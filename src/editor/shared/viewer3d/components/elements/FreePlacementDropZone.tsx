@@ -1796,23 +1796,18 @@ const FreePlacementDropZone: React.FC = () => {
       const step = e.shiftKey ? KEYBOARD_SHIFT_STEP_MM : KEYBOARD_STEP_MM;
       const deltaMm = direction * step;
 
-      // 다중 선택 시: 선택된 가구들 모두를 동일 deltaMm로 이동.
-      // 다중 선택이 아닐 때(단일): 충돌 검사 통과한 경우에만 이동.
+      // 단일/다중 모두 키보드 이동은 충돌 검사 없이 deltaMm만 적용 (가구 붙어있어도 이동 가능)
       if (targetIds.length === 1) {
         const tId = targetIds[0];
         const mod = placedModules.find(m => m.id === tId);
         if (!mod) return;
-        const currentXmm = mod.position.x * 100;
-        const newXmm = currentXmm + deltaMm;
-        const result = calcMovedPosition(newXmm, tId, true);
-        if (!result.colliding) {
-          const zoneUpdate = recalcZoneUpdate(mod, result.x);
-          updatePlacedModule(tId, {
-            position: { x: result.x * 0.01, y: zoneUpdate.y, z: mod.position.z },
-            freeHeight: zoneUpdate.freeHeight,
-            zone: zoneUpdate.zone as 'normal' | 'dropped',
-          });
-        }
+        const newXmm = mod.position.x * 100 + deltaMm;
+        const zoneUpdate = recalcZoneUpdate(mod, newXmm);
+        updatePlacedModule(tId, {
+          position: { x: newXmm * 0.01, y: zoneUpdate.y, z: mod.position.z },
+          freeHeight: zoneUpdate.freeHeight,
+          zone: zoneUpdate.zone as 'normal' | 'dropped',
+        });
       } else {
         // 다중 선택: 선택된 가구들을 그룹으로 보고 동시 이동 (충돌 검사는 그룹 외부 가구만 대상)
         targetIds.forEach(tId => {
