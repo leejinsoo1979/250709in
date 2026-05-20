@@ -95,21 +95,38 @@ const DoorGapInput: React.FC<{
   storeValue: number;
   onCommit: (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => void;
   highlightModuleIds?: string[]; // 전체 동기화 시 전체 도어 ID들
-}> = ({ moduleId, field, storeValue, onCommit, highlightModuleIds }) => {
-  const [localVal, setLocalVal] = useState(String(storeValue));
+  // 표시 기준 모드. 'body' = 몸통 기준(저장값 그대로). 'cf' = 천장·바닥 기준 (거리 - 저장값으로 표시)
+  referenceMode?: 'body' | 'cf';
+  // 천장/바닥 기준으로 변환할 때 필요한 거리 (mm).
+  //   field=doorTopGap → 천장 ~ 가구 상단 거리
+  //   field=doorBottomGap → 가구 하단 ~ 바닥 거리
+  refDistanceMm?: number;
+}> = ({ moduleId, field, storeValue, onCommit, highlightModuleIds, referenceMode = 'body', refDistanceMm = 0 }) => {
+  const isCf = referenceMode === 'cf';
+  // 표시값 계산
+  const displayFromStore = (v: number) => isCf ? String(Math.round(refDistanceMm - v)) : String(v);
+  const [localVal, setLocalVal] = useState(displayFromStore(storeValue));
   const [isFocused, setIsFocused] = useState(false);
 
-  // store 값이 외부에서 변경되면 로컬 값도 동기화 (편집 중이 아닐 때만)
+  // store / 모드 / 거리 변경 시 동기화 (편집 중이 아닐 때만)
   useEffect(() => {
     if (!isFocused) {
-      setLocalVal(String(storeValue));
+      setLocalVal(displayFromStore(storeValue));
     }
-  }, [storeValue, isFocused]);
+  }, [storeValue, isFocused, isCf, refDistanceMm]);
 
   const commit = () => {
     setIsFocused(false);
-    onCommit(moduleId, field, localVal);
-    // 하이라이트 해제
+    let toCommit = localVal;
+    if (isCf) {
+      const raw = parseFloat(localVal);
+      if (!isNaN(raw)) {
+        // 0 ≤ v ≤ refDistance (천장/바닥 뚫기 방지)
+        const clamped = Math.max(0, Math.min(refDistanceMm, raw));
+        toCommit = String(Math.round(refDistanceMm - clamped));
+      }
+    }
+    onCommit(moduleId, field, toCommit);
     useUIStore.getState().setHighlightedDoorGap && useUIStore.getState().setHighlightedDoorGap(null);
   };
 
@@ -142,7 +159,6 @@ const DoorGapInput: React.FC<{
           boxSizing: 'border-box',
         }}
         step="1"
-        min="0"
       />
     </td>
   );
@@ -672,7 +688,28 @@ const Configurator: React.FC = () => {
   const showDoorSetup = doorFurnitureList.length > 0;
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-  const [doorGapAllSync, setDoorGapAllSync] = useState(false);
+  const [doorGapAllSync, setDoorGapAllSync] = useState(true);
+  // 도어 셋팅 표시 기준 ('body' = 몸통 기준 / 'cf' = 천장·바닥 기준)
+  const [doorGapRefMode, setDoorGapRefMode] = useState<'body' | 'cf'>('body');
+
+  // 가구별 천장/바닥까지 거리 계산 (천장·바닥 기준 변환용)
+  //   - topDistance: 천장 ~ 가구 상단 거리 (mm)
+  //   - bottomDistance: 가구 하단 ~ 바닥 거리 (mm)
+  const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
+    if (!mod) return { topDistance: 0, bottomDistance: 0 };
+    let ceilingMm = spaceInfo.height;
+    if (spaceInfo.droppedCeiling?.enabled && mod.zone === 'dropped') {
+      ceilingMm = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
+    }
+    const baseFrameMm = mod.hasBase === false
+      ? (mod.individualFloatHeight ?? 0)
+      : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+    const bodyHmm = (mod.freeHeight ?? mod.customHeight ?? 0);
+    const fallbackBodyMm = bodyHmm > 0 ? bodyHmm : (ceilingMm - baseFrameMm);
+    const topDistance = Math.max(0, ceilingMm - (baseFrameMm + fallbackBodyMm));
+    const bottomDistance = Math.max(0, baseFrameMm);
+    return { topDistance, bottomDistance };
+  }, [spaceInfo]);
 
   // 개별 모드: 개별 가구 도어 갭 변경 (전체선택 시 모든 도어에 동일 적용)
   const handleIndividualDoorGapChange = (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => {
@@ -6839,6 +6876,29 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
+              {/* 표시 기준 토글 (몸통 / 천장·바닥) */}
+              <div style={{ display: 'flex', gap: '2px', marginLeft: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setDoorGapRefMode('body')}
+                  style={{
+                    padding: '2px 6px', fontSize: '10px',
+                    background: doorGapRefMode === 'body' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
+                    color: doorGapRefMode === 'body' ? 'white' : 'var(--theme-text-primary)',
+                    border: '1px solid var(--theme-border)', borderRadius: '3px', cursor: 'pointer', fontWeight: 600,
+                  }}
+                >몸통</button>
+                <button
+                  type="button"
+                  onClick={() => setDoorGapRefMode('cf')}
+                  style={{
+                    padding: '2px 6px', fontSize: '10px',
+                    background: doorGapRefMode === 'cf' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
+                    color: doorGapRefMode === 'cf' ? 'white' : 'var(--theme-text-primary)',
+                    border: '1px solid var(--theme-border)', borderRadius: '3px', cursor: 'pointer', fontWeight: 600,
+                  }}
+                >천장·바닥</button>
+              </div>
               <label
                 style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
               >
@@ -6873,10 +6933,13 @@ const Configurator: React.FC = () => {
                       {(() => {
                         const firstMod = doorFurnitureList[0];
                         const allIds = doorFurnitureList.map(m => m.id);
-                        return <DoorGapInput key={`top-all`} moduleId={firstMod.id} field="doorTopGap"
+                        const { topDistance } = computeRefDistances(firstMod);
+                        return <DoorGapInput key={`top-all-${doorGapRefMode}`} moduleId={firstMod.id} field="doorTopGap"
                           storeValue={firstMod.doorTopGap ?? 5}
                           onCommit={handleIndividualDoorGapChange}
-                          highlightModuleIds={allIds} />;
+                          highlightModuleIds={allIds}
+                          referenceMode={doorGapRefMode}
+                          refDistanceMm={topDistance} />;
                       })()}
                     </tr>
                     <tr>
@@ -6884,10 +6947,13 @@ const Configurator: React.FC = () => {
                       {(() => {
                         const firstMod = doorFurnitureList[0];
                         const allIds = doorFurnitureList.map(m => m.id);
-                        return <DoorGapInput key={`bot-all`} moduleId={firstMod.id} field="doorBottomGap"
+                        const { bottomDistance } = computeRefDistances(firstMod);
+                        return <DoorGapInput key={`bot-all-${doorGapRefMode}`} moduleId={firstMod.id} field="doorBottomGap"
                           storeValue={firstMod.doorBottomGap ?? 25}
                           onCommit={handleIndividualDoorGapChange}
-                          highlightModuleIds={allIds} />;
+                          highlightModuleIds={allIds}
+                          referenceMode={doorGapRefMode}
+                          refDistanceMm={bottomDistance} />;
                       })()}
                     </tr>
                   </tbody>
@@ -6915,18 +6981,24 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
                       {fullDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
-                        return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
+                        const { topDistance } = computeRefDistances(mod);
+                        return <DoorGapInput key={`top-${mod.id}-${doorGapRefMode}`} moduleId={mod.id} field="doorTopGap"
                           storeValue={mod.doorTopGap ?? 5}
-                          onCommit={handleIndividualDoorGapChange} />;
+                          onCommit={handleIndividualDoorGapChange}
+                          referenceMode={doorGapRefMode}
+                          refDistanceMm={topDistance} />;
                       })}
                     </tr>
                     <tr>
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                       {fullDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
-                        return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
+                        const { bottomDistance } = computeRefDistances(mod);
+                        return <DoorGapInput key={`bot-${mod.id}-${doorGapRefMode}`} moduleId={mod.id} field="doorBottomGap"
                           storeValue={mod.doorBottomGap ?? 25}
-                          onCommit={handleIndividualDoorGapChange} />;
+                          onCommit={handleIndividualDoorGapChange}
+                          referenceMode={doorGapRefMode}
+                          refDistanceMm={bottomDistance} />;
                       })}
                     </tr>
                   </tbody>
@@ -6954,18 +7026,24 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
                       {partialDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
-                        return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
+                        const { topDistance } = computeRefDistances(mod);
+                        return <DoorGapInput key={`top-${mod.id}-${doorGapRefMode}`} moduleId={mod.id} field="doorTopGap"
                           storeValue={mod.doorTopGap ?? -20}
-                          onCommit={handleIndividualDoorGapChange} />;
+                          onCommit={handleIndividualDoorGapChange}
+                          referenceMode={doorGapRefMode}
+                          refDistanceMm={topDistance} />;
                       })}
                     </tr>
                     <tr>
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                       {partialDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
-                        return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
+                        const { bottomDistance } = computeRefDistances(mod);
+                        return <DoorGapInput key={`bot-${mod.id}-${doorGapRefMode}`} moduleId={mod.id} field="doorBottomGap"
                           storeValue={mod.doorBottomGap ?? 5}
-                          onCommit={handleIndividualDoorGapChange} />;
+                          onCommit={handleIndividualDoorGapChange}
+                          referenceMode={doorGapRefMode}
+                          refDistanceMm={bottomDistance} />;
                       })}
                     </tr>
                   </tbody>
