@@ -2142,6 +2142,21 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
+                  const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+                  const wallEdgeBackColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.backMix);
+                  const wallEdgeFrontColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.frontMix);
+                  const halfD = extendedPanelDepth / 2;
+                  const halfH = height / 2;
+                  const wallEdgePos = new Float32Array([
+                    -halfD, halfH, 0, halfD, halfH, 0,
+                    -halfD, -halfH, 0, halfD, -halfH, 0,
+                  ]);
+                  const wallEdgeColors = new Float32Array([
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2152,6 +2167,19 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
+                      <lineSegments renderOrder={1001}>
+                        <bufferGeometry>
+                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
+                          <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
+                        </bufferGeometry>
+                        <lineBasicMaterial
+                          vertexColors
+                          transparent
+                          opacity={spaceLineTone.cornerOpacity}
+                          depthTest={false}
+                          depthWrite={false}
+                        />
+                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
@@ -2258,6 +2286,21 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
+                  const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+                  const wallEdgeBackColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.backMix);
+                  const wallEdgeFrontColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.frontMix);
+                  const halfD = extendedPanelDepth / 2;
+                  const halfH = height / 2;
+                  const wallEdgePos = new Float32Array([
+                    -halfD, halfH, 0, halfD, halfH, 0,
+                    -halfD, -halfH, 0, halfD, -halfH, 0,
+                  ]);
+                  const wallEdgeColors = new Float32Array([
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2268,6 +2311,19 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
+                      <lineSegments renderOrder={1001}>
+                        <bufferGeometry>
+                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
+                          <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
+                        </bufferGeometry>
+                        <lineBasicMaterial
+                          vertexColors
+                          transparent
+                          opacity={spaceLineTone.cornerOpacity}
+                          depthTest={false}
+                          depthWrite={false}
+                        />
+                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
@@ -2919,7 +2975,7 @@ const Room: React.FC<RoomProps> = ({
               // 천장 mesh(단면)를 뚫고 안쪽에서 보이므로, 뒷벽 근처로만 제한
               if (isFreePlacement && !stepSameSideAsDC && bwBot === cY) {
                 // 메인 천장과 동일 높이 → 뒷벽 실선만 (Z축 앞으로 연장 안 함)
-                lines.push([bx, bwBot, z1, bx, bwBot, z1 + 0.01]);
+                lines.push([bx, bwBot, z1, bx, bwBot, z2]);
               } else {
                 lines.push([bx, bwBot, z1, bx, bwBot, z2]);  // 경계벽 하단
               }
@@ -2928,13 +2984,13 @@ const Room: React.FC<RoomProps> = ({
               if (dcIsL && hasLW) {
                 // 커튼박스: 천장이 메인보다 높으므로 외벽 라인도 뒷벽 근처로 제한
                 if (isFreePlacement) {
-                  lines.push([x1, droppedCY, z1, x1, droppedCY, z1 + 0.01]);
+                  lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
                 } else {
                   lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
                 }
               } else if (!dcIsL && hasRW) {
                 if (isFreePlacement) {
-                  lines.push([x2, droppedCY, z1, x2, droppedCY, z1 + 0.01]);
+                  lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
                 } else {
                   lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
                 }
@@ -2953,13 +3009,13 @@ const Room: React.FC<RoomProps> = ({
               // 경계벽 상단 (커튼박스 천장 높이에서)
               lines.push([cbBx, cbCeilingY, z1, cbBx, cbCeilingY, z2]);
               // 경계벽 하단 (메인 천장 높이 = cY) → 뒷벽 근처로만 제한 (천장 mesh 관통 방지)
-              lines.push([cbBx, cY, z1, cbBx, cY, z1 + 0.01]);
+              lines.push([cbBx, cY, z1, cbBx, cY, z2]);
 
               // 커튼박스 쪽 외벽의 천장 높이 Z축 라인 (뒷벽 근처로 제한)
               if (cbIsL && hasLW) {
-                lines.push([x1, cbCeilingY, z1, x1, cbCeilingY, z1 + 0.01]);
+                lines.push([x1, cbCeilingY, z1, x1, cbCeilingY, z2]);
               } else if (!cbIsL && hasRW) {
-                lines.push([x2, cbCeilingY, z1, x2, cbCeilingY, z1 + 0.01]);
+                lines.push([x2, cbCeilingY, z1, x2, cbCeilingY, z2]);
               }
             }
 
@@ -3386,6 +3442,10 @@ const Room: React.FC<RoomProps> = ({
               : _cbIsLeft ? (xOffset + _cbW)
               : _cbIsRight ? (xOffset + width - _cbW)
               : 0;
+            const visibleEdgeShadowMaterial = MaterialFactory.createEdgeShadowMaterial();
+            visibleEdgeShadowMaterial.depthTest = false;
+            visibleEdgeShadowMaterial.depthWrite = false;
+            const bottomEdgeY = panelStartY + 0.003;
 
             return (
             <>
@@ -3484,12 +3544,12 @@ const Room: React.FC<RoomProps> = ({
 
             {/* 하단 가로 모서리 (바닥과 뒷벽 사이) */}
             <mesh
-              position={[xOffset + width / 2, panelStartY, zOffset]}
+              position={[xOffset + width / 2, bottomEdgeY, zOffset]}
               rotation={[0, 0, Math.PI / 2]}
-              renderOrder={-1}
+              renderOrder={1002}
             >
               <planeGeometry args={[0.02, width]} />
-              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+              <primitive object={visibleEdgeShadowMaterial} />
             </mesh>
 
             {/* 왼쪽 위 세로 모서리 (좌측벽과 천장 사이) */}
@@ -3512,20 +3572,22 @@ const Room: React.FC<RoomProps> = ({
 
             {/* 왼쪽 아래 세로 모서리 (좌측벽과 바닥 사이) */}
             <mesh
-              position={[-width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
+              position={[-width / 2, bottomEdgeY, extendedZOffset + extendedPanelDepth / 2]}
               rotation={[Math.PI / 2, 0, 0]}
+              renderOrder={1002}
             >
               <planeGeometry args={[0.02, extendedPanelDepth]} />
-              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+              <primitive object={visibleEdgeShadowMaterial} />
             </mesh>
 
             {/* 오른쪽 아래 세로 모서리 (우측벽과 바닥 사이) */}
             <mesh
-              position={[width / 2, panelStartY, extendedZOffset + extendedPanelDepth / 2]}
+              position={[width / 2, bottomEdgeY, extendedZOffset + extendedPanelDepth / 2]}
               rotation={[Math.PI / 2, 0, 0]}
+              renderOrder={1002}
             >
               <planeGeometry args={[0.02, extendedPanelDepth]} />
-              <primitive object={MaterialFactory.createEdgeShadowMaterial()} />
+              <primitive object={visibleEdgeShadowMaterial} />
             </mesh>
 
             {/* 커튼박스/단내림 경계벽 앞뒤 모서리 */}
