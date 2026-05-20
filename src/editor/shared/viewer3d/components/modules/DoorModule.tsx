@@ -455,13 +455,14 @@ const BoxWithEdges: React.FC<{
           ))}
         </group>
       )}
-      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
+      {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링
+          ※ 가구 선택(고스트) 상태에서 도어 외곽선은 흰색으로 (3D 전용) */}
       {viewMode === '3D' ? (
         <lineSegments name={`furniture-edge${panelName ? `-${panelName}` : ''}`} geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 10}>
           <lineBasicMaterial
-            color={isEditMode ? getThemeColor() : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : "#505050")}
+            color={isEditMode ? '#ffffff' : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : "#505050")}
             transparent={renderMode !== 'wireframe'}
-            opacity={isEditMode ? 0.3 : (renderMode === 'wireframe' ? 1.0 : 0.9)}
+            opacity={isEditMode ? 0.9 : (renderMode === 'wireframe' ? 1.0 : 0.9)}
             depthTest={true}
             depthWrite={false}
             polygonOffset={true}
@@ -1331,6 +1332,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
   let useFurnitureFitDoorHeight = false;
+  let dimensionDoorTopGapMm = doorTopGap;
+  let dimensionDoorBottomGapMm = doorBottomGap;
 
   // 단내림 구간인 경우 해당 구간의 높이 사용
   let fullSpaceHeight = originalSpaceInfo.height;
@@ -1369,6 +1372,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // cabH가 stoneThk별로 변해도 도어 상단~가구 상단 갭은 항상 80mm 일정
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
+      dimensionDoorTopGapMm = effectiveTopDownTopGap;
+      dimensionDoorBottomGapMm = effectiveTopDownBottomGap;
       actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
@@ -1440,6 +1445,102 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
   // 도어 높이에 추가 조정 없음 (사용자 입력 갭이 완전히 제어)
   const doorHeight = mmToThreeUnits(actualDoorHeight);
+  const doorTopGapDimensionMm = Math.max(0, Math.min(Math.round(dimensionDoorTopGapMm), Math.round(actualDoorHeight)));
+  const doorBottomGapDimensionMm = Math.max(0, Math.min(Math.round(dimensionDoorBottomGapMm), Math.max(0, Math.round(actualDoorHeight) - doorTopGapDimensionMm)));
+  const doorTopGapDimensionUnits = mmToThreeUnits(doorTopGapDimensionMm);
+  const doorBottomGapDimensionUnits = mmToThreeUnits(doorBottomGapDimensionMm);
+  const doorDimensionTopY = doorHeight / 2 + doorTopGapDimensionUnits;
+  const doorDimensionBottomY = -doorHeight / 2 - doorBottomGapDimensionUnits;
+  const renderDoorGapDimensionMarkers = ({
+    lineX,
+    textX,
+    zPos,
+    dimColor,
+    tickSize,
+    keyPrefix,
+  }: {
+    lineX: number;
+    textX: number;
+    zPos: number;
+    dimColor: string;
+    tickSize: number;
+    keyPrefix: string;
+  }) => {
+    return (
+      <>
+        {doorTopGapDimensionMm > 0 && (
+          <>
+            <NativeLine
+              key={`${keyPrefix}-ceiling-tick`}
+              name="door-dimension-height-gap"
+              points={[[lineX - tickSize, doorDimensionTopY, zPos], [lineX + tickSize, doorDimensionTopY, zPos]]}
+              color={dimColor}
+              lineWidth={1}
+              renderOrder={100001}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
+            />
+            <NativeLine
+              key={`${keyPrefix}-door-top-tick`}
+              name="door-dimension-height-gap"
+              points={[[lineX - tickSize, doorHeight / 2, zPos], [lineX + tickSize, doorHeight / 2, zPos]]}
+              color={dimColor}
+              lineWidth={1}
+              renderOrder={100001}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
+            />
+            <DimensionText
+              name="door-dimension-top-gap-text"
+              value={doorTopGapDimensionMm}
+              position={[textX, (doorHeight / 2 + doorDimensionTopY) / 2, zPos]}
+              color={dimColor}
+              anchorX="center"
+              anchorY="middle"
+              forceShow={true}
+            />
+          </>
+        )}
+        {doorBottomGapDimensionMm > 0 && (
+          <>
+            <NativeLine
+              key={`${keyPrefix}-door-bottom-tick`}
+              name="door-dimension-height-gap"
+              points={[[lineX - tickSize, -doorHeight / 2, zPos], [lineX + tickSize, -doorHeight / 2, zPos]]}
+              color={dimColor}
+              lineWidth={1}
+              renderOrder={100001}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
+            />
+            <NativeLine
+              key={`${keyPrefix}-floor-tick`}
+              name="door-dimension-height-gap"
+              points={[[lineX - tickSize, doorDimensionBottomY, zPos], [lineX + tickSize, doorDimensionBottomY, zPos]]}
+              color={dimColor}
+              lineWidth={1}
+              renderOrder={100001}
+              depthTest={false}
+              depthWrite={false}
+              transparent={true}
+            />
+            <DimensionText
+              name="door-dimension-bottom-gap-text"
+              value={doorBottomGapDimensionMm}
+              position={[textX, (doorDimensionBottomY - doorHeight / 2) / 2, zPos]}
+              color={dimColor}
+              anchorX="center"
+              anchorY="middle"
+              forceShow={true}
+            />
+          </>
+        )}
+      </>
+    );
+  };
   const customHingePositionSource = splitDoorPanelName === '상부 도어'
     ? (upperDoorHingePositionsMm ?? storePlacedModule?.upperDoorHingePositionsMm)
     : splitDoorPanelName === '하부 도어'
@@ -2502,8 +2603,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     {(is3D || doorHeightDimensionSides.left) && (
                     <>
                     <NativeLine name="door-dimension-height" points={[
-                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
-                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]
+                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionBottomY, zPos],
+                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionTopY, zPos]
                     ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <NativeLine name="door-dimension-height" points={[
@@ -2535,6 +2636,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       anchorY="middle"
                       forceShow={true}
                     />
+                    {renderDoorGapDimensionMarkers({
+                      lineX: -leftDoorWidthUnits / 2 - mmToThreeUnits(90),
+                      textX: -leftDoorWidthUnits / 2 - mmToThreeUnits(125),
+                      zPos,
+                      dimColor,
+                      tickSize,
+                      keyPrefix: 'left-door',
+                    })}
                     </>
                     )}
 
@@ -2932,8 +3041,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     {!is3D && doorHeightDimensionSides.right && (
                     <>
                     <NativeLine name="door-dimension-height" points={[
-                      [rightDoorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos],
-                      [rightDoorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]
+                      [rightDoorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionBottomY, zPos],
+                      [rightDoorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionTopY, zPos]
                     ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <NativeLine name="door-dimension-height" points={[
@@ -2965,6 +3074,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       anchorY="middle"
                       forceShow={true}
                     />
+                    {renderDoorGapDimensionMarkers({
+                      lineX: rightDoorWidthUnits / 2 + mmToThreeUnits(90),
+                      textX: rightDoorWidthUnits / 2 + mmToThreeUnits(125),
+                      zPos,
+                      dimColor,
+                      tickSize,
+                      keyPrefix: 'right-door',
+                    })}
                     </>
                     )}
 
@@ -3655,8 +3772,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <NativeLine
                       name="door-dimension-height"
                       points={[
-                        [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
-                        [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]
+                        [-doorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionBottomY, zPos],
+                        [-doorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionTopY, zPos]
                       ]}
                       color={dimColor}
                       lineWidth={1}
@@ -3671,8 +3788,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <NativeLine
                       name="door-dimension-height"
                       points={[
-                        [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos],
-                        [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]
+                        [doorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionBottomY, zPos],
+                        [doorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionTopY, zPos]
                       ]}
                       color={dimColor}
                       lineWidth={1}
@@ -3739,6 +3856,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         anchorY="middle"
                         forceShow={true}
                       />
+                      {renderDoorGapDimensionMarkers({
+                        lineX: -doorWidthUnits / 2 - mmToThreeUnits(90),
+                        textX: -doorWidthUnits / 2 - mmToThreeUnits(125),
+                        zPos,
+                        dimColor,
+                        tickSize,
+                        keyPrefix: 'single-door-left',
+                      })}
                     </>
                   )}
 
@@ -3775,6 +3900,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         anchorY="middle"
                         forceShow={true}
                       />
+                      {renderDoorGapDimensionMarkers({
+                        lineX: doorWidthUnits / 2 + mmToThreeUnits(90),
+                        textX: doorWidthUnits / 2 + mmToThreeUnits(125),
+                        zPos,
+                        dimColor,
+                        tickSize,
+                        keyPrefix: 'single-door-right',
+                      })}
                     </>
                   )}
                   </>
