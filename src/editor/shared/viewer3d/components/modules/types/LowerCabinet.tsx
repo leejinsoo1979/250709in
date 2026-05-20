@@ -954,6 +954,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     maidaHeightsMm[1] = evenH;
     maidaHeightsMm[2] = evenH;
   }
+  // 도어올림 터치 3단: 상단갭(doorTopGap) 변화량을 1단(맨위) 마이다에 흡수
+  //   customMaida 값 보존 + 상단갭 변경 시 1단 마이다 윗변이 그만큼 올라가/내려가도록.
+  if (isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+    const topExtDeltaMm = topExtMm - defaultTopExtMm;
+    if (topExtDeltaMm !== 0) {
+      maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + topExtDeltaMm);
+    }
+  }
   // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정, maida0이 흡수
   //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
   if (!customMaidaValid && (isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
@@ -971,8 +979,11 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   let maidas: { height: number; centerY: number; tier: number; bottomMm: number }[];
   if ((isTopDownTouch || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
     // 마이다 영역은 도어갭과 무관. 항상 default 위치 사용.
+    //   ※ 도어올림 3단만 예외: 상단갭(topExtMm) 변화량을 시작점(top)에 반영해
+    //      1단 마이다 윗변이 도어 상단을 따라 같이 올라가/내려가도록 함.
     const lastIdx = maidaHeightsMm.length - 1;
-    const topPositionMm = -defaultBottomExtMm + maidaTotalFrontMm;
+    const topShiftMm = isDoorLift3Fixed ? (topExtMm - defaultTopExtMm) : 0;
+    const topPositionMm = -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
     let cursorTop = topPositionMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
     // 맨 위(lastIdx)부터 아래(1)까지 위치 고정
