@@ -888,8 +888,8 @@ const FreePlacementDropZone: React.FC = () => {
     const ghostRight = hoverXmm + effectiveDimensions.width / 2;
     const { startX, endX } = spaceBounds;
 
-    // 배치된 가구의 X범위 (캐싱된 값 사용)
-    const bounds = sortedBoundsCache;
+    // 배치된 가구 + 기둥(장애물)의 X범위 — 기둥도 가구처럼 갭 계산에 포함
+    const bounds = [...sortedBoundsCache, ...columnObstacleBounds].sort((a, b) => a.left - b.left);
 
     // 왼쪽 이격: 고스트 왼쪽 가장자리 ~ 가장 가까운 왼쪽 장애물
     let leftObstacle = startX;
@@ -913,7 +913,7 @@ const FreePlacementDropZone: React.FC = () => {
     const guideY = ghostYThree;
 
     return { leftObstacle, rightObstacle, leftDistance, rightDistance, ghostLeft, ghostRight, guideY };
-  }, [hoverXmm, effectiveDimensions, spaceBounds, placedModules, ghostYThree]);
+  }, [hoverXmm, effectiveDimensions, spaceBounds, placedModules, ghostYThree, sortedBoundsCache, columnObstacleBounds]);
 
   // 편집/이동 중인 가구의 실시간 이격거리 계산
   const editingDistanceGuides = useMemo(() => {
@@ -928,9 +928,12 @@ const FreePlacementDropZone: React.FC = () => {
     const modRight = centerXmm + widthMm / 2;
     const { startX, endX } = spaceBounds;
 
-    // 자기 자신 제외한 가구의 X범위
+    // 자기 자신 제외한 가구 + 기둥(장애물)의 X범위
     const otherModules = placedModules.filter(m => m.isFreePlacement && m.id !== targetId);
-    const bounds = otherModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+    const bounds = [
+      ...otherModules.map(m => getModuleBoundsX(m)),
+      ...columnObstacleBounds,
+    ].sort((a, b) => a.left - b.left);
 
     // 왼쪽 장애물
     let leftObstacle = startX;
@@ -958,7 +961,7 @@ const FreePlacementDropZone: React.FC = () => {
     const modBottom = guideY - halfHeightThree;
 
     return { leftObstacle, rightObstacle, leftDistance, rightDistance, modLeft, modRight, guideY, modTop, modBottom };
-  }, [movingModuleId, editingFreeModuleId, placedModules, spaceBounds]);
+  }, [movingModuleId, editingFreeModuleId, placedModules, spaceBounds, columnObstacleBounds]);
 
   // 편집 중인 모듈의 removeUpperSafetyShelf 상태 (고스트 실시간 반영용)
   const editingRemoveUpperSafetyShelf = useMemo(() => {
@@ -1028,6 +1031,11 @@ const FreePlacementDropZone: React.FC = () => {
     const { startX, endX } = spaceBounds;
     const gapLabelYTop = spaceInfo.height * 0.01 + 120 * 0.01; // 상부장용: 공간 위쪽
     const gapLabelYBottom = -120 * 0.01; // 하부장용: 공간 아래쪽
+    const columnBounds = columnObstacleBounds.map((bounds, index) => ({
+      ...bounds,
+      id: `__column-${index}`,
+      isColumn: true,
+    }));
 
     // 카테고리 판별
     const isUpperModL = (m: any) => !m.isSurroundPanel && (m.moduleId?.startsWith('upper-') || m.moduleId?.includes('-upper-'));
@@ -1038,12 +1046,15 @@ const FreePlacementDropZone: React.FC = () => {
 
     // 특정 가구 집합 기준으로 빈공간 계산
     const computeGapsFor = (mods: typeof freeModules, gapLabelY: number, tag: 'upper' | 'lower' | 'all'): GapInfo[] => {
-      const localBounds = mods.map(m => ({ ...getModuleBoundsX(m), id: m.id })).sort((a, b) => a.left - b.left);
+      const localBounds = [
+        ...mods.map(m => ({ ...getModuleBoundsX(m), id: m.id, isColumn: false })),
+        ...columnBounds,
+      ].sort((a, b) => a.left - b.left);
       const g: GapInfo[] = [];
       if (localBounds.length === 0) return g;
 
       // 왼쪽 벽 ~ 첫 가구
-      if (localBounds[0].left - startX > 0.5) {
+      if (!localBounds[0].isColumn && localBounds[0].left - startX > 0.5) {
         g.push({
           startX,
           endX: localBounds[0].left,
@@ -1062,8 +1073,11 @@ const FreePlacementDropZone: React.FC = () => {
         const gapStart = localBounds[i].right;
         const gapEnd = localBounds[i + 1].left;
         if (gapEnd - gapStart > 0.5) {
-          const modA = freeModules.find(m => m.id === localBounds[i].id);
-          const modB = freeModules.find(m => m.id === localBounds[i + 1].id);
+          const leftIsColumn = localBounds[i].isColumn;
+          const rightIsColumn = localBounds[i + 1].isColumn;
+          const modA = leftIsColumn ? null : freeModules.find(m => m.id === localBounds[i].id);
+          const modB = rightIsColumn ? null : freeModules.find(m => m.id === localBounds[i + 1].id);
+          if (!modA && !modB) continue;
           const wA = modA ? Math.round(modA.freeWidth || modA.customWidth || modA.moduleWidth || (localBounds[i].right - localBounds[i].left)) : (localBounds[i].right - localBounds[i].left);
           const wB = modB ? Math.round(modB.freeWidth || modB.customWidth || modB.moduleWidth || (localBounds[i + 1].right - localBounds[i + 1].left)) : (localBounds[i + 1].right - localBounds[i + 1].left);
           const cA = modA ? modA.position.x * 100 : (localBounds[i].left + localBounds[i].right) / 2;
@@ -1075,8 +1089,8 @@ const FreePlacementDropZone: React.FC = () => {
             width: Math.round(exactGap),
             centerX: ((gapStart + gapEnd) / 2) * 0.01,
             centerY: gapLabelY,
-            adjacentModuleId: localBounds[i + 1].id,
-            leftModuleId: localBounds[i].id,
+            adjacentModuleId: modB ? localBounds[i + 1].id : null,
+            leftModuleId: modA ? localBounds[i].id : null,
             isWallGap: null,
             gapType: 'between',
             anchorX: gapStart,
@@ -1086,7 +1100,7 @@ const FreePlacementDropZone: React.FC = () => {
 
       // 마지막 가구 ~ 오른쪽 벽
       const lastBound = localBounds[localBounds.length - 1];
-      if (endX - lastBound.right > 0.5) {
+      if (!lastBound.isColumn && endX - lastBound.right > 0.5) {
         const totalInner = endX - startX;
         const moduleSum = localBounds.reduce((s, b) => s + (b.right - b.left), 0);
         const gapSum = g.reduce((s, gi) => s + (gi.endX - gi.startX), 0);
@@ -1155,15 +1169,19 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     // 모든 가구의 X범위를 구해서 왼쪽부터 정렬 (캐싱된 bounds + id 추가)
-    const bounds = freeModules.map(m => ({
-      ...getModuleBoundsX(m),
-      id: m.id,
-    })).sort((a, b) => a.left - b.left);
+    const bounds = [
+      ...freeModules.map(m => ({
+        ...getModuleBoundsX(m),
+        id: m.id,
+        isColumn: false,
+      })),
+      ...columnBounds,
+    ].sort((a, b) => a.left - b.left);
 
     const gaps: GapInfo[] = [];
 
     // 왼쪽 벽 ~ 첫 가구
-    if (bounds[0].left - startX > 0.5) {
+    if (!bounds[0].isColumn && bounds[0].left - startX > 0.5) {
       const lockedLeft = spaceInfo.lockedWallGaps?.left;
       if (lockedLeft != null) {
         // 잠금 영역: 벽 ~ 잠금 끝
@@ -1216,8 +1234,11 @@ const FreePlacementDropZone: React.FC = () => {
       const gapEnd = bounds[i + 1].left;
       if (gapEnd - gapStart > 0.5) {
         // 저장된 가구 너비(정수)와 위치로부터 정확한 거리 재계산
-        const modA = freeModules.find(m => m.id === bounds[i].id);
-        const modB = freeModules.find(m => m.id === bounds[i + 1].id);
+        const leftIsColumn = bounds[i].isColumn;
+        const rightIsColumn = bounds[i + 1].isColumn;
+        const modA = leftIsColumn ? null : freeModules.find(m => m.id === bounds[i].id);
+        const modB = rightIsColumn ? null : freeModules.find(m => m.id === bounds[i + 1].id);
+        if (!modA && !modB) continue;
         const wA = modA ? Math.round(modA.freeWidth || modA.customWidth || modA.moduleWidth || (bounds[i].right - bounds[i].left)) : (bounds[i].right - bounds[i].left);
         const wB = modB ? Math.round(modB.freeWidth || modB.customWidth || modB.moduleWidth || (bounds[i + 1].right - bounds[i + 1].left)) : (bounds[i + 1].right - bounds[i + 1].left);
         const cA = modA ? modA.position.x * 100 : (bounds[i].left + bounds[i].right) / 2;
@@ -1230,8 +1251,8 @@ const FreePlacementDropZone: React.FC = () => {
           width: Math.round(exactGap),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
-          adjacentModuleId: bounds[i + 1].id,
-          leftModuleId: bounds[i].id,
+          adjacentModuleId: modB ? bounds[i + 1].id : null,
+          leftModuleId: modA ? bounds[i].id : null,
           isWallGap: null,
           gapType: 'between',
           anchorX: gapStart,
@@ -1241,7 +1262,7 @@ const FreePlacementDropZone: React.FC = () => {
 
     // 마지막 가구 ~ 오른쪽 벽
     const lastBound = bounds[bounds.length - 1];
-    if (endX - lastBound.right > 0.5) {
+    if (!lastBound.isColumn && endX - lastBound.right > 0.5) {
       const lockedRight = spaceInfo.lockedWallGaps?.right;
       if (lockedRight != null) {
         const lockStartX = endX - lockedRight;
@@ -1295,7 +1316,7 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     return gaps;
-  }, [placedModules, spaceBounds, spaceInfo]);
+  }, [placedModules, spaceBounds, spaceInfo, columnObstacleBounds]);
 
   // 이격거리 편집 시작
   const handleGapLabelClick = useCallback((index: number, currentWidth: number) => {
