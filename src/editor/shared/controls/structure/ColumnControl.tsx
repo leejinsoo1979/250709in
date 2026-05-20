@@ -29,12 +29,11 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     const spaceInfo = spaceConfig.spaceInfo;
     if (!spaceInfo) return;
 
-    // 공간 중앙에 기둥 배치
+    // 기둥 배치: 항상 맨 왼쪽 벽에 붙여 배치 (X는 아래 centerX 계산에서 결정)
     // 가구(의류장/키큰장)와 동일한 Z 정렬: 가구 뒷면과 기둥 뒷면을 맞춤
     // furnitureZOffset = zOffset + (panelDepth - furnitureDepth)/2
     // 가구 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness
     // 기둥 중심 Z = 가구 뒷면 Z + columnDepth/2
-    const rawCenterX = 0;
     const panelDepthM = (spaceInfo.depth || 1500) * 0.01;
     const furnitureDepthM = Math.min(panelDepthM, 6); // 600mm
     const doorThicknessM = 0.2; // 20mm
@@ -44,14 +43,14 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     const centerZ = furnitureBackZ + (columnData.depth * 0.01) / 2;
 
     const columnWidthMm = columnData.width;
+    // 더블클릭 배치: 항상 내부공간 맨 왼쪽 벽에 붙여서 배치
     const centerX = (() => {
-      if (spaceInfo.layoutMode !== 'free-placement') return rawCenterX;
       const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
       const halfWidth = (columnWidthMm * 0.01) / 2;
       const minX = startX * 0.01 + halfWidth;
       const maxX = endX * 0.01 - halfWidth;
       if (minX > maxX) return (minX + maxX) / 2;
-      return Math.max(minX, Math.min(maxX, rawCenterX));
+      return minX;
     })();
 
     const newColumn: Column = {
