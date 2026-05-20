@@ -705,6 +705,7 @@ const Room: React.FC<RoomProps> = ({
   const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const isPanelSimulationLayout = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
   const isDesignMode = isLayoutBuilderOpen || activePopup?.type === 'customizableEdit';
+  const isWindowsPlatform = typeof document !== 'undefined' && document.documentElement.classList.contains('platform-windows');
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
@@ -3060,17 +3061,22 @@ const Room: React.FC<RoomProps> = ({
             const positions = new Float32Array(lines.length * 6);
             const vertColors = new Float32Array(lines.length * 6);
             const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+            const softenSpaceLines = isWindowsPlatform && viewMode === '3D';
+            const lineBackMix = softenSpaceLines ? 0.38 : 0;
+            const lineFrontMix = softenSpaceLines ? 0.9 : 0.7;
+            const lineBackColor = threeEdgeColor.clone().lerp(bgColor, lineBackMix);
+            const lineFrontColor = threeEdgeColor.clone().lerp(bgColor, lineFrontMix);
 
             lines.forEach((line, i) => {
               for (let j = 0; j < 6; j++) positions[i * 6 + j] = line[j];
               // 뒷벽 쪽: 테마 색상
-              vertColors[i * 6 + 0] = threeEdgeColor.r;
-              vertColors[i * 6 + 1] = threeEdgeColor.g;
-              vertColors[i * 6 + 2] = threeEdgeColor.b;
+              vertColors[i * 6 + 0] = lineBackColor.r;
+              vertColors[i * 6 + 1] = lineBackColor.g;
+              vertColors[i * 6 + 2] = lineBackColor.b;
               // 앞쪽: 배경색으로 페이드
-              vertColors[i * 6 + 3] = threeEdgeColor.r * 0.3 + bgColor.r * 0.7;
-              vertColors[i * 6 + 4] = threeEdgeColor.g * 0.3 + bgColor.g * 0.7;
-              vertColors[i * 6 + 5] = threeEdgeColor.b * 0.3 + bgColor.b * 0.7;
+              vertColors[i * 6 + 3] = lineFrontColor.r;
+              vertColors[i * 6 + 4] = lineFrontColor.g;
+              vertColors[i * 6 + 5] = lineFrontColor.b;
             });
 
             // 단내림 뒷벽 실선 (그라데이션 없이 테마색상 단색)
@@ -3083,13 +3089,13 @@ const Room: React.FC<RoomProps> = ({
               const zStart = extendedZOffset;
               const zEnd = extendedZOffset + extendedPanelDepth;
               const zRange = Math.max(0.0001, zEnd - zStart);
-              // 회색 베이스: 뒷벽 #555 (진한 회색) → 앞쪽 #cccccc (흐린 회색)
-              const baseGray = new THREE.Color('#555555');
+              // 회색 베이스: 윈도우 저DPR에서는 더 연한 회색으로 시작해 선 번짐을 줄임
+              const baseGray = new THREE.Color(softenSpaceLines ? '#8f8f8f' : '#555555');
               const baseR = baseGray.r;
               const baseG = baseGray.g;
               const baseB = baseGray.b;
               // 앞쪽으로 갈수록 흰색에 섞이는 비율
-              const fadeWhiteMax = 0.7;
+              const fadeWhiteMax = softenSpaceLines ? 0.92 : 0.7;
               solidThemeLines.forEach((line, i) => {
                 for (let j = 0; j < 6; j++) solidThemePositions![i * 6 + j] = line[j];
                 // 각 endpoint의 z값으로 진하기 결정 (z1 → 0, z2 → 1)
@@ -3116,7 +3122,13 @@ const Room: React.FC<RoomProps> = ({
                       <bufferAttribute attach="attributes-position" args={[positions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial vertexColors depthTest={true} depthWrite={false} />
+                    <lineBasicMaterial
+                      vertexColors
+                      depthTest={true}
+                      depthWrite={false}
+                      transparent={softenSpaceLines}
+                      opacity={softenSpaceLines ? 0.68 : 1}
+                    />
                   </lineSegments>
                 )}
                 {solidThemePositions && solidThemeColors && (
@@ -3130,6 +3142,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent
+                      opacity={softenSpaceLines ? 0.62 : 1}
                       polygonOffset
                       polygonOffsetFactor={-50}
                       polygonOffsetUnits={-50}

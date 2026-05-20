@@ -826,7 +826,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   ], [args[0], args[1], args[2]]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, isTransparentMode, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, setLiveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isTransparentMode, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, setLiveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -2622,8 +2622,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           ))}
         </group>
       )}
-      {/* 윤곽선 렌더링 - hideEdges prop으로만 제어 */}
-      {!hideEdges && (() => {
+      {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
+      {!hideEdges && edgeOutlineEnabled && (() => {
         // 2D 모드: 깊이 기반 개별 라인 opacity 적용
         if (viewMode === '2D') {
           return render2DEdgesWithDepth();
