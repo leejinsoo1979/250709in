@@ -198,7 +198,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
     if (!category) return;
     const props = collectProps();
     setFurniturePreset(category, props);
-    alert(`옵션이 저장되었습니다 (${category === 'full' ? '키큰장' : category === 'upper' ? '상부장' : '하부장'}). 같은 카테고리 가구에서 "속성 주입" 버튼으로 적용할 수 있어요.`);
+    alert(`속성이 저장되었습니다 (${category === 'full' ? '키큰장' : category === 'upper' ? '상부장' : '하부장'}). 같은 카테고리 가구에서 "속성 이식" 버튼으로 적용할 수 있어요.`);
   };
 
   const handleInjectClick = () => {
@@ -247,9 +247,9 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
           fontWeight: 600,
           cursor: 'pointer',
         }}
-        title={`현재 가구의 옵션을 ${categoryLabel} 카테고리 프리셋으로 저장`}
+        title={`현재 가구의 속성을 ${categoryLabel} 카테고리 프리셋으로 저장`}
       >
-        옵션 저장
+        속성 저장
       </button>
       <button
         type="button"
@@ -266,9 +266,9 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
           cursor: preset ? 'pointer' : 'not-allowed',
           opacity: preset ? 1 : 0.6,
         }}
-        title={preset ? `저장된 ${categoryLabel} 프리셋을 이 가구에 주입` : `먼저 ${categoryLabel} 가구에서 옵션 저장을 해주세요`}
+        title={preset ? `저장된 ${categoryLabel} 프리셋을 이 가구에 이식` : `먼저 ${categoryLabel} 가구에서 속성 저장을 해주세요`}
       >
-        속성 주입
+        속성 이식
       </button>
       {preset && (
         <span style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>
@@ -293,7 +293,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
             onClick={(e) => e.stopPropagation()}
           >
             <h3 style={{ margin: '0 0 14px 0', fontSize: '16px', color: 'var(--theme-text-primary)' }}>
-              속성 주입 — {categoryLabel}
+              속성 이식 — {categoryLabel}
             </h3>
             <div style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)', marginBottom: '18px', lineHeight: 1.5 }}>
               적용할 그룹을 선택하세요. 가구 폭/높이/깊이/위치는 항상 제외됩니다.<br />
@@ -338,7 +338,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
                   cursor: selectedGroups.length > 0 ? 'pointer' : 'not-allowed',
                 }}
               >
-                주입
+                이식
               </button>
             </div>
           </div>
