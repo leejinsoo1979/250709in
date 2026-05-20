@@ -168,8 +168,8 @@
    clamp()로 부드러운 스케일링 + 극단적 케이스만 미디어 쿼리
    ============================== */
 
-/* FHD 모니터 (1513px ~ 1919px) - 95% 스케일 */
-@media (max-width: 1919px) and (min-width: 1513px) {
+/* FHD/소형 데스크톱 (1513px ~ 2048px) - 95% 스케일 */
+@media (max-width: 2048px) and (min-width: 1513px) {
   :root {
     /* 폰트 크기 95% */
     --font-size-xs: 11px;
@@ -207,6 +207,11 @@
 
     /* 컨피규레이터 헤더 95% */
     --configurator-header-height: 53px;
+
+    /* 1920px 윈도우에서 좌우 패널이 과하게 커지지 않도록 맥북 체감 폭에 맞춤 */
+    --sidebar-icon-width: clamp(48px, 3vw, 58px);
+    --sidebar-content-width: clamp(180px, 12vw, 240px);
+    --right-panel-width: clamp(220px, 14vw, 300px);
   }
 }
 
