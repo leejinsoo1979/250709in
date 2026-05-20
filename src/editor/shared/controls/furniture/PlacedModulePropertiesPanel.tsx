@@ -4360,13 +4360,81 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
+            // 천장 ~ 가구 상단 거리, 가구 하단 ~ 바닥 거리 (mm)
+            //   - 천장: spaceInfo.height (단내림/stepCeiling은 위 useEffect에서 보정된 placedBodyHeight 사용)
+            //   - 가구 상단 = placedBodyHeight + 걸레받이높이(개별띄움 포함)
+            //   - 가구 하단 = 걸레받이높이(개별띄움 포함)
+            const ceilingMm = (() => {
+              let h = spaceInfo.height;
+              if (spaceInfo.droppedCeiling?.enabled) {
+                if (currentPlacedModule.zone === 'dropped') h = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
+              }
+              return h;
+            })();
+            const topFrameMm = currentPlacedModule.hasTopFrame === false ? 0 : (currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+            const baseFrameMm = currentPlacedModule.hasBase === false
+              ? (currentPlacedModule.individualFloatHeight ?? 0)
+              : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+            const bodyHmm = placedBodyHeight || moduleData?.dimensions.height || 0;
+            // 가구 상단 Y(바닥 기준) = baseFrameMm + bodyHmm
+            // 천장 ~ 가구 상단 거리 = ceiling - (baseFrameMm + bodyHmm)
+            const ceilingToBodyTopMm = Math.max(0, ceilingMm - (baseFrameMm + bodyHmm));
+            // 가구 하단 ~ 바닥 = baseFrameMm
+            const bodyBottomToFloorMm = Math.max(0, baseFrameMm);
+
+            const ceilingFloorMode = !!(currentPlacedModule as any)._doorGapRefCF;
+            const toggleRefMode = () => {
+              updatePlacedModule(currentPlacedModule.id, { _doorGapRefCF: !ceilingFloorMode } as any);
+            };
+            // 표시값: 천장/바닥 기준이면 (천장~가구상단 + topGap) / (가구하단~바닥 + bottomGap)
+            const displayTopGap = ceilingFloorMode
+              ? String(Math.round((parseFloat(doorTopGapInput) || 0) + ceilingToBodyTopMm))
+              : doorTopGapInput;
+            const displayBottomGap = ceilingFloorMode
+              ? String(Math.round((parseFloat(doorBottomGapInput) || 0) + bodyBottomToFloorMm))
+              : doorBottomGapInput;
+            const onTopChange = (v: string) => {
+              if (!ceilingFloorMode) return handleDoorTopGapChange(v);
+              // 천장/바닥 기준 입력값을 몸통 기준으로 변환해 저장
+              const num = parseFloat(v) || 0;
+              handleDoorTopGapChange(String(Math.round(num - ceilingToBodyTopMm)));
+            };
+            const onBotChange = (v: string) => {
+              if (!ceilingFloorMode) return handleDoorBottomGapChange(v);
+              const num = parseFloat(v) || 0;
+              handleDoorBottomGapChange(String(Math.round(num - bodyBottomToFloorMm)));
+            };
+
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>
                   <span style={{ color: 'var(--theme-primary, #10b981)', marginRight: '4px' }}>●</span>
                   도어 셋팅
-                  <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title="도어와 가구 상단/하단 사이의 간격 (mm). 0이면 공간 천장/바닥 기준.">ⓘ</span>
+                  <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title={ceilingFloorMode ? '도어와 천장/바닥 사이의 거리 (mm)' : '도어와 가구 상단/하단 사이의 간격 (mm)'}>ⓘ</span>
                 </h5>
+                {/* 기준 토글 (몸통 ↔ 천장/바닥) */}
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => { if (ceilingFloorMode) toggleRefMode(); }}
+                    style={{
+                      flex: 1, padding: '4px 8px', fontSize: '11px',
+                      background: !ceilingFloorMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
+                      color: !ceilingFloorMode ? 'white' : 'var(--theme-text-primary)',
+                      border: '1px solid var(--theme-border)', borderRadius: '4px', cursor: 'pointer', fontWeight: 600,
+                    }}
+                  >몸통 기준</button>
+                  <button
+                    type="button"
+                    onClick={() => { if (!ceilingFloorMode) toggleRefMode(); }}
+                    style={{
+                      flex: 1, padding: '4px 8px', fontSize: '11px',
+                      background: ceilingFloorMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
+                      color: ceilingFloorMode ? 'white' : 'var(--theme-text-primary)',
+                      border: '1px solid var(--theme-border)', borderRadius: '4px', cursor: 'pointer', fontWeight: 600,
+                    }}
+                  >천장/바닥 기준</button>
+                </div>
                 {/* 도어 헤더 행: 도어 N */}
                 <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>
                   {Array.from({ length: doorCount }, (_, i) => `도어 ${i + 1}`).join(' / ')}
@@ -4378,8 +4446,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={doorTopGapInput}
-                      onChange={(e) => handleDoorTopGapChange(e.target.value)}
+                      value={displayTopGap}
+                      onChange={(e) => onTopChange(e.target.value)}
                       onBlur={handleDoorTopGapBlur}
                       onKeyDown={handleDoorTopGapKeyDown}
                       className={styles.depthInput}
@@ -4395,8 +4463,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={doorBottomGapInput}
-                      onChange={(e) => handleDoorBottomGapChange(e.target.value)}
+                      value={displayBottomGap}
+                      onChange={(e) => onBotChange(e.target.value)}
                       onBlur={handleDoorBottomGapBlur}
                       onKeyDown={handleDoorBottomGapKeyDown}
                       className={styles.depthInput}

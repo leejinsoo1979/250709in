@@ -3179,7 +3179,7 @@ const Room: React.FC<RoomProps> = ({
             return (
               <>
                 {lines.length > 0 && (
-                  <lineSegments renderOrder={20}>
+                  <lineSegments renderOrder={-50}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[positions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
@@ -3188,13 +3188,12 @@ const Room: React.FC<RoomProps> = ({
                       vertexColors
                       depthTest={true}
                       depthWrite={false}
-                      transparent={softenSpaceLines}
-                      opacity={softenSpaceLines ? spaceLineTone.lineOpacity : 1}
+                      transparent={false}
                     />
                   </lineSegments>
                 )}
                 {solidThemePositions && solidThemeColors && (
-                  <lineSegments key={`corner-lines-${solidThemeLines.length}-${extendedPanelDepth.toFixed(3)}`} renderOrder={1000}>
+                  <lineSegments key={`corner-lines-${solidThemeLines.length}-${extendedPanelDepth.toFixed(3)}`} renderOrder={-50}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[solidThemeColors, 3]} />
@@ -3203,8 +3202,7 @@ const Room: React.FC<RoomProps> = ({
                       vertexColors
                       depthTest={true}
                       depthWrite={false}
-                      transparent
-                      opacity={softenSpaceLines ? spaceLineTone.cornerOpacity : 1}
+                      transparent={false}
                     />
                   </lineSegments>
                 )}
