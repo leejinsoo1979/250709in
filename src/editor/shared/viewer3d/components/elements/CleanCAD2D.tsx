@@ -11241,9 +11241,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           );
         })()}
 
-        {/* 도어 치수 표시 - 도어가 실제로 설치된 캐비넷에만 표시 */}
-        {/* 도어 치수 표시 비활성화 */}
-        {false && placedModules.length > 0 && placedModules.filter(module => {
+        {/* 도어 치수 표시 - 3D에서 도어가 실제로 설치된 캐비넷에만 표시 */}
+        {is3DMode && showDimensions && placedModules.length > 0 && placedModules.filter(module => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -11260,6 +11259,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           // 도어가 없으면 표시하지 않음
           if (!moduleData || !moduleData.hasDoor) return null;
+          const dimensionColor = primaryColor;
           
           const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
           // 자유배치 가구는 freeWidth 우선, 기둥 조정 너비 사용
@@ -11772,8 +11772,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ? (module.slotIndex !== undefined ? (indexing3D.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
           : module.position.x;
         const showOnLeftSide = cxX3D < 0;
-        // 치수선 X 위치: 가구 측면에서 80mm 떨어진 곳 (탑뷰 좌측뷰와 동일 간격)
-        const sideOffsetMm = 80;
+        const hasInstalledDoor3D = !!moduleData.hasDoor && !!module.hasDoor;
+        // 치수선 X 위치: 도어가 있으면 도어 치수와 겹치지 않도록 좌/우측으로 조금 더 뺀다.
+        const sideOffsetMm = hasInstalledDoor3D ? 120 : 80;
         const sideX = showOnLeftSide
           ? (cxX3D - halfWidth - mmToThreeUnits(sideOffsetMm))
           : (cxX3D + halfWidth + mmToThreeUnits(sideOffsetMm));

@@ -2492,14 +2492,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineLength = mmToThreeUnits(110);
                 const tickSize = 0.008;
                 const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
-                const dimColor = is3D ? '#000000' : dimensionColor;
+                const dimColor = dimensionColor;
 
                 const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
                 const extensionStart = -doorHeight / 2 - extensionLineStart;
 
                 return (
                   <>
-                    {!is3D && doorHeightDimensionSides.left && (
+                    {(is3D || doorHeightDimensionSides.left) && (
                     <>
                     <NativeLine name="door-dimension-height" points={[
                       [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
@@ -2923,7 +2923,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineLength = mmToThreeUnits(110);
                 const tickSize = 0.008;
                 const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
-                const dimColor = is3D ? '#000000' : dimensionColor;
+                const dimColor = dimensionColor;
 
                 const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
                 const extensionStart = -doorHeight / 2 - extensionLineStart;
@@ -3644,16 +3644,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               const extensionLineLength = mmToThreeUnits(110);
               const tickSize = 0.008;
               const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
-              const dimColor = is3D ? '#000000' : dimensionColor;
+              const dimColor = dimensionColor;
 
               const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
               const extensionStart = -doorHeight / 2 - extensionLineStart;
 
               return (
                 <>
-                  {!is3D && (doorHeightDimensionSides.left || doorHeightDimensionSides.right) && (
+                  {(is3D || doorHeightDimensionSides.left || doorHeightDimensionSides.right) && (
                   <>
-                  {doorHeightDimensionSides.left && (
+                  {(is3D || doorHeightDimensionSides.left) && (
                     <NativeLine
                       name="door-dimension-height"
                       points={[
@@ -3669,7 +3669,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     />
                   )}
 
-                  {doorHeightDimensionSides.right && (
+                  {!is3D && doorHeightDimensionSides.right && (
                     <NativeLine
                       name="door-dimension-height"
                       points={[
@@ -3686,11 +3686,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
 
                   {[
-                    ...(doorHeightDimensionSides.left ? [
+                    ...((is3D || doorHeightDimensionSides.left) ? [
                       [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2],
                       [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2]
                     ] : []),
-                    ...(doorHeightDimensionSides.right ? [
+                    ...((!is3D && doorHeightDimensionSides.right) ? [
                       [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2],
                       [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2]
                     ] : [])
@@ -3708,7 +3708,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     />
                   ))}
 
-                  {doorHeightDimensionSides.left && (
+                  {(is3D || doorHeightDimensionSides.left) && (
                     <>
                       <NativeLine
                         name="door-dimension-height"
@@ -3745,7 +3745,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     </>
                   )}
 
-                  {doorHeightDimensionSides.right && (
+                  {!is3D && doorHeightDimensionSides.right && (
                     <>
                       <NativeLine
                         name="door-dimension-height"
