@@ -4399,12 +4399,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const onTopChange = (v: string) => {
               if (!ceilingFloorMode) return handleDoorTopGapChange(v);
               // 천장 기준 입력값을 몸통 기준으로 변환: 몸통 = 천장~가구상단 - 천장기준
-              const num = parseFloat(v) || 0;
+              // 천장 뚫고 올라갈 수 없으니 0 ≤ v ≤ ceilingToBodyTopMm
+              const raw = parseFloat(v);
+              if (isNaN(raw)) return handleDoorTopGapChange(v);
+              const num = Math.max(0, Math.min(ceilingToBodyTopMm, raw));
               handleDoorTopGapChange(String(Math.round(ceilingToBodyTopMm - num)));
             };
             const onBotChange = (v: string) => {
               if (!ceilingFloorMode) return handleDoorBottomGapChange(v);
-              const num = parseFloat(v) || 0;
+              // 바닥 뚫고 내려갈 수 없으니 0 ≤ v ≤ bodyBottomToFloorMm
+              const raw = parseFloat(v);
+              if (isNaN(raw)) return handleDoorBottomGapChange(v);
+              const num = Math.max(0, Math.min(bodyBottomToFloorMm, raw));
               handleDoorBottomGapChange(String(Math.round(bodyBottomToFloorMm - num)));
             };
 
