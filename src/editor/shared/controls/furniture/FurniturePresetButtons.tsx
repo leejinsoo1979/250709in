@@ -49,8 +49,8 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
     fields: ['customConfig', 'customSections'],
   },
   {
-    id: 'safetyShelf',
-    label: '안전선반 옵션',
+    id: 'rodShelf',
+    label: '옷봉선반 옵션',
     fields: ['removeSafetyShelf'],
   },
   {
