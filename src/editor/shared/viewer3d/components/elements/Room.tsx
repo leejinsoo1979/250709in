@@ -1254,7 +1254,7 @@ const Room: React.FC<RoomProps> = ({
       topBottomFrameHeightMm,
       baseFrameHeightMm
     };
-  }, [isSpaceInfoValid, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, spaceInfo?.installType, spaceInfo?.surroundType, spaceInfo?.baseConfig, spaceInfo?.floorFinish, spaceInfo?.frameSize, spaceInfo?.wallConfig, placedModules, placedModulesFromStore]);
+  }, [isSpaceInfoValid, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, spaceInfo?.installType, spaceInfo?.surroundType, spaceInfo?.baseConfig, spaceInfo?.hasFloorFinish, spaceInfo?.floorFinish, spaceInfo?.floorFinish?.height, spaceInfo?.frameSize, spaceInfo?.wallConfig, placedModules, placedModulesFromStore]);
 
   const {
     width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
