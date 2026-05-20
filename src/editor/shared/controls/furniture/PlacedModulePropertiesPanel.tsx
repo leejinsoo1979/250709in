@@ -4386,23 +4386,28 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const toggleRefMode = () => {
               updatePlacedModule(currentPlacedModule.id, { _doorGapRefCF: !ceilingFloorMode } as any);
             };
-            // 표시값: 천장/바닥 기준이면 (천장~가구상단 + topGap) / (가구하단~바닥 + bottomGap)
+            // 표시값(천장/바닥 기준): 도어 상/하단이 천장/바닥에서 얼마나 떨어져 있는지 부호 포함.
+            //   - 상단갭(천장 기준) = doorTopGap(몸통) - 천장~가구상단 거리
+            //     양수=도어가 천장 위로 솟구침, 음수=도어가 천장 아래 (일반적으로 음수)
+            //   - 하단갭(바닥 기준) = doorBottomGap(몸통) - 가구하단~바닥 거리
+            //     양수=도어가 바닥 아래로 내려감, 음수=도어가 바닥 위 (일반적으로 음수)
+            //   예: 걸레받이 65, 몸통 기준 하단갭 25 → 바닥 기준 = 25 - 65 = -40
             const displayTopGap = ceilingFloorMode
-              ? String(Math.round((parseFloat(doorTopGapInput) || 0) + ceilingToBodyTopMm))
+              ? String(Math.round((parseFloat(doorTopGapInput) || 0) - ceilingToBodyTopMm))
               : doorTopGapInput;
             const displayBottomGap = ceilingFloorMode
-              ? String(Math.round((parseFloat(doorBottomGapInput) || 0) + bodyBottomToFloorMm))
+              ? String(Math.round((parseFloat(doorBottomGapInput) || 0) - bodyBottomToFloorMm))
               : doorBottomGapInput;
             const onTopChange = (v: string) => {
               if (!ceilingFloorMode) return handleDoorTopGapChange(v);
-              // 천장/바닥 기준 입력값을 몸통 기준으로 변환해 저장
+              // 천장 기준 입력값을 몸통 기준으로 변환: 몸통 = 천장기준 + ceilingToBodyTop
               const num = parseFloat(v) || 0;
-              handleDoorTopGapChange(String(Math.round(num - ceilingToBodyTopMm)));
+              handleDoorTopGapChange(String(Math.round(num + ceilingToBodyTopMm)));
             };
             const onBotChange = (v: string) => {
               if (!ceilingFloorMode) return handleDoorBottomGapChange(v);
               const num = parseFloat(v) || 0;
-              handleDoorBottomGapChange(String(Math.round(num - bodyBottomToFloorMm)));
+              handleDoorBottomGapChange(String(Math.round(num + bodyBottomToFloorMm)));
             };
 
             return (

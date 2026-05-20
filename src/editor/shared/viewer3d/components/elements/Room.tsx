@@ -2167,16 +2167,15 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
-                      <lineSegments renderOrder={1001}>
+                      <lineSegments renderOrder={-50}>
                         <bufferGeometry>
                           <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
                           <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
                         </bufferGeometry>
                         <lineBasicMaterial
                           vertexColors
-                          transparent
-                          opacity={spaceLineTone.cornerOpacity}
-                          depthTest={false}
+                          transparent={false}
+                          depthTest={true}
                           depthWrite={false}
                         />
                       </lineSegments>
@@ -2311,16 +2310,15 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
-                      <lineSegments renderOrder={1001}>
+                      <lineSegments renderOrder={-50}>
                         <bufferGeometry>
                           <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
                           <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
                         </bufferGeometry>
                         <lineBasicMaterial
                           vertexColors
-                          transparent
-                          opacity={spaceLineTone.cornerOpacity}
-                          depthTest={false}
+                          transparent={false}
+                          depthTest={true}
                           depthWrite={false}
                         />
                       </lineSegments>
