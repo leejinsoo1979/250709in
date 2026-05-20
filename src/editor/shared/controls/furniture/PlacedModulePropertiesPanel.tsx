@@ -4360,26 +4360,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
-            // 천장 ~ 가구 상단 거리, 가구 하단 ~ 바닥 거리 (mm)
-            //   - 천장: spaceInfo.height (단내림/stepCeiling은 위 useEffect에서 보정된 placedBodyHeight 사용)
-            //   - 가구 상단 = placedBodyHeight + 걸레받이높이(개별띄움 포함)
-            //   - 가구 하단 = 걸레받이높이(개별띄움 포함)
-            const ceilingMm = (() => {
-              let h = spaceInfo.height;
-              if (spaceInfo.droppedCeiling?.enabled) {
-                if (currentPlacedModule.zone === 'dropped') h = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
-              }
-              return h;
-            })();
-            const topFrameMm = currentPlacedModule.hasTopFrame === false ? 0 : (currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+            // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 바닥 거리 = 걸레받이 높이
+            //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
+            const topFrameMm = currentPlacedModule.hasTopFrame === false
+              ? 0
+              : (currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
             const baseFrameMm = currentPlacedModule.hasBase === false
               ? (currentPlacedModule.individualFloatHeight ?? 0)
               : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-            const bodyHmm = placedBodyHeight || moduleData?.dimensions.height || 0;
-            // 가구 상단 Y(바닥 기준) = baseFrameMm + bodyHmm
-            // 천장 ~ 가구 상단 거리 = ceiling - (baseFrameMm + bodyHmm)
-            const ceilingToBodyTopMm = Math.max(0, ceilingMm - (baseFrameMm + bodyHmm));
-            // 가구 하단 ~ 바닥 = baseFrameMm
+            const ceilingToBodyTopMm = Math.max(0, topFrameMm);
             const bodyBottomToFloorMm = Math.max(0, baseFrameMm);
 
             // 천장/바닥 기준 표시값: 도어와 천장/바닥 사이의 실제 거리 (양수)

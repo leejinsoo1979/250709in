@@ -683,9 +683,17 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       }
 
       const uiStateSnapshot = useUIStore.getState();
+      const key = e.key.toLowerCase();
+      const code = e.code;
+      const isModKey = e.ctrlKey || e.metaKey;
+      const isUndoShortcut = isModKey && !e.shiftKey && (code === 'KeyZ' || key === 'z');
+      const isRedoShortcut = isModKey && (
+        (e.shiftKey && (code === 'KeyZ' || key === 'z')) ||
+        (!e.shiftKey && (code === 'KeyY' || key === 'y'))
+      );
 
       // Ctrl+Z / Cmd+Z : Undo (측정 모드가 아니고 편집 입력 포커스가 없을 때)
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.code === 'KeyZ') {
+      if (isUndoShortcut) {
         if (!uiStateSnapshot.isMeasureMode) {
           e.preventDefault();
           e.stopPropagation();
@@ -700,8 +708,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       }
 
       // Ctrl+Shift+Z / Cmd+Shift+Z or Ctrl+Y : Redo
-      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyZ') ||
-        ((e.ctrlKey || e.metaKey) && e.code === 'KeyY')) {
+      if (isRedoShortcut) {
         if (!uiStateSnapshot.isMeasureMode) {
           e.preventDefault();
           e.stopPropagation();

@@ -693,26 +693,19 @@ const Configurator: React.FC = () => {
   const [doorGapRefMode, setDoorGapRefMode] = useState<'body' | 'cf'>('body');
 
   // 가구별 천장/바닥까지 거리 계산 (천장·바닥 기준 변환용)
-  //   - topDistance: 천장 ~ 가구 상단 거리 (mm)
-  //   - bottomDistance: 가구 하단 ~ 바닥 거리 (mm)
-  //   가구 편집 팝업의 식과 동일하게 계산해야 표시값이 일치함.
+  //   - topDistance: 가구 상단 ~ 천장 사이 거리 = 상단몰딩 두께(topFrameThickness)
+  //   - bottomDistance: 가구 하단 ~ 바닥 거리 = 걸레받이 높이(baseFrameHeight)
+  //   ※ 가구 자체 높이는 공간 - 상단몰딩 - 걸레받이로 자동 계산되므로,
+  //     "가구 상단~천장 거리"는 상단몰딩 두께와 정확히 같음.
   const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
     if (!mod) return { topDistance: 0, bottomDistance: 0 };
-    let ceilingMm = spaceInfo.height;
-    if (spaceInfo.droppedCeiling?.enabled && mod.zone === 'dropped') {
-      ceilingMm = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
-    }
+    const topFrameMm = mod.hasTopFrame === false
+      ? 0
+      : (mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
     const baseFrameMm = mod.hasBase === false
       ? (mod.individualFloatHeight ?? 0)
       : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-    // 가구 몸통 높이: customHeight/freeHeight 우선 → 모듈 데이터 → fallback
-    const internalSp = { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth || 1500 };
-    const moduleData = getModuleById(mod.moduleId, internalSp, spaceInfo);
-    const moduleH = moduleData?.dimensions?.height ?? 0;
-    const bodyHmm = mod.customHeight ?? mod.freeHeight ?? moduleH;
-    const topDistance = Math.max(0, ceilingMm - (baseFrameMm + bodyHmm));
-    const bottomDistance = Math.max(0, baseFrameMm);
-    return { topDistance, bottomDistance };
+    return { topDistance: Math.max(0, topFrameMm), bottomDistance: Math.max(0, baseFrameMm) };
   }, [spaceInfo]);
 
   // 개별 모드: 개별 가구 도어 갭 변경 (전체선택 시 모든 도어에 동일 적용)
@@ -1204,6 +1197,15 @@ const Configurator: React.FC = () => {
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const code = event.code;
+      const isModKey = event.ctrlKey || event.metaKey;
+      const isUndoShortcut = isModKey && !event.shiftKey && (key === 'z' || code === 'KeyZ');
+      const isRedoShortcut = isModKey && (
+        (!event.shiftKey && (key === 'y' || code === 'KeyY')) ||
+        (event.shiftKey && (key === 'z' || code === 'KeyZ'))
+      );
+
       // input 필드에 포커스가 있으면 키보드 단축키 무시
       const activeElement = document.activeElement;
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
@@ -1211,7 +1213,7 @@ const Configurator: React.FC = () => {
       }
 
       // Ctrl+Z / Cmd+Z로 Undo
-      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+      if (isUndoShortcut) {
         event.preventDefault();
         const previousState = historyUndo();
         if (previousState) {
@@ -1223,8 +1225,7 @@ const Configurator: React.FC = () => {
       }
 
       // Ctrl+Y / Cmd+Y 또는 Ctrl+Shift+Z / Cmd+Shift+Z로 Redo
-      if (((event.ctrlKey || event.metaKey) && event.key === 'y') ||
-        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')) {
+      if (isRedoShortcut) {
         event.preventDefault();
         const nextState = historyRedo();
         if (nextState) {
