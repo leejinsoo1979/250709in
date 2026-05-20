@@ -122,15 +122,11 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
     internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;
   }
   
-  // 내경 높이 = 전체 높이 - 상단 프레임 - 받침대
-  // 주의: baseConfig.height(=baseFrameHeight)는 바닥마감재 높이를 이미 포함하고 있으므로
-  // floorFinishHeight를 별도로 빼면 이중 차감됨
+  // 내경 높이 = 전체 높이 - 상단 프레임 - 받침대 - 바닥마감재
+  //   바닥마감재 위에 받침대(걸레받이)가 그대로 얹히므로 두 값을 항상 합산 차감.
   let internalHeight = spaceInfo.height;
-  if (baseFrameHeight > 0) {
-    // 받침대 있음: baseFrameHeight가 이미 floorFinish 포함
-    internalHeight -= baseFrameHeight;
-  } else if (spaceInfo.hasFloorFinish) {
-    // 받침대 없음: floorFinish만 별도 차감
+  internalHeight -= baseFrameHeight;
+  if (spaceInfo.hasFloorFinish) {
     internalHeight -= floorFinishHeight;
   }
   internalHeight -= topFrameHeight;
@@ -184,9 +180,8 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
     depth: internalDepth,
     // 배치 시작 위치
     startX: startX,
-    // baseConfig.height(=baseFrameHeight)는 바닥마감재 높이를 이미 포함
-    // 받침대 있으면 baseFrameHeight만, 없으면 floorFinishHeight만 사용
-    startY: baseFrameHeight > 0 ? baseFrameHeight : floorFinishHeight,
+    // 시작 Y = 바닥마감재 + 받침대 (둘 다 독립적으로 적용)
+    startY: floorFinishHeight + baseFrameHeight,
     startZ: 0
   };
 };
