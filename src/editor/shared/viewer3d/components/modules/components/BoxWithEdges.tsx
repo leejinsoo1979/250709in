@@ -1566,7 +1566,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       if (textureSource.includes('melatone_4319') || textureSource.includes('melatone_8832')) {
         return "#1f5f3a";
       }
-      return isWindowsPlatform ? "#666b72" : "#5a5a5a"; // Windows 저DPR에서는 선 대비를 낮춰 번짐을 줄임
+      return "#5a5a5a"; // 3D 솔리드 모드 기본 윤곽선
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
@@ -2632,8 +2632,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
         const inspectionEdgeActive = false;
         const resolvedEdgeColor = edgeColor;
-        const resolvedEdgeOpacity = isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : (isWindowsPlatform ? 0.52 : 0.65));
-        const resolvedEdgeLineWidth = isHighlighted ? (isWindowsPlatform ? 2 : 3) : 1;
+        const resolvedEdgeOpacity = isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65);
+        const resolvedEdgeLineWidth = isHighlighted ? 3 : 1;
         const resolvedEdgeDepthTest = effectiveRenderMode !== 'wireframe';
 
         // 3D 모드: notch가 있으면 L자형 엣지
