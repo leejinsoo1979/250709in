@@ -6204,6 +6204,7 @@ const Configurator: React.FC = () => {
           const renderSlotFrameRow = (
             label: string, enabled: boolean, sizeMM: number, offset: number,
             onToggle: () => void, onSizeChange: (v: number) => void, onOffsetChange: (v: number) => void, hlKey: string,
+            gap?: number, onGapChange?: (v: number) => void,
           ) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -6261,6 +6262,32 @@ const Configurator: React.FC = () => {
                       className={styles.frameNumberInput}
                     />
                   </div>
+                  {typeof onGapChange === 'function' && (
+                    <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>갭</span>
+                      <input
+                        type="text" inputMode="numeric"
+                        value={(gap ?? 0) !== 0 ? gap : ''} placeholder="0"
+                        onFocus={() => setHighlightedFrame(hlKey)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const delta = e.key === 'ArrowUp' ? 1 : -1;
+                            onGapChange(Math.max(0, Math.min(2000, (gap || 0) + delta)));
+                          }
+                        }}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          if (v === '' || /^\d+$/.test(v)) onGapChange(v === '' ? 0 : parseInt(v, 10));
+                        }}
+                        onBlur={(e) => {
+                          setHighlightedFrame(null);
+                          onGapChange(Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)));
+                        }}
+                        className={styles.frameNumberInput}
+                      />
+                    </div>
+                  )}
                 </div>
               ) : null}
             </div>
@@ -6323,6 +6350,24 @@ const Configurator: React.FC = () => {
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
                         onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || (isLower ? 65 : 0))) }); }}
+                        className={styles.frameNumberInput}
+                      />
+                    </div>
+                    <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                      <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>갭</span>
+                      <input
+                        type="text" inputMode="numeric"
+                        value={((mod as any).baseFrameGap ?? 0) || ''} placeholder="0"
+                        onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            const cur = (mod as any).baseFrameGap ?? 0;
+                            updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(2000, cur + (e.key === 'ArrowUp' ? 1 : -1))) } as any);
+                          }
+                        }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameGap: v === '' ? 0 : parseInt(v, 10) } as any); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)) } as any); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -6586,6 +6631,10 @@ const Configurator: React.FC = () => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
                           },
                           'top-all',
+                          firstTop.topFrameGap ?? 0,
+                          (v) => {
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }));
+                          },
                         );
                         }
                         // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 걸래받이 - 바닥마감재 - 띄움 (실제 빈 공간)
@@ -6659,6 +6708,8 @@ const Configurator: React.FC = () => {
                           (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
                           (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                           `top-${mod.id}`,
+                          mod.topFrameGap ?? 0,
+                          (v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) }),
                         )}</React.Fragment>;
                       })
                     )}
@@ -6710,6 +6761,10 @@ const Configurator: React.FC = () => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
                               },
                               'base-all',
+                              (first as any).baseFrameGap ?? 0,
+                              (v) => {
+                                baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any));
+                              },
                             );
                           }
                           // OFF 상태: 토글 + 띄움 높이 입력

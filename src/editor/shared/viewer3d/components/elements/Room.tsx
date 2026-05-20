@@ -2142,24 +2142,6 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
-                  const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
-                  const wallEdgeBackColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.backMix);
-                  const wallEdgeFrontColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.frontMix);
-                  // 좌벽 로컬 좌표: planeGeometry args=[extendedPanelDepth, height]
-                  // local X = 깊이(=월드 Z), local Y = 높이(=월드 Y)
-                  // Z축 방향 라인 = 좌벽의 위/아래 가로 모서리 (천장-좌벽, 바닥-좌벽 교차선)
-                  const halfD = extendedPanelDepth / 2;
-                  const halfH = height / 2;
-                  const wallEdgePos = new Float32Array([
-                    -halfD, halfH, 0, halfD, halfH, 0,
-                    -halfD, -halfH, 0, halfD, -halfH, 0,
-                  ]);
-                  const wallEdgeColors = new Float32Array([
-                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
-                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
-                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
-                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
-                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2170,19 +2152,6 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
-                      <lineSegments renderOrder={2}>
-                        <bufferGeometry>
-                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
-                          <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
-                        </bufferGeometry>
-                        <lineBasicMaterial
-                          vertexColors
-                          transparent
-                          opacity={spaceLineTone.lineOpacity}
-                          depthTest={true}
-                          depthWrite={false}
-                        />
-                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
@@ -2289,21 +2258,6 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
-                  const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
-                  const wallEdgeBackColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.backMix);
-                  const wallEdgeFrontColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.frontMix);
-                  const halfD = extendedPanelDepth / 2;
-                  const halfH = height / 2;
-                  const wallEdgePos = new Float32Array([
-                    -halfD, halfH, 0, halfD, halfH, 0,
-                    -halfD, -halfH, 0, halfD, -halfH, 0,
-                  ]);
-                  const wallEdgeColors = new Float32Array([
-                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
-                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
-                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
-                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
-                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2314,19 +2268,6 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
-                      <lineSegments renderOrder={2}>
-                        <bufferGeometry>
-                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
-                          <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
-                        </bufferGeometry>
-                        <lineBasicMaterial
-                          vertexColors
-                          transparent
-                          opacity={spaceLineTone.lineOpacity}
-                          depthTest={true}
-                          depthWrite={false}
-                        />
-                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
