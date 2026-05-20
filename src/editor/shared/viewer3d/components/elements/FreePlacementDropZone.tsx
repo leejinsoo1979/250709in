@@ -277,7 +277,7 @@ const FreePlacementDropZone: React.FC = () => {
       });
       if (unlockedSorted.length === 0) return;
 
-      // zone 내 잠긴 영역
+      // zone 내 잠긴 영역만 obstacle로 (기둥은 가구가 옆에 붙어도 폭 줄지 않으므로 제외)
       const clampedLocked = sortedLockedRaw
         .map(r => ({ leftMm: Math.max(zoneStartMm, r.leftMm), rightMm: Math.min(zoneEndMm, r.rightMm) }))
         .filter(r => r.rightMm > r.leftMm)
