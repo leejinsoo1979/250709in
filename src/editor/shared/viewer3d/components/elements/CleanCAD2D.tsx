@@ -6446,12 +6446,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 : Math.min(maxModWidth, Math.floor(totalAvailableMm));
               const newHalfWThree = mmToThreeUnits(newWidthMm) / 2;
 
+              // 그룹 이동 한 칸 폭: 그룹 내 가장 작은 가구의 폭 (좌·우 동일하게 적용)
+              const groupStepBaseMm = isMulti
+                ? Math.min(...groupModules.map(m => (m.freeWidth || m.customWidth || m.moduleWidth || 600)))
+                : currentWidthMm;
               const moveLeft = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  // 그룹 이동: 한 번에 자기 폭만큼만 이동 (한 칸씩).
-                  //   여유 공간(realLeftGapMm)이 한 폭보다 작으면 여유만큼만.
-                  const stepMm = Math.min(currentWidthMm, realLeftGapMm);
+                  const stepMm = Math.min(groupStepBaseMm, realLeftGapMm);
                   if (stepMm <= 0) return;
                   const deltaThree = -mmToThreeUnits(stepMm);
                   groupModules.forEach(m => {
@@ -6471,7 +6473,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moveRight = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  const stepMm = Math.min(currentWidthMm, realRightGapMm);
+                  const stepMm = Math.min(groupStepBaseMm, realRightGapMm);
                   if (stepMm <= 0) return;
                   const deltaThree = mmToThreeUnits(stepMm);
                   groupModules.forEach(m => {
