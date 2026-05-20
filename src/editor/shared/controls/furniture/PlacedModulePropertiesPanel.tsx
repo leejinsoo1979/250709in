@@ -4300,15 +4300,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <input
                           type="text"
-                          inputMode="numeric"
+                          inputMode="decimal"
                           value={(currentPlacedModule as any).doorWidthAdjustMm ?? (insertExtensionMm > 0 ? insertExtensionMm : -1.5)}
                           onChange={(e) => {
                             const v = e.target.value;
-                            // 정수/소수/음수 모두 허용 (-1.5 등)
+                            // 정수/소수/음수 모두 허용 (직접입력 ex. -1.5, 50, 0.3)
                             if (v === '' || v === '-' || /^-?\d*(\.\d*)?$/.test(v)) {
-                              const num = v === '' || v === '-' || v === '.' ? 0 : parseFloat(v);
+                              const num = v === '' || v === '-' || v === '.' || v === '-.' ? 0 : parseFloat(v);
                               if (!isNaN(num)) {
-                                updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, num)) } as any);
+                                // 0.1mm 단위로 반올림
+                                const rounded = Math.round(num * 10) / 10;
+                                updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, rounded)) } as any);
                               }
                             }
                           }}
@@ -4316,11 +4318,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
                               const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? (insertExtensionMm > 0 ? insertExtensionMm : -1.5);
-                              const next = Math.max(-500, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: next } as any);
+                              // 0.1mm 단위 증감 (Shift 누르면 1.0mm 단위)
+                              const step = e.shiftKey ? 1 : 0.1;
+                              const next = Math.round((cur + (e.key === 'ArrowUp' ? step : -step)) * 10) / 10;
+                              updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, next)) } as any);
                             }
                           }}
-                          style={{ width: '60px', padding: '2px 4px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '12px', textAlign: 'right' }}
+                          style={{ width: '70px', padding: '2px 4px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '12px', textAlign: 'right' }}
                         />
                         <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                       </div>
