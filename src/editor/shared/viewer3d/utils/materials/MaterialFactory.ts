@@ -347,9 +347,9 @@ export class MaterialFactory {
         },
         side: THREE.DoubleSide,
         // 페이드 지원 시: transparent + depthWrite=false (블렌딩 가능, 뒷면 가구 비침)
-        // 페이드 미지원 시: 원래대로 불투명 (정상 z-buffer 동작)
+        // 페이드 미지원 시에도 depthWrite=false로 코너 라인이 가려지지 않도록
         transparent: supportFade,
-        depthWrite: !supportFade,
+        depthWrite: false,
         depthTest: true
       });
     }
@@ -444,7 +444,7 @@ export class MaterialFactory {
         },
         side: THREE.DoubleSide,
         transparent: is2DMode, // 2D 모드에서만 투명 처리
-        depthWrite: !is2DMode // 투명이 아닐 때만 depth buffer에 쓰기
+        depthWrite: false // depth buffer에 안 써서 코너 라인이 가려지지 않게 — 가구는 정상 depth로 라인 가림
       });
   }
 

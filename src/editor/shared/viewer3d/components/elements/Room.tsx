@@ -1694,19 +1694,18 @@ const Room: React.FC<RoomProps> = ({
   const extensionDepth = mmToThreeUnits(300);
   // ── 그라데이션 메쉬를 가구 뒷면까지만 당기는 옵션 ──
   // true: 공간 그라데이션(바닥/벽/천장) 뒷쪽 경계가 가구 뒷면에 맞춰 렌더링
-  // false: 공간 전체 깊이 기준
-  const SHRINK_MESH_TO_FURNITURE_BACK = true;
+  // false: 공간 전체 깊이 기준 (메쉬 깊이가 가구 무관 → 공간 깊이만큼 펼쳐짐)
+  const SHRINK_MESH_TO_FURNITURE_BACK = false;
   const BACK_MESH_GAP = mmToThreeUnits(10);
   // 메쉬 전체를 Z축 30mm 뒤로 이동 (깊이는 그대로 유지)
   const MESH_Z_BACK_SHIFT = mmToThreeUnits(30);
+  // 뒷쪽 경계는 항상 가구 뒷면 - 40mm (슬롯 가이드와 일치)
+  // 앞쪽으로만 확장: SHRINK true면 가구 깊이 기반, false면 공간 깊이 기반
   const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK
     ? (furnitureDepth + BACK_MESH_GAP)
     : panelDepth;
   const extendedPanelDepth = meshDepth + extensionDepth;
-  // 뒷쪽 경계: 기존 위치에서 30mm 뒤로 이동 (메쉬 통째로 30mm 뒤로)
-  const extendedZOffset = (SHRINK_MESH_TO_FURNITURE_BACK
-    ? (furnitureZOffset - furnitureDepth / 2 - BACK_MESH_GAP)
-    : zOffset) - MESH_Z_BACK_SHIFT;
+  const extendedZOffset = furnitureZOffset - furnitureDepth / 2 - BACK_MESH_GAP - MESH_Z_BACK_SHIFT;
 
   // 상단/하단 패널의 너비 (좌우 프레임 사이의 공간)
   const topBottomPanelWidth = baseFrame.width;
@@ -2101,6 +2100,28 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
+                  const wallEdgeColor = (() => {
+                    const tcMap: Record<string, string> = {
+                      green: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', vivid: '#a25378',
+                      red: '#D2042D', pink: '#ec4899', indigo: '#6366f1', teal: '#14b8a6',
+                      yellow: '#eab308', gray: '#6b7280', cyan: '#06b6d4', lime: '#84cc16',
+                      black: '#1a1a1a', wine: '#845EC2', gold: '#d97706', navy: '#1e3a8a',
+                      emerald: '#059669', violet: '#C128D7', mint: '#0CBA80', neon: '#18CF23',
+                      rust: '#FF7438', white: '#D65DB1', plum: '#790963', brown: '#5A2B1D',
+                      darkgray: '#2C3844', maroon: '#3F0D0D', turquoise: '#003A7A',
+                      slate: '#2E3A47', copper: '#AD4F34', forest: '#1B3924', olive: '#4C462C'
+                    };
+                    return tcMap[appTheme.color] || '#3b82f6';
+                  })();
+                  // 좌벽 로컬 좌표: planeGeometry args=[extendedPanelDepth, height]
+                  // local X = 깊이(=월드 Z), local Y = 높이(=월드 Y)
+                  // Z축 방향 라인 = 좌벽의 위/아래 가로 모서리 (천장-좌벽, 바닥-좌벽 교차선)
+                  const halfD = extendedPanelDepth / 2;
+                  const halfH = height / 2;
+                  const wallEdgePos = new Float32Array([
+                    -halfD, halfH, 0, halfD, halfH, 0,   // 위 모서리 (천장-좌벽)
+                    -halfD, -halfH, 0, halfD, -halfH, 0, // 아래 모서리 (바닥-좌벽)
+                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2111,6 +2132,13 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
+                      {/* Z축 모서리 라인 (천장-좌벽, 바닥-좌벽 교차) — 메쉬 자식이라 같은 transform */}
+                      <lineSegments renderOrder={2}>
+                        <bufferGeometry>
+                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
+                        </bufferGeometry>
+                        <lineBasicMaterial color="#888888" />
+                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
@@ -2948,10 +2976,10 @@ const Room: React.FC<RoomProps> = ({
                 const _cbSL = hasCBStandalone && cbIsLeft;
                 if (dcIsLeft && _cbSL) leftCY2 = cY + cbDropHLine;
                 else if (dcIsLeft) leftCY2 = cY - dcDropH;
-                else if (_cbSL) leftCY2 = cY + cbDropHLine;               // CB (단독 또는 DC 반대쪽)
+                else if (_cbSL) leftCY2 = cY + cbDropHLine;
               }
-              solidThemeLines.push([x1, leftCY2, z1, x1, leftCY2, z2]); // 좌벽-천장 z축
-              solidThemeLines.push([x1, fY, z1, x1, fY, z2]);           // 좌벽-바닥 z축
+              solidThemeLines.push([x1, leftCY2, z1, x1, leftCY2, z2]); // 좌벽-천장
+              solidThemeLines.push([x1, fY, z1, x1, fY, z2]); // 좌벽-바닥
             }
             // 우벽-천장, 우벽-바닥 z축 라인
             if (hasRW) {
@@ -2963,10 +2991,10 @@ const Room: React.FC<RoomProps> = ({
                 const _cbSR = hasCBStandalone && cbIsRight;
                 if (dcIsRight && _cbSR) rightCY2 = cY + cbDropHLine;
                 else if (dcIsRight) rightCY2 = cY - dcDropH;
-                else if (_cbSR) rightCY2 = cY + cbDropHLine;              // CB (단독 또는 DC 반대쪽)
+                else if (_cbSR) rightCY2 = cY + cbDropHLine;
               }
-              solidThemeLines.push([x2, rightCY2, z1, x2, rightCY2, z2]); // 우벽-천장 z축
-              solidThemeLines.push([x2, fY, z1, x2, fY, z2]);             // 우벽-바닥 z축
+              solidThemeLines.push([x2, rightCY2, z1, x2, rightCY2, z2]); // 우벽-천장
+              solidThemeLines.push([x2, fY, z1, x2, fY, z2]); // 우벽-바닥
             }
 
             // === 단내림 천장 메쉬 z축 앞면(z=z2) 윤곽선 ===
@@ -3043,10 +3071,36 @@ const Room: React.FC<RoomProps> = ({
 
             // 단내림 뒷벽 실선 (그라데이션 없이 테마색상 단색)
             let solidThemePositions: Float32Array | null = null;
+            let solidThemeColors: Float32Array | null = null;
             if (solidThemeLines.length > 0) {
               solidThemePositions = new Float32Array(solidThemeLines.length * 6);
+              solidThemeColors = new Float32Array(solidThemeLines.length * 6);
+              // 라인 endpoint별 색상 계산: z가 z1(뒷벽)에 가까우면 진하게, z2(앞쪽)에 가까우면 흐리게
+              const zStart = extendedZOffset;
+              const zEnd = extendedZOffset + extendedPanelDepth;
+              const zRange = Math.max(0.0001, zEnd - zStart);
+              // 회색 베이스: 뒷벽 #555 (진한 회색) → 앞쪽 #cccccc (흐린 회색)
+              const baseGray = new THREE.Color('#555555');
+              const baseR = baseGray.r;
+              const baseG = baseGray.g;
+              const baseB = baseGray.b;
+              // 앞쪽으로 갈수록 흰색에 섞이는 비율
+              const fadeWhiteMax = 0.7;
               solidThemeLines.forEach((line, i) => {
                 for (let j = 0; j < 6; j++) solidThemePositions![i * 6 + j] = line[j];
+                // 각 endpoint의 z값으로 진하기 결정 (z1 → 0, z2 → 1)
+                const z_a = line[2];
+                const z_b = line[5];
+                const tA = Math.min(1, Math.max(0, (z_a - zStart) / zRange));
+                const tB = Math.min(1, Math.max(0, (z_b - zStart) / zRange));
+                const wA = tA * fadeWhiteMax;
+                const wB = tB * fadeWhiteMax;
+                solidThemeColors![i * 6 + 0] = baseR * (1 - wA) + 1 * wA;
+                solidThemeColors![i * 6 + 1] = baseG * (1 - wA) + 1 * wA;
+                solidThemeColors![i * 6 + 2] = baseB * (1 - wA) + 1 * wA;
+                solidThemeColors![i * 6 + 3] = baseR * (1 - wB) + 1 * wB;
+                solidThemeColors![i * 6 + 4] = baseG * (1 - wB) + 1 * wB;
+                solidThemeColors![i * 6 + 5] = baseB * (1 - wB) + 1 * wB;
               });
             }
 
@@ -3061,12 +3115,18 @@ const Room: React.FC<RoomProps> = ({
                     <lineBasicMaterial vertexColors depthTest={true} depthWrite={false} />
                   </lineSegments>
                 )}
-                {solidThemePositions && (
-                  <lineSegments renderOrder={20}>
+                {solidThemePositions && solidThemeColors && (
+                  <lineSegments key={`corner-lines-${solidThemeLines.length}-${extendedPanelDepth.toFixed(3)}`} renderOrder={1000}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
+                      <bufferAttribute attach="attributes-color" args={[solidThemeColors, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={edgeColor} depthTest={true} depthWrite={false} />
+                    <lineBasicMaterial
+                      vertexColors
+                      depthTest={true}
+                      depthWrite={false}
+                      transparent
+                    />
                   </lineSegments>
                 )}
               </>
