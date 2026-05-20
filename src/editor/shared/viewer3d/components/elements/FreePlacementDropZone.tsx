@@ -300,10 +300,15 @@ const FreePlacementDropZone: React.FC = () => {
       if (totalUnits === 0) return;
 
       const totalAvailable = gaps.reduce((s, g) => s + g.widthMm, 0);
+      // 가용공간을 unit 수로 정확히 나눔. MAX 캡을 강제하지 않아 합이 가용공간을 정확히 채움
       const exactUnitWidth = totalAvailable / totalUnits;
-      const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
-      const singleW = Math.min(Math.round(cappedUnitWidth), MAX_SINGLE);
-      const dualW = Math.min(singleW * 2, MAX_DUAL);
+      const singleW = Math.floor(exactUnitWidth);
+      // 잔여(소수점)는 듀얼이 흡수하여 총합 = totalAvailable
+      const dualCount = isDualArr.filter(d => d).length;
+      const singleCount = isDualArr.length - dualCount;
+      const dualW = dualCount > 0
+        ? Math.floor((totalAvailable - singleW * singleCount) / dualCount)
+        : 0;
 
       // 가구 폭 배열
       const widths = isDualArr.map(d => (d ? dualW : singleW));
