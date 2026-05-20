@@ -129,6 +129,11 @@ export const useFurnitureKeyboard = ({
         
         // slotCustomWidth가 설정된 가구는 좌우 이동 차단
         const hasSlotCustomWidth = editingModule.slotCustomWidth !== undefined;
+        const excludedMovingModuleIds = editingModule.groupId
+          ? placedModules
+            .filter(module => module.groupId === editingModule.groupId)
+            .map(module => module.id)
+          : editingModule.id;
 
         switch (e.key) {
           case 'Delete':
@@ -162,7 +167,7 @@ export const useFurnitureKeyboard = ({
               placedModules,
               spaceInfo,
               editingModule.moduleId,
-              targetModuleId, // excludeModuleId로 전달
+              excludedMovingModuleIds, // 같은 그룹은 이동 중 빈 슬롯처럼 취급
               editingModule.zone // 현재 zone 유지
             );
 // console.log('⌨️ ArrowLeft 결과:', { nextSlot });
@@ -298,7 +303,7 @@ export const useFurnitureKeyboard = ({
               placedModules,
               spaceInfo,
               editingModule.moduleId,
-              targetModuleId, // excludeModuleId로 전달
+              excludedMovingModuleIds, // 같은 그룹은 이동 중 빈 슬롯처럼 취급
               editingModule.zone // 현재 zone 유지
             );
 // console.log('⌨️ ArrowRight 결과:', { nextSlot });
@@ -440,6 +445,61 @@ export const useFurnitureKeyboard = ({
           const selectedModule = placedModules.find(m => m.id === selectedPlacedModuleId);
           if (!selectedModule) return;
 
+          // 그룹 묶인 가구 다중선택 시: 그룹 전체를 한 슬롯씩 같은 방향으로 동시 이동.
+          //   - 그룹 멤버끼리는 충돌 검사 대상에서 제외
+          //   - 끝 가구가 막혔으면 그룹 전체 이동 안 함 (한 슬롯만 이동)
+          if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !selectedModule.isFreePlacement) {
+            const uiSelectedIds = useUIStore.getState().selectedFurnitureIds || [];
+            const groupIds = selectedModule.groupId
+              ? placedModules.filter(m => m.groupId === selectedModule.groupId).map(m => m.id)
+              : (uiSelectedIds.length >= 2 ? uiSelectedIds : []);
+            if (groupIds.length >= 2) {
+              const groupMembers = placedModules.filter(m => groupIds.includes(m.id) && !m.isFreePlacement);
+              if (groupMembers.length >= 2) {
+                const dir: 'left' | 'right' = e.key === 'ArrowLeft' ? 'left' : 'right';
+                // 그룹 내에서 진행 방향 끝 가구 (left면 가장 작은 slotIndex, right면 가장 큰)
+                const edgeMod = groupMembers.reduce((acc, m) => {
+                  const ai = acc.slotIndex ?? 0;
+                  const mi = m.slotIndex ?? 0;
+                  if (dir === 'left') return mi < ai ? m : acc;
+                  return mi > ai ? m : acc;
+                }, groupMembers[0]);
+                const edgeIdx = edgeMod.slotIndex ?? 0;
+                const targetIdx = edgeIdx + (dir === 'left' ? -1 : 1);
+                // 슬롯 범위 체크
+                const slotCount = indexing.threeUnitPositions.length;
+                if (targetIdx < 0 || targetIdx >= slotCount) { e.preventDefault(); return; }
+                // 그룹 외부 가구 중 targetIdx 점유 여부 확인
+                const occupiedByOther = placedModules.some(m => {
+                  if (groupIds.includes(m.id)) return false;
+                  if (m.isFreePlacement) return false;
+                  const mi = m.slotIndex ?? -1;
+                  const isDualM = m.isDualSlot ?? m.moduleId?.includes('dual-');
+                  if (isDualM) return mi === targetIdx || mi + 1 === targetIdx;
+                  return mi === targetIdx;
+                });
+                if (occupiedByOther) { e.preventDefault(); return; }
+                // 그룹 전체를 한 슬롯씩 이동 (각 가구 slotIndex ± 1, position.x도 그에 맞게)
+                const deltaSlot = dir === 'left' ? -1 : 1;
+                groupMembers.forEach(m => {
+                  if ((m as any).isLocked) return;
+                  const newSlot = (m.slotIndex ?? 0) + deltaSlot;
+                  const isDualM = m.isDualSlot ?? m.moduleId?.includes('dual-');
+                  const newX = isDualM && indexing.threeUnitDualPositions
+                    ? indexing.threeUnitDualPositions[newSlot]
+                    : indexing.threeUnitPositions[newSlot];
+                  if (newX === undefined) return;
+                  updatePlacedModule(m.id, {
+                    position: { x: newX, y: m.position.y, z: m.position.z },
+                    slotIndex: newSlot,
+                  });
+                });
+                e.preventDefault();
+                return;
+              }
+            }
+          }
+
           // 자유배치 가구는 FreePlacementDropZone에서 실제 좌표 기준으로 이동 처리한다.
           // 슬롯 이동 훅이 이전 selectedPlacedModuleId를 잡고 있으면 엉뚱한 가구가 움직일 수 있다.
           if (selectedModule.isFreePlacement) {
@@ -479,6 +539,11 @@ export const useFurnitureKeyboard = ({
           
           // slotCustomWidth가 설정된 가구는 좌우 이동 차단
           const hasSlotCustomWidth2 = selectedModule.slotCustomWidth !== undefined;
+          const excludedMovingModuleIds = selectedModule.groupId
+            ? placedModules
+              .filter(module => module.groupId === selectedModule.groupId)
+              .map(module => module.id)
+            : selectedModule.id;
 
           switch (e.key) {
             case 'Delete':
@@ -504,7 +569,7 @@ export const useFurnitureKeyboard = ({
                 placedModules,
                 spaceInfo,
                 selectedModule.moduleId,
-                selectedPlacedModuleId // excludeModuleId로 전달
+                excludedMovingModuleIds // 같은 그룹은 이동 중 빈 슬롯처럼 취급
               );
 
               if (nextSlot !== null) {
@@ -603,7 +668,7 @@ export const useFurnitureKeyboard = ({
                 placedModules,
                 spaceInfo,
                 selectedModule.moduleId,
-                selectedPlacedModuleId // excludeModuleId로 전달
+                excludedMovingModuleIds // 같은 그룹은 이동 중 빈 슬롯처럼 취급
               );
 
               if (nextSlot !== null) {

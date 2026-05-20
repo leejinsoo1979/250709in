@@ -13,7 +13,7 @@ import { isCustomizableModuleId, getCustomizableCategory } from '@/editor/shared
  * @param placedModules 현재 배치된 가구 목록
  * @param spaceInfo 공간 정보
  * @param moduleId 배치하려는 가구의 모듈 ID
- * @param excludeModuleId 제외할 모듈 ID (자기 자신)
+ * @param excludeModuleId 제외할 모듈 ID (자기 자신 또는 같은 그룹)
  * @returns 슬롯 사용 가능 여부
  */
 export const isSlotAvailable = (
@@ -22,7 +22,7 @@ export const isSlotAvailable = (
   placedModules: PlacedModule[],
   spaceInfo: SpaceInfo,
   moduleId: string,
-  excludeModuleId?: string,
+  excludeModuleId?: string | string[],
   targetZone?: 'normal' | 'dropped'
 ): boolean => {
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -63,6 +63,14 @@ export const isSlotAvailable = (
   const totalZoneColumnCount = zoneInfo
     ? (zoneInfo.normal?.columnCount ?? 0) + (zoneInfo.dropped?.columnCount ?? 0)
     : indexing.columnCount;
+  const excludedModuleIds = new Set(
+    Array.isArray(excludeModuleId)
+      ? excludeModuleId
+      : excludeModuleId
+        ? [excludeModuleId]
+        : []
+  );
+  const isExcludedModule = (moduleIdToCheck: string) => excludedModuleIds.has(moduleIdToCheck);
 
   // targetZone이 지정된 경우 해당 zone의 columnCount로 범위 체크
   // (slotIndex가 zone 로컬 인덱스이기 때문)
@@ -133,7 +141,7 @@ export const isSlotAvailable = (
             }
             const moduleZone = m.zone as 'normal' | 'dropped' | undefined;
             const globalSlot = resolveGlobalSlotIndex(m.slotIndex, moduleZone);
-            return globalSlot === targetSlot && m.id !== excludeModuleId;
+            return globalSlot === targetSlot && !isExcludedModule(m.id);
           });
           
           if (furnitureInSlot.length >= 2) {
@@ -151,7 +159,7 @@ export const isSlotAvailable = (
             }
             const moduleZone = m.zone as 'normal' | 'dropped' | undefined;
             const globalSlot = resolveGlobalSlotIndex(m.slotIndex, moduleZone);
-            return globalSlot === targetSlot && m.id !== excludeModuleId;
+            return globalSlot === targetSlot && !isExcludedModule(m.id);
           });
           
           if (furnitureInSlot.length >= 2) {
@@ -192,7 +200,7 @@ export const isSlotAvailable = (
       }
       const moduleZone = m.zone as 'normal' | 'dropped' | undefined;
       const globalSlot = resolveGlobalSlotIndex(m.slotIndex, moduleZone);
-      return globalSlot === targetSlot && m.id !== excludeModuleId;
+      return globalSlot === targetSlot && !isExcludedModule(m.id);
     });
     
     console.log('🔵 Column C 슬롯 가용성 확인:', {
@@ -220,7 +228,7 @@ export const isSlotAvailable = (
     
     for (const placedModule of placedModules) {
       // 제외할 모듈은 건너뛰기
-      if (excludeModuleId && placedModule.id === excludeModuleId) {
+      if (isExcludedModule(placedModule.id)) {
         continue;
       }
 
@@ -378,7 +386,7 @@ export const isSlotAvailable = (
  * @param placedModules 현재 배치된 가구 목록
  * @param spaceInfo 공간 정보
  * @param moduleId 배치하려는 가구의 모듈 ID
- * @param excludeModuleId 제외할 모듈 ID (자기 자신)
+ * @param excludeModuleId 제외할 모듈 ID (자기 자신 또는 같은 그룹)
  * @returns 사용 가능한 슬롯 인덱스 또는 null
  */
 export const findNextAvailableSlot = (
@@ -388,7 +396,7 @@ export const findNextAvailableSlot = (
   placedModules: PlacedModule[],
   spaceInfo: SpaceInfo,
   moduleId: string,
-  excludeModuleId?: string,
+  excludeModuleId?: string | string[],
   targetZone?: 'normal' | 'dropped'
 ): number | null => {
   const indexing = calculateSpaceIndexing(spaceInfo);

@@ -110,6 +110,10 @@ const getGroupedMovementUpdates = (
   targetModule: PlacedModule | undefined,
   updates: Partial<PlacedModule>
 ): Partial<PlacedModule> | null => {
+  if ((updates as any).__skipGroupPropagation) {
+    return null;
+  }
+
   if (!targetModule?.groupId || module.id === targetModule.id || module.groupId !== targetModule.groupId || module.isLocked) {
     return null;
   }
@@ -145,8 +149,9 @@ const applyModuleAndGroupedMovement = (
   targetModule: PlacedModule | undefined,
   updates: Partial<PlacedModule>
 ): PlacedModule => {
+  const { __skipGroupPropagation, ...cleanUpdates } = updates as Partial<PlacedModule> & { __skipGroupPropagation?: boolean };
   if (module.id === targetId) {
-    return { ...module, ...updates };
+    return { ...module, ...cleanUpdates };
   }
   const groupedUpdates = getGroupedMovementUpdates(module, targetModule, updates);
   return groupedUpdates ? { ...module, ...groupedUpdates } : module;
@@ -710,6 +715,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (targetModule) {
         const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
         const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
+        const movingGroupId = targetModule.groupId;
 
         // 이동하는 모듈의 카테고리 확인
         const spaceInfo = useSpaceConfigStore.getState();
@@ -730,6 +736,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         for (const slotIdx of occupiedSlots) {
           const modulesInThisSlot = state.placedModules.filter(m => {
             if (m.id === id) return false; // 자기 자신은 제외
+            if (movingGroupId && m.groupId === movingGroupId) return false; // 같은 그룹은 함께 이동하므로 충돌 제외
 
             // 기존 가구가 듀얼인지 확인
             const existingIsDual = m.moduleId.includes('dual-');
