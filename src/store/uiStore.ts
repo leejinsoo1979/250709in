@@ -973,9 +973,15 @@ export const useUIStore = create<UIState>()(
         set({ selectedFurnitureIds: ids, selectedFurnitureId: ids[ids.length - 1] ?? null }),
 
       toggleSelectedFurnitureId: (id) => {
-        const cur = get().selectedFurnitureIds || [];
-        const exists = cur.includes(id);
-        const next = exists ? cur.filter(x => x !== id) : [...cur, id];
+        const state = get();
+        const baseSelectedId = state.selectedFurnitureId;
+        const cur = state.selectedFurnitureIds || [];
+        const base = [...cur];
+        if (baseSelectedId && !base.includes(baseSelectedId)) {
+          base.push(baseSelectedId);
+        }
+        const exists = base.includes(id);
+        const next = exists ? base.filter(x => x !== id) : [...base, id];
         set({ selectedFurnitureIds: next, selectedFurnitureId: next[next.length - 1] ?? null });
       },
 

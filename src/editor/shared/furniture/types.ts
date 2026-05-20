@@ -184,6 +184,7 @@ export interface PlacedModule {
   isDualSlot?: boolean; // 듀얼 가구 여부 (2개 슬롯을 차지하는지)
   isValidInCurrentSpace?: boolean; // 현재 공간 설정에서 유효한지 여부
   zone?: 'normal' | 'dropped'; // 가구가 배치된 영역 (일반/단내림)
+  groupId?: string; // 다중 선택으로 묶은 가구 그룹 ID
   
   // 기둥 포함 슬롯 관련 정보
   columnSlotInfo?: ColumnSlotMetadata; // 기둥이 포함된 슬롯 정보

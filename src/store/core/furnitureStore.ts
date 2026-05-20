@@ -105,6 +105,53 @@ const notifyR3F = (modules: PlacedModule[]) => {
   }, 0);
 };
 
+const getGroupedMovementUpdates = (
+  module: PlacedModule,
+  targetModule: PlacedModule | undefined,
+  updates: Partial<PlacedModule>
+): Partial<PlacedModule> | null => {
+  if (!targetModule?.groupId || module.id === targetModule.id || module.groupId !== targetModule.groupId || module.isLocked) {
+    return null;
+  }
+
+  const groupedUpdates: Partial<PlacedModule> = {};
+
+  if (updates.position) {
+    groupedUpdates.position = {
+      x: module.position.x + (updates.position.x - targetModule.position.x),
+      y: module.position.y + (updates.position.y - targetModule.position.y),
+      z: module.position.z + (updates.position.z - targetModule.position.z),
+    };
+  }
+
+  if (
+    updates.slotIndex !== undefined &&
+    targetModule.slotIndex !== undefined &&
+    module.slotIndex !== undefined
+  ) {
+    groupedUpdates.slotIndex = module.slotIndex + (updates.slotIndex - targetModule.slotIndex);
+  }
+
+  if (updates.zone !== undefined) {
+    groupedUpdates.zone = updates.zone;
+  }
+
+  return Object.keys(groupedUpdates).length > 0 ? groupedUpdates : null;
+};
+
+const applyModuleAndGroupedMovement = (
+  module: PlacedModule,
+  targetId: string,
+  targetModule: PlacedModule | undefined,
+  updates: Partial<PlacedModule>
+): PlacedModule => {
+  if (module.id === targetId) {
+    return { ...module, ...updates };
+  }
+  const groupedUpdates = getGroupedMovementUpdates(module, targetModule, updates);
+  return groupedUpdates ? { ...module, ...groupedUpdates } : module;
+};
+
 /**
  * 가구 배치 후 인접 키큰장(full)의 EP를 자동 체크하는 헬퍼.
  * - 새 가구가 upper/lower면 → 인접 full의 해당 방향 EP 체크
@@ -607,10 +654,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   moveModule: (id: string, position: { x: number; y: number; z: number }) => {
     // get() + non-callback set() 방식 사용 (R3F Canvas 내부 리렌더 보장)
     const state = get();
+    const targetModule = state.placedModules.find(module => module.id === id);
     const newModules = state.placedModules.map(module =>
-      module.id === id
-        ? { ...module, position }
-        : module
+      applyModuleAndGroupedMovement(module, id, targetModule, { position })
     );
     set({ placedModules: newModules });
     notifyR3F(newModules);
@@ -726,9 +772,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 모든 기존 가구와 공존 가능하면 그냥 업데이트
           if (modulesToReplace.length === 0) {
             const newModules = state.placedModules.map(module =>
-              module.id === id
-                ? { ...module, ...finalUpdates }
-                : module
+              applyModuleAndGroupedMovement(module, id, existingModule, finalUpdates)
             );
             set({ placedModules: newModules });
             notifyR3F(newModules);
@@ -748,9 +792,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             const replaceIds = modulesToReplace.map(m => m.id);
             const filteredModules = state.placedModules.filter(m => !replaceIds.includes(m.id));
             const newModules = filteredModules.map(module =>
-              module.id === id
-                ? { ...module, ...finalUpdates }
-                : module
+              applyModuleAndGroupedMovement(module, id, existingModule, finalUpdates)
             );
             set({ placedModules: newModules });
             notifyR3F(newModules);
@@ -770,10 +812,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
     // 충돌이 없으면 일반 업데이트
     const newModules = state.placedModules.map(module => {
-      if (module.id === id) {
-        return { ...module, ...finalUpdates };
-      }
-      return module;
+      return applyModuleAndGroupedMovement(module, id, existingModule, finalUpdates);
     });
 
     set({ placedModules: newModules });

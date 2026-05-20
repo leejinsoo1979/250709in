@@ -454,7 +454,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     () => (showFurniture ? placedModulesStore : []),
     [placedModulesStore, showFurniture]
   );
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId, hingePositionEditModeModuleId } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId, selectedFurnitureIds, hingePositionEditModeModuleId } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   // 단내림 설정
@@ -6389,7 +6389,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
               const gapRightX = rightX + mmToThreeUnits(rightGapMm);
               // 가구 이동 핸들러: 화살표 클릭 시 벽/인접가구까지 한번에 붙임
-              const isSelected = selectedFurnitureId === module.id;
+              const isSelected = selectedFurnitureId === module.id
+                || (selectedFurnitureIds ?? []).includes(module.id);
               const stopAll = (e: any) => {
                 e.stopPropagation();
                 e.nativeEvent?.stopImmediatePropagation?.();
@@ -6412,6 +6413,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 실제 빈 공간 기준으로 버튼 표시 — 가구 사이 빈 공간이 3mm 이상일 때만
               const canMoveLeft = realLeftGapMm >= 3;
               const canMoveRight = realRightGapMm >= 3;
+              if (isSelected && module.isFreePlacement) {
+                // eslint-disable-next-line no-console
+                console.log('[arrow-debug]', module.id, {
+                  hasAdjacentLeft, hasAdjacentRight,
+                  nearestLeftDistance, nearestRightDistance,
+                  realLeftGapMm, realRightGapMm,
+                  canMoveLeft, canMoveRight,
+                  wallGapLeft, wallGapRight,
+                });
+              }
               // 좌측 한계: 벽 이격 경계 또는 인접 가구 우측 끝
               const leftLimit = leftX - mmToThreeUnits(realLeftGapMm);
               // 우측 한계: 벽 이격 경계 또는 인접 가구 좌측 끝

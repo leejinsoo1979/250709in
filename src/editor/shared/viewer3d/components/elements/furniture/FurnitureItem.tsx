@@ -3096,6 +3096,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     updatePlacedModule(placedModule.id, widthResetPayload);
   }, [widthResetPayload, placedModule.id, updatePlacedModule]);
 
+  const toggleCurrentFurnitureMultiSelection = React.useCallback(() => {
+    const uiState = useUIStore.getState();
+    const furnitureState = useFurnitureStore.getState();
+    const base = [...(uiState.selectedFurnitureIds || [])];
+    const addBaseId = (id?: string | null) => {
+      if (id && !base.includes(id)) {
+        base.push(id);
+      }
+    };
+
+    addBaseId(uiState.selectedFurnitureId);
+    addBaseId(furnitureState.selectedFurnitureId);
+    addBaseId(furnitureState.selectedPlacedModuleId);
+
+    const exists = base.includes(placedModule.id);
+    const next = exists ? base.filter(id => id !== placedModule.id) : [...base, placedModule.id];
+    const activeId = next[next.length - 1] ?? null;
+
+    uiState.setSelectedColumnId(null);
+    uiState.setSelectedFurnitureIds(next);
+    furnitureState.setSelectedFurnitureId(activeId);
+    furnitureState.setSelectedPlacedModuleId(activeId);
+  }, [placedModule.id]);
+
   // 계산된 값들을 상태로 업데이트 - 값이 실제로 변경될 때만 업데이트
   React.useEffect(() => {
     setCalculatedValues(prev => {
@@ -3129,11 +3153,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isMultiSelectPointer = isMultiSelectModifierPressed(nativeEvent);
     if (isMultiSelectPointer) {
       e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation?.();
       (window as any).__r3fClickHandled = true;
       (window as any).__r3fFurnitureClicked = true;
       (window as any).__multiSelectPointerHandled = placedModule.id;
-      useUIStore.getState().setSelectedColumnId(null);
-      useUIStore.getState().toggleSelectedFurnitureId(placedModule.id);
+      toggleCurrentFurnitureMultiSelection();
       return;
     }
 
@@ -3523,12 +3547,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const isMultiSelectClick = isMultiSelectModifierPressed(nativeEvent);
           if (isMultiSelectClick) {
             e.stopPropagation();
+            e.nativeEvent.stopImmediatePropagation?.();
             if ((window as any).__multiSelectPointerHandled === placedModule.id) {
               (window as any).__multiSelectPointerHandled = null;
               return;
             }
-            useUIStore.getState().setSelectedColumnId(null);
-            useUIStore.getState().toggleSelectedFurnitureId(placedModule.id);
+            toggleCurrentFurnitureMultiSelection();
             return;
           }
 
@@ -3886,7 +3910,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
             {/* 앞↔측면 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
             {/* 기둥 타입(columnType)과 무관하게 기둥이 있고 가구 앞 여유가 있으면 전환 가능 */}
-            {isSelected && !readOnly && columnActionSlotInfo?.hasColumn && columnActionSlotInfo.column && (() => {
+            {shouldRenderColumnActionControls && !readOnly && columnActionSlotInfo?.hasColumn && columnActionSlotInfo.column && (() => {
               const columnDepthMm = columnActionSlotInfo.column.depth;
               const actionModule = columnActionModule ?? placedModule;
               const actionModuleData = actionModule.id === placedModule.id
