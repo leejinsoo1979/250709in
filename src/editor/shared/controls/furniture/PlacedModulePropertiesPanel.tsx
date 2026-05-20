@@ -4197,23 +4197,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 }
               }
             }
-            // 도어 확장/축소 토글: ON 시 사용자 입력값을 절대 확장량으로 적용.
-            //   입력값 v(mm) = 도어 끝이 몸통 끝으로부터의 오프셋 (음수=안쪽, 양수=바깥쪽).
-            //   - v=-1.5 → 노서라운드 기본 (도어가 몸통보다 1.5mm 안쪽) → 토글 ON 시 자동 표시되는 초기값
-            //   - v=0    → 도어 라인이 몸통 라인과 일치
-            //   - v=50   → 정확히 50mm 확장
+            // 도어 확장/축소 토글: 경첩 반대 방향(한쪽)으로만 확장/축소.
+            //   경첩쪽은 항상 -1.5 (몸통 안쪽) 고정.
+            //   입력값 v(mm) = 경첩 반대쪽 도어 끝과 몸통 끝의 거리 (음수=안쪽, 양수=바깥쪽).
+            //   도어 폭 = bodyWidth - 1.5 + v
+            //   - v=-1.5 → 596 (몸통-3, 노서라운드 기본)
+            //   - v=0    → 597.5 (경첩 반대쪽이 몸통 끝과 정렬)
+            //   - v=50   → 647.5 (경첩 반대쪽 50mm 확장)
             //   OFF 시는 기존 도어(몸통-3) 유지.
+            const HINGE_SIDE_GAP_MM = 1.5;
             const NOSURROUND_DEFAULT_OFFSET_MM = -1.5;
             const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
             const userExtensionRaw = (currentPlacedModule as any).doorWidthAdjustMm;
             const effectiveUserExtension = userExtensionRaw ?? (insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
-            // 싱글: 도어 1장 → 도어 너비 = (몸통 + 확장량). 확장량=-1.5면 기본(좌우 안쪽 1.5씩)
-            //   토글 OFF 시는 기존대로 몸통-3.
+            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 1.5 + v
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
               : (doorWidthAdjustEnabled
-                ? Math.max(0, bodyWidth + effectiveUserExtension)
+                ? Math.max(0, bodyWidth - HINGE_SIDE_GAP_MM + effectiveUserExtension)
                 : Math.max(0, bodyWidth - 3));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
