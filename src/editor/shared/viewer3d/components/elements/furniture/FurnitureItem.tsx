@@ -1285,6 +1285,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [placedModule.groupId, groupedFurnitureModules, placedModule.id]);
 
   const columnActionContext = React.useMemo(() => {
+    if (placedModule.isLocked) {
+      return undefined;
+    }
+
     if (slotInfo?.hasColumn && slotInfo.column) {
       return { slotInfo, module: placedModule };
     }
@@ -1298,7 +1302,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     for (const id of candidateIds) {
       const module = placedModules.find((item) => item.id === id);
-      if (!module) {
+      if (!module || module.isLocked) {
         continue;
       }
 
@@ -1321,6 +1325,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     groupedFurnitureIds,
     selectedFurnitureIds,
     placedModule.id,
+    placedModule.isLocked,
     placedModules,
     convertZoneToGlobalIndex,
     columnSlots
@@ -1328,8 +1333,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const columnActionSlotInfo = columnActionContext?.slotInfo;
   const columnActionModule = columnActionContext?.module;
   const usesGroupedColumnAction = !!columnActionContext && columnActionModule?.id !== placedModule.id;
-  const shouldRenderColumnActionControls = isSelected ||
-    (isGroupSelected && isLeftmostGroupedFurniture && !!columnActionSlotInfo?.hasColumn && !!columnActionSlotInfo.column);
+  const shouldRenderColumnActionControls = !placedModule.isLocked && (
+    isSelected ||
+    (isGroupSelected && isLeftmostGroupedFurniture && !!columnActionSlotInfo?.hasColumn && !!columnActionSlotInfo.column)
+  );
 
   // 단내림 구간 기둥 디버깅
   if (placedModule.zone === 'dropped' && slotInfo) {

@@ -6449,12 +6449,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moveLeft = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  // 그룹 이동: 좌측 끝 가구의 leftLimit까지 그룹 전체를 같은 deltaX로 이동 (폭 유지)
-                  const newSelfX = snap(leftLimit + mmToThreeUnits(currentWidthMm) / 2);
-                  const deltaX = newSelfX - module.position.x;
+                  // 그룹 이동: 한 번에 자기 폭만큼만 이동 (한 칸씩).
+                  //   여유 공간(realLeftGapMm)이 한 폭보다 작으면 여유만큼만.
+                  const stepMm = Math.min(currentWidthMm, realLeftGapMm);
+                  if (stepMm <= 0) return;
+                  const deltaThree = -mmToThreeUnits(stepMm);
                   groupModules.forEach(m => {
                     if ((m as any).isLocked) return;
-                    updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaX) } });
+                    updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaThree) } });
                   });
                   return;
                 }
@@ -6469,11 +6471,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moveRight = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  const newSelfX = snap(rightLimit - mmToThreeUnits(currentWidthMm) / 2);
-                  const deltaX = newSelfX - module.position.x;
+                  const stepMm = Math.min(currentWidthMm, realRightGapMm);
+                  if (stepMm <= 0) return;
+                  const deltaThree = mmToThreeUnits(stepMm);
                   groupModules.forEach(m => {
                     if ((m as any).isLocked) return;
-                    updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaX) } });
+                    updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaThree) } });
                   });
                   return;
                 }
