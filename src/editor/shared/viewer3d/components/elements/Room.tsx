@@ -3173,7 +3173,7 @@ const Room: React.FC<RoomProps> = ({
             return (
               <>
                 {lines.length > 0 && (
-                  <lineSegments renderOrder={-50}>
+                  <lineSegments renderOrder={20}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[positions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
@@ -3187,7 +3187,7 @@ const Room: React.FC<RoomProps> = ({
                   </lineSegments>
                 )}
                 {solidThemePositions && solidThemeColors && (
-                  <lineSegments key={`corner-lines-${solidThemeLines.length}-${extendedPanelDepth.toFixed(3)}`} renderOrder={-50}>
+                  <lineSegments key={`corner-lines-${solidThemeLines.length}-${extendedPanelDepth.toFixed(3)}`} renderOrder={20}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[solidThemeColors, 3]} />
