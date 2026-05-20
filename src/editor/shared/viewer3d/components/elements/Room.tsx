@@ -2100,28 +2100,6 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
-                  const wallEdgeColor = (() => {
-                    const tcMap: Record<string, string> = {
-                      green: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', vivid: '#a25378',
-                      red: '#D2042D', pink: '#ec4899', indigo: '#6366f1', teal: '#14b8a6',
-                      yellow: '#eab308', gray: '#6b7280', cyan: '#06b6d4', lime: '#84cc16',
-                      black: '#1a1a1a', wine: '#845EC2', gold: '#d97706', navy: '#1e3a8a',
-                      emerald: '#059669', violet: '#C128D7', mint: '#0CBA80', neon: '#18CF23',
-                      rust: '#FF7438', white: '#D65DB1', plum: '#790963', brown: '#5A2B1D',
-                      darkgray: '#2C3844', maroon: '#3F0D0D', turquoise: '#003A7A',
-                      slate: '#2E3A47', copper: '#AD4F34', forest: '#1B3924', olive: '#4C462C'
-                    };
-                    return tcMap[appTheme.color] || '#3b82f6';
-                  })();
-                  // 좌벽 로컬 좌표: planeGeometry args=[extendedPanelDepth, height]
-                  // local X = 깊이(=월드 Z), local Y = 높이(=월드 Y)
-                  // Z축 방향 라인 = 좌벽의 위/아래 가로 모서리 (천장-좌벽, 바닥-좌벽 교차선)
-                  const halfD = extendedPanelDepth / 2;
-                  const halfH = height / 2;
-                  const wallEdgePos = new Float32Array([
-                    -halfD, halfH, 0, halfD, halfH, 0,   // 위 모서리 (천장-좌벽)
-                    -halfD, -halfH, 0, halfD, -halfH, 0, // 아래 모서리 (바닥-좌벽)
-                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[-width / 2 - 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2132,13 +2110,6 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={leftWallMaterialRef}
                         object={leftWallMaterial} />
-                      {/* Z축 모서리 라인 (천장-좌벽, 바닥-좌벽 교차) — 메쉬 자식이라 같은 transform */}
-                      <lineSegments renderOrder={2}>
-                        <bufferGeometry>
-                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
-                        </bufferGeometry>
-                        <lineBasicMaterial color="#888888" />
-                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
@@ -3017,6 +2988,11 @@ const Room: React.FC<RoomProps> = ({
               solidThemeLines.push([dcEndX, droppedCY, z1, dcEndX, droppedCY, z2]);     // 경계벽쪽
               // 경계벽 위치에서 메인 천장 높이 z축 라인 (단내림↔일반 구간 경계)
               solidThemeLines.push([bx2, cY, z1, bx2, cY, z2]);
+              // 단내림↔메인 천장 경계의 수직 모서리 라인 (Y방향: droppedCY → cY)
+              solidThemeLines.push([bx2, droppedCY, z1, bx2, cY, z1]); // 뒷벽 쪽 수직
+              solidThemeLines.push([bx2, droppedCY, z2, bx2, cY, z2]); // 앞쪽 수직
+              // 경계벽 아래(단내림 천장 높이)에서 Z방향 라인 — 메인 공간 안쪽에서 본 경계벽 하단
+              solidThemeLines.push([bx2, droppedCY, z1, bx2, droppedCY, z2]);
             }
 
             // === 자유배치 stepCeiling z축 윤곽선 ===
@@ -3126,6 +3102,9 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent
+                      polygonOffset
+                      polygonOffsetFactor={-50}
+                      polygonOffsetUnits={-50}
                     />
                   </lineSegments>
                 )}
