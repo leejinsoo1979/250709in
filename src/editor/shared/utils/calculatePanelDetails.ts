@@ -4,6 +4,7 @@ import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import type { FreeSurroundConfig } from '@/store/core/spaceConfigStore';
 import { normalizeDoorHingePositionsMm, resolveDoorLeafDimensions } from './doorGeometryCalculator';
+import type { DoorOuterOpenSides } from './doorOuterGap';
 import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from './topDownCabinetGeometry';
 
@@ -58,7 +59,8 @@ export const calculatePanelDetails = (
   customHingePositionsMm?: number[],
   customUpperDoorHingePositionsMm?: number[],
   customLowerDoorHingePositionsMm?: number[],
-  customSectionsOverride?: SectionConfig[]
+  customSectionsOverride?: SectionConfig[],
+  doorOuterOpenSides?: DoorOuterOpenSides
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1426,6 +1428,20 @@ export const calculatePanelDetails = (
         isLeftHinge,
       });
     };
+    const getOuterAdjustedDoorWidth = (leaf: { name: 'single' | 'left' | 'right'; widthMm: number }) => {
+      const leftCompensation = doorOuterOpenSides?.left ? 1.5 : 0;
+      const rightCompensation = doorOuterOpenSides?.right ? 1.5 : 0;
+      if (leaf.name === 'single') {
+        return leaf.widthMm + leftCompensation + rightCompensation;
+      }
+      if (leaf.name === 'left') {
+        return leaf.widthMm + leftCompensation;
+      }
+      if (leaf.name === 'right') {
+        return leaf.widthMm + rightCompensation;
+      }
+      return leaf.widthMm;
+    };
 
     if (isDoorSplitPanelModule) {
       const isPantryDoorSplitModule = moduleData.id.includes('pantry-cabinet-split');
@@ -1463,8 +1479,9 @@ export const calculatePanelDetails = (
           ...resolvedUpperHinges.map(y => upperDoorBottomMm + y)
         );
 
-        pushDoorPanel(`${prefix}하부 도어`, leaf.widthMm, lowerDoorH, isLeftHinge, 4, customLowerDoorHingePositionsMm);
-        pushDoorPanel(`${prefix}상부 도어`, leaf.widthMm, upperDoorH, isLeftHinge, 2, customUpperDoorHingePositionsMm);
+        const adjustedLeafWidth = getOuterAdjustedDoorWidth(leaf);
+        pushDoorPanel(`${prefix}하부 도어`, adjustedLeafWidth, lowerDoorH, isLeftHinge, 4, customLowerDoorHingePositionsMm);
+        pushDoorPanel(`${prefix}상부 도어`, adjustedLeafWidth, upperDoorH, isLeftHinge, 2, customUpperDoorHingePositionsMm);
       });
 
       bracketHingeYPositions = Array.from(new Set(bracketHingeYPositions)).sort((a, b) => a - b);
@@ -1476,7 +1493,7 @@ export const calculatePanelDetails = (
           : leaf.name === 'right'
             ? '우측 도어'
             : '도어';
-        pushDoorPanel(doorName, leaf.widthMm, leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm);
+        pushDoorPanel(doorName, getOuterAdjustedDoorWidth(leaf), leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm);
       });
     }
 

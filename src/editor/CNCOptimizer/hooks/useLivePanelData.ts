@@ -11,6 +11,7 @@ import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/sh
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
+import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -367,6 +368,11 @@ export function useLivePanelData() {
             m.slotIndex !== undefined && (m.slotIndex === rightEnd + 1 || (m.isDualSlot && m.slotIndex === rightEnd + 1))
           );
         }
+        const doorOuterOpenSides = resolveDoorOuterOpenSides({
+          spaceInfo,
+          placedModule,
+          moduleWidthMm: width
+        });
 
         const allPanelsList = calculatePanelDetailsShared(
           moduleData, width, depth, hasDoor, t, undefined,
@@ -416,7 +422,12 @@ export function useLivePanelData() {
           (placedModule as any).hasBase === false
             ? 0
             : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH),
-          (placedModule as any).customMaidaHeights // 레그라 마이다 개별 사이즈
+          (placedModule as any).customMaidaHeights, // 레그라 마이다 개별 사이즈
+          placedModule.hingePositionsMm,
+          placedModule.upperDoorHingePositionsMm,
+          placedModule.lowerDoorHingePositionsMm,
+          (placedModule as any).customSections,
+          doorOuterOpenSides
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1192,6 +1203,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           m.slotIndex !== undefined && (m.slotIndex === rightEnd + 1 || (m.isDualSlot && m.slotIndex === rightEnd + 1))
         );
       }
+      const doorOuterOpenSides2 = resolveDoorOuterOpenSides({
+        spaceInfo,
+        placedModule,
+        moduleWidthMm: width
+      });
 
       const allPanelsList = calculatePanelDetailsShared(
         moduleData, width, depth, hasDoor, t, undefined,
@@ -1233,7 +1249,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         (placedModule as any).hasBase === false
           ? 0
           : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH2),
-        (placedModule as any).customMaidaHeights // 레그라 마이다 개별 사이즈
+        (placedModule as any).customMaidaHeights, // 레그라 마이다 개별 사이즈
+        placedModule.hingePositionsMm,
+        placedModule.upperDoorHingePositionsMm,
+        placedModule.lowerDoorHingePositionsMm,
+        (placedModule as any).customSections,
+        doorOuterOpenSides2
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

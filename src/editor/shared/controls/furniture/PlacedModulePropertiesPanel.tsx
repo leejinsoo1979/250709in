@@ -17,6 +17,7 @@ import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
+import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
@@ -1833,6 +1834,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
+    const doorOuterOpenSides = resolveDoorOuterOpenSides({
+      spaceInfo,
+      placedModule: currentPlacedModule,
+      moduleWidthMm: doorOriginalWidth ?? customWidth
+    });
     return calculatePanelDetails(
       moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth,
       currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
@@ -1863,9 +1869,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       currentPlacedModule?.hingePositionsMm,
       currentPlacedModule?.upperDoorHingePositionsMm,
       currentPlacedModule?.lowerDoorHingePositionsMm,
-      currentPlacedModule?.customSections
+      currentPlacedModule?.customSections,
+      doorOuterOpenSides
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -4190,16 +4197,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 }
               }
             }
-            // 도어 확장/축소 토글: ON 시 사용자 입력값(절대 확장량) 적용, OFF 시 확장 없음(몸통-3mm)
+            // 도어 확장/축소 토글: ON 시 사용자 입력값을 절대 확장량으로 적용.
+            //   입력값 v(mm) = 도어 끝이 몸통 끝으로부터의 오프셋 (음수=안쪽, 양수=바깥쪽).
+            //   - v=-1.5 → 노서라운드 기본 (도어가 몸통보다 1.5mm 안쪽) → 토글 ON 시 자동 표시되는 초기값
+            //   - v=0    → 도어 라인이 몸통 라인과 일치
+            //   - v=50   → 정확히 50mm 확장
+            //   OFF 시는 기존 도어(몸통-3) 유지.
+            const NOSURROUND_DEFAULT_OFFSET_MM = -1.5;
             const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
-            const totalExtensionMm = doorWidthAdjustEnabled
-              ? ((currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm)
-              : 0;
+            const userExtensionRaw = (currentPlacedModule as any).doorWidthAdjustMm;
+            const effectiveUserExtension = userExtensionRaw ?? (insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
-            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 3 + 확장량
+            // 싱글: 도어 1장 → 도어 너비 = (몸통 + 확장량). 확장량=-1.5면 기본(좌우 안쪽 1.5씩)
+            //   토글 OFF 시는 기존대로 몸통-3.
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
-              : Math.max(0, bodyWidth - 3 + totalExtensionMm);
+              : (doorWidthAdjustEnabled
+                ? Math.max(0, bodyWidth + effectiveUserExtension)
+                : Math.max(0, bodyWidth - 3));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)

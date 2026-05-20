@@ -25,6 +25,7 @@ import {
   resolveDefaultDoorHingePositionsMm,
   resolveHingeOppositeDoorWidthAdjustment
 } from '@/editor/shared/utils/doorGeometryCalculator';
+import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 import {
   getPanelAssemblySequence,
@@ -1273,6 +1274,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [allPlacedModules, storePlacedModule]);
 
   const effectiveFurnitureWidth = actualDoorWidth;
+  const openOuterDoorSides = useMemo(() => resolveDoorOuterOpenSides({
+    spaceInfo: originalSpaceInfo,
+    placedModule: storePlacedModule,
+    moduleWidthMm: actualDoorWidth,
+    slotCenterX
+  }), [originalSpaceInfo, storePlacedModule, actualDoorWidth, slotCenterX]);
+
   // 팬트리장/인출장/냉장고장(빌트인 포함)은 600mm 초과해도 도어 1짝 유지 (단일 도어 전용 키큰장)
   const isSingleDoorOnlyCabinet = !!(
     moduleData?.id?.includes('pantry-cabinet') ||
@@ -2000,6 +2008,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // actualDoorWidth
     // });
 
+    const outerLeftGapCompensationMm = openOuterDoorSides.left ? 1.5 : 0;
+    const outerRightGapCompensationMm = openOuterDoorSides.right ? 1.5 : 0;
+
     if (isFree) {
       // 자유배치: actualDoorWidth(= storeFreeWidth)를 그대로 사용, 좌우 균등 분할
       totalWidth = actualDoorWidth;
@@ -2013,6 +2024,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       leftDoorWidth = halfWidth - doorGap;
       rightDoorWidth = halfWidth - doorGap;
     }
+    leftDoorWidth += outerLeftGapCompensationMm;
+    rightDoorWidth += outerRightGapCompensationMm;
 
     // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금.
     // 힌지가 반대쪽이면 도어가 EP 반대 방향으로 열리므로 충돌 없음 → 통과.
@@ -2086,8 +2099,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
     const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
     
-    const leftXOffset = mmToThreeUnits(leftSlotCenter);
-    const rightXOffset = mmToThreeUnits(rightSlotCenter);
+    const leftXOffset = mmToThreeUnits(leftSlotCenter - outerLeftGapCompensationMm / 2);
+    const rightXOffset = mmToThreeUnits(rightSlotCenter + outerRightGapCompensationMm / 2);
     
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
@@ -3051,7 +3064,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 싱글 가구: 하나의 문 - 힌지 위치에 따라 회전축을 문의 가장자리에서 10mm 안쪽으로 이동
     // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
     const doorGap = 3;
-    let doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
+    const outerLeftGapCompensationMm = openOuterDoorSides.left ? 1.5 : 0;
+    const outerRightGapCompensationMm = openOuterDoorSides.right ? 1.5 : 0;
+    let doorWidth = actualDoorWidth - doorGap + outerLeftGapCompensationMm + outerRightGapCompensationMm; // 슬롯사이즈 - 적용 갭
+    const openOuterShiftX = mmToThreeUnits(outerRightGapCompensationMm - outerLeftGapCompensationMm) / 2;
 
     // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금
     // 힌지가 반대쪽이면 도어가 EP 반대 방향으로 열리므로 충돌 없음 → 통과
@@ -3122,7 +3138,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     const singleDoorOpenGeometry = calculateSingleDoorOpenGeometry({
       hingeSide: adjustedHingePosition,
-      doorGroupX,
+      doorGroupX: doorGroupX + openOuterShiftX,
       doorYPosition,
       doorDepth,
       doorWidthUnits,

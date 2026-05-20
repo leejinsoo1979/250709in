@@ -1,0 +1,102 @@
+import type { PlacedModule } from '@/editor/shared/furniture/types';
+import type { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+
+export interface DoorOuterOpenSides {
+  left: boolean;
+  right: boolean;
+}
+
+const isBuiltin = (installType?: string) =>
+  installType === 'builtin' || installType === 'built-in';
+
+const isSemiStanding = (installType?: string) =>
+  installType === 'semistanding' || installType === 'semi-standing';
+
+export const resolveDoorOuterOpenSides = ({
+  spaceInfo,
+  placedModule,
+  moduleWidthMm,
+  slotCenterX,
+}: {
+  spaceInfo: SpaceInfo;
+  placedModule?: PlacedModule | null;
+  moduleWidthMm?: number;
+  slotCenterX?: number;
+}): DoorOuterOpenSides => {
+  if (!placedModule || placedModule.isFreePlacement) {
+    return { left: false, right: false };
+  }
+
+  const installType = spaceInfo.installType;
+  const hasLeftWall = isBuiltin(installType) || (isSemiStanding(installType) && !!spaceInfo.wallConfig?.left);
+  const hasRightWall = isBuiltin(installType) || (isSemiStanding(installType) && !!spaceInfo.wallConfig?.right);
+
+  if (hasLeftWall && hasRightWall) {
+    return { left: false, right: false };
+  }
+
+  const indexing = calculateSpaceIndexing(spaceInfo);
+  const isDual = !!placedModule.isDualSlot || placedModule.moduleId?.startsWith('dual-');
+
+  if (typeof placedModule.slotIndex === 'number') {
+    let localSlotIndex = placedModule.slotIndex;
+    let zoneColumnCount = indexing.columnCount;
+
+    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      const targetZone = placedModule.zone === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+      zoneColumnCount = targetZone?.columnCount ?? zoneColumnCount;
+
+      if (zoneColumnCount > 0 && localSlotIndex >= zoneColumnCount) {
+        const droppedCount = zoneInfo.dropped?.columnCount ?? 0;
+        const normalCount = zoneInfo.normal?.columnCount ?? 0;
+        if (placedModule.zone === 'normal' && spaceInfo.droppedCeiling.position === 'left') {
+          localSlotIndex -= droppedCount;
+        } else if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling.position === 'right') {
+          localSlotIndex -= normalCount;
+        }
+      }
+    }
+
+    const slotEndIndex = localSlotIndex + (isDual ? 1 : 0);
+    return {
+      left: !hasLeftWall && localSlotIndex === 0,
+      right: !hasRightWall && slotEndIndex === zoneColumnCount - 1,
+    };
+  }
+
+  let runStartMm = -indexing.internalWidth / 2;
+  let runEndMm = indexing.internalWidth / 2;
+
+  if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const targetZone = placedModule.zone === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+    if (targetZone) {
+      runStartMm = targetZone.startX;
+      runEndMm = targetZone.startX + targetZone.width;
+    }
+  }
+
+  const widthMm = moduleWidthMm
+    ?? placedModule.slotCustomWidth
+    ?? placedModule.customWidth
+    ?? placedModule.moduleWidth
+    ?? placedModule.freeWidth
+    ?? 0;
+
+  if (!Number.isFinite(widthMm) || widthMm <= 0) {
+    return { left: false, right: false };
+  }
+
+  const centerXUnits = slotCenterX ?? placedModule.position?.x ?? 0;
+  const centerXmm = centerXUnits / 0.01;
+  const leftEdgeMm = centerXmm - widthMm / 2;
+  const rightEdgeMm = centerXmm + widthMm / 2;
+  const toleranceMm = 2;
+
+  return {
+    left: !hasLeftWall && Math.abs(leftEdgeMm - runStartMm) <= toleranceMm,
+    right: !hasRightWall && Math.abs(rightEdgeMm - runEndMm) <= toleranceMm,
+  };
+};

@@ -3,6 +3,7 @@ import { Module, PlacedModule } from '@/types/module';
 import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
+import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
@@ -419,7 +420,17 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       : (placedModule?.endPanelTopOffset !== undefined ? placedModule.endPanelTopOffset : topFrameHeightMm),
     placedModule?.hasBase === false
       ? 0
-      : (placedModule?.endPanelBottomOffset !== undefined ? placedModule.endPanelBottomOffset : baseFrameHeightMm)
+      : (placedModule?.endPanelBottomOffset !== undefined ? placedModule.endPanelBottomOffset : baseFrameHeightMm),
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    resolveDoorOuterOpenSides({
+      spaceInfo,
+      placedModule: placedModule as any,
+      moduleWidthMm: customWidth
+    })
   );
 
   // 서라운드 패널 (공간 전체 단위)
