@@ -6425,8 +6425,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const isRightmostInGroup = isMulti
                 ? groupModules.every(m => m.id === module.id || m.position.x <= module.position.x)
                 : true;
-              const canMoveLeft = realLeftGapMm >= 3 && isLeftmostInGroup && (!isMulti || isFreePlacement);
-              const canMoveRight = realRightGapMm >= 3 && isRightmostInGroup && (!isMulti || isFreePlacement);
+              // 자유배치 전용. 슬롯배치는 슬롯 인덱스 기반이라 별도 처리가 필요해 화살표 자체 표시 안 함.
+              const canMoveLeft = isFreePlacement && realLeftGapMm >= 3 && isLeftmostInGroup;
+              const canMoveRight = isFreePlacement && realRightGapMm >= 3 && isRightmostInGroup;
               // 좌측 한계: 벽 이격 경계 또는 인접 가구 우측 끝
               const leftLimit = leftX - mmToThreeUnits(realLeftGapMm);
               // 우측 한계: 벽 이격 경계 또는 인접 가구 좌측 끝
