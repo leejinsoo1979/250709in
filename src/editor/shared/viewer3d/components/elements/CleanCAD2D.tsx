@@ -6446,16 +6446,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 : Math.min(maxModWidth, Math.floor(totalAvailableMm));
               const newHalfWThree = mmToThreeUnits(newWidthMm) / 2;
 
-              // 그룹 이동 한 칸 폭: 그룹 내 가장 작은 가구의 폭 (좌·우 동일하게 적용)
-              const groupStepBaseMm = isMulti
-                ? Math.min(...groupModules.map(m => (m.freeWidth || m.customWidth || m.moduleWidth || 600)))
-                : currentWidthMm;
+              // 그룹 이동: 듀얼 가구처럼 한계까지 한 번에 슬라이드.
+              //   - 그룹 가구 간 상대 간격 유지 (deltaX 통일)
+              //   - 좌측 한계 = 그룹 가장 왼쪽 가구의 realLeftGap만큼 왼쪽
+              //   - 우측 한계 = 그룹 가장 오른쪽 가구의 realRightGap만큼 오른쪽
               const moveLeft = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  const stepMm = Math.min(groupStepBaseMm, realLeftGapMm);
-                  if (stepMm <= 0) return;
-                  const deltaThree = -mmToThreeUnits(stepMm);
+                  if (realLeftGapMm <= 0) return;
+                  const deltaThree = -mmToThreeUnits(realLeftGapMm);
                   groupModules.forEach(m => {
                     if ((m as any).isLocked) return;
                     updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaThree) } });
@@ -6473,9 +6472,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moveRight = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  const stepMm = Math.min(groupStepBaseMm, realRightGapMm);
-                  if (stepMm <= 0) return;
-                  const deltaThree = mmToThreeUnits(stepMm);
+                  if (realRightGapMm <= 0) return;
+                  const deltaThree = mmToThreeUnits(realRightGapMm);
                   groupModules.forEach(m => {
                     if ((m as any).isLocked) return;
                     updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaThree) } });
