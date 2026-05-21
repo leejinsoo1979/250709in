@@ -883,10 +883,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           ui.setCameraMode(nextMode);
           canvasLog('🔁 측면뷰 카메라 모드 전환:', ui.cameraMode, '→', nextMode);
           spaceToggleStepRef.current = 0;
-          // cameraMode 변경 후 측면뷰 카메라 위치를 다시 적용 (정면뷰로 돌아가지 않도록)
-          setTimeout(() => {
-            resetCamera();
-          }, 50);
           return;
         }
 

@@ -39,6 +39,7 @@ import {
   resolvePanelSimulationLayout
 } from '../../utils/panelSimulationMotion';
 import { removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
+import { ROOM_BACK_MESH_GAP_MM, ROOM_MESH_BACK_SHIFT_MM } from '../../utils/sideWallPlacement';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -1736,8 +1737,8 @@ const Room: React.FC<RoomProps> = ({
   // true: 공간 그라데이션(바닥/벽/천장) 뒷쪽 경계가 가구 뒷면에 맞춰 렌더링
   // false: 공간 전체 깊이 기준 (메쉬 깊이가 가구 무관 → 공간 깊이만큼 펼쳐짐)
   const SHRINK_MESH_TO_FURNITURE_BACK = false;
-  const BACK_MESH_GAP = mmToThreeUnits(10);
-  const MESH_Z_BACK_SHIFT = mmToThreeUnits(30);
+  const BACK_MESH_GAP = mmToThreeUnits(ROOM_BACK_MESH_GAP_MM);
+  const MESH_Z_BACK_SHIFT = mmToThreeUnits(ROOM_MESH_BACK_SHIFT_MM);
   // 뒷쪽 경계는 항상 가구 뒷면 - 40mm (슬롯 가이드와 일치)
   // 앞쪽으로만 확장: SHRINK true면 가구 깊이 기반, false면 공간 깊이 기반
   const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK
