@@ -467,7 +467,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     ? (furnitureZOffset - mmToThreeUnits(furnitureDepthMm) / 2 - mmToThreeUnits(BACK_GUIDE_GAP_MM))
     : -mmToThreeUnits(internalSpace.depth / 2))
     - mmToThreeUnits(GUIDE_Z_BACK_SHIFT_MM);
-  const emptySlotDimensionZ = -mmToThreeUnits(internalSpace.depth / 2) + 0.01;
+  const frontIndicatorBackZ = backZ + mmToThreeUnits(20);
+  const emptySlotDimensionZ = frontIndicatorBackZ + 0.01;
 
   // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
   const frontZ = frameEndZ;
@@ -663,7 +664,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         ? Math.min(zoneEndX, internalEndX) 
         : zoneEndX;
       
-      const guideZ = backZ + 0.01;
+      const guideZ = frontIndicatorBackZ + 0.01;
 
       // 바닥 가이드
       guides.push(
@@ -785,7 +786,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         } else {
           // 프론트뷰 및 3D뷰: 기존 위치 유지
           const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
-          const textZ = backZ + 0.5; // 뒷면에서 살짝 앞으로
+          const textZ = frontIndicatorBackZ + 0.5; // 뒷면에서 살짝 앞으로
           textPosition = [xPos, textY, textZ];
           textRotation = [0, 0, 0];
         }
@@ -898,7 +899,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         guides.push(
           <Text
             key={`${zoneType}-slot-size-2d-${index}`}
-            position={[xPos, textY, backZ]}
+            position={[xPos, textY, frontIndicatorBackZ]}
             fontSize={0.5}
             color={textColor}
             anchorX="center"
@@ -952,7 +953,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       return (
         <mesh
           key={`${zoneType}-back-mesh`}
-          position={[centerX, centerY, backZ]}
+          position={[centerX, centerY, frontIndicatorBackZ]}
           rotation={[0, 0, 0]}
         >
           <planeGeometry args={[meshWidth, height]} />

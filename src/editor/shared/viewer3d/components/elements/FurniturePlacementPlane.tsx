@@ -227,8 +227,9 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const rangeWidth = mmToThreeUnits(sideWallRange.depthMm);
     const dimensionColor = '#333333';
     const textColor = '#222222';
-    const dimensionOffset = mmToThreeUnits(180);
-    const dimensionTextGap = mmToThreeUnits(50);
+    // 정면 폭 치수선과 동일 Y 정렬: 천장(=halfHeight) + DIM_GAP(120) × 3 = +360mm, 연장선 끝 = +400mm
+    const dimensionOffset = mmToThreeUnits(360);
+    const dimensionTextGap = mmToThreeUnits(40);
     const dimensionRenderOrder = 100000;
     const dimensionLineWidth = 0.6;
     const dimensionFontSize = 0.5;
