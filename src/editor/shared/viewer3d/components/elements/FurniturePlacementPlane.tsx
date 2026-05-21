@@ -239,7 +239,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const renderDimensionLine = (key: string, points: [number, number, number][]) => (
       <NativeLine
         key={key}
-        name="occludable-dimension-line"
+        name="side-wall-dimension-line"
         points={points}
         color={dimensionColor}
         lineWidth={dimensionLineWidth}
@@ -563,8 +563,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                 {renderDimensionLine(`side-placed-width-${mod.id}-main`, [[startX, topLineY, lineZ], [endX, topLineY, lineZ]])}
                 {renderDimensionLine(`side-placed-width-${mod.id}-left-tick`, [[startX, topLineY - tick, lineZ], [startX, topLineY + tick, lineZ]])}
                 {renderDimensionLine(`side-placed-width-${mod.id}-right-tick`, [[endX, topLineY - tick, lineZ], [endX, topLineY + tick, lineZ]])}
-                {renderDimensionLine(`side-placed-width-${mod.id}-left-ext`, [[startX, topLineY - tick, lineZ], [startX, topLineY + tick, lineZ]])}
-                {renderDimensionLine(`side-placed-width-${mod.id}-right-ext`, [[endX, topLineY - tick, lineZ], [endX, topLineY + tick, lineZ]])}
+                {renderDimensionLine(`side-placed-width-${mod.id}-left-ext`, [[startX, moduleTopY - slotY, lineZ], [startX, textY + mmToThreeUnits(12), lineZ]])}
+                {renderDimensionLine(`side-placed-width-${mod.id}-right-ext`, [[endX, moduleTopY - slotY, lineZ], [endX, textY + mmToThreeUnits(12), lineZ]])}
                 <Text
                   position={[centerX, textY, textZ]}
                   fontSize={dimensionFontSize}

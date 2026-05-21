@@ -615,12 +615,11 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
 
 const CameraSideViewFillLight: React.FC<{ active: boolean }> = ({ active }) => {
   const lightRef = useRef<THREE.DirectionalLight>(null);
-  const targetRef = useRef<THREE.Object3D>(null);
+  const targetRef = useRef<THREE.Object3D>(new THREE.Object3D());
   const { camera, scene } = useThree();
 
   useEffect(() => {
     const target = targetRef.current;
-    if (!target) return;
     scene.add(target);
     return () => {
       scene.remove(target);
@@ -628,7 +627,7 @@ const CameraSideViewFillLight: React.FC<{ active: boolean }> = ({ active }) => {
   }, [scene]);
 
   useFrame(() => {
-    if (!active || !lightRef.current || !targetRef.current) return;
+    if (!active || !lightRef.current) return;
     const direction = new THREE.Vector3();
     camera.getWorldDirection(direction);
     lightRef.current.position.copy(camera.position);
