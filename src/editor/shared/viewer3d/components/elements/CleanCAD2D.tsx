@@ -11844,17 +11844,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key={`3d-depth-dim-${module.id}-${mIdx}`} name={`3d-depth-dim-${module.id}`}>
             {/* 깊이 치수선 (Z축 방향) — 기존 좌측뷰와 동일 스타일 */}
-            <NativeLine name="dimension_line"
+            <NativeLine name="3d-depth-dimension-line"
               points={[[sideX, dimY3D, backZ3D], [sideX, dimY3D, frontZ3D]]}
-              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={true} depthWrite={false}
             />
-            <NativeLine name="dimension_line"
+            <NativeLine name="3d-depth-dimension-arrow"
               points={createArrowHead([sideX, dimY3D, backZ3D], [sideX, dimY3D, backZ3D + 0.02], 0.01)}
-              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={true} depthWrite={false}
             />
-            <NativeLine name="dimension_line"
+            <NativeLine name="3d-depth-dimension-arrow"
               points={createArrowHead([sideX, dimY3D, frontZ3D], [sideX, dimY3D, frontZ3D - 0.02], 0.01)}
-              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={true} depthWrite={false}
             />
             {/* 깊이 텍스트 — 좌측뷰 깊이 라벨과 동일 스타일 (fontSize, color, rotation) */}
             <Text
@@ -11867,19 +11867,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               outlineColor={textOutlineColor}
               rotation={textRotation}
               renderOrder={100001}
-              material-depthTest={false}
+              material-depthTest={true}
               material-transparent={true}
             >
               {Math.round(actualDepthMm3D)}
             </Text>
             {/* 연장선: 가구 측면 ~ 치수선까지 (탑뷰 좌측뷰와 동일) */}
-            <NativeLine name="dimension_line"
+            <NativeLine name="3d-depth-dimension-extension"
               points={[[cabinetSideX, dimY3D, backZ3D], [sideX, dimY3D, backZ3D]]}
-              color={dimensionColor} renderOrder={100000} depthTest={false}
+              color={dimensionColor} renderOrder={100000} depthTest={true} depthWrite={false}
             />
-            <NativeLine name="dimension_line"
+            <NativeLine name="3d-depth-dimension-extension"
               points={[[cabinetSideX, dimY3D, frontZ3D], [sideX, dimY3D, frontZ3D]]}
-              color={dimensionColor} renderOrder={100000} depthTest={false}
+              color={dimensionColor} renderOrder={100000} depthTest={true} depthWrite={false}
             />
           </group>
         );

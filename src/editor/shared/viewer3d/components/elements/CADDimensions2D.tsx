@@ -1461,36 +1461,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 });
               }
             } else if (modCat !== 'upper') {
-              // 하부장/키큰장 공통: 도어 상단갭 라벨
-              //   doorGapDisplayMode === 'cf' (천장·바닥 기준): 천장 ~ 도어 상단 거리
-              //   doorGapDisplayMode === 'body' (몸통 기준): 가구 상단 ~ 도어 상단 거리 (= doorTopGap)
+              // 하부장/키큰장 공통: 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 거리 (항상 천장 기준)
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
               if (!isLowerSpecial) {
-                let topRefAbs: number;
-                if (doorGapDisplayMode === 'cf') {
-                  const isDroppedZone = (mod as any).zone === 'dropped';
-                  topRefAbs = isDroppedZone && spaceInfo.droppedCeiling?.enabled
-                    ? (spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0))
-                    : spaceInfo.height;
-                } else {
-                  // 몸통 기준 — 가구 상단 = 천장 - 상단몰딩 (가구 상단보다 도어 상단이 위에 있으면 양수)
-                  const topFrameMmRef = (mod as any).hasTopFrame === false
-                    ? 0
-                    : ((mod as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
-                  topRefAbs = spaceInfo.height - topFrameMmRef;
-                }
-                const topGapMm = Math.round(Math.abs(topRefAbs - doorTopAbsMm));
+                const isDroppedZone = (mod as any).zone === 'dropped';
+                const ceilingAbsMm = isDroppedZone && spaceInfo.droppedCeiling?.enabled
+                  ? (spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0))
+                  : spaceInfo.height;
+                const topGapMm = Math.round(Math.max(0, ceilingAbsMm - doorTopAbsMm));
                 if (topGapMm > 0) {
                   doorSegs.push({
-                    bottomY: mmToThreeUnits(Math.min(topRefAbs, doorTopAbsMm)),
-                    topY: mmToThreeUnits(Math.max(topRefAbs, doorTopAbsMm)),
+                    bottomY: mmToThreeUnits(doorTopAbsMm),
+                    topY: mmToThreeUnits(ceilingAbsMm),
                     heightMm: topGapMm,
                     key: `door-topgap-${moduleIndex}`,
                     isUpper: false
                   });
                 }
               }
-              // 하단갭은 doorSegs 밖 별도 분기(allLowerDoorSegs 하단갭)에서 별도 기준으로 표시
+              // 하단갭은 doorSegs 밖 별도 분기에서 바닥 기준으로 표시
             }
           });
 
@@ -1562,31 +1551,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   </Text>
                 </group>
               ))}
-              {/* 하부장/키큰장 도어 하단갭 라벨
-                  doorGapDisplayMode === 'cf': 바닥(절대 0) ~ 도어 하단 거리
-                  doorGapDisplayMode === 'body': 가구 하단(마감재+걸레받이 위) ~ 도어 하단 */}
+              {/* 하부장/키큰장 도어 하단갭: 바닥(0) ~ 도어 하단 (항상 바닥 기준) */}
               {(() => {
                 if (allLowerDoorSegs.length === 0) return null;
                 const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
-                let bottomStartY: number;
-                if (doorGapDisplayMode === 'cf') {
-                  // 바닥 기준: 진짜 바닥(0) ~ 도어 하단
-                  bottomStartY = 0;
-                } else {
-                  // 몸통 기준: 가구 하단 = 마감재 + 걸레받이
-                  const baseFrameMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
-                  bottomStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameMm);
-                }
-                const bottomGapMm = Math.round(Math.abs(lowestBottomY - bottomStartY) / 0.01);
+                const bottomStartY = 0;
+                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
                 if (bottomGapMm <= 0) return null;
-                const sLow = Math.min(bottomStartY, lowestBottomY);
-                const sHigh = Math.max(bottomStartY, lowestBottomY);
                 return (
                   <group key="r-door-bottomgap">
-                    <ExtLine points={[[0, sLow, dimExtZ], [0, sLow, dimZ]]} color={dimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, sLow, dimZ], [0, sHigh, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.008, sLow, dimZ], [0.008, sLow, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (sLow + sHigh) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                    <ExtLine points={[[0, bottomStartY, dimExtZ], [0, bottomStartY, dimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
                     </Text>
                   </group>

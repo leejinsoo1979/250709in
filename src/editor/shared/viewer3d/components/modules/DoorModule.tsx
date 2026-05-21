@@ -252,9 +252,6 @@ const BoxWithEdges: React.FC<{
 
     return mats;
   }, [displayMaterial, doorEdgeBandingMaterial, renderMode, safeArgs, viewMode]);
-  const doorMeshRenderOrder = viewMode === '2D' ? 100010 : (isEditMode ? 999 : 10);
-  const doorEdgeRenderOrder = viewMode === '2D' ? 100011 : (isEditMode ? 1000 : 10);
-
   const doorEdgeBandingStrip = useMemo(() => {
     if (viewMode !== '3D' || renderMode !== 'solid' || !doorEdgeBandingColor) return null;
     const strip = Math.min(0.025, safeArgs[0] / 3, safeArgs[1] / 3);
@@ -424,7 +421,7 @@ const BoxWithEdges: React.FC<{
           }}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
-          renderOrder={doorMeshRenderOrder}
+          renderOrder={isEditMode ? 999 : 10}
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
@@ -460,7 +457,7 @@ const BoxWithEdges: React.FC<{
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링
           ※ 가구 선택(고스트) 상태에서 도어 외곽선은 흰색으로 (3D 전용) */}
       {viewMode === '3D' ? (
-        <lineSegments name={`furniture-edge${panelName ? `-${panelName}` : ''}`} geometry={edgesGeometry} renderOrder={doorEdgeRenderOrder}>
+        <lineSegments name={`furniture-edge${panelName ? `-${panelName}` : ''}`} geometry={edgesGeometry} renderOrder={isEditMode ? 1000 : 10}>
           <lineBasicMaterial
             color={isEditMode ? '#ffffff' : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : "#505050")}
             transparent={renderMode !== 'wireframe'}
@@ -474,7 +471,7 @@ const BoxWithEdges: React.FC<{
         </lineSegments>
       ) : (
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments name="door-edge" geometry={edgesGeometry} renderOrder={100011}>
+          <lineSegments name="door-edge" geometry={edgesGeometry} renderOrder={1001}>
             <lineBasicMaterial
               color={viewMode === '2D' ? (isLocked ? "#FF0000" : "#18CF23") : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))}
               linewidth={viewMode === '2D' ? 3 : 0.5}
@@ -810,10 +807,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             mat.depthWrite = false;
           } else {
             mat.color.set('#18CF23');
-            mat.transparent = true;
+            mat.transparent = false;
             mat.opacity = 1.0;
-            mat.depthWrite = false;
-            mat.depthTest = false;
+            mat.depthWrite = true;
             mat.side = THREE.FrontSide;
           }
         } else if (renderMode === 'wireframe') {
