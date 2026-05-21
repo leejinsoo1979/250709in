@@ -175,7 +175,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     setSlotDraft(result.widths.map(w => String(w)));
     setLockedSlots(result.lockedIndices);
 
-    const hasSlotPlaced = placedModules.some(m => !m.isFreePlacement);
+    const hasSlotPlaced = frontPlacedModules.some(m => !m.isFreePlacement);
     if (hasSlotPlaced) {
       if (!window.confirm('슬롯 너비를 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) {
         return;
@@ -203,7 +203,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
-    placedModules.some(module => {
+    frontPlacedModules.some(module => {
       // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
       const isDual = module.isDualSlot || module.moduleId.includes('dual-');
       // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
@@ -213,7 +213,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       return false;
     });
   const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
-    placedModules.some(module => {
+    frontPlacedModules.some(module => {
       const lastSlotIndex = indexing.columnCount - 1;
       // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
       const isDual = module.isDualSlot || module.moduleId.includes('dual-');
@@ -298,13 +298,13 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
 
     // slotCustomWidth가 있는 모듈이 있으면 슬롯 재분할 적용
-    const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
+    const hasCustomWidths = frontPlacedModules.some(m => m.slotCustomWidth !== undefined);
     if (hasCustomWidths) {
       // normal zone 재분할
       if (info.normal && info.normal.slotWidths) {
         const normalRecalc = recalculateWithCustomWidths(
           { ...fullIndexing, columnCount: info.normal.columnCount, slotWidths: info.normal.slotWidths, internalWidth: info.normal.width, internalStartX: info.normal.startX, columnWidth: info.normal.columnWidth } as any,
-          placedModules,
+          frontPlacedModules,
           'normal'
         );
         info.normal.slotWidths = normalRecalc.slotWidths;
@@ -314,7 +314,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       if (info.dropped && info.dropped.slotWidths) {
         const droppedRecalc = recalculateWithCustomWidths(
           { ...fullIndexing, columnCount: info.dropped.columnCount, slotWidths: info.dropped.slotWidths, internalWidth: info.dropped.width, internalStartX: info.dropped.startX, columnWidth: info.dropped.columnWidth } as any,
-          placedModules,
+          frontPlacedModules,
           'dropped'
         );
         info.dropped.slotWidths = droppedRecalc.slotWidths;
@@ -323,7 +323,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     }
 
     return info;
-  }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount, placedModules]);
+  }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount, frontPlacedModules]);
   
   // 디버깅 로그 추가
   React.useEffect(() => {

@@ -108,7 +108,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { showAlert } = useAlert();
   const { user } = useAuth();
-  const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com';
+  const isNoWallSpace = spaceInfo.installType === 'freestanding'
+    || (!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right);
+  const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com' && !isNoWallSpace;
 
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();

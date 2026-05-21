@@ -84,6 +84,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const isNoWallSpace = spaceInfo?.installType === 'freestanding'
+    || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
+  const canUsePlacementWallTools = isAllowedUser && !isNoWallSpace;
   const hasFurniture = placedModules.length > 0;
   // 모든 슬롯이 가구로 채워졌는지 판단 (프레임병합 버튼 표시 조건)
   const allSlotsFilled = (() => {
@@ -285,7 +288,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     <div className={styles.viewerControls}>
 
       {/* ─── Left: L/F/R 측면 배치벽 토글 (3D 모드에서만) — 기즈모 박스 중앙과 수직 정렬 ─── */}
-      {isAllowedUser && viewMode === '3D' && (
+      {canUsePlacementWallTools && viewMode === '3D' && (
         <div className={styles.segmentedControl} style={{ marginLeft: 19 }}>
           {[
             { id: 'left' as const, label: 'L' },

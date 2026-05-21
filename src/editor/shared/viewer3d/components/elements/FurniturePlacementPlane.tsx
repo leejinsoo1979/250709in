@@ -24,7 +24,9 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const activePlacementWall = useUIStore(state => state.activePlacementWall);
   const showDimensions = useUIStore(state => state.showDimensions);
   const { theme } = useTheme();
-  const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com';
+  const isNoWallSpace = spaceInfo.installType === 'freestanding'
+    || (!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right);
+  const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com' && !isNoWallSpace;
 
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -188,6 +190,9 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   };
 
   const renderSideWallSlotMeshes = (wall: 'left' | 'right') => {
+    if (isNoWallSpace) {
+      return null;
+    }
     if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === wall) {
       return null;
     }
@@ -225,6 +230,28 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const rangeCenterZMm = sideWallRange.startZMm + sideWallRange.depthMm / 2;
     const rangeCenterZ = mmToThreeUnits(rangeCenterZMm);
     const rangeWidth = mmToThreeUnits(sideWallRange.depthMm);
+    // 정면벽에 배치된 가구의 최대 깊이 (정면 모드에서 측면 깊이 가이드를 가구 앞단으로 옮기기 위함)
+    const frontModulesForDim = placedModules.filter(mod => ((mod as any).placementWall || 'front') === 'front');
+    const maxFrontFurnitureDepthMm = frontModulesForDim.reduce((maxDepth, mod) => {
+      const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
+      const d = mod.customDepth
+        ?? mod.upperSectionDepth
+        ?? mod.lowerSectionDepth
+        ?? moduleData?.dimensions?.depth
+        ?? 0;
+      return Math.max(maxDepth, d);
+    }, 0);
+    // 측면 깊이 치수 가이드의 길이/중앙 Z: 가구 있으면 가구 깊이, 없으면 공간 전체 깊이
+    const dimRangeDepthMm = maxFrontFurnitureDepthMm > 0
+      ? maxFrontFurnitureDepthMm
+      : sideWallRange.depthMm;
+    // 가구는 공간 앞쪽에 붙어 있으므로 가이드 중앙 Z = sideWallRange 끝(앞단) - 가구깊이/2
+    const sideWallEndZMm = sideWallRange.startZMm + sideWallRange.depthMm;
+    const dimRangeCenterZMm = maxFrontFurnitureDepthMm > 0
+      ? sideWallEndZMm - maxFrontFurnitureDepthMm / 2
+      : rangeCenterZMm;
+    const dimRangeCenterZ = mmToThreeUnits(dimRangeCenterZMm);
+    const dimRangeWidth = mmToThreeUnits(dimRangeDepthMm);
     const dimensionColor = '#333333';
     const textColor = '#222222';
     // 정면 폭 치수선과 동일 Y 정렬: 천장(=halfHeight) + DIM_GAP(120) × 3 = +360mm, 연장선 끝 = +400mm
@@ -276,7 +303,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       const dimensionRange = getSideWallDimensionRangeMm(wall);
       const dimensionHeight = mmToThreeUnits(dimensionRange.heightMm);
       const dimensionCenterY = mmToThreeUnits(dimensionRange.centerYmm);
-      const halfWidth = rangeWidth / 2;
+      // 가이드 길이: 가구 배치 전엔 공간 전체 깊이, 배치 후엔 가구 깊이만큼만
+      const halfWidth = dimRangeWidth / 2;
       const halfHeight = dimensionHeight / 2;
       const topLineY = halfHeight + dimensionOffset;
       // 정면뷰와 동일한 레이어 규칙:
@@ -286,7 +314,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       const outerDimensionOffset = mmToThreeUnits(hasDoorOnSideWall ? 680 : 500);
       const lineZ = 0.002;
       const textZ = 0.01;
-      const widthLabel = totalSideDepthMm % 1 === 0 ? String(totalSideDepthMm) : totalSideDepthMm.toFixed(1);
+      // 라벨도 동일하게 — 가구 있으면 가구 깊이, 없으면 공간 전체 깊이
+      const widthLabel = dimRangeDepthMm % 1 === 0 ? String(Math.round(dimRangeDepthMm)) : dimRangeDepthMm.toFixed(1);
       const heightLabel = dimensionRange.heightMm % 1 === 0 ? String(dimensionRange.heightMm) : dimensionRange.heightMm.toFixed(1);
       const topFrameHeightMm = spaceInfo.frameSize?.top ?? 30;
       const baseFrameDisplayMm = (() => {
@@ -367,7 +396,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       return (
         <group
           key={`side-wall-${wall}-dimension-guides`}
-          position={[wallX + dimensionOffsetX, dimensionCenterY, rangeCenterZ]}
+          position={[wallX + dimensionOffsetX, dimensionCenterY, dimRangeCenterZ]}
           rotation={[0, rotationY, 0]}
           renderOrder={dimensionRenderOrder}
         >

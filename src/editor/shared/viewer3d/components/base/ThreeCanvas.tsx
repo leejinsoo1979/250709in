@@ -92,7 +92,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
   const { user } = useAuth();
-  const canUsePlacementWallTools = user?.email === ALLOWED_PLACEMENT_WALL_EMAIL;
+  const isNoWallSpace = spaceInfo?.installType === 'freestanding'
+    || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
+  const canUsePlacementWallTools = user?.email === ALLOWED_PLACEMENT_WALL_EMAIL && !isNoWallSpace;
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
   const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo, activePlacementWall, setActivePlacementWall } = useUIStore();
