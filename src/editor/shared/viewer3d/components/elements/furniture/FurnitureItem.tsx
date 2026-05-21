@@ -351,7 +351,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
-  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore();
+  // 3D ViewCube 측면(L/R) 활성 시 카메라 쪽에 있는 가구(인디케이터 가리는 가구)만 숨김
+  //   L 시점(카메라 우측에서 좌측 봄) → x>0 가구 숨김
+  //   R 시점(카메라 좌측에서 우측 봄) → x<0 가구 숨김
+  if (viewMode === '3D') {
+    const px = placedModule.position?.x ?? 0;
+    if (activePlacementWall === 'left' && px > 0) return null;
+    if (activePlacementWall === 'right' && px < 0) return null;
+  }
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const activePopup = useUIStore(state => state.activePopup);
   const { updatePlacedModule } = useFurnitureStore();
