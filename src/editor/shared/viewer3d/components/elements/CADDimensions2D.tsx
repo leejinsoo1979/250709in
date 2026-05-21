@@ -1563,28 +1563,31 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </group>
               ))}
               {/* 하부장/키큰장 도어 하단갭 라벨
-                  doorGapDisplayMode === 'cf': 바닥(마감재 상단) ~ 도어 하단
-                  doorGapDisplayMode === 'body': 가구 하단(걸레받이 상단) ~ 도어 하단 */}
+                  doorGapDisplayMode === 'cf': 바닥(절대 0) ~ 도어 하단 거리
+                  doorGapDisplayMode === 'body': 가구 하단(마감재+걸레받이 위) ~ 도어 하단 */}
               {(() => {
                 if (allLowerDoorSegs.length === 0) return null;
                 const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
                 let bottomStartY: number;
                 if (doorGapDisplayMode === 'cf') {
-                  bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
+                  // 바닥 기준: 진짜 바닥(0) ~ 도어 하단
+                  bottomStartY = 0;
                 } else {
                   // 몸통 기준: 가구 하단 = 마감재 + 걸레받이
                   const baseFrameMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
                   bottomStartY = mmToThreeUnits(floorFinishHeightMm + baseFrameMm);
                 }
-                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
+                const bottomGapMm = Math.round(Math.abs(lowestBottomY - bottomStartY) / 0.01);
                 if (bottomGapMm <= 0) return null;
+                const sLow = Math.min(bottomStartY, lowestBottomY);
+                const sHigh = Math.max(bottomStartY, lowestBottomY);
                 return (
                   <group key="r-door-bottomgap">
-                    <ExtLine points={[[0, bottomStartY, dimExtZ], [0, bottomStartY, dimZ]]} color={dimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                      {Math.abs(bottomGapMm)}
+                    <ExtLine points={[[0, sLow, dimExtZ], [0, sLow, dimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, sLow, dimZ], [0, sHigh, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, sLow, dimZ], [0.008, sLow, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (sLow + sHigh) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      {bottomGapMm}
                     </Text>
                   </group>
                 );
