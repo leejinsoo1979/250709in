@@ -315,8 +315,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
             anchorX="center"
             anchorY="middle"
             renderOrder={dimensionRenderOrder + 1}
-            material-depthTest={false}
-            material-depthWrite={false}
+            material-depthTest={true}
             material-transparent={true}
           >
             {widthLabel}
@@ -355,8 +354,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                 anchorX={item.anchorX}
                 anchorY="middle"
                 renderOrder={dimensionRenderOrder + 1}
-                material-depthTest={false}
-                material-depthWrite={false}
+                material-depthTest={true}
                 material-transparent={true}
               >
                 {heightLabel}
@@ -385,8 +383,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                       anchorX={item.anchorX}
                       anchorY="middle"
                       renderOrder={dimensionRenderOrder + 1}
-                      material-depthTest={false}
-                      material-depthWrite={false}
+                      material-depthTest={true}
                       material-transparent={true}
                     >
                       {label}
@@ -524,6 +521,9 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       const sideModules = sideModulesForWall;
       if (sideModules.length === 0) return null;
 
+      const halfHeight = slotHeight / 2;
+      const topLineY = halfHeight + mmToThreeUnits(65);
+      const textY = topLineY + mmToThreeUnits(34);
       const lineZ = 0.018;
       const textZ = 0.03;
       const tick = mmToThreeUnits(26);
@@ -551,14 +551,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
             const startX = -rangeWidth / 2 + rangeWidth * (logicalStartMm / totalSideDepthMm);
             const endX = -rangeWidth / 2 + rangeWidth * ((logicalStartMm + logicalWidthMm) / totalSideDepthMm);
             const centerX = (startX + endX) / 2;
-            const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
-            const moduleHeightMm = mod.freeHeight
-              ?? moduleData?.dimensions?.height
-              ?? 600;
-            const moduleTopY = mod.position.y + mmToThreeUnits(moduleHeightMm) / 2;
-            const topLineY = moduleTopY - slotY + mmToThreeUnits(65);
-            const textY = topLineY + mmToThreeUnits(34);
-            const labelValue = (mod as any).sideLogicalWidth ?? logicalWidthMm;
+            const labelValue = mod.customWidth ?? logicalWidthMm;
             const label = labelValue % 1 === 0 ? String(labelValue) : labelValue.toFixed(1);
 
             return (
@@ -566,8 +559,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                 {renderDimensionLine(`side-placed-width-${mod.id}-main`, [[startX, topLineY, lineZ], [endX, topLineY, lineZ]])}
                 {renderDimensionLine(`side-placed-width-${mod.id}-left-tick`, [[startX, topLineY - tick, lineZ], [startX, topLineY + tick, lineZ]])}
                 {renderDimensionLine(`side-placed-width-${mod.id}-right-tick`, [[endX, topLineY - tick, lineZ], [endX, topLineY + tick, lineZ]])}
-                {renderDimensionLine(`side-placed-width-${mod.id}-left-ext`, [[startX, topLineY - tick, lineZ], [startX, topLineY + tick, lineZ]])}
-                {renderDimensionLine(`side-placed-width-${mod.id}-right-ext`, [[endX, topLineY - tick, lineZ], [endX, topLineY + tick, lineZ]])}
+                {renderDimensionLine(`side-placed-width-${mod.id}-left-ext`, [[startX, halfHeight, lineZ], [startX, topLineY + tick, lineZ]])}
+                {renderDimensionLine(`side-placed-width-${mod.id}-right-ext`, [[endX, halfHeight, lineZ], [endX, topLineY + tick, lineZ]])}
                 <Text
                   position={[centerX, textY, textZ]}
                   fontSize={dimensionFontSize}
@@ -575,8 +568,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                   anchorX="center"
                   anchorY="middle"
                   renderOrder={dimensionRenderOrder + 11}
-                  material-depthTest={false}
-                  material-depthWrite={false}
+                  material-depthTest={true}
                   material-transparent={true}
                 >
                   {label}
