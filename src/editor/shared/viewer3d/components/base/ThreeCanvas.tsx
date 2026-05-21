@@ -92,9 +92,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
   const { user } = useAuth();
-  const isNoWallSpace = spaceInfo?.installType === 'freestanding'
-    || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
-  const canUsePlacementWallTools = user?.email === ALLOWED_PLACEMENT_WALL_EMAIL && !isNoWallSpace;
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
   const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo, activePlacementWall, setActivePlacementWall } = useUIStore();
@@ -119,6 +116,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
+
+  // 벽 없음 공간(freestanding 또는 좌우 벽 모두 없음)에서는 측면 배치/뷰 토글 비활성화
+  const isNoWallSpace = spaceInfo?.installType === 'freestanding'
+    || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
+  const canUsePlacementWallTools = user?.email === ALLOWED_PLACEMENT_WALL_EMAIL && !isNoWallSpace;
   // 단내림 좌/우 위치 변경 이전 상태 추적
   const prevDroppedPositionRef = useRef<'left' | 'right' | undefined>(spaceInfo?.droppedCeiling?.position);
 
