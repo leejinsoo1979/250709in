@@ -3031,6 +3031,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     (placedModule.rotation * Math.PI) / 180,
     0
   ];
+  const sideWallFillLightDistance = Math.max(width, height, depth) * 2.5;
 
   const sideFrameColor = spaceInfo.materialConfig?.doorColor
     || (spaceInfo.materialConfig as any)?.frameColor
@@ -3682,6 +3683,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           setIsHovered(false);
         }}
       >
+        {isSideWallFurniture && viewMode === '3D' && (
+          <pointLight
+            position={[0, height * 0.35, depth * 0.75]}
+            intensity={0.38}
+            distance={sideWallFillLightDistance}
+            decay={1.7}
+            color="#ffffff"
+            castShadow={false}
+          />
+        )}
         {/* 키큰장찬넬(insert-frame) 클릭 영역 확장: 폭이 좁아 다른 가구 사이에 끼면
             마우스로 잡기 어려운 문제를 해결. 투명 박스 메시를 가구 폭의 좌우로
             확장하여 클릭/호버 영역만 넓히고 시각 변화는 없음. (편집 모드에서만,
