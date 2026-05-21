@@ -114,20 +114,30 @@ const createCompassTexture = (): THREE.Texture => {
 
 // ───────── 큐브 면 정의 ─────────
 // 방을 축소한 큐브처럼 보이게 한다. 앞쪽(+Z)은 열려 있고, 안쪽 뒷벽(-Z)이 Front 배치면이다.
-// 라벨은 "해당 뷰를 선택했을 때 카메라가 바라보는 면"에 부착되어야 한다.
-// 예: Left 뷰는 카메라가 좌측벽을 응시 → 큐브의 -X면이 카메라 쪽을 향함 → -X면에 "Left" 라벨
+// 라벨은 "해당 뷰 방향의 외부 면"에 부착된다.
+// Left 뷰 활성 시 카메라는 우측에서 좌측벽을 응시 → 큐브의 외부 -X(좌측) 면이 카메라 반대편이라 가려져야 하고,
+// 카메라 쪽으로 보이는 건 내부(반대편 안쪽). 외부 -X 면 메쉬를 숨기면 카메라가 내부의 +X 면에 그려진 "Left" 라벨을 볼 수 있다.
 const FACES: Array<{ view: ViewName; label: string; normal: [number, number, number]; innerNormal: [number, number, number] }> = [
-  { view: 'right', label: 'Right', normal: [-1, 0, 0], innerNormal: [1, 0, 0] },
-  { view: 'left', label: 'Left', normal: [1, 0, 0], innerNormal: [-1, 0, 0] },
-  { view: 'top', label: 'Top', normal: [0, -1, 0], innerNormal: [0, 1, 0] },
-  { view: 'bottom', label: 'Bottom', normal: [0, 1, 0], innerNormal: [0, -1, 0] },
-  { view: 'front', label: 'Front', normal: [0, 0, 1], innerNormal: [0, 0, -1] },
+  { view: 'right', label: 'Right', normal: [1, 0, 0], innerNormal: [-1, 0, 0] },
+  { view: 'left', label: 'Left', normal: [-1, 0, 0], innerNormal: [1, 0, 0] },
+  { view: 'top', label: 'Top', normal: [0, 1, 0], innerNormal: [0, -1, 0] },
+  { view: 'bottom', label: 'Bottom', normal: [0, -1, 0], innerNormal: [0, 1, 0] },
+  { view: 'front', label: 'Front', normal: [0, 0, -1], innerNormal: [0, 0, 1] },
 ];
 
 // ───────── ViewCube 본체 ─────────
 const ViewCube: React.FC = () => {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState<ViewName | null>(null);
+  const activePlacementWall = useUIStore((s) => s.activePlacementWall);
+  // 활성 뷰(L/R 토글) 시 카메라는 그 벽 반대편에 있다.
+  // 카메라 쪽 외부 면(=반대편 큐브 면)을 숨겨서 큐브 내부(활성 view 안쪽 면 라벨)가 보이도록.
+  // 예: L 뷰 → 카메라는 +X 쪽 → 큐브 +X(=right) 외부 면을 숨김 → 카메라가 큐브 내부의 -X(=left) 안쪽 면 라벨을 봄
+  const hiddenOuterView: ViewName | null = activePlacementWall === 'left'
+    ? 'right'
+    : activePlacementWall === 'right'
+    ? 'left'
+    : null;
 
   // 면별 텍스처(노말+호버)를 미리 만들어 캐시
   const textures = useMemo(() => {
@@ -163,9 +173,11 @@ const ViewCube: React.FC = () => {
         const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
         const innerQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), innerNormal);
         const isHover = hovered === face.view;
+        const hideOuter = hiddenOuterView === face.view;
         return (
           <group key={face.view}>
             <mesh
+              visible={!hideOuter}
               position={pos.toArray()}
               quaternion={quat}
               onPointerOver={(e) => {
@@ -210,7 +222,7 @@ const ViewCube: React.FC = () => {
               <meshBasicMaterial
                 map={isHover ? textures[face.view].hover : textures[face.view].base}
                 toneMapped={false}
-                side={THREE.FrontSide}
+                side={THREE.DoubleSide}
                 transparent
               />
             </mesh>
