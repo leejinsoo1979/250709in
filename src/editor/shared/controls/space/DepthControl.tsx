@@ -5,10 +5,12 @@ import styles from '../styles/common.module.css';
 interface DepthControlProps {
   spaceInfo: SpaceInfo;
   onUpdate: (updates: Partial<SpaceInfo>) => void;
+  hideUnit?: boolean;
 }
 
-const DepthControl: React.FC<DepthControlProps> = ({ spaceInfo, onUpdate }) => {
+const DepthControl: React.FC<DepthControlProps> = ({ spaceInfo, onUpdate, hideUnit = true }) => {
   const [error, setError] = useState<string>();
+  const [isFocused, setIsFocused] = useState<boolean>(false);
   
   // 안전한 기본값 제공
   const safeDepth = spaceInfo?.depth || DEFAULT_SPACE_VALUES.DEPTH;
@@ -86,19 +88,27 @@ const DepthControl: React.FC<DepthControlProps> = ({ spaceInfo, onUpdate }) => {
   };
 
   return (
-    <div className={styles.inputWrapper}>
-      <label className={styles.inputLabel}>깊이 ({SPACE_LIMITS.DEPTH.MIN}mm ~ {SPACE_LIMITS.DEPTH.MAX}mm)</label>
+    <div className={styles.inputWrapper} style={{ position: 'relative' }}>
+      {isFocused && (
+        <label className={styles.inputLabel} style={{ position: 'absolute', bottom: '-20px', fontSize: '11px', color: '#5b21b6', zIndex: 10 }}>
+          {SPACE_LIMITS.DEPTH.MIN}~{SPACE_LIMITS.DEPTH.MAX}mm
+        </label>
+      )}
       <div className={styles.inputWithUnit}>
         <input
           type="text"
           value={inputValue}
           onChange={(e) => handleInputChange(e.target.value)}
-          onBlur={handleInputBlur}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            handleInputBlur();
+          }}
           onKeyDown={handleKeyDown}
-          className={`${styles.input} ${styles.inputWithUnitField} ${error ? styles.inputError : ''}`}
+          className={`${styles.input} ${!hideUnit ? styles.inputWithUnitField : ''} ${error ? styles.inputError : ''}`}
           placeholder={`${SPACE_LIMITS.DEPTH.MIN}-${SPACE_LIMITS.DEPTH.MAX}`}
         />
-        <span className={styles.unit}>mm</span>
+        {!hideUnit && <span className={styles.unit}>mm</span>}
       </div>
       {error && <div className={styles.errorMessage}>{error}</div>}
     </div>

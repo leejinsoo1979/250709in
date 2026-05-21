@@ -6,9 +6,10 @@ interface WidthControlProps {
   spaceInfo: SpaceInfo;
   onUpdate: (updates: Partial<SpaceInfo>) => void;
   disabled?: boolean;
+  hideUnit?: boolean;
 }
 
-const WidthControl: React.FC<WidthControlProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
+const WidthControl: React.FC<WidthControlProps> = ({ spaceInfo, onUpdate, disabled = false, hideUnit = true }) => {
   const [error, setError] = useState<string>();
   const [isFocused, setIsFocused] = useState<boolean>(false);
 
@@ -106,11 +107,11 @@ const WidthControl: React.FC<WidthControlProps> = ({ spaceInfo, onUpdate, disabl
             handleInputBlur();
           }}
           onKeyDown={handleKeyDown}
-          className={`${styles.input} ${styles.inputWithUnitField} ${error ? styles.inputError : ''}`}
+          className={`${styles.input} ${!hideUnit ? styles.inputWithUnitField : ''} ${error ? styles.inputError : ''}`}
           placeholder={`${SPACE_LIMITS.WIDTH.MIN}-${SPACE_LIMITS.WIDTH.MAX}`}
           disabled={disabled}
         />
-        <span className={styles.unit}>mm</span>
+        {!hideUnit && <span className={styles.unit}>mm</span>}
       </div>
       {error && <div className={styles.errorMessage}>{error}</div>}
     </div>

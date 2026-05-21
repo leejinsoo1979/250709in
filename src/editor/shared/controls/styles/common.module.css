@@ -138,6 +138,7 @@
   color: var(--theme-text);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   -webkit-font-smoothing: antialiased;
+  text-align: center;
 }
 
 .input:focus {

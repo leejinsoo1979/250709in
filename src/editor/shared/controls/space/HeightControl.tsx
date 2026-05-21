@@ -5,9 +5,10 @@ import styles from '../styles/common.module.css';
 interface HeightControlProps {
   spaceInfo: SpaceInfo;
   onUpdate: (updates: Partial<SpaceInfo>) => void;
+  hideUnit?: boolean;
 }
 
-const HeightControl: React.FC<HeightControlProps> = ({ spaceInfo, onUpdate }) => {
+const HeightControl: React.FC<HeightControlProps> = ({ spaceInfo, onUpdate, hideUnit = true }) => {
   const [error, setError] = useState<string>();
   const [isFocused, setIsFocused] = useState<boolean>(false);
   
@@ -104,10 +105,10 @@ const HeightControl: React.FC<HeightControlProps> = ({ spaceInfo, onUpdate }) =>
             handleInputBlur();
           }}
           onKeyDown={handleKeyDown}
-          className={`${styles.input} ${styles.inputWithUnitField} ${error ? styles.inputError : ''}`}
+          className={`${styles.input} ${!hideUnit ? styles.inputWithUnitField : ''} ${error ? styles.inputError : ''}`}
           placeholder={`${SPACE_LIMITS.HEIGHT.MIN}-${SPACE_LIMITS.HEIGHT.MAX}`}
         />
-        <span className={styles.unit}>mm</span>
+        {!hideUnit && <span className={styles.unit}>mm</span>}
       </div>
       {error && <div className={styles.errorMessage}>{error}</div>}
     </div>
