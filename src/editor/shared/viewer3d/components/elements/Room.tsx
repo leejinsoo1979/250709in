@@ -700,7 +700,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore();
   const isLiveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
   const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const isPanelSimulationLayout = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);

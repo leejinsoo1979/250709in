@@ -353,6 +353,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const startTime = performance.now();
       const duration = 420;
       const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+      const sideTransitionWall = canUsePlacementWallTools && (view === 'left' || view === 'right')
+        ? view
+        : null;
+
+      if (sideTransitionWall) {
+        window.dispatchEvent(new CustomEvent('side-placement-view-transition-light', {
+          detail: { active: true, wall: sideTransitionWall }
+        }));
+      }
 
       cancelAnimationFrame(animationFrame);
       const animate = (now: number) => {
@@ -370,6 +379,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
         if (progress < 1) {
           animationFrame = requestAnimationFrame(animate);
+        } else if (sideTransitionWall) {
+          window.dispatchEvent(new CustomEvent('side-placement-view-transition-light', {
+            detail: { active: false, wall: sideTransitionWall }
+          }));
         }
       };
 

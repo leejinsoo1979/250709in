@@ -244,7 +244,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
         color={dimensionColor}
         lineWidth={dimensionLineWidth}
         renderOrder={dimensionRenderOrder}
-        depthTest={true}
+        depthTest={false}
         depthWrite={false}
       />
     );
@@ -536,20 +536,17 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
           renderOrder={dimensionRenderOrder + 10}
         >
           {sideModules.map(mod => {
-            const slotIndex = Math.max(0, mod.slotIndex ?? 0);
-            if (slotIndex >= sideSlotSizes.length) return null;
-
-            const span = mod.isDualSlot ? 2 : 1;
-            const logicalStartMm = sideSlotSizes
-              .slice(0, slotIndex)
-              .reduce((sum, size) => sum + size, 0);
-            const logicalWidthMm = sideSlotSizes
-              .slice(slotIndex, Math.min(sideSlotSizes.length, slotIndex + span))
-              .reduce((sum, size) => sum + size, 0);
+            const logicalWidthMm = (mod as any).sideLogicalWidth
+              ?? mod.customWidth
+              ?? sideSlotSizes[Math.max(0, mod.slotIndex ?? 0)]
+              ?? 0;
             if (logicalWidthMm <= 0.5 || totalSideDepthMm <= 0.5) return null;
 
-            const startX = -rangeWidth / 2 + rangeWidth * (logicalStartMm / totalSideDepthMm);
-            const endX = -rangeWidth / 2 + rangeWidth * ((logicalStartMm + logicalWidthMm) / totalSideDepthMm);
+            const worldDeltaZ = mod.position.z - rangeCenterZ;
+            const localCenterX = wall === 'left' ? -worldDeltaZ : worldDeltaZ;
+            const visualWidth = rangeWidth * (logicalWidthMm / totalSideDepthMm);
+            const startX = localCenterX - visualWidth / 2;
+            const endX = localCenterX + visualWidth / 2;
             const centerX = (startX + endX) / 2;
             const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
             const moduleHeightMm = mod.freeHeight
@@ -558,7 +555,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
             const moduleTopY = mod.position.y + mmToThreeUnits(moduleHeightMm) / 2;
             const topLineY = moduleTopY - slotY + mmToThreeUnits(65);
             const textY = topLineY + mmToThreeUnits(34);
-            const labelValue = (mod as any).sideLogicalWidth ?? logicalWidthMm;
+            const labelValue = logicalWidthMm;
             const label = labelValue % 1 === 0 ? String(labelValue) : labelValue.toFixed(1);
 
             return (

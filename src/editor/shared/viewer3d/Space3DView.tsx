@@ -45,7 +45,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import type { PanelSimulationLayout, PanelSimulationSheetLayout, PanelSimulationSummary } from '@/store/uiStore';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -609,6 +609,41 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
       shadow-bias={-0.0005}
       shadow-radius={12}
       shadow-normalBias={0.02}
+    />
+  );
+};
+
+const CameraSideViewFillLight: React.FC<{ active: boolean }> = ({ active }) => {
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const targetRef = useRef<THREE.Object3D>(null);
+  const { camera, scene } = useThree();
+
+  useEffect(() => {
+    const target = targetRef.current;
+    if (!target) return;
+    scene.add(target);
+    return () => {
+      scene.remove(target);
+    };
+  }, [scene]);
+
+  useFrame(() => {
+    if (!active || !lightRef.current || !targetRef.current) return;
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    lightRef.current.position.copy(camera.position);
+    targetRef.current.position.copy(camera.position).add(direction.multiplyScalar(10));
+    lightRef.current.target = targetRef.current;
+  });
+
+  if (!active) return null;
+
+  return (
+    <directionalLight
+      ref={lightRef}
+      intensity={1.8}
+      color="#ffffff"
+      castShadow={false}
     />
   );
 };
@@ -2063,6 +2098,26 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const initialCameraDistRef = useRef<number | null>(null);
   // 슬라이더 드래그 중 피드백 루프 방지 플래그
   const isSliderDraggingRef = useRef(false);
+  const [sideViewTransitionLightWall, setSideViewTransitionLightWall] = useState<'left' | 'right' | null>(null);
+
+  useEffect(() => {
+    const handleSideViewTransitionLight = (event: Event) => {
+      const detail = (event as CustomEvent<{ active?: boolean; wall?: 'left' | 'right' }>).detail;
+      if (detail?.active && (detail.wall === 'left' || detail.wall === 'right')) {
+        setSideViewTransitionLightWall(detail.wall);
+        return;
+      }
+      setSideViewTransitionLightWall(null);
+    };
+
+    window.addEventListener('side-placement-view-transition-light', handleSideViewTransitionLight);
+    return () => {
+      window.removeEventListener('side-placement-view-transition-light', handleSideViewTransitionLight);
+    };
+  }, []);
+  const activeSideViewLightWall = viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')
+    ? activePlacementWall
+    : sideViewTransitionLightWall;
   // 3D 줌 애니메이션용
   const zoomAnimationRef = useRef<number | null>(null);
   const targetCameraDistRef = useRef<number | null>(null);
@@ -3968,8 +4023,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 intensity={0.6}
                 color="#ffffff"
               />
+              <CameraSideViewFillLight active={!!activeSideViewLightWall} />
               {/* 환경광 - 2D 모드에서는 더 밝게 */}
               <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
+              {activeSideViewLightWall && <ambientLight intensity={0.35} color="#ffffff" />}
 
               {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
               {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}
