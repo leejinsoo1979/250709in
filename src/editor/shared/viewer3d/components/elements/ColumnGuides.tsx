@@ -350,10 +350,6 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
     return null;
   }
-  // 3D ViewCube에서 측면(L/R)을 활성화한 경우에도 정면 슬롯 가이드 숨김
-  if (viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
-    return null;
-  }
 
   // 자유배치 모드에서는 슬롯 가이드 숨김
   if (spaceInfo.layoutMode === 'free-placement') {

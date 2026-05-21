@@ -106,12 +106,209 @@ export const useFurnitureKeyboard = ({
         });
       };
 
+      const isSideWallModule = (module: typeof placedModules[number]) =>
+        module.placementWall === 'left' || module.placementWall === 'right';
+
+      const getPlacementDefaultDepth = (moduleId: string): number => {
+        const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
+        if (moduleId.includes('upper-cabinet')) {
+          return Math.min(300, spaceInfo.depth || 600);
+        }
+        if (moduleId.includes('-entryway-') || moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) {
+          return Math.min(380, spaceInfo.depth || 600);
+        }
+        if (moduleData?.defaultDepth) {
+          return Math.min(moduleData.defaultDepth, spaceInfo.depth || 600);
+        }
+        return Math.min(Math.floor((spaceInfo.depth || 600) * 0.9), 580);
+      };
+
+      const getSideSlotSizes = (wall: 'left' | 'right') => {
+        const totalDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+        const distributeDepth = (depthMm: number) => {
+          if (depthMm <= 0.5) return [];
+          const slotCount = Math.max(1, Math.ceil(depthMm / 600));
+          const slotDepthMm = depthMm / slotCount;
+          return Array.from({ length: slotCount }, () => slotDepthMm);
+        };
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const cornerSlotIndex = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
+        const frontCornerModule = placedModules.find(mod => {
+          const placementWall = mod.placementWall || 'front';
+          return placementWall === 'front' && mod.slotIndex === cornerSlotIndex;
+        });
+        const frontCornerData = frontCornerModule
+          ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
+          : undefined;
+
+        if (!frontCornerModule) {
+          return distributeDepth(totalDepthMm);
+        }
+
+        const cornerDepthMm = Math.min(
+          totalDepthMm,
+          Math.max(
+            1,
+            frontCornerModule.customDepth
+              ?? frontCornerModule.freeDepth
+              ?? frontCornerData?.dimensions?.depth
+              ?? Math.min(600, totalDepthMm)
+          )
+        );
+        const remainingDepthMm = Math.max(0, totalDepthMm - cornerDepthMm);
+        if (remainingDepthMm <= 0.5) {
+          return [totalDepthMm];
+        }
+
+        return [
+          cornerDepthMm,
+          ...distributeDepth(remainingDepthMm)
+        ];
+      };
+
+      const getSideWallRange = () => {
+        const panelDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
+        const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+        return {
+          startZMm: furnitureZOffsetMm - furnitureDepthMm / 2 - 10 - 30,
+          depthMm: panelDepthMm + 300
+        };
+      };
+
+      const buildSideWallMoveUpdate = (
+        module: typeof placedModules[number],
+        nextSlot: number
+      ) => {
+        const wall = module.placementWall as 'left' | 'right';
+        const sideSlotSizes = getSideSlotSizes(wall);
+        const span = module.isDualSlot ? 2 : 1;
+        const spanSlots = sideSlotSizes.slice(nextSlot, nextSlot + span);
+        if (nextSlot < 0 || spanSlots.length < span) {
+          return null;
+        }
+
+        const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+        const sideWallRange = getSideWallRange();
+        const logicalWidthMm = spanSlots.reduce((sum, size) => sum + size, 0);
+        const visualWidthMm = sideWallRange.depthMm * (logicalWidthMm / totalSideDepthMm);
+        const startDepthFromFrontMm = sideSlotSizes
+          .slice(0, nextSlot)
+          .reduce((sum, size) => sum + size, 0);
+        const centerZMm = sideWallRange.startZMm
+          + sideWallRange.depthMm * ((startDepthFromFrontMm + logicalWidthMm / 2) / totalSideDepthMm);
+        const sideWallXmm = wall === 'left' ? -spaceInfo.width / 2 : spaceInfo.width / 2;
+        const sideDepthMm = Math.min(
+          Math.max(1, spaceInfo.width || internalSpace.width || 600),
+          Math.max(1, module.customDepth ?? getPlacementDefaultDepth(module.moduleId))
+        );
+        const sideCenterXmm = wall === 'left'
+          ? sideWallXmm + sideDepthMm / 2
+          : sideWallXmm - sideDepthMm / 2;
+
+        return {
+          position: {
+            x: sideCenterXmm * 0.01,
+            y: module.position.y,
+            z: centerZMm * 0.01
+          },
+          slotIndex: nextSlot,
+          customDepth: sideDepthMm,
+          customWidth: visualWidthMm,
+          sideLogicalWidth: logicalWidthMm,
+          rotation: wall === 'left' ? 90 : -90,
+          placementWall: wall,
+          zone: 'normal' as const,
+          __skipGroupPropagation: true
+        };
+      };
+
+      const canMoveSideWallModules = (
+        movingModules: typeof placedModules,
+        direction: 'left' | 'right'
+      ) => {
+        const movingIds = new Set(movingModules.map(module => module.id));
+        const delta = direction === 'left' ? -1 : 1;
+        const plannedRanges = movingModules.map(module => {
+          if (!isSideWallModule(module) || module.isLocked || typeof module.slotIndex !== 'number') {
+            return null;
+          }
+          const wall = module.placementWall as 'left' | 'right';
+          const sideSlotSizes = getSideSlotSizes(wall);
+          const span = module.isDualSlot ? 2 : 1;
+          const nextSlot = module.slotIndex + delta;
+          if (nextSlot < 0 || nextSlot + span > sideSlotSizes.length) {
+            return null;
+          }
+          return {
+            module,
+            wall,
+            start: nextSlot,
+            end: nextSlot + span
+          };
+        });
+
+        if (plannedRanges.some(range => range === null)) {
+          return false;
+        }
+
+        return plannedRanges.every(range => {
+          if (!range) return false;
+          return !placedModules.some(other => {
+            if (movingIds.has(other.id)) return false;
+            if ((other.placementWall || 'front') !== range.wall) return false;
+            if (typeof other.slotIndex !== 'number') return false;
+            const otherSpan = other.isDualSlot ? 2 : 1;
+            const otherStart = other.slotIndex;
+            const otherEnd = otherStart + otherSpan;
+            return range.start < otherEnd && range.end > otherStart;
+          });
+        });
+      };
+
+      const moveSideWallModuleOneSlot = (
+        module: typeof placedModules[number],
+        direction: 'left' | 'right'
+      ) => {
+        if (!isSideWallModule(module) || module.isLocked) {
+          return false;
+        }
+
+        const movingModules = module.groupId
+          ? placedModules.filter(item =>
+            item.groupId === module.groupId &&
+            isSideWallModule(item) &&
+            !item.isLocked
+          )
+          : [module];
+
+        if (movingModules.length === 0 || !canMoveSideWallModules(movingModules, direction)) {
+          return true;
+        }
+
+        const delta = direction === 'left' ? -1 : 1;
+        movingModules.forEach(item => {
+          const nextSlot = (item.slotIndex ?? 0) + delta;
+          const updates = buildSideWallMoveUpdate(item, nextSlot);
+          if (updates) {
+            updatePlacedModule(item.id, updates as any);
+          }
+        });
+        return true;
+      };
+
       // 편집 모드이거나 가구 편집 팝업이 열린 상태일 때 처리
       const targetModuleId = editingModuleId || (activePopup.type === 'furnitureEdit' ? activePopup.id : null);
 
       if ((editMode && editingModuleId) || (activePopup.type === 'furnitureEdit' && activePopup.id)) {
         const editingModule = placedModules.find(m => m.id === targetModuleId);
         if (!editingModule) return;
+
+        if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && isSideWallModule(editingModule)) {
+          moveSideWallModuleOneSlot(editingModule, e.key === 'ArrowLeft' ? 'left' : 'right');
+          e.preventDefault();
+          return;
+        }
 
         // 자유배치 가구는 FreePlacementDropZone의 키보드 핸들러에서 처리
         if (editingModule.isFreePlacement) return;
@@ -510,6 +707,12 @@ export const useFurnitureKeyboard = ({
         if (selectedPlacedModuleId) {
           const selectedModule = placedModules.find(m => m.id === selectedPlacedModuleId);
           if (!selectedModule) return;
+
+          if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && isSideWallModule(selectedModule)) {
+            moveSideWallModuleOneSlot(selectedModule, e.key === 'ArrowLeft' ? 'left' : 'right');
+            e.preventDefault();
+            return;
+          }
 
           // 그룹 묶인 가구 선택 시: 그룹 전체를 한 슬롯씩만 이동.
           // 그룹 멤버를 순회 업데이트하면 store의 그룹 전파와 중복되어 여러 칸 이동하므로 대표 가구만 업데이트한다.

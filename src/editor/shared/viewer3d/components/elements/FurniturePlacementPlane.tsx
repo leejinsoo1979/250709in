@@ -185,7 +185,21 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const rotationY = wall === 'left' ? Math.PI / 2 : -Math.PI / 2;
     const surfaceOffsetX = wall === 'left' ? 0.03 : -0.03;
     const textOffsetX = surfaceOffsetX + (wall === 'left' ? 0.01 : -0.01);
-    const dimensionOffsetX = wall === 'left' ? 0.16 : -0.16;
+    const sideModulesForWall = placedModules.filter(mod => ((mod as any).placementWall || 'front') === wall);
+    const maxSideFurnitureDepthMm = sideModulesForWall.reduce((maxDepth, mod) => {
+      const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
+      return Math.max(
+        maxDepth,
+        mod.customDepth
+          ?? mod.freeDepth
+          ?? moduleData?.defaultDepth
+          ?? moduleData?.dimensions?.depth
+          ?? 0
+      );
+    }, 0);
+    const dimensionOffsetX = maxSideFurnitureDepthMm > 0
+      ? mmToThreeUnits(maxSideFurnitureDepthMm + 20) * (wall === 'left' ? 1 : -1)
+      : (wall === 'left' ? 0.16 : -0.16);
     const meshes: React.ReactNode[] = [];
     const sideWallRange = getSideWallMeshRangeMm();
     const totalSideDepthMm = sideSlotSizes.reduce((sum, size) => sum + size, 0);
@@ -504,7 +518,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const sidePlacedWidthDimensions = (() => {
       if (!showDimensions || activePlacementWall !== wall) return null;
 
-      const sideModules = placedModules.filter(mod => ((mod as any).placementWall || 'front') === wall);
+      const sideModules = sideModulesForWall;
       if (sideModules.length === 0) return null;
 
       const halfHeight = slotHeight / 2;
