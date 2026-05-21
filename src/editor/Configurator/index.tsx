@@ -691,7 +691,8 @@ const Configurator: React.FC = () => {
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
   const [doorGapAllSync, setDoorGapAllSync] = useState(true);
   // 도어 셋팅 표시 기준 ('body' = 몸통 기준 / 'cf' = 천장·바닥 기준)
-  const [doorGapRefMode, setDoorGapRefMode] = useState<'body' | 'cf'>('body');
+  const doorGapRefMode = useUIStore(s => s.doorGapDisplayMode);
+  const setDoorGapRefMode = useUIStore(s => s.setDoorGapDisplayMode);
 
   // 가구별 천장/바닥까지 거리 계산 (천장·바닥 기준 변환용)
   //   - topDistance: 가구 상단 ~ 천장 사이 거리 = 상단몰딩 두께(topFrameThickness)

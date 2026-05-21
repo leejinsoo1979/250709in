@@ -234,6 +234,10 @@ interface UIState {
   //   - 다른 같은 카테고리 가구 팝업에서 "속성 주입" 시 사용자가 선택한 그룹의 속성만 덮어씀
   //   - 새 저장 시 같은 카테고리의 기존 프리셋은 덮어쓰기됨
   furniturePresets: Partial<Record<'full' | 'upper' | 'lower', { savedAt: number; props: Record<string, any> }>>;
+  // 도어 상/하단갭 표시 기준 ('body' = 몸통 기준 / 'cf' = 천장·바닥 기준)
+  //   우측바 토글 상태. 3D 도어 옆 치수 라벨도 이 값을 반영해 실시간 전환됨.
+  doorGapDisplayMode: 'body' | 'cf';
+  setDoorGapDisplayMode: (mode: 'body' | 'cf') => void;
   setFurniturePreset: (category: 'full' | 'upper' | 'lower', props: Record<string, any>) => void;
   clearFurniturePreset: (category: 'full' | 'upper' | 'lower') => void;
 
@@ -522,6 +526,7 @@ const initialUIState = {
   selectedFurnitureId: null,
   selectedFurnitureIds: [],
   furniturePresets: {},
+  doorGapDisplayMode: 'body' as const,
   highlightedSection: null,  // 기본값: 강조된 섹션 없음
   highlightedPanel: null,  // 기본값: 강조된 패널 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
@@ -1008,6 +1013,8 @@ export const useUIStore = create<UIState>()(
         delete next[category];
         return { furniturePresets: next };
       }),
+
+      setDoorGapDisplayMode: (mode) => set({ doorGapDisplayMode: mode }),
 
       setSelectedSlotIndex: (index) =>
         set({ selectedSlotIndex: index }),
