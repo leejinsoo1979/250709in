@@ -1460,43 +1460,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   isUpper: false
                 });
               }
-            } else if (modCat === 'lower' && !modData.id?.includes('lower-top-down-') && !modData.id?.includes('lower-door-lift-')) {
-              // 하부장 상단갭: 천장 기준 = 천장 ~ 도어 상단 거리
-              const ceilingAbsMm = spaceInfo.height;
-              const topGapMm = Math.round(Math.max(0, ceilingAbsMm - doorTopAbsMm));
-              if (topGapMm > 0) {
-                doorSegs.push({
-                  bottomY: mmToThreeUnits(doorTopAbsMm),
-                  topY: mmToThreeUnits(ceilingAbsMm),
-                  heightMm: topGapMm,
-                  key: `door-topgap-${moduleIndex}`,
-                  isUpper: false
-                });
+            } else if (modCat !== 'upper') {
+              // 하부장/키큰장 공통: 상단갭 = 천장(또는 단내림) ~ 도어 상단 거리 (도어 위에 표시)
+              //   ※ lower-top-down/lower-door-lift는 별도 분기에서 처리됨
+              const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
+              if (!isLowerSpecial) {
+                const isDroppedZone = (mod as any).zone === 'dropped';
+                const ceilingAbsMm = isDroppedZone && spaceInfo.droppedCeiling?.enabled
+                  ? (spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0))
+                  : spaceInfo.height;
+                const topGapMm = Math.round(Math.max(0, ceilingAbsMm - doorTopAbsMm));
+                if (topGapMm > 0) {
+                  doorSegs.push({
+                    bottomY: mmToThreeUnits(doorTopAbsMm),
+                    topY: mmToThreeUnits(ceilingAbsMm),
+                    heightMm: topGapMm,
+                    key: `door-topgap-${moduleIndex}`,
+                    isUpper: false
+                  });
+                }
               }
-              // 하단갭은 doorSegs 밖에서 별도 렌더링 (바닥 기준 절대 거리)
-            } else if (modCat !== 'upper' && modCat !== 'lower') {
-              // 키큰장(full): 상단갭 = 천장 ~ 도어 상단, 하단갭 = 도어 하단 ~ 바닥
-              const ceilingAbsMm = spaceInfo.height;
-              const topGapMm = Math.round(Math.max(0, ceilingAbsMm - doorTopAbsMm));
-              if (topGapMm > 0) {
-                doorSegs.push({
-                  bottomY: mmToThreeUnits(doorTopAbsMm),
-                  topY: mmToThreeUnits(ceilingAbsMm),
-                  heightMm: topGapMm,
-                  key: `door-topgap-${moduleIndex}`,
-                  isUpper: false
-                });
-              }
-              const bottomGapMm = Math.round(Math.max(0, doorBottomAbsMm));
-              if (bottomGapMm > 0) {
-                doorSegs.push({
-                  bottomY: mmToThreeUnits(0),
-                  topY: mmToThreeUnits(doorBottomAbsMm),
-                  heightMm: bottomGapMm,
-                  key: `door-botgap-${moduleIndex}`,
-                  isUpper: false
-                });
-              }
+              // 하단갭은 doorSegs 밖 별도 분기(allLowerDoorSegs 하단갭)에서 바닥 기준으로 표시
             }
           });
 
