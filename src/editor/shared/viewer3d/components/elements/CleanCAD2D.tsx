@@ -11678,18 +11678,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <NativeLine name="3d-depth-dimension"
                   points={[[sideX, midY3D, backZ3D], [sideX, midY3D, frontZ3D]]}
                   color={dimensionColor} lineWidth={1.5}
-                  renderOrder={1000000} depthTest={false}
+                  renderOrder={100000} depthTest={true}
                 />
                 {/* 화살표 (뒷면 / 앞면) */}
                 <NativeLine name="3d-depth-dimension"
                   points={createArrowHead([sideX, midY3D, backZ3D], [sideX, midY3D, backZ3D + 0.02])}
                   color={dimensionColor} lineWidth={1.5}
-                  renderOrder={1000000} depthTest={false}
+                  renderOrder={100000} depthTest={true}
                 />
                 <NativeLine name="3d-depth-dimension"
                   points={createArrowHead([sideX, midY3D, frontZ3D], [sideX, midY3D, frontZ3D - 0.02])}
                   color={dimensionColor} lineWidth={1.5}
-                  renderOrder={1000000} depthTest={false}
+                  renderOrder={100000} depthTest={true}
                 />
                 {/* 깊이 텍스트 (가구 측면 외부) */}
                 <Text
@@ -11701,8 +11701,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   outlineWidth={textOutlineWidth}
                   outlineColor={textOutlineColor}
                   rotation={textRotation}
-                  renderOrder={1000001}
-                  material-depthTest={false}
+                  renderOrder={100001}
+                  material-depthTest={true}
                   material-transparent={true}
                 >
                   {Math.round(actualDepthMm3D)}
@@ -11711,12 +11711,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <NativeLine name="3d-depth-dimension-ext"
                   points={[[cabinetSideX, midY3D, backZ3D], [sideX, midY3D, backZ3D]]}
                   color={dimensionColor} lineWidth={0.8}
-                  renderOrder={1000000} depthTest={false}
+                  renderOrder={100000} depthTest={true}
                 />
                 <NativeLine name="3d-depth-dimension-ext"
                   points={[[cabinetSideX, midY3D, frontZ3D], [sideX, midY3D, frontZ3D]]}
                   color={dimensionColor} lineWidth={0.8}
-                  renderOrder={1000000} depthTest={false}
+                  renderOrder={100000} depthTest={true}
                 />
               </group>
             );

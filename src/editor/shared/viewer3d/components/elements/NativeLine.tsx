@@ -51,12 +51,13 @@ export const NativeLine: React.FC<NativeLineProps> = ({
     name.includes('guide') ||
     name.includes('dim')
   );
+  const isOccludableDepthDimension = typeof name === 'string' && name.startsWith('3d-depth-dimension');
   const effectiveOpacity = isDimensionOverlay && inspectorFocused ? Math.min(opacity, 0.18) : opacity;
-  const effectiveDepthTest = isDimensionOverlay ? false : depthTest;
-  const effectiveDepthWrite = isDimensionOverlay ? false : depthWrite;
-  const effectiveRenderOrder = isDimensionOverlay ? Math.max(renderOrder, 100000) : renderOrder;
+  const effectiveDepthTest = isDimensionOverlay && !isOccludableDepthDimension ? false : depthTest;
+  const effectiveDepthWrite = isDimensionOverlay && !isOccludableDepthDimension ? false : depthWrite;
+  const effectiveRenderOrder = isDimensionOverlay && !isOccludableDepthDimension ? Math.max(renderOrder, 100000) : renderOrder;
   // 치수 오버레이는 항상 마지막에 그려지도록 transparent 강제 (Three.js는 transparent=true를 마지막에 렌더)
-  const effectiveTransparent = isDimensionOverlay ? true : (transparent || effectiveOpacity < 1);
+  const effectiveTransparent = isDimensionOverlay && !isOccludableDepthDimension ? true : (transparent || effectiveOpacity < 1);
 
   // points를 flat array로 변환
   const flatPositions = useMemo(() => {
