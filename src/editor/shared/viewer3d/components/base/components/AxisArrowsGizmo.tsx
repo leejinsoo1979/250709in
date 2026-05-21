@@ -114,12 +114,14 @@ const createCompassTexture = (): THREE.Texture => {
 
 // ───────── 큐브 면 정의 ─────────
 // 방을 축소한 큐브처럼 보이게 한다. 앞쪽(+Z)은 열려 있고, 안쪽 뒷벽(-Z)이 Front 배치면이다.
+// 라벨은 "해당 뷰를 선택했을 때 카메라가 바라보는 면"에 부착되어야 한다.
+// 예: Left 뷰는 카메라가 좌측벽을 응시 → 큐브의 -X면이 카메라 쪽을 향함 → -X면에 "Left" 라벨
 const FACES: Array<{ view: ViewName; label: string; normal: [number, number, number]; innerNormal: [number, number, number] }> = [
-  { view: 'right', label: 'Right', normal: [1, 0, 0], innerNormal: [-1, 0, 0] },
-  { view: 'left', label: 'Left', normal: [-1, 0, 0], innerNormal: [1, 0, 0] },
-  { view: 'top', label: 'Top', normal: [0, 1, 0], innerNormal: [0, -1, 0] },
-  { view: 'bottom', label: 'Bottom', normal: [0, -1, 0], innerNormal: [0, 1, 0] },
-  { view: 'front', label: 'Front', normal: [0, 0, -1], innerNormal: [0, 0, 1] },
+  { view: 'right', label: 'Right', normal: [-1, 0, 0], innerNormal: [1, 0, 0] },
+  { view: 'left', label: 'Left', normal: [1, 0, 0], innerNormal: [-1, 0, 0] },
+  { view: 'top', label: 'Top', normal: [0, -1, 0], innerNormal: [0, 1, 0] },
+  { view: 'bottom', label: 'Bottom', normal: [0, 1, 0], innerNormal: [0, -1, 0] },
+  { view: 'front', label: 'Front', normal: [0, 0, 1], innerNormal: [0, 0, -1] },
 ];
 
 // ───────── ViewCube 본체 ─────────
