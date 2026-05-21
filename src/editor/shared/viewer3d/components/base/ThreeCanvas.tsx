@@ -502,23 +502,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [isMeasureMode, cursorColor, defaultCursor]);
 
-  // 측면뷰 활성 상태에서 cameraMode 변경 시 카메라 위치를 측면뷰로 재설정
-  // (OrthographicCamera/PerspectiveCamera 컴포넌트가 재마운트되며 정면 좌표로 점프하는 것 방지)
-  const prevCameraModeForSideViewRef = useRef(cameraMode);
-  useEffect(() => {
-    const prev = prevCameraModeForSideViewRef.current;
-    prevCameraModeForSideViewRef.current = cameraMode;
-    if (prev === cameraMode) return;
-    if (viewMode !== '3D') return;
-    if (!canUsePlacementWallTools) return;
-    if (activePlacementWall !== 'left' && activePlacementWall !== 'right') return;
-    // 새 카메라 컴포넌트 마운트 + R3F 카메라 적용 이후 측면뷰 좌표 재적용
-    const id = window.setTimeout(() => {
-      resetCamera();
-    }, 80);
-    return () => window.clearTimeout(id);
-  }, [cameraMode, viewMode, activePlacementWall, canUsePlacementWallTools, resetCamera]);
-
   // viewMode 및 cameraMode 변경 시 그림자 설정 업데이트
   useEffect(() => {
     if (rendererRef.current && viewMode === '3D') {
@@ -847,6 +830,23 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       newTarget: controls.target.toArray(),
     });
   }, [camera, viewMode, cameraMode, activePlacementWall, canUsePlacementWallTools, spaceInfo]);
+
+  // 측면뷰 활성 상태에서 cameraMode 변경 시 카메라 위치를 측면뷰로 재설정
+  // (OrthographicCamera/PerspectiveCamera 컴포넌트가 재마운트되며 정면 좌표로 점프하는 것 방지)
+  const prevCameraModeForSideViewRef = useRef(cameraMode);
+  useEffect(() => {
+    const prev = prevCameraModeForSideViewRef.current;
+    prevCameraModeForSideViewRef.current = cameraMode;
+    if (prev === cameraMode) return;
+    if (viewMode !== '3D') return;
+    if (!canUsePlacementWallTools) return;
+    if (activePlacementWall !== 'left' && activePlacementWall !== 'right') return;
+    // 새 카메라 컴포넌트 마운트 + R3F 카메라 적용 이후 측면뷰 좌표 재적용
+    const id = window.setTimeout(() => {
+      resetCamera();
+    }, 80);
+    return () => window.clearTimeout(id);
+  }, [cameraMode, viewMode, activePlacementWall, canUsePlacementWallTools, resetCamera]);
 
   // 스페이스바 토글: 누를 때마다 [카메라 초기화] ↔ [카메라 모드 전환] 순으로 번갈아 실행
   // - 홀수 번째: 카메라 초기화
