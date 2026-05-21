@@ -8,6 +8,7 @@ interface PlacedModule {
   moduleId: string;
   position: { x: number; y: number; z: number };
   rotation: number;
+  placementWall?: 'front' | 'left' | 'right';
 }
 
 export const useSlotOccupancy = (spaceInfo: SpaceInfo) => {
@@ -28,6 +29,8 @@ export const useSlotOccupancy = (spaceInfo: SpaceInfo) => {
       const occupiedSlotsDropped = new Set<number>();
       
       placedModules.forEach(module => {
+        if ((module.placementWall || 'front') !== 'front') return;
+
         const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
         if (!moduleData) return;
         
@@ -86,6 +89,8 @@ export const useSlotOccupancy = (spaceInfo: SpaceInfo) => {
     const occupiedSlots = new Set<number>();
     
     placedModules.forEach(module => {
+      if ((module.placementWall || 'front') !== 'front') return;
+
       const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleData) return;
       

@@ -30,6 +30,11 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       const updatedModules: PlacedModule[] = [];
       
       currentModules.forEach(module => {
+        if ((module.placementWall || 'front') !== 'front') {
+          updatedModules.push(module);
+          return;
+        }
+
         // 자유배치 모듈: 공간 경계 변경 시 비례 리사이징 + 재배치
         if (module.isFreePlacement) {
           const oldBounds = getInternalSpaceBoundsX(oldSpaceInfo);
@@ -411,7 +416,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         // 단내림 활성화 시 영역 확인
         if (newSpaceInfo.droppedCeiling?.enabled && newIndexing.zones) {
           // 현재 슬롯의 영역 확인
-          const moduleX = newIndexing.threeUnitPositions[slotIndex] * 1000; // Three.js units to mm
+          const moduleX = newIndexing.threeUnitPositions[slotIndex] * 100; // Three.js units to mm
           const zoneInfo = ColumnIndexer.findZoneAndSlotFromPosition(
             { x: moduleX },
             newSpaceInfo,
@@ -426,7 +431,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             
             // 영역별 위치 계산
             const slotCenterX = zoneSlots.startX + (zoneInfo.slotIndex * zoneSlots.columnWidth) + (zoneSlots.columnWidth / 2);
-            newX = slotCenterX * 0.001; // mm to Three.js units
+            newX = slotCenterX * 0.01; // mm to Three.js units
             
             // 단내림 영역의 경우 커스텀 너비 설정
             if (zone === 'dropped') {

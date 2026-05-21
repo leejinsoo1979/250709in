@@ -163,6 +163,8 @@ const applyModuleAndGroupedMovement = (
  * - 새 가구가 full이면 → 인접 upper/lower가 있는 방향 EP 체크
  */
 const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
+  if ((newModule.placementWall || 'front') !== 'front') return;
+
   const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
   const internalSpace = calculateInternalSpace(spaceInfo);
   const newModuleData = getModuleById(newModule.moduleId, internalSpace, spaceInfo);
@@ -178,6 +180,7 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
   // 인접 모듈 찾기 (같은 zone)
   const findAdjacentModule = (targetSlotIndex: number) =>
     allModules.find(m =>
+      (m.placementWall || 'front') === 'front' &&
       m.id !== newModule.id &&
       m.zone === newModule.zone &&
       (m.slotIndex === targetSlotIndex ||
@@ -240,6 +243,8 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
  * 삭제되는 가구가 upper/lower이고, 같은 슬롯에 다른 upper/lower가 남아있지 않으면 EP 해제.
  */
 const autoClearAdjacentFullEP = (removedModule: PlacedModule) => {
+  if ((removedModule.placementWall || 'front') !== 'front') return;
+
   const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
   const internalSpace = calculateInternalSpace(spaceInfo);
   const removedData = getModuleById(removedModule.moduleId, internalSpace, spaceInfo);
@@ -256,6 +261,7 @@ const autoClearAdjacentFullEP = (removedModule: PlacedModule) => {
 
   // 같은 슬롯에 다른 upper/lower가 남아있는지 체크
   const remainingUpperLower = allModules.find(m =>
+    (m.placementWall || 'front') === 'front' &&
     m.id !== removedModule.id &&
     m.zone === removedModule.zone &&
     m.slotIndex === slotIndex &&
@@ -271,6 +277,7 @@ const autoClearAdjacentFullEP = (removedModule: PlacedModule) => {
   // 인접 모듈 찾기
   const findAdjacentFull = (targetSlotIndex: number) =>
     allModules.find(m =>
+      (m.placementWall || 'front') === 'front' &&
       m.id !== removedModule.id &&
       m.zone === removedModule.zone &&
       (() => {
@@ -386,7 +393,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (typeof window !== 'undefined' && (window as any).__doorInstallIntent === true) {
         intent = true;
       }
-      const anyOtherHasDoor = state.placedModules.some((m: any) => m.hasDoor === true);
+      const anyOtherHasDoor = state.placedModules.some((m: any) =>
+        ((m as any).placementWall || 'front') === ((module as any).placementWall || 'front') &&
+        m.hasDoor === true
+      );
       if (intent === true || doorsOpen === true || anyOtherHasDoor) {
         module.hasDoor = true;
       }
@@ -1102,16 +1112,19 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       const target = updatedModules.find(m => m.id === moduleId);
       if (!target || target.slotIndex === undefined) return { placedModules: updatedModules };
+      if ((target.placementWall || 'front') !== 'front') return { placedModules: updatedModules };
 
       const targetZone = target.zone || 'normal';
+      const frontModulesForIndex = updatedModules.filter(m => (m.placementWall || 'front') === 'front');
 
       // 2. recalculateWithCustomWidths로 슬롯 재분할
-      const recalculated = recalculateWithCustomWidths(baseIndexing, updatedModules, targetZone);
+      const recalculated = recalculateWithCustomWidths(baseIndexing, frontModulesForIndex, targetZone);
       const columnCount = recalculated.columnCount;
 
       // 3. 같은 zone 내 모든 모듈의 position.x / moduleWidth 업데이트
       updatedModules = updatedModules.map(m => {
         const mZone = m.zone || 'normal';
+        if ((m.placementWall || 'front') !== 'front') return m;
         if (mZone !== targetZone) return m;
         if (m.slotIndex === undefined) return m;
 
@@ -1182,6 +1195,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set((state) => {
       const updatedModules = state.placedModules.map(module => {
         const updated = { ...module };
+
+        if ((module.placementWall || 'front') !== 'front') {
+          return updated;
+        }
 
         if (module.customWidth !== undefined) {
           delete updated.customWidth;

@@ -93,7 +93,10 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   if (isBuiltInFridgeAuto || isInsertFrameAuto) {
     const initialIndexing = calculateSpaceIndexing(spaceInfo);
     const placedNow = useFurnitureStore.getState().placedModules.filter(m =>
-      !m.isFreePlacement && (m.zone || 'normal') === (zone || 'normal') && typeof m.slotIndex === 'number'
+      ((m as any).placementWall || 'front') === 'front' &&
+      !m.isFreePlacement &&
+      (m.zone || 'normal') === (zone || 'normal') &&
+      typeof m.slotIndex === 'number'
     );
     // 점유된 슬롯 인덱스 (이번 배치 + 1 포함)
     const occupiedIndices = new Set<number>();
@@ -139,7 +142,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const existingModules = useFurnitureStore.getState().placedModules;
 
   // 인서트 프레임 균등 흡수 로직 제거 — 인서트 프레임 폭은 사용자가 직접 설정 (136 고정 또는 클릭 팝업)
-  const adjustedExistingModules = existingModules;
+  const adjustedExistingModules = existingModules.filter(m =>
+    ((m as any).placementWall || 'front') === 'front'
+  );
 
   const virtualModulesForIndex = needsVirtualModule
     ? [
@@ -807,7 +812,10 @@ function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurniture
   // 빈 슬롯 2개가 연속으로 없으면 컬럼수를 부족분만큼 +
   const initialIndexing = calculateSpaceIndexing(spaceInfo);
   const placedNow = useFurnitureStore.getState().placedModules.filter(m =>
-    !m.isFreePlacement && (m.zone || 'normal') === (zone || 'normal') && typeof m.slotIndex === 'number'
+    ((m as any).placementWall || 'front') === 'front' &&
+    !m.isFreePlacement &&
+    (m.zone || 'normal') === (zone || 'normal') &&
+    typeof m.slotIndex === 'number'
   );
   const occupiedIndices = new Set<number>();
   placedNow.forEach(m => {

@@ -23,7 +23,7 @@ import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, calculateFurnitureBo
 import { useUIStore } from '@/store/uiStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { useAuth } from '@/auth/AuthProvider';
-import { calculateSideWallPlacementRangeMm } from '../../utils/sideWallPlacement';
+import { calculateSideWallPlacementRangeMm, resolveSideWallCornerBodyDepthMm } from '../../utils/sideWallPlacement';
 
 // 빌트인 냉장고장: 폭 582 / 깊이 600 고정 모듈
 // 슬롯 너비와 무관하게 582로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
@@ -264,17 +264,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         return distributeSideDepth(totalSideDepthMm);
       }
 
-      const fallbackCornerDepthMm = Math.min(600, totalSideDepthMm);
-      const cornerDepthMm = Math.min(
-        totalSideDepthMm,
-        Math.max(
-          1,
-          frontCornerModule.customDepth
-            ?? frontCornerModule.freeDepth
-            ?? frontCornerData?.dimensions?.depth
-            ?? fallbackCornerDepthMm
-        )
-      );
+      const cornerDepthMm = resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, totalSideDepthMm);
       const remainingSideDepthMm = Math.max(0, totalSideDepthMm - cornerDepthMm);
       if (remainingSideDepthMm <= 0.5) {
         return [totalSideDepthMm];
@@ -290,9 +280,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const sideDropHeightMm = isDroppedSideWall ? (sideDroppedCeiling.dropHeight || 0) : 0;
     const sideWallHeightMm = Math.max(1, internalSpace.height - sideDropHeightMm);
     const sideWallTopYmm = internalSpace.startY + sideWallHeightMm;
+    const maxSideCabinetDepthMm = Math.max(1, spaceInfo.width || internalSpace.width || 600);
     const sideCabinetDepthMm = Math.min(
-      Math.max(1, spaceInfo.width || internalSpace.width || 600),
-      Math.max(1, getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600))
+      maxSideCabinetDepthMm,
+      Math.max(1, frontCornerModule
+        ? resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, maxSideCabinetDepthMm)
+        : getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600))
     );
     const sideCenterXmm = wall === 'left'
       ? sideWallXmm + sideCabinetDepthMm / 2
@@ -345,7 +338,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     activePlacementWall,
     distributeSideDepth,
     internalSpace,
-    isSideDualModule,
     isSidePlacementActive,
     placedModules,
     spaceInfo
@@ -449,7 +441,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       },
       rotation: placementData.rotation,
       hasDoor: false,
-      customDepth: getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600),
+      customDepth: placementData.sideCabinetDepthMm,
       customWidth: visualWidthMm,
       sideLogicalWidth: logicalWidthMm,
       slotIndex: sideSlotIndex,
@@ -636,17 +628,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return distributeSideDepth(totalSideDepthMm);
         }
 
-        const fallbackCornerDepthMm = Math.min(600, totalSideDepthMm);
-        const cornerDepthMm = Math.min(
-          totalSideDepthMm,
-          Math.max(
-            1,
-            frontCornerModule.customDepth
-              ?? frontCornerModule.freeDepth
-              ?? frontCornerData?.dimensions?.depth
-              ?? fallbackCornerDepthMm
-          )
-        );
+        const cornerDepthMm = resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, totalSideDepthMm);
         const remainingSideDepthMm = Math.max(0, totalSideDepthMm - cornerDepthMm);
         if (remainingSideDepthMm <= 0.5) {
           return [totalSideDepthMm];
@@ -664,9 +646,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const sideDropHeightMm = isDroppedSideWall ? (sideDroppedCeiling.dropHeight || 0) : 0;
       const sideWallHeightMm = Math.max(1, internalSpace.height - sideDropHeightMm);
       const sideWallTopYmm = internalSpace.startY + sideWallHeightMm;
+      const maxSideCabinetDepthMm = Math.max(1, spaceInfo.width || internalSpace.width || 600);
       const sideCabinetDepthMm = Math.min(
-        Math.max(1, spaceInfo.width || internalSpace.width || 600),
-        Math.max(1, getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600))
+        maxSideCabinetDepthMm,
+        Math.max(1, frontCornerModule
+          ? resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, maxSideCabinetDepthMm)
+          : getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600))
       );
       const sideCenterXmm = activePlacementWall === 'left'
         ? sideWallXmm + sideCabinetDepthMm / 2
@@ -744,7 +729,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         },
         rotation: activePlacementWall === 'left' ? 90 : -90,
         hasDoor: false,
-        customDepth: getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600),
+        customDepth: sideCabinetDepthMm,
         customWidth: Math.min(currentSideSlotDepthMm, moduleData?.dimensions?.width || currentSideSlotDepthMm),
         sideLogicalWidth: currentSideSlotDepthMm,
         slotIndex: sideSlotIndex,
@@ -1355,8 +1340,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         : undefined;
 
       const zoneExistingModules = spaceInfo.droppedCeiling?.enabled
-        ? placedModules.filter(m => (m.zone || 'normal') === targetZoneForFiltering)
-        : placedModules;
+        ? placedModules.filter(m =>
+          ((m as any).placementWall || 'front') === 'front' &&
+          (m.zone || 'normal') === targetZoneForFiltering
+        )
+        : placedModules.filter(m => ((m as any).placementWall || 'front') === 'front');
 
       // 슬롯 점유 상태 디버깅
       debugLog('[SlotDebug] slot-occupancy', {
@@ -2997,7 +2985,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             }
 
             // 단내림 구간: 동일 영역의 가구만 확인
-            const zoneModules = placedModules.filter(m => m.zone === detectedZone);
+            const zoneModules = placedModules.filter(m =>
+              ((m as any).placementWall || 'front') === 'front' &&
+              m.zone === detectedZone
+            );
 
             // 단내림 구간 슬롯 점유 상태 로깅
             debugLog('🏗️ 단내림 구간 슬롯 점유 상태 (hover):', {
@@ -3410,6 +3401,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const getOccupiedSlots = (zoneType: string): Set<number> => {
           const occupied = new Set<number>();
           placedModules.forEach(mod => {
+            if (((mod as any).placementWall || 'front') !== 'front') return;
             const matchesZone = zoneType === 'full'
               || (zoneType === 'main' && (!mod.zone || mod.zone === 'normal'))
               || (zoneType === 'dropped' && mod.zone === 'dropped');
@@ -3525,7 +3517,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const startDepthFromFrontMm = spanSlots[0].slotStartDepthFromFrontMm;
           const centerZMm = placementData.sideWallRange.startZMm
             + placementData.sideWallRange.depthMm * ((startDepthFromFrontMm + logicalWidthMm / 2) / placementData.totalSideDepthMm);
-          const sideDepthMm = getPlacementDefaultDepth(baseModuleData, spaceInfo.depth || 600);
+          const sideDepthMm = placementData.sideCabinetDepthMm;
           const furnitureHeightMm = baseModuleData.dimensions?.height || 600;
           const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
           const floorY = mmToThreeUnits(internalSpace.startY);

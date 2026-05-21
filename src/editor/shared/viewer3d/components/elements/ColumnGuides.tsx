@@ -25,13 +25,17 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
   const { theme } = useViewerTheme();
+  const frontPlacedModules = useMemo(
+    () => placedModules.filter(module => ((module as any).placementWall || 'front') === 'front'),
+    [placedModules]
+  );
   
   // 전체 공간의 인덱싱 계산 (가구 위치 판단용) — slotCustomWidth 재분할 적용
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const indexing = React.useMemo(() => {
-    const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
-    return hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, placedModules) : baseIndexing;
-  }, [baseIndexing, placedModules]);
+    const hasCustomWidths = frontPlacedModules.some(m => m.slotCustomWidth !== undefined);
+    return hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, frontPlacedModules) : baseIndexing;
+  }, [baseIndexing, frontPlacedModules]);
 
   // ── 슬롯 너비 자유 입력 모드 ──
   // 슬롯배치 + 슬롯폭 편집 토글 + 단내림/커튼박스 비활성일 때만 활성
@@ -455,16 +459,15 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const frameEndZ = furnitureZOffset + mmToThreeUnits(furnitureDepthMm) / 2;
 
   // ── 그라데이션 메쉬 축소와 동기화 — Room.tsx SHRINK_MESH_TO_FURNITURE_BACK와 연동 ──
-  // true: 가이드의 뒷쪽 경계를 가구 뒷면으로 맞춤 (공간 그라데이션 메쉬와 일치)
-  // false: 기존 동작 (공간 내경 뒷쪽)
+  // 슬롯 인디게이터/배치 가이드 자체의 기존 위치는 유지한다.
   const SHRINK_GUIDES_TO_FURNITURE_BACK = true;
   const BACK_GUIDE_GAP_MM = 10; // 가구 뒷면과 가이드 뒷쪽 경계 사이 여유
-  // 공간 그라데이션 메쉬 30mm 뒤로 이동에 맞춰 슬롯 가이드/치수도 동일하게 보정
   const GUIDE_Z_BACK_SHIFT_MM = 30;
   const backZ = (SHRINK_GUIDES_TO_FURNITURE_BACK
-    ? (furnitureZOffset - mmToThreeUnits(furnitureDepthMm) / 2 - mmToThreeUnits(BACK_GUIDE_GAP_MM)) // 가구 뒷면 - 10mm
-    : -mmToThreeUnits(internalSpace.depth / 2)) // 내경의 뒤쪽 좌표
+    ? (furnitureZOffset - mmToThreeUnits(furnitureDepthMm) / 2 - mmToThreeUnits(BACK_GUIDE_GAP_MM))
+    : -mmToThreeUnits(internalSpace.depth / 2))
     - mmToThreeUnits(GUIDE_Z_BACK_SHIFT_MM);
+  const emptySlotDimensionZ = -mmToThreeUnits(internalSpace.depth / 2) + 0.01;
 
   // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
   const frontZ = frameEndZ;
@@ -475,7 +478,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 배치된 가구의 슬롯 인덱스 Set 생성 (zone별)
   const getOccupiedSlots = (zoneType: string): Set<number> => {
     const occupied = new Set<number>();
-    placedModules.forEach(mod => {
+    frontPlacedModules.forEach(mod => {
       // zone 매칭: 'full'이면 모든 모듈, 'main'이면 normal/undefined, 'dropped'이면 dropped
       const matchesZone = zoneType === 'full'
         || (zoneType === 'main' && (!mod.zone || mod.zone === 'normal'))
@@ -490,6 +493,31 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       }
     });
     return occupied;
+  };
+
+  const getModuleFrontZ = (mod: any): number => {
+    const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
+    const depthMm = mod.customDepth
+      ?? mod.freeDepth
+      ?? moduleData?.defaultDepth
+      ?? moduleData?.dimensions?.depth
+      ?? furnitureDepthMm;
+    return mod.position.z + mmToThreeUnits(depthMm) / 2;
+  };
+
+  const getSlotFrontZ = (zoneType: string, slotIndex: number): number | null => {
+    const fronts = frontPlacedModules
+      .filter(mod => {
+        const matchesZone = zoneType === 'full'
+          || (zoneType === 'main' && (!mod.zone || mod.zone === 'normal'))
+          || (zoneType === 'dropped' && mod.zone === 'dropped');
+        if (!matchesZone || mod.slotIndex === undefined) return false;
+        const span = mod.isDualSlot || mod.moduleId?.includes('dual-') ? 2 : 1;
+        return slotIndex >= mod.slotIndex && slotIndex < mod.slotIndex + span;
+      })
+      .map(getModuleFrontZ);
+
+    return fronts.length > 0 ? Math.max(...fronts) : null;
   };
 
   // 슬롯 가이드 렌더링 헬퍼 함수
@@ -635,7 +663,6 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         ? Math.min(zoneEndX, internalEndX) 
         : zoneEndX;
       
-      // 뒷벽과 Z-fighting 회피를 위해 가이드를 뒷벽 바로 앞쪽으로 1mm 오프셋
       const guideZ = backZ + 0.01;
 
       // 바닥 가이드
@@ -704,8 +731,14 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           />
         );
       } else {
-        // 3D 및 2D 정면뷰 — 뒷벽과 Z-fighting 회피 위해 1mm 앞쪽 오프셋
-        const guideZV = backZ + 0.01;
+        const adjacentFronts = [
+          index > 0 ? getSlotFrontZ(zoneType, index - 1) : null,
+          index < columnCount ? getSlotFrontZ(zoneType, index) : null
+        ].filter((value): value is number => typeof value === 'number');
+        // 빈 슬롯의 치수가이드 Z축 라인은 뒷벽, 배치된 슬롯 옆 경계는 해당 가구 앞단에 둔다.
+        const guideZV = adjacentFronts.length > 0
+          ? Math.max(...adjacentFronts) + 0.01
+          : emptySlotDimensionZ;
         guides.push(
           <Line
             key={`${zoneType}-vertical-guide-${index}`}

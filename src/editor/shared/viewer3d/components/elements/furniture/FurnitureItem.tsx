@@ -3049,6 +3049,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     (placedModule.rotation * Math.PI) / 180,
     0
   ];
+  const editIconForwardOffset = depth / 2 + 0.5;
+  const editIconPosition: [number, number, number] = isSideWallFurniture
+    ? [
+      furnitureGroupPosition[0] + (placedModule.placementWall === 'left' ? editIconForwardOffset : -editIconForwardOffset),
+      furnitureGroupPosition[1] - height / 2 - 3.2,
+      furnitureGroupPosition[2]
+    ]
+    : [
+      furnitureGroupPosition[0],
+      furnitureGroupPosition[1] - height / 2 - 3.2,
+      furnitureGroupPosition[2] + editIconForwardOffset
+    ];
 
   const sideFrameColor = spaceInfo.materialConfig?.doorColor
     || (spaceInfo.materialConfig as any)?.frameColor
@@ -5005,11 +5017,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         (!placedModule.moduleId?.includes('insert-frame') || placedModule.isFreePlacement) &&
         !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
         <Html
-          position={[
-            adjustedPosition.x,
-            finalYPosition - height / 2 - 3.2, // 가구 하단 아래 320mm (도어 치수선보다 아래)
-            furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
-          ]}
+          position={editIconPosition}
           center
           style={{
             userSelect: 'none',

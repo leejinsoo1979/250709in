@@ -71,6 +71,9 @@ export const isSlotAvailable = (
         : []
   );
   const isExcludedModule = (moduleIdToCheck: string) => excludedModuleIds.has(moduleIdToCheck);
+  const frontPlacedModules = placedModules.filter(module =>
+    ((module as any).placementWall || 'front') === 'front'
+  );
 
   // targetZone이 지정된 경우 해당 zone의 columnCount로 범위 체크
   // (slotIndex가 zone 로컬 인덱스이기 때문)
@@ -87,7 +90,7 @@ export const isSlotAvailable = (
   console.log('[SlotDebug] isSlotAvailable:start', {
     slotIndex,
     isDualFurniture,
-    placedCount: placedModules.length,
+    placedCount: frontPlacedModules.length,
     effectiveColumnCount,
     targetZone,
     moduleId,
@@ -135,7 +138,7 @@ export const isSlotAvailable = (
         // Column C는 듀얼 가구를 2개의 싱글로 분할하여 배치 가능
         if (isDualFurniture) {
           // Column C 슬롯에 이미 2개의 가구가 있는지 확인
-          const furnitureInSlot = placedModules.filter(m => {
+          const furnitureInSlot = frontPlacedModules.filter(m => {
             if (typeof m.slotIndex !== 'number') {
               return false;
             }
@@ -153,7 +156,7 @@ export const isSlotAvailable = (
           return true;
         } else {
           // 싱글 가구는 빈 서브슬롯이 있으면 배치 가능
-          const furnitureInSlot = placedModules.filter(m => {
+          const furnitureInSlot = frontPlacedModules.filter(m => {
             if (typeof m.slotIndex !== 'number') {
               return false;
             }
@@ -194,7 +197,7 @@ export const isSlotAvailable = (
   if (hasColumnC) {
     // Column C 슬롯 - 3개까지 가구 배치 가능 (첫 번째 1개 + 기둥 앞 2개)
     const targetSlot = targetSlots[0]; // 단일 슬롯만 확인
-    const furnitureInSlot = placedModules.filter(m => {
+    const furnitureInSlot = frontPlacedModules.filter(m => {
       if (typeof m.slotIndex !== 'number') {
         return false;
       }
@@ -226,7 +229,7 @@ export const isSlotAvailable = (
     const isNewUpper = newCategory === 'upper';
     const isNewLower = newCategory === 'lower';
     
-    for (const placedModule of placedModules) {
+    for (const placedModule of frontPlacedModules) {
       // 제외할 모듈은 건너뛰기
       if (isExcludedModule(placedModule.id)) {
         continue;

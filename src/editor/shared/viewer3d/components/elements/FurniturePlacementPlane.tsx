@@ -9,7 +9,7 @@ import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
 import { useAuth } from '@/auth/AuthProvider';
 import NativeLine from './NativeLine';
-import { calculateSideWallPlacementRangeMm } from '../../utils/sideWallPlacement';
+import { calculateSideWallPlacementRangeMm, resolveSideWallCornerBodyDepthMm } from '../../utils/sideWallPlacement';
 
 interface FurniturePlacementPlaneProps {
   spaceInfo: SpaceInfo;
@@ -110,17 +110,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       return distributeDepth(totalDepthMm);
     }
 
-    const fallbackCornerDepthMm = Math.min(600, totalDepthMm);
-    const cornerDepthMm = Math.min(
-      totalDepthMm,
-      Math.max(
-        1,
-        frontCornerModule?.customDepth
-          ?? frontCornerModule?.freeDepth
-          ?? frontCornerData?.dimensions?.depth
-          ?? fallbackCornerDepthMm
-      )
-    );
+    const cornerDepthMm = resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, totalDepthMm);
     const remainingDepthMm = Math.max(0, totalDepthMm - cornerDepthMm);
     if (remainingDepthMm <= 0.5) {
       return [totalDepthMm];
@@ -158,6 +148,43 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       heightMm,
       centerYmm: heightMm / 2
     };
+  };
+
+  const getModuleSectionHeightsMm = (mod: any, moduleData: any, sectionBodyHeightMm: number) => {
+    const rawSections = mod.customConfig?.sections
+      || mod.customSections
+      || moduleData?.modelConfig?.sections
+      || moduleData?.modelConfig?.leftSections
+      || [];
+    if (!Array.isArray(rawSections) || rawSections.length < 2) {
+      return [];
+    }
+
+    const availableHeightMm = Math.max(0, sectionBodyHeightMm);
+    const calculateSectionHeightMm = (section: any, availableMm: number) => {
+      const heightType = section.heightType || 'percentage';
+      if (heightType === 'absolute') {
+        return Math.max(0, Math.min(section.height || 0, availableMm));
+      }
+      return Math.max(0, availableMm * ((section.height || section.heightRatio || 100) / 100));
+    };
+    const fixedHeightMm = rawSections
+      .filter((section: any) => section.heightType === 'absolute')
+      .reduce((sum: number, section: any) => sum + calculateSectionHeightMm(section, availableHeightMm), 0);
+    const remainingHeightMm = Math.max(0, availableHeightMm - fixedHeightMm);
+    const sectionHeightsMm = rawSections.map((section: any) => section.heightType === 'absolute'
+      ? calculateSectionHeightMm(section, availableHeightMm)
+      : calculateSectionHeightMm(section, remainingHeightMm));
+
+    if (sectionHeightsMm.length >= 2) {
+      const lastIndex = sectionHeightsMm.length - 1;
+      const lowerHeightSumMm = sectionHeightsMm
+        .slice(0, lastIndex)
+        .reduce((sum: number, heightMm: number) => sum + heightMm, 0);
+      sectionHeightsMm[lastIndex] = Math.max(0, availableHeightMm - lowerHeightSumMm);
+    }
+
+    return sectionHeightsMm.filter((heightMm: number) => heightMm > 0.5);
   };
 
   const renderSideWallSlotMeshes = (wall: 'left' | 'right') => {
@@ -200,8 +227,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const rangeWidth = mmToThreeUnits(sideWallRange.depthMm);
     const dimensionColor = '#333333';
     const textColor = '#222222';
-    const dimensionOffset = mmToThreeUnits(120);
-    const dimensionTextGap = mmToThreeUnits(40);
+    const dimensionOffset = mmToThreeUnits(180);
+    const dimensionTextGap = mmToThreeUnits(50);
     const dimensionRenderOrder = 100000;
     const dimensionLineWidth = 0.6;
     const dimensionFontSize = 0.5;
@@ -241,17 +268,21 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     );
 
     const renderSideWallDimensionGuides = () => {
-      if (!showDimensions || activePlacementWall !== wall) return null;
+      if (!showDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
 
       const hasPlacedSideWallModule = placedModules.some(mod => ((mod as any).placementWall || 'front') === wall);
+      const hasDoorOnSideWall = sideModulesForWall.some(mod => mod.hasDoor);
       const dimensionRange = getSideWallDimensionRangeMm(wall);
       const dimensionHeight = mmToThreeUnits(dimensionRange.heightMm);
       const dimensionCenterY = mmToThreeUnits(dimensionRange.centerYmm);
       const halfWidth = rangeWidth / 2;
       const halfHeight = dimensionHeight / 2;
       const topLineY = halfHeight + dimensionOffset;
-      const innerDimensionOffset = mmToThreeUnits(120);
-      const outerDimensionOffset = mmToThreeUnits(320);
+      // 정면뷰와 동일한 레이어 규칙:
+      // 도어가 달리면 도어치수는 안쪽에 두고, 가구/공간 높이 치수는 더 바깥쪽으로 벌린다.
+      const innerDimensionOffset = mmToThreeUnits(hasDoorOnSideWall ? 500 : 340);
+      const sectionDimensionOffset = mmToThreeUnits(hasDoorOnSideWall ? 340 : 180);
+      const outerDimensionOffset = mmToThreeUnits(hasDoorOnSideWall ? 680 : 500);
       const lineZ = 0.002;
       const textZ = 0.01;
       const widthLabel = totalSideDepthMm % 1 === 0 ? String(totalSideDepthMm) : totalSideDepthMm.toFixed(1);
@@ -286,6 +317,51 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
           endMm: dimensionRange.heightMm
         }
       ].filter(segment => segment.valueMm > 0.5) : [];
+      const sectionDimensionModules = sideModulesForWall
+        .map(mod => {
+          const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
+      const moduleHeightMm = mod.freeHeight
+        ?? mod.customHeight
+        ?? moduleData?.dimensions?.height
+        ?? 0;
+          const sectionBodyHeightMm = Math.max(0, dimensionRange.heightMm - baseFrameDisplayMm - topFrameHeightMm);
+          const sectionHeightsMm = getModuleSectionHeightsMm(mod, moduleData, sectionBodyHeightMm);
+          if (moduleHeightMm <= 0.5 || sectionHeightsMm.length === 0) {
+            return null;
+          }
+          let currentY = -halfHeight + mmToThreeUnits(baseFrameDisplayMm);
+          const sections = sectionHeightsMm.map((heightMm: number, index: number) => {
+            const startY = currentY;
+            const endY = startY + mmToThreeUnits(heightMm);
+            currentY = endY;
+            return {
+              key: `${mod.id}-${index}`,
+              startY,
+              endY,
+              midY: (startY + endY) / 2,
+              valueMm: Math.round(heightMm)
+            };
+          });
+
+          return {
+            id: mod.id,
+            localCenterX: wall === 'left'
+              ? -(mod.position.z - rangeCenterZ)
+              : mod.position.z - rangeCenterZ,
+            sections
+          };
+        })
+        .filter(Boolean) as Array<{
+          id: string;
+          localCenterX: number;
+          sections: Array<{ key: string; startY: number; endY: number; midY: number; valueMm: number }>;
+        }>;
+      const sortedSectionDimensionModules = [...sectionDimensionModules]
+        .sort((a, b) => a.localCenterX - b.localCenterX);
+      const sectionDimensionBySide = {
+        left: sortedSectionDimensionModules[0],
+        right: sortedSectionDimensionModules[sortedSectionDimensionModules.length - 1]
+      };
 
       return (
         <group
@@ -318,18 +394,22 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
               key: 'left',
               edgeX: -halfWidth,
               innerX: -halfWidth - innerDimensionOffset,
+              sectionX: -halfWidth - sectionDimensionOffset,
               outerX: -halfWidth - outerDimensionOffset,
               fullTextX: -halfWidth - outerDimensionOffset - mmToThreeUnits(10),
               segmentTextX: -halfWidth - innerDimensionOffset - mmToThreeUnits(10),
+              sectionTextX: -halfWidth - sectionDimensionOffset - mmToThreeUnits(10),
               anchorX: 'right' as const
             },
             {
               key: 'right',
               edgeX: halfWidth,
               innerX: halfWidth + innerDimensionOffset,
+              sectionX: halfWidth + sectionDimensionOffset,
               outerX: halfWidth + outerDimensionOffset,
               fullTextX: halfWidth + outerDimensionOffset + mmToThreeUnits(10),
               segmentTextX: halfWidth + innerDimensionOffset + mmToThreeUnits(10),
+              sectionTextX: halfWidth + sectionDimensionOffset + mmToThreeUnits(10),
               anchorX: 'left' as const
             }
           ].map(item => (
@@ -356,7 +436,28 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
               {hasPlacedSideWallModule && renderDimensionLine(`side-height-${item.key}-inner-main`, [[item.innerX, -halfHeight, lineZ], [item.innerX, halfHeight, lineZ]])}
               {hasPlacedSideWallModule && renderDimensionLine(`side-height-${item.key}-inner-bottom-end`, createArrowHead([item.innerX, -halfHeight, lineZ], [item.innerX, -halfHeight + 0.05, lineZ]))}
               {hasPlacedSideWallModule && renderDimensionLine(`side-height-${item.key}-inner-top-end`, createArrowHead([item.innerX, halfHeight, lineZ], [item.innerX, halfHeight - 0.05, lineZ]))}
+              {hasPlacedSideWallModule && renderDimensionLine(`side-height-${item.key}-inner-bottom-ext`, [[item.edgeX, -halfHeight, lineZ], [item.innerX, -halfHeight, lineZ]])}
+              {hasPlacedSideWallModule && renderDimensionLine(`side-height-${item.key}-inner-top-ext`, [[item.edgeX, halfHeight, lineZ], [item.innerX, halfHeight, lineZ]])}
+              {hasPlacedSideWallModule && (
+                <Text
+                  position={[item.segmentTextX, 0, textZ]}
+                  fontSize={dimensionFontSize}
+                  color={textColor}
+                  anchorX={item.anchorX}
+                  anchorY="middle"
+                  renderOrder={dimensionRenderOrder + 1}
+                  material-depthTest={false}
+                  material-depthWrite={false}
+                  material-transparent={true}
+                >
+                  {heightLabel}
+                </Text>
+              )}
               {dimensionSegments.map(segment => {
+                const sideSections = sectionDimensionBySide[item.key]?.sections ?? [];
+                if (sideSections.length > 0 && segment.key === 'body') {
+                  return null;
+                }
                 const startY = -halfHeight + dimensionHeight * (segment.startMm / dimensionRange.heightMm);
                 const endY = -halfHeight + dimensionHeight * (segment.endMm / dimensionRange.heightMm);
                 const midY = (startY + endY) / 2;
@@ -365,12 +466,20 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
 
                 return (
                   <React.Fragment key={`side-height-${item.key}-${segment.key}`}>
+                    {renderDimensionLine(
+                      `side-height-${item.key}-${segment.key}-section-main`,
+                      [[item.sectionX, startY, lineZ], [item.sectionX, endY, lineZ]]
+                    )}
                     {segment.startMm > 0.5 && renderDimensionLine(
                       `side-height-${item.key}-${segment.key}-start-tick`,
-                      [[item.innerX - tickHalf, startY, lineZ], [item.innerX + tickHalf, startY, lineZ]]
+                      [[item.sectionX - tickHalf, startY, lineZ], [item.sectionX + tickHalf, startY, lineZ]]
+                    )}
+                    {renderDimensionLine(
+                      `side-height-${item.key}-${segment.key}-end-tick`,
+                      [[item.sectionX - tickHalf, endY, lineZ], [item.sectionX + tickHalf, endY, lineZ]]
                     )}
                     <Text
-                      position={[item.segmentTextX, midY, textZ]}
+                      position={[item.sectionTextX, midY, textZ]}
                       fontSize={dimensionFontSize}
                       color={textColor}
                       anchorX={item.anchorX}
@@ -381,6 +490,39 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                       material-transparent={true}
                     >
                       {label}
+                    </Text>
+                  </React.Fragment>
+                );
+              })}
+              {sectionDimensionBySide[item.key]?.sections.map(section => {
+                const tickHalf = mmToThreeUnits(24);
+
+                return (
+                  <React.Fragment key={`side-section-height-${item.key}-${section.key}`}>
+                    {renderDimensionLine(
+                      `side-section-height-${item.key}-${section.key}-main`,
+                      [[item.sectionX, section.startY, lineZ], [item.sectionX, section.endY, lineZ]]
+                    )}
+                    {renderDimensionLine(
+                      `side-section-height-${item.key}-${section.key}-start-tick`,
+                      [[item.sectionX - tickHalf, section.startY, lineZ], [item.sectionX + tickHalf, section.startY, lineZ]]
+                    )}
+                    {renderDimensionLine(
+                      `side-section-height-${item.key}-${section.key}-end-tick`,
+                      [[item.sectionX - tickHalf, section.endY, lineZ], [item.sectionX + tickHalf, section.endY, lineZ]]
+                    )}
+                    <Text
+                      position={[item.sectionTextX, section.midY, textZ]}
+                      fontSize={dimensionFontSize}
+                      color={textColor}
+                      anchorX={item.anchorX}
+                      anchorY="middle"
+                      renderOrder={dimensionRenderOrder + 1}
+                      material-depthTest={false}
+                      material-depthWrite={false}
+                      material-transparent={true}
+                    >
+                      {section.valueMm}
                     </Text>
                   </React.Fragment>
                 );
@@ -510,7 +652,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     })();
 
     const sidePlacedWidthDimensions = (() => {
-      if (!showDimensions || activePlacementWall !== wall) return null;
+      if (!showDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
 
       const sideModules = sideModulesForWall;
       if (sideModules.length === 0) return null;
@@ -544,8 +686,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
               ?? moduleData?.dimensions?.height
               ?? 600;
             const moduleTopY = mod.position.y + mmToThreeUnits(moduleHeightMm) / 2;
-            const topLineY = moduleTopY - slotY + mmToThreeUnits(65);
-            const textY = topLineY + mmToThreeUnits(34);
+            const topLineY = moduleTopY - slotY + mmToThreeUnits(105);
+            const textY = topLineY + mmToThreeUnits(42);
             const labelValue = logicalWidthMm;
             const label = labelValue % 1 === 0 ? String(labelValue) : labelValue.toFixed(1);
 
@@ -554,8 +696,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
                 {renderDimensionLine(`side-placed-width-${mod.id}-main`, [[startX, topLineY, lineZ], [endX, topLineY, lineZ]])}
                 {renderDimensionLine(`side-placed-width-${mod.id}-left-tick`, [[startX, topLineY - tick, lineZ], [startX, topLineY + tick, lineZ]])}
                 {renderDimensionLine(`side-placed-width-${mod.id}-right-tick`, [[endX, topLineY - tick, lineZ], [endX, topLineY + tick, lineZ]])}
-                {renderDimensionLine(`side-placed-width-${mod.id}-left-ext`, [[startX, moduleTopY - slotY, lineZ], [startX, textY + mmToThreeUnits(12), lineZ]])}
-                {renderDimensionLine(`side-placed-width-${mod.id}-right-ext`, [[endX, moduleTopY - slotY, lineZ], [endX, textY + mmToThreeUnits(12), lineZ]])}
+                {renderDimensionLine(`side-placed-width-${mod.id}-left-ext`, [[startX, moduleTopY - slotY, lineZ], [startX, textY + mmToThreeUnits(20), lineZ]])}
+                {renderDimensionLine(`side-placed-width-${mod.id}-right-ext`, [[endX, moduleTopY - slotY, lineZ], [endX, textY + mmToThreeUnits(20), lineZ]])}
                 <Text
                   position={[centerX, textY, textZ]}
                   fontSize={dimensionFontSize}
@@ -591,6 +733,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const getOccupiedSlots = (zoneType: 'full' | 'normal' | 'dropped'): Set<number> => {
     const occupied = new Set<number>();
     placedModules.forEach(mod => {
+      if (((mod as any).placementWall || 'front') !== 'front') return;
       const matchesZone = zoneType === 'full'
         || (zoneType === 'normal' && (!mod.zone || mod.zone === 'normal'))
         || (zoneType === 'dropped' && mod.zone === 'dropped');

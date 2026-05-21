@@ -577,7 +577,11 @@ const buildPanelSimulationTargets = (
  * SunLight — sunAngle에 따라 부드럽게 회전하는 메인 조명
  * useRef로 light 인스턴스를 직접 조작하여 shadow map 재생성 없이 위치 변경
  */
-const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngle, castShadow }) => {
+const SunLight: React.FC<{ sunAngle: number; castShadow: boolean; intensity?: number }> = ({
+  sunAngle,
+  castShadow,
+  intensity = 2.5
+}) => {
   const lightRef = useRef<THREE.DirectionalLight>(null);
   const currentAngle = useRef(sunAngle);
 
@@ -596,7 +600,7 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
   return (
     <directionalLight
       ref={lightRef}
-      intensity={2.5}
+      intensity={intensity}
       color="#ffffff"
       castShadow={castShadow}
       shadow-mapSize-width={4096}
@@ -609,40 +613,6 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
       shadow-bias={-0.0005}
       shadow-radius={12}
       shadow-normalBias={0.02}
-    />
-  );
-};
-
-const CameraSideViewFillLight: React.FC<{ active: boolean }> = ({ active }) => {
-  const lightRef = useRef<THREE.DirectionalLight>(null);
-  const targetRef = useRef<THREE.Object3D>(new THREE.Object3D());
-  const { camera, scene } = useThree();
-
-  useEffect(() => {
-    const target = targetRef.current;
-    scene.add(target);
-    return () => {
-      scene.remove(target);
-    };
-  }, [scene]);
-
-  useFrame(() => {
-    if (!active || !lightRef.current) return;
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-    lightRef.current.position.copy(camera.position);
-    targetRef.current.position.copy(camera.position).add(direction.multiplyScalar(10));
-    lightRef.current.target = targetRef.current;
-  });
-
-  if (!active) return null;
-
-  return (
-    <directionalLight
-      ref={lightRef}
-      intensity={1.15}
-      color="#ffffff"
-      castShadow={false}
     />
   );
 };
@@ -2097,26 +2067,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const initialCameraDistRef = useRef<number | null>(null);
   // 슬라이더 드래그 중 피드백 루프 방지 플래그
   const isSliderDraggingRef = useRef(false);
-  const [sideViewTransitionLightWall, setSideViewTransitionLightWall] = useState<'left' | 'right' | null>(null);
-
-  useEffect(() => {
-    const handleSideViewTransitionLight = (event: Event) => {
-      const detail = (event as CustomEvent<{ active?: boolean; wall?: 'left' | 'right' }>).detail;
-      if (detail?.active && (detail.wall === 'left' || detail.wall === 'right')) {
-        setSideViewTransitionLightWall(detail.wall);
-        return;
-      }
-      setSideViewTransitionLightWall(null);
-    };
-
-    window.addEventListener('side-placement-view-transition-light', handleSideViewTransitionLight);
-    return () => {
-      window.removeEventListener('side-placement-view-transition-light', handleSideViewTransitionLight);
-    };
-  }, []);
-  const activeSideViewLightWall = viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')
-    ? activePlacementWall
-    : sideViewTransitionLightWall;
   // 3D 줌 애니메이션용
   const zoomAnimationRef = useRef<number | null>(null);
   const targetCameraDistRef = useRef<number | null>(null);
@@ -2153,6 +2103,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const effectiveShowDimensionsText = isPanelSimulationPresentation ? false : showDimensionsText;
   const effectiveShowGuides = isPanelSimulationPresentation ? false : showGuides;
   const effectiveShowAxis = isPanelSimulationPresentation ? false : showAxis;
+  const isSidePlacementView = viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right');
   const dimensionDisplayEnabled = effectiveShowDimensions && effectiveShowDimensionsText;
   const clearedPanelSimulationRevisionRef = useRef(panelSimulationRevision);
 
@@ -4009,23 +3960,42 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
 
               {/* 메인 자연광 - 3D 모드에서만 그림자 생성, sunAngle로 위치 조절 */}
-              <SunLight sunAngle={sunAngle ?? 45} castShadow={viewMode === '3D'} />
+              <SunLight
+                sunAngle={sunAngle ?? 45}
+                castShadow={viewMode === '3D'}
+                intensity={isSidePlacementView ? 1.7 : 2.5}
+              />
 
               {/* 부드러운 필 라이트 - 그림자 대비 조절 */}
               <directionalLight
                 position={[-8, 10, 15]}
-                intensity={0.6}
+                intensity={isSidePlacementView ? 0.45 : 0.6}
                 color="#ffffff"
               />
               <directionalLight
                 position={[8, 10, 15]}
-                intensity={0.6}
+                intensity={isSidePlacementView ? 0.45 : 0.6}
                 color="#ffffff"
               />
-              <CameraSideViewFillLight active={!!activeSideViewLightWall} />
+              {isSidePlacementView && (
+                <>
+                  <directionalLight
+                    position={[-14, 8, -4]}
+                    intensity={0.28}
+                    color="#ffffff"
+                  />
+                  <directionalLight
+                    position={[14, 8, -4]}
+                    intensity={0.28}
+                    color="#ffffff"
+                  />
+                </>
+              )}
               {/* 환경광 - 2D 모드에서는 더 밝게 */}
-              <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
-              {activeSideViewLightWall && <ambientLight intensity={0.28} color="#ffffff" />}
+              <ambientLight
+                intensity={viewMode === '2D' ? 0.8 : (isSidePlacementView ? 0.56 : 0.5)}
+                color="#ffffff"
+              />
 
               {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
               {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}

@@ -622,7 +622,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, isTransparentMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore() as any;
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, isTransparentMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -856,7 +856,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (!furnitureId) return undefined;
     return state.placedModules.find(m => m.id === furnitureId);
   });
-
   // 자유배치 감지: 3단 fallback (가장 확실한 것부터)
   // 1. spaceConfigStore의 layoutMode (전역 설정, 가장 확실)
   // 2. store의 placedModule.isFreePlacement (개별 모듈)
@@ -1116,12 +1115,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return resolveDoorHeightDimensionSides(visibleModules, furnitureId);
   }, [allPlacedModules, furnitureId]);
+  const effectiveDoorHeightDimensionSides = storePlacedModule?.placementWall === 'right'
+    ? {
+      left: doorHeightDimensionSides.right,
+      right: doorHeightDimensionSides.left
+    }
+    : doorHeightDimensionSides;
+  const sideDoorDimensionVisible = storePlacedModule?.placementWall === 'left' || storePlacedModule?.placementWall === 'right'
+    ? viewMode === '3D' && activePlacementWall === storePlacedModule.placementWall
+    : true;
   const showDoorDimensionGuides = shouldRenderDoorDimensionGuides(
     effectiveShowDimensions,
     isPlainMaterial,
     viewMode,
     view2DDirection
-  ) && !isHingePositionEditMode;
+  ) && !isHingePositionEditMode && sideDoorDimensionVisible;
 
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);
@@ -1491,10 +1499,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorBottomGapDimensionUnits = mmToThreeUnits(doorBottomGapDimensionMm);
   const doorDimensionTopY = doorHeight / 2 + doorTopGapDimensionUnits;
   const doorDimensionBottomY = -doorHeight / 2 - doorBottomGapDimensionUnits;
-  const doorDimensionSideLineOffset = mmToThreeUnits(130);
-  const doorDimensionSideTextOffset = mmToThreeUnits(165);
-  const doorDimensionWidthLineStart = mmToThreeUnits(130);
-  const doorDimensionWidthLineLength = mmToThreeUnits(150);
+  const doorDimensionSideLineOffset = mmToThreeUnits(180);
+  const doorDimensionSideTextOffset = mmToThreeUnits(220);
+  const doorDimensionWidthLineStart = mmToThreeUnits(70);
+  const doorDimensionWidthLineLength = mmToThreeUnits(110);
+  const doorDimensionForwardOffset = 0.01;
   const renderDoorGapDimensionMarkers = ({
     lineX,
     textX,
@@ -2660,7 +2669,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineStart = doorDimensionWidthLineStart;
                 const extensionLineLength = doorDimensionWidthLineLength;
                 const tickSize = 0.008;
-                const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
+                const zPos = is3D ? doorThicknessUnits / 2 + doorDimensionForwardOffset : doorThicknessUnits / 2 + 0.001;
                 const dimColor = activeDoorDimensionColor;
 
                 const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
@@ -2668,7 +2677,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
-                    {doorHeightDimensionSides.left && (
+                    {effectiveDoorHeightDimensionSides.left && (
                     <>
                     {renderDoorDimensionHoverPlane({
                       keyName: 'left-door-height-hover',
@@ -3116,7 +3125,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineStart = doorDimensionWidthLineStart;
                 const extensionLineLength = doorDimensionWidthLineLength;
                 const tickSize = 0.008;
-                const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
+                const zPos = is3D ? doorThicknessUnits / 2 + doorDimensionForwardOffset : doorThicknessUnits / 2 + 0.001;
                 const dimColor = activeDoorDimensionColor;
 
                 const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
@@ -3124,7 +3133,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
-                    {doorHeightDimensionSides.right && (
+                    {effectiveDoorHeightDimensionSides.right && (
                     <>
                     {renderDoorDimensionHoverPlane({
                       keyName: 'right-door-height-hover',
@@ -3862,7 +3871,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               const extensionLineStart = doorDimensionWidthLineStart;
               const extensionLineLength = doorDimensionWidthLineLength;
               const tickSize = 0.008;
-              const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
+              const zPos = is3D ? doorThicknessUnits / 2 + doorDimensionForwardOffset : doorThicknessUnits / 2 + 0.001;
               const dimColor = activeDoorDimensionColor;
 
               const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
@@ -3870,9 +3879,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               return (
                 <>
-                  {(doorHeightDimensionSides.left || doorHeightDimensionSides.right) && (
+                  {(effectiveDoorHeightDimensionSides.left || effectiveDoorHeightDimensionSides.right) && (
                   <>
-                  {doorHeightDimensionSides.left && (
+                  {effectiveDoorHeightDimensionSides.left && (
                     <>
                       {renderDoorDimensionHoverPlane({
                         keyName: 'single-door-left-height-hover',
@@ -3899,7 +3908,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     </>
                   )}
 
-                  {doorHeightDimensionSides.right && (
+                  {effectiveDoorHeightDimensionSides.right && (
                     <>
                       {renderDoorDimensionHoverPlane({
                         keyName: 'single-door-right-height-hover',
@@ -3927,11 +3936,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
 
                   {[
-                    ...(doorHeightDimensionSides.left ? [
+                    ...(effectiveDoorHeightDimensionSides.left ? [
                       [-doorWidthUnits / 2 - doorDimensionSideLineOffset, -doorHeight / 2],
                       [-doorWidthUnits / 2 - doorDimensionSideLineOffset, doorHeight / 2]
                     ] : []),
-                    ...(doorHeightDimensionSides.right ? [
+                    ...(effectiveDoorHeightDimensionSides.right ? [
                       [doorWidthUnits / 2 + doorDimensionSideLineOffset, -doorHeight / 2],
                       [doorWidthUnits / 2 + doorDimensionSideLineOffset, doorHeight / 2]
                     ] : [])
@@ -3949,7 +3958,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     />
                   ))}
 
-                  {doorHeightDimensionSides.left && (
+                  {effectiveDoorHeightDimensionSides.left && (
                     <>
                       <NativeLine
                         name="door-dimension-height"
@@ -3995,7 +4004,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     </>
                   )}
 
-                  {doorHeightDimensionSides.right && (
+                  {effectiveDoorHeightDimensionSides.right && (
                     <>
                       <NativeLine
                         name="door-dimension-height"
