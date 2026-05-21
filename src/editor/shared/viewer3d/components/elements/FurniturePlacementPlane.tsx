@@ -9,7 +9,12 @@ import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
 import { useAuth } from '@/auth/AuthProvider';
 import NativeLine from './NativeLine';
-import { calculateSideWallPlacementRangeMm, resolveSideWallCornerBodyDepthMm } from '../../utils/sideWallPlacement';
+import {
+  buildSideWallSlotSizesMm,
+  calculateSideWallPlacementRangeMm,
+  getSideWallLocalGuideX,
+  getSideWallSlotCenterZMm
+} from '../../utils/sideWallPlacement';
 
 interface FurniturePlacementPlaneProps {
   spaceInfo: SpaceInfo;
@@ -23,6 +28,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const viewMode = useUIStore(state => state.viewMode);
   const activePlacementWall = useUIStore(state => state.activePlacementWall);
   const showDimensions = useUIStore(state => state.showDimensions);
+  const showDimensionsText = useUIStore(state => state.showDimensionsText);
+  const showSideDimensions = showDimensions && showDimensionsText;
   const { theme } = useTheme();
   const isNoWallSpace = spaceInfo.installType === 'freestanding'
     || (!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right);
@@ -92,14 +99,6 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const getSideSlotSizes = (wall: 'left' | 'right') => {
     // 좌측벽 메쉬 깊이 = spaceInfo.depth (1500)
     const totalDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-    const distributeDepth = (depthMm: number) => {
-      if (depthMm <= 0.5) {
-        return [];
-      }
-      const slotCount = Math.max(1, Math.ceil(depthMm / 600));
-      const slotDepthMm = depthMm / slotCount;
-      return Array.from({ length: slotCount }, () => slotDepthMm);
-    };
     const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const cornerSlotIndex = wall === 'left'
       ? 0
@@ -111,20 +110,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const frontCornerData = frontCornerModule
       ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
       : undefined;
-    if (!frontCornerModule) {
-      return distributeDepth(totalDepthMm);
-    }
-
-    const cornerDepthMm = resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, totalDepthMm);
-    const remainingDepthMm = Math.max(0, totalDepthMm - cornerDepthMm);
-    if (remainingDepthMm <= 0.5) {
-      return [totalDepthMm];
-    }
-
-    return [
-      cornerDepthMm,
-      ...distributeDepth(remainingDepthMm)
-    ];
+    return buildSideWallSlotSizesMm(wall, totalDepthMm, frontCornerModule, frontCornerData);
   };
 
   const getSideWallMeshRangeMm = () => {
@@ -233,28 +219,11 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const rangeCenterZMm = sideWallRange.startZMm + sideWallRange.depthMm / 2;
     const rangeCenterZ = mmToThreeUnits(rangeCenterZMm);
     const rangeWidth = mmToThreeUnits(sideWallRange.depthMm);
-    // 정면벽에 배치된 가구의 최대 깊이 (정면 모드에서 측면 깊이 가이드를 가구 앞단으로 옮기기 위함)
-    const frontModulesForDim = placedModules.filter(mod => ((mod as any).placementWall || 'front') === 'front');
-    const maxFrontFurnitureDepthMm = frontModulesForDim.reduce((maxDepth, mod) => {
-      const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
-      const d = mod.customDepth
-        ?? mod.upperSectionDepth
-        ?? mod.lowerSectionDepth
-        ?? moduleData?.dimensions?.depth
-        ?? 0;
-      return Math.max(maxDepth, d);
-    }, 0);
     // 측면 깊이 치수 가이드:
-    // - 가구 배치 전: 가이드를 공간 뒷벽 라인 측면에 표시 (라벨 = 공간 전체 깊이)
-    // - 가구 배치 후: 가이드를 가구 앞단 라인 측면으로 이동 (라벨 = 가구 깊이)
-    const sideWallEndZMm = sideWallRange.startZMm + sideWallRange.depthMm; // 앞벽 Z
+    // - 상단 전체 치수는 항상 측면 공간 전체 깊이를 표시한다.
     const sideWallStartZMm = sideWallRange.startZMm; // 뒷벽 Z
-    const dimRangeDepthMm = maxFrontFurnitureDepthMm > 0
-      ? maxFrontFurnitureDepthMm
-      : sideWallRange.depthMm;
-    const dimRangeCenterZMm = maxFrontFurnitureDepthMm > 0
-      ? sideWallEndZMm - maxFrontFurnitureDepthMm / 2 // 가구 앞단 영역 중앙
-      : sideWallStartZMm + sideWallRange.depthMm / 2; // 공간 전체 중앙
+    const dimRangeDepthMm = sideWallRange.depthMm;
+    const dimRangeCenterZMm = sideWallStartZMm + sideWallRange.depthMm / 2; // 공간 전체 중앙
     // 가이드 라인을 짧게 + 라벨 위치를 가구 유무에 따라 이동
     // left wall: rotation Y=+90° → group local +X = 월드 +Z(앞벽쪽), -X = 뒷벽쪽
     // right wall: rotation Y=-90° → group local +X = 월드 -Z(뒷벽쪽), -X = 앞벽쪽
@@ -307,7 +276,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     );
 
     const renderSideWallDimensionGuides = () => {
-      if (!showDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
+      if (!showSideDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
 
       const hasPlacedSideWallModule = placedModules.some(mod => ((mod as any).placementWall || 'front') === wall);
       const hasDoorOnSideWall = sideModulesForWall.some(mod => mod.hasDoor);
@@ -577,9 +546,14 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     for (let i = 0; i < sideSlotSizes.length; i++) {
       const currentSlotDepth = sideSlotSizes[i];
       // 코너 슬롯은 좌/우측 모두 정면 뒷벽 모서리에서 시작하고, 나머지는 방 안쪽으로 이어진다.
-      const slotStartRatio = currentDepthFromFrontMm / totalSideDepthMm;
       const slotDepthRatio = currentSlotDepth / totalSideDepthMm;
-      const slotCenterZMm = sideWallRange.startZMm + sideWallRange.depthMm * (slotStartRatio + slotDepthRatio / 2);
+      const slotCenterZMm = getSideWallSlotCenterZMm(
+        wall,
+        sideWallRange,
+        totalSideDepthMm,
+        currentDepthFromFrontMm,
+        currentSlotDepth
+      );
       const slotVisualDepthMm = sideWallRange.depthMm * slotDepthRatio;
       const slotCenterZ = mmToThreeUnits(slotCenterZMm);
 
@@ -598,7 +572,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
               side={2}
             />
           </mesh>
-          {showDimensions && (
+          {showSideDimensions && (
             <Text
               position={[
                 wallX + textOffsetX,
@@ -622,7 +596,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       currentDepthFromFrontMm += currentSlotDepth;
     }
 
-    const sideSlotGuides = (() => {
+    const sideSlotGuides = showSideDimensions ? (() => {
       const boundaries: number[] = [0];
       let accumulatedDepthMm = 0;
       sideSlotSizes.forEach(sizeMm => {
@@ -668,7 +642,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
             renderOrder={4}
           />
           {boundaries.map((depthMm, index) => {
-            const x = -rangeWidth / 2 + rangeWidth * (depthMm / totalSideDepthMm);
+            const x = getSideWallLocalGuideX(wall, rangeWidth, depthMm, totalSideDepthMm);
             return (
               <NativeLine
                 key={`side-wall-${wall}-slot-guide-${index}`}
@@ -690,10 +664,10 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
           })}
         </group>
       );
-    })();
+    })() : null;
 
     const sidePlacedWidthDimensions = (() => {
-      if (!showDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
+      if (!showSideDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
 
       const sideModules = sideModulesForWall;
       if (sideModules.length === 0) return null;

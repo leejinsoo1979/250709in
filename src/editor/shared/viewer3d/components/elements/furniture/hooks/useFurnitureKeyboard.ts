@@ -7,7 +7,12 @@ import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
-import { calculateSideWallPlacementRangeMm, resolveSideWallCornerBodyDepthMm } from '@/editor/shared/viewer3d/utils/sideWallPlacement';
+import {
+  buildSideWallSlotSizesMm,
+  calculateSideWallPlacementRangeMm,
+  getSideWallSlotCenterZMm,
+  resolveSideWallCabinetDepthMm
+} from '@/editor/shared/viewer3d/utils/sideWallPlacement';
 
 interface UseFurnitureKeyboardProps {
   spaceInfo: SpaceInfo;
@@ -126,12 +131,6 @@ export const useFurnitureKeyboard = ({
 
       const getSideSlotSizes = (wall: 'left' | 'right') => {
         const totalDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-        const distributeDepth = (depthMm: number) => {
-          if (depthMm <= 0.5) return [];
-          const slotCount = Math.max(1, Math.ceil(depthMm / 600));
-          const slotDepthMm = depthMm / slotCount;
-          return Array.from({ length: slotCount }, () => slotDepthMm);
-        };
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
         const cornerSlotIndex = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
         const frontCornerModule = placedModules.find(mod => {
@@ -141,21 +140,7 @@ export const useFurnitureKeyboard = ({
         const frontCornerData = frontCornerModule
           ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
           : undefined;
-
-        if (!frontCornerModule) {
-          return distributeDepth(totalDepthMm);
-        }
-
-        const cornerDepthMm = resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, totalDepthMm);
-        const remainingDepthMm = Math.max(0, totalDepthMm - cornerDepthMm);
-        if (remainingDepthMm <= 0.5) {
-          return [totalDepthMm];
-        }
-
-        return [
-          cornerDepthMm,
-          ...distributeDepth(remainingDepthMm)
-        ];
+        return buildSideWallSlotSizesMm(wall, totalDepthMm, frontCornerModule, frontCornerData);
       };
 
       const getSideWallRange = () => {
@@ -185,11 +170,11 @@ export const useFurnitureKeyboard = ({
           : undefined;
         const maxDepthMm = Math.max(1, spaceInfo.width || internalSpace.width || 600);
 
-        return Math.min(
+        return resolveSideWallCabinetDepthMm(
+          frontCornerModule,
+          frontCornerData,
           maxDepthMm,
-          Math.max(1, frontCornerModule
-            ? resolveSideWallCornerBodyDepthMm(frontCornerModule, frontCornerData, maxDepthMm)
-            : getPlacementDefaultDepth(module.moduleId))
+          getPlacementDefaultDepth(module.moduleId)
         );
       };
 
@@ -212,8 +197,13 @@ export const useFurnitureKeyboard = ({
         const startDepthFromFrontMm = sideSlotSizes
           .slice(0, nextSlot)
           .reduce((sum, size) => sum + size, 0);
-        const centerZMm = sideWallRange.startZMm
-          + sideWallRange.depthMm * ((startDepthFromFrontMm + logicalWidthMm / 2) / totalSideDepthMm);
+        const centerZMm = getSideWallSlotCenterZMm(
+          wall,
+          sideWallRange,
+          totalSideDepthMm,
+          startDepthFromFrontMm,
+          logicalWidthMm
+        );
         const sideWallXmm = wall === 'left' ? -spaceInfo.width / 2 : spaceInfo.width / 2;
         const sideDepthMm = getSideCabinetDepthMm(wall, module);
         const sideCenterXmm = wall === 'left'

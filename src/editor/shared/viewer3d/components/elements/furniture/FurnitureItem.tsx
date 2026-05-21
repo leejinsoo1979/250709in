@@ -2983,6 +2983,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 앞 공간 가구인지 확인 (isColumnCFront는 나중에 정의되므로 직접 체크)
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
   const isSideWallFurniture = placedModule.placementWall === 'left' || placedModule.placementWall === 'right';
+  const defaultModuleDepthMm = actualModuleData?.dimensions?.depth || actualDepthMm;
+  const resolveSideWallSectionDepth = (sectionDepth?: number) => {
+    if (!isSideWallFurniture) return sectionDepth;
+    if (sectionDepth === undefined || sectionDepth === null) return actualDepthMm;
+    return Math.abs(sectionDepth - defaultModuleDepthMm) < 0.5
+      ? actualDepthMm
+      : sectionDepth;
+  };
+  const effectiveLowerSectionDepth = resolveSideWallSectionDepth(placedModule.lowerSectionDepth);
+  const effectiveUpperSectionDepth = resolveSideWallSectionDepth(placedModule.upperSectionDepth);
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
@@ -4274,8 +4284,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
                   doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap} // store 우선 → prop → 글로벌 폴백
                   doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap} // store 우선 → prop → 글로벌 폴백
-                  lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
-                  upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
+                  lowerSectionDepth={effectiveLowerSectionDepth} // 하부 섹션 깊이 (mm)
+                  upperSectionDepth={effectiveUpperSectionDepth} // 상부 섹션 깊이 (mm)
                   lowerSectionDepthDirection={placedModule.lowerSectionDepthDirection} // 하부 깊이 줄이는 방향
                   upperSectionDepthDirection={placedModule.upperSectionDepthDirection} // 상부 깊이 줄이는 방향
                   lowerSectionWidth={placedModule.lowerSectionWidth} // 하부 섹션 너비 (mm)

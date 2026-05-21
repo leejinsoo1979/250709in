@@ -7,6 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { calculateSpaceIndexing, ColumnIndexer, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace, calculateFrameThickness, END_PANEL_THICKNESS } from '../../utils/geometry';
+import { getModuleById } from '@/data/modules';
 import ColumnDropTarget from './ColumnDropTarget';
 
 interface ColumnGuidesProps {
@@ -468,7 +469,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     : -mmToThreeUnits(internalSpace.depth / 2))
     - mmToThreeUnits(GUIDE_Z_BACK_SHIFT_MM);
   const frontIndicatorBackZ = backZ + mmToThreeUnits(20);
-  const emptySlotDimensionZ = frontIndicatorBackZ + 0.01;
+  const roomBackDimensionZ = zOffset + mmToThreeUnits(20);
+  const emptySlotDimensionZ = roomBackDimensionZ + 0.01;
 
   // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
   const frontZ = frameEndZ;
@@ -519,6 +521,21 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       .map(getModuleFrontZ);
 
     return fronts.length > 0 ? Math.max(...fronts) : null;
+  };
+
+  const getZoneFrontZ = (zoneType: string): number | null => {
+    const fronts = frontPlacedModules
+      .filter(mod => zoneType === 'full'
+        || (zoneType === 'main' && (!mod.zone || mod.zone === 'normal'))
+        || (zoneType === 'dropped' && mod.zone === 'dropped'))
+      .map(getModuleFrontZ);
+
+    return fronts.length > 0 ? Math.max(...fronts) : null;
+  };
+
+  const getZoneDimensionZ = (zoneType: string): number => {
+    const frontZForZone = getZoneFrontZ(zoneType);
+    return frontZForZone !== null ? frontZForZone + 0.01 : emptySlotDimensionZ;
   };
 
   // 슬롯 가이드 렌더링 헬퍼 함수
@@ -732,14 +749,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           />
         );
       } else {
-        const adjacentFronts = [
-          index > 0 ? getSlotFrontZ(zoneType, index - 1) : null,
-          index < columnCount ? getSlotFrontZ(zoneType, index) : null
-        ].filter((value): value is number => typeof value === 'number');
-        // 빈 슬롯의 치수가이드 Z축 라인은 뒷벽, 배치된 슬롯 옆 경계는 해당 가구 앞단에 둔다.
-        const guideZV = adjacentFronts.length > 0
-          ? Math.max(...adjacentFronts) + 0.01
-          : emptySlotDimensionZ;
+        const guideZV = frontIndicatorBackZ + 0.01;
         guides.push(
           <Line
             key={`${zoneType}-vertical-guide-${index}`}
@@ -786,7 +796,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         } else {
           // 프론트뷰 및 3D뷰: 기존 위치 유지
           const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
-          const textZ = frontIndicatorBackZ + 0.5; // 뒷면에서 살짝 앞으로
+          const textZ = frontIndicatorBackZ + 0.5; // 뒷면 인디게이터에서 살짝 앞으로
           textPosition = [xPos, textY, textZ];
           textRotation = [0, 0, 0];
         }
