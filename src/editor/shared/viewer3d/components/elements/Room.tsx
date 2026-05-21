@@ -700,7 +700,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore();
   const isLiveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
   const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const isPanelSimulationLayout = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
@@ -911,11 +911,13 @@ const Room: React.FC<RoomProps> = ({
       // 임계값: 페이드 시작 = vy 0.6, 완전 투명 = vy 0.9
       const topDot = vy;
 
+      // 측면뷰(L/R) 활성 시 해당 측면 그라데이션 메쉬는 슬롯 가이드 대신 보여야 하므로 항상 불투명 유지
+      const isSideViewActive = activePlacementWall === 'left' || activePlacementWall === 'right';
       if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
-        leftWallMaterialRef.current.uniforms.opacity.value = computeOpacity(leftDot);
+        leftWallMaterialRef.current.uniforms.opacity.value = isSideViewActive ? 1 : computeOpacity(leftDot);
       }
       if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
-        rightWallMaterialRef.current.uniforms.opacity.value = computeOpacity(rightDot);
+        rightWallMaterialRef.current.uniforms.opacity.value = isSideViewActive ? 1 : computeOpacity(rightDot);
       }
       // 천장: vy(=topDot)가 클수록(카메라가 위로 회전) 천장이 가구 윗면을 가림 → 페이드
       // 정면뷰(vy ≈ 0.3 전후 추정)는 불투명 유지, 위로 더 회전하면 페이드 시작
