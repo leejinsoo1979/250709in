@@ -1344,8 +1344,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
   let useFurnitureFitDoorHeight = false;
-  let dimensionDoorTopGapMm = doorTopGap;
-  let dimensionDoorBottomGapMm = doorBottomGap;
 
   // 단내림 구간인 경우 해당 구간의 높이 사용
   let fullSpaceHeight = originalSpaceInfo.height;
@@ -1384,8 +1382,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // cabH가 stoneThk별로 변해도 도어 상단~가구 상단 갭은 항상 80mm 일정
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
-      dimensionDoorTopGapMm = effectiveTopDownTopGap;
-      dimensionDoorBottomGapMm = effectiveTopDownBottomGap;
       actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
@@ -1456,9 +1452,36 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorHeight = forcedDoorHeightMm;
   }
   // 도어 높이에 추가 조정 없음 (사용자 입력 갭이 완전히 제어)
+  const doorCenterLocalForDimensionMm = (() => {
+    if (forcedDoorYMm !== undefined) {
+      return forcedDoorYMm;
+    }
+
+    if (isUpperCabinet) {
+      return (doorTopGap - doorBottomGap) / 2;
+    }
+
+    if (isLowerCabinet) {
+      const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
+      const isTopDown = moduleData?.id?.includes('lower-top-down-');
+      if (isTopDown) {
+        const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+        const doorTopMm = lowerCabinetHeight / 2 + effectiveTopDownTopGap;
+        return doorTopMm - actualDoorHeight / 2;
+      }
+      return (doorTopGap - doorBottomGap) / 2;
+    }
+
+    return (doorBottomLocal + doorTopLocal) / 2;
+  })();
+  const parentGroupYMm = parentGroupYProp !== undefined ? parentGroupYProp / 0.01 : 0;
+  const doorTopWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm + actualDoorHeight / 2;
+  const doorBottomWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm - actualDoorHeight / 2;
+  const dimensionDoorTopGapMm = Math.max(0, Math.round(fullSpaceHeight - doorTopWorldMm));
+  const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm));
   const doorHeight = mmToThreeUnits(actualDoorHeight);
-  const doorTopGapDimensionMm = Math.max(0, Math.min(Math.round(dimensionDoorTopGapMm), Math.round(actualDoorHeight)));
-  const doorBottomGapDimensionMm = Math.max(0, Math.min(Math.round(dimensionDoorBottomGapMm), Math.max(0, Math.round(actualDoorHeight) - doorTopGapDimensionMm)));
+  const doorTopGapDimensionMm = dimensionDoorTopGapMm;
+  const doorBottomGapDimensionMm = dimensionDoorBottomGapMm;
   const doorTopGapDimensionUnits = mmToThreeUnits(doorTopGapDimensionMm);
   const doorBottomGapDimensionUnits = mmToThreeUnits(doorBottomGapDimensionMm);
   const doorDimensionTopY = doorHeight / 2 + doorTopGapDimensionUnits;
