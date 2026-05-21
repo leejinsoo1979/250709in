@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, OrthographicCamera } from '@react-three/drei';
 import * as THREE from 'three';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
@@ -19,6 +19,16 @@ import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
 import SceneBackground from './components/SceneBackground'; // 하위 레벨
 import { TouchOrbitControlsSetup } from './components/TouchOrbitControlsSetup'; // 터치 컨트롤
+import AxisArrowsGizmo, { mainCameraQuaternion } from './components/AxisArrowsGizmo'; // CAD 축 기즈모 (HTML 오버레이)
+
+// 메인 카메라 quaternion을 매 프레임 전역 ref로 복사 (기즈모용)
+const CameraQuaternionSync: React.FC = () => {
+  const { camera } = useThree();
+  useFrame(() => {
+    mainCameraQuaternion.copy(camera.quaternion);
+  });
+  return null;
+};
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
 
 // 최근 복사한 가구 ID를 전역 수준에서 유지해 Ctrl+V 붙여넣기 시 활용
@@ -80,7 +90,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo } = useUIStore();
 
   // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
   const cameraMode = cameraModeFromProps || cameraModeFromStore;
@@ -1410,11 +1420,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           {/* 기본 조명 제거 - Space3DView에서 모든 조명 관리 */}
           {/* 기본 조명이 우리 조명과 충돌하므로 제거 */}
 
-          {/* 축 표시 - 기즈모 제거 */}
-          {/* <axesHelper args={[5]} /> */}
+          {/* 메인 카메라 quaternion을 기즈모로 전달 (3D 모드에서만) */}
+          {viewMode === '3D' && <CameraQuaternionSync />}
 
           {children}
         </Canvas>
+
+        {/* CAD 스타일 ViewCube 기즈모 - 좌측 상단 HTML 오버레이 (3D 모드 + 표시설정 ON일 때만) */}
+        {viewMode === '3D' && showGizmo && <AxisArrowsGizmo />}
       </div>
     </ErrorBoundary>
   );

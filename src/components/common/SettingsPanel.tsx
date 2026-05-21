@@ -13,7 +13,7 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSpaceDefaultsSaved }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
-  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFrame, setShowFrame, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
+  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showGizmo, setShowGizmo, showFrame, setShowFrame, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
   const [showSpaceDefaults, setShowSpaceDefaults] = useState(false);
   
   useEffect(() => {
@@ -206,6 +206,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSpaceD
                 </div>
                 <label className={styles.switch}>
                   <input type="checkbox" checked={showAxis} onChange={() => setShowAxis(!showAxis)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>기즈모</span>
+                  <span className={styles.settingDescription}>좌측 상단 ViewCube 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showGizmo} onChange={() => setShowGizmo(!showGizmo)} />
                   <span className={styles.slider}></span>
                 </label>
               </div>

@@ -155,6 +155,9 @@ interface UIState {
   // 축 표시 상태
   showAxis: boolean;
 
+  // 기즈모(좌측 상단 ViewCube) 표시 상태
+  showGizmo: boolean;
+
   // 프레임 표시 상태 (상부/걸래받이)
   showFrame: boolean;
 
@@ -387,6 +390,7 @@ interface UIState {
   setShowDimensionsText: (show: boolean) => void;
   setShowGuides: (show: boolean) => void;
   setShowAxis: (show: boolean) => void;
+  setShowGizmo: (show: boolean) => void;
   setShowFrame: (show: boolean) => void;
   setShowAll: (show: boolean) => void;
   setShowFurniture: (show: boolean) => void;
@@ -498,6 +502,7 @@ const initialUIState = {
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: false, // 기본값: 그리드(가이드) 숨김
   showAxis: true, // 기본값: 축 표시
+  showGizmo: true, // 기본값: 좌측 상단 ViewCube 기즈모 표시
   highlightedDoorGap: null,  // 도어 갭 하이라이트
   hingePositionEditModeModuleId: null,  // 기본값: 경첩 위치 변경 모드 비활성
   showFrame: true, // 기본값: 프레임 표시
@@ -786,6 +791,9 @@ export const useUIStore = create<UIState>()(
       
       setShowAxis: (show) =>
         set({ showAxis: show }),
+
+      setShowGizmo: (show) =>
+        set({ showGizmo: show }),
 
       setHighlightedDoorGap: (h) => set({ highlightedDoorGap: h }),
 
