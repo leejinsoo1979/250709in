@@ -1551,11 +1551,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   </Text>
                 </group>
               ))}
-              {/* 하부장/키큰장 도어 하단갭: 바닥(0) ~ 도어 하단 (항상 바닥 기준) */}
+              {/* 하부장/키큰장 도어 하단갭: 바닥(마감재 있으면 마감재 상단) ~ 도어 하단 */}
               {(() => {
                 if (allLowerDoorSegs.length === 0) return null;
                 const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
-                const bottomStartY = 0;
+                const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
                 const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
                 if (bottomGapMm <= 0) return null;
                 return (
