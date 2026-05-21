@@ -26,6 +26,9 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const { theme } = useTheme();
   const isNoWallSpace = spaceInfo.installType === 'freestanding'
     || (!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right);
+  const hasPlacementWall = (wall: 'left' | 'right') => wall === 'left'
+    ? !!spaceInfo.wallConfig?.left
+    : !!spaceInfo.wallConfig?.right;
   const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com' && !isNoWallSpace;
 
   // 내경 공간 계산
@@ -190,7 +193,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   };
 
   const renderSideWallSlotMeshes = (wall: 'left' | 'right') => {
-    if (isNoWallSpace) {
+    if (isNoWallSpace || !hasPlacementWall(wall)) {
       return null;
     }
     if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === wall) {
@@ -241,17 +244,25 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
         ?? 0;
       return Math.max(maxDepth, d);
     }, 0);
-    // 측면 깊이 치수 가이드의 길이/중앙 Z: 가구 있으면 가구 깊이, 없으면 공간 전체 깊이
+    // 측면 깊이 치수 가이드:
+    // - 가구 배치 전: 가이드를 공간 뒷벽 라인 측면에 표시 (라벨 = 공간 전체 깊이)
+    // - 가구 배치 후: 가이드를 가구 앞단 라인 측면으로 이동 (라벨 = 가구 깊이)
+    const sideWallEndZMm = sideWallRange.startZMm + sideWallRange.depthMm; // 앞벽 Z
+    const sideWallStartZMm = sideWallRange.startZMm; // 뒷벽 Z
     const dimRangeDepthMm = maxFrontFurnitureDepthMm > 0
       ? maxFrontFurnitureDepthMm
       : sideWallRange.depthMm;
-    // 가구는 공간 앞쪽에 붙어 있으므로 가이드 중앙 Z = sideWallRange 끝(앞단) - 가구깊이/2
-    const sideWallEndZMm = sideWallRange.startZMm + sideWallRange.depthMm;
     const dimRangeCenterZMm = maxFrontFurnitureDepthMm > 0
-      ? sideWallEndZMm - maxFrontFurnitureDepthMm / 2
-      : rangeCenterZMm;
+      ? sideWallEndZMm - maxFrontFurnitureDepthMm / 2 // 가구 앞단 영역 중앙
+      : sideWallStartZMm + sideWallRange.depthMm / 2; // 공간 전체 중앙
+    // 가이드 라인의 깊이 중심을 한쪽으로 치우치게: 가구 없으면 뒷벽 인디케이터 라인 위에 라벨이 오도록 보정
+    // (라인 길이가 1500이라 시각적으로 같지만, 라벨 텍스트 위치만 뒷벽 측으로 이동)
+    const labelZOffsetMm = maxFrontFurnitureDepthMm > 0
+      ? 0 // 가구 있으면 가이드 라인 중앙 = 가구 깊이 중앙 (라벨도 중앙)
+      : -sideWallRange.depthMm / 2 + 10; // 가구 없으면 라벨을 뒷벽쪽으로 이동 (group local Z 음수)
     const dimRangeCenterZ = mmToThreeUnits(dimRangeCenterZMm);
     const dimRangeWidth = mmToThreeUnits(dimRangeDepthMm);
+    const labelZOffset = mmToThreeUnits(labelZOffsetMm);
     const dimensionColor = '#333333';
     const textColor = '#222222';
     // 정면 폭 치수선과 동일 Y 정렬: 천장(=halfHeight) + DIM_GAP(120) × 3 = +360mm, 연장선 끝 = +400mm
@@ -406,7 +417,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
           {renderDimensionLine('side-top-left-ext', [[-halfWidth, halfHeight, lineZ], [-halfWidth, topLineY + dimensionTextGap, lineZ]])}
           {renderDimensionLine('side-top-right-ext', [[halfWidth, halfHeight, lineZ], [halfWidth, topLineY + dimensionTextGap, lineZ]])}
           <Text
-            position={[0, topLineY + dimensionTextGap, textZ]}
+            position={[labelZOffset, topLineY + dimensionTextGap, textZ]}
             fontSize={dimensionFontSize}
             color={textColor}
             anchorX="center"

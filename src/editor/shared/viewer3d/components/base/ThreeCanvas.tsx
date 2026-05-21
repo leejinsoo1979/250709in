@@ -120,6 +120,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 벽 없음 공간(freestanding 또는 좌우 벽 모두 없음)에서는 측면 배치/뷰 토글 비활성화
   const isNoWallSpace = spaceInfo?.installType === 'freestanding'
     || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
+  const hasLeftPlacementWall = !!spaceInfo?.wallConfig?.left;
+  const hasRightPlacementWall = !!spaceInfo?.wallConfig?.right;
   const canUsePlacementWallTools = user?.email === ALLOWED_PLACEMENT_WALL_EMAIL && !isNoWallSpace;
   // 단내림 좌/우 위치 변경 이전 상태 추적
   const prevDroppedPositionRef = useRef<'left' | 'right' | undefined>(spaceInfo?.droppedCeiling?.position);
@@ -276,7 +278,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier, viewportSize);
   const isSidePlacementView = viewMode === '3D'
     && canUsePlacementWallTools
-    && (activePlacementWall === 'left' || activePlacementWall === 'right');
+    && (
+      (activePlacementWall === 'left' && hasLeftPlacementWall)
+      || (activePlacementWall === 'right' && hasRightPlacementWall)
+    );
   const controlsConfig = useOrbitControlsConfig(
     camera.target,
     viewMode,
@@ -288,10 +293,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   );
 
   useEffect(() => {
-    if (!canUsePlacementWallTools && activePlacementWall !== 'front') {
+    const activeSideWallUnavailable =
+      (activePlacementWall === 'left' && !hasLeftPlacementWall)
+      || (activePlacementWall === 'right' && !hasRightPlacementWall);
+    if ((!canUsePlacementWallTools || activeSideWallUnavailable) && activePlacementWall !== 'front') {
       setActivePlacementWall('front');
     }
-  }, [activePlacementWall, canUsePlacementWallTools, setActivePlacementWall]);
+  }, [activePlacementWall, canUsePlacementWallTools, hasLeftPlacementWall, hasRightPlacementWall, setActivePlacementWall]);
 
   useEffect(() => {
     if (viewMode !== '3D') return;
@@ -299,8 +307,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     let animationFrame = 0;
 
     const focusViewCubeFace = (view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom') => {
-      if (canUsePlacementWallTools && (view === 'front' || view === 'left' || view === 'right')) {
-        setActivePlacementWall(view);
+      const sideViewAllowed = (view === 'left' && hasLeftPlacementWall)
+        || (view === 'right' && hasRightPlacementWall);
+      const effectiveView = (view === 'left' || view === 'right') && !sideViewAllowed ? 'front' : view;
+
+      if (canUsePlacementWallTools && (effectiveView === 'front' || effectiveView === 'left' || effectiveView === 'right')) {
+        setActivePlacementWall(effectiveView);
       } else {
         setActivePlacementWall('front');
       }
@@ -333,8 +345,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           toThree(sideWallRangeStartZMm + sideWallRangeDepthMm / 2)
         );
       };
-      const target = canUsePlacementWallTools && (view === 'left' || view === 'right')
-        ? getSideWallTarget(view)
+      const target = canUsePlacementWallTools && (effectiveView === 'left' || effectiveView === 'right')
+        ? getSideWallTarget(effectiveView)
         : roomTarget;
       const radius = Math.max(toThree(width), toThree(height), toThree(depth)) * 1.45;
       const frontOffset = radius + toThree(depth);
@@ -352,7 +364,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
       const startPosition = object.position.clone();
       const startTarget = controls.target.clone();
-      const endPosition = positions[view];
+      const endPosition = positions[effectiveView];
       const endTarget = target;
       const startTime = performance.now();
       const duration = 420;
@@ -387,7 +399,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         viewCubeRequest.handler = null;
       }
     };
-  }, [viewMode, canUsePlacementWallTools, setActivePlacementWall, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth]);
+  }, [viewMode, canUsePlacementWallTools, hasLeftPlacementWall, hasRightPlacementWall, setActivePlacementWall, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth]);
 
   useEffect(() => {
     if (viewMode !== '2D') return;
@@ -675,7 +687,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     if (
       viewMode === '3D' &&
       canUsePlacementWallTools &&
-      (activePlacementWall === 'left' || activePlacementWall === 'right')
+      (
+        (activePlacementWall === 'left' && hasLeftPlacementWall)
+        || (activePlacementWall === 'right' && hasRightPlacementWall)
+      )
     ) {
       const object = controls.object as THREE.Camera & { zoom?: number; updateProjectionMatrix?: () => void };
       const width = spaceInfo?.width || 2400;
@@ -819,7 +834,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       newPosition: controls.object.position.toArray(),
       newTarget: controls.target.toArray(),
     });
-  }, [camera, viewMode, cameraMode, activePlacementWall, canUsePlacementWallTools, spaceInfo]);
+  }, [camera, viewMode, cameraMode, activePlacementWall, canUsePlacementWallTools, hasLeftPlacementWall, hasRightPlacementWall, spaceInfo]);
 
   // 측면뷰 활성 상태에서 cameraMode 변경 시 카메라 위치를 측면뷰로 재설정
   // (OrthographicCamera/PerspectiveCamera 컴포넌트가 재마운트되며 정면 좌표로 점프하는 것 방지)
@@ -830,13 +845,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     if (prev === cameraMode) return;
     if (viewMode !== '3D') return;
     if (!canUsePlacementWallTools) return;
-    if (activePlacementWall !== 'left' && activePlacementWall !== 'right') return;
+    if (
+      !(
+        (activePlacementWall === 'left' && hasLeftPlacementWall)
+        || (activePlacementWall === 'right' && hasRightPlacementWall)
+      )
+    ) return;
     // 새 카메라 컴포넌트 마운트 + R3F 카메라 적용 이후 측면뷰 좌표 재적용
     const id = window.setTimeout(() => {
       resetCamera();
     }, 80);
     return () => window.clearTimeout(id);
-  }, [cameraMode, viewMode, activePlacementWall, canUsePlacementWallTools, resetCamera]);
+  }, [cameraMode, viewMode, activePlacementWall, canUsePlacementWallTools, hasLeftPlacementWall, hasRightPlacementWall, resetCamera]);
 
   // 카메라 방향 ↔ activePlacementWall(뷰 방향 토글) 동기화
   // 카메라가 정면을 보면 front, 좌측을 보면 left, 우측을 보면 right로 토글 자동 갱신
@@ -862,6 +882,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const X_DOMINANT_RATIO = 3.0; // X가 Z의 3배 이상 우세할 때만
       if (absX > absZ * X_DOMINANT_RATIO) {
         const next: 'left' | 'right' = dir.x > 0 ? 'right' : 'left';
+        const nextAvailable = next === 'left' ? hasLeftPlacementWall : hasRightPlacementWall;
+        if (!nextAvailable) {
+          if (current !== 'front') ui.setActivePlacementWall('front');
+          return;
+        }
         if (current !== next) ui.setActivePlacementWall(next);
       } else if (absZ > absX * X_DOMINANT_RATIO) {
         // Z가 강하게 우세할 때만 front로 복귀
@@ -876,7 +901,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => {
       try { controls.removeEventListener('change', syncWallFromCamera); } catch {}
     };
-  }, [viewMode, canUsePlacementWallTools, cameraMode]);
+  }, [viewMode, canUsePlacementWallTools, cameraMode, hasLeftPlacementWall, hasRightPlacementWall]);
 
   // 스페이스바 토글: 누를 때마다 [카메라 초기화] ↔ [카메라 모드 전환] 순으로 번갈아 실행
   // - 홀수 번째: 카메라 초기화

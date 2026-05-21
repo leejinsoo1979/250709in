@@ -110,6 +110,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const { user } = useAuth();
   const isNoWallSpace = spaceInfo.installType === 'freestanding'
     || (!spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right);
+  const hasPlacementWall = (wall: 'left' | 'right') => wall === 'left'
+    ? !!spaceInfo.wallConfig?.left
+    : !!spaceInfo.wallConfig?.right;
   const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com' && !isNoWallSpace;
 
   // Three.js 컨텍스트 접근
@@ -227,7 +230,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
   const isSidePlacementView = viewMode === '3D'
     && (activePlacementWall === 'left' || activePlacementWall === 'right');
-  const isSidePlacementActive = canUsePlacementWallTools && isSidePlacementView;
+  const isSidePlacementActive = canUsePlacementWallTools
+    && isSidePlacementView
+    && hasPlacementWall(activePlacementWall as 'left' | 'right');
   const isClickPlacementMode = !!selectedFurnitureId || isFurniturePlacementMode;
 
   const distributeSideDepth = useCallback((depthMm: number) => {
@@ -597,7 +602,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
 
-    if (canUsePlacementWallTools && viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
+    if (isSidePlacementActive) {
       if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === activePlacementWall) {
         showAlert('커튼박스가 있는 위치에는 배치할 수 없습니다.', { title: '배치 불가' });
         return true;
