@@ -107,7 +107,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
   const { viewMode: contextViewMode } = useSpace3DView();
-  const { view2DDirection: view2DDirectionStore } = useUIStore();
+  const { view2DDirection: view2DDirectionStore, activePlacementWall } = useUIStore();
 
   // 슬롯 바닥 클릭 시 선택 해제 및 팝업 닫기 핸들러
   const handleSlotFloorClick = useCallback((e: any) => {
@@ -304,6 +304,175 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       showAlert('배치슬롯의 사이즈를 늘려주세요', { title: '배치 불가' });
       return false;
+    }
+
+    if (viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
+      if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === activePlacementWall) {
+        showAlert('커튼박스가 있는 위치에는 배치할 수 없습니다.', { title: '배치 불가' });
+        return true;
+      }
+
+      const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo) || dragData.moduleData;
+      const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+      const sideWallRange = (() => {
+        const panelDepthMm = totalSideDepthMm;
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
+        const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+        const startZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - 10 - 30;
+        return {
+          startZMm,
+          depthMm: panelDepthMm + 300
+        };
+      })();
+      const cornerFrontSlot = activePlacementWall === 'left'
+        ? 0
+        : zoneInfo.normal.columnCount - 1;
+      const frontCornerModule = placedModules.find(mod => {
+        const wall = (mod as any).placementWall || 'front';
+        return wall === 'front' && mod.slotIndex === cornerFrontSlot;
+      });
+      const frontCornerData = frontCornerModule
+        ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
+        : undefined;
+      const distributeSideDepth = (depthMm: number) => {
+        if (depthMm <= 0.5) {
+          return [];
+        }
+        const slotCount = Math.max(1, Math.ceil(depthMm / 600));
+        const slotDepthMm = depthMm / slotCount;
+        return Array.from({ length: slotCount }, () => slotDepthMm);
+      };
+      const sideSlotSizes = (() => {
+        if (!frontCornerModule) {
+          return distributeSideDepth(totalSideDepthMm);
+        }
+
+        const fallbackCornerDepthMm = Math.min(600, totalSideDepthMm);
+        const cornerDepthMm = Math.min(
+          totalSideDepthMm,
+          Math.max(
+            1,
+            frontCornerModule.customDepth
+              ?? frontCornerModule.freeDepth
+              ?? frontCornerData?.dimensions?.depth
+              ?? fallbackCornerDepthMm
+          )
+        );
+        const remainingSideDepthMm = Math.max(0, totalSideDepthMm - cornerDepthMm);
+        if (remainingSideDepthMm <= 0.5) {
+          return [totalSideDepthMm];
+        }
+        return [
+          cornerDepthMm,
+          ...distributeSideDepth(remainingSideDepthMm)
+        ];
+      })();
+      const sideWallXmm = activePlacementWall === 'left'
+        ? -spaceInfo.width / 2
+        : spaceInfo.width / 2;
+      const sideDroppedCeiling = spaceInfo.droppedCeiling;
+      const isDroppedSideWall = sideDroppedCeiling?.enabled && sideDroppedCeiling.position === activePlacementWall;
+      const sideDropHeightMm = isDroppedSideWall ? (sideDroppedCeiling.dropHeight || 0) : 0;
+      const sideWallHeightMm = Math.max(1, internalSpace.height - sideDropHeightMm);
+      const sideWallTopYmm = internalSpace.startY + sideWallHeightMm;
+      const sideCabinetDepthMm = Math.min(
+        Math.max(1, spaceInfo.width || internalSpace.width || 600),
+        Math.max(1, getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600))
+      );
+      const sideCenterXmm = activePlacementWall === 'left'
+        ? sideWallXmm + sideCabinetDepthMm / 2
+        : sideWallXmm - sideCabinetDepthMm / 2;
+
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+      const wallX = mmToThreeUnits(sideWallXmm);
+      const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -wallX);
+      const intersectPoint = new THREE.Vector3();
+      if (!raycaster.ray.intersectPlane(plane, intersectPoint)) {
+        return false;
+      }
+
+      const intersectZMm = threeUnitsToMm(intersectPoint.z);
+      const relativeDepthMm = Math.max(
+        0,
+        Math.min(
+          totalSideDepthMm,
+          ((intersectZMm - sideWallRange.startZMm) / sideWallRange.depthMm) * totalSideDepthMm
+        )
+      );
+      let sideSlotIndex = sideSlotSizes.length - 1;
+      let accumulatedDepthMm = 0;
+      for (let i = 0; i < sideSlotSizes.length; i++) {
+        accumulatedDepthMm += sideSlotSizes[i];
+        if (relativeDepthMm <= accumulatedDepthMm) {
+          sideSlotIndex = i;
+          break;
+        }
+      }
+      sideSlotIndex = Math.max(0, Math.min(sideSlotSizes.length - 1, sideSlotIndex));
+
+      const cornerOccupied = sideSlotIndex === 0 && placedModules.some(mod => {
+        const wall = (mod as any).placementWall || 'front';
+        return (!!frontCornerModule && wall === 'front' && mod.slotIndex === cornerFrontSlot)
+          || (wall === activePlacementWall && mod.slotIndex === 0);
+      });
+      if (cornerOccupied) {
+        showAlert('코너 슬롯은 이미 배치되어 있습니다.', { title: '배치 불가' });
+        return true;
+      }
+
+      const slotOccupied = placedModules.some(mod => {
+        const wall = (mod as any).placementWall || 'front';
+        return wall === activePlacementWall && mod.slotIndex === sideSlotIndex;
+      });
+      if (slotOccupied) {
+        showAlert('이미 배치된 슬롯입니다.', { title: '배치 불가' });
+        return true;
+      }
+
+      const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+      const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
+      const floorY = mmToThreeUnits(internalSpace.startY);
+      let furnitureY = floorY + furnitureHeight / 2;
+      if (moduleData?.category === 'upper') {
+        furnitureY = mmToThreeUnits(sideWallTopYmm - furnitureHeightMm / 2);
+      }
+
+      const slotStartDepthFromFrontMm = sideSlotSizes
+        .slice(0, sideSlotIndex)
+        .reduce((sum, slotDepthMm) => sum + slotDepthMm, 0);
+      const currentSideSlotDepthMm = sideSlotSizes[sideSlotIndex];
+      const slotCenterZMm = sideWallRange.startZMm
+        + sideWallRange.depthMm * ((slotStartDepthFromFrontMm + currentSideSlotDepthMm / 2) / totalSideDepthMm);
+      const placedId = `placed-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const newModule: any = {
+        id: placedId,
+        moduleId: moduleData.id,
+        position: {
+          x: mmToThreeUnits(sideCenterXmm),
+          y: furnitureY,
+          z: mmToThreeUnits(slotCenterZMm)
+        },
+        rotation: activePlacementWall === 'left' ? 90 : -90,
+        hasDoor: false,
+        customDepth: getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600),
+        customWidth: Math.min(currentSideSlotDepthMm, moduleData?.dimensions?.width || currentSideSlotDepthMm),
+        slotIndex: sideSlotIndex,
+        isDualSlot: false,
+        isValidInCurrentSpace: true,
+        zone: 'normal',
+        placementWall: activePlacementWall,
+        lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0,
+        ...getModulePlacementFlags(moduleData)
+      };
+
+      addModule(newModule);
+      if (currentDragData) {
+        setCurrentDragData(null);
+      }
+      window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+      return true;
     }
 
 

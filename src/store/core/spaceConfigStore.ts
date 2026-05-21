@@ -324,7 +324,7 @@ export const SPACE_LIMITS = {
   },
   DEPTH: {
     MIN: 130,   // 최소 깊이
-    MAX: 1500,   // 최대 깊이
+    MAX: 3000,   // 최대 깊이
   },
 } as const;
 

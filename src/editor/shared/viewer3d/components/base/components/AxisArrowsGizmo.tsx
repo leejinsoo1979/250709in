@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // 외부에서 메인 카메라 상태를 받기 위한 전역
 export const mainCameraQuaternion = new THREE.Quaternion();
 // 클릭 시 뷰 전환 요청을 ThreeCanvas로 전달하기 위한 콜백 핸들러
-type ViewName = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
+export type ViewName = 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom';
 export const viewCubeRequest = {
   handler: null as ((view: ViewName) => void) | null,
 };
@@ -113,13 +113,13 @@ const createCompassTexture = (): THREE.Texture => {
 };
 
 // ───────── 큐브 면 정의 ─────────
-const FACES: Array<{ view: ViewName; label: string; normal: [number, number, number] }> = [
-  { view: 'right', label: 'Right', normal: [1, 0, 0] },
-  { view: 'left', label: 'Left', normal: [-1, 0, 0] },
-  { view: 'top', label: 'Top', normal: [0, 1, 0] },
-  { view: 'bottom', label: 'Bottom', normal: [0, -1, 0] },
-  { view: 'front', label: 'Front', normal: [0, 0, 1] },
-  { view: 'back', label: 'Back', normal: [0, 0, -1] },
+// 방을 축소한 큐브처럼 보이게 한다. 앞쪽(+Z)은 열려 있고, 안쪽 뒷벽(-Z)이 Front 배치면이다.
+const FACES: Array<{ view: ViewName; label: string; normal: [number, number, number]; innerNormal: [number, number, number] }> = [
+  { view: 'right', label: 'Right', normal: [1, 0, 0], innerNormal: [-1, 0, 0] },
+  { view: 'left', label: 'Left', normal: [-1, 0, 0], innerNormal: [1, 0, 0] },
+  { view: 'top', label: 'Top', normal: [0, 1, 0], innerNormal: [0, -1, 0] },
+  { view: 'bottom', label: 'Bottom', normal: [0, -1, 0], innerNormal: [0, 1, 0] },
+  { view: 'front', label: 'Front', normal: [0, 0, -1], innerNormal: [0, 0, 1] },
 ];
 
 // ───────── ViewCube 본체 ─────────
@@ -155,38 +155,64 @@ const ViewCube: React.FC = () => {
     <group ref={groupRef} position={[0, 0.25, 0]}>
       {FACES.map((face) => {
         const normal = new THREE.Vector3(...face.normal);
+        const innerNormal = new THREE.Vector3(...face.innerNormal);
         const pos = normal.clone().multiplyScalar(cubeSize / 2);
-        const quat = new THREE.Quaternion().setFromUnitVectors(
-          new THREE.Vector3(0, 0, 1),
-          normal
-        );
+        const innerPos = pos.clone().add(innerNormal.clone().multiplyScalar(0.006));
+        const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+        const innerQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), innerNormal);
         const isHover = hovered === face.view;
         return (
-          <mesh
-            key={face.view}
-            position={pos.toArray()}
-            quaternion={quat}
-            onPointerOver={(e) => {
-              e.stopPropagation();
-              setHovered(face.view);
-              document.body.style.cursor = 'pointer';
-            }}
-            onPointerOut={() => {
-              setHovered(null);
-              document.body.style.cursor = '';
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick(face.view);
-            }}
-          >
-            <planeGeometry args={[cubeSize, cubeSize]} />
-            <meshBasicMaterial
-              map={isHover ? textures[face.view].hover : textures[face.view].base}
-              toneMapped={false}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
+          <group key={face.view}>
+            <mesh
+              position={pos.toArray()}
+              quaternion={quat}
+              onPointerOver={(e) => {
+                e.stopPropagation();
+                setHovered(face.view);
+                document.body.style.cursor = 'pointer';
+              }}
+              onPointerOut={() => {
+                setHovered(null);
+                document.body.style.cursor = '';
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick(face.view);
+              }}
+            >
+              <planeGeometry args={[cubeSize, cubeSize]} />
+              <meshBasicMaterial
+                map={isHover ? textures[face.view].hover : textures[face.view].base}
+                toneMapped={false}
+                side={THREE.FrontSide}
+              />
+            </mesh>
+            <mesh
+              position={innerPos.toArray()}
+              quaternion={innerQuat}
+              onPointerOver={(e) => {
+                e.stopPropagation();
+                setHovered(face.view);
+                document.body.style.cursor = 'pointer';
+              }}
+              onPointerOut={() => {
+                setHovered(null);
+                document.body.style.cursor = '';
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick(face.view);
+              }}
+            >
+              <planeGeometry args={[cubeSize * 0.92, cubeSize * 0.92]} />
+              <meshBasicMaterial
+                map={isHover ? textures[face.view].hover : textures[face.view].base}
+                toneMapped={false}
+                side={THREE.FrontSide}
+                transparent
+              />
+            </mesh>
+          </group>
         );
       })}
     </group>
@@ -254,7 +280,10 @@ const AxisArrowsGizmo: React.FC = () => {
     >
       <Canvas
         gl={{ antialias: true, alpha: true, premultipliedAlpha: false }}
-        style={{ background: 'transparent', backgroundColor: 'transparent' }}
+        style={{
+          background: 'transparent',
+          backgroundColor: 'transparent'
+        }}
         dpr={[1, 2]}
         onCreated={({ gl, scene }) => {
           gl.setClearColor(0x000000, 0);

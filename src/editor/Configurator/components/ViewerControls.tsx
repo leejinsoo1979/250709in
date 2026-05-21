@@ -12,6 +12,7 @@ import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/auth/AuthProvider';
+import { viewCubeRequest } from '@/editor/shared/viewer3d/components/base/components/AxisArrowsGizmo';
 
 const ALLOWED_EMAIL = 'sbbc212@gmail.com';
 
@@ -76,7 +77,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   frameMergeEnabled = false,
   onFrameMergeToggle
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = user?.email === ALLOWED_EMAIL;
   const { spaceInfo } = useSpaceConfigStore();
@@ -283,6 +284,23 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   return (
     <div className={styles.viewerControls}>
 
+      {/* ─── Left: L/F/R 측면 배치벽 토글 (3D 모드에서만) — 기즈모 박스 중앙과 수직 정렬 ─── */}
+      {viewMode === '3D' && (
+        <div className={styles.segmentedControl} style={{ marginLeft: 19 }}>
+          {[
+            { id: 'left' as const, label: 'L' },
+            { id: 'front' as const, label: 'F' },
+            { id: 'right' as const, label: 'R' },
+          ].map((btn) => (
+            <button
+              key={btn.id}
+              className={`${styles.segmentButton} ${styles.segmentAccent} ${activePlacementWall === btn.id ? styles.segmentAccentActive : ''}`}
+              onClick={() => viewCubeRequest.handler?.(btn.id)}
+            >{btn.label}</button>
+          ))}
+        </div>
+      )}
+
       {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
       <div className={styles.centerAbsolute}>
         {isFreePlacement && (() => {
@@ -380,6 +398,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >{mode.label}</button>
           ))}
         </div>
+
 
         {/* 스캔/줄자 버튼 — 우측 패널 토글 옆 세로 배열로 이동 (Configurator/index.tsx 참조) */}
 

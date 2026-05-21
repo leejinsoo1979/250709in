@@ -2037,6 +2037,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
   const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode, closePanelSimulation } = useUIStore();
+  const activePlacementWall = useUIStore(state => state.activePlacementWall);
   const { ready: panelSimulationAccessReady, canUsePanelSimulation } = usePanelSimulationAccess();
   const isInspectionMode3D = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const effectiveRenderMode = isInspectionMode3D ? 'solid' : renderMode;
@@ -4207,6 +4208,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {!isPanelSimulationPresentation && (
                 <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={effectiveShowDimensions} viewMode={viewMode} view2DDirection={view2DDirection} />
+              )}
+
+              {!isPanelSimulationPresentation && viewMode === '3D' && (
+                <FurniturePlacementPlane spaceInfo={spaceInfo} />
               )}
 
               {/* 자유배치 모드 드롭존 */}

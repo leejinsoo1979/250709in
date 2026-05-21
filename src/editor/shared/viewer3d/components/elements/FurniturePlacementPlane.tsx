@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
+import { Edges, Text } from '@react-three/drei';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '../../utils/geometry';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { getModuleById } from '@/data/modules';
 
 interface FurniturePlacementPlaneProps {
   spaceInfo: SpaceInfo;
@@ -15,6 +17,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const isLiveDimensionMode = useUIStore(state => state.isLiveDimensionMode);
   const isTapeMeasureMode = useUIStore(state => state.isTapeMeasureMode);
   const viewMode = useUIStore(state => state.viewMode);
+  const activePlacementWall = useUIStore(state => state.activePlacementWall);
+  const showDimensions = useUIStore(state => state.showDimensions);
   const { theme } = useTheme();
 
   // 내경 공간 계산
@@ -75,6 +79,152 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const indexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled && indexing.zones;
 
+  const getSideSlotSizes = (wall: 'left' | 'right') => {
+    // 좌측벽 메쉬 깊이 = spaceInfo.depth (1500)
+    const totalDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+    const distributeDepth = (depthMm: number) => {
+      if (depthMm <= 0.5) {
+        return [];
+      }
+      const slotCount = Math.max(1, Math.ceil(depthMm / 600));
+      const slotDepthMm = depthMm / slotCount;
+      return Array.from({ length: slotCount }, () => slotDepthMm);
+    };
+    const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const cornerSlotIndex = wall === 'left'
+      ? 0
+      : zoneSlotInfo.normal.columnCount - 1;
+    const frontCornerModule = placedModules.find(mod => {
+      const wall = (mod as any).placementWall || 'front';
+      return wall === 'front' && mod.slotIndex === cornerSlotIndex;
+    });
+    const frontCornerData = frontCornerModule
+      ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
+      : undefined;
+    if (!frontCornerModule) {
+      return distributeDepth(totalDepthMm);
+    }
+
+    const fallbackCornerDepthMm = Math.min(600, totalDepthMm);
+    const cornerDepthMm = Math.min(
+      totalDepthMm,
+      Math.max(
+        1,
+        frontCornerModule?.customDepth
+          ?? frontCornerModule?.freeDepth
+          ?? frontCornerData?.dimensions?.depth
+          ?? fallbackCornerDepthMm
+      )
+    );
+    const remainingDepthMm = Math.max(0, totalDepthMm - cornerDepthMm);
+    if (remainingDepthMm <= 0.5) {
+      return [totalDepthMm];
+    }
+
+    return [
+      cornerDepthMm,
+      ...distributeDepth(remainingDepthMm)
+    ];
+  };
+
+  const getSideWallMeshRangeMm = () => {
+    const panelDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+    const backMeshGapMm = 10;
+    const meshBackShiftMm = 30;
+    const extensionDepthMm = 300;
+    const startZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - backMeshGapMm - meshBackShiftMm;
+    const depthMm = panelDepthMm + extensionDepthMm;
+    return { startZMm, depthMm };
+  };
+
+  const getSideWallVerticalRangeMm = (wall: 'left' | 'right') => {
+    const droppedCeiling = spaceInfo.droppedCeiling;
+    const isDroppedWall = droppedCeiling?.enabled && droppedCeiling.position === wall;
+    const dropHeightMm = isDroppedWall ? (droppedCeiling.dropHeight || 0) : 0;
+    const heightMm = Math.max(1, internalSpace.height - dropHeightMm);
+    return {
+      startYmm: internalSpace.startY,
+      heightMm,
+      centerYmm: internalSpace.startY + heightMm / 2
+    };
+  };
+
+  const renderSideWallSlotMeshes = (wall: 'left' | 'right') => {
+    if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === wall) {
+      return null;
+    }
+
+    const sideSlotSizes = getSideSlotSizes(wall);
+    const sideWallX = wall === 'left'
+      ? -spaceInfo.width / 2
+      : spaceInfo.width / 2;
+    const wallX = mmToThreeUnits(sideWallX);
+    const verticalRange = getSideWallVerticalRangeMm(wall);
+    const slotHeight = mmToThreeUnits(verticalRange.heightMm);
+    const slotY = mmToThreeUnits(verticalRange.centerYmm);
+    const rotationY = wall === 'left' ? Math.PI / 2 : -Math.PI / 2;
+    const surfaceOffsetX = wall === 'left' ? 0.03 : -0.03;
+    const textOffsetX = wall === 'left' ? 0.03 : -0.03;
+    const meshes: React.ReactNode[] = [];
+    const sideWallRange = getSideWallMeshRangeMm();
+    const totalSideDepthMm = sideSlotSizes.reduce((sum, size) => sum + size, 0);
+    let currentDepthFromFrontMm = 0;
+
+    for (let i = 0; i < sideSlotSizes.length; i++) {
+      const currentSlotDepth = sideSlotSizes[i];
+      // 코너 슬롯은 좌/우측 모두 정면 뒷벽 모서리에서 시작하고, 나머지는 방 안쪽으로 이어진다.
+      const slotStartRatio = currentDepthFromFrontMm / totalSideDepthMm;
+      const slotDepthRatio = currentSlotDepth / totalSideDepthMm;
+      const slotCenterZMm = sideWallRange.startZMm + sideWallRange.depthMm * (slotStartRatio + slotDepthRatio / 2);
+      const slotVisualDepthMm = sideWallRange.depthMm * slotDepthRatio;
+      const slotCenterZ = mmToThreeUnits(slotCenterZMm);
+
+      meshes.push(
+        <group key={`side-wall-${wall}-slot-${i}-${theme.color}-${theme.mode}`}>
+          <mesh
+            position={[wallX + surfaceOffsetX, slotY, slotCenterZ]}
+            rotation={[0, rotationY, 0]}
+            renderOrder={2}
+          >
+            <planeGeometry args={[mmToThreeUnits(slotVisualDepthMm), slotHeight]} />
+            <meshBasicMaterial
+              color={themeColorHex}
+              transparent
+              opacity={0.08}
+              depthTest={false}
+              depthWrite={false}
+              side={2}
+            />
+            <Edges color={themeColorHex} />
+          </mesh>
+          {showDimensions && (
+            <Text
+              position={[
+                wallX + textOffsetX,
+                slotY,
+                slotCenterZ
+              ]}
+              rotation={[0, rotationY, 0]}
+              fontSize={0.5}
+              color={themeColorHex}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={5}
+            >
+              {currentSlotDepth % 1 === 0 ? currentSlotDepth : currentSlotDepth.toFixed(1)}
+            </Text>
+          )}
+        </group>
+      );
+
+      currentDepthFromFrontMm += currentSlotDepth;
+    }
+
+    return meshes;
+  };
+
   // 영역(zone)별로 차지된 슬롯 인덱스 Set 생성
   // SlotDropZonesSimple.getOccupiedSlots와 동일한 규칙 사용
   const getOccupiedSlots = (zoneType: 'full' | 'normal' | 'dropped'): Set<number> => {
@@ -134,6 +284,21 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   
   // 도어가 하나라도 장착되면 바닥 슬롯 매쉬를 모두 숨김 (기존 동작 유지)
   if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
+    return null;
+  }
+
+  if (viewMode === '3D') {
+    if (activePlacementWall === 'front') {
+      return (
+        <>
+          {renderSideWallSlotMeshes('left')}
+          {renderSideWallSlotMeshes('right')}
+        </>
+      );
+    }
+    if (activePlacementWall === 'left' || activePlacementWall === 'right') {
+      return <>{renderSideWallSlotMeshes(activePlacementWall)}</>;
+    }
     return null;
   }
 

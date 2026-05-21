@@ -210,6 +210,16 @@
 
 .segmentIconText svg { flex-shrink: 0; }
 
+.wallViewToggle {
+  margin-left: 2px;
+}
+
+.wallViewButton {
+  width: 28px;
+  min-width: 28px;
+  padding: 0;
+}
+
 :global(html.platform-windows) .viewerControls {
   text-rendering: geometricPrecision;
 }

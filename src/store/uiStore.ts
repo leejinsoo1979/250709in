@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 
 // 2D 뷰 방향 타입 정의
 export type View2DDirection = 'front' | 'left' | 'right' | 'top' | 'all';
+export type PlacementWall = 'front' | 'left' | 'right';
 
 // 에디터 탭 타입 정의
 export interface EditorTab {
@@ -126,6 +127,9 @@ interface UIState {
 
   // 아일랜드 모드에서 현재 활성 면 (드롭/선택 시 어느 면에 태깅할지)
   activeIslandSide: 'front' | 'back';
+
+  // 3D ViewCube 기준 현재 배치 슬롯을 보여줄 벽
+  activePlacementWall: PlacementWall;
   
   // 문 열림/닫힘 상태 (전역 오버라이드: true=전체열기, false=전체닫기, null=개별상태)
   doorsOpen: boolean | null;
@@ -369,6 +373,7 @@ interface UIState {
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
   setView2DDirection: (direction: View2DDirection) => void;
   setActiveIslandSide: (side: 'front' | 'back') => void;
+  setActivePlacementWall: (wall: PlacementWall) => void;
   toggleDoors: () => void;
   setDoorsOpen: (open: boolean | null) => void;
   toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => void;
@@ -495,6 +500,7 @@ const initialUIState = {
   viewMode: '3D' as const,  // 기본값은 3D
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
   activeIslandSide: 'front' as const,  // 아일랜드 모드 기본 활성 면
+  activePlacementWall: 'front' as const,
   doorsOpen: null,  // 기본값: null (개별 도어 상태 사용)
   doorInstallIntent: false,  // 기본값: 도어 없음 배치
   individualDoorsOpen: {} as Record<string, boolean>,  // 개별 도어 열림 상태
@@ -667,6 +673,8 @@ export const useUIStore = create<UIState>()(
         set({ view2DDirection: direction }),
       setActiveIslandSide: (side) =>
         set({ activeIslandSide: side }),
+      setActivePlacementWall: (wall) =>
+        set({ activePlacementWall: wall }),
       
       toggleDoors: () =>
         set((state) => ({ doorsOpen: state.doorsOpen === true ? null : true })),

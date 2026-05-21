@@ -19,7 +19,7 @@ import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
 import SceneBackground from './components/SceneBackground'; // 하위 레벨
 import { TouchOrbitControlsSetup } from './components/TouchOrbitControlsSetup'; // 터치 컨트롤
-import AxisArrowsGizmo, { mainCameraQuaternion } from './components/AxisArrowsGizmo'; // CAD 축 기즈모 (HTML 오버레이)
+import AxisArrowsGizmo, { mainCameraQuaternion, viewCubeRequest } from './components/AxisArrowsGizmo'; // CAD 축 기즈모 (HTML 오버레이)
 
 // 메인 카메라 quaternion을 매 프레임 전역 ref로 복사 (기즈모용)
 const CameraQuaternionSync: React.FC = () => {
@@ -90,10 +90,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo, activePlacementWall, setActivePlacementWall } = useUIStore();
 
   // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
   const cameraMode = cameraModeFromProps || cameraModeFromStore;
+  const placementWallButtons = [
+    { id: 'left' as const, label: 'L' },
+    { id: 'front' as const, label: 'F' },
+    { id: 'right' as const, label: 'R' },
+  ];
 
   // 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const cursorColor = view2DTheme === 'dark' ? 'white' : 'black';
@@ -132,6 +137,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const [canvasReady, setCanvasReady] = useState(false);
   // viewMode 전환 시 깜빡임 방지용 - 전환 중에는 Canvas를 숨김
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [placementTogglePosition, setPlacementTogglePosition] = useState({ top: 0, left: 0 });
   const prevViewModeRef = useRef(viewMode);
   // isFurnitureDragging 상태는 UIStore에서 가져옴
 
@@ -141,6 +147,25 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const updatePlacementTogglePosition = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setPlacementTogglePosition({
+        top: Math.max(4, rect.top - 30),
+        left: rect.left + 18,
+      });
+    };
+
+    updatePlacementTogglePosition();
+    window.addEventListener('resize', updatePlacementTogglePosition);
+    window.addEventListener('scroll', updatePlacementTogglePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePlacementTogglePosition);
+      window.removeEventListener('scroll', updatePlacementTogglePosition, true);
+    };
+  }, [viewMode, showGizmo]);
 
   // 초기 카메라 설정 저장 (2D와 3D 각각)
   // 이 값은 props가 변경될 때마다 업데이트되어야 함 (스페이스바 리셋용)
@@ -254,6 +279,82 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode),
     viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)
   );
+
+  useEffect(() => {
+    if (viewMode !== '3D') return;
+
+    let animationFrame = 0;
+
+    const focusViewCubeFace = (view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom') => {
+      if (view === 'front' || view === 'left' || view === 'right') {
+        setActivePlacementWall(view);
+      } else {
+        setActivePlacementWall('front');
+      }
+
+      const controls = controlsRef.current;
+      const object = controls?.object as THREE.Camera | undefined;
+      if (!controls || !object) return;
+
+      const width = spaceInfo?.width || 2400;
+      const height = spaceInfo?.height || 2400;
+      const depth = spaceInfo?.depth || 600;
+      const toThree = (mm: number) => mm * 0.01;
+      const target = new THREE.Vector3(0, toThree(height / 2), -toThree(depth / 2));
+      const radius = Math.max(toThree(width), toThree(height), toThree(depth)) * 1.45;
+      const sideOffset = toThree(width / 2) + radius;
+      const frontOffset = radius + toThree(depth);
+
+      const positions: Record<typeof view, THREE.Vector3> = {
+        front: new THREE.Vector3(0, target.y, frontOffset),
+        back: new THREE.Vector3(0, target.y, -toThree(depth) - radius),
+        // 큐브 안쪽 Left/Right는 "해당 벽의 안쪽면"을 보는 의미다.
+        // Left 벽 안쪽을 보려면 카메라는 방의 오른쪽 바깥에 있어야 하고, Right는 반대다.
+        left: new THREE.Vector3(sideOffset, target.y, target.z),
+        right: new THREE.Vector3(-sideOffset, target.y, target.z),
+        top: new THREE.Vector3(0, toThree(height) + radius, target.z),
+        bottom: new THREE.Vector3(0, -radius, target.z),
+      };
+
+      const startPosition = object.position.clone();
+      const startTarget = controls.target.clone();
+      const endPosition = positions[view];
+      const endTarget = target;
+      const startTime = performance.now();
+      const duration = 420;
+      const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+
+      cancelAnimationFrame(animationFrame);
+      const animate = (now: number) => {
+        const progress = Math.min(1, (now - startTime) / duration);
+        const eased = ease(progress);
+        object.position.lerpVectors(startPosition, endPosition, eased);
+        controls.target.lerpVectors(startTarget, endTarget, eased);
+        object.up.set(0, 1, 0);
+        object.lookAt(controls.target);
+
+        if ('updateProjectionMatrix' in object) {
+          object.updateProjectionMatrix();
+        }
+        controls.update();
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate);
+        }
+      };
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    viewCubeRequest.handler = focusViewCubeFace;
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+      if (viewCubeRequest.handler === focusViewCubeFace) {
+        viewCubeRequest.handler = null;
+      }
+    };
+  }, [viewMode, setActivePlacementWall, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth]);
 
   useEffect(() => {
     if (viewMode !== '2D') return;
@@ -1104,7 +1205,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           bottom: 0,
           touchAction: 'none',
           overscrollBehavior: 'none', // 브라우저 스와이프 네비게이션 방지
-          overscrollBehaviorX: 'none'
+          overscrollBehaviorX: 'none',
+          overflow: 'visible'
         }}
       >
         <Canvas

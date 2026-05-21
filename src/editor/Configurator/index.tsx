@@ -75,6 +75,7 @@ import MobileToolbar from './components/MobileToolbar';
 import {
   WidthControl,
   HeightControl,
+  DepthControl,
   InstallTypeControls,
   SurroundControls,
   BaseControls,
@@ -4353,7 +4354,7 @@ const Configurator: React.FC = () => {
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>{spaceInfo.isIsland ? '가구 사이즈' : '공간 설정'}</h3>
             {!spaceInfo.isIsland && (
-              <HelpBtn title="공간 설정" text="가구가 설치될 공간의 전체 너비(W)와 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 너비는 1,000~8,000mm, 높이는 2,000~3,000mm 범위에서 설정 가능합니다. 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈가 자동 계산됩니다." />
+              <HelpBtn title="공간 설정" text="가구가 설치될 공간의 전체 너비(W), 깊이(D), 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈와 3D 공간 깊이가 자동 계산됩니다." />
             )}
           </div>
 
@@ -4392,6 +4393,18 @@ const Configurator: React.FC = () => {
                     spaceInfo={spaceInfo}
                     onUpdate={handleSpaceInfoUpdate}
                     disabled={hasSpecialDualFurniture}
+                    hideUnit
+                  />
+                </div>
+              </div>
+
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>D</span>
+                <div style={{ flex: 1 }}>
+                  <DepthControl
+                    spaceInfo={spaceInfo}
+                    onUpdate={handleSpaceInfoUpdate}
+                    hideUnit
                   />
                 </div>
               </div>
@@ -4402,6 +4415,7 @@ const Configurator: React.FC = () => {
                   <HeightControl
                     spaceInfo={spaceInfo}
                     onUpdate={handleSpaceInfoUpdate}
+                    hideUnit
                   />
                 </div>
               </div>
