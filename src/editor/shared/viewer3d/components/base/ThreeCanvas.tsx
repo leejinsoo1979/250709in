@@ -848,6 +848,47 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => window.clearTimeout(id);
   }, [cameraMode, viewMode, activePlacementWall, canUsePlacementWallTools, resetCamera]);
 
+  // 카메라 방향 ↔ activePlacementWall(뷰 방향 토글) 동기화
+  // 카메라가 정면을 보면 front, 좌측을 보면 left, 우측을 보면 right로 토글 자동 갱신
+  // (ViewCube가 정면인데 토글이 left/right인 불일치 방지)
+  useEffect(() => {
+    if (viewMode !== '3D') return;
+    if (!canUsePlacementWallTools) return;
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    const syncWallFromCamera = () => {
+      const cam = controls.object as THREE.Camera | undefined;
+      if (!cam) return;
+      // 카메라 → 타겟 방향 벡터
+      const dir = new THREE.Vector3();
+      dir.subVectors(controls.target as THREE.Vector3, cam.position).normalize();
+      // 카메라가 어떤 축을 가장 강하게 바라보는지 판정
+      const absX = Math.abs(dir.x);
+      const absZ = Math.abs(dir.z);
+      const ui = useUIStore.getState();
+      let next: 'front' | 'left' | 'right' = 'front';
+      if (absX > absZ * 1.2) {
+        // X축이 우세: 카메라가 좌측에 있으면(+x→-x 방향) 우측벽을 보는 것 X
+        // dir.x > 0 → 카메라가 -x쪽에서 +x를 봄 → 우측벽 응시 → wall='right'
+        // dir.x < 0 → 카메라가 +x쪽에서 -x를 봄 → 좌측벽 응시 → wall='left'
+        next = dir.x > 0 ? 'right' : 'left';
+      } else {
+        next = 'front';
+      }
+      if (ui.activePlacementWall !== next) {
+        ui.setActivePlacementWall(next);
+      }
+    };
+
+    controls.addEventListener('change', syncWallFromCamera);
+    // 초기 1회 동기화
+    syncWallFromCamera();
+    return () => {
+      try { controls.removeEventListener('change', syncWallFromCamera); } catch {}
+    };
+  }, [viewMode, canUsePlacementWallTools, cameraMode]);
+
   // 스페이스바 토글: 누를 때마다 [카메라 초기화] ↔ [카메라 모드 전환] 순으로 번갈아 실행
   // - 홀수 번째: 카메라 초기화
   // - 짝수 번째: 카메라 모드 전환
