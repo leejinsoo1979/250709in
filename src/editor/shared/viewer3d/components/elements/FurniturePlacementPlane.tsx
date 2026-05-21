@@ -258,10 +258,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     // 가이드 라인을 짧게 + 라벨 위치를 가구 유무에 따라 이동
     // left wall: rotation Y=+90° → group local +X = 월드 +Z(앞벽쪽), -X = 뒷벽쪽
     // right wall: rotation Y=-90° → group local +X = 월드 -Z(뒷벽쪽), -X = 앞벽쪽
-    const wallSignLR = wall === 'left' ? -1 : 1; // 뒷벽 방향의 group local X 부호
-    const labelZOffsetMm = maxFrontFurnitureDepthMm > 0
-      ? 0 // 가구 있으면 가이드 중앙 (= 가구 앞단 영역 중앙)
-      : (sideWallRange.depthMm / 2 - 10) * wallSignLR; // 가구 없으면 뒷벽쪽으로 이동
+    // 라벨 항상 가이드 중앙 정렬
+    const labelZOffsetMm = 0;
     const dimRangeCenterZ = mmToThreeUnits(dimRangeCenterZMm);
     const dimRangeWidth = mmToThreeUnits(dimRangeDepthMm);
     const labelZOffset = mmToThreeUnits(labelZOffsetMm);
