@@ -874,8 +874,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           return;
         }
 
-        // 3D 모드: 1번 → 카메라 초기화 / 2번 → perspective ↔ orthographic 토글
-        //   ※ 측면뷰(L/R) 활성 시에도 동일하게 동작 (해당 시점에서 ortho 전환 가능)
+        // 3D 모드:
+        //   - 측면뷰(L/R) 활성 시: 스페이스 한 번에 바로 ortho 토글
+        //   - 정면뷰: 1번 → 카메라 초기화 / 2번 → perspective ↔ orthographic 토글
+        if (canUsePlacementWallTools && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
+          const ui = useUIStore.getState();
+          const nextMode = ui.cameraMode === 'perspective' ? 'orthographic' : 'perspective';
+          ui.setCameraMode(nextMode);
+          canvasLog('🔁 측면뷰 카메라 모드 전환:', ui.cameraMode, '→', nextMode);
+          spaceToggleStepRef.current = 0;
+          return;
+        }
+
         if (spaceToggleStepRef.current === 0) {
           canvasLog('🚀 스페이스 (초기화 단계) - resetCamera');
           resetCamera();

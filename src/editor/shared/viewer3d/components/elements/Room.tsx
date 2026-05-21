@@ -1729,15 +1729,15 @@ const Room: React.FC<RoomProps> = ({
   // 전체 그룹을 z축 방향으로 약간 조정 (앞으로 당겨서 중앙에 오도록)
   const groupZOffset = 0; // 필요에 따라 조정 가능 (양수: 앞으로, 음수: 뒤로)
 
-  const isSidePlacementWallActive = activePlacementWall === 'left' || activePlacementWall === 'right';
-  // 측면 배치 모드에서는 실제 공간 깊이와 인디게이터 끝선을 맞춘다.
-  const extensionDepth = isSidePlacementWallActive ? 0 : mmToThreeUnits(300);
+  // 공간 그라데이션 매쉬는 뷰 전환과 무관하게 기존 깊이를 유지한다.
+  // 측면 배치 인디케이터/배치 좌표만 이 매쉬의 실제 좌표에 맞춘다.
+  const extensionDepth = mmToThreeUnits(300);
   // ── 그라데이션 메쉬를 가구 뒷면까지만 당기는 옵션 ──
   // true: 공간 그라데이션(바닥/벽/천장) 뒷쪽 경계가 가구 뒷면에 맞춰 렌더링
   // false: 공간 전체 깊이 기준 (메쉬 깊이가 가구 무관 → 공간 깊이만큼 펼쳐짐)
   const SHRINK_MESH_TO_FURNITURE_BACK = false;
   const BACK_MESH_GAP = mmToThreeUnits(10);
-  const MESH_Z_BACK_SHIFT = isSidePlacementWallActive ? 0 : mmToThreeUnits(30);
+  const MESH_Z_BACK_SHIFT = mmToThreeUnits(30);
   // 뒷쪽 경계는 항상 가구 뒷면 - 40mm (슬롯 가이드와 일치)
   // 앞쪽으로만 확장: SHRINK true면 가구 깊이 기반, false면 공간 깊이 기반
   const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK
