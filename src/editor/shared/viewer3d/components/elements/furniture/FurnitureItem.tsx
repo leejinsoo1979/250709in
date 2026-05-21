@@ -4241,7 +4241,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
                   topFrameThickness={placedModule.topFrameThickness}
+                  topFrameOffset={placedModule.topFrameOffset}
+                  topFrameGap={placedModule.topFrameGap}
+                  hasTopFrame={placedModule.hasTopFrame}
                   hasBase={placedModule.hasBase}
+                  baseFrameHeight={placedModule.baseFrameHeight}
+                  baseFrameOffset={placedModule.baseFrameOffset}
+                  baseFrameGap={(placedModule as any).baseFrameGap}
                   individualFloatHeight={placedModule.individualFloatHeight}
                   isCustomizable={placedModule.isCustomizable}
                   customConfig={placedModule.customConfig}
@@ -4909,11 +4915,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </Html>
       )}
 
-      {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면, 인서트 프레임에서는 숨김 */}
+      {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면, 슬롯배치 인서트 프레임에서는 숨김 */}
       {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen &&
         panelSimulationPhase !== 'layout' && !panelSimulationViewBackup &&
         !(viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) &&
-        !placedModule.moduleId?.includes('insert-frame') &&
+        (!placedModule.moduleId?.includes('insert-frame') || placedModule.isFreePlacement) &&
         !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
         <Html
           position={[

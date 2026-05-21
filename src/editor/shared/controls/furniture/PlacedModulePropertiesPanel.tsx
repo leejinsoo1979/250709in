@@ -5621,8 +5621,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           })()}
 
           {/* 상,걸래받이 — 우측바와 동일 형태 (해당 가구 단일) — 편집 탭 전용 */}
-          {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 상단몰딩/걸레받이 옵션 숨김 */}
-          {!showDetails && currentPlacedModule && !currentPlacedModule.isSurroundPanel && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
+          {!showDetails && currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
             const mod = currentPlacedModule;
             const globalTop = spaceInfo.frameSize?.top ?? 30;
             const globalBase = spaceInfo.baseConfig?.height ?? 65;

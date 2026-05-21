@@ -98,7 +98,13 @@ interface BoxModuleProps {
   lowerDoorTopGap?: number; // 하부 도어 상단 이격거리 (mm)
   lowerDoorBottomGap?: number; // 하부 도어 하단 이격거리 (mm)
   topFrameThickness?: number; // 개별 가구 상단몰딩 두께 (mm)
+  topFrameOffset?: number; // 개별 상단몰딩 Z 옵셋 (mm)
+  topFrameGap?: number; // 개별 상단몰딩 갭 (mm)
+  hasTopFrame?: boolean; // 상단몰딩 존재 여부
   hasBase?: boolean; // 걸래받이 존재 여부 (false면 받침대 없음 → baseHeight=0)
+  baseFrameHeight?: number; // 개별 걸레받이 높이 (mm)
+  baseFrameOffset?: number; // 개별 걸레받이 Z 옵셋 (mm)
+  baseFrameGap?: number; // 개별 걸레받이 갭 (mm)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
   isCustomizable?: boolean; // 커스터마이징 가구 여부
   customConfig?: CustomFurnitureConfig; // 커스터마이징 설정
@@ -186,7 +192,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   lowerDoorTopGap, // 하부 도어 상단 이격거리
   lowerDoorBottomGap, // 하부 도어 하단 이격거리
   topFrameThickness, // 개별 가구 상단몰딩 두께
+  topFrameOffset,
+  topFrameGap,
+  hasTopFrame,
   hasBase, // 걸래받이 존재 여부
+  baseFrameHeight,
+  baseFrameOffset,
+  baseFrameGap,
   individualFloatHeight, // 개별 띄움 높이
   isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
   customConfig, // 커스터마이징 설정
@@ -204,7 +216,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   const spaceConfigStore = useSpaceConfigStore();
-  const { indirectLightEnabled, indirectLightIntensity, indirectLightColor } = useUIStore();
+  const { indirectLightEnabled, indirectLightIntensity, indirectLightColor, view2DDirection } = useUIStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
 
   // 상부 안전선반 제거 옵션 적용 (코트장/붙박이장B/D)
@@ -1298,9 +1310,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
 
+    const _pmIF = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
+
     // 앞면 프레임: placedModule.insertFrontInsetMm 우선, 기본 18mm
     //   프레임 앞면 = moduleD/2 - inset → 프레임 중심 = moduleD/2 - inset - PT/2
-    const _pmIF = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
     const _insetMm = typeof (_pmIF as any)?.insertFrontInsetMm === 'number' ? (_pmIF as any).insertFrontInsetMm : 18;
     const FRONT_FRAME_INSET = mmTo(_insetMm);
     const frontFrameZ = moduleD / 2 - FRONT_FRAME_INSET - PT_THREE / 2;
@@ -1321,18 +1334,38 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     // 상단 프레임 / 걸레받이: 전면 프레임과 동일한 Z 위치, 폭=가구 외경, 두께=18mm, 깊이=18mm
     //   상단 프레임 size = spaceInfo.frameSize.top (기본 30)
     //   걸레받이 size = spaceInfo.baseConfig.height (floor 타입일 때만, 기본 65)
-    const topFrameMmIF = spaceInfo.frameSize?.top ?? 30;
-    const baseFrameMmIF = spaceInfo.baseConfig?.type === 'floor'
-      ? (spaceInfo.baseConfig?.height ?? 65)
+    const insertHasTopFrame = (hasTopFrame ?? (_pmIF as any)?.hasTopFrame) !== false;
+    const insertHasBaseFrame = (hasBase ?? (_pmIF as any)?.hasBase) !== false;
+    const rawTopFrameMmIF = insertHasTopFrame
+      ? ((typeof topFrameThickness === 'number' ? topFrameThickness : undefined)
+        ?? (typeof (_pmIF as any)?.topFrameThickness === 'number' ? (_pmIF as any).topFrameThickness : undefined)
+        ?? spaceInfo.frameSize?.top
+        ?? 30)
       : 0;
+    const rawBaseFrameMmIF = insertHasBaseFrame && spaceInfo.baseConfig?.type === 'floor'
+      ? ((typeof baseFrameHeight === 'number' ? baseFrameHeight : undefined)
+        ?? (typeof (_pmIF as any)?.baseFrameHeight === 'number' ? (_pmIF as any).baseFrameHeight : undefined)
+        ?? spaceInfo.baseConfig?.height
+        ?? 65)
+      : 0;
+    const topFrameGapMmIF = rawTopFrameMmIF > 0
+      ? Math.max(0, Math.min(rawTopFrameMmIF - 1, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? 0))
+      : 0;
+    const baseFrameGapMmIF = rawBaseFrameMmIF > 0
+      ? Math.max(0, Math.min(rawBaseFrameMmIF - 1, baseFrameGap ?? (_pmIF as any)?.baseFrameGap ?? 0))
+      : 0;
+    const topFrameMmIF = Math.max(0, rawTopFrameMmIF - topFrameGapMmIF);
+    const baseFrameMmIF = Math.max(0, rawBaseFrameMmIF - baseFrameGapMmIF);
     const topFrameH = mmTo(topFrameMmIF);
     const baseFrameH = mmTo(baseFrameMmIF);
+    const topFrameGapThree = mmTo(topFrameGapMmIF);
+    const baseFrameGapThree = mmTo(baseFrameGapMmIF);
     // 공간 좌표계: 공간 상단 Y = fullYOffset + fullHeight/2
     //              공간 바닥(floor finish 위) Y = fullYOffset - fullHeight/2 + mmTo(floorFinishMm)
     const spaceTopY = fullYOffset + fullHeight / 2;
     const spaceBottomY = fullYOffset - fullHeight / 2 + mmTo(floorFinishMm);
-    const topFrameCenterY = spaceTopY - topFrameH / 2;
-    const baseFrameCenterY = spaceBottomY + baseFrameH / 2;
+    const topFrameCenterY = spaceTopY - topFrameGapThree - topFrameH / 2;
+    const baseFrameCenterY = spaceBottomY + baseFrameGapThree + baseFrameH / 2;
     // 상단몰딩 Z (옆 가구와 동일 라인) — Room.tsx의 topZPosition 산식과 일치
     //   전체 서라운드: 월드 Z = furnitureZOffset + furnitureDepth/2 - END/2 + 3 (+ 23 if frameOffsetBase==='door')
     //   노서라운드  : 월드 Z = furnitureZOffset + furnitureDepth/2 - END/2 - 20 (+ 23 if frameOffsetBase==='door')
@@ -1358,22 +1391,33 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const topFrameRefZMm = isFullSurroundIF
       ? (-END_PANEL_THK_MM / 2 + 3)
       : (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM);
-    const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF);
+    const topFrameOffsetMmIF = topFrameOffset ?? (_pmIF as any)?.topFrameOffset ?? 0;
+    const baseFrameOffsetMmIF = baseFrameOffset ?? (_pmIF as any)?.baseFrameOffset ?? 0;
+    const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF + topFrameOffsetMmIF);
     // 걸레받이 Z: 노서라운드 산식 고정 + baseConfig.depth만큼 추가로 뒤로
-    const baseFrameZ = mmTo(moduleD_mm / 2 + (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM) - baseConfigDepthMmIF - baseDepthOffsetMmIF);
+    const baseFrameZ = mmTo(moduleD_mm / 2 + (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM) - baseConfigDepthMmIF - baseDepthOffsetMmIF - baseFrameOffsetMmIF);
+    const frontFrameTopY = spaceTopY - mmTo(rawTopFrameMmIF);
+    const frontFrameBottomY = spaceBottomY + mmTo(rawBaseFrameMmIF);
+    const frontFrameBodyHeight = Math.max(0, frontFrameTopY - frontFrameBottomY);
+    const frontFrameBodyCenterY = (frontFrameTopY + frontFrameBottomY) / 2;
+    const isInsertFrame2DSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
 
     return (
       <>
-        {/* 앞면 프레임 (PET) - 좌우 EP 사이, 가구 중앙에 위치, 윤곽선 포함 */}
-        <BoxWithEdges
-          args={[frontFrameWidth, fullHeight, PT_THREE]}
-          position={[0, fullYOffset, frontFrameZ]}
-          material={insertFrameMaterial}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          panelName="Insert전면프레임-마감판"
-          furnitureId={placedFurnitureId}
-        />
+        {/* 앞면 프레임 (PET) - 상단몰딩/걸레받이 사이 영역만 렌더링해 옵셋 프레임과 겹치지 않게 함 */}
+        {frontFrameBodyHeight > 0 && (
+          <BoxWithEdges
+            args={[frontFrameWidth, frontFrameBodyHeight, PT_THREE]}
+            position={[0, frontFrameBodyCenterY, frontFrameZ]}
+            material={insertFrameMaterial}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            panelName="Insert전면프레임-마감판"
+            furnitureId={placedFurnitureId}
+            hideTopEdge={isInsertFrame2DSideView}
+            hideBottomEdge={isInsertFrame2DSideView}
+          />
+        )}
         {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z + 같은 색상/윤곽선 (panelName에 '마감판' 포함 → 도어 색 외곽선) */}
         {topFrameMmIF > 0 && (
           <BoxWithEdges
@@ -1400,8 +1444,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         )}
         {/* 좌/우 EP (PET) — 상단 프레임/걸레받이 사이 영역만 (전면 프레임과 동일한 본체 높이) */}
         {(() => {
-          const epTopY = spaceTopY - topFrameH;       // 상단 프레임 하단
-          const epBottomY = spaceBottomY + baseFrameH; // 걸레받이 상단
+          const epTopY = frontFrameTopY;       // 상단 프레임 하단(갭 변경 시에도 하단 고정)
+          const epBottomY = frontFrameBottomY; // 걸레받이 상단(갭 변경 시에도 상단 고정)
           const epH = Math.max(0, epTopY - epBottomY);
           const epCenterY = (epTopY + epBottomY) / 2;
           if (epH <= 0) return null;
@@ -1416,6 +1460,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 isEndPanel={true}
                 panelName="Insert좌EP-마감판"
                 furnitureId={placedFurnitureId}
+                hideTopEdge={isInsertFrame2DSideView}
+                hideBottomEdge={isInsertFrame2DSideView}
               />
               <BoxWithEdges
                 args={[PT_THREE, epH, epDepth]}
@@ -1426,6 +1472,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 isEndPanel={true}
                 panelName="Insert우EP-마감판"
                 furnitureId={placedFurnitureId}
+                hideTopEdge={isInsertFrame2DSideView}
+                hideBottomEdge={isInsertFrame2DSideView}
               />
             </>
           );

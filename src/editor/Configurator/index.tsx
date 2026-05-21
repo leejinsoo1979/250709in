@@ -8160,7 +8160,7 @@ const Configurator: React.FC = () => {
                 : 'none',
               appearance: 'none',
               WebkitAppearance: 'none',
-              zIndex: 9999,
+              zIndex: 20,
               transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s',
             }}
             onMouseEnter={(e) => {
@@ -8210,7 +8210,7 @@ const Configurator: React.FC = () => {
                 : 'none',
               appearance: 'none',
               WebkitAppearance: 'none',
-              zIndex: 9999,
+              zIndex: 20,
               transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s',
             }}
             onMouseEnter={(e) => {
