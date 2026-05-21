@@ -2964,6 +2964,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 기둥 앞 공간 가구인지 확인 (isColumnCFront는 나중에 정의되므로 직접 체크)
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
+  const isSideWallFurniture = placedModule.placementWall === 'left' || placedModule.placementWall === 'right';
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
@@ -2973,7 +2974,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const midForZ = placedModule.moduleId || '';
   const isShoeCabinet = (midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-') || midForZ.includes('glass-cabinet'));
   let furnitureZ: number;
-  if (isFrontSpaceFurniture) {
+  if (isFrontSpaceFurniture || isSideWallFurniture) {
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
     // 상부장: 뒷면을 하부장 뒷면에 정렬
@@ -3020,7 +3021,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // console.log('🔴 Z', ...); // 진단용 로그 제거 (성능)
 
   const furnitureGroupPosition: [number, number, number] = [
-    adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
+    isSideWallFurniture ? placedModule.position.x : adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
     furnitureZ
   ];
