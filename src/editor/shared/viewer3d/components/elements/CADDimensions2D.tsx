@@ -1463,7 +1463,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             } else if (modCat !== 'upper') {
               // 하부장/키큰장 공통: 도어 상단갭 라벨
               //   doorGapDisplayMode === 'cf' (천장·바닥 기준): 천장 ~ 도어 상단 거리
-              //   doorGapDisplayMode === 'body' (몸통 기준): 가구 상단 ~ 도어 상단 거리
+              //   doorGapDisplayMode === 'body' (몸통 기준): 가구 상단 ~ 도어 상단 거리 (= doorTopGap)
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
               if (!isLowerSpecial) {
                 let topRefAbs: number;
@@ -1473,21 +1473,24 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     ? (spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0))
                     : spaceInfo.height;
                 } else {
-                  // 몸통 기준: 가구 상단 (도어상단 - doorTopGap = 가구상단)
-                  topRefAbs = doorTopAbsMm - doorTopGapVal;
+                  // 몸통 기준 — 가구 상단 = 천장 - 상단몰딩 (가구 상단보다 도어 상단이 위에 있으면 양수)
+                  const topFrameMmRef = (mod as any).hasTopFrame === false
+                    ? 0
+                    : ((mod as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+                  topRefAbs = spaceInfo.height - topFrameMmRef;
                 }
-                const topGapMm = Math.round(Math.max(0, topRefAbs - doorTopAbsMm));
+                const topGapMm = Math.round(Math.abs(topRefAbs - doorTopAbsMm));
                 if (topGapMm > 0) {
                   doorSegs.push({
-                    bottomY: mmToThreeUnits(doorTopAbsMm),
-                    topY: mmToThreeUnits(topRefAbs),
+                    bottomY: mmToThreeUnits(Math.min(topRefAbs, doorTopAbsMm)),
+                    topY: mmToThreeUnits(Math.max(topRefAbs, doorTopAbsMm)),
                     heightMm: topGapMm,
                     key: `door-topgap-${moduleIndex}`,
                     isUpper: false
                   });
                 }
               }
-              // 하단갭은 doorSegs 밖 별도 분기(allLowerDoorSegs 하단갭)에서 바닥 기준으로 표시
+              // 하단갭은 doorSegs 밖 별도 분기(allLowerDoorSegs 하단갭)에서 별도 기준으로 표시
             }
           });
 

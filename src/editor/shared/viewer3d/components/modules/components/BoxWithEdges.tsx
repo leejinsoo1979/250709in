@@ -835,6 +835,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const hideRearReinforcementInFront2D = viewMode === '2D' && view2DDirection === 'front' && panelName?.includes('보강대');
   const hideDrawerInnerFrontPanelInFront2D = viewMode === '2D' && view2DDirection === 'front' && !!panelName && panelName.includes('서랍') && panelName.includes('앞판');
   const hiddenByViewMode = !!(hideInTop2D || hideRearReinforcementInFront2D || hideDrawerInnerFrontPanelInFront2D);
+  const isDoorLikePanel = !!panelName && (
+    panelName.includes('도어') ||
+    panelName.toLowerCase().includes('door') ||
+    panelName.includes('마이다')
+  );
+  const resolvedRenderOrder = renderOrder ?? (viewMode === '2D' && isDoorLikePanel ? 100010 : 10);
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
   // NOTE: React hook (useExcludedPanelsStore) 대신 useFrame으로 폴링 — R3F Canvas는 별도 React reconciler를 사용하므로
@@ -1147,10 +1153,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (편집/드래그 중에도 항상 적용)
     // 2D에서는 고스트 색상 없이 원래 재질 그대로 투명화 → 와이어프레임 라인으로 치수 확인
     if (viewMode === '2D' && effectiveRenderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      // 도어: DoorModule에서 이미 material 설정 완료 → 그대로 사용
-      const isDoor = panelName && (panelName.includes('도어') || panelName.includes('door'));
-      if (isDoor) {
-        return baseMaterial;
+      // 도어/마이다는 2D 측면뷰에서 깊이치수보다 앞에 그려져야 한다.
+      if (isDoorLikePanel) {
+        const doorLikeMaterial = baseMaterial.clone();
+        doorLikeMaterial.transparent = true;
+        doorLikeMaterial.opacity = 1;
+        doorLikeMaterial.depthWrite = false;
+        doorLikeMaterial.depthTest = false;
+        doorLikeMaterial.side = THREE.DoubleSide;
+        doorLikeMaterial.needsUpdate = true;
+        return doorLikeMaterial;
       }
 
       // 인조대리석 상판/뒷턱: 2D에서도 면 채움 유지 (상판 재질 색상 표시)
@@ -1208,7 +1220,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme, liveDimensionInspecting, themePrimaryColor, isTransparentMode]);
+  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme, liveDimensionInspecting, themePrimaryColor, isTransparentMode, isDoorLikePanel]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -1299,6 +1311,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       panelMaterialRef.current.transparent = processedMaterial.transparent;
       panelMaterialRef.current.opacity = processedMaterial.opacity;
       panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
+      panelMaterialRef.current.depthTest = processedMaterial.depthTest;
       panelMaterialRef.current.needsUpdate = true;
 
       return panelMaterialRef.current;
@@ -1317,6 +1330,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     panelMaterial.transparent = processedMaterial.transparent;
     panelMaterial.opacity = processedMaterial.opacity;
     panelMaterial.depthWrite = processedMaterial.depthWrite;
+    panelMaterial.depthTest = processedMaterial.depthTest;
 
     panelMaterial.needsUpdate = true;
     texture.needsUpdate = true;
@@ -2006,6 +2020,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         : `furniture-edge${panelName ? `-${panelName}` : ''}`;
 
     const baseLineWidth = isHighlighted ? 2 : 1;
+    const doorLikeEdgeRenderOrder = viewMode === '2D' && isDoorLikePanel ? resolvedRenderOrder + 1 : undefined;
 
     // 깊이감 표현: 다크모드는 배경색과 color 블렌딩, 라이트모드는 opacity만으로 깊이감
     const blendedColor = (view2DTheme === 'light' || panelDepthOpacity >= 1.0) ? edgeColor : (() => {
@@ -2038,6 +2053,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             transparent={true}
             depthTest={false}
             depthWrite={false}
+            renderOrder={doorLikeEdgeRenderOrder}
           />
         ))}
         {crossLines.map((line, i) => (
@@ -2051,11 +2067,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             transparent={true}
             depthTest={false}
             depthWrite={false}
+            renderOrder={doorLikeEdgeRenderOrder}
           />
         ))}
       </>
     );
-  }, [args, safeArgs, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, hasFaceGrooves, normalizedFaceGrooves, getNotchEdgeLines]);
+  }, [args, safeArgs, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, hasFaceGrooves, normalizedFaceGrooves, getNotchEdgeLines, viewMode, isDoorLikePanel, resolvedRenderOrder]);
 
   // 노치 지오메트리 (단일 notch 또는 다중 notches 지원)
   const notchGeometry = React.useMemo(() => {
@@ -2528,7 +2545,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         }}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
-        renderOrder={renderOrder ?? 10}
+        renderOrder={resolvedRenderOrder}
         onClick={handlePanelClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
