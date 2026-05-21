@@ -537,6 +537,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       let existingModulesInSlot: typeof state.placedModules = [];
       for (const slotIdx of occupiedSlots) {
         const modulesInThisSlot = state.placedModules.filter(m => {
+          const incomingWall = module.placementWall || 'front';
+          const existingWall = m.placementWall || 'front';
+          if (incomingWall !== existingWall) return false;
+
           // 기존 가구가 듀얼인지 확인
           const existingIsDual = m.moduleId.includes('dual-');
           const existingOccupiedSlots = existingIsDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
@@ -737,6 +741,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const modulesInThisSlot = state.placedModules.filter(m => {
             if (m.id === id) return false; // 자기 자신은 제외
             if (movingGroupId && m.groupId === movingGroupId) return false; // 같은 그룹은 함께 이동하므로 충돌 제외
+            const targetWall = targetModule.placementWall || 'front';
+            const existingWall = m.placementWall || 'front';
+            if (targetWall !== existingWall) return false;
 
             // 기존 가구가 듀얼인지 확인
             const existingIsDual = m.moduleId.includes('dual-');

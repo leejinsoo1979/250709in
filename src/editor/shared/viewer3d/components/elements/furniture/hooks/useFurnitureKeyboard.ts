@@ -169,10 +169,10 @@ export const useFurnitureKeyboard = ({
       const getSideWallRange = () => {
         const panelDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
         const furnitureDepthMm = Math.min(panelDepthMm, 600);
-        const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+        const meshRightZMm = panelDepthMm - furnitureDepthMm - 10;
         return {
-          startZMm: furnitureZOffsetMm - furnitureDepthMm / 2 - 10 - 30,
-          depthMm: panelDepthMm + 300
+          startZMm: meshRightZMm - panelDepthMm,
+          depthMm: panelDepthMm
         };
       };
 

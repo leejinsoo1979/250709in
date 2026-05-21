@@ -640,7 +640,7 @@ const CameraSideViewFillLight: React.FC<{ active: boolean }> = ({ active }) => {
   return (
     <directionalLight
       ref={lightRef}
-      intensity={2.4}
+      intensity={1.15}
       color="#ffffff"
       castShadow={false}
     />
@@ -4025,7 +4025,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               <CameraSideViewFillLight active={!!activeSideViewLightWall} />
               {/* 환경광 - 2D 모드에서는 더 밝게 */}
               <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
-              {activeSideViewLightWall && <ambientLight intensity={0.75} color="#ffffff" />}
+              {activeSideViewLightWall && <ambientLight intensity={0.28} color="#ffffff" />}
 
               {/* HDRI 환경맵 제거 - 순수 조명만 사용 */}
               {/* Environment 컴포넌트가 렌더링을 방해할 수 있으므로 비활성화 */}

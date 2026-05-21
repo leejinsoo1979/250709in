@@ -134,15 +134,12 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const getSideWallMeshRangeMm = () => {
     const panelDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
     const furnitureDepthMm = Math.min(panelDepthMm, 600);
-    const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
-    const backMeshGapMm = 10;
-    const meshBackShiftMm = 30;
-    const extensionDepthMm = 300;
-    const startZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - backMeshGapMm - meshBackShiftMm;
-    const depthMm = panelDepthMm + extensionDepthMm;
+    const meshRightZMm = activePlacementWall === 'left' || activePlacementWall === 'right'
+      ? panelDepthMm - furnitureDepthMm - 10
+      : panelDepthMm - furnitureDepthMm + 260;
     return {
-      startZMm,
-      depthMm
+      startZMm: meshRightZMm - panelDepthMm,
+      depthMm: panelDepthMm
     };
   };
 
@@ -183,8 +180,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const slotHeight = mmToThreeUnits(verticalRange.heightMm);
     const slotY = mmToThreeUnits(verticalRange.centerYmm);
     const rotationY = wall === 'left' ? Math.PI / 2 : -Math.PI / 2;
-    const surfaceOffsetX = wall === 'left' ? 0.03 : -0.03;
-    const textOffsetX = surfaceOffsetX + (wall === 'left' ? 0.01 : -0.01);
+    const surfaceOffsetX = wall === 'left' ? 0.001 : -0.001;
+    const textOffsetX = surfaceOffsetX + (wall === 'left' ? 0.001 : -0.001);
     const sideModulesForWall = placedModules.filter(mod => ((mod as any).placementWall || 'front') === wall);
     const maxSideFurnitureDepthMm = sideModulesForWall.reduce((maxDepth, mod) => {
       const moduleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);

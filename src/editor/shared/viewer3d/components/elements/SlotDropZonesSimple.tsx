@@ -248,12 +248,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const wall = activePlacementWall as 'left' | 'right';
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-    const panelDepthMm = totalSideDepthMm;
-    const furnitureDepthForRangeMm = Math.min(panelDepthMm, 600);
-    const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthForRangeMm) / 2;
+    const furnitureDepthForRangeMm = Math.min(totalSideDepthMm, 600);
+    const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm + 260;
     const sideWallRange = {
-      startZMm: furnitureZOffsetMm - furnitureDepthForRangeMm / 2 - 10 - 30,
-      depthMm: panelDepthMm + 300
+      startZMm: meshRightZMm - totalSideDepthMm,
+      depthMm: totalSideDepthMm
     };
     const cornerFrontSlot = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
     const frontCornerModule = placedModules.find(mod => {
@@ -616,16 +615,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo) || dragData.moduleData;
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-      const sideWallRange = (() => {
-        const panelDepthMm = totalSideDepthMm;
-        const furnitureDepthMm = Math.min(panelDepthMm, 600);
-        const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
-        const startZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - 10 - 30;
-        return {
-          startZMm,
-          depthMm: panelDepthMm + 300
-        };
-      })();
+      const furnitureDepthForRangeMm = Math.min(totalSideDepthMm, 600);
+      const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm + 260;
+      const sideWallRange = {
+        startZMm: meshRightZMm - totalSideDepthMm,
+        depthMm: totalSideDepthMm
+      };
       const cornerFrontSlot = activePlacementWall === 'left'
         ? 0
         : zoneInfo.normal.columnCount - 1;
@@ -759,6 +754,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         hasDoor: false,
         customDepth: getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600),
         customWidth: Math.min(currentSideSlotDepthMm, moduleData?.dimensions?.width || currentSideSlotDepthMm),
+        sideLogicalWidth: currentSideSlotDepthMm,
         slotIndex: sideSlotIndex,
         isDualSlot: false,
         isValidInCurrentSpace: true,

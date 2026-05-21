@@ -1809,6 +1809,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // customWidth가 이전 편집값으로 남아 있어도 2D 치수 입력으로 줄인 폭을 덮어쓰면 안 된다.
   if (placedModule.isFreePlacement && placedModule.freeWidth) {
     furnitureWidthMm = placedModule.freeWidth;
+  } else if (
+    (placedModule.placementWall === 'left' || placedModule.placementWall === 'right') &&
+    typeof (placedModule as any).sideLogicalWidth === 'number'
+  ) {
+    furnitureWidthMm = (placedModule as any).sideLogicalWidth;
   } else if (!placedModule.isFreePlacement && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스) - 자유배치는 제외
     furnitureWidthMm = placedModule.adjustedWidth;
@@ -2368,6 +2373,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 자유배치 모드에서는 freeWidth를 도어 기준 너비로 사용
   if (placedModule.isFreePlacement && placedModule.freeWidth) {
     originalSlotWidthMm = placedModule.freeWidth;
+  } else if (
+    (placedModule.placementWall === 'left' || placedModule.placementWall === 'right') &&
+    typeof (placedModule as any).sideLogicalWidth === 'number'
+  ) {
+    originalSlotWidthMm = (placedModule as any).sideLogicalWidth;
   } else {
 
     // 노서라운드 모드에서 끝 슬롯인지 확인
