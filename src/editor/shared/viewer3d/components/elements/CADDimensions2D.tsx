@@ -1461,18 +1461,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 });
               }
             } else if (modCat === 'lower' && !modData.id?.includes('lower-top-down-') && !modData.id?.includes('lower-door-lift-')) {
-              // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용 (싱크장 반통 등 높이 변경 반영)
-              const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 1000;
-              const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
-              const cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
-              // 상단갭: 도어 상단 ~ 가구 상단
-              const topGapMm = Math.round(Math.abs(cabinetTopAbsMm - doorTopAbsMm));
+              // 하부장 상단갭: 천장 기준 = 천장 ~ 도어 상단 거리
+              const ceilingAbsMm = spaceInfo.height;
+              const topGapMm = Math.round(Math.max(0, ceilingAbsMm - doorTopAbsMm));
               if (topGapMm > 0) {
-                const gapBottom = Math.min(doorTopAbsMm, cabinetTopAbsMm);
-                const gapTop = Math.max(doorTopAbsMm, cabinetTopAbsMm);
                 doorSegs.push({
-                  bottomY: mmToThreeUnits(gapBottom),
-                  topY: mmToThreeUnits(gapTop),
+                  bottomY: mmToThreeUnits(doorTopAbsMm),
+                  topY: mmToThreeUnits(ceilingAbsMm),
                   heightMm: topGapMm,
                   key: `door-topgap-${moduleIndex}`,
                   isUpper: false
