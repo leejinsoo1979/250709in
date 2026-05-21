@@ -11,6 +11,7 @@ import { useHistoryStore } from '@/store/historyStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useAuth } from '@/auth/AuthProvider';
 import { sceneHolder } from '../../sceneHolder';
+import { calculateInternalSpace } from '../../utils/geometry';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -269,13 +270,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier, viewportSize);
+  const isSidePlacementView = viewMode === '3D'
+    && canUsePlacementWallTools
+    && (activePlacementWall === 'left' || activePlacementWall === 'right');
   const controlsConfig = useOrbitControlsConfig(
     camera.target,
     viewMode,
     camera.spaceWidth,
     camera.spaceHeight,
     isMobile,
-    viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode),
+    viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode || isSidePlacementView),
     viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)
   );
 
@@ -305,20 +309,41 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const height = spaceInfo?.height || 2400;
       const depth = spaceInfo?.depth || 600;
       const toThree = (mm: number) => mm * 0.01;
-      const target = new THREE.Vector3(0, toThree(height / 2), -toThree(depth / 2));
+      const internalSpace = spaceInfo
+        ? calculateInternalSpace(spaceInfo)
+        : { startY: 0, height, depth };
+      const roomTarget = new THREE.Vector3(0, toThree(height / 2), -toThree(depth / 2));
+      const getSideWallTarget = (wall: 'left' | 'right') => {
+        const panelDepthMm = Math.max(1, depth || internalSpace.depth || 600);
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
+        const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+        const sideWallRangeStartZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - 10 - 30;
+        const sideWallRangeDepthMm = panelDepthMm + 300;
+        const droppedCeiling = spaceInfo?.droppedCeiling;
+        const isDroppedWall = droppedCeiling?.enabled && droppedCeiling.position === wall;
+        const dropHeightMm = isDroppedWall ? (droppedCeiling.dropHeight || 0) : 0;
+        const sideWallHeightMm = Math.max(1, internalSpace.height - dropHeightMm);
+        return new THREE.Vector3(
+          toThree(wall === 'left' ? -width / 2 : width / 2),
+          toThree(internalSpace.startY + sideWallHeightMm / 2),
+          toThree(sideWallRangeStartZMm + sideWallRangeDepthMm / 2)
+        );
+      };
+      const target = canUsePlacementWallTools && (view === 'left' || view === 'right')
+        ? getSideWallTarget(view)
+        : roomTarget;
       const radius = Math.max(toThree(width), toThree(height), toThree(depth)) * 1.45;
-      const sideOffset = toThree(width / 2) + radius;
       const frontOffset = radius + toThree(depth);
 
       const positions: Record<typeof view, THREE.Vector3> = {
-        front: new THREE.Vector3(0, target.y, frontOffset),
-        back: new THREE.Vector3(0, target.y, -toThree(depth) - radius),
+        front: new THREE.Vector3(0, roomTarget.y, frontOffset),
+        back: new THREE.Vector3(0, roomTarget.y, -toThree(depth) - radius),
         // 큐브 안쪽 Left/Right는 "해당 벽의 안쪽면"을 보는 의미다.
         // Left 벽 안쪽을 보려면 카메라는 방의 오른쪽 바깥에 있어야 하고, Right는 반대다.
-        left: new THREE.Vector3(sideOffset, target.y, target.z),
-        right: new THREE.Vector3(-sideOffset, target.y, target.z),
-        top: new THREE.Vector3(0, toThree(height) + radius, target.z),
-        bottom: new THREE.Vector3(0, -radius, target.z),
+        left: new THREE.Vector3(target.x + radius, target.y, target.z),
+        right: new THREE.Vector3(target.x - radius, target.y, target.z),
+        top: new THREE.Vector3(0, toThree(height) + radius, roomTarget.z),
+        bottom: new THREE.Vector3(0, -radius, roomTarget.z),
       };
 
       const startPosition = object.position.clone();
@@ -644,6 +669,59 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     const isOrthographicCamera = controls.object.type === 'OrthographicCamera';
 
+    if (
+      viewMode === '3D' &&
+      canUsePlacementWallTools &&
+      (activePlacementWall === 'left' || activePlacementWall === 'right')
+    ) {
+      const object = controls.object as THREE.Camera & { zoom?: number; updateProjectionMatrix?: () => void };
+      const width = spaceInfo?.width || 2400;
+      const height = spaceInfo?.height || 2400;
+      const depth = spaceInfo?.depth || 600;
+      const toThree = (mm: number) => mm * 0.01;
+      const internal = spaceInfo
+        ? calculateInternalSpace(spaceInfo)
+        : { startY: 0, height, depth };
+      const panelDepthMm = Math.max(1, depth || internal.depth || 600);
+      const furnitureDepthMm = Math.min(panelDepthMm, 600);
+      const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+      const sideWallRangeStartZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - 10 - 30;
+      const sideWallRangeDepthMm = panelDepthMm + 300;
+      const droppedCeiling = spaceInfo?.droppedCeiling;
+      const isDroppedWall = droppedCeiling?.enabled && droppedCeiling.position === activePlacementWall;
+      const dropHeightMm = isDroppedWall ? (droppedCeiling.dropHeight || 0) : 0;
+      const sideWallHeightMm = Math.max(1, internal.height - dropHeightMm);
+      const target = new THREE.Vector3(
+        toThree(activePlacementWall === 'left' ? -width / 2 : width / 2),
+        toThree(internal.startY + sideWallHeightMm / 2),
+        toThree(sideWallRangeStartZMm + sideWallRangeDepthMm / 2)
+      );
+      const radius = Math.max(toThree(width), toThree(height), toThree(depth)) * 1.45;
+      const position = activePlacementWall === 'left'
+        ? new THREE.Vector3(target.x + radius, target.y, target.z)
+        : new THREE.Vector3(target.x - radius, target.y, target.z);
+
+      const prevDamping = controls.enableDamping;
+      controls.enableDamping = false;
+      if (controls._panOffset) controls._panOffset.set(0, 0, 0);
+      if (controls._sphericalDelta) controls._sphericalDelta.set(0, 0, 0);
+      if (controls._dollyDirection) controls._dollyDirection.set(0, 0, 0);
+      if (controls._scale !== undefined) controls._scale = 1;
+      controls._performCursorZoom = false;
+
+      controls.target.copy(target);
+      object.position.copy(position);
+      object.up.set(0, 1, 0);
+      if (isOrthographicCamera && 'zoom' in object) {
+        object.zoom = initialCameraSetup.current.zoom0 ?? camera.zoom;
+      }
+      object.lookAt(controls.target);
+      object.updateProjectionMatrix?.();
+      controls.update();
+      controls.enableDamping = prevDamping;
+      return;
+    }
+
     // 2D 모드 또는 Orthographic 카메라 리셋
     if (viewMode === '2D' || isOrthographicCamera) {
       const initial = initialCameraSetup.current;
@@ -738,7 +816,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       newPosition: controls.object.position.toArray(),
       newTarget: controls.target.toArray(),
     });
-  }, [camera, viewMode, cameraMode]);
+  }, [camera, viewMode, cameraMode, activePlacementWall, canUsePlacementWallTools, spaceInfo]);
 
   // 스페이스바 토글: 누를 때마다 [카메라 초기화] ↔ [카메라 모드 전환] 순으로 번갈아 실행
   // - 홀수 번째: 카메라 초기화
@@ -784,6 +862,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }
 
         // 3D 모드: 1번 → 카메라 초기화 / 2번 → perspective ↔ orthographic 토글
+        if (canUsePlacementWallTools && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
+          canvasLog('🚀 스페이스 (측면 배치뷰) - resetCamera');
+          resetCamera();
+          spaceToggleStepRef.current = 0;
+          return;
+        }
+
         if (spaceToggleStepRef.current === 0) {
           canvasLog('🚀 스페이스 (초기화 단계) - resetCamera');
           resetCamera();
@@ -908,7 +993,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [resetCamera, viewMode, cameraMode]);
+  }, [resetCamera, viewMode, cameraMode, activePlacementWall, canUsePlacementWallTools]);
 
   // 기둥 드래그 및 설정 변경 관련 이벤트 처리
   useEffect(() => {

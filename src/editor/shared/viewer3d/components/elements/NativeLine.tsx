@@ -51,7 +51,10 @@ export const NativeLine: React.FC<NativeLineProps> = ({
     name.includes('guide') ||
     name.includes('dim')
   );
-  const isOccludableDepthDimension = typeof name === 'string' && name.startsWith('3d-depth-dimension');
+  const isOccludableDepthDimension = typeof name === 'string' && (
+    name.startsWith('3d-depth-dimension') ||
+    name.startsWith('occludable-dimension')
+  );
   const effectiveOpacity = isDimensionOverlay && inspectorFocused ? Math.min(opacity, 0.18) : opacity;
   const effectiveDepthTest = isDimensionOverlay && !isOccludableDepthDimension ? false : depthTest;
   const effectiveDepthWrite = isDimensionOverlay && !isOccludableDepthDimension ? false : depthWrite;

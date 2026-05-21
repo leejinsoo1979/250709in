@@ -3032,6 +3032,50 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     0
   ];
 
+  const sideFrameColor = spaceInfo.materialConfig?.doorColor
+    || (spaceInfo.materialConfig as any)?.frameColor
+    || '#D4C5A9';
+  const sideFrameThickness = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
+  const shouldRenderSideWallFrames = isSideWallFurniture
+    && !placedModule.moduleId?.includes('insert-frame')
+    && !placedModule.isSurroundPanel;
+  const sideTopFrame = (() => {
+    if (!shouldRenderSideWallFrames) return null;
+    if (placedModule.hasTopFrame === false) return null;
+    if (actualModuleData?.category === 'lower') return null;
+
+    const rawHeightMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm - 1, placedModule.topFrameGap ?? 0)) : 0;
+    const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
+    if (visibleHeightMm <= 0.5) return null;
+
+    const worldY = (spaceInfo.height || internalSpace.height) - gapMm - visibleHeightMm / 2;
+    return {
+      height: mmToThreeUnits(visibleHeightMm),
+      y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
+      z: depth / 2 - sideFrameThickness / 2 + mmToThreeUnits(placedModule.topFrameOffset ?? 0)
+    };
+  })();
+  const sideBaseFrame = (() => {
+    if (!shouldRenderSideWallFrames) return null;
+    if (placedModule.hasBase === false) return null;
+    if (actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet')) return null;
+    if (spaceInfo.baseConfig?.type !== 'floor') return null;
+
+    const rawHeightMm = placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm - 1, (placedModule as any).baseFrameGap ?? 0)) : 0;
+    const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
+    if (visibleHeightMm <= 0.5) return null;
+
+    const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+    const worldY = floorFinishMm + gapMm + visibleHeightMm / 2;
+    return {
+      height: mmToThreeUnits(visibleHeightMm),
+      y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
+      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits((spaceInfo.baseConfig?.depth ?? 0) + (placedModule.baseFrameOffset ?? 0))
+    };
+  })();
+
   // Column C 깊이 디버깅
   if (isColumnC && slotInfo) {
   }
@@ -4259,6 +4303,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 />
               );
             })()}
+
+            {sideTopFrame && (
+              <Box
+                args={[width, sideTopFrame.height, sideFrameThickness]}
+                position={[0, sideTopFrame.y, sideTopFrame.z]}
+              >
+                <meshStandardMaterial color={sideFrameColor} roughness={0.48} metalness={0.06} />
+                <Edges color={getEdgeColor(sideFrameColor)} />
+              </Box>
+            )}
+
+            {sideBaseFrame && (
+              <Box
+                args={[width, sideBaseFrame.height, sideFrameThickness]}
+                position={[0, sideBaseFrame.y, sideBaseFrame.z]}
+              >
+                <meshStandardMaterial color={sideFrameColor} roughness={0.48} metalness={0.06} />
+                <Edges color={getEdgeColor(sideFrameColor)} />
+              </Box>
+            )}
 
             {/* 가구 너비 디버깅 */}
             {(() => {

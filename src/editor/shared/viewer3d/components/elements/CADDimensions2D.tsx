@@ -728,6 +728,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
     if (nonSurroundModules.length === 0) return [];
 
+    const sideWallModules = nonSurroundModules.filter(module => (module as any).placementWall === currentViewDirection);
+    if (sideWallModules.length > 0) {
+      return sideWallModules;
+    }
+
     let filteredBySlot = nonSurroundModules;
 
     if (selectedSlotIndex !== null) {

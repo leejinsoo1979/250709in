@@ -100,6 +100,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const addModule = useFurnitureStore(state => state.addModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
   const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
+  const isFurniturePlacementMode = useFurnitureStore(state => state.isFurniturePlacementMode);
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
@@ -220,9 +221,306 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   const threeUnitsToMm = (units: number) => units * 100;
 
+  const isSidePlacementView = viewMode === '3D'
+    && (activePlacementWall === 'left' || activePlacementWall === 'right');
+  const isSidePlacementActive = canUsePlacementWallTools && isSidePlacementView;
+  const isClickPlacementMode = !!selectedFurnitureId || isFurniturePlacementMode;
+
+  const distributeSideDepth = useCallback((depthMm: number) => {
+    if (depthMm <= 0.5) {
+      return [];
+    }
+    const slotCount = Math.max(1, Math.ceil(depthMm / 600));
+    const slotDepthMm = depthMm / slotCount;
+    return Array.from({ length: slotCount }, () => slotDepthMm);
+  }, []);
+
+  const isSideDualModule = useCallback((moduleData: ModuleData | undefined) => {
+    if (!moduleData) return false;
+    return moduleData.id?.startsWith('dual-') || (moduleData.dimensions?.width || 0) > 600;
+  }, []);
+
+  const getSideWallPlacementData = useCallback((moduleData: ModuleData | undefined) => {
+    if (!moduleData || !isSidePlacementActive) {
+      return null;
+    }
+
+    const wall = activePlacementWall as 'left' | 'right';
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
+    const panelDepthMm = totalSideDepthMm;
+    const furnitureDepthForRangeMm = Math.min(panelDepthMm, 600);
+    const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthForRangeMm) / 2;
+    const sideWallRange = {
+      startZMm: furnitureZOffsetMm - furnitureDepthForRangeMm / 2 - 10 - 30,
+      depthMm: panelDepthMm + 300
+    };
+    const cornerFrontSlot = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
+    const frontCornerModule = placedModules.find(mod => {
+      const placementWall = (mod as any).placementWall || 'front';
+      return placementWall === 'front' && mod.slotIndex === cornerFrontSlot;
+    });
+    const frontCornerData = frontCornerModule
+      ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
+      : undefined;
+    const sideSlotSizes = (() => {
+      if (!frontCornerModule) {
+        return distributeSideDepth(totalSideDepthMm);
+      }
+
+      const fallbackCornerDepthMm = Math.min(600, totalSideDepthMm);
+      const cornerDepthMm = Math.min(
+        totalSideDepthMm,
+        Math.max(
+          1,
+          frontCornerModule.customDepth
+            ?? frontCornerModule.freeDepth
+            ?? frontCornerData?.dimensions?.depth
+            ?? fallbackCornerDepthMm
+        )
+      );
+      const remainingSideDepthMm = Math.max(0, totalSideDepthMm - cornerDepthMm);
+      if (remainingSideDepthMm <= 0.5) {
+        return [totalSideDepthMm];
+      }
+      return [
+        cornerDepthMm,
+        ...distributeSideDepth(remainingSideDepthMm)
+      ];
+    })();
+    const sideWallXmm = wall === 'left' ? -spaceInfo.width / 2 : spaceInfo.width / 2;
+    const sideDroppedCeiling = spaceInfo.droppedCeiling;
+    const isDroppedSideWall = sideDroppedCeiling?.enabled && sideDroppedCeiling.position === wall;
+    const sideDropHeightMm = isDroppedSideWall ? (sideDroppedCeiling.dropHeight || 0) : 0;
+    const sideWallHeightMm = Math.max(1, internalSpace.height - sideDropHeightMm);
+    const sideWallTopYmm = internalSpace.startY + sideWallHeightMm;
+    const sideCabinetDepthMm = Math.min(
+      Math.max(1, spaceInfo.width || internalSpace.width || 600),
+      Math.max(1, getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600))
+    );
+    const sideCenterXmm = wall === 'left'
+      ? sideWallXmm + sideCabinetDepthMm / 2
+      : sideWallXmm - sideCabinetDepthMm / 2;
+
+    const slots = sideSlotSizes.map((slotDepthMm, sideSlotIndex) => {
+      const slotStartDepthFromFrontMm = sideSlotSizes
+        .slice(0, sideSlotIndex)
+        .reduce((sum, depthMm) => sum + depthMm, 0);
+      const slotVisualDepthMm = sideWallRange.depthMm * (slotDepthMm / totalSideDepthMm);
+      const slotCenterZMm = sideWallRange.startZMm
+        + sideWallRange.depthMm * ((slotStartDepthFromFrontMm + slotDepthMm / 2) / totalSideDepthMm);
+      const placementWallOccupied = placedModules.some(mod => {
+        const placementWall = (mod as any).placementWall || 'front';
+        if (placementWall !== wall || mod.slotIndex === undefined || mod.slotIndex === null) {
+          return false;
+        }
+        const span = mod.isDualSlot ? 2 : 1;
+        return sideSlotIndex >= mod.slotIndex && sideSlotIndex < mod.slotIndex + span;
+      });
+      const cornerOccupied = sideSlotIndex === 0 && placedModules.some(mod => {
+        const placementWall = (mod as any).placementWall || 'front';
+        return (!!frontCornerModule && placementWall === 'front' && mod.slotIndex === cornerFrontSlot)
+          || (placementWall === wall && mod.slotIndex === 0);
+      });
+
+      return {
+        sideSlotIndex,
+        slotDepthMm,
+        slotVisualDepthMm,
+        slotCenterZMm,
+        slotStartDepthFromFrontMm,
+        occupied: placementWallOccupied || cornerOccupied
+      };
+    });
+
+    return {
+      wall,
+      slots,
+      totalSideDepthMm,
+      sideWallRange,
+      sideWallXmm,
+      sideCenterXmm,
+      sideCabinetDepthMm,
+      sideWallTopYmm,
+      rotation: wall === 'left' ? 90 : -90,
+      rotationRad: wall === 'left' ? Math.PI / 2 : -Math.PI / 2
+    };
+  }, [
+    activePlacementWall,
+    distributeSideDepth,
+    internalSpace,
+    isSideDualModule,
+    isSidePlacementActive,
+    placedModules,
+    spaceInfo
+  ]);
+
+  const getSideSlotIndexFromPointer = useCallback((clientX: number, clientY: number, canvasElement: HTMLCanvasElement, moduleData: ModuleData | undefined) => {
+    const placementData = getSideWallPlacementData(moduleData);
+    if (!placementData || placementData.slots.length === 0) {
+      return null;
+    }
+
+    const rect = canvasElement.getBoundingClientRect();
+    const mouseX = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const mouseY = -((clientY - rect.top) / rect.height) * 2 + 1;
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+    const wallX = mmToThreeUnits(placementData.sideWallXmm);
+    const plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), -wallX);
+    const intersectPoint = new THREE.Vector3();
+    if (!raycaster.ray.intersectPlane(plane, intersectPoint)) {
+      return null;
+    }
+
+    const intersectZMm = threeUnitsToMm(intersectPoint.z);
+    const relativeDepthMm = Math.max(
+      0,
+      Math.min(
+        placementData.totalSideDepthMm,
+        ((intersectZMm - placementData.sideWallRange.startZMm) / placementData.sideWallRange.depthMm) * placementData.totalSideDepthMm
+      )
+    );
+
+    let sideSlotIndex = placementData.slots.length - 1;
+    let accumulatedDepthMm = 0;
+    for (let i = 0; i < placementData.slots.length; i++) {
+      accumulatedDepthMm += placementData.slots[i].slotDepthMm;
+      if (relativeDepthMm <= accumulatedDepthMm) {
+        sideSlotIndex = i;
+        break;
+      }
+    }
+
+    return Math.max(0, Math.min(placementData.slots.length - 1, sideSlotIndex));
+  }, [camera, getSideWallPlacementData]);
+
+  const placeSideWallModuleAtSlot = useCallback((sideSlotIndex: number, dragData: any): boolean => {
+    if (!dragData || dragData.type !== 'furniture' || !dragData.moduleData) {
+      return false;
+    }
+
+    if (!isSidePlacementActive) {
+      return false;
+    }
+
+    if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === activePlacementWall) {
+      showAlert('커튼박스가 있는 위치에는 배치할 수 없습니다.', { title: '배치 불가' });
+      return true;
+    }
+
+    const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo) || dragData.moduleData;
+    const placementData = getSideWallPlacementData(moduleData);
+    const slot = placementData?.slots[sideSlotIndex];
+    if (!placementData || !slot) {
+      return false;
+    }
+
+    const span = isSideDualModule(moduleData) ? 2 : 1;
+    const spanSlots = placementData.slots.slice(sideSlotIndex, sideSlotIndex + span);
+    if (spanSlots.length < span) {
+      showAlert('듀얼 가구를 배치하려면 연속된 슬롯이 필요합니다.', { title: '배치 불가' });
+      return true;
+    }
+
+    if (spanSlots.some(item => item.occupied)) {
+      showAlert(sideSlotIndex === 0 ? '코너 슬롯은 이미 배치되어 있습니다.' : '이미 배치된 슬롯입니다.', { title: '배치 불가' });
+      return true;
+    }
+
+    const furnitureHeightMm = moduleData?.dimensions?.height || 600;
+    const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
+    const floorY = mmToThreeUnits(internalSpace.startY);
+    let furnitureY = floorY + furnitureHeight / 2;
+    if (moduleData?.category === 'upper') {
+      furnitureY = mmToThreeUnits(placementData.sideWallTopYmm - furnitureHeightMm / 2);
+    }
+
+    const logicalWidthMm = spanSlots.reduce((sum, item) => sum + item.slotDepthMm, 0);
+    const visualWidthMm = spanSlots.reduce((sum, item) => sum + item.slotVisualDepthMm, 0);
+    const startDepthFromFrontMm = spanSlots[0].slotStartDepthFromFrontMm;
+    const centerZMm = placementData.sideWallRange.startZMm
+      + placementData.sideWallRange.depthMm * ((startDepthFromFrontMm + logicalWidthMm / 2) / placementData.totalSideDepthMm);
+
+    const placedId = `placed-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    const newModule: any = {
+      id: placedId,
+      moduleId: moduleData.id,
+      position: {
+        x: mmToThreeUnits(placementData.sideCenterXmm),
+        y: furnitureY,
+        z: mmToThreeUnits(centerZMm)
+      },
+      rotation: placementData.rotation,
+      hasDoor: false,
+      customDepth: getPlacementDefaultDepth(moduleData, spaceInfo.depth || 600),
+      customWidth: visualWidthMm,
+      sideLogicalWidth: logicalWidthMm,
+      slotIndex: sideSlotIndex,
+      isDualSlot: span > 1,
+      isValidInCurrentSpace: true,
+      zone: 'normal',
+      placementWall: placementData.wall,
+      lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0,
+      ...getModulePlacementFlags(moduleData)
+    };
+
+    addModule(newModule);
+    if (currentDragData) {
+      setCurrentDragData(null);
+    }
+    setSelectedFurnitureId(null);
+    window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+    return true;
+  }, [
+    activePlacementWall,
+    addModule,
+    currentDragData,
+    getSideWallPlacementData,
+    internalSpace,
+    isSideDualModule,
+    isSidePlacementActive,
+    setCurrentDragData,
+    setSelectedFurnitureId,
+    showAlert,
+    spaceInfo
+  ]);
+
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
 // console.log('🎯🎯🎯 [handleSlotDrop] 호출됨!');
+
+    // 측면 배치 활성 상태이면 측면 슬롯으로 라우팅
+    if (isSidePlacementActive) {
+      let dragData: any = currentDragData;
+      try {
+        const dragDataString = dragEvent.dataTransfer?.getData('application/json');
+        if (dragDataString) {
+          dragData = JSON.parse(dragDataString);
+        }
+      } catch (_e) { /* ignore */ }
+
+      if (!dragData?.moduleData && selectedFurnitureId) {
+        const selectedModuleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+        if (selectedModuleData) {
+          dragData = {
+            type: 'furniture',
+            moduleData: selectedModuleData
+          };
+        }
+      }
+
+      if (!dragData?.moduleData) {
+        return false;
+      }
+
+      const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo) || dragData.moduleData;
+      const sideSlotIndex = getSideSlotIndexFromPointer(dragEvent.clientX, dragEvent.clientY, canvasElement, moduleData);
+      if (sideSlotIndex === null) {
+        return false;
+      }
+      return placeSideWallModuleAtSlot(sideSlotIndex, dragData);
+    }
 
     // 드롭 위치에서 마우스 좌표 계산
     const rect = canvasElement.getBoundingClientRect();
@@ -2474,8 +2772,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     return true;
   }, [
+    activePlacementWall,
+    canUsePlacementWallTools,
     currentDragData,
     camera,
+    getSideSlotIndexFromPointer,
+    isSidePlacementActive,
+    placeSideWallModuleAtSlot,
+    selectedFurnitureId,
     scene,
     spaceInfo,
     internalSpace,
@@ -2500,13 +2804,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // Click & Place 모드: 모바일에서 섬네일 클릭 후 캔버스 클릭으로 배치
   useEffect(() => {
     const furniturePlacementMode = useFurnitureStore.getState().furniturePlacementMode;
-    if (!furniturePlacementMode || !currentDragData) {
+    if (!furniturePlacementMode || (!currentDragData && !selectedFurnitureId)) {
       return;
     }
+
+    const activeClickData = currentDragData || (() => {
+      if (!selectedFurnitureId) return null;
+      const selectedModuleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+      if (!selectedModuleData) return null;
+      return {
+        type: 'furniture',
+        moduleData: selectedModuleData
+      };
+    })();
 
     const handleClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName !== 'CANVAS') return;
+      if (!activeClickData) return;
 
       const canvas = target as HTMLCanvasElement;
 
@@ -2522,7 +2837,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         value: {
           getData: (format: string) => {
             if (format === 'application/json') {
-              return JSON.stringify(currentDragData);
+              return JSON.stringify(activeClickData);
             }
             return '';
           },
@@ -2536,6 +2851,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       if (result) {
         useFurnitureStore.getState().setFurniturePlacementMode(false);
         setSelectedFurnitureId(null);
+        setCurrentDragData(null);
+      } else {
+        useFurnitureStore.getState().setFurniturePlacementMode(false);
+        setSelectedFurnitureId(null);
+        setCurrentDragData(null);
       }
     };
 
@@ -2554,26 +2874,48 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         canvasElement.removeEventListener('click', handleClick);
       }
     };
-  }, [currentDragData, handleSlotDrop, setSelectedFurnitureId]);
+  }, [currentDragData, selectedFurnitureId, handleSlotDrop, internalSpace, setCurrentDragData, setSelectedFurnitureId, spaceInfo]);
 
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
     // 드래그 데이터나 선택된 모듈이 없으면 반환
-    if (!currentDragData) {
+    if (!currentDragData && !selectedFurnitureId) {
       return;
     }
 
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
+    const updateHoverFromPointer = (e: DragEvent | MouseEvent) => {
+      if (e.type === 'dragover') {
+        e.preventDefault();
+      }
       const canvas = document.querySelector('canvas');
       if (!canvas) return;
 
-      debugLog('🔥 handleDragOver 호출:', {
+      debugLog('🔥 placement hover 호출:', {
         hasCurrentDragData: !!currentDragData,
         mouseX: e.clientX,
         mouseY: e.clientY,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
       });
+
+      if (isSidePlacementActive) {
+        const moduleData = currentDragData?.moduleData
+          ? getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo) || currentDragData.moduleData
+          : selectedFurnitureId
+            ? getModuleById(selectedFurnitureId, internalSpace, spaceInfo)
+            : undefined;
+        const sideSlotIndex = getSideSlotIndexFromPointer(e.clientX, e.clientY, canvas, moduleData);
+        const sidePlacementData = getSideWallPlacementData(moduleData);
+        const targetSlot = sideSlotIndex !== null ? sidePlacementData?.slots[sideSlotIndex] : undefined;
+
+        if (targetSlot && !targetSlot.occupied) {
+          setHoveredSlotIndex(sideSlotIndex);
+          setHoveredZone(null);
+        } else {
+          setHoveredSlotIndex(null);
+          setHoveredZone(null);
+        }
+        return;
+      }
 
       // 단내림이 활성화되어 있는 경우, 마우스 X 좌표로 영역 자동 판단
       let detectedZone: 'normal' | 'dropped' | null = null;
@@ -2754,6 +3096,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     };
 
+    const handleDragOver = (e: DragEvent) => {
+      updateHoverFromPointer(e);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      updateHoverFromPointer(e);
+    };
+
     const handleDragLeave = () => {
       setHoveredSlotIndex(null);
       setHoveredZone(null);
@@ -2763,19 +3113,40 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const canvas = document.querySelector('canvas');
     const canvasContainer = canvas?.parentElement;
 
-    if (canvasContainer && currentDragData) {
-      // 드래그 이벤트
-      canvasContainer.addEventListener('dragover', handleDragOver);
+    if (canvasContainer) {
+      if (currentDragData) {
+        canvasContainer.addEventListener('dragover', handleDragOver);
+      }
+      if (selectedFurnitureId || isFurniturePlacementMode) {
+        canvasContainer.addEventListener('mousemove', handleMouseMove);
+      }
       canvasContainer.addEventListener('dragleave', handleDragLeave);
+      canvasContainer.addEventListener('mouseleave', handleDragLeave);
     }
 
     return () => {
       if (canvasContainer) {
         canvasContainer.removeEventListener('dragover', handleDragOver);
+        canvasContainer.removeEventListener('mousemove', handleMouseMove);
         canvasContainer.removeEventListener('dragleave', handleDragLeave);
+        canvasContainer.removeEventListener('mouseleave', handleDragLeave);
       }
     };
-  }, [currentDragData, camera, scene, spaceInfo, placedModules]);
+  }, [
+    currentDragData,
+    selectedFurnitureId,
+    isFurniturePlacementMode,
+    camera,
+    scene,
+    spaceInfo,
+    placedModules,
+    internalSpace,
+    isSidePlacementView,
+    isSidePlacementActive,
+    isClickPlacementMode,
+    getSideSlotIndexFromPointer,
+    getSideWallPlacementData
+  ]);
 
 
   // 단내림 정보 가져오기
@@ -2920,7 +3291,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       {/* 레이캐스팅용 투명 콜라이더들 - 좌우측뷰에서는 숨김 */}
       {debugLog('🎯 렌더링 슬롯 콜라이더 수:', zoneSlotPositions.length)}
       {debugLog('🎯 슬롯 콜라이더 상세 정보:', zoneSlotPositions)}
-      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && zoneSlotPositions.map((slotData, slotIndex) => {
+      {!isSidePlacementView && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && zoneSlotPositions.map((slotData, slotIndex) => {
         // slotData가 객체인지 숫자인지 확인
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
@@ -3009,7 +3380,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       })}
 
       {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 (2D 좌측/우측뷰에서는 숨김) */}
-      {showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+      {!isSidePlacementView && showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         // 단내림 활성화 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
         const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
@@ -3120,6 +3491,112 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         return null;
       })()}
 
+      {/* 측면 배치 고스트 */}
+      {isSidePlacementActive && (currentDragData || selectedFurnitureId) && (() => {
+        let activeDragData = currentDragData;
+        if (!activeDragData && selectedFurnitureId) {
+          const selectedModuleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+          if (selectedModuleData) {
+            activeDragData = {
+              type: 'furniture',
+              moduleData: selectedModuleData
+            } as any;
+          }
+        }
+
+        if (!activeDragData?.moduleData) {
+          return null;
+        }
+
+        const baseModuleData = getModuleById(activeDragData.moduleData.id, internalSpace, spaceInfo)
+          || activeDragData.moduleData;
+        const placementData = getSideWallPlacementData(baseModuleData);
+        if (!placementData || placementData.slots.length === 0) {
+          return null;
+        }
+
+        if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === placementData.wall) {
+          return null;
+        }
+
+        const span = isSideDualModule(baseModuleData) ? 2 : 1;
+        return placementData.slots.map(slot => {
+          const spanSlots = placementData.slots.slice(slot.sideSlotIndex, slot.sideSlotIndex + span);
+          const hasEnoughSlots = spanSlots.length === span;
+          const spanOccupied = !hasEnoughSlots || spanSlots.some(item => item.occupied);
+          const shouldRenderSideGhost = isClickPlacementMode
+            ? !spanOccupied
+            : !!currentDragData && hoveredSlotIndex === slot.sideSlotIndex && !spanOccupied;
+
+          if (!shouldRenderSideGhost) {
+            return null;
+          }
+
+          const logicalWidthMm = spanSlots.reduce((sum, item) => sum + item.slotDepthMm, 0);
+          const sideWidthMm = spanSlots.reduce((sum, item) => sum + item.slotVisualDepthMm, 0);
+          const startDepthFromFrontMm = spanSlots[0].slotStartDepthFromFrontMm;
+          const centerZMm = placementData.sideWallRange.startZMm
+            + placementData.sideWallRange.depthMm * ((startDepthFromFrontMm + logicalWidthMm / 2) / placementData.totalSideDepthMm);
+          const sideDepthMm = getPlacementDefaultDepth(baseModuleData, spaceInfo.depth || 600);
+          const furnitureHeightMm = baseModuleData.dimensions?.height || 600;
+          const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
+          const floorY = mmToThreeUnits(internalSpace.startY);
+          let furnitureY = floorY + furnitureHeight / 2;
+          if (baseModuleData.category === 'upper') {
+            furnitureY = mmToThreeUnits(placementData.sideWallTopYmm - furnitureHeightMm / 2);
+          }
+          return (
+            <group
+              key={`side-placement-preview-${placementData.wall}-${slot.sideSlotIndex}-${baseModuleData.id}`}
+              position={[
+                mmToThreeUnits(placementData.sideCenterXmm),
+                furnitureY,
+                mmToThreeUnits(centerZMm)
+              ]}
+              rotation={[0, placementData.rotationRad, 0]}
+              onClick={(e) => {
+                e.stopPropagation();
+                placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
+              }}
+            >
+              <BoxModule
+                moduleData={baseModuleData}
+                color={theme.color}
+                isDragging={true}
+                hasDoor={false}
+                customDepth={sideDepthMm}
+                adjustedWidth={sideWidthMm}
+                customWidth={sideWidthMm}
+                spaceInfo={spaceInfo}
+              />
+              <mesh
+                position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.05]}
+                renderOrder={50}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
+                }}
+              >
+                <circleGeometry args={[0.28, 32]} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.92} depthTest={false} depthWrite={false} />
+              </mesh>
+              <mesh position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.065]} renderOrder={51}>
+                <ringGeometry args={[0.22, 0.27, 32]} />
+                <meshBasicMaterial color={theme.color} depthTest={false} depthWrite={false} />
+              </mesh>
+              <mesh position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.08]} renderOrder={52}>
+                <planeGeometry args={[0.18, 0.045]} />
+                <meshBasicMaterial color={theme.color} depthTest={false} depthWrite={false} />
+              </mesh>
+              <mesh position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.08]} renderOrder={52}>
+                <planeGeometry args={[0.045, 0.18]} />
+                <meshBasicMaterial color={theme.color} depthTest={false} depthWrite={false} />
+              </mesh>
+            </group>
+          );
+        });
+      })()}
+
       {/* 가구 미리보기 */}
       {debugLog('👻 [Ghost] Rendering conditions:', {
         hoveredSlotIndex,
@@ -3127,7 +3604,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         hasSelectedFurnitureId: !!selectedFurnitureId,
         zoneSlotPositionsLength: zoneSlotPositions.length
       })}
-      {(currentDragData || selectedFurnitureId) && zoneSlotPositions.map((slotData, slotIndex) => {
+      {!isSidePlacementView && (currentDragData || selectedFurnitureId) && zoneSlotPositions.map((slotData, slotIndex) => {
         // slotData가 객체인지 숫자인지 확인하여 위치 추출
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
@@ -3933,7 +4410,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       })}
 
       {/* 기둥 앞 공간 고스트 (기둥 C 전용) - 기둥 양옆에 가구가 배치된 후에만 표시 */}
-      {(currentDragData || selectedFurnitureId) && (() => {
+      {!isSidePlacementView && (currentDragData || selectedFurnitureId) && (() => {
         // 기둥 분석
         const columnSlotsForFront = analyzeColumnSlots(spaceInfo);
 

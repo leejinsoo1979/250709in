@@ -179,7 +179,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
-  const { activeDroppedCeilingTab, setIsSlotDragging } = useUIStore();
+  const { activeDroppedCeilingTab, setIsSlotDragging, activePlacementWall } = useUIStore();
   // (다크모드 검정 배경 처리 제거 — 누끼 처리된 PNG로 사용자가 직접 작업함)
 
   // 드래그용 이미지 ref (각 썸네일마다 독립적인 DOM 요소)
@@ -607,6 +607,30 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
       clickTimeoutRef.current = null;
+    }
+
+    if (activePlacementWall === 'left' || activePlacementWall === 'right') {
+      setSelectedFurnitureId(module.id);
+      setFurniturePlacementMode(true);
+      setCurrentDragData({
+        type: 'furniture',
+        zone: activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal',
+        moduleData: {
+          id: module.id,
+          name: module.name,
+          dimensions: module.dimensions,
+          originalDimensions: module.dimensions,
+          type: module.type || 'default',
+          color: module.color,
+          hasDoor: module.hasDoor || false,
+          isDynamic: module.isDynamic,
+          furnType: module.id.includes('dual-') ? 'dual' : 'single',
+          modelConfig: module.modelConfig,
+          category: module.category
+        }
+      });
+      setTimeout(() => { isDoubleClickRef.current = false; }, 100);
+      return;
     }
 
     // Click & Place 모드 비활성화 (고스트 제거)

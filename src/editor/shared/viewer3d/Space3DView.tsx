@@ -3968,7 +3968,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 intensity={0.6}
                 color="#ffffff"
               />
-
               {/* 환경광 - 2D 모드에서는 더 밝게 */}
               <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
 
@@ -4186,7 +4185,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {!isPanelSimulationPresentation && effectiveShowDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
 
               {/* CAD 스타일 치수/가이드 표시 - 3D 모드 또는 2D 정면/탑뷰에서 표시 */}
-              {effectiveShowDimensions && effectiveShowDimensionsText && (viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
+              {effectiveShowDimensions && effectiveShowDimensionsText && ((viewMode === '3D' && activePlacementWall === 'front') || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
                 <CleanCAD2D
                   viewDirection={viewMode === '3D' ? '3D' : view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
@@ -4218,7 +4217,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {!isPanelSimulationPresentation && <FreePlacementDropZone />}
 
               {/* 슬롯 배치 인디케이터 - 가구 선택 시 + 아이콘 표시 */}
-              {!isPanelSimulationPresentation && <SlotPlacementIndicators onSlotClick={placeFurniture} />}
+              {!isPanelSimulationPresentation && (viewMode !== '3D' || activePlacementWall === 'front') && <SlotPlacementIndicators onSlotClick={placeFurniture} />}
 
               {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
               {!isPanelSimulationPresentation && <InternalDimensionDisplay />}

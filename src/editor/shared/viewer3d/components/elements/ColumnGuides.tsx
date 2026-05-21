@@ -20,7 +20,7 @@ interface ColumnGuidesProps {
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, clearAllModules } = useFurnitureStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode, isLiveDimensionMode, isTapeMeasureMode, activePlacementWall } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -348,6 +348,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   
   // 2D 측면뷰(좌/우)에서는 슬롯 가이드 숨김
   if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+    return null;
+  }
+  // 3D ViewCube에서 측면(L/R)을 활성화한 경우에도 정면 슬롯 가이드 숨김
+  if (viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
     return null;
   }
 

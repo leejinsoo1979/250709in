@@ -5135,6 +5135,7 @@ const Room: React.FC<RoomProps> = ({
                   const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
 
                   group.modules.filter((mod) => {
+                    if (((mod as any).placementWall || 'front') !== 'front') return false;
                     if (mod.hasTopFrame === false) return false;
                     // 하부장 모듈은 상단몰딩 불필요
                     if (getModuleCategory(mod) === 'lower') return false;
@@ -6100,8 +6101,9 @@ const Room: React.FC<RoomProps> = ({
               // 세그먼트 수집
               const slotTopSegments: (FrameRenderSegment & { key: string })[] = [];
               slotModsForFrame
-                .filter(mod => {
-                  if (mod.hasTopFrame === false) return false;
+                  .filter(mod => {
+                    if (((mod as any).placementWall || 'front') !== 'front') return false;
+                    if (mod.hasTopFrame === false) return false;
                   // 하부장 모듈은 상단몰딩 불필요
                   if (getModuleCategory(mod) === 'lower') return false;
                   // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 상단 몰딩 불필요
@@ -7248,6 +7250,7 @@ const Room: React.FC<RoomProps> = ({
 
           stripGroups.forEach((group) => {
             group.modules.filter((mod) => {
+              if (((mod as any).placementWall || 'front') !== 'front') return false;
               if (mod.hasBase === false) return false;
               // Insert 프레임은 걸래받이(받침대) 불필요
               if (mod.moduleId?.includes('insert-frame')) return false;
@@ -7581,6 +7584,7 @@ const Room: React.FC<RoomProps> = ({
                   const slotBaseSegments: (FrameRenderSegment & { key: string })[] = [];
                   slotModsForBase
                     .filter(mod => {
+                      if (((mod as any).placementWall || 'front') !== 'front') return false;
                       if (mod.hasBase === false) return false;
                       // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 걸래받이 불필요
                       if (mod.moduleId?.includes('insert-frame')) return false;

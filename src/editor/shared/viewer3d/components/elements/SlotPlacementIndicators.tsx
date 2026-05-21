@@ -22,10 +22,14 @@ interface SlotPlacementIndicatorsProps {
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
-  const { view2DTheme } = useUIStore();
+  const { view2DTheme, viewMode, activePlacementWall } = useUIStore();
   const { pendingPlacement } = useMyCabinetStore();
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+
+  if (viewMode === '3D' && activePlacementWall !== 'front') {
+    return null;
+  }
 
 // console.log('🔵🔵🔵 SlotPlacementIndicators 렌더링:', { selectedFurnitureId, placedModulesCount: placedModules.length });
 
