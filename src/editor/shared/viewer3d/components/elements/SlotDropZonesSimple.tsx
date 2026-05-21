@@ -21,6 +21,7 @@ import { useAlert } from '@/contexts/AlertContext';
 import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
 import { useUIStore } from '@/store/uiStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
+import { useAuth } from '@/auth/AuthProvider';
 
 // 빌트인 냉장고장: 폭 582 / 깊이 600 고정 모듈
 // 슬롯 너비와 무관하게 582로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
@@ -103,6 +104,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { showAlert } = useAlert();
+  const { user } = useAuth();
+  const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com';
 
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
@@ -306,7 +309,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
 
-    if (viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
+    if (canUsePlacementWallTools && viewMode === '3D' && (activePlacementWall === 'left' || activePlacementWall === 'right')) {
       if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox.position === activePlacementWall) {
         showAlert('커튼박스가 있는 위치에는 배치할 수 없습니다.', { title: '배치 불가' });
         return true;

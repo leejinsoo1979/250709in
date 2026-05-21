@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useProjectStore } from '@/store/core/projectStore';
+import { useAuth } from '@/auth/AuthProvider';
 import { sceneHolder } from '../../sceneHolder';
 
 // 클린 아키텍처: 의존성 방향 관리
@@ -33,6 +34,7 @@ import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/con
 
 // 최근 복사한 가구 ID를 전역 수준에서 유지해 Ctrl+V 붙여넣기 시 활용
 let lastCopiedFurnitureId: string | null = null;
+const ALLOWED_PLACEMENT_WALL_EMAIL = 'sbbc212@gmail.com';
 
 
 
@@ -88,17 +90,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
+  const { user } = useAuth();
+  const canUsePlacementWallTools = user?.email === ALLOWED_PLACEMENT_WALL_EMAIL;
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
   const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo, activePlacementWall, setActivePlacementWall } = useUIStore();
 
   // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
   const cameraMode = cameraModeFromProps || cameraModeFromStore;
-  const placementWallButtons = [
-    { id: 'left' as const, label: 'L' },
-    { id: 'front' as const, label: 'F' },
-    { id: 'right' as const, label: 'R' },
-  ];
 
   // 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const cursorColor = view2DTheme === 'dark' ? 'white' : 'black';
@@ -281,12 +280,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   );
 
   useEffect(() => {
+    if (!canUsePlacementWallTools && activePlacementWall !== 'front') {
+      setActivePlacementWall('front');
+    }
+  }, [activePlacementWall, canUsePlacementWallTools, setActivePlacementWall]);
+
+  useEffect(() => {
     if (viewMode !== '3D') return;
 
     let animationFrame = 0;
 
     const focusViewCubeFace = (view: 'front' | 'back' | 'left' | 'right' | 'top' | 'bottom') => {
-      if (view === 'front' || view === 'left' || view === 'right') {
+      if (canUsePlacementWallTools && (view === 'front' || view === 'left' || view === 'right')) {
         setActivePlacementWall(view);
       } else {
         setActivePlacementWall('front');
@@ -354,7 +359,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         viewCubeRequest.handler = null;
       }
     };
-  }, [viewMode, setActivePlacementWall, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth]);
+  }, [viewMode, canUsePlacementWallTools, setActivePlacementWall, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth]);
 
   useEffect(() => {
     if (viewMode !== '2D') return;
@@ -1529,7 +1534,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         </Canvas>
 
         {/* CAD 스타일 ViewCube 기즈모 - 좌측 상단 HTML 오버레이 (3D 모드 + 표시설정 ON일 때만) */}
-        {viewMode === '3D' && showGizmo && <AxisArrowsGizmo />}
+        {canUsePlacementWallTools && viewMode === '3D' && showGizmo && <AxisArrowsGizmo />}
       </div>
     </ErrorBoundary>
   );

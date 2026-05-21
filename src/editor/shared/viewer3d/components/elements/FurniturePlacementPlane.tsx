@@ -7,12 +7,14 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
+import { useAuth } from '@/auth/AuthProvider';
 
 interface FurniturePlacementPlaneProps {
   spaceInfo: SpaceInfo;
 }
 
 const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ spaceInfo }) => {
+  const { user } = useAuth();
   const placedModules = useFurnitureStore(state => state.placedModules);
   const isLiveDimensionMode = useUIStore(state => state.isLiveDimensionMode);
   const isTapeMeasureMode = useUIStore(state => state.isTapeMeasureMode);
@@ -20,6 +22,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   const activePlacementWall = useUIStore(state => state.activePlacementWall);
   const showDimensions = useUIStore(state => state.showDimensions);
   const { theme } = useTheme();
+  const canUsePlacementWallTools = user?.email === 'sbbc212@gmail.com';
 
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -288,6 +291,9 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   }
 
   if (viewMode === '3D') {
+    if (!canUsePlacementWallTools) {
+      return null;
+    }
     if (activePlacementWall === 'front') {
       return (
         <>

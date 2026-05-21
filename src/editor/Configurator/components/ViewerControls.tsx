@@ -285,7 +285,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     <div className={styles.viewerControls}>
 
       {/* ─── Left: L/F/R 측면 배치벽 토글 (3D 모드에서만) — 기즈모 박스 중앙과 수직 정렬 ─── */}
-      {viewMode === '3D' && (
+      {isAllowedUser && viewMode === '3D' && (
         <div className={styles.segmentedControl} style={{ marginLeft: 19 }}>
           {[
             { id: 'left' as const, label: 'L' },
