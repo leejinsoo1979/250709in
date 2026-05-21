@@ -174,10 +174,41 @@ const ViewCube: React.FC = () => {
         const innerQuat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), innerNormal);
         const isHover = hovered === face.view;
         const hideOuter = hiddenOuterView === face.view;
+        if (hideOuter) {
+          // 외부 면 완전 제거 (큐브 한 면이 뚫림 → 내부 안쪽 라벨이 보임)
+          return (
+            <group key={face.view}>
+              <mesh
+                position={innerPos.toArray()}
+                quaternion={innerQuat}
+                onPointerOver={(e) => {
+                  e.stopPropagation();
+                  setHovered(face.view);
+                  document.body.style.cursor = 'pointer';
+                }}
+                onPointerOut={() => {
+                  setHovered(null);
+                  document.body.style.cursor = '';
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClick(face.view);
+                }}
+              >
+                <planeGeometry args={[cubeSize * 0.92, cubeSize * 0.92]} />
+                <meshBasicMaterial
+                  map={isHover ? textures[face.view].hover : textures[face.view].base}
+                  toneMapped={false}
+                  side={THREE.DoubleSide}
+                  transparent
+                />
+              </mesh>
+            </group>
+          );
+        }
         return (
           <group key={face.view}>
             <mesh
-              visible={!hideOuter}
               position={pos.toArray()}
               quaternion={quat}
               onPointerOver={(e) => {
