@@ -249,7 +249,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
     const furnitureDepthForRangeMm = Math.min(totalSideDepthMm, 600);
-    const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm - 10;
+    const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm - 20;
     const sideWallRange = {
       startZMm: meshRightZMm - totalSideDepthMm,
       depthMm: totalSideDepthMm
@@ -616,7 +616,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
       const furnitureDepthForRangeMm = Math.min(totalSideDepthMm, 600);
-      const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm - 10;
+      const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm - 20;
       const sideWallRange = {
         startZMm: meshRightZMm - totalSideDepthMm,
         depthMm: totalSideDepthMm
