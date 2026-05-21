@@ -11821,9 +11821,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         }
         const frontZ3D = backZ3D + depth3D;
 
-        // 치수선 Y 위치: 정면 폭 치수선과 동일한 높이로 정렬 (공간 천장 + DIM_GAP × dimLevels)
-        // (이전: 가구 바닥에 배치 → 정면 폭 가이드와 어긋남)
-        const dimY3D = topDimensionY;
+        // 치수선 Y 위치: 가구 바닥 라인 (다른 깊이 치수들과 동일하게 안정적 위치)
+        const floorFinishMm3D = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+        const baseFrameMm3D = (module as any).hasBase === false ? 0
+          : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+        const floatMm3D = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
+        const topFrameMm3D = (module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+        const moduleHeightMm3D = isUpper3D
+          ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height ?? 600)
+          : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height ?? 2200);
+        const moduleBottomMm3D = isUpper3D
+          ? Math.max(0, Math.round(spaceInfo.height - topFrameMm3D - moduleHeightMm3D))
+          : (floorFinishMm3D + baseFrameMm3D + floatMm3D);
+        // 가구 바닥 위치에 깊이 치수 배치 (탑뷰 좌측뷰의 spaceHeight와 같은 의미: 가구 base)
+        const dimY3D = mmToThreeUnits(moduleBottomMm3D);
 
         // 텍스트 회전: 가구 측면에서 보았을 때 정상 방향으로 읽히도록 (탑뷰 깊이 치수와 같이 위에서 보는 형태)
         const textRotation: [number, number, number] = [-Math.PI / 2, 0, 0];
@@ -11861,14 +11872,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             >
               {Math.round(actualDepthMm3D)}
             </Text>
-            {/* 연장선: 공간 천장 ~ 치수선 위 40mm (정면 폭 치수 연장선과 동일 길이) */}
+            {/* 연장선: 가구 측면 ~ 치수선까지 (탑뷰 좌측뷰와 동일) */}
             <NativeLine name="3d-depth-dimension-ext"
-              points={[[sideX, spaceHeight, backZ3D], [sideX, topDimensionY + mmToThreeUnits(40), backZ3D]]}
-              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+              points={[[cabinetSideX, dimY3D, backZ3D], [sideX, dimY3D, backZ3D]]}
+              color={dimensionColor} renderOrder={100000} depthTest={true}
             />
             <NativeLine name="3d-depth-dimension-ext"
-              points={[[sideX, spaceHeight, frontZ3D], [sideX, topDimensionY + mmToThreeUnits(40), frontZ3D]]}
-              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+              points={[[cabinetSideX, dimY3D, frontZ3D], [sideX, dimY3D, frontZ3D]]}
+              color={dimensionColor} renderOrder={100000} depthTest={true}
             />
           </group>
         );
