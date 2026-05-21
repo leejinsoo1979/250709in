@@ -863,22 +863,21 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 카메라 → 타겟 방향 벡터
       const dir = new THREE.Vector3();
       dir.subVectors(controls.target as THREE.Vector3, cam.position).normalize();
-      // 카메라가 어떤 축을 가장 강하게 바라보는지 판정
+      // 카메라가 어떤 축을 가장 강하게 바라보는지 판정 (강한 X 우세일 때만 left/right로 전환)
       const absX = Math.abs(dir.x);
       const absZ = Math.abs(dir.z);
       const ui = useUIStore.getState();
-      let next: 'front' | 'left' | 'right' = 'front';
-      if (absX > absZ * 1.2) {
-        // X축이 우세: 카메라가 좌측에 있으면(+x→-x 방향) 우측벽을 보는 것 X
-        // dir.x > 0 → 카메라가 -x쪽에서 +x를 봄 → 우측벽 응시 → wall='right'
-        // dir.x < 0 → 카메라가 +x쪽에서 -x를 봄 → 좌측벽 응시 → wall='left'
-        next = dir.x > 0 ? 'right' : 'left';
-      } else {
-        next = 'front';
+      const current = ui.activePlacementWall;
+      // X 우세가 명확할 때만 left/right로 전환, 그 외엔 현재 상태 유지(transition 중 흔들림 방지)
+      const X_DOMINANT_RATIO = 3.0; // X가 Z의 3배 이상 우세할 때만
+      if (absX > absZ * X_DOMINANT_RATIO) {
+        const next: 'left' | 'right' = dir.x > 0 ? 'right' : 'left';
+        if (current !== next) ui.setActivePlacementWall(next);
+      } else if (absZ > absX * X_DOMINANT_RATIO) {
+        // Z가 강하게 우세할 때만 front로 복귀
+        if (current !== 'front') ui.setActivePlacementWall('front');
       }
-      if (ui.activePlacementWall !== next) {
-        ui.setActivePlacementWall(next);
-      }
+      // 애매한 각도 구간에서는 토글 변경 없음
     };
 
     controls.addEventListener('change', syncWallFromCamera);

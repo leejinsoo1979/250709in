@@ -138,6 +138,8 @@ const ViewCube: React.FC = () => {
     : activePlacementWall === 'right'
     ? 'left'
     : null;
+  // eslint-disable-next-line no-console
+  console.log('[ViewCube] activePlacementWall=', activePlacementWall, 'hiddenOuterView=', hiddenOuterView);
 
   // 면별 텍스처(노말+호버)를 미리 만들어 캐시
   const textures = useMemo(() => {
@@ -176,35 +178,7 @@ const ViewCube: React.FC = () => {
         const hideOuter = hiddenOuterView === face.view;
         if (hideOuter) {
           // 외부 면 완전 제거 (큐브 한 면이 뚫림 → 내부 안쪽 라벨이 보임)
-          return (
-            <group key={face.view}>
-              <mesh
-                position={innerPos.toArray()}
-                quaternion={innerQuat}
-                onPointerOver={(e) => {
-                  e.stopPropagation();
-                  setHovered(face.view);
-                  document.body.style.cursor = 'pointer';
-                }}
-                onPointerOut={() => {
-                  setHovered(null);
-                  document.body.style.cursor = '';
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleClick(face.view);
-                }}
-              >
-                <planeGeometry args={[cubeSize * 0.92, cubeSize * 0.92]} />
-                <meshBasicMaterial
-                  map={isHover ? textures[face.view].hover : textures[face.view].base}
-                  toneMapped={false}
-                  side={THREE.DoubleSide}
-                  transparent
-                />
-              </mesh>
-            </group>
-          );
+          return null;
         }
         return (
           <group key={face.view}>
