@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
@@ -22,6 +23,7 @@ import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, calculateFurnitureBo
 import { useUIStore } from '@/store/uiStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { useAuth } from '@/auth/AuthProvider';
+import { calculateSideWallPlacementRangeMm } from '../../utils/sideWallPlacement';
 
 // 빌트인 냉장고장: 폭 582 / 깊이 600 고정 모듈
 // 슬롯 너비와 무관하게 582로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
@@ -111,7 +113,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
   const { viewMode: contextViewMode } = useSpace3DView();
-  const { view2DDirection: view2DDirectionStore, activePlacementWall } = useUIStore();
+  const { view2DDirection: view2DDirectionStore, activePlacementWall, view2DTheme } = useUIStore();
 
   // 슬롯 바닥 클릭 시 선택 해제 및 팝업 닫기 핸들러
   const handleSlotFloorClick = useCallback((e: any) => {
@@ -248,12 +250,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const wall = activePlacementWall as 'left' | 'right';
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-    const furnitureDepthForRangeMm = Math.min(totalSideDepthMm, 600);
-    const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm - 20;
-    const sideWallRange = {
-      startZMm: meshRightZMm - totalSideDepthMm,
-      depthMm: totalSideDepthMm
-    };
+    const sideWallRange = calculateSideWallPlacementRangeMm(totalSideDepthMm);
     const cornerFrontSlot = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
     const frontCornerModule = placedModules.find(mod => {
       const placementWall = (mod as any).placementWall || 'front';
@@ -615,12 +612,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo) || dragData.moduleData;
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-      const furnitureDepthForRangeMm = Math.min(totalSideDepthMm, 600);
-      const meshRightZMm = totalSideDepthMm - furnitureDepthForRangeMm - 20;
-      const sideWallRange = {
-        startZMm: meshRightZMm - totalSideDepthMm,
-        depthMm: totalSideDepthMm
-      };
+      const sideWallRange = calculateSideWallPlacementRangeMm(totalSideDepthMm);
       const cornerFrontSlot = activePlacementWall === 'left'
         ? 0
         : zoneInfo.normal.columnCount - 1;
@@ -3554,6 +3546,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 e.stopPropagation();
                 placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
               }}
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
+              }}
             >
               <BoxModule
                 moduleData={baseModuleData}
@@ -3565,29 +3561,72 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 customWidth={sideWidthMm}
                 spaceInfo={spaceInfo}
               />
-              <mesh
-                position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.05]}
-                renderOrder={50}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
+              <Html
+                position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.08]}
+                center
+                transform={false}
+                style={{
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  background: 'transparent'
                 }}
               >
-                <circleGeometry args={[0.28, 32]} />
-                <meshBasicMaterial color="#ffffff" transparent opacity={0.92} depthTest={false} depthWrite={false} />
-              </mesh>
-              <mesh position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.065]} renderOrder={51}>
-                <ringGeometry args={[0.22, 0.27, 32]} />
-                <meshBasicMaterial color={theme.color} depthTest={false} depthWrite={false} />
-              </mesh>
-              <mesh position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.08]} renderOrder={52}>
-                <planeGeometry args={[0.18, 0.045]} />
-                <meshBasicMaterial color={theme.color} depthTest={false} depthWrite={false} />
-              </mesh>
-              <mesh position={[0, 0, mmToThreeUnits(sideDepthMm / 2) + 0.08]} renderOrder={52}>
-                <planeGeometry args={[0.045, 0.18]} />
-                <meshBasicMaterial color={theme.color} depthTest={false} depthWrite={false} />
-              </mesh>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                    placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                    placeSideWallModuleAtSlot(slot.sideSlotIndex, activeDragData);
+                  }}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: view2DTheme.primary,
+                    border: '2px solid white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    transition: 'all 0.2s ease',
+                    fontSize: '22px',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                    animation: 'pulse 0.8s ease-in-out infinite',
+                    pointerEvents: 'auto'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.15)';
+                    e.currentTarget.style.opacity = '0.8';
+                    e.currentTarget.style.animation = 'none';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.opacity = '1';
+                    e.currentTarget.style.animation = 'pulse 0.8s ease-in-out infinite';
+                  }}
+                >
+                  +
+                </div>
+                <style>{`
+                  @keyframes pulse {
+                    0%, 100% {
+                      transform: scale(1);
+                      opacity: 1;
+                    }
+                    50% {
+                      transform: scale(1.1);
+                      opacity: 0.8;
+                    }
+                  }
+                `}</style>
+              </Html>
             </group>
           );
         });

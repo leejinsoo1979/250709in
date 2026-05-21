@@ -7,6 +7,7 @@ import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { calculateSideWallPlacementRangeMm } from '@/editor/shared/viewer3d/utils/sideWallPlacement';
 
 interface UseFurnitureKeyboardProps {
   spaceInfo: SpaceInfo;
@@ -168,12 +169,7 @@ export const useFurnitureKeyboard = ({
 
       const getSideWallRange = () => {
         const panelDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-        const furnitureDepthMm = Math.min(panelDepthMm, 600);
-        const meshRightZMm = panelDepthMm - furnitureDepthMm - 20;
-        return {
-          startZMm: meshRightZMm - panelDepthMm,
-          depthMm: panelDepthMm
-        };
+        return calculateSideWallPlacementRangeMm(panelDepthMm);
       };
 
       const buildSideWallMoveUpdate = (

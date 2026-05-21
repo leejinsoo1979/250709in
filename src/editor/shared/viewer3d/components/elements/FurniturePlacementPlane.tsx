@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
 import { useAuth } from '@/auth/AuthProvider';
 import NativeLine from './NativeLine';
+import { calculateSideWallPlacementRangeMm } from '../../utils/sideWallPlacement';
 
 interface FurniturePlacementPlaneProps {
   spaceInfo: SpaceInfo;
@@ -133,12 +134,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
 
   const getSideWallMeshRangeMm = () => {
     const panelDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
-    const furnitureDepthMm = Math.min(panelDepthMm, 600);
-    const meshRightZMm = panelDepthMm - furnitureDepthMm - 20;
-    return {
-      startZMm: meshRightZMm - panelDepthMm,
-      depthMm: panelDepthMm
-    };
+    return calculateSideWallPlacementRangeMm(panelDepthMm);
   };
 
   const getSideWallVerticalRangeMm = (wall: 'left' | 'right') => {
