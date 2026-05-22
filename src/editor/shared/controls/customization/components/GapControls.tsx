@@ -201,6 +201,16 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
                 value={entry.value}
                 onChange={(e) => handleInputChange(entry.key, e.target.value)}
                 onBlur={() => handleInputBlur(entry.key)}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const step = e.shiftKey ? 1 : 0.5;
+                    const delta = e.key === 'ArrowUp' ? step : -step;
+                    const next = Math.max(0, Math.min(5, Math.round((entry.value + delta) * 10) / 10));
+                    entry.setter(next);
+                    updateGap(entry.key, next);
+                  }
+                }}
                 className={styles.gapInput}
                 min="0" max="5" step="0.5"
               />
