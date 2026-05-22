@@ -12306,6 +12306,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ? (module.slotIndex !== undefined ? (indexing3D.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
           : module.position.x;
         const showOnLeftSide = cxX3D < 0;
+        const mid3D = module.moduleId || '';
         const hasInstalledDoor3D = !!moduleData.hasDoor && !!module.hasDoor;
         const hasExternalMaidaDimension3D = !!module.hasDoor && (
           mid3D.includes('lower-drawer-')
@@ -12334,7 +12335,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const baseDepthOffset3D = isFloating3D ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
         const moduleBackWallGapMm3D = (module as any).backWallGap ?? 0;
         const moduleBackWallGapZ3D = moduleBackWallGapMm3D > 0 ? mmToThreeUnits(moduleBackWallGapMm3D) : 0;
-        const mid3D = module.moduleId || '';
         const isShoeCab3D = (mid3D.includes('-entryway-') || mid3D.includes('-shelf-')
           || mid3D.includes('-4drawer-shelf-') || mid3D.includes('-2drawer-shelf-'));
         const isUpper3D = moduleData.category === 'upper' || mid3D.includes('upper-cabinet');
