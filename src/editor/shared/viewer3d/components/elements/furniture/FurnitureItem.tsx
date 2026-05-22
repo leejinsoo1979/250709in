@@ -4239,17 +4239,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // customSections의 선반 갯수 변경 시에만 BoxModule 리마운트
               // shelfPositions는 prop으로 갱신만 → 듀얼 W 변경 시 width에 비례해 재계산되어도
               // BoxModule이 remount되지 않아 클릭 race(팝업 안 뜨는 현상) 방지
+              // 도어분절 가구: 섹션 높이 변경 시 분절 위치 갱신을 위해 height도 key에 포함
+              const isDoorSplitForKey = !!(actualModuleData?.id?.includes('shelf-split') || actualModuleData?.id?.includes('pantry-cabinet-split'));
               const customSectionsKey = adjustedCustomSections
-                ? adjustedCustomSections.map((s: any) => `${s.count || 0}`).join('|')
+                ? adjustedCustomSections.map((s: any) => isDoorSplitForKey ? `${s.count || 0}h${Math.round(s.height || 0)}` : `${s.count || 0}`).join('|')
                 : '';
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
+              const doorInstallKey = placedModule.hasDoor ? 'door1' : 'door0';
               // key에서 height를 제거 — H 변경마다 BoxModule이 unmount/remount 되면서
               // 그 1~2 프레임 사이 클릭이 raycaster에 안 잡혀 "허공 클릭"으로 처리되어
               // closeAllPopups()가 호출되는 race를 막음. H는 internalHeight prop으로 반영.
               return (
                 <BoxModule
-                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
+                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}-${doorInstallKey}`}
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김
