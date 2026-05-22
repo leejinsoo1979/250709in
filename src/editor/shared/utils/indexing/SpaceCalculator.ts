@@ -204,13 +204,18 @@ export class SpaceCalculator {
         const isValidSlotWidth = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
         const roundSlotWidth = (val: number) => Math.round(val * 2) / 2;
 
-        // 1단계: 기존 이격 (없으면 1.5mm) 그대로 유지
+        // 1단계: 기존 이격 (없으면 1.5mm) 그대로 유지 — 단, 슬롯폭이 0.5mm 단위로 정확히 떨어질 때만
+        // (떨어지지 않으면 2단계 이상에서 이격 자동 조정으로 슬롯 균등 분할 보장)
         const userLeft = spaceInfo.gapConfig?.left ?? 1.5;
         const userRight = spaceInfo.gapConfig?.right ?? 1.5;
         const userInternalWidth = baseWidth - userLeft - userRight;
         const userSlotWidth = userInternalWidth / columnCount;
 
-        if (userSlotWidth >= 400 && userSlotWidth <= 600) {
+        if (
+          userSlotWidth >= 400 &&
+          userSlotWidth <= 600 &&
+          isValidSlotWidth(userSlotWidth)
+        ) {
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
