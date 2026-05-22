@@ -1328,11 +1328,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const lowerCabinetFloatMm = hasBase === false
     ? (individualFloatHeight ?? placedModuleForCorner?.individualFloatHeight ?? 0)
     : 0;
-  const lowerCabinetFloorFinishMm = spaceInfo?.hasFloorFinish && spaceInfo.floorFinish
-    ? spaceInfo.floorFinish.height
-    : 0;
+  // 마이다 하단갭 기준은 원바닥이 아니라 바닥마감재 윗면이다.
+  // 가구 Y 위치 계산에서 바닥마감재 높이는 이미 반영되므로 여기서 다시 빼면
+  // 바닥마감재 높이만큼 하단갭 치수가 커진다.
   const lowerCabinetFloorY = -adjustedHeight / 2
-    - (lowerCabinetFloorFinishMm + lowerCabinetBaseFrameMm + lowerCabinetFloatMm) * 0.01;
+    - (lowerCabinetBaseFrameMm + lowerCabinetFloatMm) * 0.01;
   
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
