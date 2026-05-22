@@ -533,6 +533,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
+  const isExternalMaidaModule = (moduleId = '') => moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-')
+    || moduleId.includes('lower-top-down-')
+    || moduleId.includes('lower-induction-cabinet')
+    || moduleId.includes('dual-lower-induction-cabinet');
+  const getExternalMaidaDimensionSide = (module: any): 'left' | 'right' | null => {
+    const slotCount = indexing.slotWidths?.length || indexing.columnCount || 0;
+    const isDual = !!module.isDualSlot || (module.moduleId || '').includes('dual-');
+    const isSelected = selectedFurnitureId === module.id || selectedFurnitureIds.includes(module.id);
+
+    if (slotCount > 0 && typeof module.slotIndex === 'number') {
+      const endSlotIndex = module.slotIndex + (isDual ? 1 : 0);
+      if (module.slotIndex <= 0) return 'left';
+      if (endSlotIndex >= slotCount - 1) return 'right';
+      if (isSelected) {
+        const x = module.position?.x ?? 0;
+        return x >= 0 ? 'right' : 'left';
+      }
+      return null;
+    }
+
+    if (module.placementWall === 'left') return 'left';
+    if (module.placementWall === 'right') return 'right';
+    const x = module.position?.x ?? 0;
+    if (Math.abs(x) < 0.001 && !isSelected) return null;
+    return x > 0 ? 'right' : 'left';
+  };
 
   // 디버깅 로그 추가
 // console.log('🔴 CleanCAD2D - indexing:', {
@@ -1652,11 +1679,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       spaceInfo
     );
     const moduleId = module.moduleId || '';
-    const hasExternalMaidaDimension = moduleId.includes('lower-drawer-')
-      || moduleId.includes('lower-door-lift-')
-      || moduleId.includes('lower-top-down-')
-      || moduleId.includes('lower-induction-cabinet')
-      || moduleId.includes('dual-lower-induction-cabinet');
+    const hasExternalMaidaDimension = isExternalMaidaModule(moduleId)
+      && !!getExternalMaidaDimensionSide(module);
     return !!moduleData?.hasDoor || hasExternalMaidaDimension;
   });
   const doorVerticalGuideExpansionMm = hasInstalledDoorForVerticalGuides ? 160 : 0;
@@ -4737,7 +4761,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={[[innerX, furnitureTopY, upperDimZ_L], [innerX, effectiveCeilingY, upperDimZ_L]]}
+                    points={[[innerX, upperCabinetBottomY, upperDimZ_L], [innerX, effectiveCeilingY, upperDimZ_L]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
                 </>
@@ -5668,7 +5692,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={[[rightInnerX, rFurnitureTopY, upperDimZ_R], [rightInnerX, rEffectiveCeilingY, upperDimZ_R]]}
+                    points={[[rightInnerX, rUpperCabinetBottomY, upperDimZ_R], [rightInnerX, rEffectiveCeilingY, upperDimZ_R]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
                 </>
@@ -12308,13 +12332,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const showOnLeftSide = cxX3D < 0;
         const mid3D = module.moduleId || '';
         const hasInstalledDoor3D = !!moduleData.hasDoor && !!module.hasDoor;
-        const hasExternalMaidaDimension3D = !!module.hasDoor && (
-          mid3D.includes('lower-drawer-')
-          || mid3D.includes('lower-door-lift-')
-          || mid3D.includes('lower-top-down-')
-          || mid3D.includes('lower-induction-cabinet')
-          || mid3D.includes('dual-lower-induction-cabinet')
-        );
+        const hasExternalMaidaDimension3D = !!module.hasDoor
+          && isExternalMaidaModule(mid3D)
+          && !!getExternalMaidaDimensionSide(module);
         // 치수선 X 위치: 도어/서랍 마이다 치수가 외부에 있으면 겹치지 않도록 좌/우측으로 조금 더 뺀다.
         const sideOffsetMm = (hasInstalledDoor3D || hasExternalMaidaDimension3D) ? 120 : 80;
         const sideX = showOnLeftSide

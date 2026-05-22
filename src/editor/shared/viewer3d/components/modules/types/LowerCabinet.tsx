@@ -410,7 +410,7 @@ interface InductionDrawerAnimatedProps {
   doorTopGap?: number;
   doorBottomGap?: number;
   floorY?: number;
-  maidaDimensionSide?: 'left' | 'right';
+  maidaDimensionSide?: 'left' | 'right' | null;
 }
 
 const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
@@ -429,7 +429,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   doorTopGap,
   doorBottomGap,
   floorY,
-  maidaDimensionSide = 'left',
+  maidaDimensionSide = null,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -749,7 +749,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
         </group>
       )}
-      {hasDoor && showDimensions && (
+      {hasDoor && showDimensions && maidaDimensionSide && (
         <MaidaHeightDimension
           segments={maidaHeightSegments}
           maidaWidth={maidaWidth}
@@ -791,7 +791,7 @@ interface TouchDrawerAnimatedProps {
   doorBottomGap?: number;
   stoneThickness?: number;
   floorY?: number;
-  maidaDimensionSide?: 'left' | 'right';
+  maidaDimensionSide?: 'left' | 'right' | null;
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -813,7 +813,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   doorBottomGap,
   stoneThickness = 20,
   floorY,
-  maidaDimensionSide = 'left',
+  maidaDimensionSide = null,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -1217,7 +1217,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         </group>
       );
     })()}
-    {hasDoor && maidas.length > 0 && showDimensions && (
+    {hasDoor && maidas.length > 0 && showDimensions && maidaDimensionSide && (
       <MaidaHeightDimension
         segments={maidaHeightSegments}
         maidaWidth={maidaWidth}
@@ -1274,10 +1274,34 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const placedModuleForCorner = useFurnitureStore(state => (
     placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
   )) as any;
-  const maidaDimensionSide: 'left' | 'right' = (() => {
+  const selectedMaidaFurnitureId = useUIStore(state => state.selectedFurnitureId);
+  const selectedMaidaFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
+  const isMaidaFurnitureSelected = !!placedFurnitureId && (
+    selectedMaidaFurnitureId === placedFurnitureId
+    || selectedMaidaFurnitureIds.includes(placedFurnitureId)
+  );
+  const maidaDimensionSide: 'left' | 'right' | null = (() => {
+    const resolvedSlotIndex = typeof slotIndex === 'number'
+      ? slotIndex
+      : typeof placedModuleForCorner?.slotIndex === 'number'
+        ? placedModuleForCorner.slotIndex
+        : undefined;
+    const slotCount = Array.isArray(slotWidths) ? slotWidths.length : 0;
+    const isDual = !!placedModuleForCorner?.isDualSlot || moduleData.id.includes('dual-');
+
+    if (slotCount > 0 && typeof resolvedSlotIndex === 'number') {
+      const endSlotIndex = resolvedSlotIndex + (isDual ? 1 : 0);
+      if (resolvedSlotIndex <= 0) return 'left';
+      if (endSlotIndex >= slotCount - 1) return 'right';
+      if (!isMaidaFurnitureSelected) return null;
+      const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
+      return x >= 0 ? 'right' : 'left';
+    }
+
     if (placedModuleForCorner?.placementWall === 'right') return 'right';
     if (placedModuleForCorner?.placementWall === 'left') return 'left';
     const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
+    if (Math.abs(x) < 0.001 && !isMaidaFurnitureSelected) return null;
     return x > 0 ? 'right' : 'left';
   })();
   const isRightCornerCabinet = moduleData.id.includes('right-corner');

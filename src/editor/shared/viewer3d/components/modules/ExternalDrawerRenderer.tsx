@@ -354,7 +354,7 @@ interface ExternalDrawerRendererProps {
   defaultDoorTopGap?: number; // 모듈 타입별 기본 doorTopGap (delta 계산 기준)
   defaultDoorBottomGap?: number; // 모듈 타입별 기본 doorBottomGap (delta 계산 기준)
   floorY?: number; // 현재 그룹 좌표계에서 실제 바닥 Y
-  maidaDimensionSide?: 'left' | 'right';
+  maidaDimensionSide?: 'left' | 'right' | null;
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -387,7 +387,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   defaultDoorTopGap = -20,
   defaultDoorBottomGap = 5,
   floorY,
-  maidaDimensionSide = 'left',
+  maidaDimensionSide = null,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -698,7 +698,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         />
       ))}
 
-      {showDimensions && showMaida && maidaHeightSegments.length > 0 && (
+      {showDimensions && showMaida && maidaDimensionSide && maidaHeightSegments.length > 0 && (
         <MaidaHeightDimension
           segments={maidaHeightSegments}
           maidaWidth={maidaWidth}
