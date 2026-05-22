@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 
 // 같은 카테고리(full/upper/lower)끼리만 프리셋 주입 허용.
-//   - 가구 폭/높이/깊이/슬롯/위치 등 가구별로 달라야 할 필드는 제외.
+//   - 가구 폭/깊이/슬롯/위치 등 가구별로 달라야 할 필드는 제외.
 //   - 그룹별로 묶어서 사용자가 체크박스로 선택해 주입.
 const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
   {
@@ -13,6 +13,8 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
     fields: [
       'hasDoor',
       'doorTopGap', 'doorBottomGap',
+      'upperDoorTopGap', 'upperDoorBottomGap',
+      'lowerDoorTopGap', 'lowerDoorBottomGap',
       'doorWidthAdjustEnabled', 'doorWidthAdjustMm',
       'hingePosition', 'hingeType',
       'hingePositionsMm', 'upperDoorHingePositionsMm', 'lowerDoorHingePositionsMm',
@@ -31,8 +33,9 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
   },
   {
     id: 'topBottom',
-    label: '상부몰딩 / 걸레받이 (사이즈, 옵셋, 갭, 띄움)',
+    label: '높이 / 상부몰딩 / 걸레받이 (사이즈, 옵셋, 갭, 띄움)',
     fields: [
+      'freeHeight', 'customHeight',
       'hasTopFrame', 'topFrameThickness', 'topFrameOffset', 'topFrameGap',
       'hasBase', 'hasBottomFrame', 'baseFrameHeight', 'baseFrameOffset', 'baseFrameGap',
       'individualFloatHeight',
@@ -106,6 +109,11 @@ const getCategory = (m: PlacedModule | undefined, fallbackCategory?: string): 'f
   if (fallbackCategory === 'lower' || id.includes('lower')) return 'lower';
   if (fallbackCategory === 'full' || id.startsWith('dual-') || id.startsWith('single-') || id.includes('full')) return 'full';
   return 'full';
+};
+
+const isLowerDrawer2Tier = (moduleId?: string): boolean => {
+  const id = moduleId || '';
+  return id.includes('lower-drawer-2tier') || id.includes('dual-lower-drawer-2tier');
 };
 
 // 그룹별로 현재 가구에 적용 가능한지 판단 (가구 종류 기반).
@@ -218,6 +226,21 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
     for (const [k, v] of Object.entries(preset.props)) {
       if (allowedFields.has(k)) updates[k] = v;
     }
+    const injectedHeight = typeof updates.freeHeight === 'number'
+      ? updates.freeHeight
+      : typeof updates.customHeight === 'number'
+        ? updates.customHeight
+        : typeof updates.cabinetBodyHeight === 'number'
+          ? updates.cabinetBodyHeight
+          : undefined;
+    if (injectedHeight !== undefined) {
+      if (isLowerDrawer2Tier(placedModule.moduleId)) {
+        updates.cabinetBodyHeight = injectedHeight;
+        updates.freeHeight = injectedHeight;
+      } else if (updates.cabinetBodyHeight !== undefined && updates.freeHeight === undefined && updates.customHeight === undefined) {
+        updates.freeHeight = injectedHeight;
+      }
+    }
     if (Object.keys(updates).length > 0) {
       updatePlacedModule(placedModule.id, updates as any);
     }
@@ -296,7 +319,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
               속성 이식 — {categoryLabel}
             </h3>
             <div style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)', marginBottom: '18px', lineHeight: 1.5 }}>
-              적용할 그룹을 선택하세요. 가구 폭/높이/깊이/위치는 항상 제외됩니다.<br />
+              적용할 그룹을 선택하세요. 가구 폭/깊이/위치는 항상 제외됩니다.<br />
               현재 가구에 의미 없는 그룹은 자동으로 숨김 처리됩니다.
             </div>
             {applicableGroups.length === 0 ? (

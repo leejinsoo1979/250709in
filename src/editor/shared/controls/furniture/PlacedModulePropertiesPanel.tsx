@@ -3782,9 +3782,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               : freshModule.position.x;
                           }
                           if (isInsertFrameWidth) {
-                            newX = freshModule.isFreePlacement
-                              ? calcInsertFrameResizedPositionX(freshModule, val, freshAll, freshSI)
-                              : freshModule.position.x;
+                            newX = calcInsertFrameResizedPositionX(freshModule, val, freshAll, freshSI);
                             insertMoveTargets = [];
                             insertDelta = 0;
                           }
@@ -3904,9 +3902,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   : freshMod.position.x;
                               }
                               if (isInsertFrameKey) {
-                                newX = freshMod.isFreePlacement
-                                  ? calcInsertFrameResizedPositionX(freshMod, next, freshAll, freshSI)
-                                  : freshMod.position.x;
+                                newX = calcInsertFrameResizedPositionX(freshMod, next, freshAll, freshSI);
                               }
                               updatePlacedModule(currentPlacedModule.id, {
                                 freeWidth: next,
@@ -4275,25 +4271,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 }
               }
             }
-            // 도어 확장/축소 토글: 경첩 반대 방향(한쪽)으로만 확장/축소.
-            //   경첩쪽은 항상 -1.5 (몸통 안쪽) 고정.
-            //   입력값 v(mm) = 경첩 반대쪽 도어 끝과 몸통 끝의 거리 (음수=안쪽, 양수=바깥쪽).
-            //   도어 폭 = bodyWidth - 1.5 + v
-            //   - v=-1.5 → 596 (몸통-3, 노서라운드 기본)
-            //   - v=0    → 597.5 (경첩 반대쪽이 몸통 끝과 정렬)
-            //   - v=50   → 647.5 (경첩 반대쪽 50mm 확장)
+            // 도어 확장/축소 토글: 입력값 v(mm)는 몸통 대비 도어 전체 폭 증감값이다.
+            //   도어 폭 = bodyWidth + v
+            //   - v=-1.5 → 몸통보다 1.5mm 작음
+            //   - v=0    → 몸통과 동일
+            //   - v=40   → 몸통보다 40mm 확장
             //   OFF 시는 기존 도어(몸통-3) 유지.
-            const HINGE_SIDE_GAP_MM = 1.5;
             const NOSURROUND_DEFAULT_OFFSET_MM = -1.5;
             const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
             const userExtensionRaw = (currentPlacedModule as any).doorWidthAdjustMm;
             const effectiveUserExtension = userExtensionRaw ?? (insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
-            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 1.5 + v
+            // 싱글: 도어 1장 → 도어 너비 = 몸통 + v
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
               : (doorWidthAdjustEnabled
-                ? Math.max(0, bodyWidth - HINGE_SIDE_GAP_MM + effectiveUserExtension)
+                ? Math.max(0, bodyWidth + effectiveUserExtension)
                 : Math.max(0, bodyWidth - 3));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭

@@ -897,13 +897,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const clamped = Math.max(minWidth, Math.min(3000, Math.round(value)));
     if (module && !module.isLocked && !readOnly) {
       const freshSI = useSpaceConfigStore.getState().spaceInfo;
-      const newX = module.isFreePlacement
-        ? (
-          isInsertFrame
-            ? calcInsertFrameResizedPositionX(module, clamped, placedModules, freshSI)
-            : calcResizedPositionX(module, clamped, placedModules, freshSI)
-        )
-        : module.position.x;
+      const newX = isInsertFrame
+        ? calcInsertFrameResizedPositionX(module, clamped, placedModules, freshSI)
+        : (
+          module.isFreePlacement
+            ? calcResizedPositionX(module, clamped, placedModules, freshSI)
+            : module.position.x
+        );
       updatePlacedModule(editingFurnitureWidthId, {
         freeWidth: clamped,
         moduleWidth: clamped,
