@@ -753,6 +753,21 @@ export type SpaceConfigDefaults = {
   curtainBoxMode?: 'none' | 'left' | 'right';
   hasFloorFinish?: boolean;
   floorFinishHeight?: number;
+  // 상단몰딩
+  topMoldingEnabled?: boolean;
+  topMoldingSize?: number;
+  topMoldingOffset?: number;
+  topMoldingGap?: number;
+  // 걸래받이
+  baseboardEnabled?: boolean;
+  baseboardSize?: number;
+  baseboardOffset?: number;
+  baseboardGap?: number;
+  // 도어 셋팅
+  doorSettingEnabled?: boolean;
+  doorGapMode?: 'body' | 'cf';
+  doorTopGap?: number;
+  doorBottomGap?: number;
 };
 
 // 공간설정 기본값 조회

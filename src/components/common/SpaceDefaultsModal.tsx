@@ -30,6 +30,21 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   curtainBoxMode: 'none',
   hasFloorFinish: false,
   floorFinishHeight: 15,
+  // 상단몰딩
+  topMoldingEnabled: true,
+  topMoldingSize: 10,
+  topMoldingOffset: 0,
+  topMoldingGap: 0,
+  // 걸래받이
+  baseboardEnabled: true,
+  baseboardSize: 60,
+  baseboardOffset: 0,
+  baseboardGap: 0,
+  // 도어 셋팅
+  doorSettingEnabled: true,
+  doorGapMode: 'body',
+  doorTopGap: 5,
+  doorBottomGap: 25,
 };
 
 const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; label: string }[] = [
@@ -271,6 +286,78 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               <div className={styles.row}>
                 <NumberInput label="두께" value={values.floorFinishHeight} onChange={h('floorFinishHeight')} min={5} max={100} step={1} />
               </div>
+            )}
+          </div>
+
+          {/* 상단몰딩 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!values.topMoldingEnabled}
+                  onChange={(e) => set('topMoldingEnabled', e.target.checked)}
+                  style={{ accentColor: 'var(--theme-primary)' }}
+                />
+                상단몰딩
+              </label>
+            </div>
+            {values.topMoldingEnabled && (
+              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <NumberInput label="size" value={values.topMoldingSize} onChange={h('topMoldingSize')} min={0} max={200} step={1} />
+                <NumberInput label="옵셋" value={values.topMoldingOffset} onChange={h('topMoldingOffset')} min={-200} max={200} step={1} />
+                <NumberInput label="갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={200} step={1} />
+              </div>
+            )}
+          </div>
+
+          {/* 걸래받이 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!values.baseboardEnabled}
+                  onChange={(e) => set('baseboardEnabled', e.target.checked)}
+                  style={{ accentColor: 'var(--theme-primary)' }}
+                />
+                걸래받이
+              </label>
+            </div>
+            {values.baseboardEnabled && (
+              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <NumberInput label="size" value={values.baseboardSize} onChange={h('baseboardSize')} min={0} max={300} step={1} />
+                <NumberInput label="옵셋" value={values.baseboardOffset} onChange={h('baseboardOffset')} min={-200} max={200} step={1} />
+                <NumberInput label="갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={200} step={1} />
+              </div>
+            )}
+          </div>
+
+          {/* 도어 셋팅 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!values.doorSettingEnabled}
+                  onChange={(e) => set('doorSettingEnabled', e.target.checked)}
+                  style={{ accentColor: 'var(--theme-primary)' }}
+                />
+                도어 셋팅
+              </label>
+            </div>
+            {values.doorSettingEnabled && (
+              <>
+                <Toggle
+                  options={[{ id: 'body', label: '몸통' }, { id: 'cf', label: '천장·바닥' }]}
+                  selected={values.doorGapMode}
+                  onChange={(id) => set('doorGapMode', id as any)}
+                />
+                <div className={styles.row}>
+                  <NumberInput label="상단갭" value={values.doorTopGap} onChange={h('doorTopGap')} min={0} max={100} step={1} />
+                  <NumberInput label="하단갭" value={values.doorBottomGap} onChange={h('doorBottomGap')} min={0} max={100} step={1} />
+                </div>
+              </>
             )}
           </div>
 
