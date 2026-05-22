@@ -59,6 +59,22 @@ describe('filterSideViewModules', () => {
     })).toEqual([dual])
   })
 
+  it('같은 선택 슬롯의 상부 싱글과 하부 듀얼은 X 중심이 달라도 함께 표시한다', () => {
+    const upper = createModule('slot-0-upper', -1, 0, {
+      moduleId: 'upper-cabinet-single',
+    })
+    const lowerDual = createModule('slot-0-1-lower', 0, 0, {
+      moduleId: 'dual-lower-cabinet',
+      isDualSlot: true,
+    })
+
+    expect(filterSideViewModules({
+      placedModules: [upper, lowerDual],
+      viewDirection: 'left',
+      selectedSlotIndex: 0
+    }).map(module => module.id)).toEqual(['slot-0-upper', 'slot-0-1-lower'])
+  })
+
   it('자유배치는 X 위치 그룹을 가상 슬롯으로 사용한다', () => {
     const modules = [
       createModule('left', -2),

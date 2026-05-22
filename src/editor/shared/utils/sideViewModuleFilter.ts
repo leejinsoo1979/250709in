@@ -125,6 +125,8 @@ export const filterSideViewModules = ({
     filtered = isFreePlacement
       ? getFreePlacementSlotModules(filtered, selectedSlotIndex)
       : getSlotPlacedModules(filtered, selectedSlotIndex, spaceInfo, zones)
+
+    return filtered
   }
 
   return filterToEdgeModules(filtered, viewDirection)
