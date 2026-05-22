@@ -5740,16 +5740,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <>
                   {/* 하부장 높이 */}
                   <NativeLine name="dimension_line"
-                    points={[[rightInnerX - mmToThreeUnits(15), rFurnitureTopY, lowerDimZ_R], [rightInnerX + mmToThreeUnits(15), rFurnitureTopY, lowerDimZ_R]]}
+                    points={[[rightInnerX - mmToThreeUnits(15), rLowerCabinetBodyTopY, lowerDimZ_R], [rightInnerX + mmToThreeUnits(15), rLowerCabinetBodyTopY, lowerDimZ_R]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
                   <Text renderOrder={100001} depthTest={false}
-                    position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, lowerTextZ_R]}
+                    position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rLowerCabinetBodyTopY) / 2, lowerTextZ_R]}
                     fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
                     {rLowerCabinetH}
                   </Text>
+                  {rLowerCountertopH > 0 && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[rightInnerX - mmToThreeUnits(15), rFurnitureTopY, lowerDimZ_R], [rightInnerX + mmToThreeUnits(15), rFurnitureTopY, lowerDimZ_R]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                      <NativeLine name="dimension_line"
+                        points={[[rightWallX, rLowerCabinetBodyTopY, lowerExtZ_R], [rightInnerX + mmToThreeUnits(20), rLowerCabinetBodyTopY, lowerExtZ_R]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                      <Text renderOrder={100001} depthTest={false}
+                        position={[rightInnerX + mmToThreeUnits(10), (rLowerCabinetBodyTopY + rFurnitureTopY) / 2, lowerTextZ_R]}
+                        fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {rLowerCountertopH}
+                      </Text>
+                    </>
+                  )}
                   {/* 중간 빈공간 (있는 경우) — 클릭 편집 가능 (상부장 하단 확장) */}
                   {rMiddleGapH > 0 && (() => {
                     const rUpperMod = rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod;
@@ -5897,13 +5916,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       </>
                     );
                   })() : (
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, bodyTextZ_R]}
-                      fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {rFurnitureH}
-                    </Text>
+                    <>
+                      <Text renderOrder={100001} depthTest={false}
+                        position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, bodyTextZ_R]}
+                        fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {rFurnitureH}
+                      </Text>
+                      {rSingleLowerCountertopH > 0 && (
+                        <>
+                          <NativeLine name="dimension_line"
+                            points={[[rightInnerX - mmToThreeUnits(15), rSingleLowerCountertopTopY, bodyDimZ_R], [rightInnerX + mmToThreeUnits(15), rSingleLowerCountertopTopY, bodyDimZ_R]]}
+                            color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                          />
+                          <NativeLine name="dimension_line"
+                            points={[[rightWallX, rFurnitureTopY, bodyExtZ_R], [rightInnerX + mmToThreeUnits(20), rFurnitureTopY, bodyExtZ_R]]}
+                            color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                          />
+                          <Text renderOrder={100001} depthTest={false}
+                            position={[rightInnerX + mmToThreeUnits(10), (rFurnitureTopY + rSingleLowerCountertopTopY) / 2, bodyTextZ_R]}
+                            fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          >
+                            {rSingleLowerCountertopH}
+                          </Text>
+                        </>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -5917,9 +5957,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? userTopGap
                   : rTopFrameH;
                 if (displayTopFrame <= 0) return null;
+                const rSingleLowerTopRef = rSingleLowerCountertopH > 0 ? rSingleLowerCountertopTopY : rFurnitureTopY;
                 const topFrameBottomRef = topRefMod_R?.hasTopFrame === false
                   ? rEffectiveCeilingY - mmToThreeUnits(userTopGap)
-                  : (rHasDualCabinet ? rUpperCabinetTopY : rFurnitureTopY);
+                  : (rHasDualCabinet ? rUpperCabinetTopY : rSingleLowerTopRef);
                 return (
                   <>
                     <NativeLine name="dimension_line"

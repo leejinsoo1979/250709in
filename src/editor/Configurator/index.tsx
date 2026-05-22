@@ -102,7 +102,7 @@ const DoorGapInput: React.FC<{
   moduleId: string;
   field: DoorGapField;
   storeValue: number;
-  onCommit: (moduleId: string, field: DoorGapField, val: string) => void;
+  onCommit: (moduleId: string, field: DoorGapField, val: string, syncModuleIds?: string[]) => void;
   highlightModuleIds?: string[]; // 전체 동기화 시 전체 도어 ID들
   // 표시 기준 모드. 'body' = 몸통 기준(저장값 그대로). 'cf' = 천장·바닥 기준 (거리 - 저장값으로 표시)
   referenceMode?: 'body' | 'cf';
@@ -135,7 +135,7 @@ const DoorGapInput: React.FC<{
         toCommit = String(Math.round(refDistanceMm - clamped));
       }
     }
-    onCommit(moduleId, field, toCommit);
+    onCommit(moduleId, field, toCommit, highlightModuleIds);
     useUIStore.getState().setHighlightedDoorGap && useUIStore.getState().setHighlightedDoorGap(null);
   };
 
@@ -717,6 +717,7 @@ const Configurator: React.FC = () => {
             bottomField: 'lowerDoorBottomGap' as DoorGapField,
             topValue: mod.lowerDoorTopGap ?? lowerTopDefault,
             bottomValue: mod.lowerDoorBottomGap ?? (mod.doorBottomGap ?? 0),
+            category: 'lower' as const,
             splitPart: 'lower' as const
           },
           {
@@ -727,6 +728,7 @@ const Configurator: React.FC = () => {
             bottomField: 'upperDoorBottomGap' as DoorGapField,
             topValue: mod.upperDoorTopGap ?? (mod.doorTopGap ?? 0),
             bottomValue: mod.upperDoorBottomGap ?? upperBottomDefault,
+            category: 'upper' as const,
             splitPart: 'upper' as const
           }
         ];
@@ -740,6 +742,7 @@ const Configurator: React.FC = () => {
         bottomField: 'doorBottomGap' as DoorGapField,
         topValue: mod.doorTopGap ?? -20,
         bottomValue: mod.doorBottomGap ?? 5,
+        category: info.category,
         splitPart: null
       }];
     });
@@ -753,6 +756,18 @@ const Configurator: React.FC = () => {
       ? partialDoorSettingEntries.filter(entry => entry.splitPart)
       : partialDoorSettingEntries
   ), [doorGapAllSync, partialDoorSettingEntries]);
+  const visibleUpperDoorSettingEntries = useMemo(() => (
+    visiblePartialDoorSettingEntries.filter(entry => entry.category === 'upper')
+  ), [visiblePartialDoorSettingEntries]);
+  const visibleLowerDoorSettingEntries = useMemo(() => (
+    visiblePartialDoorSettingEntries.filter(entry => entry.category === 'lower')
+  ), [visiblePartialDoorSettingEntries]);
+  const normalUpperDoorSettingEntries = useMemo(() => (
+    partialDoorSettingEntries.filter(entry => entry.category === 'upper' && !entry.splitPart)
+  ), [partialDoorSettingEntries]);
+  const normalLowerDoorSettingEntries = useMemo(() => (
+    partialDoorSettingEntries.filter(entry => entry.category === 'lower' && !entry.splitPart)
+  ), [partialDoorSettingEntries]);
   // 도어 셋팅 표시 기준 ('body' = 몸통 기준 / 'cf' = 천장·바닥 기준)
   const doorGapRefMode = useUIStore(s => s.doorGapDisplayMode);
   const setDoorGapRefMode = useUIStore(s => s.setDoorGapDisplayMode);
@@ -774,18 +789,19 @@ const Configurator: React.FC = () => {
   }, [spaceInfo]);
 
   // 개별 모드: 개별 가구 도어 갭 변경 (전체선택 시 모든 도어에 동일 적용)
-  const handleIndividualDoorGapChange = (moduleId: string, field: DoorGapField, val: string) => {
+  const handleIndividualDoorGapChange = (moduleId: string, field: DoorGapField, val: string, syncModuleIds?: string[]) => {
     const num = parseFloat(val);
     if (!isNaN(num)) {
       // 일반 도어 갭만 글로벌 fallback 값으로도 반영한다.
-      if (field === 'doorTopGap' || field === 'doorBottomGap') {
+      if ((field === 'doorTopGap' || field === 'doorBottomGap') && (!doorGapAllSync || !syncModuleIds?.length)) {
         setSpaceInfo({ [field]: num });
       }
 
       if (doorGapAllSync && (field === 'doorTopGap' || field === 'doorBottomGap')) {
-        // 전체 동기화: 같은 필드를 사용하는 도어 가구에 동일 값 적용
+        // 전체 동기화: 지정된 그룹이 있으면 해당 그룹 안에서만, 없으면 전체 도어에 동일 값 적용
+        const targetIdSet = syncModuleIds?.length ? new Set(syncModuleIds) : null;
         const newModules = useFurnitureStore.getState().placedModules.map(m =>
-          m.hasDoor ? { ...m, [field]: num } : m
+          m.hasDoor && (!targetIdSet || targetIdSet.has(m.id)) ? { ...m, [field]: num } : m
         );
         useFurnitureStore.setState({ placedModules: newModules });
         // R3F 리렌더 보장
@@ -4409,6 +4425,110 @@ const Configurator: React.FC = () => {
     );
   };
 
+  const renderDoorCategorySyncTable = () => {
+    const fullDoorModules = fullDoorIndices
+      .map(({ i }) => doorFurnitureList[i])
+      .filter(Boolean);
+    const groups = [
+      { key: 'full', title: '키큰장 도어', modules: fullDoorModules },
+      { key: 'upper', title: '상부장 도어', modules: normalUpperDoorSettingEntries.map(entry => entry.mod) },
+      { key: 'lower', title: '하부장 도어', modules: normalLowerDoorSettingEntries.map(entry => entry.mod) },
+    ].filter(group => group.modules.length > 0);
+
+    if (groups.length === 0) return null;
+
+    return (
+      <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+        <thead>
+          <tr>
+            <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
+            {groups.map(group => (
+              <th key={group.key} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                {group.title}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+            {groups.map(group => {
+              const firstMod = group.modules[0];
+              const groupIds = group.modules.map(mod => mod.id);
+              const { topDistance } = computeRefDistances(firstMod);
+              return <DoorGapInput key={`top-sync-${group.key}-${doorGapRefMode}`} moduleId={firstMod.id} field="doorTopGap"
+                storeValue={firstMod.doorTopGap ?? 5}
+                onCommit={handleIndividualDoorGapChange}
+                highlightModuleIds={groupIds}
+                referenceMode={doorGapRefMode}
+                refDistanceMm={topDistance} />;
+            })}
+          </tr>
+          <tr>
+            <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+            {groups.map(group => {
+              const firstMod = group.modules[0];
+              const groupIds = group.modules.map(mod => mod.id);
+              const { bottomDistance } = computeRefDistances(firstMod);
+              return <DoorGapInput key={`bot-sync-${group.key}-${doorGapRefMode}`} moduleId={firstMod.id} field="doorBottomGap"
+                storeValue={firstMod.doorBottomGap ?? 25}
+                onCommit={handleIndividualDoorGapChange}
+                highlightModuleIds={groupIds}
+                referenceMode={doorGapRefMode}
+                refDistanceMm={bottomDistance} />;
+            })}
+          </tr>
+        </tbody>
+      </table>
+    );
+  };
+
+  const renderDoorGapEntriesTable = (title: string, entries: typeof partialDoorSettingEntries, marginTop: string) => {
+    if (entries.length === 0) return null;
+
+    return (
+      <div style={{ marginTop, overflowX: 'auto' }}>
+        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>{title}</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <thead>
+            <tr>
+              <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
+              {entries.map((entry) => (
+                <th key={entry.key} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                  {entry.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+              {entries.map((entry) => {
+                const { topDistance } = computeRefDistances(entry.mod);
+                return <DoorGapInput key={`top-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.topField}
+                  storeValue={entry.topValue}
+                  onCommit={handleIndividualDoorGapChange}
+                  referenceMode={entry.splitPart ? 'body' : doorGapRefMode}
+                  refDistanceMm={topDistance} />;
+              })}
+            </tr>
+            <tr>
+              <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+              {entries.map((entry) => {
+                const { bottomDistance } = computeRefDistances(entry.mod);
+                return <DoorGapInput key={`bot-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.bottomField}
+                  storeValue={entry.bottomValue}
+                  onCommit={handleIndividualDoorGapChange}
+                  referenceMode={entry.splitPart ? 'body' : doorGapRefMode}
+                  refDistanceMm={bottomDistance} />;
+              })}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
   // 우측 패널 컨텐츠 렌더링
   const renderRightPanelContent = () => {
     const isFreeMode = (spaceInfo.layoutMode || 'equal-division') === 'free-placement';
@@ -7005,7 +7125,7 @@ const Configurator: React.FC = () => {
             {/* 전체 ON: 통합 상단갭/하단갭 입력 1쌍 */}
             {doorGapAllSync && doorFurnitureList.length > 0 && (
               <div style={{ marginTop: '8px' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                {renderDoorCategorySyncTable() || <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
                       <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
@@ -7044,7 +7164,7 @@ const Configurator: React.FC = () => {
                       })()}
                     </tr>
                   </tbody>
-                </table>
+                </table>}
               </div>
             )}
 
@@ -7093,48 +7213,9 @@ const Configurator: React.FC = () => {
               </div>
             )}
 
-            {/* 상하부장 도어 테이블 (전체 OFF 시에만) */}
-            {visiblePartialDoorSettingEntries.length > 0 && (
-              <div style={{ marginTop: fullDoorIndices.length > 0 ? '12px' : '8px', overflowX: 'auto' }}>
-                {fullDoorIndices.length > 0 && <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>상하부장</div>}
-                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
-                      {visiblePartialDoorSettingEntries.map((entry) => (
-                        <th key={entry.key} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                          {entry.label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
-                      {visiblePartialDoorSettingEntries.map((entry) => {
-                        const { topDistance } = computeRefDistances(entry.mod);
-                        return <DoorGapInput key={`top-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.topField}
-                          storeValue={entry.topValue}
-                          onCommit={handleIndividualDoorGapChange}
-                          referenceMode={entry.splitPart ? 'body' : doorGapRefMode}
-                          refDistanceMm={topDistance} />;
-                      })}
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
-                      {visiblePartialDoorSettingEntries.map((entry) => {
-                        const { bottomDistance } = computeRefDistances(entry.mod);
-                        return <DoorGapInput key={`bot-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.bottomField}
-                          storeValue={entry.bottomValue}
-                          onCommit={handleIndividualDoorGapChange}
-                          referenceMode={entry.splitPart ? 'body' : doorGapRefMode}
-                          refDistanceMm={bottomDistance} />;
-                      })}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
+            {/* 상부장 / 하부장 도어 테이블 */}
+            {renderDoorGapEntriesTable('상부장 도어', visibleUpperDoorSettingEntries, fullDoorIndices.length > 0 ? '12px' : '8px')}
+            {renderDoorGapEntriesTable('하부장 도어', visibleLowerDoorSettingEntries, (fullDoorIndices.length > 0 || visibleUpperDoorSettingEntries.length > 0) ? '12px' : '8px')}
 
           </div>
         )}

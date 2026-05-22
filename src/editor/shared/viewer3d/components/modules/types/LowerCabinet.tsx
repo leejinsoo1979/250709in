@@ -10,6 +10,7 @@ import { useUIStore } from '@/store/uiStore';
 import IndirectLight from '../IndirectLight';
 import DimensionText from '../components/DimensionText';
 import MaidaWidthDimension from '../components/MaidaWidthDimension';
+import MaidaHeightDimension, { MaidaHeightDimensionSegment } from '../components/MaidaHeightDimension';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 
 import DoorModule from '../DoorModule';
@@ -408,6 +409,7 @@ interface InductionDrawerAnimatedProps {
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
   doorTopGap?: number;
   doorBottomGap?: number;
+  floorY?: number;
 }
 
 const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
@@ -425,6 +427,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   panelGrainDirections,
   doorTopGap,
   doorBottomGap,
+  floorY,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -518,6 +521,40 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const maida1BottomMm = -5 - gapBottomExt;
   const maida1HeightMm = Math.max(0, maida1TopMm - maida1BottomMm);
   const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
+  const floorLineY = floorY ?? -cabinetYPosition;
+  const maida1BottomY = cabinetBottomY + mmToThreeUnits(maida1BottomMm);
+  const maidaHeightSegments: MaidaHeightDimensionSegment[] = [
+    ...(Math.abs((maida1BottomY - floorLineY) / 0.01) > 0 ? [{
+      bottomY: Math.min(floorLineY, maida1BottomY),
+      topY: Math.max(floorLineY, maida1BottomY),
+      valueMm: Math.round(Math.abs((maida1BottomY - floorLineY) / 0.01) * 10) / 10,
+      key: 'induction-maida-bottom-gap',
+    }] : []),
+    {
+      bottomY: maida1CenterY - mmToThreeUnits(maida1HeightMm) / 2,
+      topY: maida1CenterY + mmToThreeUnits(maida1HeightMm) / 2,
+      valueMm: Math.round(maida1HeightMm * 10) / 10,
+      key: 'induction-maida-height-1',
+    },
+    ...(maida2BottomMm - maida1TopMm > 0 ? [{
+      bottomY: cabinetBottomY + mmToThreeUnits(maida1TopMm),
+      topY: cabinetBottomY + mmToThreeUnits(maida2BottomMm),
+      valueMm: Math.round((maida2BottomMm - maida1TopMm) * 10) / 10,
+      key: 'induction-maida-gap-1',
+    }] : []),
+    {
+      bottomY: maida2CenterY - mmToThreeUnits(maida2HeightMm) / 2,
+      topY: maida2CenterY + mmToThreeUnits(maida2HeightMm) / 2,
+      valueMm: Math.round(maida2HeightMm * 10) / 10,
+      key: 'induction-maida-height-2',
+    },
+    ...(cabinetHeightMm - maida2TopMm > 0 ? [{
+      bottomY: cabinetBottomY + mmToThreeUnits(maida2TopMm),
+      topY: cabinetBottomY + mmToThreeUnits(cabinetHeightMm),
+      valueMm: Math.round((cabinetHeightMm - maida2TopMm) * 10) / 10,
+      key: 'induction-maida-top-gap',
+    }] : []),
+  ];
 
   // drawer2 위치: 상단 마이다(maida2)와 함께 평행 이동
   // 원래 H=785 기준: maida2 바닥(338) + 18 = drawer2 바닥(356)
@@ -710,6 +747,19 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
         </group>
       )}
+      {hasDoor && showDimensions && (
+        <MaidaHeightDimension
+          segments={maidaHeightSegments}
+          maidaWidth={maidaWidth}
+          moduleDepthMm={moduleDepthMm}
+          maidaZ={maidaZ}
+          viewMode={viewMode as '3D' | '2D'}
+          view2DDirection={view2DDirection as any}
+          dimensionColor={dimensionColor}
+          mmToThreeUnits={mmToThreeUnits}
+          side="left"
+        />
+      )}
     </group>
   );
 };
@@ -738,6 +788,7 @@ interface TouchDrawerAnimatedProps {
   doorTopGap?: number;
   doorBottomGap?: number;
   stoneThickness?: number;
+  floorY?: number;
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -758,6 +809,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   doorTopGap,
   doorBottomGap,
   stoneThickness = 20,
+  floorY,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -1030,6 +1082,55 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       drawers[i] = { ...drawers[i], bottomY: newBottomY };
     }
   }
+  const maidaHeightSegments: MaidaHeightDimensionSegment[] = maidas.flatMap((m, i) => {
+    const bottomY = cabinetBottomY + mmToThreeUnits(m.bottomMm);
+    const topY = bottomY + mmToThreeUnits(m.height);
+    const current = [{
+      bottomY,
+      topY,
+      valueMm: Math.round(m.height * 10) / 10,
+      key: `touch-maida-height-${i}`,
+    }];
+    if (i >= maidas.length - 1) return current;
+
+    const gapMm = maidas[i + 1].bottomMm - (m.bottomMm + m.height);
+    if (gapMm <= 0) return current;
+    return [
+      ...current,
+      {
+        bottomY: topY,
+        topY: topY + mmToThreeUnits(gapMm),
+        valueMm: Math.round(gapMm * 10) / 10,
+        key: `touch-maida-gap-${i}`,
+      },
+    ];
+  });
+  if (maidas.length > 0) {
+    const firstMaida = maidas[0];
+    const floorLineY = floorY ?? -cabinetYPosition;
+    const firstMaidaBottomY = cabinetBottomY + mmToThreeUnits(firstMaida.bottomMm);
+    const bottomGapMm = Math.abs((firstMaidaBottomY - floorLineY) / 0.01);
+    if (bottomGapMm > 0) {
+      maidaHeightSegments.unshift({
+        bottomY: Math.min(floorLineY, firstMaidaBottomY),
+        topY: Math.max(floorLineY, firstMaidaBottomY),
+        valueMm: Math.round(bottomGapMm * 10) / 10,
+        key: 'touch-maida-bottom-gap',
+      });
+    }
+
+    const lastMaida = maidas[maidas.length - 1];
+    const lastMaidaTopMm = lastMaida.bottomMm + lastMaida.height;
+    const topGapMm = moduleHeightMm - lastMaidaTopMm;
+    if (topGapMm > 0) {
+      maidaHeightSegments.push({
+        bottomY: cabinetBottomY + mmToThreeUnits(lastMaidaTopMm),
+        topY: cabinetBottomY + mmToThreeUnits(moduleHeightMm),
+        valueMm: Math.round(topGapMm * 10) / 10,
+        key: 'touch-maida-top-gap',
+      });
+    }
+  }
 
   return (
     <group position={[0, cabinetYPosition, 0]}>
@@ -1112,6 +1213,19 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         </group>
       );
     })()}
+    {hasDoor && maidas.length > 0 && showDimensions && (
+      <MaidaHeightDimension
+        segments={maidaHeightSegments}
+        maidaWidth={maidaWidth}
+        moduleDepthMm={moduleDepthMm}
+        maidaZ={maidaZ}
+        viewMode={viewMode as '3D' | '2D'}
+        view2DDirection={view2DDirection as any}
+        dimensionColor={dimensionColor}
+        mmToThreeUnits={mmToThreeUnits}
+        side="left"
+      />
+    )}
     </group>
   );
 };
@@ -1208,6 +1322,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   
   // 띄움 배치 시 Y 위치는 FurnitureItem에서 처리하므로 여기서는 0
   const cabinetYPosition = 0;
+  const lowerCabinetBaseFrameMm = hasBase === false || spaceInfo?.baseConfig?.type === 'stand'
+    ? 0
+    : (placedModuleForCorner?.baseFrameHeight ?? spaceInfo?.baseConfig?.height ?? 105);
+  const lowerCabinetFloatMm = hasBase === false
+    ? (individualFloatHeight ?? placedModuleForCorner?.individualFloatHeight ?? 0)
+    : 0;
+  const lowerCabinetFloorFinishMm = spaceInfo?.hasFloorFinish && spaceInfo.floorFinish
+    ? spaceInfo.floorFinish.height
+    : 0;
+  const lowerCabinetFloorY = -adjustedHeight / 2
+    - (lowerCabinetFloorFinishMm + lowerCabinetBaseFrameMm + lowerCabinetFloatMm) * 0.01;
   
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
@@ -2157,6 +2282,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               doorBottomGap={effectiveDrawerBottomGap}
               defaultDoorTopGap={defaultDrawerTopGap}
               defaultDoorBottomGap={defaultDrawerBottomGap}
+              floorY={lowerCabinetFloorY - cabinetYPosition}
             />
           </group>
         );
@@ -2326,6 +2452,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           panelGrainDirections={panelGrainDirections}
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
+          floorY={lowerCabinetFloorY - cabinetYPosition}
         />
       )}
 
@@ -2350,6 +2477,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
           stoneThickness={stoneThickness}
+          floorY={lowerCabinetFloorY - cabinetYPosition}
         />
       )}
 

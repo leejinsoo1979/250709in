@@ -27,6 +27,7 @@ import {
 } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
+import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import {
   getPanelAssemblySequence,
   getPanelSimulationPlaybackElapsed,
@@ -1514,9 +1515,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const dimensionDoorTopGapMm = Math.max(0, Math.round(fullSpaceHeight - doorTopWorldMm));
   const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm));
   const doorHeight = mmToThreeUnits(actualDoorHeight);
-  const showDoorTopGapDimension = !isLowerCabinet && dimensionDoorTopGapMm > 0;
+  const lowerCountertopThicknessMm = resolveCountertopThicknessMm(storePlacedModule, originalSpaceInfo);
+  const isSplitDoorDimensionPanel = splitDoorPanelName !== undefined || forcedDoorHeightMm !== undefined || forcedDoorYMm !== undefined;
+  const shouldUseLowerCountertopTopGapDimension = isLowerCabinet
+    && lowerCountertopThicknessMm > 0
+    && (!isSplitDoorDimensionPanel || splitDoorPanelName === '상부 도어');
+  const lowerCabinetHeightForTopReference = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
+  const lowerCabinetTopWorldMm = parentGroupYMm + lowerCabinetHeightForTopReference / 2;
+  const lowerCountertopBottomGapMm = moduleIdentifier.includes('lower-top-down-')
+    ? 20
+    : Math.max(0, Math.round(lowerCabinetTopWorldMm - doorTopWorldMm));
+  const effectiveDoorTopGapDimensionMm = shouldUseLowerCountertopTopGapDimension
+    ? lowerCountertopBottomGapMm
+    : dimensionDoorTopGapMm;
+  const showDoorTopGapDimension = shouldUseLowerCountertopTopGapDimension
+    ? lowerCountertopBottomGapMm > 0
+    : dimensionDoorTopGapMm > 0;
   const showDoorBottomGapDimension = !isUpperCabinet && dimensionDoorBottomGapMm > 0;
-  const doorTopGapDimensionMm = showDoorTopGapDimension ? dimensionDoorTopGapMm : 0;
+  const doorTopGapDimensionMm = showDoorTopGapDimension ? effectiveDoorTopGapDimensionMm : 0;
   const doorBottomGapDimensionMm = showDoorBottomGapDimension ? dimensionDoorBottomGapMm : 0;
   const doorTopGapDimensionUnits = mmToThreeUnits(doorTopGapDimensionMm);
   const doorBottomGapDimensionUnits = mmToThreeUnits(doorBottomGapDimensionMm);

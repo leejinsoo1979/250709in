@@ -9,6 +9,7 @@ import { Line } from '@react-three/drei';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
 import MaidaWidthDimension from './components/MaidaWidthDimension';
+import MaidaHeightDimension, { MaidaHeightDimensionSegment } from './components/MaidaHeightDimension';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
@@ -352,6 +353,7 @@ interface ExternalDrawerRendererProps {
   doorBottomGap?: number; // 하단갭 (mm) — 맨아래 서랍 마이다 하단 확장
   defaultDoorTopGap?: number; // 모듈 타입별 기본 doorTopGap (delta 계산 기준)
   defaultDoorBottomGap?: number; // 모듈 타입별 기본 doorBottomGap (delta 계산 기준)
+  floorY?: number; // 현재 그룹 좌표계에서 실제 바닥 Y
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -383,6 +385,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   doorBottomGap,
   defaultDoorTopGap = -20,
   defaultDoorBottomGap = 5,
+  floorY,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -569,7 +572,80 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   }
 
   const cabinetBottomY = -height / 2;
+  const floorLineY = floorY ?? cabinetBottomY;
   const DRAWER_OPEN_DISTANCE = mmToThreeUnits(300);
+  const maidaRanges = zones.map((zone, i) => {
+    const isTopDrawer = i === zones.length - 1;
+    const isBottomDrawer = i === 0;
+    const effectiveDoorTopGap = doorTopGap ?? defaultDoorTopGap;
+    const effectiveDoorBottomGap = doorBottomGap ?? defaultDoorBottomGap;
+    const maidaTopMm = zone.notchAboveBottom + 40;
+    const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+    const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
+    const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
+    const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
+    const heightMm = maidaHeightsMm?.[i] != null
+      ? maidaHeightsMm[i] + gapTopExt + gapBottomExt
+      : defaultMaidaHeightMm;
+    const bottomMm = maidaBottomMm - gapBottomExt;
+    const bottomY = cabinetBottomY + mmToThreeUnits(bottomMm);
+    const topY = bottomY + mmToThreeUnits(heightMm);
+    return {
+      bottomMm,
+      topMm: bottomMm + heightMm,
+      bottomY,
+      topY,
+      valueMm: Math.round(heightMm * 10) / 10,
+      key: `maida-height-${i}`,
+    };
+  });
+  const maidaHeightSegments: MaidaHeightDimensionSegment[] = maidaRanges.flatMap((range, i) => {
+    const current = [{
+      bottomY: range.bottomY,
+      topY: range.topY,
+      valueMm: range.valueMm,
+      key: range.key,
+    }];
+    if (i >= maidaRanges.length - 1) return current;
+
+    const gapMm = maidaRanges[i + 1].bottomMm - range.topMm;
+    if (gapMm <= 0) return current;
+
+    const gapBottomY = range.topY;
+    const gapTopY = gapBottomY + mmToThreeUnits(gapMm);
+    return [
+      ...current,
+      {
+        bottomY: gapBottomY,
+        topY: gapTopY,
+        valueMm: Math.round(gapMm * 10) / 10,
+        key: `maida-gap-${i}`,
+      },
+    ];
+  });
+  if (maidaRanges.length > 0) {
+    const firstMaida = maidaRanges[0];
+    const bottomGapMm = Math.abs((firstMaida.bottomY - floorLineY) / 0.01);
+    if (bottomGapMm > 0) {
+      maidaHeightSegments.unshift({
+        bottomY: Math.min(floorLineY, firstMaida.bottomY),
+        topY: Math.max(floorLineY, firstMaida.bottomY),
+        valueMm: Math.round(bottomGapMm * 10) / 10,
+        key: 'maida-bottom-gap',
+      });
+    }
+
+    const lastMaida = maidaRanges[maidaRanges.length - 1];
+    const topGapMm = sidePanelHeightMm - lastMaida.topMm;
+    if (topGapMm > 0) {
+      maidaHeightSegments.push({
+        bottomY: lastMaida.topY,
+        topY: lastMaida.topY + mmToThreeUnits(topGapMm),
+        valueMm: Math.round(topGapMm * 10) / 10,
+        key: 'maida-top-gap',
+      });
+    }
+  }
 
   return (
     <group>
@@ -619,6 +695,20 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           isBottomDrawer={i === 0}
         />
       ))}
+
+      {showDimensions && showMaida && maidaHeightSegments.length > 0 && (
+        <MaidaHeightDimension
+          segments={maidaHeightSegments}
+          maidaWidth={maidaWidth}
+          moduleDepthMm={moduleDepthMm}
+          maidaZ={maidaZ}
+          viewMode={viewMode as '3D' | '2D'}
+          view2DDirection={view2DDirection as any}
+          dimensionColor={dimensionColor}
+          mmToThreeUnits={mmToThreeUnits}
+          side="left"
+        />
+      )}
 
       {/* L자 PET 프레임 — 따내기 위치에 고정 (서랍 오픈과 무관) */}
       {allNotches.map((notch, ni) => {
