@@ -45,11 +45,13 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
   }
 
   const is3D = viewMode === '3D';
-  const extensionLineStart = mmToThreeUnits(70);
-  const extensionLineLength = mmToThreeUnits(110);
+  // 도어 너비 치수와 동일한 값 사용 (DoorModule.tsx의 doorDimensionWidthLineStart/Length)
+  const extensionLineStart = mmToThreeUnits(60);
+  const extensionLineLength = mmToThreeUnits(100);
   const tickSize = 0.008;
   const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
-  const dimColor = is3D ? '#000000' : dimensionColor;
+  // 도어와 동일하게 dimensionColor 사용 (3D에서도 검정 강제하지 않음)
+  const dimColor = dimensionColor;
   const halfW = maidaWidth / 2;
 
   const dimLineY = -extensionLineLength - extensionLineStart;
