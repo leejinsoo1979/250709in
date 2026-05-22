@@ -1486,7 +1486,11 @@ export const calculatePanelDetails = (
 
       bracketHingeYPositions = Array.from(new Set(bracketHingeYPositions)).sort((a, b) => a - b);
     } else {
-      doorLeafDimensions.leaves.forEach((leaf) => {
+      const doorLeaves = moduleData.id.includes('right-corner')
+        ? doorLeafDimensions.leaves.filter((leaf) => leaf.name !== 'right')
+        : doorLeafDimensions.leaves;
+
+      doorLeaves.forEach((leaf) => {
         const isLeftHinge = leaf.hingeSide === 'left';
         const doorName = leaf.name === 'left'
           ? '좌측 도어'
@@ -2428,10 +2432,16 @@ export const calculatePanelDetails = (
 
     lowerNotches.forEach((notch, ni) => {
       if (notch.height <= 0) return;
+      const lFrameWidth = moduleData.id.includes('right-corner')
+        ? customWidth / 2 + 58
+        : customWidth;
+      const lFrameVerticalWidth = moduleData.id.includes('right-corner')
+        ? customWidth / 2 + 45
+        : customWidth;
       // 수평판: 깊이 40mm
       panels.frame.push({
         name: `목찬넬프레임수평(${ni + 1})`,
-        width: customWidth,
+        width: lFrameWidth,
         height: 40,
         thickness: 18.5,
         material: 'PET',
@@ -2440,7 +2450,7 @@ export const calculatePanelDetails = (
       // 수직판: 높이 = 따내기높이 - 수평판두께
       panels.frame.push({
         name: `목찬넬프레임수직(${ni + 1})`,
-        width: customWidth,
+        width: lFrameVerticalWidth,
         height: notch.height - 18.5,
         thickness: 18.5,
         material: 'PET',
@@ -2456,6 +2466,41 @@ export const calculatePanelDetails = (
         material: 'PB',
       });
     });
+  }
+
+  if (moduleData.id.includes('right-corner')) {
+    const cornerFrameHeight = Math.max(0, height - 60 - basicThickness);
+    const sideFrameHeight = Math.max(0, height - 60);
+    panels.frame.push(
+      {
+        name: '우측코너장 세로프레임 좌',
+        width: 58,
+        height: cornerFrameHeight,
+        thickness: basicThickness,
+        material: 'PB',
+      },
+      {
+        name: '우측코너장 세로프레임 우',
+        width: 58,
+        height: cornerFrameHeight,
+        thickness: basicThickness,
+        material: 'PB',
+      },
+      {
+        name: '우측코너장 측면 쫄대프레임',
+        width: 58,
+        height: sideFrameHeight,
+        thickness: basicThickness,
+        material: 'PB',
+      },
+      {
+        name: '우측코너장 우측측판 전면 쫄대프레임',
+        width: 58,
+        height: sideFrameHeight,
+        thickness: basicThickness,
+        material: 'PB',
+      }
+    );
   }
 
   // === 싱크장/인덕션장 전대 (상단 따내기 아래 150mm) ===

@@ -1,5 +1,6 @@
 const DEFAULT_SIDE_FURNITURE_DEPTH_MM = 600;
 export const SIDE_WALL_CORNER_DOOR_RECESS_MM = 20;
+export const SIDE_WALL_CORNER_DOOR_FRONT_GAP_MM = 3;
 
 export const ROOM_BACK_MESH_GAP_MM = 10;
 export const ROOM_MESH_BACK_SHIFT_MM = 30;
@@ -75,7 +76,7 @@ export const resolveSideWallCabinetDepthMm = (
     ?? frontCornerModule?.adjustedWidth
     ?? frontCornerModule?.slotCustomWidth;
   const sideCabinetDepthMm = Number.isFinite(frontCornerWidthMm)
-    ? frontCornerWidthMm - SIDE_WALL_CORNER_DOOR_RECESS_MM
+    ? frontCornerWidthMm - SIDE_WALL_CORNER_DOOR_RECESS_MM - SIDE_WALL_CORNER_DOOR_FRONT_GAP_MM
     : fallbackDepthMm;
 
   return Math.min(

@@ -96,7 +96,9 @@ export const resolveDoorOuterOpenSides = ({
     return { left: false, right: false };
   }
 
-  const centerXUnits = slotCenterX ?? placedModule.position?.x ?? 0;
+  const centerXUnits = placedModule.isFreePlacement
+    ? (placedModule.position?.x ?? slotCenterX ?? 0)
+    : (slotCenterX ?? placedModule.position?.x ?? 0);
   const centerXmm = centerXUnits / 0.01;
   const leftEdgeMm = centerXmm - widthMm / 2;
   const rightEdgeMm = centerXmm + widthMm / 2;
@@ -104,21 +106,8 @@ export const resolveDoorOuterOpenSides = ({
   // (노서라운드 좌이격 + 엔드패널 두께 등을 고려하여 50mm)
   const toleranceMm = placedModule.isFreePlacement ? 50 : 2;
 
-  const result = {
+  return {
     left: !hasLeftWall && Math.abs(leftEdgeMm - runStartMm) <= toleranceMm,
     right: !hasRightWall && Math.abs(rightEdgeMm - runEndMm) <= toleranceMm,
   };
-  if (placedModule.isFreePlacement) {
-    // eslint-disable-next-line no-console
-    console.log('[doorOuterGap-free2]', {
-      installType, isFreestanding, hasLeftWall, hasRightWall,
-      spaceWidth: spaceInfo.width, internalWidth: indexing.internalWidth,
-      centerXmm, widthMm, leftEdgeMm, rightEdgeMm,
-      runStartMm, runEndMm,
-      diffLeft: leftEdgeMm - runStartMm,
-      diffRight: rightEdgeMm - runEndMm,
-      toleranceMm, result,
-    });
-  }
-  return result;
 };

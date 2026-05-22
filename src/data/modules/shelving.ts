@@ -435,7 +435,7 @@ const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FR
     ...base,
     widthOptions: [INSERT_FRAME_OUTER_WIDTH],
     dimensions: { width: INSERT_FRAME_OUTER_WIDTH, height: maxHeight, depth: INSERT_FRAME_DEPTH },
-    hasDoor: false,
+    hasDoor: true,
     modelConfig: {
       ...base.modelConfig,
       sections: [{ type: 'open', heightType: 'percentage', height: 100 }],

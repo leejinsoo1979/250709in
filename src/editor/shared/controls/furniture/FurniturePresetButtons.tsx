@@ -92,7 +92,7 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
     fields: [
       'doorColor', 'doorTextureUrl', 'doorMaterial',
       'bodyColor', 'bodyTextureUrl', 'bodyMaterial',
-      'interiorEdgeColor', 'doorEdgeColor',
+      'interiorEdgeColor', 'doorEdgeColor', 'doorEdgeBandingWidthMm',
       'panelGrainDirections',
       'panelExclusions',
     ],

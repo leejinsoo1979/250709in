@@ -1397,7 +1397,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 엣지밴딩 색상 (속장/도어 패널 단면 PVC 띠) 적용용
   // 판재 패널(MDF/PB)에만 적용 — 옷봉/브래킷/조절발/레그라/금속/손잡이 등 부속 부품은 제외
   const edgeBandingColor = useSpaceConfigStore(state => {
-    if (viewMode !== '3D') return undefined;
     const cfg = state.spaceInfo.materialConfig;
     if (!cfg) return undefined;
     if (!panelName) return undefined;
@@ -1406,12 +1405,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const nonPanelKeywords = ['옷봉', '브라켓', '브래킷', '조절발', '레그라', '금속', '손잡이', '핸들', '경첩', '레일'];
     if (nonPanelKeywords.some(k => panelName.includes(k))) return undefined;
     const isDoorPanel = panelName.includes('도어') || panelName.includes('door');
+    if (viewMode !== '3D' && !(viewMode === '2D' && view2DDirection === 'front' && isDoorPanel)) return undefined;
     return isDoorPanel ? cfg.doorEdgeColor : cfg.interiorEdgeColor;
   });
   const isDoorEdgeBandingPanel = !!edgeBandingColor && !!panelName && (panelName.includes('도어') || panelName.includes('door'));
+  const doorEdgeBandingWidthMm = useSpaceConfigStore(state => {
+    const width = state.spaceInfo.materialConfig?.doorEdgeBandingWidthMm;
+    return typeof width === 'number' && [1, 2, 3, 4].includes(width) ? width : 2;
+  });
   const doorEdgeBandingStrip = React.useMemo(() => {
     if (!isDoorEdgeBandingPanel) return null;
-    const strip = Math.min(0.025, safeArgs[0] / 3, safeArgs[1] / 3);
+    const strip = Math.min(doorEdgeBandingWidthMm * 0.01, safeArgs[0] / 3, safeArgs[1] / 3);
     if (strip <= 0) return null;
     const frontZ = safeArgs[2] / 2 + 0.004;
     const backZ = -safeArgs[2] / 2 - 0.004;
@@ -1424,7 +1428,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       horizontalWidth: safeArgs[0],
       verticalHeight: Math.max(0.001, safeArgs[1] - strip * 2),
     };
-  }, [isDoorEdgeBandingPanel, safeArgs]);
+  }, [doorEdgeBandingWidthMm, isDoorEdgeBandingPanel, safeArgs]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -2543,12 +2547,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           <boxGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
         )}
       </mesh>
-      {viewMode === '3D' && doorEdgeBandingStrip && edgeBandingColor && effectiveRenderMode === 'solid' && (
+      {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && doorEdgeBandingStrip && edgeBandingColor && effectiveRenderMode === 'solid' && (
         <group
           name={`door-edge-banding${panelName ? `-${panelName}` : ''}`}
           userData={{ decoration: true, edgeBandingOverlay: true }}
         >
-          {[doorEdgeBandingStrip.frontZ, doorEdgeBandingStrip.backZ].map((z, faceIndex) => (
+          {(viewMode === '2D' ? [doorEdgeBandingStrip.frontZ] : [doorEdgeBandingStrip.frontZ, doorEdgeBandingStrip.backZ]).map((z, faceIndex) => (
             <React.Fragment key={`door-edge-face-${faceIndex}`}>
               <mesh position={[0, safeArgs[1] / 2 - doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />

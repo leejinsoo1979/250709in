@@ -2294,11 +2294,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
+    const rightCornerMainDoorHinge = isRightCornerCabinet ? adjustedHingePosition : 'left';
+    const rightCornerMainDoorHingeX = rightCornerMainDoorHinge === 'right'
+      ? leftXOffset + (leftDoorWidthUnits / 2 - hingeOffsetUnits)
+      : leftHingeX;
     const leftDoorOpenGeometry = calculateDualDoorOpenGeometry({
-      doorSide: 'left',
+      doorSide: rightCornerMainDoorHinge,
       doorYPosition,
       doorDepth,
-      hingeX: leftHingeX,
+      hingeX: rightCornerMainDoorHingeX,
       doorWidthUnits: leftDoorWidthUnits,
       epTrimShift: leftEpTrimShift,
       insertExtendShift: leftInsertExtendShift,
@@ -2335,13 +2339,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 측면뷰가 아니면 항상 표시, 측면뷰면 항상 표시 (듀얼 도어는 하나의 유닛)
     const showLeftDoor = true;
     const showRightDoor = !isRightCornerCabinet;
+    const leftDoorRotation = isRightCornerCabinet && rightCornerMainDoorHinge === 'right'
+      ? dualRightDoorSpring.rotation
+      : dualLeftDoorSpring.rotation;
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
         <group position={leftDoorOpenGeometry.parentPosition}>
-          <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
+          <animated.group rotation-y={leftDoorLocked ? 0 : leftDoorRotation}>
             <group position={leftDoorOpenGeometry.childPosition}>
               {/* 2D 정면뷰: 좌측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
@@ -3306,19 +3313,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const outerLeftGapCompensationMm = openOuterDoorSides.left ? 1.5 : 0;
     const outerRightGapCompensationMm = openOuterDoorSides.right ? 1.5 : 0;
     let doorWidth = actualDoorWidth - doorGap + outerLeftGapCompensationMm + outerRightGapCompensationMm; // 슬롯사이즈 - 적용 갭
-    if (isFree) {
-      // eslint-disable-next-line no-console
-      console.log('[DoorWidth-free]', {
-        moduleId: storePlacedModule?.moduleId,
-        actualDoorWidth,
-        storeFreeWidth,
-        moduleWidth,
-        openOuterDoorSides,
-        outerLeftGapCompensationMm,
-        outerRightGapCompensationMm,
-        doorWidth,
-      });
-    }
     const openOuterShiftX = mmToThreeUnits(outerRightGapCompensationMm - outerLeftGapCompensationMm) / 2;
 
     // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금

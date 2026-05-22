@@ -217,87 +217,97 @@ const MaterialPanel: React.FC = () => {
       {/* 탭 컨텐츠 */}
       <div className={styles.content}>
         {materialTab === 'edge' ? (
-          <div className={styles.tabContent} style={{ padding: '8px 12px' }}>
+          <div className={styles.edgePanel}>
             {(['interior', 'door'] as const).map((target) => {
               const edgeKey = target === 'interior' ? 'interiorEdgeColor' : 'doorEdgeColor';
               const currentEdge = (materialConfig as any)[edgeKey] as string | undefined;
+              const storedDoorEdgeWidth = materialConfig.doorEdgeBandingWidthMm;
+              const currentDoorEdgeWidth = [1, 2, 3, 4].includes(storedDoorEdgeWidth as number)
+                ? storedDoorEdgeWidth
+                : 2;
               const fallbackEdge = target === 'interior'
                 ? (materialConfig.interiorColor || '#FFFFFF')
                 : (materialConfig.doorColor || '#E0E0E0');
               const label = target === 'interior' ? '속장 엣지' : '도어 엣지';
               return (
-                <div
-                  key={edgeKey}
-                  style={{
-                    padding: '14px 0',
-                    borderBottom: '1px solid var(--theme-border, #e5e7eb)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  <span style={{ fontSize: 13, color: 'var(--theme-text-primary, #111827)', fontWeight: 600, minWidth: 80 }}>
-                    {label}
-                  </span>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                    <input
-                      type="color"
-                      value={currentEdge || fallbackEdge}
-                      onChange={(e) => {
-                        const newColor = e.target.value;
+                <section key={edgeKey} className={styles.edgeItem}>
+                  <div className={styles.edgeHeader}>
+                    <div>
+                      <div className={styles.edgeTitle}>{label}</div>
+                      <div className={styles.edgeValue}>{currentEdge ? currentEdge.toUpperCase() : '기본 색상'}</div>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.edgeResetButton}
+                      onClick={() => {
+                        const nextMaterialConfig = { ...materialConfig, [edgeKey]: undefined as any };
+                        if (target === 'door') {
+                          (nextMaterialConfig as any).doorEdgeBandingWidthMm = undefined;
+                        }
                         setSpaceInfo({
-                          materialConfig: { ...materialConfig, [edgeKey]: newColor },
+                          materialConfig: nextMaterialConfig,
                         });
                       }}
-                      style={{
-                        width: 40,
-                        height: 32,
-                        border: '1px solid var(--theme-border, #d1d5db)',
-                        borderRadius: 6,
-                        padding: 0,
-                        cursor: 'pointer',
-                        background: 'transparent',
-                      }}
-                    />
-                    <span style={{
-                      fontSize: 12,
-                      color: 'var(--theme-text-secondary, #6b7280)',
-                      fontFamily: 'SF Mono, Menlo, monospace',
-                    }}>
-                      {currentEdge ? currentEdge.toUpperCase() : '기본'}
-                    </span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // 엣지 색 키를 삭제하면 패널 본체 재질과 동일하게 표시된다.
-                      setSpaceInfo({
-                        materialConfig: { ...materialConfig, [edgeKey]: undefined as any },
-                      });
-                    }}
-                    style={{
-                      marginLeft: 'auto',
-                      fontSize: 11,
-                      padding: '4px 10px',
-                      borderRadius: 6,
-                      border: '1px solid var(--theme-border, #d1d5db)',
-                      background: 'transparent',
-                      color: 'var(--theme-text-secondary, #6b7280)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    초기화
-                  </button>
-                </div>
+                    >
+                      초기화
+                    </button>
+                  </div>
+
+                  <div className={styles.edgeColorRow}>
+                    <label className={styles.edgeColorControl}>
+                      <span className={styles.edgeColorInputWrap}>
+                        <input
+                          className={styles.edgeColorInput}
+                          type="color"
+                          value={currentEdge || fallbackEdge}
+                          onChange={(e) => {
+                            const newColor = e.target.value;
+                            setSpaceInfo({
+                              materialConfig: { ...materialConfig, [edgeKey]: newColor },
+                            });
+                          }}
+                        />
+                      </span>
+                      <span>색상 선택</span>
+                    </label>
+                    <div className={styles.edgePreview}>
+                      <span className={styles.edgePreviewSwatch} style={{ backgroundColor: currentEdge || fallbackEdge }} />
+                      <span>{currentEdge ? currentEdge.toUpperCase() : '본체 재질과 동일'}</span>
+                    </div>
+                  </div>
+
+                  {target === 'door' && (
+                    <div className={styles.edgeSpecialControl}>
+                      <div className={styles.edgeSpecialHeader}>
+                        <span>특수엣지 적용</span>
+                        <strong>{currentDoorEdgeWidth}mm</strong>
+                      </div>
+                      <div className={styles.edgeWidthSegmented} aria-label="특수엣지 적용 두께">
+                        {[1, 2, 3, 4].map((width) => {
+                          const isActive = currentDoorEdgeWidth === width;
+                          return (
+                            <button
+                              key={width}
+                              type="button"
+                              className={cn(styles.edgeWidthButton, isActive && styles.edgeWidthButtonActive)}
+                              onClick={() => {
+                                setSpaceInfo({
+                                  materialConfig: { ...materialConfig, doorEdgeBandingWidthMm: width },
+                                });
+                              }}
+                            >
+                              {width}mm
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </section>
               );
             })}
-            <p style={{
-              marginTop: 16,
-              fontSize: 12,
-              color: 'var(--theme-text-secondary, #6b7280)',
-              lineHeight: 1.5,
-            }}>
-              패널 단면(엣지밴딩)에 표시될 색상을 지정합니다. 색을 지정하지 않으면 패널 본체 재질과 동일하게 표시됩니다.
+            <p className={styles.edgeHelpText}>
+              패널 단면에 표시될 엣지 색상을 지정합니다. 도어의 특수엣지 두께는 3D와 2D 정면에 함께 적용됩니다.
             </p>
           </div>
         ) : (
@@ -331,7 +341,6 @@ const MaterialPanel: React.FC = () => {
               </div>
             ))}
           </div>
-
         </div>
         )}
       </div>

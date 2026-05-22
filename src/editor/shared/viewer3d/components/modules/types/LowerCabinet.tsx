@@ -1670,7 +1670,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
                 {moduleData.id.includes('right-corner') && (() => {
                   const mmToUnits = (mm: number) => mm * 0.01;
-                  const frameWidth = mmToUnits(18);
+                  const frameWidthMm = 18;
+                  const frameWidth = mmToUnits(frameWidthMm);
                   const frameDepth = mmToUnits(58);
                   const cabinetBottomY = -adjustedHeight / 2;
                   const bottomPanelTopY = cabinetBottomY + baseFurniture.basicThickness;
@@ -1678,10 +1679,224 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   const frameTopY = cabinetBottomY + mmToUnits(notchFromBottomMm);
                   const frameHeight = Math.max(0, frameTopY - bottomPanelTopY);
                   const frameCenterY = bottomPanelTopY + frameHeight / 2;
+                  const sideFrameHeight = Math.max(0, frameTopY - cabinetBottomY);
+                  const sideFrameCenterY = cabinetBottomY + sideFrameHeight / 2;
                   const frameZ = baseFurniture.depth / 2 - frameDepth / 2;
+                  const frontFrameRightX = frameDepth;
+                  const frontFrameX = frontFrameRightX - frameDepth / 2;
+                  const rightSideOuterX = baseFurniture.width / 2;
+                  const rightFrontFrameX = rightSideOuterX - frameDepth / 2;
+                  const sideFrameZ = baseFurniture.depth / 2 + frameWidth / 2;
+                  const frontSlotWidthMm = slotWidths?.[slotWidths.length - 1]
+                    ?? (adjustedWidth || moduleData.dimensions.width) / 2;
+                  const sideCabinetDepthMm = Math.max(1, frontSlotWidthMm - 23);
+                  const totalSideDepthMm = Math.max(
+                    baseFurniture.actualDepthMm,
+                    spaceInfo?.depth || baseFurniture.actualDepthMm
+                  );
+                  const remainingSideDepthMm = Math.max(0, totalSideDepthMm - baseFurniture.actualDepthMm);
+                  const sideSlotCount = remainingSideDepthMm > 0.5
+                    ? Math.max(1, Math.ceil(remainingSideDepthMm / 600))
+                    : 0;
+                  const sideCabinetWidthMm = sideSlotCount > 0
+                    ? remainingSideDepthMm / sideSlotCount
+                    : 0;
+                  const sideCabinetWidth = mmToUnits(sideCabinetWidthMm);
+                  const sideCabinetBodyWidthMm = Math.max(1, sideCabinetWidthMm - frameWidthMm);
+                  const sideCabinetBodyWidth = mmToUnits(sideCabinetBodyWidthMm);
+                  const sideCabinetDepth = mmToUnits(sideCabinetDepthMm);
+                  const sideCabinetInnerWidth = Math.max(0.01, sideCabinetBodyWidth - baseFurniture.basicThickness * 2);
+                  const sideCabinetInnerHeight = Math.max(0.01, adjustedHeight - baseFurniture.basicThickness * 2);
+                  const sideCabinetHeight = adjustedHeight;
+                  const sideCabinetCenterX = baseFurniture.width / 2 - sideCabinetDepth / 2;
+                  const sideCabinetCenterZ = baseFurniture.depth / 2 + frameWidth + sideCabinetBodyWidth / 2;
+                  const sideAssemblyCenterZ = baseFurniture.depth / 2 + sideCabinetWidth / 2;
+                  const sideCabinetAdjustedDepthForShelves = Math.max(
+                    0.01,
+                    sideCabinetDepth - baseFurniture.basicThickness
+                  );
+                  const sideCabinetShelfZOffset = -baseFurniture.basicThickness / 2;
+                  const sidePlacedFurnitureId = placedFurnitureId;
+                  const sideModuleData = { id: 'lower-half-cabinet-side-corner-shell' };
+                  const sideDoorModuleData = {
+                    ...moduleData,
+                    id: 'lower-half-cabinet-side-corner-door',
+                    name: '우측코너장 측면가구',
+                    category: 'lower' as const,
+                    dimensions: {
+                      width: sideCabinetBodyWidthMm,
+                      height: Math.round(sideCabinetHeight / 0.01),
+                      depth: sideCabinetDepthMm
+                    },
+                    hasDoor: true,
+                    slotWidths: undefined
+                  };
+                  const sideNotchHeightMm = 60;
+                  const sideBasicThicknessMm = baseFurniture.basicThickness / 0.01;
+                  const sideVerticalFrameHeightMm = Math.max(0, sideNotchHeightMm - sideBasicThicknessMm);
+                  const sideChannelDepthMm = 40;
+                  const sideChannelHorizontalExtensionMm = 18;
+                  const sideChannelVerticalExtensionMm = 58;
+                  const sideChannelHorizontalWidth = sideCabinetBodyWidth + mmToUnits(sideChannelHorizontalExtensionMm);
+                  const sideChannelHorizontalX = -mmToUnits(sideChannelHorizontalExtensionMm) / 2;
+                  const sideChannelVerticalWidth = sideCabinetBodyWidth + mmToUnits(sideChannelVerticalExtensionMm);
+                  const sideChannelVerticalX = -mmToUnits(sideChannelVerticalExtensionMm) / 2;
+                  const sideCabinetBottomY = -sideCabinetHeight / 2;
+                  const sideNotchFromBottomMm = Math.round(sideCabinetHeight / 0.01) - sideNotchHeightMm;
+                  const sideHorzFrameY = sideCabinetBottomY
+                    + mmToUnits(sideNotchFromBottomMm)
+                    + baseFurniture.basicThickness / 2;
+                  const sideHorzFrameZ = sideCabinetDepth / 2 - mmToUnits(sideChannelDepthMm) / 2;
+                  const sideVertFrameY = sideCabinetBottomY
+                    + mmToUnits(sideNotchFromBottomMm)
+                    + baseFurniture.basicThickness
+                    + mmToUnits(sideVerticalFrameHeightMm) / 2;
+                  const sideVertFrameZ = sideCabinetDepth / 2
+                    - mmToUnits(sideChannelDepthMm)
+                    + baseFurniture.basicThickness / 2;
+                  const placedModuleForSideBase = placedFurnitureId
+                    ? useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId)
+                    : undefined;
+                  const rawSideBaseFrameHeightMm = (placedModuleForSideBase as any)?.baseFrameHeight
+                    ?? spaceInfo?.baseConfig?.height
+                    ?? 65;
+                  const sideBaseFrameGapMm = Math.max(
+                    0,
+                    Math.min(rawSideBaseFrameHeightMm - 1, (placedModuleForSideBase as any)?.baseFrameGap ?? 0)
+                  );
+                  const sideBaseFrameHeightMm = Math.max(0, rawSideBaseFrameHeightMm - sideBaseFrameGapMm);
+                  const sideBaseFrameHeight = mmToUnits(sideBaseFrameHeightMm);
+                  const sideBaseFrameGap = mmToUnits(sideBaseFrameGapMm);
+                  const sideBaseFrameDepth = frameWidth;
+                  const sideBaseFrameOffsetMm = (placedModuleForSideBase as any)?.baseFrameOffset ?? 65;
+                  const sideBaseFrameZ = sideCabinetDepth / 2
+                    - sideBaseFrameDepth / 2
+                    - mmToUnits(20)
+                    - mmToUnits(spaceInfo?.baseConfig?.depth ?? 0)
+                    - mmToUnits(sideBaseFrameOffsetMm);
+                  const sideBaseFrameY = sideCabinetBottomY - sideBaseFrameHeight / 2;
+                  const shouldRenderSideBaseFrame = hasBase !== false
+                    && sideBaseFrameHeightMm > 0
+                    && spaceInfo?.baseConfig?.type !== 'stand'
+                    && !(viewMode === '2D' && view2DDirection === 'top');
 
                   return (
                     <>
+                      {sideCabinetWidthMm > 0 && (
+                        <group
+                          position={[sideCabinetCenterX, 0, sideCabinetCenterZ]}
+                          rotation={[0, -Math.PI / 2, 0]}
+                        >
+                          <BaseFurnitureShell
+                            width={sideCabinetBodyWidth}
+                            height={sideCabinetHeight}
+                            depth={sideCabinetDepth}
+                            innerWidth={sideCabinetInnerWidth}
+                            innerHeight={sideCabinetInnerHeight}
+                            basicThickness={baseFurniture.basicThickness}
+                            backPanelThickness={baseFurniture.backPanelThickness}
+                            adjustedDepthForShelves={sideCabinetAdjustedDepthForShelves}
+                            shelfZOffset={sideCabinetShelfZOffset}
+                            material={baseFurniture.material}
+                            isMultiSectionFurniture={() => false}
+                            getSectionHeights={() => []}
+                            mmToThreeUnits={baseFurniture.mmToThreeUnits}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            hasBackPanel={hasBackPanel}
+                            moduleData={sideModuleData}
+                            placedFurnitureId={sidePlacedFurnitureId}
+                            spaceInfo={spaceInfo}
+                            renderMode={renderMode}
+                            isFloating={isFloating}
+                            showFurniture={showFurniture}
+                            hideVentilationCap={true}
+                            hideTopPanel={true}
+                            textureUrl={baseFurniture.textureUrl}
+                            panelGrainDirections={panelGrainDirections}
+                          />
+                          <BoxWithEdges
+                            args={[sideChannelHorizontalWidth, baseFurniture.basicThickness, mmToUnits(sideChannelDepthMm)]}
+                            position={[sideChannelHorizontalX, sideHorzFrameY, sideHorzFrameZ]}
+                            material={lFrameDoorMaterial}
+                            renderMode={renderMode}
+                            isHighlighted={false}
+                            panelName="우측코너장 측면가구 목찬넬프레임수평(1)"
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={sidePlacedFurnitureId}
+                          />
+                          <BoxWithEdges
+                            args={[sideChannelVerticalWidth, mmToUnits(sideVerticalFrameHeightMm), baseFurniture.basicThickness]}
+                            position={[sideChannelVerticalX, sideVertFrameY, sideVertFrameZ]}
+                            material={lFrameDoorMaterial}
+                            renderMode={renderMode}
+                            isHighlighted={false}
+                            panelName="우측코너장 측면가구 목찬넬프레임수직(1)"
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={sidePlacedFurnitureId}
+                          />
+                          <AdjustableFootsRenderer
+                            width={sideCabinetBodyWidth}
+                            depth={sideCabinetDepth}
+                            yOffset={-sideCabinetHeight / 2}
+                            placedFurnitureId={placedFurnitureId}
+                            renderMode={renderMode}
+                            isHighlighted={false}
+                            isFloating={isFloating}
+                            baseHeight={spaceInfo?.baseConfig?.height || 65}
+                            baseDepth={spaceInfo?.baseConfig?.depth || 0}
+                            frontZInset={65}
+                            viewMode={viewMode}
+                            view2DDirection={useUIStore.getState().view2DDirection}
+                          />
+                        </group>
+                      )}
+                      {sideCabinetWidthMm > 0 && shouldRenderSideBaseFrame && (
+                        <group
+                          position={[sideCabinetCenterX, 0, sideAssemblyCenterZ]}
+                          rotation={[0, -Math.PI / 2, 0]}
+                        >
+                          <BoxWithEdges
+                            args={[sideCabinetWidth, sideBaseFrameHeight, sideBaseFrameDepth]}
+                            position={[0, sideBaseFrameY, sideBaseFrameZ]}
+                            material={lFrameDoorMaterial}
+                            renderMode={renderMode}
+                            isHighlighted={false}
+                            panelName="우측코너장 측면가구 걸레받이"
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={sidePlacedFurnitureId}
+                          />
+                        </group>
+                      )}
+                      {hasDoor && sideCabinetWidthMm > 0 && spaceInfo && (
+                        <group
+                          position={[sideCabinetCenterX, 0, sideCabinetCenterZ]}
+                          rotation={[0, -Math.PI / 2, 0]}
+                        >
+                          <DoorModule
+                            moduleWidth={sideCabinetBodyWidthMm}
+                            moduleDepth={sideCabinetDepthMm}
+                            hingePosition={hingePosition}
+                            spaceInfo={spaceInfo}
+                            color={baseFurniture.doorColor}
+                            moduleData={sideDoorModuleData}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
+                            textureUrl={spaceInfo.materialConfig?.doorTexture}
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={sidePlacedFurnitureId}
+                            zone={zone}
+                            hasBase={hasBase}
+                            individualFloatHeight={individualFloatHeight}
+                            parentGroupY={parentGroupY}
+                            doorTopGap={doorTopGap}
+                            doorBottomGap={doorBottomGap}
+                            internalHeight={Math.round(sideCabinetHeight / 0.01)}
+                            isFreePlacement={true}
+                          />
+                        </group>
+                      )}
                       <BoxWithEdges
                         args={[frameWidth, frameHeight, frameDepth]}
                         position={[-frameWidth / 2, frameCenterY, frameZ]}
@@ -1702,6 +1917,30 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         panelGrainDirections={panelGrainDirections}
                         furnitureId={placedFurnitureId}
                       />
+                      {sideCabinetWidthMm > 0 && (
+                        <>
+                          <BoxWithEdges
+                            args={[frameDepth, sideFrameHeight, frameWidth]}
+                            position={[frontFrameX, sideFrameCenterY, sideFrameZ]}
+                            material={baseFurniture.material}
+                            renderMode={renderMode}
+                            isHighlighted={false}
+                            panelName="우측코너장 측면 쫄대프레임"
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                          />
+                          <BoxWithEdges
+                            args={[frameDepth, sideFrameHeight, frameWidth]}
+                            position={[rightFrontFrameX, sideFrameCenterY, sideFrameZ]}
+                            material={baseFurniture.material}
+                            renderMode={renderMode}
+                            isHighlighted={false}
+                            panelName="우측코너장 우측측판 전면 쫄대프레임"
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                          />
+                        </>
+                      )}
                     </>
                   );
                 })()}
@@ -1960,7 +2199,22 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           ? (cabinetHeightMmLocal - notchHeightMm)
           : ((moduleData.dimensions.height || 785) - notchHeightMm);
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;
-        const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
+        const fullFrameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
+        const isRightCornerCabinet = moduleData.id.includes('right-corner');
+        const rightCornerHorzReach = mmToThreeUnits(isRightCornerCabinet ? 58 : 0);
+        const rightCornerVertReach = mmToThreeUnits(isRightCornerCabinet ? 45 : 0);
+        const horzFrameWidth = isRightCornerCabinet
+          ? fullFrameWidth / 2 + rightCornerHorzReach
+          : fullFrameWidth;
+        const horzFrameX = isRightCornerCabinet
+          ? (-fullFrameWidth / 2 + rightCornerHorzReach) / 2
+          : 0;
+        const vertFrameWidth = isRightCornerCabinet
+          ? fullFrameWidth / 2 + rightCornerVertReach
+          : fullFrameWidth;
+        const vertFrameX = isRightCornerCabinet
+          ? (-fullFrameWidth / 2 + rightCornerVertReach) / 2
+          : 0;
         const verticalHMm = notchHeightMm - basicThicknessMm;
         const cabinetBottomY = -cabinetHeight / 2;
         const horzY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
@@ -1971,8 +2225,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         return (
           <group position={[0, cabinetYPosition, 0]}>
             <BoxWithEdges
-              args={[frameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
-              position={[0, horzY, horzZ]}
+              args={[horzFrameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
+              position={[horzFrameX, horzY, horzZ]}
               material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
@@ -1981,8 +2235,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
             />
             <BoxWithEdges
-              args={[frameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
-              position={[0, vertY, vertZ]}
+              args={[vertFrameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
+              position={[vertFrameX, vertY, vertZ]}
               material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}

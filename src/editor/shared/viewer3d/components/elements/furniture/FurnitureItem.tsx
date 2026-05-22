@@ -11,7 +11,7 @@ import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSin
 import { calculateSpaceIndexing, ColumnIndexer, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
 import { useUIStore } from '@/store/uiStore';
-import { EditIcon } from '@/components/common/Icons';
+import { EditIcon, SettingsIcon } from '@/components/common/Icons';
 import { getEdgeColor } from '../../../utils/edgeColorUtils';
 import { useColumnCResize } from '@/editor/shared/furniture/hooks/useColumnCResize';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -3059,7 +3059,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     (placedModule.rotation * Math.PI) / 180,
     0
   ];
-  const editIconForwardOffset = depth / 2 + 0.5;
+  const isInsertFrameModule = placedModule.moduleId?.includes('insert-frame') === true;
+  const isTopPlanView = viewMode === '2D' && view2DDirection === 'top';
+  const showInsertFramePlanSettingsIcon = isInsertFrameModule && isTopPlanView;
+  const topPlanIconLineOffset = 0.85;
+  const editIconForwardOffset = depth / 2 + (showInsertFramePlanSettingsIcon ? topPlanIconLineOffset : 0.5);
   const editIconPosition: [number, number, number] = isSideWallFurniture
     ? [
       furnitureGroupPosition[0] + (placedModule.placementWall === 'left' ? editIconForwardOffset : -editIconForwardOffset),
@@ -3366,7 +3370,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.isSurroundPanel) {
     const surroundDepth = placedModule.freeDepth || spaceInfo.depth;
     // group position이 이미 패널 중심이므로, 아이콘은 로컬 (0,0,앞쪽)
-    const surroundFrontZ = surroundDepth * 0.01 / 2 + 0.3;
+    const surroundFrontZ = surroundDepth * 0.01 / 2 + (isTopPlanView ? topPlanIconLineOffset : 0.3);
     // 서라운드 패널도 인접 가구(같은 슬롯)의 backWallGap 상속
     let surroundExtraZ = placedModule.backWallGap ?? 0;
     if (surroundExtraZ === 0 && placedModule.slotIndex !== undefined) {
@@ -4834,7 +4838,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           position={[
             adjustedPosition.x,
             finalYPosition,
-            furnitureZ + depth / 2 + doorThickness + 0.3
+            furnitureZ + depth / 2 + (isTopPlanView ? topPlanIconLineOffset : doorThickness + 0.3)
           ]}
           center
           zIndexRange={[100, 0]}
@@ -5023,12 +5027,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </Html>
       )}
 
-      {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면, 슬롯배치 인서트 프레임에서는 숨김 */}
+      {/* 편집 아이콘 표시 — 2D 평면의 키큰장찬넬은 전면 옵셋 설정 진입점으로 톱니를 표시 */}
       {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen &&
         panelSimulationPhase !== 'layout' && !panelSimulationViewBackup &&
         !(viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) &&
-        (!placedModule.moduleId?.includes('insert-frame') || placedModule.isFreePlacement) &&
-        !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+        (!isInsertFrameModule || placedModule.isFreePlacement || showInsertFramePlanSettingsIcon) &&
+        !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || (view2DDirection === 'top' && !showInsertFramePlanSettingsIcon))) && (
         <Html
           position={editIconPosition}
           center
@@ -5071,9 +5075,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               onPointerDown={(e) => e.stopPropagation()}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => setIsHovered(false)}
-              title="가구 속성 편집"
+              title={showInsertFramePlanSettingsIcon ? '키큰장찬넬 설정' : '가구 속성 편집'}
             >
-              <EditIcon color={getThemeColor()} size={18} />
+              {showInsertFramePlanSettingsIcon
+                ? <SettingsIcon color={getThemeColor()} size={18} />
+                : <EditIcon color={getThemeColor()} size={18} />}
             </div>
           </div>
         </Html>

@@ -747,6 +747,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   // 상판내림 계단형 따내기 (앞으로 평행이동된 좌표계 기준 — notch는 패널 앞면 기준이므로 그대로)
                   ...topDownNotches
                 ] : undefined;
+                const notchProps = allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } };
+                const rightPanelNotchProps = moduleData?.id?.includes('right-corner') ? {} : notchProps;
 
                 return (
                   <>
@@ -765,7 +767,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                       faceGrooves={createBackPanelFaceGrooves('right', height)}
-                      {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
+                      {...notchProps}
                     />
 
                     {/* 우측판 - L자형 단일 메시 (따내기 포함) */}
@@ -783,7 +785,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                       faceGrooves={createBackPanelFaceGrooves('left', height)}
-                      {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
+                      {...rightPanelNotchProps}
                     />
 
                     {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림은 상판이 있으므로 제외) */}

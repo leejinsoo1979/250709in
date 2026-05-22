@@ -115,6 +115,7 @@ export interface MaterialConfig {
   // 엣지밴딩 색상 (패널 단면 PVC 띠 색)
   interiorEdgeColor?: string; // 속장(내부) 패널 엣지 색상
   doorEdgeColor?: string;     // 도어 패널 엣지 색상
+  doorEdgeBandingWidthMm?: number; // 3D 정면 도어 특수엣지 표시 폭(mm), 1~4
 }
 
 // 단내림/커튼박스 기본값 상수
