@@ -67,8 +67,14 @@ export const resolveDoorOuterOpenSides = ({
     };
   }
 
-  let runStartMm = -indexing.internalWidth / 2;
-  let runEndMm = indexing.internalWidth / 2;
+  // freestanding(벽없음): 공간 전체 폭 기준, 그 외: 내경 폭 기준
+  const isFreestanding = !hasLeftWall && !hasRightWall;
+  let runStartMm = isFreestanding
+    ? -(spaceInfo.width ?? indexing.internalWidth) / 2
+    : -indexing.internalWidth / 2;
+  let runEndMm = isFreestanding
+    ? (spaceInfo.width ?? indexing.internalWidth) / 2
+    : indexing.internalWidth / 2;
 
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
