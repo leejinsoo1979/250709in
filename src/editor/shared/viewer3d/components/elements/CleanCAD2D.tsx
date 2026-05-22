@@ -529,6 +529,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
+  const hasFrontPlacedModules = placedModules.some(module => ((module as any).placementWall || 'front') === 'front');
 
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
@@ -1790,7 +1791,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 정면뷰 치수선 - 3D 모드에서는 가구 앞면(도어 두께만큼 뒤)에 배치
   const doorThicknessOffset = mmToThreeUnits(20); // 도어 두께 20mm
   const frontFrameZ = -doorThicknessOffset; // 가구 본체 앞면 z 좌표
-  const zOffset = is3DMode ? frontFrameZ : 0; // 3D 모드에서 가구 앞면 위치로 배치
+  const frontDimensionBackIndicatorZ = (() => {
+    const panelDepthMm = spaceInfo.depth || 1500;
+    const furnitureDepthMm = 600;
+    const panelDepth = mmToThreeUnits(panelDepthMm);
+    const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+    const roomBackZ = -panelDepth / 2;
+    const furnitureZOffset = roomBackZ + (panelDepth - furnitureDepth) / 2;
+    const guideBackZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(10 + 30);
+    return guideBackZ + mmToThreeUnits(20);
+  })();
+  const zOffset = is3DMode
+    ? (hasFrontPlacedModules ? frontFrameZ : frontDimensionBackIndicatorZ)
+    : 0;
   
   const renderFrontView = () => (
     <group position={[0, 0, zOffset]} renderOrder={9999}>
