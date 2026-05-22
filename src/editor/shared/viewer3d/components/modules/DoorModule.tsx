@@ -1159,7 +1159,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     isPlainMaterial,
     viewMode,
     view2DDirection
-  ) && !isHingePositionEditMode && sideDoorDimensionVisible && (hasOuterDoorDimensionSide || isEditMode);
+  ) && !isHingePositionEditMode && sideDoorDimensionVisible;
 
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);
@@ -1536,8 +1536,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const effectiveDoorTopGapDimensionMm = shouldUseLowerCountertopTopGapDimension
     ? lowerCountertopBottomGapMm
     : dimensionDoorTopGapMm;
-  const showDoorTopGapDimension = shouldUseLowerCountertopTopGapDimension
-    ? lowerCountertopBottomGapMm > 0
+  const showDoorTopGapDimension = isLowerCabinet
+    ? (shouldUseLowerCountertopTopGapDimension && lowerCountertopBottomGapMm > 0)
     : dimensionDoorTopGapMm > 0;
   const showDoorBottomGapDimension = !isUpperCabinet && dimensionDoorBottomGapMm > 0;
   const doorTopGapDimensionMm = showDoorTopGapDimension ? effectiveDoorTopGapDimensionMm : 0;
