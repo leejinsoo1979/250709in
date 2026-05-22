@@ -1305,9 +1305,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const upperDimZ = upperFrontZ + mmToThreeUnits(200);
           const upperDimExtZ = upperFrontZ + mmToThreeUnits(20);
           const effectiveH_door = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
-          const hasUpperDoorModule = visibleFurniture.some(module => {
+          const hasUpperSideModule = visibleFurniture.some(module => {
             const mod = module as PlacedModule;
-            return mod.hasDoor && getModuleCategory(mod) === 'upper';
+            return getModuleCategory(mod) === 'upper';
           });
 
           const doorSegs: { bottomY: number; topY: number; heightMm: number; key: string; isUpper: boolean }[] = [];
@@ -1469,7 +1469,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   isUpper: false
                 });
               }
-            } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperDoorModule)) {
+            } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperSideModule)) {
               // 하부장/키큰장 공통: 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 거리 (항상 천장 기준)
               // 상부장+하부장이 같이 보이는 측면뷰에서는 하부장 도어 치수가 상부장 영역까지 이어지면 안 된다.
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
@@ -2716,9 +2716,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const upperDimZ_r = upperFrontZ_r + mmToThreeUnits(200);
           const upperDimExtZ_r = upperFrontZ_r + mmToThreeUnits(20);
           const effectiveH_rd = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
-          const hasUpperDoorModule_r = visibleFurniture.some(module => {
+          const hasUpperSideModule_r = visibleFurniture.some(module => {
             const mod = module as PlacedModule;
-            return mod.hasDoor && getModuleCategory(mod) === 'upper';
+            return getModuleCategory(mod) === 'upper';
           });
 
           const doorSegs_r: { bottomY: number; topY: number; heightMm: number; key: string; isUpper: boolean }[] = [];
@@ -2876,7 +2876,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   isUpper: false,
                 });
               }
-            } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperDoorModule_r)) {
+            } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperSideModule_r)) {
               // 상부장+하부장이 같이 보이는 측면뷰에서는 하부장 도어 치수가 상부장 영역까지 이어지면 안 된다.
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
               if (!isLowerSpecial) {
