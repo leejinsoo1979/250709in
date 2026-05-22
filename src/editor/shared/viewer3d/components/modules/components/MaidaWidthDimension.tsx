@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 
@@ -39,6 +39,8 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
   maidaWidthMm, maidaWidth, moduleDepthMm, maidaZ,
   viewMode, view2DDirection, dimensionColor, mmToThreeUnits,
 }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   // 3D 또는 2D 정면뷰에서만 표시
   if (!(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front'))) {
     return null;
@@ -51,7 +53,8 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
   const tickSize = 0.008;
   const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
   // 도어와 동일하게 dimensionColor 사용 (3D에서도 검정 강제하지 않음)
-  const dimColor = dimensionColor;
+  const hoverColor = '#0b3d91';
+  const dimColor = isHovered ? hoverColor : dimensionColor;
   const halfW = maidaWidth / 2;
 
   const dimLineY = -extensionLineLength - extensionLineStart;
@@ -69,6 +72,8 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
         value={maidaWidthMm}
         position={[0, dimLineY + mmToThreeUnits(15), zPos]}
         color={dimColor}
+        hoverColor={hoverColor}
+        onHoverChange={setIsHovered}
         anchorX="center"
         anchorY="bottom"
         forceShow={true}
