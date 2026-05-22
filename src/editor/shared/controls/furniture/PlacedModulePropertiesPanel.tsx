@@ -3666,7 +3666,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         } else {
                           const minWidth = isInsertFrameWidth ? 30 : 100;
-                          if (isNaN(val) || val < minWidth || val > 2400 || !currentPlacedModule) return;
+                          if (isNaN(val) || val < minWidth || val > 3000 || !currentPlacedModule) return;
                           // 자유배치 모드: 기존 로직
                           // 키큰장찬넬은 슬롯배치여도 좌측 고정 적용
                           const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
@@ -3782,7 +3782,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               : freshModule.position.x;
                           }
                           if (isInsertFrameWidth) {
-                            newX = calcInsertFrameResizedPositionX(freshModule, val, freshAll, freshSI);
+                            newX = freshModule.isFreePlacement
+                              ? calcInsertFrameResizedPositionX(freshModule, val, freshAll, freshSI)
+                              : freshModule.position.x;
                             insertMoveTargets = [];
                             insertDelta = 0;
                           }
@@ -3857,7 +3859,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             // 자유배치 모드 (또는 키큰장찬넬): 좌측 고정 / 우측으로만 확장
                             const curW = freshMod?.freeWidth || freshMod?.customWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
                             const minWidth = isInsertFrameKey ? 30 : 100;
-                            const next = Math.max(minWidth, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
+                            const next = Math.max(minWidth, Math.min(3000, curW + (e.key === 'ArrowUp' ? 1 : -1)));
                             setFreeWidthInput(next.toString());
                             if (currentPlacedModule && freshMod) {
                               const freshAll = useFurnitureStore.getState().placedModules;
@@ -3902,7 +3904,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   : freshMod.position.x;
                               }
                               if (isInsertFrameKey) {
-                                newX = calcInsertFrameResizedPositionX(freshMod, next, freshAll, freshSI);
+                                newX = freshMod.isFreePlacement
+                                  ? calcInsertFrameResizedPositionX(freshMod, next, freshAll, freshSI)
+                                  : freshMod.position.x;
                               }
                               updatePlacedModule(currentPlacedModule.id, {
                                 freeWidth: next,
