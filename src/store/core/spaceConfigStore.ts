@@ -512,6 +512,8 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.surroundType !== undefined ||
         processedInfo.wallConfig !== undefined ||
         processedInfo.gapConfig !== undefined;
+
+      const explicitGapConfig = processedInfo.gapConfig;
       
       // gapConfig만 변경한 경우에는 SpaceCalculator에서 gapConfig을 덮어쓰지 않도록 보존
       const isGapConfigOnly = processedInfo.gapConfig !== undefined &&
@@ -567,6 +569,15 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
             tempSpaceInfo.gapConfig = {
               ...tempSpaceInfo.gapConfig,
               ...adjustmentResult.adjustedSpaceInfo.gapConfig,
+            };
+          }
+
+          // 저장된 프로젝트 로드/명시 입력처럼 gapConfig가 함께 들어온 경우에는
+          // 슬롯 정수화 보정이 좌우 이격을 1.5 -> 1처럼 바꾸지 못하게 한다.
+          if (explicitGapConfig !== undefined) {
+            tempSpaceInfo.gapConfig = {
+              ...tempSpaceInfo.gapConfig,
+              ...explicitGapConfig,
             };
           }
 

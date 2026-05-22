@@ -482,7 +482,7 @@ export function calcInsertFrameResizedPositionX(
   let rightAnchor: { x: number; gap: number } | null = null;
 
   for (const other of allModules) {
-    if (other.id === module.id || other.isSurroundPanel || !other.isFreePlacement) continue;
+    if (other.id === module.id || other.isSurroundPanel) continue;
     const otherBounds = getModuleBoundsX(other);
 
     const leftGap = oldBounds.left - otherBounds.right;

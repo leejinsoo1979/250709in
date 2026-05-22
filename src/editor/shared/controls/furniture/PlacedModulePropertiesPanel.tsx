@@ -2222,6 +2222,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
+  const applyLowerCabinetDepth = (nextDepth: number) => {
+    if (!currentPlacedModule) return;
+
+    updatePlacedModule(currentPlacedModule.id, {
+      freeDepth: nextDepth,
+      customDepth: nextDepth,
+      lowerSectionDepth: nextDepth,
+      upperSectionDepth: nextDepth,
+    });
+    setFreeDepthInput(nextDepth.toString());
+    setCustomDepth(nextDepth);
+    setLowerSectionDepth(nextDepth);
+    setUpperSectionDepth(nextDepth);
+  };
+
+  const applyLowerCabinetDepthDirection = (direction: 'front' | 'back') => {
+    if (!currentPlacedModule) return;
+
+    updatePlacedModule(currentPlacedModule.id, {
+      lowerSectionDepthDirection: direction,
+      upperSectionDepthDirection: direction,
+    });
+    setLowerDepthDirection(direction);
+    setUpperDepthDirection(direction);
+  };
+
   // 깊이 입력 필드 처리
   const handleDepthInputChange = (value: string) => {
     // 숫자와 빈 문자열만 허용
@@ -3638,7 +3664,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             adjustSlotWidth(currentPlacedModule.id, val);
                             setFreeWidthInput(val.toString());
                           }
-                        } else if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
+                        } else {
+                          const minWidth = isInsertFrameWidth ? 30 : 100;
+                          if (isNaN(val) || val < minWidth || val > 2400 || !currentPlacedModule) return;
                           // 자유배치 모드: 기존 로직
                           // 키큰장찬넬은 슬롯배치여도 좌측 고정 적용
                           const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
@@ -3828,7 +3856,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           } else {
                             // 자유배치 모드 (또는 키큰장찬넬): 좌측 고정 / 우측으로만 확장
                             const curW = freshMod?.freeWidth || freshMod?.customWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
-                            const next = Math.max(100, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
+                            const minWidth = isInsertFrameKey ? 30 : 100;
+                            const next = Math.max(minWidth, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
                             setFreeWidthInput(next.toString());
                             if (currentPlacedModule && freshMod) {
                               const freshAll = useFurnitureStore.getState().placedModules;
@@ -6183,51 +6212,45 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const curDepth = currentPlacedModule.freeDepth || currentPlacedModule.customDepth || moduleData.dimensions.depth;
             return (
               <div className={styles.propertySection}>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={freeDepthInput}
-                    onChange={(e) => setFreeDepthInput(e.target.value)}
-                    onBlur={() => {
-                      const val = parseInt(freeDepthInput, 10);
-                      const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
-                      const minDepth = isLowerDrawer ? 400 : 100;
-                      if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, {
-                          freeDepth: val,
-                          customDepth: val,
-                          lowerSectionDepth: val,
-                          upperSectionDepth: val,
-                        });
-                        setFreeDepthInput(val.toString());
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const cur = parseInt(freeDepthInput, 10) || curDepth;
-                        const isLowerDrawerArrow = currentPlacedModule?.moduleId?.includes('lower-drawer-');
-                        const minDepthArrow = isLowerDrawerArrow ? 400 : 100;
-                        const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                        setFreeDepthInput(next.toString());
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, {
-                            freeDepth: next,
-                            customDepth: next,
-                            lowerSectionDepth: next,
-                            upperSectionDepth: next,
-                          });
+                <h5 className={styles.sectionTitle}>가구 깊이</h5>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ minWidth: '34px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>깊이</span>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={freeDepthInput}
+                      onChange={(e) => setFreeDepthInput(e.target.value)}
+                      onBlur={() => {
+                        const val = parseInt(freeDepthInput, 10);
+                        const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                        const minDepth = isLowerDrawer ? 400 : 100;
+                        if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
+                          applyLowerCabinetDepth(val);
+                        } else {
+                          setFreeDepthInput(Math.round(curDepth).toString());
                         }
-                      }
-                    }}
-                    className={styles.depthInput}
-                    style={{ fontSize: '14px' }}
-                  />
-                  <span className={styles.unit}>mm</span>
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = parseInt(freeDepthInput, 10) || curDepth;
+                          const isLowerDrawerArrow = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                          const minDepthArrow = isLowerDrawerArrow ? 400 : 100;
+                          const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          applyLowerCabinetDepth(next);
+                        }
+                      }}
+                      className={styles.depthInput}
+                      style={{ fontSize: '14px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                  <span style={{ minWidth: '34px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>기준</span>
+                  <div style={{ display: 'flex', gap: '4px', flex: 1 }}>
                   <button
                     style={{
                       flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
@@ -6236,9 +6259,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'front' ? 600 : 400
                     }}
                     onClick={() => {
-                      if (currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' });
-                      }
+                      applyLowerCabinetDepthDirection('front');
                     }}
                   >
                     뒤고정
@@ -6251,13 +6272,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'back' ? 600 : 400
                     }}
                     onClick={() => {
-                      if (currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' });
-                      }
+                      applyLowerCabinetDepthDirection('back');
                     }}
                   >
                     앞고정
                   </button>
+                  </div>
                 </div>
               </div>
             );

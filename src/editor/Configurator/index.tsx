@@ -1611,8 +1611,8 @@ const Configurator: React.FC = () => {
         delete spaceConfig.lockedWallGaps; // 세션 전용
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
-        // 이격: 사용자가 설정에 저장한 기본값으로 맞추기 (노서라운드일 때만)
-        // 양쪽 벽이 실제로 있는 쪽에만 적용
+        // 이격: 저장된 프로젝트 값이 있으면 그대로 유지한다.
+        // 기본값은 과거 데이터처럼 gapConfig가 비어 있는 경우에만 보정한다.
         if (spaceConfig.surroundType === 'no-surround') {
           try {
             const defaults = await getSpaceConfigDefaults();
@@ -1622,10 +1622,12 @@ const Configurator: React.FC = () => {
             if (defaults) {
               const defLeft = defaults.gapLeft ?? 1.5;
               const defRight = defaults.gapRight ?? 1.5;
+              const savedLeft = spaceConfig.gapConfig?.left;
+              const savedRight = spaceConfig.gapConfig?.right;
               spaceConfig.gapConfig = {
                 ...spaceConfig.gapConfig,
-                left: spaceConfig.wallConfig?.left ? defLeft : (spaceConfig.gapConfig?.left ?? 0),
-                right: spaceConfig.wallConfig?.right ? defRight : (spaceConfig.gapConfig?.right ?? 0),
+                left: spaceConfig.wallConfig?.left ? (savedLeft ?? defLeft) : (savedLeft ?? 0),
+                right: spaceConfig.wallConfig?.right ? (savedRight ?? defRight) : (savedRight ?? 0),
               };
             }
           } catch { /* noop */ }

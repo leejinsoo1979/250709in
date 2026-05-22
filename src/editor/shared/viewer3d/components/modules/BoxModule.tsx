@@ -1306,7 +1306,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const fullHeight = mmTo(spaceTotalHeightMm);
 
     // 외경 폭: 사용자 입력값(adjustedWidth) 우선, 없으면 기본 136
-    const insertOuterWidthMm = adjustedWidth || moduleData.dimensions.width || 136;
+    const insertOuterWidthMm = typeof adjustedWidth === 'number' && adjustedWidth > 0
+      ? adjustedWidth
+      : (moduleData.dimensions.width || 136);
     const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
 

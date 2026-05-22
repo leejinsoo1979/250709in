@@ -886,16 +886,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const handleFurnitureWidthSubmit = () => {
     if (!editingFurnitureWidthId) return;
     const value = parseFloat(editingFurnitureWidthValue);
-    if (isNaN(value) || value < 100) {
+    const module = placedModules.find(m => m.id === editingFurnitureWidthId);
+    const isInsertFrame = typeof module?.moduleId === 'string' && module.moduleId.includes('insert-frame');
+    const minWidth = isInsertFrame ? 30 : 100;
+    if (isNaN(value) || value < minWidth) {
       setEditingFurnitureWidthId(null);
       setEditingFurnitureWidthValue('');
       return;
     }
-    const clamped = Math.max(100, Math.min(3000, Math.round(value)));
-    const module = placedModules.find(m => m.id === editingFurnitureWidthId);
+    const clamped = Math.max(minWidth, Math.min(3000, Math.round(value)));
     if (module && !module.isLocked && !readOnly) {
       const freshSI = useSpaceConfigStore.getState().spaceInfo;
-      const isInsertFrame = typeof module.moduleId === 'string' && module.moduleId.includes('insert-frame');
       const newX = module.isFreePlacement
         ? (
           isInsertFrame
