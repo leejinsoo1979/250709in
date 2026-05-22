@@ -2077,12 +2077,50 @@ const createRightCornerLowerCabinet = (dualWidth: number, slotWidths?: number[])
 
   const base = createFurnitureBase(
     `dual-lower-half-cabinet-right-corner-${widthForId}`,
-    '우측코너장',
+    '코너장(우)',
     dualWidth,
     cabinetHeight,
     600,
     '#fff3e0',
-    `우측코너장 W${widthForId}xH785xD600 (조절발 65mm)`,
+    `코너장(우) W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 600,
+    hasDoor: false,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+const createLeftCornerLowerCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 780;
+
+  const base = createFurnitureBase(
+    `dual-lower-half-cabinet-left-corner-${widthForId}`,
+    '코너장(좌)',
+    dualWidth,
+    cabinetHeight,
+    600,
+    '#fff3e0',
+    `코너장(좌) W${widthForId}xH785xD600 (조절발 65mm)`,
     600,
     'lower'
   );
@@ -3734,6 +3772,7 @@ export const generateShelvingModules = (
 
     // === 새 듀얼 하부장 가구 생성 ===
     modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
+    modules.push(createLeftCornerLowerCabinet(dualWidth, dualSlotWidths));
     modules.push(createRightCornerLowerCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerSinkCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerInductionCabinet(dualWidth, dualSlotWidths));

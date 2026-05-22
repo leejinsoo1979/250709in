@@ -1153,6 +1153,21 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   doorTopGap,
   doorBottomGap
 }) => {
+  const placedModuleForCorner = useFurnitureStore(state => (
+    placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
+  )) as any;
+  const isRightCornerCabinet = moduleData.id.includes('right-corner');
+  const isLeftCornerCabinet = moduleData.id.includes('left-corner');
+  const isCornerCabinet = isRightCornerCabinet || isLeftCornerCabinet;
+  const cornerFrontHingePosition = (
+    placedModuleForCorner?.cornerFrontHingePosition
+    ?? placedModuleForCorner?.hingePosition
+    ?? (isRightCornerCabinet ? 'left' : 'right')
+  ) as 'left' | 'right';
+  const cornerSideHingePosition = (
+    placedModuleForCorner?.cornerSideHingePosition
+    ?? (isRightCornerCabinet ? 'right' : 'left')
+  ) as 'left' | 'right';
   console.log('🏠 [LowerCabinet] Props 확인:', {
     moduleId: moduleData.id,
     lowerSectionTopOffset,
@@ -1668,7 +1683,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   />
                 )}
 
-                {moduleData.id.includes('right-corner') && (() => {
+                {isCornerCabinet && (() => {
                   const mmToUnits = (mm: number) => mm * 0.01;
                   const frameWidthMm = 18;
                   const frameWidth = mmToUnits(frameWidthMm);
@@ -1687,7 +1702,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   const rightSideOuterX = baseFurniture.width / 2;
                   const rightFrontFrameX = rightSideOuterX - frameDepth / 2;
                   const sideFrameZ = baseFurniture.depth / 2 + frameWidth / 2;
-                  const frontSlotWidthMm = slotWidths?.[slotWidths.length - 1]
+                  const frontSlotWidthMm = (isLeftCornerCabinet ? slotWidths?.[0] : slotWidths?.[slotWidths.length - 1])
                     ?? (adjustedWidth || moduleData.dimensions.width) / 2;
                   const sideCabinetDepthMm = Math.max(1, frontSlotWidthMm - 23);
                   const totalSideDepthMm = Math.max(
@@ -1771,7 +1786,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   const sideBaseFrameOffsetMm = (placedModuleForSideBase as any)?.baseFrameOffset ?? 65;
                   const sideBaseFrameZ = sideCabinetDepth / 2
                     - sideBaseFrameDepth / 2
-                    - mmToUnits(20)
                     - mmToUnits(spaceInfo?.baseConfig?.depth ?? 0)
                     - mmToUnits(sideBaseFrameOffsetMm);
                   const sideBaseFrameY = sideCabinetBottomY - sideBaseFrameHeight / 2;
@@ -1779,9 +1793,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     && sideBaseFrameHeightMm > 0
                     && spaceInfo?.baseConfig?.type !== 'stand'
                     && !(viewMode === '2D' && view2DDirection === 'top');
+                  const cornerGhostMode = isEditMode && viewMode === '3D';
 
                   return (
-                    <>
+                    <group scale={[isLeftCornerCabinet ? -1 : 1, 1, 1]}>
                       {sideCabinetWidthMm > 0 && (
                         <group
                           position={[sideCabinetCenterX, 0, sideCabinetCenterZ]}
@@ -1801,7 +1816,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                             isMultiSectionFurniture={() => false}
                             getSectionHeights={() => []}
                             mmToThreeUnits={baseFurniture.mmToThreeUnits}
-                            isDragging={isDragging}
+                            isDragging={isDragging || cornerGhostMode}
                             isEditMode={isEditMode}
                             hasBackPanel={hasBackPanel}
                             moduleData={sideModuleData}
@@ -1820,6 +1835,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                             position={[sideChannelHorizontalX, sideHorzFrameY, sideHorzFrameZ]}
                             material={lFrameDoorMaterial}
                             renderMode={renderMode}
+                            isDragging={isDragging || cornerGhostMode}
                             isHighlighted={false}
                             panelName="우측코너장 측면가구 목찬넬프레임수평(1)"
                             panelGrainDirections={panelGrainDirections}
@@ -1830,6 +1846,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                             position={[sideChannelVerticalX, sideVertFrameY, sideVertFrameZ]}
                             material={lFrameDoorMaterial}
                             renderMode={renderMode}
+                            isDragging={isDragging || cornerGhostMode}
                             isHighlighted={false}
                             panelName="우측코너장 측면가구 목찬넬프레임수직(1)"
                             panelGrainDirections={panelGrainDirections}
@@ -1861,6 +1878,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                             position={[0, sideBaseFrameY, sideBaseFrameZ]}
                             material={lFrameDoorMaterial}
                             renderMode={renderMode}
+                            isDragging={isDragging || cornerGhostMode}
                             isHighlighted={false}
                             panelName="우측코너장 측면가구 걸레받이"
                             panelGrainDirections={panelGrainDirections}
@@ -1876,11 +1894,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                           <DoorModule
                             moduleWidth={sideCabinetBodyWidthMm}
                             moduleDepth={sideCabinetDepthMm}
-                            hingePosition={hingePosition}
+                            hingePosition={cornerSideHingePosition}
                             spaceInfo={spaceInfo}
                             color={baseFurniture.doorColor}
                             moduleData={sideDoorModuleData}
-                            isDragging={isDragging}
+                            isDragging={isDragging || cornerGhostMode}
                             isEditMode={isEditMode}
                             floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
                             textureUrl={spaceInfo.materialConfig?.doorTexture}
@@ -1902,6 +1920,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         position={[-frameWidth / 2, frameCenterY, frameZ]}
                         material={baseFurniture.material}
                         renderMode={renderMode}
+                        isDragging={isDragging || cornerGhostMode}
                         isHighlighted={false}
                         panelName="우측코너장 세로프레임 좌"
                         panelGrainDirections={panelGrainDirections}
@@ -1912,6 +1931,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         position={[frameDepth / 2, frameCenterY, baseFurniture.depth / 2 - frameWidth / 2]}
                         material={baseFurniture.material}
                         renderMode={renderMode}
+                        isDragging={isDragging || cornerGhostMode}
                         isHighlighted={false}
                         panelName="우측코너장 세로프레임 우"
                         panelGrainDirections={panelGrainDirections}
@@ -1924,6 +1944,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                             position={[frontFrameX, sideFrameCenterY, sideFrameZ]}
                             material={baseFurniture.material}
                             renderMode={renderMode}
+                            isDragging={isDragging || cornerGhostMode}
                             isHighlighted={false}
                             panelName="우측코너장 측면 쫄대프레임"
                             panelGrainDirections={panelGrainDirections}
@@ -1934,6 +1955,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                             position={[rightFrontFrameX, sideFrameCenterY, sideFrameZ]}
                             material={baseFurniture.material}
                             renderMode={renderMode}
+                            isDragging={isDragging || cornerGhostMode}
                             isHighlighted={false}
                             panelName="우측코너장 우측측판 전면 쫄대프레임"
                             panelGrainDirections={panelGrainDirections}
@@ -1941,7 +1963,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                           />
                         </>
                       )}
-                    </>
+                    </group>
                   );
                 })()}
               </>
@@ -1950,7 +1972,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           {(() => {
             if (viewMode === '2D' && view2DDirection === 'top') return null;
             const moduleId = moduleData.id;
-            const isRightCornerCabinet = moduleId.includes('right-corner');
+            const isRightCornerCabinet = moduleId.includes('right-corner') || moduleId.includes('left-corner');
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
             const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
             const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
@@ -2337,7 +2359,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
+          hingePosition={isCornerCabinet ? cornerFrontHingePosition : hingePosition}
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
           originalSlotWidth={originalSlotWidth}

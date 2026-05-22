@@ -135,7 +135,16 @@ export const useFurnitureKeyboard = ({
         const cornerSlotIndex = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
         const frontCornerModule = placedModules.find(mod => {
           const placementWall = mod.placementWall || 'front';
-          return placementWall === 'front' && mod.slotIndex === cornerSlotIndex;
+          const moduleId = mod.moduleId || '';
+          const span = mod.isDualSlot ? 2 : 1;
+          const startSlot = mod.slotIndex ?? -1;
+          const isMatchingCorner = wall === 'left'
+            ? moduleId.includes('left-corner')
+            : moduleId.includes('right-corner');
+          return placementWall === 'front'
+            && isMatchingCorner
+            && startSlot <= cornerSlotIndex
+            && cornerSlotIndex < startSlot + span;
         });
         const frontCornerData = frontCornerModule
           ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
@@ -163,7 +172,16 @@ export const useFurnitureKeyboard = ({
         const cornerSlotIndex = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
         const frontCornerModule = placedModules.find(mod => {
           const placementWall = mod.placementWall || 'front';
-          return placementWall === 'front' && mod.slotIndex === cornerSlotIndex;
+          const moduleId = mod.moduleId || '';
+          const span = mod.isDualSlot ? 2 : 1;
+          const startSlot = mod.slotIndex ?? -1;
+          const isMatchingCorner = wall === 'left'
+            ? moduleId.includes('left-corner')
+            : moduleId.includes('right-corner');
+          return placementWall === 'front'
+            && isMatchingCorner
+            && startSlot <= cornerSlotIndex
+            && cornerSlotIndex < startSlot + span;
         });
         const frontCornerData = frontCornerModule
           ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)

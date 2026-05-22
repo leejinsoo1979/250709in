@@ -1320,7 +1320,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setCustomWidth(roundedWidth);
       setWidthInputValue(roundedWidth % 1 === 0 ? roundedWidth.toString() : roundedWidth.toFixed(1));
       setOriginalCustomWidth(initialWidth);
-      const hingePos = currentPlacedModule.hingePosition || 'right';
+      const isRightCornerCabinet = !!currentPlacedModule.moduleId?.includes('right-corner');
+      const hingePos = currentPlacedModule.hingePosition || (isRightCornerCabinet ? 'left' : 'right');
       const hingeTypeVal = currentPlacedModule.hingeType || 'A';
       const hasDoorVal = currentPlacedModule.hasDoor ?? false; // 3D 렌더링(FurnitureItem)과 동일 기준
       const doorSplitVal = currentPlacedModule.doorSplit ?? false;
@@ -1758,6 +1759,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
+  const isRightCornerCabinet = !!moduleData?.id.includes('right-corner');
+  const isLeftCornerCabinet = !!moduleData?.id.includes('left-corner');
+  const isCornerCabinet = isRightCornerCabinet || isLeftCornerCabinet;
   const isDualFurniture = moduleData ? moduleData.id.startsWith('dual-') : false;
 
   // 싱글 가구 여부 확인 (듀얼이 아닌 경우)
@@ -2743,6 +2747,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
+  const handleCornerHingePositionChange = (
+    field: 'cornerFrontHingePosition' | 'cornerSideHingePosition',
+    position: 'left' | 'right'
+  ) => {
+    if (activePopup.id) {
+      updatePlacedModule(activePopup.id, { [field]: position });
+    }
+  };
+
   const handleHingeTypeChange = (type: 'A' | 'B') => {
     setHingeType(type);
     if (activePopup.id) {
@@ -3223,7 +3236,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </h4>
 
               <div className={styles.property}>
-                <span className={styles.propertyValue}>
+                <div className={styles.propertyValue}>
                   {(() => {
                     const directW = currentPlacedModule
                       ? Math.round((currentPlacedModule.adjustedWidth ?? currentPlacedModule.customWidth ?? moduleData.dimensions.width) * 10) / 10
@@ -3233,9 +3246,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       : customDepth;
                     const is2Tier = currentPlacedModule?.moduleId.includes('lower-drawer-2tier') || currentPlacedModule?.moduleId.includes('dual-lower-drawer-2tier');
                     const displayH = is2Tier && currentPlacedModule?.cabinetBodyHeight ? currentPlacedModule.cabinetBodyHeight : moduleData.dimensions.height;
-                    return `${directW} × ${displayH} × ${directD}mm`;
+                    if (!isCornerCabinet) {
+                      return `${directW} × ${displayH} × ${directD}mm`;
+                    }
+
+                    const cornerSlotWidths = ((currentPlacedModule as any)?.slotWidths ?? (moduleData as any).slotWidths) as number[] | undefined;
+                    const frontSlotWidthMm = (isLeftCornerCabinet
+                      ? cornerSlotWidths?.[0]
+                      : cornerSlotWidths?.[cornerSlotWidths.length - 1])
+                      ?? directW / 2;
+                    const sideDepthMm = Math.max(1, frontSlotWidthMm - 23);
+                    const totalSideDepthMm = Math.max(directD, spaceInfo.depth || directD);
+                    const remainingSideDepthMm = Math.max(0, totalSideDepthMm - directD);
+                    const sideSlotCount = remainingSideDepthMm > 0.5
+                      ? Math.max(1, Math.ceil(remainingSideDepthMm / 600))
+                      : 0;
+                    const sideWidthMm = sideSlotCount > 0 ? remainingSideDepthMm / sideSlotCount : 0;
+                    const sideBodyWidthMm = sideWidthMm > 0 ? Math.max(1, sideWidthMm - 18) : 0;
+                    const formatMm = (value: number) => Number.isInteger(value) ? String(value) : value.toFixed(1);
+
+                    return (
+                      <div style={{ display: 'grid', gap: '2px' }}>
+                        <span>정면: {formatMm(directW)} × {formatMm(displayH)} × {formatMm(directD)}mm</span>
+                        <span>측면: {formatMm(sideBodyWidthMm)} × {formatMm(displayH)} × {formatMm(sideDepthMm)}mm</span>
+                      </div>
+                    );
                   })()}
-                </span>
+                </div>
               </div>
               {/* 뒷벽과 이격 / 키큰장찬넬은 전면 옵셋 (전면 프레임이 EP 라인에서 뒤로 들어가는 mm) */}
               {currentPlacedModule && (() => {
@@ -4476,7 +4513,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
              상판내림(top-down-half/2tier/3tier)·도어올림(door-lift-half/2tier/3tier)·기본장은 도어이므로 경첩 표시 */}
           {!showDetails && currentPlacedModule?.hasDoor
             && !isGlassCabinetModule
-            && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-'))
+            && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-') && !currentPlacedModule.moduleId.includes('right-corner') && !currentPlacedModule.moduleId.includes('left-corner'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
               // 서랍 모듈만 매칭 (반통 half / 2tier / 3tier 는 도어 모듈 → 제외)
@@ -4488,30 +4525,68 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ))
             && (
             <div className={styles.propertySection}>
-              <div className={styles.hingeSubSection}>
-                <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
-                <div className={styles.hingeTabSelector}>
-                  <button
-                    className={`${styles.hingeTab} ${hingePosition === 'left' ? styles.activeHingeTab : ''}`}
-                    onClick={() => handleHingePositionChange('left')}
-                  >
-                    {t('furniture.left')}
-                    <span className={styles.hingeTabSubtitle}>{t('furniture.openToRight')}</span>
-                  </button>
-                  <button
-                    className={`${styles.hingeTab} ${hingePosition === 'right' ? styles.activeHingeTab : ''}`}
-                    onClick={() => handleHingePositionChange('right')}
-                  >
-                    {t('furniture.right')}
-                    <span className={styles.hingeTabSubtitle}>{t('furniture.openToLeft')}</span>
-                  </button>
-                </div>
-                {isCoverDoor && (
-                  <div className={styles.coverDoorNote}>
-                    {t('furniture.coverDoorNote')}
+              {isCornerCabinet ? (() => {
+                const frontDefault = (isRightCornerCabinet ? 'left' : 'right') as const;
+                const sideDefault = (isRightCornerCabinet ? 'right' : 'left') as const;
+                const frontHinge = ((currentPlacedModule as any).cornerFrontHingePosition || frontDefault) as 'left' | 'right';
+                const sideHinge = ((currentPlacedModule as any).cornerSideHingePosition || sideDefault) as 'left' | 'right';
+                const renderCornerHingeTabs = (
+                  label: string,
+                  value: 'left' | 'right',
+                  field: 'cornerFrontHingePosition' | 'cornerSideHingePosition'
+                ) => (
+                  <div className={styles.hingeSubSection}>
+                    <h6 className={styles.subSectionTitle}>{label}</h6>
+                    <div className={styles.hingeTabSelector}>
+                      <button
+                        className={`${styles.hingeTab} ${value === 'left' ? styles.activeHingeTab : ''}`}
+                        onClick={() => handleCornerHingePositionChange(field, 'left')}
+                      >
+                        {t('furniture.left')}
+                        <span className={styles.hingeTabSubtitle}>{t('furniture.openToRight')}</span>
+                      </button>
+                      <button
+                        className={`${styles.hingeTab} ${value === 'right' ? styles.activeHingeTab : ''}`}
+                        onClick={() => handleCornerHingePositionChange(field, 'right')}
+                      >
+                        {t('furniture.right')}
+                        <span className={styles.hingeTabSubtitle}>{t('furniture.openToLeft')}</span>
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
+                );
+                return (
+                  <>
+                    {renderCornerHingeTabs('정면 도어 경첩 방향', frontHinge, 'cornerFrontHingePosition')}
+                    {renderCornerHingeTabs('측면 도어 경첩 방향', sideHinge, 'cornerSideHingePosition')}
+                  </>
+                );
+              })() : (
+                <div className={styles.hingeSubSection}>
+                  <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
+                  <div className={styles.hingeTabSelector}>
+                    <button
+                      className={`${styles.hingeTab} ${hingePosition === 'left' ? styles.activeHingeTab : ''}`}
+                      onClick={() => handleHingePositionChange('left')}
+                    >
+                      {t('furniture.left')}
+                      <span className={styles.hingeTabSubtitle}>{t('furniture.openToRight')}</span>
+                    </button>
+                    <button
+                      className={`${styles.hingeTab} ${hingePosition === 'right' ? styles.activeHingeTab : ''}`}
+                      onClick={() => handleHingePositionChange('right')}
+                    >
+                      {t('furniture.right')}
+                      <span className={styles.hingeTabSubtitle}>{t('furniture.openToLeft')}</span>
+                    </button>
+                  </div>
+                  {isCoverDoor && (
+                    <div className={styles.coverDoorNote}>
+                      {t('furniture.coverDoorNote')}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

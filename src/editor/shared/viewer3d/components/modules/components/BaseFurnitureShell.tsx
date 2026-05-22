@@ -748,6 +748,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   ...topDownNotches
                 ] : undefined;
                 const notchProps = allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } };
+                const leftPanelNotchProps = moduleData?.id?.includes('left-corner') ? {} : notchProps;
                 const rightPanelNotchProps = moduleData?.id?.includes('right-corner') ? {} : notchProps;
 
                 return (
@@ -767,7 +768,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                       faceGrooves={createBackPanelFaceGrooves('right', height)}
-                      {...notchProps}
+                      {...leftPanelNotchProps}
                     />
 
                     {/* 우측판 - L자형 단일 메시 (따내기 포함) */}

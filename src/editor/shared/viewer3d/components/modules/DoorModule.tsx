@@ -1164,8 +1164,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   const moduleIdentifier = moduleData?.id || storePlacedModule?.moduleId || '';
   const isRightCornerCabinet = moduleIdentifier.includes('right-corner');
+  const isLeftCornerCabinet = moduleIdentifier.includes('left-corner');
+  const isCornerCabinet = isRightCornerCabinet || isLeftCornerCabinet;
   const isRightCornerSideDoor = moduleData?.id?.includes('side-corner-door') || false;
-  const isRightCornerMainDoor = isRightCornerCabinet && !isRightCornerSideDoor;
+  const isRightCornerMainDoor = isCornerCabinet && !isRightCornerSideDoor;
 
   // 듀얼 가구인지 판단: moduleData ID 또는 PlacedModule.isDualSlot (커스텀 가구 지원)
   const isDualByModuleId = !isRightCornerSideDoor && (moduleData?.id?.startsWith('dual-') || storePlacedModule?.isDualSlot || false);
@@ -1335,12 +1337,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       !moduleIdentifier.startsWith('dual-')
     )
   );
-  const isDualFurniture = isDualByModuleId || (
-    !isExplicitSingleByModuleId &&
-    !isSingleDoorOnlyCabinet &&
-    !isSingleUpperCabinet &&
-    Math.round(effectiveFurnitureWidth) >= 601
-  );
+  const isDualFurniture = isDualByModuleId;
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -2294,25 +2291,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
-    const rightCornerMainDoorHinge = isRightCornerCabinet ? adjustedHingePosition : 'left';
-    const rightCornerMainDoorHingeX = rightCornerMainDoorHinge === 'right'
+    const cornerMainDoorHinge = isCornerCabinet ? adjustedHingePosition : 'left';
+    const leftCornerMainDoorHingeX = cornerMainDoorHinge === 'right'
       ? leftXOffset + (leftDoorWidthUnits / 2 - hingeOffsetUnits)
       : leftHingeX;
+    const rightCornerMainDoorHingeX = cornerMainDoorHinge === 'left'
+      ? rightXOffset + (-rightDoorWidthUnits / 2 + hingeOffsetUnits)
+      : rightHingeX;
     const leftDoorOpenGeometry = calculateDualDoorOpenGeometry({
-      doorSide: rightCornerMainDoorHinge,
+      doorSide: isRightCornerCabinet ? cornerMainDoorHinge : 'left',
       doorYPosition,
       doorDepth,
-      hingeX: rightCornerMainDoorHingeX,
+      hingeX: isRightCornerCabinet ? leftCornerMainDoorHingeX : leftHingeX,
       doorWidthUnits: leftDoorWidthUnits,
       epTrimShift: leftEpTrimShift,
       insertExtendShift: leftInsertExtendShift,
       panelThicknessMm: panelThickness
     });
     const rightDoorOpenGeometry = calculateDualDoorOpenGeometry({
-      doorSide: 'right',
+      doorSide: isLeftCornerCabinet ? cornerMainDoorHinge : 'right',
       doorYPosition,
       doorDepth,
-      hingeX: rightHingeX,
+      hingeX: isLeftCornerCabinet ? rightCornerMainDoorHingeX : rightHingeX,
       doorWidthUnits: rightDoorWidthUnits,
       epTrimShift: rightEpTrimShift,
       insertExtendShift: rightInsertExtendShift,
@@ -2337,11 +2337,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isSideView = view2DDirection === 'left' || view2DDirection === 'right';
 
     // 측면뷰가 아니면 항상 표시, 측면뷰면 항상 표시 (듀얼 도어는 하나의 유닛)
-    const showLeftDoor = true;
+    const showLeftDoor = !isLeftCornerCabinet;
     const showRightDoor = !isRightCornerCabinet;
-    const leftDoorRotation = isRightCornerCabinet && rightCornerMainDoorHinge === 'right'
+    const leftDoorRotation = isRightCornerCabinet && cornerMainDoorHinge === 'right'
       ? dualRightDoorSpring.rotation
       : dualLeftDoorSpring.rotation;
+    const rightDoorRotation = isLeftCornerCabinet && cornerMainDoorHinge === 'left'
+      ? dualLeftDoorSpring.rotation
+      : dualRightDoorSpring.rotation;
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
@@ -2805,7 +2808,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
         <group position={rightDoorOpenGeometry.parentPosition}>
-          <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
+          <animated.group rotation-y={rightDoorLocked ? 0 : rightDoorRotation}>
             <group position={rightDoorOpenGeometry.childPosition}>
               {/* 2D 정면뷰: 우측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (

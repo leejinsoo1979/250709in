@@ -149,7 +149,7 @@ const formatThumbnailName = (module: ModuleData): string => {
   const isDual = module.id.includes('dual-');
   // 키큰장찬넬(insert-frame)은 듀얼 개념 없는 단일 채움재 → "(반통)" 접미어 제외
   const isInsertFrame = module.id.includes('insert-frame');
-  const isCornerCabinet = module.id.includes('right-corner');
+  const isCornerCabinet = module.id.includes('right-corner') || module.id.includes('left-corner');
 
   // "한통" 제거, "듀얼 " 접두어 제거
   name = name.replace(/\s*한통/, '').replace(/^듀얼\s*/, '');
@@ -1254,7 +1254,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
-    if (moduleId.includes('right-corner')) return '';
+    if (moduleId.includes('right-corner') || moduleId.includes('left-corner')) return '';
     // 멍장(더미 가구) 3종 전용 썸네일
     if (moduleId.includes('dummy')) return '/images/furniture-thumbnails/dummy.png';
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거

@@ -104,8 +104,17 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
       ? 0
       : zoneSlotInfo.normal.columnCount - 1;
     const frontCornerModule = placedModules.find(mod => {
-      const wall = (mod as any).placementWall || 'front';
-      return wall === 'front' && mod.slotIndex === cornerSlotIndex;
+      const placementWall = (mod as any).placementWall || 'front';
+      const moduleId = (mod as any).moduleId || '';
+      const span = (mod as any).isDualSlot ? 2 : 1;
+      const startSlot = mod.slotIndex ?? -1;
+      const isMatchingCorner = wall === 'left'
+        ? moduleId.includes('left-corner')
+        : moduleId.includes('right-corner');
+      return placementWall === 'front'
+        && isMatchingCorner
+        && startSlot <= cornerSlotIndex
+        && cornerSlotIndex < startSlot + span;
     });
     const frontCornerData = frontCornerModule
       ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)

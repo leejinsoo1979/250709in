@@ -37,6 +37,26 @@ import {
 const BUILT_IN_FRIDGE_FIXED_WIDTH = 582;
 const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
 
+const getCornerCabinetStartSlot = (
+  moduleId: string | undefined,
+  span: number,
+  columnCount: number
+): number | null => {
+  if (!moduleId?.includes('left-corner') && !moduleId?.includes('right-corner')) return null;
+  if (moduleId.includes('left-corner')) return 0;
+  return Math.max(0, columnCount - span);
+};
+
+const canStartCornerCabinetAtSlot = (
+  moduleId: string | undefined,
+  slotIndex: number | undefined | null,
+  span: number,
+  columnCount: number
+): boolean => {
+  const cornerStartSlot = getCornerCabinetStartSlot(moduleId, span, columnCount);
+  return cornerStartSlot === null || slotIndex === cornerStartSlot;
+};
+
 const getModulePlacementFlags = (moduleData: ModuleData | undefined) => {
   const data = moduleData as (ModuleData & {
     hasBase?: boolean;
@@ -240,7 +260,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const isSidePlacementActive = canUsePlacementWallTools
     && isSidePlacementView
     && hasPlacementWall(activePlacementWall as 'left' | 'right');
-  const isClickPlacementMode = !!selectedFurnitureId || isFurniturePlacementMode;
+  const placementSelectedFurnitureId = isFurniturePlacementMode ? selectedFurnitureId : null;
+  const hasPlacementPreview = !!currentDragData || !!placementSelectedFurnitureId;
+  const isClickPlacementMode = !!placementSelectedFurnitureId;
 
   const isSideDualModule = useCallback((moduleData: ModuleData | undefined) => {
     if (!moduleData) return false;
@@ -259,7 +281,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const cornerFrontSlot = wall === 'left' ? 0 : zoneInfo.normal.columnCount - 1;
     const frontCornerModule = placedModules.find(mod => {
       const placementWall = (mod as any).placementWall || 'front';
-      return placementWall === 'front' && mod.slotIndex === cornerFrontSlot;
+      const moduleId = (mod as any).moduleId || '';
+      const span = (mod as any).isDualSlot ? 2 : 1;
+      const startSlot = mod.slotIndex ?? -1;
+      const isMatchingCorner = wall === 'left'
+        ? moduleId.includes('left-corner')
+        : moduleId.includes('right-corner');
+      return placementWall === 'front'
+        && isMatchingCorner
+        && startSlot <= cornerFrontSlot
+        && cornerFrontSlot < startSlot + span;
     });
     const frontCornerData = frontCornerModule
       ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
@@ -498,8 +529,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       } catch (_e) { /* ignore */ }
 
-      if (!dragData?.moduleData && selectedFurnitureId) {
-        const selectedModuleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+      if (!dragData?.moduleData && placementSelectedFurnitureId) {
+        const selectedModuleData = getModuleById(placementSelectedFurnitureId, internalSpace, spaceInfo);
         if (selectedModuleData) {
           dragData = {
             type: 'furniture',
@@ -620,7 +651,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         : zoneInfo.normal.columnCount - 1;
       const frontCornerModule = placedModules.find(mod => {
         const wall = (mod as any).placementWall || 'front';
-        return wall === 'front' && mod.slotIndex === cornerFrontSlot;
+        const moduleId = (mod as any).moduleId || '';
+        const span = (mod as any).isDualSlot ? 2 : 1;
+        const startSlot = mod.slotIndex ?? -1;
+        const isMatchingCorner = activePlacementWall === 'left'
+          ? moduleId.includes('left-corner')
+          : moduleId.includes('right-corner');
+        return wall === 'front'
+          && isMatchingCorner
+          && startSlot <= cornerFrontSlot
+          && cornerFrontSlot < startSlot + span;
       });
       const frontCornerData = frontCornerModule
         ? getModuleById(frontCornerModule.moduleId, internalSpace, spaceInfo)
@@ -1345,6 +1385,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         return false;
       }
 
+      if (!canStartCornerCabinetAtSlot(dragData.moduleData.id, zoneSlotIndex, isDual ? 2 : 1, targetZone.columnCount)) {
+        showAlert('코너장은 좌/우 끝 슬롯에만 배치할 수 있습니다.', { title: '배치 불가' });
+        return false;
+      }
+
       // 슬롯 가용성 검사 (영역 내 인덱스 사용)
       // 단내림이 없을 때는 모든 가구를 확인해야 함
       const targetZoneForFiltering: 'normal' | 'dropped' | undefined = spaceInfo.droppedCeiling?.enabled
@@ -2057,7 +2102,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
         adjustedWidth: _isBuiltInFridge1 ? undefined : adjustedWidth,
-        hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
+        hingePosition: moduleData.id.includes('right-corner') ? 'left' : moduleData.id.includes('left-corner') ? 'right' : hingePosition, // 코너장은 종전 정면도어 기본 열림 유지
         zone: zoneToUse, // 영역 정보 저장
         customWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
         ...(_isBuiltInFridge1 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
@@ -2162,6 +2207,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const defaultDepth = getPlacementDefaultDepth(moduleData, spaceInfo.depth);
         const slotIndex = colliderUserData?.slotIndex;
         const customWidth = moduleData.customWidth || moduleData.dimensions.width;
+        const targetZoneInfo = targetZone === 'dropped' && zoneInfo.dropped
+          ? zoneInfo.dropped
+          : zoneInfo.normal;
+
+        if (!canStartCornerCabinetAtSlot(moduleData.id, slotIndex, isDual ? 2 : 1, targetZoneInfo.columnCount)) {
+          showAlert('코너장은 좌/우 끝 슬롯에만 배치할 수 있습니다.', { title: '배치 불가' });
+          return false;
+        }
 
         // X 위치 계산
         let finalX = 0;
@@ -2208,7 +2261,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
           adjustedWidth: _isBuiltInFridge2 ? undefined : moduleData.dimensions.width,
-          hingePosition: 'right' as 'left' | 'right',
+          hingePosition: (moduleData.id.includes('right-corner') ? 'left' : 'right') as 'left' | 'right',
           customWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
           ...(_isBuiltInFridge2 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
           zone: targetZone, // 클릭한 슬롯의 영역 사용
@@ -2318,6 +2371,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     // 정확한 너비를 포함한 ID 생성
     const targetModuleId = `${moduleBaseType}-${finalWidth}`;
+
+    const targetColumnCount = zoneIndexDataForTarget?.columnCount ?? targetIndexing.columnCount;
+    if (!canStartCornerCabinetAtSlot(dragData.moduleData.id, zoneSlotIndex, isDual ? 2 : 1, targetColumnCount)) {
+      showAlert('코너장은 좌/우 끝 슬롯에만 배치할 수 있습니다.', { title: '배치 불가' });
+      return false;
+    }
 
     debugLog('🎯 [SlotDropZones] Non-dropped module lookup:', {
       originalId: dragData.moduleData.id,
@@ -2626,7 +2685,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       isDualSlot: isDual,
       isValidInCurrentSpace: true,
       adjustedWidth: finalAdjustedWidth,
-      hingePosition: 'right' as 'left' | 'right',
+      hingePosition: (moduleData.id.includes('right-corner') ? 'left' : 'right') as 'left' | 'right',
       // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
       customWidth: finalCustomWidth,
       // 빌트인 냉장고장: slotCustomWidth로 슬롯 재분배 트리거
@@ -2792,13 +2851,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // Click & Place 모드: 모바일에서 섬네일 클릭 후 캔버스 클릭으로 배치
   useEffect(() => {
     const furniturePlacementMode = useFurnitureStore.getState().furniturePlacementMode;
-    if (!furniturePlacementMode || (!currentDragData && !selectedFurnitureId)) {
+    if (!furniturePlacementMode || (!currentDragData && !placementSelectedFurnitureId)) {
       return;
     }
 
     const activeClickData = currentDragData || (() => {
-      if (!selectedFurnitureId) return null;
-      const selectedModuleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+      if (!placementSelectedFurnitureId) return null;
+      const selectedModuleData = getModuleById(placementSelectedFurnitureId, internalSpace, spaceInfo);
       if (!selectedModuleData) return null;
       return {
         type: 'furniture',
@@ -2862,12 +2921,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         canvasElement.removeEventListener('click', handleClick);
       }
     };
-  }, [currentDragData, selectedFurnitureId, handleSlotDrop, internalSpace, setCurrentDragData, setSelectedFurnitureId, spaceInfo]);
+  }, [currentDragData, placementSelectedFurnitureId, handleSlotDrop, internalSpace, setCurrentDragData, setSelectedFurnitureId, spaceInfo]);
 
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
     // 드래그 데이터나 선택된 모듈이 없으면 반환
-    if (!currentDragData && !selectedFurnitureId) {
+    if (!currentDragData && !placementSelectedFurnitureId) {
       return;
     }
 
@@ -2888,8 +2947,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       if (isSidePlacementActive) {
         const moduleData = currentDragData?.moduleData
           ? getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo) || currentDragData.moduleData
-          : selectedFurnitureId
-            ? getModuleById(selectedFurnitureId, internalSpace, spaceInfo)
+          : placementSelectedFurnitureId
+            ? getModuleById(placementSelectedFurnitureId, internalSpace, spaceInfo)
             : undefined;
         const sideSlotIndex = getSideSlotIndexFromPointer(e.clientX, e.clientY, canvas, moduleData);
         const sidePlacementData = getSideWallPlacementData(moduleData);
@@ -3108,7 +3167,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       if (currentDragData) {
         canvasContainer.addEventListener('dragover', handleDragOver);
       }
-      if (selectedFurnitureId || isFurniturePlacementMode) {
+      if (placementSelectedFurnitureId) {
         canvasContainer.addEventListener('mousemove', handleMouseMove);
       }
       canvasContainer.addEventListener('dragleave', handleDragLeave);
@@ -3125,8 +3184,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     };
   }, [
     currentDragData,
-    selectedFurnitureId,
-    isFurniturePlacementMode,
+    placementSelectedFurnitureId,
     camera,
     scene,
     spaceInfo,
@@ -3484,10 +3542,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       })()}
 
       {/* 측면 배치 고스트 */}
-      {isSidePlacementActive && (currentDragData || selectedFurnitureId) && (() => {
+      {isSidePlacementActive && hasPlacementPreview && (() => {
         let activeDragData = currentDragData;
-        if (!activeDragData && selectedFurnitureId) {
-          const selectedModuleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+        if (!activeDragData && placementSelectedFurnitureId) {
+          const selectedModuleData = getModuleById(placementSelectedFurnitureId, internalSpace, spaceInfo);
           if (selectedModuleData) {
             activeDragData = {
               type: 'furniture',
@@ -3645,10 +3703,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       {debugLog('👻 [Ghost] Rendering conditions:', {
         hoveredSlotIndex,
         hasCurrentDragData: !!currentDragData,
-        hasSelectedFurnitureId: !!selectedFurnitureId,
+        hasSelectedFurnitureId: !!placementSelectedFurnitureId,
         zoneSlotPositionsLength: zoneSlotPositions.length
       })}
-      {!isSidePlacementView && (currentDragData || selectedFurnitureId) && zoneSlotPositions.map((slotData, slotIndex) => {
+      {!isSidePlacementView && hasPlacementPreview && zoneSlotPositions.map((slotData, slotIndex) => {
         // slotData가 객체인지 숫자인지 확인하여 위치 추출
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
@@ -3667,8 +3725,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // });
 
         // selectedFurnitureId가 있고 currentDragData가 없으면 selectedFurnitureId로부터 데이터 생성
-        if (!activeModuleData && selectedFurnitureId) {
-          const moduleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+        if (!activeModuleData && placementSelectedFurnitureId) {
+          const moduleData = getModuleById(placementSelectedFurnitureId, internalSpace, spaceInfo);
 // console.log('🔍 [Ghost] moduleData 조회 결과:', {
             // selectedFurnitureId,
             // foundModuleData: !!moduleData,
@@ -3727,8 +3785,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
 
           // 클릭 모드: selectedFurnitureId가 있으면 클릭 모드 (섬네일 클릭)
-          if (selectedFurnitureId) {
-            const moduleIdForCheck = selectedFurnitureId || currentDragData?.moduleData?.id || activeModuleData?.moduleData?.id || '';
+          if (placementSelectedFurnitureId) {
+            const moduleIdForCheck = placementSelectedFurnitureId || currentDragData?.moduleData?.id || activeModuleData?.moduleData?.id || '';
+            const targetColumnCountForGhost = (() => {
+              if (hasDroppedCeiling && slotZone && zoneSlotInfo) {
+                const targetZone = slotZone === 'dropped' && zoneSlotInfo.dropped
+                  ? zoneSlotInfo.dropped
+                  : zoneSlotInfo.normal;
+                return targetZone.columnCount;
+              }
+              return indexing.columnCount;
+            })();
 
 // console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
               // selectedFurnitureId,
@@ -3747,6 +3814,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               // 듀얼 가구일 때 겹치지 않도록 짝수 슬롯(0,2,4,...)에만 고스트 표시
               if (isDual && compareIndex % 2 !== 0) {
 // console.log('🚫 [Click Mode] 듀얼 가구 홀수 슬롯 제외:', { slotIndex: compareIndex });
+                shouldRenderGhost = false;
+              } else if (!canStartCornerCabinetAtSlot(moduleIdForCheck, compareIndex, isDual ? 2 : 1, targetColumnCountForGhost)) {
                 shouldRenderGhost = false;
               } else {
                 // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
@@ -3773,29 +3842,43 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             }
           }
           // 드래그 모드: currentDragData만 있고 selectedFurnitureId가 없으면 드래그 중
-          else if (currentDragData && !selectedFurnitureId) {
+          else if (currentDragData && !placementSelectedFurnitureId) {
             const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
             const isHoveredSlot = compareIndex === hoveredSlotIndex && zoneMatches;
+            const moduleIdForCheck = currentDragData?.moduleData.id || '';
+            const targetColumnCountForGhost = (() => {
+              if (hasDroppedCeiling && slotZone && zoneSlotInfo) {
+                const targetZone = slotZone === 'dropped' && zoneSlotInfo.dropped
+                  ? zoneSlotInfo.dropped
+                  : zoneSlotInfo.normal;
+                return targetZone.columnCount;
+              }
+              return indexing.columnCount;
+            })();
 
             if (isHoveredSlot) {
+              if (!canStartCornerCabinetAtSlot(moduleIdForCheck, compareIndex, isDual ? 2 : 1, targetColumnCountForGhost)) {
+                shouldRenderGhost = false;
+              } else {
               // hover 중인 슬롯이면 사용 가능 여부 확인
               const available = isSlotAvailable(
                 compareIndex,
                 isDual,
                 placedModules,
                 spaceInfo,
-                selectedFurnitureId || (currentDragData?.moduleData.id || ''),
+                placementSelectedFurnitureId || moduleIdForCheck,
                 undefined, // excludeModuleId
                 slotZone // targetZone
               );
               shouldRenderGhost = available;
+              }
             } else {
               shouldRenderGhost = false;
             }
           }
 
           debugLog('🔥 고스트 렌더링 체크:', {
-            mode: currentDragData ? 'drag' : selectedFurnitureId ? 'click' : 'none',
+            mode: currentDragData ? 'drag' : placementSelectedFurnitureId ? 'click' : 'none',
             hoveredSlotIndex,
             hoveredZone,
             slotIndex,
@@ -4454,7 +4537,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       })}
 
       {/* 기둥 앞 공간 고스트 (기둥 C 전용) - 기둥 양옆에 가구가 배치된 후에만 표시 */}
-      {!isSidePlacementView && (currentDragData || selectedFurnitureId) && (() => {
+      {!isSidePlacementView && hasPlacementPreview && (() => {
         // 기둥 분석
         const columnSlotsForFront = analyzeColumnSlots(spaceInfo);
 
@@ -4470,7 +4553,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
 
         // 모듈 데이터 가져오기
-        const moduleIdForFront = currentDragData?.moduleData?.id || selectedFurnitureId;
+        const moduleIdForFront = currentDragData?.moduleData?.id || placementSelectedFurnitureId;
         const moduleDataForFront = currentDragData?.moduleData || (moduleIdForFront ? getModuleById(moduleIdForFront) : null);
 
         // 싱글장만 기둥 앞 공간에 배치 가능

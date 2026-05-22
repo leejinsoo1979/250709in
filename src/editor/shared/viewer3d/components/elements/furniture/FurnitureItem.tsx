@@ -499,6 +499,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     updatePlacedModule(placedModule.id, { hingePosition: pos });
   }, [placedModule.id, updatePlacedModule]);
 
+  const handleCornerHingeChange = useCallback((
+    field: 'cornerFrontHingePosition' | 'cornerSideHingePosition',
+    pos: 'left' | 'right'
+  ) => {
+    updatePlacedModule(placedModule.id, { [field]: pos });
+  }, [placedModule.id, updatePlacedModule]);
+
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
     green: '#10b981',
@@ -1430,6 +1437,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isDualFurniture = placedModule.isDualSlot !== undefined
     ? placedModule.isDualSlot
     : actualModuleData?.id.includes('dual-') || false;
+  const isRightCornerCabinet = !!(
+    actualModuleData?.id?.includes('right-corner') ||
+    placedModule.moduleId?.includes('right-corner')
+  );
+  const isLeftCornerCabinet = !!(
+    actualModuleData?.id?.includes('left-corner') ||
+    placedModule.moduleId?.includes('left-corner')
+  );
+  const isCornerCabinet = isRightCornerCabinet || isLeftCornerCabinet;
 
 
   // 상부장/하부장과 인접한 키큰장인지 확인 (actualModuleData가 있을 때만)
@@ -3136,10 +3152,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const furnitureColor = isDraggingThis ? '#66ff66' : undefined;
 
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산 (드래그 중이 아닐 때만)
-  let optimalHingePosition = placedModule.hingePosition || 'right';
+  let optimalHingePosition = placedModule.hingePosition || (isRightCornerCabinet ? 'left' : 'right');
 
   // 노서라운드 모드에서 커버도어의 힌지 위치 조정
-  if (spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
+  if (!isCornerCabinet && spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
     const isFirstSlot = normalizedSlotIndex === 0;
     // isLastSlot은 이미 위에서 정의됨
 
@@ -4992,7 +5008,52 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             </div>
 
             {/* 경첩 방향 (싱글 가구만) */}
-            {!isDualFurniture && (
+            {isCornerCabinet ? (() => {
+              const frontHinge = ((placedModule as any).cornerFrontHingePosition || (isRightCornerCabinet ? 'left' : 'right')) as 'left' | 'right';
+              const sideHinge = ((placedModule as any).cornerSideHingePosition || (isRightCornerCabinet ? 'right' : 'left')) as 'left' | 'right';
+              const renderCornerHingeButtons = (
+                label: string,
+                value: 'left' | 'right',
+                field: 'cornerFrontHingePosition' | 'cornerSideHingePosition'
+              ) => (
+                <div>
+                  <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>{label}</label>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {(['left', 'right'] as const).map((pos) => {
+                      const isActive = value === pos;
+                      return (
+                        <button
+                          key={`${field}-${pos}`}
+                          onClick={() => handleCornerHingeChange(field, pos)}
+                          style={{
+                            flex: 1,
+                            padding: '5px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid',
+                            borderColor: isActive ? getThemeColor() : '#d1d5db',
+                            background: isActive ? getThemeColor() : '#fff',
+                            color: isActive ? '#fff' : '#374151',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: 500,
+                            transition: 'all 0.15s ease',
+                          }}
+                        >
+                          {pos === 'left' ? '좌' : '우'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+
+              return (
+                <>
+                  {renderCornerHingeButtons('정면 경첩 방향', frontHinge, 'cornerFrontHingePosition')}
+                  {renderCornerHingeButtons('측면 경첩 방향', sideHinge, 'cornerSideHingePosition')}
+                </>
+              );
+            })() : !isDualFurniture && (
               <div>
                 <label style={{ fontSize: '11px', color: '#6b7280', marginBottom: '3px', display: 'block' }}>경첩 방향</label>
                 <div style={{ display: 'flex', gap: '4px' }}>

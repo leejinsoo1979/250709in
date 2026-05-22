@@ -34,11 +34,48 @@ export const calculateSideWallPlacementRangeMm = (
   };
 };
 
+const getWidthFromModuleId = (moduleId?: string) => {
+  const widthMatch = moduleId?.match(/-([\d.]+)$/);
+  return widthMatch ? parseFloat(widthMatch[1]) : undefined;
+};
+
+const getFrontCornerSlotWidthMm = (frontCornerModule: any, frontCornerData: any) => {
+  const moduleId = frontCornerModule?.moduleId || frontCornerData?.id || '';
+  const isLeftCorner = moduleId.includes('left-corner');
+  const isRightCorner = moduleId.includes('right-corner');
+  if (!isLeftCorner && !isRightCorner) {
+    return undefined;
+  }
+
+  const slotWidths = frontCornerModule?.slotWidths || frontCornerData?.slotWidths;
+  if (Array.isArray(slotWidths) && slotWidths.length > 0) {
+    return isLeftCorner ? slotWidths[0] : slotWidths[slotWidths.length - 1];
+  }
+
+  const totalWidthMm = frontCornerModule?.freeWidth
+    ?? frontCornerModule?.moduleWidth
+    ?? frontCornerModule?.customWidth
+    ?? frontCornerModule?.adjustedWidth
+    ?? frontCornerModule?.slotCustomWidth
+    ?? getWidthFromModuleId(frontCornerModule?.moduleId)
+    ?? frontCornerData?.dimensions?.width;
+
+  return Number.isFinite(totalWidthMm) ? totalWidthMm / 2 : undefined;
+};
+
 export const resolveSideWallCornerBodyDepthMm = (
   frontCornerModule: any,
   frontCornerData: any,
   totalSideDepthMm: number
 ) => {
+  const frontCornerSlotWidthMm = getFrontCornerSlotWidthMm(frontCornerModule, frontCornerData);
+  if (Number.isFinite(frontCornerSlotWidthMm)) {
+    return Math.min(
+      Math.max(1, totalSideDepthMm),
+      Math.max(1, frontCornerSlotWidthMm - SIDE_WALL_CORNER_DOOR_RECESS_MM - SIDE_WALL_CORNER_DOOR_FRONT_GAP_MM)
+    );
+  }
+
   const frontCornerDepthMm = frontCornerModule?.customDepth
     ?? frontCornerModule?.freeDepth
     ?? frontCornerModule?.upperSectionDepth
@@ -51,11 +88,6 @@ export const resolveSideWallCornerBodyDepthMm = (
     Math.max(1, totalSideDepthMm),
     Math.max(1, frontCornerDepthMm)
   );
-};
-
-const getWidthFromModuleId = (moduleId?: string) => {
-  const widthMatch = moduleId?.match(/-([\d.]+)$/);
-  return widthMatch ? parseFloat(widthMatch[1]) : undefined;
 };
 
 export const resolveSideWallCabinetDepthMm = (
@@ -75,7 +107,10 @@ export const resolveSideWallCabinetDepthMm = (
     ?? frontCornerModule?.customWidth
     ?? frontCornerModule?.adjustedWidth
     ?? frontCornerModule?.slotCustomWidth;
-  const sideCabinetDepthMm = Number.isFinite(frontCornerWidthMm)
+  const frontCornerSlotWidthMm = getFrontCornerSlotWidthMm(frontCornerModule, frontCornerData);
+  const sideCabinetDepthMm = Number.isFinite(frontCornerSlotWidthMm)
+    ? frontCornerSlotWidthMm - SIDE_WALL_CORNER_DOOR_RECESS_MM - SIDE_WALL_CORNER_DOOR_FRONT_GAP_MM
+    : Number.isFinite(frontCornerWidthMm)
     ? frontCornerWidthMm - SIDE_WALL_CORNER_DOOR_RECESS_MM - SIDE_WALL_CORNER_DOOR_FRONT_GAP_MM
     : fallbackDepthMm;
 

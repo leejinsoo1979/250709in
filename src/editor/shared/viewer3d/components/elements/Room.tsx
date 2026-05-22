@@ -7262,7 +7262,7 @@ const Room: React.FC<RoomProps> = ({
               const modCenterXmm = (bounds.left + bounds.right) / 2;
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
-              const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
+              const modBaseZInset = mmToThreeUnits(mod.baseFrameOffset ?? (freeIsLower ? 65 : 0));
               // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
               const baseShoeMid = mod.moduleId || '';
               const isShoeBase = (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-') || baseShoeMid.includes('glass-cabinet'));
@@ -7634,7 +7634,7 @@ const Room: React.FC<RoomProps> = ({
                       const modBaseYCenter = panelStartY + floatHeight + baseGapThreeUnits + modBaseH / 2;
                       const modCategory = getModuleCategory(mod);
                       const isLowerMod = modCategory === 'lower';
-                      const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (isLowerMod ? mmToThreeUnits(65) : 0);
+                      const modBaseZInset = mmToThreeUnits(mod.baseFrameOffset ?? (isLowerMod ? 65 : 0));
                       // 신발장 걸래받이 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
