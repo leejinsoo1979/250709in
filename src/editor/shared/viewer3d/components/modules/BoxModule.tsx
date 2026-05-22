@@ -1734,21 +1734,24 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const lowerSectionTopMm = (typeof customLowerSecH === 'number' && customLowerSecH > 0)
               ? customLowerSecH
               : defaultLowerSectionTopMm;
-            const doorSplitGapMm = isPantrySplit ? 3 : 20;
+            const defaultLowerDoorTopGapMm = isPantrySplit ? 2 : 40;
+            const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : 20;
+            const effectiveLowerDoorTopGapMm = lowerDoorTopGap ?? defaultLowerDoorTopGapMm;
+            const effectiveUpperDoorBottomGapMm = upperDoorBottomGap ?? defaultUpperDoorBottomGapMm;
+            const effectiveLowerDoorBottomGapMm = lowerDoorBottomGap ?? doorBottomGap ?? 0;
+            const effectiveUpperDoorTopGapMm = upperDoorTopGap ?? doorTopGap ?? 0;
             // 명시 사양 (사용자):
             //   - shelf-split: 하부도어 상단 = 860-40, 상부도어 하단 = 860-20
             //   - pantry-cabinet-split: 갭 3mm 비대칭 분할
             //       · 하부도어 상단 = 하부섹션 상단 - 2mm (아래로 2)
             //       · 상부도어 하단 = 하부섹션 상단(=상부섹션 하단) + 1mm (위로 1)
             //       · 총 갭 = 1 + 2 = 3mm
-            const lowerDoorTopMm = isPantrySplit
-              ? lowerSectionTopMm - 2 // 하부 도어 상단: 하부섹션 상단에서 2mm 아래
-              : lowerSectionTopMm - 40; // 820 (현관장 기존 사양 유지)
+            const lowerDoorTopMm = lowerSectionTopMm - effectiveLowerDoorTopGapMm;
             const upperDoorBottomMm = isPantrySplit
-              ? lowerSectionTopMm + 1 // 상부 도어 하단: 상부섹션 하단에서 1mm 위
-              : lowerSectionTopMm - 20; // 840 (현관장 기존 사양 유지)
-            const lowerGapBottom = doorBottomGap ?? 0; // 가구 바닥에서 아래로 확장
-            const upperGapTop = doorTopGap ?? 0; // 가구 천판에서 위로 확장
+              ? lowerSectionTopMm + effectiveUpperDoorBottomGapMm
+              : lowerSectionTopMm - effectiveUpperDoorBottomGapMm;
+            const lowerGapBottom = effectiveLowerDoorBottomGapMm; // 가구 바닥에서 아래로 확장
+            const upperGapTop = effectiveUpperDoorTopGapMm; // 가구 천판에서 위로 확장
             // 하부도어 H = 820 - (-하단갭) = 820 + 하단갭
             const lowerDoorH = lowerDoorTopMm + lowerGapBottom;
             // 하부도어 중심(바닥기준) = (820 + (-하단갭)) / 2 = (820 - 하단갭) / 2

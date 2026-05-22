@@ -1878,9 +1878,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       currentPlacedModule?.upperDoorHingePositionsMm,
       currentPlacedModule?.lowerDoorHingePositionsMm,
       currentPlacedModule?.customSections,
-      doorOuterOpenSides
+      doorOuterOpenSides,
+      {
+        upperDoorTopGap: currentPlacedModule?.upperDoorTopGap,
+        upperDoorBottomGap: currentPlacedModule?.upperDoorBottomGap,
+        lowerDoorTopGap: currentPlacedModule?.lowerDoorTopGap,
+        lowerDoorBottomGap: currentPlacedModule?.lowerDoorBottomGap
+      }
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {

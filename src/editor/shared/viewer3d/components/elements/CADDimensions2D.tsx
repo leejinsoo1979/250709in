@@ -2548,11 +2548,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               cabinetTopMm = cabinetBottomMm + moduleHeightMm;
             }
 
-            // 하부장 + 인조대리석: 가구 높이에 상판 두께 포함
+            // 하부장 + 상판: 장 높이와 상판 두께를 분리하여 표시
             const stoneThicknessRL2 = _stoneTopThk(mod);
             const includeStoneInHeightRL2 = modCat_rl2 === 'lower' && stoneThicknessRL2 > 0;
-            const displayHeightMmRL2 = includeStoneInHeightRL2 ? moduleHeightMm + stoneThicknessRL2 : moduleHeightMm;
-            const displayTopMmRL2 = includeStoneInHeightRL2 ? cabinetTopMm + stoneThicknessRL2 : cabinetTopMm;
 
             // 2섹션 가구(의류장: 코트장/붙박이장B/D)는 섹션별로 분할하여 표시
             let didSplitSectionsRL2 = false;
@@ -2578,9 +2576,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (!didSplitSectionsRL2) {
               segments_rl2.push({
                 bottomY: mmToThreeUnits(cabinetBottomMm),
-                topY: mmToThreeUnits(displayTopMmRL2),
-                heightMm: Math.round(displayHeightMmRL2),
+                topY: mmToThreeUnits(cabinetTopMm),
+                heightMm: Math.round(moduleHeightMm),
                 key: `furniture-${moduleIndex}`
+              });
+            }
+
+            if (includeStoneInHeightRL2) {
+              segments_rl2.push({
+                bottomY: mmToThreeUnits(cabinetTopMm),
+                topY: mmToThreeUnits(cabinetTopMm + stoneThicknessRL2),
+                heightMm: stoneThicknessRL2,
+                key: `stone-top-${moduleIndex}`
               });
             }
 
@@ -2599,7 +2606,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               }
             }
 
-            // 하부장: 뒷턱 치수만 (상판 두께는 몸통에 합산됨)
+            // 하부장: 뒷턱 치수
             if (modCat_rl2 === 'lower') {
               const stoneThickness = _stoneTopThk(mod);
 

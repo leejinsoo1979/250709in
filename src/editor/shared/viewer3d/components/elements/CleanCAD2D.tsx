@@ -4409,6 +4409,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let upperCabinetH = 0;
           let upperCabinetBodyH = 0;
           let upperCabinetBottomEpH = 0;
+          let lowerCountertopH = 0;
+          let singleLowerCountertopH = 0;
           if (hasDualCabinet) {
             const upperModForEP = leftCategoryResolved === 'upper' ? leftmostMod : leftCompanionMod;
             const upperHasBottomEP = (upperModForEP as any)?.hasBottomEndPanel !== false;
@@ -4431,9 +4433,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (hasDualCabinet) {
             const lowerMod = leftCategoryResolved === 'lower' ? leftmostMod : leftCompanionMod;
             const stoneH = getStoneH(lowerMod);
-            if (stoneH > 0) lowerCabinetH += stoneH;
+            if (stoneH > 0) lowerCountertopH = stoneH;
           } else if (leftCategoryResolved === 'lower' && leftmostMod?.stoneTopThickness) {
-            furnitureH += getStoneH(leftmostMod);
+            singleLowerCountertopH = getStoneH(leftmostMod);
           }
 
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
@@ -4461,9 +4463,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             furnitureH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - leftTopGapForDim);
           }
           // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값(actualTopSize), 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
+          const furnitureOccupiedH = furnitureH + (leftCategoryResolved === 'lower' && !hasDualCabinet ? singleLowerCountertopH : 0);
           const topFrameH = (leftCategoryResolved === 'upper' || hasDualCabinet)
             ? actualTopSize
-            : Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
+            : Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureOccupiedH);
 
           // 상부장 여부: 상부장은 천장에서 아래로 배치되므로 분할 순서가 다름
           const isUpperCategory = leftCategoryResolved === 'upper' && !hasDualCabinet;
@@ -4556,11 +4559,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상부장: 천장→상단몰딩→가구→빈공간→바닥 순서
           // 하부장/키큰장: 바닥→바닥마감재→받침대→가구→상단몰딩→천장 순서
           // 상하부장 동시배치: 바닥→받침대→하부장→빈공간→상부장→상단몰딩→천장
-          let bottomFrameTopY: number, furnitureTopY: number;
+          let bottomFrameTopY: number, furnitureTopY: number, lowerCabinetBodyTopY: number, singleLowerCountertopTopY: number;
           if (hasDualCabinet) {
             // 상하부장 동시 배치: 하부장 기준으로 좌표 설정
             bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
-            furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + lowerCabinetH);
+            lowerCabinetBodyTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + lowerCabinetH);
+            furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + lowerCabinetH + lowerCountertopH);
+            singleLowerCountertopTopY = furnitureTopY;
           } else if (isUpperCategory) {
             // 상부장: 가구는 천장 - 상단몰딩 아래에 붙음
             // 본체 가이드는 EP 켜진 경우에만 하부마감판(18mm) 포함, 끄면 본체만
@@ -4568,9 +4573,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const singleUpperFinishMm = singleUpperHasBottomEP ? UPPER_BOTTOM_FINISH_MM : 0;
             furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상단몰딩 하단 = 가구 상단
             bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH + singleUpperFinishMm); // 가구 하단 + (EP 시 하부마감판)
+            lowerCabinetBodyTopY = furnitureTopY;
+            singleLowerCountertopTopY = furnitureTopY;
           } else {
             bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
             furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + furnitureH);
+            lowerCabinetBodyTopY = furnitureTopY;
+            singleLowerCountertopTopY = furnitureTopY + mmToThreeUnits(singleLowerCountertopH);
           }
           // 상하부장 동시배치 시 상부장 Y 좌표
           const upperCabinetBottomY = hasDualCabinet ? mmToThreeUnits(effectiveH - actualTopSize - upperCabinetH) : 0;
@@ -4578,7 +4587,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const upperCabinetTopY = hasDualCabinet ? mmToThreeUnits(effectiveH - actualTopSize) : 0;
           // 중간 빈공간 높이
           const middleGapH = hasDualCabinet
-            ? Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - lowerCabinetH - upperCabinetH - actualTopSize)
+            ? Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - lowerCabinetH - lowerCountertopH - upperCabinetH - actualTopSize)
             : 0;
           const lowerFrontZ_L = resolveFrontDimensionFrontZ(baseRefMod ?? leftmostMod, 'lower');
           const upperFrontZ_L = resolveFrontDimensionFrontZ(topRefMod_L ?? leftmostMod, 'upper');
@@ -4800,16 +4809,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <>
                   {/* 하부장 높이 */}
                   <NativeLine name="dimension_line"
-                    points={[[innerX - mmToThreeUnits(15), furnitureTopY, lowerDimZ_L], [innerX + mmToThreeUnits(15), furnitureTopY, lowerDimZ_L]]}
+                    points={[[innerX - mmToThreeUnits(15), lowerCabinetBodyTopY, lowerDimZ_L], [innerX + mmToThreeUnits(15), lowerCabinetBodyTopY, lowerDimZ_L]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
                   <Text renderOrder={100001} depthTest={false}
-                    position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, lowerTextZ_L]}
+                    position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + lowerCabinetBodyTopY) / 2, lowerTextZ_L]}
                     fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
                     {lowerCabinetH}
                   </Text>
+                  {lowerCountertopH > 0 && (
+                    <>
+                      <NativeLine name="dimension_line"
+                        points={[[innerX - mmToThreeUnits(15), furnitureTopY, lowerDimZ_L], [innerX + mmToThreeUnits(15), furnitureTopY, lowerDimZ_L]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                      <NativeLine name="dimension_line"
+                        points={[[leftOffset, lowerCabinetBodyTopY, lowerExtZ_L], [innerX - mmToThreeUnits(20), lowerCabinetBodyTopY, lowerExtZ_L]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                      <Text renderOrder={100001} depthTest={false}
+                        position={[innerX - mmToThreeUnits(25), (lowerCabinetBodyTopY + furnitureTopY) / 2, lowerTextZ_L]}
+                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {lowerCountertopH}
+                      </Text>
+                    </>
+                  )}
                   {/* 중간 빈공간 (있는 경우) — 클릭 편집 가능 (상부장 하단 확장) */}
                   {middleGapH > 0 && (() => {
                     // 상부장 모듈 찾기 (leftmostMod 또는 leftCompanionMod 중 upper 카테고리)
@@ -4962,13 +4990,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       </>
                     );
                   })() : (
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, bodyTextZ_L]}
-                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {furnitureH}
-                    </Text>
+                    <>
+                      <Text renderOrder={100001} depthTest={false}
+                        position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, bodyTextZ_L]}
+                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {furnitureH}
+                      </Text>
+                      {singleLowerCountertopH > 0 && (
+                        <>
+                          <NativeLine name="dimension_line"
+                            points={[[innerX - mmToThreeUnits(15), singleLowerCountertopTopY, bodyDimZ_L], [innerX + mmToThreeUnits(15), singleLowerCountertopTopY, bodyDimZ_L]]}
+                            color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                          />
+                          <NativeLine name="dimension_line"
+                            points={[[leftOffset, furnitureTopY, bodyExtZ_L], [innerX - mmToThreeUnits(20), furnitureTopY, bodyExtZ_L]]}
+                            color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                          />
+                          <Text renderOrder={100001} depthTest={false}
+                            position={[innerX - mmToThreeUnits(25), (furnitureTopY + singleLowerCountertopTopY) / 2, bodyTextZ_L]}
+                            fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          >
+                            {singleLowerCountertopH}
+                          </Text>
+                        </>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -4983,9 +5032,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? userTopGap
                   : topFrameH;
                 if (displayTopFrame <= 0) return null;
+                const singleLowerTopRef = singleLowerCountertopH > 0 ? singleLowerCountertopTopY : furnitureTopY;
                 const topFrameBottomRef = topRefMod_L?.hasTopFrame === false
                   ? effectiveCeilingY - mmToThreeUnits(userTopGap)
-                  : (hasDualCabinet ? upperCabinetTopY : furnitureTopY);
+                  : (hasDualCabinet ? upperCabinetTopY : singleLowerTopRef);
                 return (
                   <>
                     <NativeLine name="dimension_line"
@@ -5307,6 +5357,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let rUpperCabinetH = 0;
           let rUpperCabinetBodyH = 0;
           let rUpperCabinetBottomEpH = 0;
+          let rLowerCountertopH = 0;
+          let rSingleLowerCountertopH = 0;
           if (rHasDualCabinet) {
             const rUpperModForEP = rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod;
             const rUpperHasBottomEP = (rUpperModForEP as any)?.hasBottomEndPanel !== false;
@@ -5329,9 +5381,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (rHasDualCabinet) {
             const rLowerMod = rightCategoryResolved === 'lower' ? rightmostMod : rightCompanionMod;
             const rStoneH = getStoneH_r(rLowerMod);
-            if (rStoneH > 0) rLowerCabinetH += rStoneH;
+            if (rStoneH > 0) rLowerCountertopH = rStoneH;
           } else if (rightCategoryResolved === 'lower' && rightmostMod?.stoneTopThickness) {
-            rFurnitureH += getStoneH_r(rightmostMod);
+            rSingleLowerCountertopH = getStoneH_r(rightmostMod);
           }
 
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
@@ -5358,9 +5410,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rFurnitureH = Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rTopGapForDim);
           }
           // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값, 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
+          const rFurnitureOccupiedH = rFurnitureH + (rightCategoryResolved === 'lower' && !rHasDualCabinet ? rSingleLowerCountertopH : 0);
           const rTopFrameH = (rightCategoryResolved === 'upper' || rHasDualCabinet)
             ? rActualTopSize
-            : Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH);
+            : Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureOccupiedH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
           let rSectionHeights: number[] = [];
@@ -5438,11 +5491,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // Y 좌표 (1단용) — 바닥마감재가 있으면 마감재 위에서 시작
           const rFloorFinishBaseY = mmToThreeUnits(rFloorFinishForHeight);
           const rEffectiveCeilingY = mmToThreeUnits(rEffectiveH);
-          let rBottomFrameTopY: number, rFurnitureTopY: number;
+          let rBottomFrameTopY: number, rFurnitureTopY: number, rLowerCabinetBodyTopY: number, rSingleLowerCountertopTopY: number;
           if (rHasDualCabinet) {
             // 상하부장 동시 배치: 하부장 기준으로 좌표 설정
             rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
-            rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rLowerCabinetH);
+            rLowerCabinetBodyTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rLowerCabinetH);
+            rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rLowerCabinetH + rLowerCountertopH);
+            rSingleLowerCountertopTopY = rFurnitureTopY;
           } else if (rIsUpperCategory) {
             // 상부장: 가구는 천장 - 상단몰딩 아래에 붙음
             // 본체 가이드는 EP 켜진 경우에만 하부마감판(18mm) 포함, 끄면 본체만
@@ -5450,16 +5505,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const rSingleUpperFinishMm = rSingleUpperHasBottomEP ? R_UPPER_BOTTOM_FINISH_MM : 0;
             rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상단몰딩 하단 = 가구 상단
             rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH + rSingleUpperFinishMm); // 가구 하단 + (EP 시 하부마감판)
+            rLowerCabinetBodyTopY = rFurnitureTopY;
+            rSingleLowerCountertopTopY = rFurnitureTopY;
           } else {
             rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
             rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rFurnitureH);
+            rLowerCabinetBodyTopY = rFurnitureTopY;
+            rSingleLowerCountertopTopY = rFurnitureTopY + mmToThreeUnits(rSingleLowerCountertopH);
           }
           // 상하부장 동시배치 시 상부장 Y 좌표
           const rUpperCabinetBottomY = rHasDualCabinet ? mmToThreeUnits(rEffectiveH - rActualTopSize - rUpperCabinetH) : 0;
           const rUpperCabinetBodyBottomY = rHasDualCabinet ? rUpperCabinetBottomY + mmToThreeUnits(rUpperCabinetBottomEpH) : 0;
           const rUpperCabinetTopY = rHasDualCabinet ? mmToThreeUnits(rEffectiveH - rActualTopSize) : 0;
           const rMiddleGapH = rHasDualCabinet
-            ? Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rLowerCabinetH - rUpperCabinetH - rActualTopSize)
+            ? Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rLowerCabinetH - rLowerCountertopH - rUpperCabinetH - rActualTopSize)
             : 0;
           const lowerFrontZ_R = resolveFrontDimensionFrontZ(rightLowerMod ?? rightmostMod, 'lower');
           const upperFrontZ_R = resolveFrontDimensionFrontZ(topRefMod_R ?? rightmostMod, 'upper');
@@ -8071,6 +8130,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? Math.max(0, Math.round(topFrameRefMod?.topFrameGap ?? 0))
               : Math.max(0, rawTopFrame - baseFrameAbsorbed);
             const topSegmentColor = frameDimensionColor;
+            const countertopThicknessMm = bottomFrameRefCategory === 'lower'
+              ? resolveCountertopThicknessMm(bottomFrameRefMod, spaceInfo)
+              : 0;
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
@@ -8164,6 +8226,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? tallestModuleBottomY
               : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
+            const countertopBottomY = furnitureTopY;
+            const countertopTopY = countertopBottomY + mmToThreeUnits(countertopThicknessMm);
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
             const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
@@ -8319,6 +8383,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {furnitureHeightValue}
+                  </Text>
+                </group>
+                )}
+
+                {/* 하부장 상판 두께 */}
+                {countertopThicknessMm > 0 && (
+                <group>
+                  <Line
+                    points={[[0, countertopBottomY, rightDimensionZ], [0, countertopTopY, rightDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([0, countertopBottomY, rightDimensionZ], [0, countertopBottomY + 0.015, rightDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([0, countertopTopY, rightDimensionZ], [0, countertopTopY - 0.015, rightDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Text
+                    renderOrder={100001}
+                    depthTest={false}
+                    position={[0, (countertopBottomY + countertopTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                  >
+                    {countertopThicknessMm}
                   </Text>
                 </group>
                 )}
@@ -9351,6 +9450,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? Math.max(0, Math.round(topFrameRefMod?.topFrameGap ?? 0))
               : Math.max(0, rawTopFrame - baseFrameAbsorbed);
             const topSegmentColor = frameDimensionColor;
+            const countertopThicknessMm = bottomFrameRefCategory === 'lower'
+              ? resolveCountertopThicknessMm(bottomFrameRefMod, spaceInfo)
+              : 0;
             // console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
@@ -9445,6 +9547,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? tallestModuleBottomY
               : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
+            const countertopBottomY = furnitureTopY;
+            const countertopTopY = countertopBottomY + mmToThreeUnits(countertopThicknessMm);
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
             const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
@@ -9608,6 +9712,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     rotation={[0, 0, 0]}
                   >
                     {furnitureHeightValue}
+                  </Text>
+                </group>
+                )}
+
+                {/* 하부장 상판 두께 */}
+                {countertopThicknessMm > 0 && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, countertopBottomY, leftDimensionZ], [spaceWidth, countertopTopY, leftDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, countertopBottomY, leftDimensionZ], [spaceWidth, countertopBottomY + 0.015, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, countertopTopY, leftDimensionZ], [spaceWidth, countertopTopY - 0.015, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Text
+                    renderOrder={100001}
+                    depthTest={false}
+                    position={[spaceWidth, (countertopBottomY + countertopTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, 0, 0]}
+                  >
+                    {countertopThicknessMm}
                   </Text>
                 </group>
                 )}
@@ -11753,10 +11892,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           return (
             <group key={`door-dimension-${index}`}>
-              {/* 하단 도어 치수 - 듀얼인 경우 각각 따로, 싱글인 경우 전체 */}
+              {/* 하단 도어 치수 - 듀얼은 좌측 도어 기준 1개만, 싱글은 전체 */}
               {/* 모든 도어의 치수는 leftDoorFrontZ를 사용하여 동일한 Z 라인에 배치 */}
               {isDualDoor ? (
-                // 듀얼 도어: 좌우 각각 치수 표시
+                // 듀얼 도어: 좌측 도어 치수만 표시
                 <>
                   {/* 좌측 도어 치수 */}
                   <group>
@@ -11810,60 +11949,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                     />
                   </group>
-                  
-                  {/* 우측 도어 치수 - 모든 도어와 동일한 Z 라인 사용 */}
-                  <group>
-                    <NativeLine name="dimension_line"
-                      points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={createArrowHead([rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorLeftX + 0.05, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)])}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={createArrowHead([rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX - 0.05, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)])}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
-                    <Text
-                      renderOrder={999999}
-                      material-depthTest={false}
-                      material-depthWrite={false}
-                      material-transparent={true}
-                      position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
-                      fontSize={baseFontSize}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[-Math.PI / 2, 0, 0]}
-                    >
-                      {Math.round((actualWidthMm - 6) / 2)}
-                    </Text>
-                    <NativeLine name="dimension_line"
-                      points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ], [rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[rightDoorRightX, spaceHeight, leftDoorFrontZ], [rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
-                  </group>
-                  
+
                   {/* 중간 세로 가이드선 - 듀얼 도어를 나누는 중간선이 가로 치수선까지 확장 */}
                   <group>
                     <NativeLine name="dimension_line"
