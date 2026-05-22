@@ -454,7 +454,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     () => (showFurniture ? placedModulesStore : []),
     [placedModulesStore, showFurniture]
   );
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId, selectedFurnitureIds, hingePositionEditModeModuleId } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId, selectedFurnitureIds, hingePositionEditModeModuleId, activePopup } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   // 단내림 설정
@@ -541,13 +541,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const getExternalMaidaDimensionSide = (module: any): 'left' | 'right' | null => {
     const slotCount = indexing.slotWidths?.length || indexing.columnCount || 0;
     const isDual = !!module.isDualSlot || (module.moduleId || '').includes('dual-');
-    const isSelected = selectedFurnitureId === module.id || selectedFurnitureIds.includes(module.id);
+    const isEditing = activePopup.type === 'furnitureEdit' && activePopup.id === module.id;
 
     if (slotCount > 0 && typeof module.slotIndex === 'number') {
       const endSlotIndex = module.slotIndex + (isDual ? 1 : 0);
       if (module.slotIndex <= 0) return 'left';
       if (endSlotIndex >= slotCount - 1) return 'right';
-      if (isSelected) {
+      if (isEditing) {
         const x = module.position?.x ?? 0;
         return x >= 0 ? 'right' : 'left';
       }
@@ -557,7 +557,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     if (module.placementWall === 'left') return 'left';
     if (module.placementWall === 'right') return 'right';
     const x = module.position?.x ?? 0;
-    if (Math.abs(x) < 0.001 && !isSelected) return null;
+    if (Math.abs(x) < 0.001 && !isEditing) return null;
     return x > 0 ? 'right' : 'left';
   };
 
@@ -12332,9 +12332,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const showOnLeftSide = cxX3D < 0;
         const mid3D = module.moduleId || '';
         const hasInstalledDoor3D = !!moduleData.hasDoor && !!module.hasDoor;
+        const externalMaidaDimensionSide3D = isExternalMaidaModule(mid3D)
+          ? getExternalMaidaDimensionSide(module)
+          : null;
+        if (isExternalMaidaModule(mid3D) && !externalMaidaDimensionSide3D) return null;
         const hasExternalMaidaDimension3D = !!module.hasDoor
-          && isExternalMaidaModule(mid3D)
-          && !!getExternalMaidaDimensionSide(module);
+          && !!externalMaidaDimensionSide3D;
         // 치수선 X 위치: 도어/서랍 마이다 치수가 외부에 있으면 겹치지 않도록 좌/우측으로 조금 더 뺀다.
         const sideOffsetMm = (hasInstalledDoor3D || hasExternalMaidaDimension3D) ? 120 : 80;
         const sideX = showOnLeftSide

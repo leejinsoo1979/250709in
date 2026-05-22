@@ -22,6 +22,7 @@ import LegraSideRail from '../components/LegraSideRail';
 import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
@@ -1274,26 +1275,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const placedModuleForCorner = useFurnitureStore(state => (
     placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
   )) as any;
-  const selectedMaidaFurnitureId = useUIStore(state => state.selectedFurnitureId);
-  const selectedMaidaFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
-  const isMaidaFurnitureSelected = !!placedFurnitureId && (
-    selectedMaidaFurnitureId === placedFurnitureId
-    || selectedMaidaFurnitureIds.includes(placedFurnitureId)
-  );
   const maidaDimensionSide: 'left' | 'right' | null = (() => {
     const resolvedSlotIndex = typeof slotIndex === 'number'
       ? slotIndex
       : typeof placedModuleForCorner?.slotIndex === 'number'
         ? placedModuleForCorner.slotIndex
         : undefined;
-    const slotCount = Array.isArray(slotWidths) ? slotWidths.length : 0;
+    const indexedSlotWidths = spaceInfo ? calculateSpaceIndexing(spaceInfo).slotWidths : undefined;
+    const effectiveSlotWidths = Array.isArray(slotWidths) && slotWidths.length > 0
+      ? slotWidths
+      : indexedSlotWidths;
+    const slotCount = Array.isArray(effectiveSlotWidths) ? effectiveSlotWidths.length : 0;
     const isDual = !!placedModuleForCorner?.isDualSlot || moduleData.id.includes('dual-');
 
     if (slotCount > 0 && typeof resolvedSlotIndex === 'number') {
       const endSlotIndex = resolvedSlotIndex + (isDual ? 1 : 0);
       if (resolvedSlotIndex <= 0) return 'left';
       if (endSlotIndex >= slotCount - 1) return 'right';
-      if (!isMaidaFurnitureSelected) return null;
+      if (!isEditMode) return null;
       const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
       return x >= 0 ? 'right' : 'left';
     }
@@ -1301,7 +1300,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (placedModuleForCorner?.placementWall === 'right') return 'right';
     if (placedModuleForCorner?.placementWall === 'left') return 'left';
     const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
-    if (Math.abs(x) < 0.001 && !isMaidaFurnitureSelected) return null;
+    if (Math.abs(x) < 0.001 && !isEditMode) return null;
     return x > 0 ? 'right' : 'left';
   })();
   const isRightCornerCabinet = moduleData.id.includes('right-corner');

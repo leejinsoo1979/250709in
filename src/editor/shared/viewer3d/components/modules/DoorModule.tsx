@@ -1137,12 +1137,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return resolveDoorHeightDimensionSides(visibleModules, furnitureId);
   }, [allPlacedModules, furnitureId, originalSpaceInfo]);
-  const effectiveDoorHeightDimensionSides = storePlacedModule?.placementWall === 'right'
+  const baseDoorHeightDimensionSides = storePlacedModule?.placementWall === 'right'
     ? {
       left: doorHeightDimensionSides.right,
       right: doorHeightDimensionSides.left
     }
     : doorHeightDimensionSides;
+  const hasOuterDoorDimensionSide = baseDoorHeightDimensionSides.left || baseDoorHeightDimensionSides.right;
+  const effectiveDoorHeightDimensionSides = hasOuterDoorDimensionSide
+    ? baseDoorHeightDimensionSides
+    : isEditMode
+      ? ((storePlacedModule?.position?.x ?? slotCenterX ?? 0) >= 0
+        ? { left: false, right: true }
+        : { left: true, right: false })
+      : { left: false, right: false };
   const sideDoorDimensionVisible = storePlacedModule?.placementWall === 'left' || storePlacedModule?.placementWall === 'right'
     ? viewMode === '3D' && activePlacementWall === storePlacedModule.placementWall
     : true;
@@ -1151,7 +1159,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     isPlainMaterial,
     viewMode,
     view2DDirection
-  ) && !isHingePositionEditMode && sideDoorDimensionVisible;
+  ) && !isHingePositionEditMode && sideDoorDimensionVisible && (hasOuterDoorDimensionSide || isEditMode);
 
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);

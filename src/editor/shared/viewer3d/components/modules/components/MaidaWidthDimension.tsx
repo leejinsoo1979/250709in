@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
+import NativeLine from '../../elements/NativeLine';
 
 /**
  * 마이다(서랍 도어면) 하단 폭 치수 — 공통 컴포넌트
@@ -56,17 +56,18 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
   const hoverColor = '#0b3d91';
   const dimColor = isHovered ? hoverColor : dimensionColor;
   const halfW = maidaWidth / 2;
+  const lineRenderOrder = 2000000;
 
   const dimLineY = -extensionLineLength - extensionLineStart;
   const extStartY = -extensionLineStart;
 
   return (
     <>
-      <Line name="maida-dimension" points={[[-halfW, extStartY, zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-      <Line name="maida-dimension" points={[[halfW, extStartY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-      <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-      <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-      <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+      <NativeLine name="maida-dimension" points={[[-halfW, extStartY, zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+      <NativeLine name="maida-dimension" points={[[halfW, extStartY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+      <NativeLine name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+      <NativeLine name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+      <NativeLine name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
       <DimensionText
         name="maida-dimension-text"
         value={maidaWidthMm}
