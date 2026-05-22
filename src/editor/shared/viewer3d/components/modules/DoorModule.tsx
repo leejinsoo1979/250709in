@@ -116,7 +116,7 @@ const BoxWithEdges: React.FC<{
   });
 
   const { theme } = useViewerTheme();
-  const { view2DTheme, shadowEnabled, isTransparentMode, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const { view2DTheme, view2DDirection, shadowEnabled, isTransparentMode, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
   const simulationRevisionRef = React.useRef(panelSimulationRevision);
   const simulationStartTimeRef = React.useRef(0);
   const simulationFrameStateRef = React.useRef<{
@@ -187,8 +187,12 @@ const BoxWithEdges: React.FC<{
   }, [material, viewMode, isTransparentMode]);
 
   const doorEdgeBandingColor = useSpaceConfigStore(state => {
-    if (viewMode !== '3D') return undefined;
+    if (viewMode !== '3D' && !(viewMode === '2D' && view2DDirection === 'front')) return undefined;
     return state.spaceInfo.materialConfig?.doorEdgeColor || undefined;
+  });
+  const doorEdgeBandingWidthMm = useSpaceConfigStore(state => {
+    const width = state.spaceInfo.materialConfig?.doorEdgeBandingWidthMm;
+    return typeof width === 'number' && [1, 2, 3, 4].includes(width) ? width : 2;
   });
 
   const doorEdgeBandingMaterial = useMemo(() => {
@@ -253,8 +257,8 @@ const BoxWithEdges: React.FC<{
     return mats;
   }, [displayMaterial, doorEdgeBandingMaterial, renderMode, safeArgs, viewMode]);
   const doorEdgeBandingStrip = useMemo(() => {
-    if (viewMode !== '3D' || renderMode !== 'solid' || !doorEdgeBandingColor) return null;
-    const strip = Math.min(0.025, safeArgs[0] / 3, safeArgs[1] / 3);
+    if (!((viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && renderMode === 'solid' && doorEdgeBandingColor)) return null;
+    const strip = Math.min(doorEdgeBandingWidthMm * 0.01, safeArgs[0] / 3, safeArgs[1] / 3);
     if (strip <= 0) return null;
     return {
       strip,
@@ -264,7 +268,7 @@ const BoxWithEdges: React.FC<{
       horizontalWidth: safeArgs[0],
       verticalHeight: Math.max(0.001, safeArgs[1] - strip * 2),
     };
-  }, [doorEdgeBandingColor, renderMode, safeArgs, viewMode]);
+  }, [doorEdgeBandingColor, doorEdgeBandingWidthMm, renderMode, safeArgs, view2DDirection, viewMode]);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -427,12 +431,12 @@ const BoxWithEdges: React.FC<{
           onPointerOut={onPointerOut}
         />
       )}
-      {viewMode === '3D' && doorEdgeBandingStrip && doorEdgeBandingColor && renderMode === 'solid' && (
+      {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && doorEdgeBandingStrip && doorEdgeBandingColor && renderMode === 'solid' && (
         <group
           name={`door-edge-banding${panelName ? `-${panelName}` : ''}`}
           userData={{ decoration: true, edgeBandingOverlay: true }}
         >
-          {[doorEdgeBandingStrip.frontZ, doorEdgeBandingStrip.backZ].map((z, faceIndex) => (
+          {(viewMode === '2D' ? [doorEdgeBandingStrip.frontZ] : [doorEdgeBandingStrip.frontZ, doorEdgeBandingStrip.backZ]).map((z, faceIndex) => (
             <React.Fragment key={`door-edge-face-${faceIndex}`}>
               <mesh position={[0, safeArgs[1] / 2 - doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
@@ -1159,9 +1163,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   const moduleIdentifier = moduleData?.id || storePlacedModule?.moduleId || '';
+  const isRightCornerCabinet = moduleIdentifier.includes('right-corner');
+  const isRightCornerSideDoor = moduleData?.id?.includes('side-corner-door') || false;
+  const isRightCornerMainDoor = isRightCornerCabinet && !isRightCornerSideDoor;
 
   // 듀얼 가구인지 판단: moduleData ID 또는 PlacedModule.isDualSlot (커스텀 가구 지원)
-  const isDualByModuleId = moduleData?.id?.startsWith('dual-') || storePlacedModule?.isDualSlot || false;
+  const isDualByModuleId = !isRightCornerSideDoor && (moduleData?.id?.startsWith('dual-') || storePlacedModule?.isDualSlot || false);
 
   // 도어 크기 계산 — 가구 본체와 동일한 slotWidths(Math.floor) 기준 사용
   // columnWidth는 소수점이 유지되지만, 가구 본체는 slotWidths(정수 내림)를 사용하므로
@@ -1170,7 +1177,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   if (isFree) {
     // 자유배치: store에서 가져온 freeWidth 또는 props moduleWidth 사용
-    actualDoorWidth = storeFreeWidth || moduleWidth;
+    actualDoorWidth = isRightCornerSideDoor ? moduleWidth : (storeFreeWidth || moduleWidth);
   } else if (
     (storePlacedModule?.placementWall === 'left' || storePlacedModule?.placementWall === 'right') &&
     typeof (storePlacedModule as any)?.sideLogicalWidth === 'number'
@@ -2014,7 +2021,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     )),
     [allPlacedModules]
   );
-  const doorDelay = (hasInnerDrawerModule && !shouldOpenDoors) ? 500 : 0;
+  const innerDrawerDoorDelay = (hasInnerDrawerModule && !shouldOpenDoors) ? 500 : 0;
+  const rightCornerSequenceDelay = isRightCornerSideDoor
+    ? (shouldOpenDoors ? 450 : 0)
+    : (isRightCornerMainDoor ? (shouldOpenDoors ? 0 : 450) : 0);
+  const doorDelay = Math.max(innerDrawerDoorDelay, rightCornerSequenceDelay);
 
   const leftHingeDoorSpring = useSpring({
     rotation: shouldOpenDoors ? -Math.PI / 2 : 0,
@@ -2323,7 +2334,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // 측면뷰가 아니면 항상 표시, 측면뷰면 항상 표시 (듀얼 도어는 하나의 유닛)
     const showLeftDoor = true;
-    const showRightDoor = true;
+    const showRightDoor = !isRightCornerCabinet;
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
@@ -3295,6 +3306,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const outerLeftGapCompensationMm = openOuterDoorSides.left ? 1.5 : 0;
     const outerRightGapCompensationMm = openOuterDoorSides.right ? 1.5 : 0;
     let doorWidth = actualDoorWidth - doorGap + outerLeftGapCompensationMm + outerRightGapCompensationMm; // 슬롯사이즈 - 적용 갭
+    if (isFree) {
+      // eslint-disable-next-line no-console
+      console.log('[DoorWidth-free]', {
+        moduleId: storePlacedModule?.moduleId,
+        actualDoorWidth,
+        storeFreeWidth,
+        moduleWidth,
+        openOuterDoorSides,
+        outerLeftGapCompensationMm,
+        outerRightGapCompensationMm,
+        doorWidth,
+      });
+    }
     const openOuterShiftX = mmToThreeUnits(outerRightGapCompensationMm - outerLeftGapCompensationMm) / 2;
 
     // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금
