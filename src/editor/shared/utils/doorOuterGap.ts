@@ -24,7 +24,7 @@ export const resolveDoorOuterOpenSides = ({
   moduleWidthMm?: number;
   slotCenterX?: number;
 }): DoorOuterOpenSides => {
-  if (!placedModule || placedModule.isFreePlacement) {
+  if (!placedModule) {
     return { left: false, right: false };
   }
 
@@ -39,7 +39,8 @@ export const resolveDoorOuterOpenSides = ({
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isDual = !!placedModule.isDualSlot || placedModule.moduleId?.startsWith('dual-');
 
-  if (typeof placedModule.slotIndex === 'number') {
+  // 자유배치 모드: slotIndex가 없으므로 좌표 비교로만 판정 (아래 fallback 분기 사용)
+  if (!placedModule.isFreePlacement && typeof placedModule.slotIndex === 'number') {
     let localSlotIndex = placedModule.slotIndex;
     let zoneColumnCount = indexing.columnCount;
 
