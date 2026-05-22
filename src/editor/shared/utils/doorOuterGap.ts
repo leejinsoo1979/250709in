@@ -95,24 +95,11 @@ export const resolveDoorOuterOpenSides = ({
   const leftEdgeMm = centerXmm - widthMm / 2;
   const rightEdgeMm = centerXmm + widthMm / 2;
   // 자유배치는 사용자가 직접 배치하므로 끝선 일치 tolerance를 슬롯배치보다 넉넉히
-  const toleranceMm = placedModule.isFreePlacement ? 30 : 2;
+  // (노서라운드 좌이격 + 엔드패널 두께 등을 고려하여 50mm)
+  const toleranceMm = placedModule.isFreePlacement ? 50 : 2;
 
-  const result = {
+  return {
     left: !hasLeftWall && Math.abs(leftEdgeMm - runStartMm) <= toleranceMm,
     right: !hasRightWall && Math.abs(rightEdgeMm - runEndMm) <= toleranceMm,
   };
-
-  if (placedModule.isFreePlacement) {
-    // eslint-disable-next-line no-console
-    console.log('[doorOuterGap-free]', {
-      hasLeftWall, hasRightWall,
-      centerXmm, widthMm,
-      leftEdgeMm, rightEdgeMm,
-      runStartMm, runEndMm,
-      diffLeft: leftEdgeMm - runStartMm,
-      diffRight: rightEdgeMm - runEndMm,
-      result,
-    });
-  }
-  return result;
 };
