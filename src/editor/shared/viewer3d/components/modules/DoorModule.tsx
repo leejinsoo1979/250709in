@@ -1109,16 +1109,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const allPlacedModules = useFurnitureStore(state => state.placedModules);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const doorHeightDimensionSides = useMemo(() => {
+    const totalSlotCount = (() => {
+      if (originalSpaceInfo.droppedCeiling?.enabled) {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(originalSpaceInfo, originalSpaceInfo.customColumnCount);
+        return (zoneInfo.normal?.columnCount ?? 0) + (zoneInfo.dropped?.columnCount ?? 0);
+      }
+      return originalSpaceInfo.customColumnCount || calculateSpaceIndexing(originalSpaceInfo).slotWidths?.length || 0;
+    })();
     const visibleModules = allPlacedModules
       .filter(module => !module.isSurroundPanel && module.hasDoor === true)
-      .map((module, index) => ({
-        id: module.id,
-        x: module.position?.x ?? 0,
-        index
-      }));
+      .map((module, index) => {
+        const moduleSlotIndex = module.slotIndex;
+        const moduleRightSlotIndex = moduleSlotIndex !== undefined
+          ? moduleSlotIndex + (module.isDualSlot ? 1 : 0)
+          : undefined;
+        return {
+          id: module.id,
+          x: module.position?.x ?? 0,
+          index,
+          slotIndex: moduleSlotIndex,
+          isRightmostSlot: moduleRightSlotIndex !== undefined
+            && totalSlotCount > 0
+            && moduleRightSlotIndex >= totalSlotCount - 1
+        };
+      });
 
     return resolveDoorHeightDimensionSides(visibleModules, furnitureId);
-  }, [allPlacedModules, furnitureId]);
+  }, [allPlacedModules, furnitureId, originalSpaceInfo]);
   const effectiveDoorHeightDimensionSides = storePlacedModule?.placementWall === 'right'
     ? {
       left: doorHeightDimensionSides.right,
@@ -1497,16 +1514,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const dimensionDoorTopGapMm = Math.max(0, Math.round(fullSpaceHeight - doorTopWorldMm));
   const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm));
   const doorHeight = mmToThreeUnits(actualDoorHeight);
-  const doorTopGapDimensionMm = dimensionDoorTopGapMm;
-  const doorBottomGapDimensionMm = dimensionDoorBottomGapMm;
+  const showDoorTopGapDimension = !isLowerCabinet && dimensionDoorTopGapMm > 0;
+  const showDoorBottomGapDimension = !isUpperCabinet && dimensionDoorBottomGapMm > 0;
+  const doorTopGapDimensionMm = showDoorTopGapDimension ? dimensionDoorTopGapMm : 0;
+  const doorBottomGapDimensionMm = showDoorBottomGapDimension ? dimensionDoorBottomGapMm : 0;
   const doorTopGapDimensionUnits = mmToThreeUnits(doorTopGapDimensionMm);
   const doorBottomGapDimensionUnits = mmToThreeUnits(doorBottomGapDimensionMm);
   const doorDimensionTopY = doorHeight / 2 + doorTopGapDimensionUnits;
   const doorDimensionBottomY = -doorHeight / 2 - doorBottomGapDimensionUnits;
-  const doorDimensionSideLineOffset = mmToThreeUnits(180);
-  const doorDimensionSideTextOffset = mmToThreeUnits(220);
-  const doorDimensionWidthLineStart = mmToThreeUnits(70);
-  const doorDimensionWidthLineLength = mmToThreeUnits(110);
+  const doorDimensionSideLineOffset = mmToThreeUnits(160);
+  const doorDimensionSideTextOffset = doorDimensionSideLineOffset + mmToThreeUnits(60);
+  const doorDimensionWidthLineStart = mmToThreeUnits(60);
+  const doorDimensionWidthLineLength = mmToThreeUnits(100);
   const doorDimensionForwardOffset = 0.01;
   const renderDoorGapDimensionMarkers = ({
     lineX,
@@ -1525,7 +1544,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }) => {
     return (
       <>
-        {doorTopGapDimensionMm > 0 && (
+        {showDoorTopGapDimension && (
           <>
             <NativeLine
               key={`${keyPrefix}-ceiling-tick`}
@@ -1562,7 +1581,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             />
           </>
         )}
-        {doorBottomGapDimensionMm > 0 && (
+        {showDoorBottomGapDimension && (
           <>
             <NativeLine
               key={`${keyPrefix}-door-bottom-tick`}

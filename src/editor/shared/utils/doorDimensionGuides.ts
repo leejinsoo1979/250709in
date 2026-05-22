@@ -2,6 +2,8 @@ export interface DoorDimensionModulePlacement {
   id: string
   x: number
   index: number
+  slotIndex?: number
+  isRightmostSlot?: boolean
 }
 
 export interface DoorHeightDimensionSides {
@@ -14,19 +16,31 @@ export const resolveDoorHeightDimensionSides = (
   furnitureId?: string
 ): DoorHeightDimensionSides => {
   if (!furnitureId || modules.length === 0) {
-    return { left: true, right: true }
+    return { left: false, right: false }
   }
 
-  const sortedModules = [...modules].sort((a, b) => {
-    if (Math.abs(a.x - b.x) > 0.001) return a.x - b.x
-    return a.index - b.index
-  })
-  const leftModule = sortedModules[0]
-  const rightModule = sortedModules[sortedModules.length - 1]
+  const currentModule = modules.find(module => module.id === furnitureId)
+  if (!currentModule) {
+    return { left: false, right: false }
+  }
+  if (currentModule.isRightmostSlot) {
+    return { left: false, right: true }
+  }
+
+  const slotIndexedModules = modules.filter(module => module.slotIndex !== undefined)
+  if (currentModule.slotIndex !== undefined && slotIndexedModules.length > 0) {
+    const minSlotIndex = Math.min(...slotIndexedModules.map(module => module.slotIndex!))
+    return {
+      left: currentModule.slotIndex === minSlotIndex,
+      right: false
+    }
+  }
+
+  const leftmostX = Math.min(...modules.map(module => module.x))
 
   return {
-    left: leftModule.id === furnitureId,
-    right: rightModule.id === furnitureId
+    left: Math.abs(currentModule.x - leftmostX) <= 0.001,
+    right: false
   }
 }
 
