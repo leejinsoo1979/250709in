@@ -2070,8 +2070,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 걸래받이 옵셋 깊이 치수 (하부장 전용) — hasBase=false이면 숨김 */}
               {isLowerMod && baseFrameOffsetMm > 0 && mod.hasBase !== false && (() => {
-                // 걸래받이은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
-                const frontZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
+                // 걸래받이는 실제 하부장 앞면에서 옵셋만큼 뒤로 들어간다.
+                // 뒤고정 상태로 깊이를 줄이면 furnitureZ가 같이 이동하므로 치수선도 같은 기준을 따라야 한다.
+                const frontZ = furnitureZ + moduleDepth / 2;
                 const offsetBackZ = frontZ - baseFrameOffsetDepth;
 
                 return (
