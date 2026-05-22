@@ -95,7 +95,7 @@ export const resolveDoorOuterOpenSides = ({
   const leftEdgeMm = centerXmm - widthMm / 2;
   const rightEdgeMm = centerXmm + widthMm / 2;
   // 자유배치는 사용자가 직접 배치하므로 끝선 일치 tolerance를 슬롯배치보다 넉넉히
-  const toleranceMm = placedModule.isFreePlacement ? 10 : 2;
+  const toleranceMm = placedModule.isFreePlacement ? 30 : 2;
 
   return {
     left: !hasLeftWall && Math.abs(leftEdgeMm - runStartMm) <= toleranceMm,
