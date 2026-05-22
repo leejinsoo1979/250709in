@@ -149,11 +149,12 @@ const formatThumbnailName = (module: ModuleData): string => {
   const isDual = module.id.includes('dual-');
   // 키큰장찬넬(insert-frame)은 듀얼 개념 없는 단일 채움재 → "(반통)" 접미어 제외
   const isInsertFrame = module.id.includes('insert-frame');
+  const isCornerCabinet = module.id.includes('right-corner');
 
   // "한통" 제거, "듀얼 " 접두어 제거
   name = name.replace(/\s*한통/, '').replace(/^듀얼\s*/, '');
 
-  if (isDual || isInsertFrame) return name.trim();
+  if (isDual || isInsertFrame || isCornerCabinet) return name.trim();
 
   // 싱글: 이름 안의 "반통" 또는 "(반통)"을 모두 제거한 뒤, 끝에 "(반통)" 하나만 붙임
   name = name
@@ -1031,12 +1032,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       </div>
 
       {/* 드래그 전용 이미지 (화면에 표시되지 않음, 각 썸네일마다 독립적) */}
-      <img
-        ref={dragImageRef}
-        src={iconPath}
-        alt=""
-        style={{ position: 'absolute', left: '-9999px', width: '100px', height: '133px' }}
-      />
+      {iconPath && (
+        <img
+          ref={dragImageRef}
+          src={iconPath}
+          alt=""
+          style={{ position: 'absolute', left: '-9999px', width: '100px', height: '133px' }}
+        />
+      )}
 
       <AlertComponent />
     </>
@@ -1251,6 +1254,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
+    if (moduleId.includes('right-corner')) return '';
     // 멍장(더미 가구) 3종 전용 썸네일
     if (moduleId.includes('dummy')) return '/images/furniture-thumbnails/dummy.png';
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거

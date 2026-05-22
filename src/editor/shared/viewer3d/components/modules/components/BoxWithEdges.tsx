@@ -1955,9 +1955,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const showFaceGrooveOpeningsInTop2D = hideFaceGrooveEdgesInTop2D && !faceGroovesSpanFullDepth;
     const openFaceGrooveMouthsInFront2D = isDrawerFaceGroovePanel && faceGroovesSpanFullDepth;
     // notch가 있으면 L자형 엣지 사용. 탑뷰에서는 백패널/서랍 홈가공 내부선만 제외해 외곽선은 유지한다.
+    // 정면뷰에서는 좌/우 측판의 face groove(홈가공) 외곽선을 모두 숨긴다.
+    const isCabinetSidePanel = !!panelName &&
+      !panelName.includes('서랍') &&
+      (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판'));
+    const hideFaceGrooveEdgesInFront2D = isFrontView && isCabinetSidePanel;
     const lines: [number, number, number][][] = hasAnyNotch && !(isFrontView && isCabinetSidePanelFaceGroove)
       ? getNotchEdgeLines({
-        includeFaceGrooveEdges: !(hideFaceGrooveEdgesInTop2D || openFaceGrooveMouthsInFront2D),
+        includeFaceGrooveEdges: !(hideFaceGrooveEdgesInTop2D || openFaceGrooveMouthsInFront2D || hideFaceGrooveEdgesInFront2D),
         openFaceGrooveMouthsInTopView: showFaceGrooveOpeningsInTop2D,
         openFaceGrooveMouthsInFrontView: openFaceGrooveMouthsInFront2D,
       })

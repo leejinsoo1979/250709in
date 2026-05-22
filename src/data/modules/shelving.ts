@@ -2068,6 +2068,48 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
+ * 우측코너장 텍스트 썸네일용 모듈
+ * 실제 코너장 상세 구조는 별도 구현 예정이며, 우선 주방 기본장 카테고리 진입점만 생성한다.
+ */
+const createRightCornerLowerCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 780;
+
+  const base = createFurnitureBase(
+    `dual-lower-half-cabinet-right-corner-${widthForId}`,
+    '우측코너장',
+    dualWidth,
+    cabinetHeight,
+    600,
+    '#fff3e0',
+    `우측코너장 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 600,
+    hasDoor: false,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
  * 싱크장 반통 - 조절발 65mm + 캐비넷 W500xD600xH785
  * 기본하부장과 동일한 디자인이지만 내부 선반 없음
  */
@@ -3692,6 +3734,7 @@ export const generateShelvingModules = (
 
     // === 새 듀얼 하부장 가구 생성 ===
     modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
+    modules.push(createRightCornerLowerCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerSinkCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerInductionCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer2Tier(dualWidth, dualSlotWidths));

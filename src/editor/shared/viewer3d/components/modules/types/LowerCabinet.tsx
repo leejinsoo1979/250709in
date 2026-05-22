@@ -1667,15 +1667,55 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     })}
                   />
                 )}
+
+                {moduleData.id.includes('right-corner') && (() => {
+                  const mmToUnits = (mm: number) => mm * 0.01;
+                  const frameWidth = mmToUnits(18);
+                  const frameDepth = mmToUnits(58);
+                  const cabinetBottomY = -adjustedHeight / 2;
+                  const bottomPanelTopY = cabinetBottomY + baseFurniture.basicThickness;
+                  const notchFromBottomMm = Math.round(adjustedHeight / 0.01) - 60;
+                  const frameTopY = cabinetBottomY + mmToUnits(notchFromBottomMm);
+                  const frameHeight = Math.max(0, frameTopY - bottomPanelTopY);
+                  const frameCenterY = bottomPanelTopY + frameHeight / 2;
+                  const frameZ = baseFurniture.depth / 2 - frameDepth / 2;
+
+                  return (
+                    <>
+                      <BoxWithEdges
+                        args={[frameWidth, frameHeight, frameDepth]}
+                        position={[-frameWidth / 2, frameCenterY, frameZ]}
+                        material={baseFurniture.material}
+                        renderMode={renderMode}
+                        isHighlighted={false}
+                        panelName="우측코너장 세로프레임 좌"
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                      />
+                      <BoxWithEdges
+                        args={[frameDepth, frameHeight, frameWidth]}
+                        position={[frameDepth / 2, frameCenterY, baseFurniture.depth / 2 - frameWidth / 2]}
+                        material={baseFurniture.material}
+                        renderMode={renderMode}
+                        isHighlighted={false}
+                        panelName="우측코너장 세로프레임 우"
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                      />
+                    </>
+                  );
+                })()}
               </>
 
           {/* 다보 선반 렌더링 (하부장 반통·한통, 도어올림/상판내림 반통·한통) — 탑뷰에서는 숨김 */}
           {(() => {
             if (viewMode === '2D' && view2DDirection === 'top') return null;
             const moduleId = moduleData.id;
+            const isRightCornerCabinet = moduleId.includes('right-corner');
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
             const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
             const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
+            if (isRightCornerCabinet) return null;
             if (!isLowerHalf && !isDoorLiftHalf && !isTopDownHalf) return null;
 
             // placedModule.customSections 우선 사용 (팝업 선반 갯수 토글/스피너 반영)
