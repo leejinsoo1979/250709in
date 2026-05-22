@@ -410,6 +410,7 @@ interface InductionDrawerAnimatedProps {
   doorTopGap?: number;
   doorBottomGap?: number;
   floorY?: number;
+  maidaDimensionSide?: 'left' | 'right';
 }
 
 const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
@@ -428,6 +429,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   doorTopGap,
   doorBottomGap,
   floorY,
+  maidaDimensionSide = 'left',
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -757,7 +759,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           view2DDirection={view2DDirection as any}
           dimensionColor={dimensionColor}
           mmToThreeUnits={mmToThreeUnits}
-          side="left"
+          side={maidaDimensionSide}
         />
       )}
     </group>
@@ -789,6 +791,7 @@ interface TouchDrawerAnimatedProps {
   doorBottomGap?: number;
   stoneThickness?: number;
   floorY?: number;
+  maidaDimensionSide?: 'left' | 'right';
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -810,6 +813,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   doorBottomGap,
   stoneThickness = 20,
   floorY,
+  maidaDimensionSide = 'left',
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -1223,7 +1227,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         view2DDirection={view2DDirection as any}
         dimensionColor={dimensionColor}
         mmToThreeUnits={mmToThreeUnits}
-        side="left"
+        side={maidaDimensionSide}
       />
     )}
     </group>
@@ -1270,6 +1274,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const placedModuleForCorner = useFurnitureStore(state => (
     placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
   )) as any;
+  const maidaDimensionSide: 'left' | 'right' = (() => {
+    if (placedModuleForCorner?.placementWall === 'right') return 'right';
+    if (placedModuleForCorner?.placementWall === 'left') return 'left';
+    const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
+    return x > 0 ? 'right' : 'left';
+  })();
   const isRightCornerCabinet = moduleData.id.includes('right-corner');
   const isLeftCornerCabinet = moduleData.id.includes('left-corner');
   const isCornerCabinet = isRightCornerCabinet || isLeftCornerCabinet;
@@ -2283,6 +2293,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               defaultDoorTopGap={defaultDrawerTopGap}
               defaultDoorBottomGap={defaultDrawerBottomGap}
               floorY={lowerCabinetFloorY - cabinetYPosition}
+              maidaDimensionSide={maidaDimensionSide}
             />
           </group>
         );
@@ -2453,6 +2464,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
           floorY={lowerCabinetFloorY - cabinetYPosition}
+          maidaDimensionSide={maidaDimensionSide}
         />
       )}
 
@@ -2478,6 +2490,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           doorBottomGap={doorBottomGap}
           stoneThickness={stoneThickness}
           floorY={lowerCabinetFloorY - cabinetYPosition}
+          maidaDimensionSide={maidaDimensionSide}
         />
       )}
 

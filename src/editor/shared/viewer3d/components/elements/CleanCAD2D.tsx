@@ -1651,7 +1651,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
       spaceInfo
     );
-    return !!moduleData?.hasDoor;
+    const moduleId = module.moduleId || '';
+    const hasExternalMaidaDimension = moduleId.includes('lower-drawer-')
+      || moduleId.includes('lower-door-lift-')
+      || moduleId.includes('lower-top-down-')
+      || moduleId.includes('lower-induction-cabinet')
+      || moduleId.includes('dual-lower-induction-cabinet');
+    return !!moduleData?.hasDoor || hasExternalMaidaDimension;
   });
   const doorVerticalGuideExpansionMm = hasInstalledDoorForVerticalGuides ? 160 : 0;
   // 최상단: 전체 너비 (3600)
@@ -12301,8 +12307,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           : module.position.x;
         const showOnLeftSide = cxX3D < 0;
         const hasInstalledDoor3D = !!moduleData.hasDoor && !!module.hasDoor;
-        // 치수선 X 위치: 도어가 있으면 도어 치수와 겹치지 않도록 좌/우측으로 조금 더 뺀다.
-        const sideOffsetMm = hasInstalledDoor3D ? 120 : 80;
+        const hasExternalMaidaDimension3D = !!module.hasDoor && (
+          mid3D.includes('lower-drawer-')
+          || mid3D.includes('lower-door-lift-')
+          || mid3D.includes('lower-top-down-')
+          || mid3D.includes('lower-induction-cabinet')
+          || mid3D.includes('dual-lower-induction-cabinet')
+        );
+        // 치수선 X 위치: 도어/서랍 마이다 치수가 외부에 있으면 겹치지 않도록 좌/우측으로 조금 더 뺀다.
+        const sideOffsetMm = (hasInstalledDoor3D || hasExternalMaidaDimension3D) ? 120 : 80;
         const sideX = showOnLeftSide
           ? (cxX3D - halfWidth - mmToThreeUnits(sideOffsetMm))
           : (cxX3D + halfWidth + mmToThreeUnits(sideOffsetMm));
