@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             const { useUIStore } = await import('@/store/uiStore');
             useUIStore.setState({ openTabs: [], activeTabId: null } as any);
+            localStorage.removeItem('activeTeamId');
             console.log('🧹 사용자 변경 감지 — openTabs 초기화:', previousUid, '→', newUid);
           } catch (e) {
             console.warn('탭 초기화 실패:', e);
@@ -77,8 +78,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (user) {
           console.log('🔐 사용자 로그인:', user.email);
           localStorage.setItem('userId', user.uid);
-          if (!localStorage.getItem('activeTeamId')) {
-            localStorage.setItem('activeTeamId', `personal_${user.uid}`);
+          const personalTeamId = `personal_${user.uid}`;
+          const storedTeamId = localStorage.getItem('activeTeamId');
+          if (!storedTeamId || (storedTeamId.startsWith('personal_') && storedTeamId !== personalTeamId)) {
+            localStorage.setItem('activeTeamId', personalTeamId);
           }
 
           // users 컬렉션에 사용자 정보 저장 (관리자 페이지용)
@@ -221,4 +224,4 @@ export const useAuth = (): AuthContextType => {
     throw new Error('useAuth는 AuthProvider 내에서 사용해야 합니다.');
   }
   return context;
-}; 
+};

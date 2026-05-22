@@ -3049,10 +3049,10 @@ const Configurator: React.FC = () => {
 //           currentProjectId
 //         });
 
-        // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
-        import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
-// console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
-          getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
+        import('@/firebase/projects').then(({ getDesignFileById, getDesignFileByIdPublic, getProjectById, getProjectByIdPublic }) => {
+          const loadDesignFile = isReadOnlyMode ? getDesignFileByIdPublic : getDesignFileById;
+          const loadProject = isReadOnlyMode ? getProjectByIdPublic : getProjectById;
+          loadDesignFile(designFileId).then(async ({ designFile, error }) => {
             if (!isLatestDesignLoad(requestedLoadKey)) {
               return;
             }
@@ -3074,7 +3074,7 @@ const Configurator: React.FC = () => {
 
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
-                const { project, error: projectError } = await getProjectByIdPublic(designFile.projectId);
+                const { project, error: projectError } = await loadProject(designFile.projectId);
                 if (!isLatestDesignLoad(requestedLoadKey)) {
                   return;
                 }

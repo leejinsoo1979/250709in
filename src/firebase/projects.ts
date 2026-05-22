@@ -31,16 +31,20 @@ const PROJECTS_COLLECTION = 'projects';
 // 팀 스코프 경로 헬퍼 함수
 async function getActiveTeamId(): Promise<string | null> {
   if (!FLAGS.teamScope) return null;
-  
-  // 먼저 localStorage에서 확인
-  const storedTeamId = localStorage.getItem('activeTeamId');
-  if (storedTeamId) return storedTeamId;
-  
-  // 없으면 개인 팀 ID 사용
+
+  // Firebase Auth의 현재 사용자를 우선한다. localStorage의 activeTeamId는
+  // 다른 계정 세션에서 남을 수 있으므로 개인 팀 경로 판단에 먼저 쓰면 안 된다.
   const user = await getCurrentUserAsync();
-  if (!user) return null;
-  
-  return `personal_${user.uid}`;
+  if (user?.uid) {
+    const personalTeamId = `personal_${user.uid}`;
+    const storedTeamId = localStorage.getItem('activeTeamId');
+    if (storedTeamId && (!storedTeamId.startsWith('personal_') || storedTeamId === personalTeamId)) {
+      return storedTeamId;
+    }
+    return personalTeamId;
+  }
+
+  return localStorage.getItem('activeTeamId');
 }
 
 // 프로젝트 컬렉션 경로 결정
@@ -56,6 +60,25 @@ async function getProjectsPath(): Promise<string> {
   
   // Fallback to legacy path
   return PROJECTS_COLLECTION;
+}
+
+async function hasProjectReadAccess(projectId: string, projectData: any, user: any): Promise<boolean> {
+  if (!user) return false;
+  if (projectData.userId === user.uid) return true;
+
+  const { isSuperAdmin, isUserAdmin } = await import('./admins');
+  if (isSuperAdmin(user.email || '')) return true;
+  const isAdmin = await isUserAdmin(user.uid, user.email).catch(() => false);
+  if (isAdmin) return true;
+
+  const sharedAccessQuery = query(
+    collection(db, 'sharedProjectAccess'),
+    where('userId', '==', user.uid),
+    where('projectId', '==', projectId),
+    where('isActive', '==', true)
+  );
+  const sharedAccessSnap = await getDocs(sharedAccessQuery);
+  return !sharedAccessSnap.empty;
 }
 
 // 새 프로젝트 생성
@@ -542,7 +565,9 @@ const updateProjectStats = async (projectId: string) => {
 export const getProject = async (projectId: string): Promise<{ project: FirebaseProject | null; error: string | null }> => {
   try {
     const user = await getCurrentUserAsync();
-    // 비로그인 사용자도 프로젝트 조회 가능 (공유 링크 지원)
+    if (!user) {
+      return { project: null, error: '로그인이 필요합니다.' };
+    }
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     const docSnap = await getDocFromServer(docRef);
@@ -553,11 +578,8 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
 
     const data = docSnap.data();
 
-    // 로그인한 사용자이고 소유자가 아니면 권한 확인 (공유 권한 체크)
-    // 비로그인 사용자는 읽기만 가능
-    if (user && data.userId !== user.uid) {
-      // 공유받은 프로젝트인지 확인 (향후 구현 가능)
-      // 현재는 모든 로그인 사용자가 조회 가능
+    if (!(await hasProjectReadAccess(projectId, data, user))) {
+      return { project: null, error: '프로젝트에 접근할 권한이 없습니다.' };
     }
 
     const project: FirebaseProject = {
@@ -582,7 +604,9 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
 export const getProjectById = async (projectId: string): Promise<{ project: any | null; error: string | null }> => {
   try {
     const user = await getCurrentUserAsync();
-    // 비로그인 사용자도 프로젝트 조회 가능 (공유 링크 지원)
+    if (!user) {
+      return { project: null, error: '로그인이 필요합니다.' };
+    }
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     const docSnap = await getDocFromServer(docRef);
@@ -593,11 +617,8 @@ export const getProjectById = async (projectId: string): Promise<{ project: any 
 
     const data = docSnap.data();
 
-    // 로그인한 사용자이고 소유자가 아니면 권한 확인 (공유 권한 체크)
-    // 비로그인 사용자는 읽기만 가능
-    if (user && data.userId !== user.uid) {
-      // 공유받은 프로젝트인지 확인 (향후 구현 가능)
-      // 현재는 모든 로그인 사용자가 조회 가능
+    if (!(await hasProjectReadAccess(projectId, data, user))) {
+      return { project: null, error: '프로젝트에 접근할 권한이 없습니다.' };
     }
 
     // 전체 데이터 반환 (뷰어에서 필요한 모든 데이터 포함)

@@ -605,13 +605,14 @@ const getAppTheme = (): 'dark' | 'light' => {
 // localStorage 마이그레이션
 // 1) shadowEnabled 캐시 제거 (구버전 잔재)
 // 2) showDimensions/showDimensionsText 도 제거 — 이제 영속화 안 함, 디자인 열 때마다 ON
+// 3) openTabs/activeTabId 제거 — 계정이 바뀌어도 이전 계정 디자인 탭이 복원되지 않게 함
 try {
   const raw = localStorage.getItem('ui-store');
   if (raw) {
     const parsed = JSON.parse(raw);
     let mutated = false;
     if (parsed?.state) {
-      ['shadowEnabled', 'showDimensions', 'showDimensionsText'].forEach((k) => {
+      ['shadowEnabled', 'showDimensions', 'showDimensionsText', 'openTabs', 'activeTabId'].forEach((k) => {
         if (k in parsed.state) {
           delete parsed.state[k];
           mutated = true;
@@ -1464,9 +1465,7 @@ export const useUIStore = create<UIState>()(
         sunAngle: state.sunAngle,
         edgeOutlineEnabled: state.edgeOutlineEnabled,
         dashboardLayout: state.dashboardLayout,
-        // openTabs/activeTabId 영속화 (사용자별 격리는 AuthProvider 의 사용자 변경 감지에서 초기화)
-        openTabs: state.openTabs,
-        activeTabId: state.activeTabId,
+        // openTabs/activeTabId는 계정별 Firebase 권한과 강하게 묶여 있어 전역 localStorage에 저장하지 않는다.
         // 뷰 토글: showDimensions/showDimensionsText 는 영속화 안 함 — 디자인 새로 열 때마다 ON
         showAll: state.showAll,
         // showGuides는 기본값(false) 유지를 위해 영속화하지 않음
