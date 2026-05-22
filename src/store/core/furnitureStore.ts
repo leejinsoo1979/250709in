@@ -505,11 +505,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
-      // 걸래받이 기본값: 하부장 100mm, 키큰장은 사용자 받침대 높이(spaceInfo.baseConfig.height) 사용
+      // 걸래받이 기본값: 하부장 105mm, 키큰장은 사용자 받침대 높이(spaceInfo.baseConfig.height) 사용
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
       if (module.baseFrameHeight === undefined) {
         if (newCategory === 'lower' || isLowerById) {
-          module.baseFrameHeight = 100;
+          module.baseFrameHeight = 105;
         } else if (newCategory === 'full') {
           module.baseFrameHeight = spaceInfo.baseConfig?.height ?? 60;
         }

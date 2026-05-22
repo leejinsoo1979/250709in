@@ -1875,7 +1875,7 @@ const Room: React.FC<RoomProps> = ({
         // 하부장 프레임 상단 = floorFinish + 받침대(가구별) + 실제 하부장 높이
         //  - 가구에 baseFrameHeight가 있으면 그 값, 없으면 spaceInfo.baseConfig.height, 그것도 없으면 하부장 기본 100
         const modBaseH = spaceInfo.baseConfig?.type === 'stand' ? 0
-          : ((m as any).baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 100);
+          : ((m as any).baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 105);
         topMm = floorFinishMM + modBaseH + cabHeight;
       } else {
         bottomMm = 0;
@@ -7286,7 +7286,7 @@ const Room: React.FC<RoomProps> = ({
               if (modBaseBackWallGapMm > 0) {
                 baseZPosition += mmToThreeUnits(modBaseBackWallGapMm);
               }
-              const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 60));
+              const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 105 : 60));
               // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
               const modBaseFrameGapMm = Math.max(0, Math.min(rawBaseHeightMm - 1, mod.baseFrameGap ?? 0));
               const modBaseHeightMm = Math.max(0, rawBaseHeightMm - modBaseFrameGapMm);

@@ -1793,7 +1793,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 OFF 영향을 받지 않음 (바닥 아래로 내려가는 문제 방지)
         const isInsertFrameForBase = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
         const effectiveHasBaseFalse = !isInsertFrameForBase && placedModule.hasBase === false;
-        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (effectiveHasBaseFalse ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 100 : 60))));
+        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (effectiveHasBaseFalse ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 105 : 60))));
         // 걸래받이 OFF + 개별 띄움 높이
         const indivFloatMm = effectiveHasBaseFalse ? (placedModule.individualFloatHeight ?? 0) : 0;
         const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units

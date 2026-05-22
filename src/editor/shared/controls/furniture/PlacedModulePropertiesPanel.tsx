@@ -161,7 +161,7 @@ const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurro
     const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseFrameMm = spaceInfo.baseConfig?.type === 'stand'
       ? 0
-      : (module.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 100);
+      : (module.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 105);
     const heightMm = floorFinishMm + baseFrameMm + cabHeight;
     return { sideHeightMm: heightMm, frontHeightMm: heightMm };
   }
@@ -1375,7 +1375,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
             - (currentPlacedModule.individualFloatHeight ?? 0))
           : 0;
-        const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH;
+        const lowerBaseForDisplay = moduleData.category === 'lower' && currentPlacedModule.hasBase !== false && spaceInfo.baseConfig?.type !== 'stand'
+          ? (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 105))
+          : 0;
+        const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH + lowerBaseForDisplay;
         // 사용자가 H input을 편집 중이면 동기화 skip (입력값 덮어쓰기 방지)
         if (!freeHeightFocusedRef.current) {
           setFreeHeightInput(Math.round(effectiveHeight).toString());
@@ -3926,8 +3929,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 {/* 높이 — 2단서랍장은 '몸통 높이'로만 조절, H는 읽기전용 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>
-                    H
-                    {moduleData.category !== 'upper' && <span style={{ fontSize: '9px' }}> (발통제외)</span>}
+	                    H
                   </label>
                   <div className={styles.inputWithUnit}>
                     <input
@@ -3940,13 +3942,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         freeHeightFocusedRef.current = false;
                         const displayVal = parseInt(freeHeightInput, 10);
-                        const maxHeightInput = (() => {
-                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
-                          return 3000;
-                        })();
-                        // 멍장(dummy)은 최소 300mm까지만 축소 가능
-                        const isDummyForMin = currentPlacedModule?.moduleId?.includes('dummy');
-                        const minHeightInput = isDummyForMin ? 300 : 100;
+	                        const lowerBaseForInput = moduleData.category === 'lower' && currentPlacedModule?.hasBase !== false && spaceInfo.baseConfig?.type !== 'stand'
+	                          ? (currentPlacedModule?.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 105))
+	                          : 0;
+	                        const maxHeightInput = (() => {
+	                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
+	                          return 3000 + lowerBaseForInput;
+	                        })();
+	                        // 멍장(dummy)은 최소 300mm까지만 축소 가능
+	                        const isDummyForMin = currentPlacedModule?.moduleId?.includes('dummy');
+	                        const minHeightInput = (isDummyForMin ? 300 : 100) + lowerBaseForInput;
                         if (!isNaN(displayVal) && displayVal >= minHeightInput && displayVal <= maxHeightInput && currentPlacedModule) {
                           // 표시값(늘어난 값) → freeHeight(원본값): 흡수분 차감
                           const shouldAbsorbTopForBodyH = moduleData.category === 'full';
@@ -3960,7 +3965,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
-                          const val = displayVal - absT - absB;
+	                          const val = displayVal - absT - absB - lowerBaseForInput;
                           const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
@@ -4023,12 +4028,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           e.preventDefault();
                           // Enter 시 직접 저장 처리 (blur 시점에 팝업이 닫히면 onBlur가 실행 안 될 수 있음)
                           const displayVal = parseInt(freeHeightInput, 10);
-                          const maxHeightInput = (() => {
-                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
-                          return 3000;
-                        })();
-                          const isDummyForMinEnter = currentPlacedModule?.moduleId?.includes('dummy');
-                          const minHeightInputEnter = isDummyForMinEnter ? 300 : 100;
+	                          const lowerBaseForInput = moduleData.category === 'lower' && currentPlacedModule?.hasBase !== false && spaceInfo.baseConfig?.type !== 'stand'
+	                            ? (currentPlacedModule?.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 105))
+	                            : 0;
+	                          const maxHeightInput = (() => {
+	                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
+	                          return 3000 + lowerBaseForInput;
+	                        })();
+	                          const isDummyForMinEnter = currentPlacedModule?.moduleId?.includes('dummy');
+	                          const minHeightInputEnter = (isDummyForMinEnter ? 300 : 100) + lowerBaseForInput;
                           if (!isNaN(displayVal) && displayVal >= minHeightInputEnter && displayVal <= maxHeightInput && currentPlacedModule) {
                             const shouldAbsorbTopForBodyH = moduleData.category === 'full';
                             const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
@@ -4041,7 +4049,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const val = displayVal - absT - absB;
+	                            const val = displayVal - absT - absB - lowerBaseForInput;
                             const updates: any = moduleData.category === 'upper'
                               ? { customHeight: val, freeHeight: undefined }
                               : { freeHeight: val };
@@ -4067,13 +4075,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
-                          const cur = parseInt(freeHeightInput, 10) || placedBodyHeight || moduleData.dimensions.height;
-                          const maxHeightInput = (() => {
-                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
-                          return 3000;
-                        })();
-                          const isDummyForMinArrow = currentPlacedModule?.moduleId?.includes('dummy');
-                          const minHeightInputArrow = isDummyForMinArrow ? 300 : 100;
+	                          const lowerBaseForInput = moduleData.category === 'lower' && currentPlacedModule?.hasBase !== false && spaceInfo.baseConfig?.type !== 'stand'
+	                            ? (currentPlacedModule?.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 105))
+	                            : 0;
+	                          const cur = parseInt(freeHeightInput, 10) || (placedBodyHeight + lowerBaseForInput) || (moduleData.dimensions.height + lowerBaseForInput);
+	                          const maxHeightInput = (() => {
+	                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
+	                          return 3000 + lowerBaseForInput;
+	                        })();
+	                          const isDummyForMinArrow = currentPlacedModule?.moduleId?.includes('dummy');
+	                          const minHeightInputArrow = (isDummyForMinArrow ? 300 : 100) + lowerBaseForInput;
                           const nextDisplay = Math.max(minHeightInputArrow, Math.min(maxHeightInput, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {
@@ -4089,16 +4100,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const next = nextDisplay - absT - absB;
+	                            const next = nextDisplay - absT - absB - lowerBaseForInput;
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
-                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
-                                ) {
-                              const iSpace = calculateInternalSpace(spaceInfo);
-                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                              arrowUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - next));
-                            }
+	                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
+	                                ) {
+	                              const iSpace = calculateInternalSpace(spaceInfo);
+	                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
+	                              arrowUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - next));
+	                            }
+	                            if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
+	                              arrowUpdates.cabinetBodyHeight = next;
+	                            }
                             updatePlacedModule(currentPlacedModule.id, arrowUpdates);
                             setSectionHeightInputs({}); // 섹션 높이 캐시 초기화
                           }
@@ -5730,7 +5744,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
             const bfMin = isLowerMod ? 60 : 40;
             const bfMax = isLowerMod ? 150 : 100;
-            const bfDefault = isLowerMod ? 100 : 60;
+            const bfDefault = isLowerMod ? 105 : 60;
 
             const topEnabled = mod.hasTopFrame !== false;
             const baseEnabled = mod.hasBase !== false;

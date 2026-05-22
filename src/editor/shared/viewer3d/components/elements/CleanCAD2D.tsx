@@ -1010,6 +1010,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // mm를 Three.js 단위로 변환 (furnitureDimensions에서 사용하기 위해 먼저 선언)
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   const threeUnitsToMm = (units: number) => units * 100;
+
+  const resolveDepthSpanZ = (
+    depthMm: number,
+    direction: 'front' | 'back' | undefined,
+    furnitureZOffsetValue: number,
+    furnitureDepthValue: number,
+    doorThicknessValue: number,
+    baseDepthOffsetValue = 0,
+    backWallGapZValue = 0
+  ) => {
+    const depth = mmToThreeUnits(depthMm);
+    const fixedFrontZ = furnitureZOffsetValue + furnitureDepthValue / 2 - doorThicknessValue + baseDepthOffsetValue + backWallGapZValue;
+    const fixedBackZ = furnitureZOffsetValue - furnitureDepthValue / 2 - doorThicknessValue + baseDepthOffsetValue + backWallGapZValue;
+
+    // UI의 '뒤고정'은 내부값 front다. 뒷면을 고정하고 깊이를 줄이면 앞면이 뒤로 들어간다.
+    if ((direction || 'front') === 'front') {
+      return {
+        backZ: fixedBackZ,
+        frontZ: fixedBackZ + depth,
+      };
+    }
+
+    // UI의 '앞고정'은 내부값 back이다. 기존 앞선을 유지하고 뒷면만 앞으로 온다.
+    return {
+      backZ: fixedFrontZ - depth,
+      frontZ: fixedFrontZ,
+    };
+  };
   
   // 발통 심볼을 그리는 헬퍼 함수
   const renderFootstoolSymbol = (x: number, y: number, z: number, rotation: [number, number, number] = [0, 0, 0]) => {
@@ -1510,7 +1538,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         }
       });
     }
-  }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, upperSectionDepth: m.upperSectionDepth, lowerSectionDepth: m.lowerSectionDepth, position: m.position }))), JSON.stringify(spaceInfo.columns?.map(col => ({ id: col.id, position: col.position, width: col.width, height: col.height, depth: col.depth })))]); // placedModules와 columns 변경사항을 세밀하게 감지
+  }, [currentViewDirection, showDimensions, placedModules.length, JSON.stringify(placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, customDepth: m.customDepth, upperSectionDepth: m.upperSectionDepth, lowerSectionDepth: m.lowerSectionDepth, upperSectionDepthDirection: m.upperSectionDepthDirection, lowerSectionDepthDirection: m.lowerSectionDepthDirection, position: m.position }))), JSON.stringify(spaceInfo.columns?.map(col => ({ id: col.id, position: col.position, width: col.width, height: col.height, depth: col.depth })))]); // placedModules와 columns 변경사항을 세밀하게 감지
   
   // 치수 표시가 비활성화된 경우에도 기둥은 렌더링 (hooks 호출 후에 체크)
   // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시
@@ -8445,16 +8473,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 상부 치수용 (기본값: 상부섹션 깊이)
           const actualDepth = upperDepth;
-          const moduleDepth = mmToThreeUnits(actualDepth);
           
           // 실제 가구 Z 위치 계산 (FurnitureItem.tsx와 동일)
           const doorThickness = mmToThreeUnits(20);
           // 가구별 뒷벽 이격(backWallGap) 반영 — 측면뷰 치수도 가구 본체 따라 이동
           const moduleBackWallGapMm = (module as any).backWallGap ?? 0;
           const moduleBackWallGapZ = moduleBackWallGapMm > 0 ? mmToThreeUnits(moduleBackWallGapMm) : 0;
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2 + moduleBackWallGapZ;
-          const furnitureBackZ = furnitureZ - moduleDepth/2;
-          const furnitureFrontZ = furnitureZ + moduleDepth/2;
+          const usesDepthDirection = hasMultiSection || moduleData.category === 'lower' || module.moduleId?.includes('lower-cabinet');
+          const upperSpan = usesDepthDirection
+            ? resolveDepthSpanZ(
+              actualDepth,
+              hasMultiSection ? module.upperSectionDepthDirection : module.lowerSectionDepthDirection,
+              furnitureZOffset,
+              furnitureDepth,
+              doorThickness,
+              0,
+              moduleBackWallGapZ
+            )
+            : (() => {
+              const depth = mmToThreeUnits(actualDepth);
+              const frontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness + moduleBackWallGapZ;
+              return { backZ: frontZ - depth, frontZ };
+            })();
+          const furnitureBackZ = upperSpan.backZ;
+          const furnitureFrontZ = upperSpan.frontZ;
           
           // 치수선은 공간 상단에 표시
           const dimY = actualSpaceHeight + mmToThreeUnits(150);
@@ -8514,10 +8556,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
               {hasMultiSection && (() => {
-                const lowerModuleDepth = mmToThreeUnits(lowerDepth);
-                const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2 + moduleBackWallGapZ;
-                const lowerBackZ = lowerFurnitureZ - lowerModuleDepth/2;
-                const lowerFrontZ = lowerFurnitureZ + lowerModuleDepth/2;
+                const lowerSpan = resolveDepthSpanZ(
+                  lowerDepth,
+                  module.lowerSectionDepthDirection,
+                  furnitureZOffset,
+                  furnitureDepth,
+                  doorThickness,
+                  0,
+                  moduleBackWallGapZ
+                );
+                const lowerBackZ = lowerSpan.backZ;
+                const lowerFrontZ = lowerSpan.frontZ;
                 const lowerDimY = mmToThreeUnits(-50); // 하단 치수선 위치
                 const furnitureBottomY = module.position.y - furnitureHeight / 2;
 
@@ -9469,30 +9518,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 상부 치수용
           const actualDepth = upperDepth;
-          const moduleDepth = mmToThreeUnits(actualDepth);
           const dimY = topDimensionY - mmToThreeUnits(120);
           // 가구별 뒷벽 이격(backWallGap) 반영 — 우측면 깊이 치수선도 가구 따라 이동
           const moduleBackWallGapMmRD = (module as any).backWallGap ?? 0;
           const moduleBackWallGapZRD = moduleBackWallGapMmRD > 0 ? mmToThreeUnits(moduleBackWallGapMmRD) : 0;
-          const dimZStart = spaceZOffset + moduleBackWallGapZRD;
+          const doorThickness = mmToThreeUnits(20);
+          const usesDepthDirection = hasMultiSection || moduleData.category === 'lower' || module.moduleId?.includes('lower-cabinet');
+          const upperSpan = usesDepthDirection
+            ? resolveDepthSpanZ(
+              actualDepth,
+              hasMultiSection ? module.upperSectionDepthDirection : module.lowerSectionDepthDirection,
+              furnitureZOffset,
+              furnitureDepth,
+              doorThickness,
+              0,
+              moduleBackWallGapZRD
+            )
+            : (() => {
+              const depth = mmToThreeUnits(actualDepth);
+              const frontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness + moduleBackWallGapZRD;
+              return { backZ: frontZ - depth, frontZ };
+            })();
 
           return (
             <group key={`right-module-dim-${index}`}>
               {/* 가구 깊이 치수선 */}
               <Line
-                points={[[spaceWidth, dimY, dimZStart], [spaceWidth, dimY, dimZStart + moduleDepth]]}
+                points={[[spaceWidth, dimY, upperSpan.backZ], [spaceWidth, dimY, upperSpan.frontZ]]}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
               
               {/* 화살표들 */}
               <Line
-                points={createArrowHead([spaceWidth, dimY, dimZStart], [spaceWidth, dimY, dimZStart + 0.02], 0.01)}
+                points={createArrowHead([spaceWidth, dimY, upperSpan.backZ], [spaceWidth, dimY, upperSpan.backZ + 0.02], 0.01)}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
               <Line
-                points={createArrowHead([spaceWidth, dimY, dimZStart + moduleDepth], [spaceWidth, dimY, dimZStart + moduleDepth - 0.02], 0.01)}
+                points={createArrowHead([spaceWidth, dimY, upperSpan.frontZ], [spaceWidth, dimY, upperSpan.frontZ - 0.02], 0.01)}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
@@ -9501,7 +9565,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <Text
                   renderOrder={100001}
                   depthTest={false}
-                position={[spaceWidth, dimY - mmToThreeUnits(30), dimZStart + moduleDepth / 2]}
+                position={[spaceWidth, dimY - mmToThreeUnits(30), (upperSpan.backZ + upperSpan.frontZ) / 2]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
                 anchorX="center"
@@ -9512,38 +9576,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 연장선 (가구에서 치수선까지 긴 보조선) */}
               <Line
-                points={[[spaceWidth, spaceHeight, dimZStart], [spaceWidth, dimY + mmToThreeUnits(30), dimZStart]]}
+                points={[[spaceWidth, spaceHeight, upperSpan.backZ], [spaceWidth, dimY + mmToThreeUnits(30), upperSpan.backZ]]}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
               <Line
-                points={[[spaceWidth, spaceHeight, dimZStart + moduleDepth], [spaceWidth, dimY + mmToThreeUnits(30), dimZStart + moduleDepth]]}
+                points={[[spaceWidth, spaceHeight, upperSpan.frontZ], [spaceWidth, dimY + mmToThreeUnits(30), upperSpan.frontZ]]}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
 
               {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
               {hasMultiSection && (() => {
-                const lowerModuleDepth = mmToThreeUnits(lowerDepth);
+                const lowerSpan = resolveDepthSpanZ(
+                  lowerDepth,
+                  module.lowerSectionDepthDirection,
+                  furnitureZOffset,
+                  furnitureDepth,
+                  doorThickness,
+                  0,
+                  moduleBackWallGapZRD
+                );
                 const lowerDimY = mmToThreeUnits(200); // 하단 치수선 위치 (바닥에서 위로)
 
                 return (
                   <group>
                     {/* 하부 깊이 치수선 */}
                     <Line
-                      points={[[spaceWidth, lowerDimY, dimZStart], [spaceWidth, lowerDimY, dimZStart + lowerModuleDepth]]}
+                      points={[[spaceWidth, lowerDimY, lowerSpan.backZ], [spaceWidth, lowerDimY, lowerSpan.frontZ]]}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
 
                     {/* 화살표들 */}
                     <Line
-                      points={createArrowHead([spaceWidth, lowerDimY, dimZStart], [spaceWidth, lowerDimY, dimZStart + 0.02], 0.01)}
+                      points={createArrowHead([spaceWidth, lowerDimY, lowerSpan.backZ], [spaceWidth, lowerDimY, lowerSpan.backZ + 0.02], 0.01)}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
                     <Line
-                      points={createArrowHead([spaceWidth, lowerDimY, dimZStart + lowerModuleDepth], [spaceWidth, lowerDimY, dimZStart + lowerModuleDepth - 0.02], 0.01)}
+                      points={createArrowHead([spaceWidth, lowerDimY, lowerSpan.frontZ], [spaceWidth, lowerDimY, lowerSpan.frontZ - 0.02], 0.01)}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
@@ -9552,7 +9624,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     <Text
                       renderOrder={100001}
                       depthTest={false}
-                      position={[spaceWidth, lowerDimY + mmToThreeUnits(30), dimZStart + lowerModuleDepth / 2]}
+                      position={[spaceWidth, lowerDimY + mmToThreeUnits(30), (lowerSpan.backZ + lowerSpan.frontZ) / 2]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
                       anchorX="center"
@@ -9563,12 +9635,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     {/* 연장선 (가구에서 치수선까지) */}
                     <Line
-                      points={[[spaceWidth, 0, dimZStart], [spaceWidth, lowerDimY - mmToThreeUnits(30), dimZStart]]}
+                      points={[[spaceWidth, 0, lowerSpan.backZ], [spaceWidth, lowerDimY - mmToThreeUnits(30), lowerSpan.backZ]]}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
                     <Line
-                      points={[[spaceWidth, 0, dimZStart + lowerModuleDepth], [spaceWidth, lowerDimY - mmToThreeUnits(30), dimZStart + lowerModuleDepth]]}
+                      points={[[spaceWidth, 0, lowerSpan.frontZ], [spaceWidth, lowerDimY - mmToThreeUnits(30), lowerSpan.frontZ]]}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
@@ -10391,9 +10463,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else {
               // 의류장(2섹션): 하부=앞면정렬, 상부=뒷면정렬
               const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
-              const lowerDepth = mmToThreeUnits(lowerDepthMm);
-              const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset + moduleBackWallGapZ2;
-              const lowerFrontZ = lowerBackZ + lowerDepth;
+              const lowerSpan = resolveDepthSpanZ(
+                lowerDepthMm,
+                module.lowerSectionDepthDirection,
+                furnitureZOffset,
+                furnitureDepth,
+                doorThickness,
+                baseDepthOffset,
+                moduleBackWallGapZ2
+              );
+              const lowerBackZ = lowerSpan.backZ;
+              const lowerFrontZ = lowerSpan.frontZ;
               const lowerKey = Math.round(lowerDepthMm);
               const existingLower = depthGroups.get(lowerKey);
               if (existingLower) {
@@ -10448,8 +10528,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 신발장: FurnitureItem.tsx와 동일하게 뒷벽 기준에 붙인다.
               furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
+            } else if (moduleData.category === 'lower' || module.moduleId?.includes('lower-cabinet')) {
+              const span = resolveDepthSpanZ(
+                actualDepthMm,
+                module.lowerSectionDepthDirection,
+                furnitureZOffset,
+                furnitureDepth,
+                doorThickness,
+                baseDepthOffset,
+                moduleBackWallGapZX
+              );
+              furnitureBackZ = span.backZ;
+              furnitureFrontZ = span.frontZ;
             } else {
-              // 하부장/키큰장/의류장: 앞면 정렬 + baseDepthOffset
+              // 하부장 외 키큰장/의류장 단일 깊이는 기존 앞면 정렬 유지
               furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             }
@@ -10614,9 +10706,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               } else {
                 // 의류장(2섹션): 하부=앞면정렬, 상부=뒷면정렬
                 const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
-                const lowerDepth = mmToThreeUnits(lowerDepthMm);
-                const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset + moduleBackWallGapZR;
-                const lowerFrontZ = lowerBackZ + lowerDepth;
+                const lowerSpan = resolveDepthSpanZ(
+                  lowerDepthMm,
+                  module.lowerSectionDepthDirection,
+                  furnitureZOffset,
+                  furnitureDepth,
+                  doorThickness,
+                  baseDepthOffset,
+                  moduleBackWallGapZR
+                );
+                const lowerBackZ = lowerSpan.backZ;
+                const lowerFrontZ = lowerSpan.frontZ;
                 const lowerKey = Math.round(lowerDepthMm);
                 const existingLower = depthGroups.get(lowerKey);
                 if (existingLower) {
@@ -10667,6 +10767,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 신발장: FurnitureItem.tsx와 동일하게 뒷벽 기준에 붙인다.
                 furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
+              } else if (moduleData.category === 'lower' || module.moduleId?.includes('lower-cabinet')) {
+                const span = resolveDepthSpanZ(
+                  actualDepthMm,
+                  module.lowerSectionDepthDirection,
+                  furnitureZOffset,
+                  furnitureDepth,
+                  doorThickness,
+                  baseDepthOffset,
+                  moduleBackWallGapZRX
+                );
+                furnitureBackZ = span.backZ;
+                furnitureFrontZ = span.frontZ;
               } else {
                 furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;

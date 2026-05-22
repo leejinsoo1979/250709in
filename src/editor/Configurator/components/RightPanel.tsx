@@ -150,7 +150,7 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
   const bfMin = isLowerCategory ? 60 : 40;
   const bfMax = isLowerCategory ? 150 : 100;
   // 일반 가구의 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
-  const bfDefault = isLowerCategory ? 100 : (userBaseHeightDefault ?? 60);
+  const bfDefault = isLowerCategory ? 105 : (userBaseHeightDefault ?? 60);
   const [heightText, setHeightText] = React.useState(String(heightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const [gapText, setGapText] = React.useState((gap ?? 0) !== 0 ? String(gap) : '');
@@ -1686,7 +1686,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const bfMin = isLowerMod ? 60 : 40;
                     const bfMax = isLowerMod ? 150 : 100;
                     // 일반 가구 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
-                    const bfDefault = isLowerMod ? 100 : (userDefaults.baseHeight ?? 60);
+                    const bfDefault = isLowerMod ? 105 : (userDefaults.baseHeight ?? 60);
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
