@@ -240,10 +240,10 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             });
             
             // 서랍 바닥판
-            // DrawerRenderer: drawerWidth - 70 - 26 = drawerWidth - 96
+            // 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
-              width: drawerWidth - 96,
+              width: drawerWidth - 91,
               depth: drawerBodyDepth - 20,
               thickness: drawerBottomThickness,
               material: 'MDF'

@@ -960,11 +960,11 @@ export const calculatePanelDetails = (
           });
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
-          // DrawerRenderer: drawerWidth - 70 - 26 = drawerWidth - 96
+          // 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
           // L = 폭(좌우), W = 깊이(앞뒤)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 바닥`,
-            width: drawerWidth - 96, // 폭(좌우) → L방향
+            width: drawerWidth - 91, // 폭(좌우) → L방향
             depth: drawerBodyDepth - 20, // 깊이(앞뒤) → W방향
             thickness: drawerBottomThickness,
             material: 'MDF'
@@ -1238,7 +1238,7 @@ export const calculatePanelDetails = (
       // 서랍 바닥판
       panels.lower.push({
         name: '서랍1 바닥',
-        width: Math.round(drawerInnerWidth),
+        width: Math.round(drawerInnerWidth + 15),
         depth: Math.round(drawerSideDepth - 10),
         thickness: backPanelThickness,
         material: 'MDF'
@@ -1826,9 +1826,10 @@ export const calculatePanelDetails = (
                   material: 'PB'
                 });
                 // 서랍 바닥판 - L = 폭(좌우), W = 깊이(앞뒤)
+                // 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 바닥`,
-                  width: drawerWidth - 96, // 폭 → L방향
+                  width: drawerWidth - 91, // 폭 → L방향
                   depth: drawerBodyDepth - 20, // 깊이 → W방향
                   thickness: drawerBottomThicknessCC,
                   material: 'MDF'
@@ -2213,7 +2214,7 @@ export const calculatePanelDetails = (
     const extSideDepthMm = Math.min(customDepth - 50, 453); // 서랍 깊이 = 캐비넷깊이 - 50, 최대 453
     const sideGapMm = 6; // 좌우 갭
     const extInnerWidth = innerWidth - sideGapMm * 2 - drawerSideThickness * 2; // 서랍 내부 폭
-    const extBottomWidthMm = extInnerWidth + 10; // 바닥판 폭
+    const extBottomWidthMm = extInnerWidth + 15; // 바닥판 폭: 좌우 각 7.5mm 홈 끼움
 
     // === 마이다 높이 계산 (ExternalDrawerRenderer + LowerCabinet.tsx 동일 로직) ===
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');

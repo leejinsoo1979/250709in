@@ -1583,8 +1583,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               // 바닥판 깊이: 측판 깊이 - 앞쪽 10mm 홈 여유 (다른 서랍 동일)
                               const bottomDepth2 = drawerSideDepth - mmToThreeUnits(10);
                               const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
-                              // 바닥판 폭: 서랍 폭 - 96mm (다른 서랍 동일: 70+26)
-                              const bottomWidth = drawerAreaWidth - mmToThreeUnits(70) - mmToThreeUnits(26);
+                              // 바닥판 폭: 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
+                              const bottomWidth = drawerAreaWidth - mmToThreeUnits(91);
                               // 바닥판 Y: 측판 하단에서 13mm 위 (바닥판 하단 = 측판 하단 + 13mm)
                               const sidePanelBottom = drawerCenterY - drawerSideH / 2;
                               const bottomY = sidePanelBottom + mmToThreeUnits(13) + bottomT / 2;
@@ -2449,13 +2449,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const sidePanelZ = depth / 2 - mmToThreeUnits(40) - sideD / 2;
 
           // 바닥판 — 측판 사이에 끼워짐, 두께 18mm, 앞면이 측판 앞면에서 18mm 안쪽 옵셋
-          //   바닥판 W = innerWidth - sideW × 2 (측판 안쪽 사이 폭)
+          //   바닥판 W = 측판 안쪽 사이 폭 + 좌우 각 7.5mm 홈 끼움
           //   바닥판 H(두께) = 18mm
           //   바닥판 D = 측판 D - 18mm 옵셋 (앞쪽 18mm 짧음, 뒷면은 측판 뒷면과 일치)
           const bottomThk_mm = 18;
           const bottomFrontOffset_mm = 18;
           const bottomD_mm = 277 - bottomFrontOffset_mm; // 277 - 18 = 259
-          const bottomW = innerWidth - sideW * 2;
+          const bottomW = innerWidth - sideW * 2 + mmToThreeUnits(15);
           const bottomTh = mmToThreeUnits(bottomThk_mm);
           const bottomD = mmToThreeUnits(bottomD_mm);
           // 바닥판 Y(중심) = 측판 하단(가구바닥 + 242mm) + 바닥판 두께/2

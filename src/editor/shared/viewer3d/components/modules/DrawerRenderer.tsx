@@ -543,7 +543,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(70) - mmToThreeUnits(26), bottomThk, bottomDepth]}
+              args={[drawerWidth - mmToThreeUnits(91), bottomThk, bottomDepth]}
               position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + bottomThk/2, bottomZ]}
               material={mat}
               renderMode={renderMode}

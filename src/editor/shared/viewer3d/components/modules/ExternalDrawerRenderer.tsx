@@ -137,7 +137,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const bottomDepth = drawerBodyDepth;
   const bottomZPos = drawerBodyCenterZ;
   const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
-  const bottomWidth = drawerInnerWidth + mmToThreeUnits(10);
+  const bottomWidth = drawerInnerWidth + mmToThreeUnits(15);
 
   // 뒷판 높이: 측판높이 - 15mm(바닥갭) - 9mm(바닥판두께)
   const backHeightMm = sideHeightMm - 15 - 9;
