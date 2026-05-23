@@ -1070,8 +1070,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               });
             }
 
-            // 상부장: 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
-            if (modCat_l2 === 'upper') {
+            // 상부장/키큰장(full): 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
+            if (modCat_l2 === 'upper' || modCat_l2 === 'full') {
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
               const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
