@@ -592,10 +592,10 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
           });
           
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
-          // 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
+          // 측판 홈 깊이 7.5mm에서 0.5mm 여유를 두고 좌우 각 7mm씩 끼움
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
-            width: drawerWidth - 91,
+            width: drawerWidth - (drawerSideThickness * 2 + 62),
             depth: drawerBodyDepth - 20, // drawerBodyDepth - 20
             thickness: drawerBottomThickness,
             material: 'MDF'  // 서랍 바닥판은 MDF 재질
@@ -1326,7 +1326,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const hasDoorVal = currentPlacedModule.hasDoor ?? false; // 3D 렌더링(FurnitureItem)과 동일 기준
       const doorSplitVal = currentPlacedModule.doorSplit ?? false;
       const hasGapVal = currentPlacedModule.hasGapBackPanel ?? false;
-      const backPanelThicknessVal = currentPlacedModule.backPanelThickness ?? 9;
+      const rawBackPanelThicknessVal = currentPlacedModule.backPanelThickness ?? 9;
+      const backPanelThicknessVal = rawBackPanelThicknessVal === 9.5
+        ? 9
+        : rawBackPanelThicknessVal === 5 || rawBackPanelThicknessVal === 5.5
+          ? 6
+          : rawBackPanelThicknessVal === 3.5
+            ? 3
+            : rawBackPanelThicknessVal;
+      if (rawBackPanelThicknessVal !== backPanelThicknessVal && activePopup.id) {
+        updatePlacedModule(activePopup.id, { backPanelThickness: backPanelThicknessVal });
+      }
       setHingePosition(hingePos);
       setHingeType(hingeTypeVal);
       setHasDoor(hasDoorVal);

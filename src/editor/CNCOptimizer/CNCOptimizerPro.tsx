@@ -475,7 +475,7 @@ function PageInner(){
   // Stock 초기화: livePanels 기반으로 PET 코팅 여부 판단하여 적절한 stock 설정
   useEffect(() => {
     // livePanels에서 실제 사용되는 두께/재질 조합을 기반으로 stock 생성
-    const isPET = livePanels.some(p => p.thickness === 18.5 || p.thickness === 15.5 || p.thickness === 9.5 || p.thickness === 5.5);
+    const isPET = livePanels.some(p => p.thickness === 18.5 || p.thickness === 15.5);
 
     const defaultStock: StockSheet[] = isPET ? [
       // PET 코팅 원자재 (+0.5mm)
@@ -483,8 +483,10 @@ function PageInner(){
       { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
       { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
       { label: 'MDF_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'MDF' },
-      { label: 'MDF_9.5T_2440x1220', width: 1220, length: 2440, thickness: 9.5, quantity: 999, material: 'MDF' },
-      { label: 'MDF_5.5T_2440x1220', width: 1220, length: 2440, thickness: 5.5, quantity: 999, material: 'MDF' },
+      { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
+      { label: 'MDF_6T_2440x1220', width: 1220, length: 2440, thickness: 6, quantity: 999, material: 'MDF' },
+      { label: 'MDF_4.5T_2440x1220', width: 1220, length: 2440, thickness: 4.5, quantity: 999, material: 'MDF' },
+      { label: 'MDF_3T_2440x1220', width: 1220, length: 2440, thickness: 3, quantity: 999, material: 'MDF' },
     ] : [
       // 일반 원자재
       { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
@@ -492,7 +494,9 @@ function PageInner(){
       { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
       { label: 'MDF_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'MDF' },
       { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
-      { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
+      { label: 'MDF_6T_2440x1220', width: 1220, length: 2440, thickness: 6, quantity: 999, material: 'MDF' },
+      { label: 'MDF_4.5T_2440x1220', width: 1220, length: 2440, thickness: 4.5, quantity: 999, material: 'MDF' },
+      { label: 'MDF_3T_2440x1220', width: 1220, length: 2440, thickness: 3, quantity: 999, material: 'MDF' },
     ];
     // 인조대리석 패널이 있으면 해당 두께의 stock 추가
     const stoneThicknesses = new Set<number>();

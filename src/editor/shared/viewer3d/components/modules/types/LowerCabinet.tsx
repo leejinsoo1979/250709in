@@ -1425,7 +1425,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const basicThicknessMm = baseFurniture.basicThickness / 0.01;
     const cabinetHeightMm = adjustedHeight / 0.01;
     const depthMm = baseFurniture.depth / 0.01;
-    const backPanelMm = backPanelThickness || 9;
+    const rawBackPanelMm = backPanelThickness || 9;
+    const backPanelMm = rawBackPanelMm === 9.5
+      ? 9
+      : rawBackPanelMm === 5 || rawBackPanelMm === 5.5
+        ? 6
+        : rawBackPanelMm === 3.5
+          ? 3
+          : rawBackPanelMm;
     const backReductionMm = backPanelMm + basicThicknessMm - 1;
     const baseBoring = calculateShelfBoringPositions({
       sections,
@@ -2244,7 +2251,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
             const cabinetHeightMm = adjustedHeight / 0.01;
             const depthMm = baseFurniture.depth / 0.01;
-            const backPanelMm = (backPanelThickness || 9);
+            const rawBackPanelMm = (backPanelThickness || 9);
+            const backPanelMm = rawBackPanelMm === 9.5
+              ? 9
+              : rawBackPanelMm === 5 || rawBackPanelMm === 5.5
+                ? 6
+                : rawBackPanelMm === 3.5
+                  ? 3
+                  : rawBackPanelMm;
 
             // 팝업에서 사용자 정의한 선반 갯수/위치 우선
             //  - customSections count === 0이면 렌더링 안 함 (선반 없음)

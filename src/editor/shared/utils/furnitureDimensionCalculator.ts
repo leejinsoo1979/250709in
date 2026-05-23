@@ -148,7 +148,14 @@ export const calculateFurnitureDimensions = (
 
     // 패널 두께
     const basicThickness = moduleData.modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18); // mm
-    const backPanelThickness = module.backPanelThickness ?? 9; // mm
+    const rawBackPanelThickness = module.backPanelThickness ?? 9;
+    const backPanelThickness = rawBackPanelThickness === 9.5
+      ? 9
+      : rawBackPanelThickness === 5 || rawBackPanelThickness === 5.5
+        ? 6
+        : rawBackPanelThickness === 3.5
+          ? 3
+          : rawBackPanelThickness; // mm
 
     // 실제 치수
     const actualWidth = module.freeWidth || module.customWidth || module.adjustedWidth || module.moduleWidth || moduleData.dimensions.width;

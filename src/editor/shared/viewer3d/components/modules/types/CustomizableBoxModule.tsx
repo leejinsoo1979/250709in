@@ -270,7 +270,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
   const panelThickness = customConfig.panelThickness || 18; // mm
   const t = mmToUnit(panelThickness); // Three.js 단위
-  const backPanelThicknessMm = backPanelThicknessProp || 9; // 백패널 두께 (3/5/9mm)
+  const rawBackPanelThicknessMm = backPanelThicknessProp || 9;
+  const backPanelThicknessMm = rawBackPanelThicknessMm === 9.5
+    ? 9
+    : rawBackPanelThicknessMm === 5 || rawBackPanelThicknessMm === 5.5
+      ? 6
+      : rawBackPanelThicknessMm === 3.5
+        ? 3
+        : rawBackPanelThicknessMm; // 백패널/서랍 바닥재 두께 (3/4.5/6/9mm)
   const backPanelT = mmToUnit(backPanelThicknessMm);
   const backReductionMm = backPanelThicknessMm + 17; // 상/하판/선반 깊이 줄임 (백패널 + 오프셋)
   const backReduction = mmToUnit(backReductionMm);

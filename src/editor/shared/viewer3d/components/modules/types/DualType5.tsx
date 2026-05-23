@@ -190,9 +190,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     fromY: 0,
     height: panelHeight,
     fromZ: basicThickness - mmToThreeUnits(2),
-    depth: mmToThreeUnits(10),
+    depth: backPanelThickness + mmToThreeUnits(1),
     cutDepth: mmToThreeUnits(7.5),
-  }], [basicThickness, mmToThreeUnits]);
+  }], [backPanelThickness, basicThickness, mmToThreeUnits]);
 
   // 우측 스타일러장은 항상 Z=0 중심 (660mm 깊이 기준)
 
@@ -232,7 +232,15 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     }
 
     // 좌측 섹션용 깊이 계산 (백패널 안쪽면과 맞닿도록 백패널 두께 기반 축소)
-    const shelfBackReductionMm = Math.max(0, (backPanelThicknessProp || 9) - 1);
+    const rawBackPanelThicknessMm = backPanelThicknessProp || 9;
+    const backPanelThicknessMm = rawBackPanelThicknessMm === 9.5
+      ? 9
+      : rawBackPanelThicknessMm === 5 || rawBackPanelThicknessMm === 5.5
+        ? 6
+        : rawBackPanelThicknessMm === 3.5
+          ? 3
+          : rawBackPanelThicknessMm;
+    const shelfBackReductionMm = Math.max(0, backPanelThicknessMm - 1);
     const leftAdjustedDepthForShelves = leftDepth - mmToThreeUnits(shelfBackReductionMm);
     const leftShelfZOffset = mmToThreeUnits(shelfBackReductionMm / 2); // 백패널 두께 기반 Z축 보정
     

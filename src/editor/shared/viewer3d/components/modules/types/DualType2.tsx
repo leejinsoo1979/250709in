@@ -165,9 +165,9 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     fromY: 0,
     height: panelHeight,
     fromZ: basicThickness - mmToThreeUnits(2),
-    depth: mmToThreeUnits(10),
+    depth: backPanelThickness + mmToThreeUnits(1),
     cutDepth: mmToThreeUnits(7.5),
-  }], [basicThickness, mmToThreeUnits]);
+  }], [backPanelThickness, basicThickness, mmToThreeUnits]);
 
   // 디버그: showFurniture 값 확인
   useEffect(() => {

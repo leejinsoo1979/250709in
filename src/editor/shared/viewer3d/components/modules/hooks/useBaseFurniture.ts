@@ -312,8 +312,16 @@ export const useBaseFurniture = (
   // 기본 판재 두께 변환 (mm -> Three.js 단위)
   const basicThickness = mmToThreeUnits(modelConfig.basicThickness || 18);
   
+  const normalizedBackPanelThicknessMm = backPanelThicknessMm === 9.5
+    ? 9
+    : backPanelThicknessMm === 5 || backPanelThicknessMm === 5.5
+      ? 6
+      : backPanelThicknessMm === 3.5
+        ? 3
+        : backPanelThicknessMm;
+
   // 백패널 두께 변환 (mm -> Three.js 단위)
-  const backPanelThickness = mmToThreeUnits(backPanelThicknessMm);
+  const backPanelThickness = mmToThreeUnits(normalizedBackPanelThicknessMm);
   
   // 가구 치수 변환 (mm -> Three.js 단위)
   // 듀얼 가구의 경우 slotWidths 합산, adjustedWidth가 있으면 사용, 없으면 원래 폭 사용
@@ -358,7 +366,7 @@ export const useBaseFurniture = (
   
   // 선반용 조정된 깊이 계산 (백패널 두께에 따라 동적으로 조정)
   // 선반 뒤쪽 여유 = 백패널 두께 - 1mm (홈 끼움 여유)
-  const shelfBackReductionMm = Math.max(0, backPanelThicknessMm - 1);
+  const shelfBackReductionMm = Math.max(0, normalizedBackPanelThicknessMm - 1);
   const adjustedDepthForShelves = depth - mmToThreeUnits(shelfBackReductionMm);
   
   // 선반 Z축 위치 조정 계산 (백패널 두께에 따라 동적 조정)

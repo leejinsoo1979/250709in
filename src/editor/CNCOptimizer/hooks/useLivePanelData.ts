@@ -482,7 +482,14 @@ export function useLivePanelData() {
 
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
-        const moduleBackPanelThickness = (placedModule as any).backPanelThickness ?? 9;
+        const rawModuleBackPanelThickness = (placedModule as any).backPanelThickness ?? 9;
+        const moduleBackPanelThickness = rawModuleBackPanelThickness === 9.5
+          ? 9
+          : rawModuleBackPanelThickness === 5 || rawModuleBackPanelThickness === 5.5
+            ? 6
+            : rawModuleBackPanelThickness === 3.5
+              ? 3
+              : rawModuleBackPanelThickness;
 
         // 프레임 높이 계산
         const topFrameH = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
@@ -1341,7 +1348,14 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
-      const moduleBackPanelThickness2 = (placedModule as any).backPanelThickness ?? 9;
+      const rawModuleBackPanelThickness2 = (placedModule as any).backPanelThickness ?? 9;
+      const moduleBackPanelThickness2 = rawModuleBackPanelThickness2 === 9.5
+        ? 9
+        : rawModuleBackPanelThickness2 === 5 || rawModuleBackPanelThickness2 === 5.5
+          ? 6
+          : rawModuleBackPanelThickness2 === 3.5
+            ? 3
+            : rawModuleBackPanelThickness2;
 
       // 프레임 높이 계산
       const topFrameH2 = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);

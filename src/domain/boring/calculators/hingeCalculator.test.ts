@@ -38,4 +38,18 @@ describe('hingeCalculator', () => {
       2100
     )).toEqual([120, 740, 1410, 1980]);
   });
+
+  it('uses shelf top and bottom faces when avoiding shelf collisions', () => {
+    expect(avoidHingePositionsForShelves(
+      [120, 750, 1380],
+      [{ bottomMm: 741, topMm: 759 }],
+      1500
+    )).toEqual([120, 691, 1380]);
+
+    expect(avoidHingePositionsForShelves(
+      [120, 740, 1360, 1980],
+      [{ bottomMm: 1351, topMm: 1369 }],
+      2100
+    )).toEqual([120, 740, 1419, 1980]);
+  });
 });

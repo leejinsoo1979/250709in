@@ -448,9 +448,6 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const HANDLE_PLATE_THICKNESS = basicThickness;
   // 서랍 옆면(앞, 뒤, 좌, 우) 두께 상수
   const DRAWER_SIDE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm); // mm 단위 변환 일관 적용
-  // 서랍 바닥 두께 상수 (9mm)
-  const DRAWER_BOTTOM_THICKNESS = mmToThreeUnits(9); // mm 단위 변환 일관 적용
-  
   // TopSupportPanel 기본 설정: 앞쪽 (85 + topPanelFrontInset)mm 잘라내고, 뒤쪽은 백패널 공간 피하기
   const frontInsetTotal = 85 + topPanelFrontInset;
   const topSupportPanelDepth = depth - mmToThreeUnits(frontInsetTotal + 9) - basicThickness + mmToThreeUnits(1);
@@ -462,9 +459,17 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 서랍속장 (Drawer Interior Frame) 설정 - ㄷ자 프레임
   // 구조: 좌우 수직 패널 + 뒤쪽 수평 패널(좌우 연결) + 앞쪽 수평 패널(좌/우 각각)
 
-  // 백패널 두께: UI 오버라이드 → 기본값 9mm
-  const backPanelThickness = backPanelThicknessOverride != null
-    ? mmToThreeUnits(backPanelThicknessOverride)
+  const normalizedBackPanelThicknessOverride = backPanelThicknessOverride === 9.5
+    ? 9
+    : backPanelThicknessOverride === 5 || backPanelThicknessOverride === 5.5
+      ? 6
+      : backPanelThicknessOverride === 3.5
+        ? 3
+        : backPanelThicknessOverride;
+
+  // 백패널/서랍 바닥 두께: UI 오버라이드 → 기본값 9mm
+  const backPanelThickness = normalizedBackPanelThicknessOverride != null
+    ? mmToThreeUnits(normalizedBackPanelThicknessOverride)
     : mmToThreeUnits(9);
 
   // 공통 설정 — 서랍속장 프레임도 서랍재와 동일 두께 (15mm, PET 시 15.5mm)
@@ -543,7 +548,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(91), bottomThk, bottomDepth]}
+              args={[drawerWidth - (DRAWER_SIDE_THICKNESS * 2 + mmToThreeUnits(62)), bottomThk, bottomDepth]}
               position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + bottomThk/2, bottomZ]}
               material={mat}
               renderMode={renderMode}

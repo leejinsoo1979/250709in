@@ -1799,15 +1799,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     className={`${doorStyles.doorTab} ${(spaceInfo.panelThickness ?? 18) === thickness ? doorStyles.activeDoorTab : ''}`}
                     onClick={() => {
                       setSpaceInfo({ panelThickness: thickness });
-                      // 가구재 두께 변경 시 백패널 두께도 자동 매핑
-                      const isHalf = thickness === 18.5 || thickness === 15.5;
-                      const bpMap: Record<number, number> = isHalf
-                        ? { 3: 3.5, 5: 5.5, 9: 9.5, 3.5: 3.5, 5.5: 5.5, 9.5: 9.5 }
-                        : { 3.5: 3, 5.5: 5, 9.5: 9, 3: 3, 5: 5, 9: 9 };
+                      // 백패널/서랍 바닥재는 가구재 18.5T와 무관하게 3/4.5/6/9T 기준을 유지한다.
+                      const bpMap: Record<number, number> = { 3.5: 3, 5: 6, 5.5: 6, 9.5: 9 };
                       const allMods = placedModules.filter(m => !m.isSurroundPanel);
                       allMods.forEach(m => {
                         const cur = m.backPanelThickness ?? 9;
-                        const mapped = bpMap[cur] ?? (isHalf ? 9.5 : 9);
+                        const mapped = bpMap[cur] ?? cur;
                         if (cur !== mapped) updatePlacedModule(m.id, { backPanelThickness: mapped });
                       });
                     }}
@@ -1823,7 +1820,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
             {(() => {
               const mods = placedModules.filter(m => !m.isSurroundPanel);
               if (mods.length === 0) return null;
-              const currentThickness = mods[0]?.backPanelThickness ?? 9;
+              const rawCurrentThickness = mods[0]?.backPanelThickness ?? 9;
+              const currentThickness = rawCurrentThickness === 9.5
+                ? 9
+                : rawCurrentThickness === 5 || rawCurrentThickness === 5.5
+                  ? 6
+                  : rawCurrentThickness === 3.5
+                    ? 3
+                    : rawCurrentThickness;
               return (
                 <FormControl
                   label="백패널 두께"
@@ -1831,7 +1835,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   onToggle={() => toggleSection('backPanel')}
                 >
                   <div className={doorStyles.doorTabSelector}>
-                    {((spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? [3.5, 5.5, 9.5] : [3, 5, 9]).map((thickness) => (
+                    {[3, 4.5, 6, 9].map((thickness) => (
                       <button
                         key={thickness}
                         className={`${doorStyles.doorTab} ${currentThickness === thickness ? doorStyles.activeDoorTab : ''}`}

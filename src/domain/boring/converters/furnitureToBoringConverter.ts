@@ -157,7 +157,14 @@ function resolveTopPanelDepthForBoring(
   const placedTopOffsetMm = Number(((placedModule as any).lowerSectionTopOffset) ?? 0);
 
   if (moduleData.id.includes('shelf-split')) {
-    const backPanelThickness = Number((placedModule as any).backPanelThickness ?? 9);
+    const rawBackPanelThickness = Number((placedModule as any).backPanelThickness ?? 9);
+    const backPanelThickness = rawBackPanelThickness === 9.5
+      ? 9
+      : rawBackPanelThickness === 5 || rawBackPanelThickness === 5.5
+        ? 6
+        : rawBackPanelThickness === 3.5
+          ? 3
+          : rawBackPanelThickness;
     return Math.max(1, depth - 39 - panelThickness * 2 - backPanelThickness);
   }
 

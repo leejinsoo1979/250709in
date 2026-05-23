@@ -181,12 +181,15 @@ export const calculatePanelDetails = (
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
   const rawBackPanelThickness = backPanelThicknessMm ?? 9;
-  // RightPanel에서 PET 코팅 시 이미 +0.5 적용된 값(3.5/5.5/9.5)을 저장하므로
-  // 소수점이 있으면 이미 적용된 것으로 판단하여 추가 +0.5 하지 않음
-  const isAlreadyPETAdjusted = rawBackPanelThickness % 1 !== 0; // 소수점이면 이미 PET 적용됨
-  const backPanelThickness = (!isAlreadyPETAdjusted && (basicThickness === 18.5 || basicThickness === 15.5))
-    ? rawBackPanelThickness + 0.5
-    : rawBackPanelThickness;
+  // 백패널/서랍 바닥판 MDF는 가구재 18.5T 선택과 무관하게 명목 두께(3/4.5/6/9T)를 유지한다.
+  // 기존 저장 데이터에 남아 있을 수 있는 자동 +0.5T 값은 새 선택지로 정규화한다.
+  const backPanelThickness = rawBackPanelThickness === 9.5
+    ? 9
+    : rawBackPanelThickness === 5 || rawBackPanelThickness === 5.5
+      ? 6
+    : rawBackPanelThickness === 3.5
+      ? 3
+      : rawBackPanelThickness;
   const drawerHandleThickness = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
@@ -858,10 +861,9 @@ export const calculatePanelDetails = (
           });
 
           // 서랍 앞판/뒷판 바닥판 끼우는 홈 위치 계산
-          // 바닥판은 하단에서 10mm + 5mm/2 = 12.5mm 위치
-          // 홈 높이는 5mm (바닥판 두께)
+          // 홈 높이는 바닥판 두께보다 1mm 크게 가공한다.
           const drawerGroovePositionY = 10; // 하단에서 10mm 위치에 홈 시작
-          const drawerGrooveHeight = 5; // 바닥판 두께 = 홈 높이
+          const drawerGrooveHeight = drawerBottomThickness + 1; // 홈 폭 = 바닥판 두께 + 1mm
 
           // 서랍 앞판 마이다 보링 위치 계산
           // X(너비) 방향: 좌측 50mm, 중앙, 우측 50mm (3개)
@@ -960,11 +962,11 @@ export const calculatePanelDetails = (
           });
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
-          // 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
+          // 측판 홈 깊이 7.5mm에서 0.5mm 여유를 두고 좌우 각 7mm씩 끼움
           // L = 폭(좌우), W = 깊이(앞뒤)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 바닥`,
-            width: drawerWidth - 91, // 폭(좌우) → L방향
+            width: drawerWidth - (drawerSideThickness * 2 + 62), // 폭(좌우) → L방향
             depth: drawerBodyDepth - 20, // 깊이(앞뒤) → W방향
             thickness: drawerBottomThickness,
             material: 'MDF'
@@ -1238,7 +1240,7 @@ export const calculatePanelDetails = (
       // 서랍 바닥판
       panels.lower.push({
         name: '서랍1 바닥',
-        width: Math.round(drawerInnerWidth + 15),
+        width: Math.round(drawerInnerWidth + 14),
         depth: Math.round(drawerSideDepth - 10),
         thickness: backPanelThickness,
         material: 'MDF'
@@ -1377,9 +1379,13 @@ export const calculatePanelDetails = (
     const actualDoorH = doorLeafDimensions.leafHeightMm;
     const isDoorSplitPanelModule = moduleData.id.includes('pantry-cabinet-split') || moduleData.id.includes('shelf-split');
     let bracketHingeYPositions: number[] | null = null;
-    const getShelfCenterPositionsFromBottom = () => {
+    const getShelfCollisionRangesFromBottom = () => {
       const targetSections = customSectionsOverride || sections;
       if (!Array.isArray(targetSections) || targetSections.length === 0) return [];
+      const toShelfRange = (centerMm: number) => ({
+        bottomMm: centerMm - basicThickness / 2,
+        topMm: centerMm + basicThickness / 2,
+      });
 
       const directLowerShelfPositions = getDirectLowerDowelShelfPositionsMm({
         moduleId: moduleData.id,
@@ -1388,12 +1394,12 @@ export const calculatePanelDetails = (
         sections: targetSections,
       });
       if (directLowerShelfPositions.length > 0) {
-        return directLowerShelfPositions.map(position => basicThickness + position);
+        return directLowerShelfPositions.map(position => toShelfRange(basicThickness + position));
       }
 
       const availableHeightMm = height - basicThickness * 2;
       let currentYFromBottom = basicThickness;
-      const shelfCenters: number[] = [];
+      const shelfRanges: Array<{ bottomMm: number; topMm: number }> = [];
 
       targetSections.forEach(section => {
         const sectionHeightMm = section.heightType === 'absolute'
@@ -1409,18 +1415,21 @@ export const calculatePanelDetails = (
             : [];
 
         shelfPositions.forEach(position => {
-          shelfCenters.push(currentYFromBottom + position);
+          shelfRanges.push(toShelfRange(currentYFromBottom + position));
         });
         currentYFromBottom += sectionHeightMm;
       });
 
-      return shelfCenters;
+      return shelfRanges;
     };
-    const shelfCentersFromBottom = getShelfCenterPositionsFromBottom();
+    const shelfRangesFromBottom = getShelfCollisionRangesFromBottom();
     const resolveDoorShelfCollisions = (doorBottomMm: number, doorH: number) => (
-      shelfCentersFromBottom
-        .map(shelfY => shelfY - doorBottomMm)
-        .filter(shelfY => shelfY > 0 && shelfY < doorH)
+      shelfRangesFromBottom
+        .map(shelf => ({
+          bottomMm: shelf.bottomMm - doorBottomMm,
+          topMm: shelf.topMm - doorBottomMm,
+        }))
+        .filter(shelf => shelf.topMm > 0 && shelf.bottomMm < doorH)
     );
     const doorVerticalGeometry = resolveDoorVerticalGeometry({
       moduleId: moduleData.id,
@@ -1447,13 +1456,15 @@ export const calculatePanelDetails = (
     };
 
     // 도어 보링 데이터 생성 헬퍼
+    type DoorShelfCollisionRange = { bottomMm: number; topMm: number };
+
     const createDoorBoringData = (
       doorW: number,
       doorH: number,
       isLeftHinge: boolean,
       fixedHingeCount?: number,
       customPositionsMm?: number[],
-      shelfCollisionPositionsMm: number[] = []
+      shelfCollisionPositionsMm: DoorShelfCollisionRange[] = []
     ) => {
       const customHingePositions = normalizeDoorHingePositionsMm(customPositionsMm, doorH);
       const hingePositions = customHingePositions.length > 0
@@ -1498,7 +1509,7 @@ export const calculatePanelDetails = (
       isLeftHinge: boolean,
       fixedHingeCount?: number,
       customPositionsMm?: number[],
-      shelfCollisionPositionsMm: number[] = []
+      shelfCollisionPositionsMm: DoorShelfCollisionRange[] = []
     ) => {
       const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm, shelfCollisionPositionsMm);
       panels.door.push({
@@ -1826,10 +1837,10 @@ export const calculatePanelDetails = (
                   material: 'PB'
                 });
                 // 서랍 바닥판 - L = 폭(좌우), W = 깊이(앞뒤)
-                // 측판 홈 깊이 7.5mm에 맞춰 좌우 각 7.5mm씩 끼움
+                // 측판 홈 깊이 7.5mm에서 0.5mm 여유를 두고 좌우 각 7mm씩 끼움
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}서랍${i + 1} 바닥`,
-                  width: drawerWidth - 91, // 폭 → L방향
+                  width: drawerWidth - (drawerSideThicknessCC * 2 + 62), // 폭 → L방향
                   depth: drawerBodyDepth - 20, // 깊이 → W방향
                   thickness: drawerBottomThicknessCC,
                   material: 'MDF'
@@ -2214,7 +2225,7 @@ export const calculatePanelDetails = (
     const extSideDepthMm = Math.min(customDepth - 50, 453); // 서랍 깊이 = 캐비넷깊이 - 50, 최대 453
     const sideGapMm = 6; // 좌우 갭
     const extInnerWidth = innerWidth - sideGapMm * 2 - drawerSideThickness * 2; // 서랍 내부 폭
-    const extBottomWidthMm = extInnerWidth + 15; // 바닥판 폭: 좌우 각 7.5mm 홈 끼움
+    const extBottomWidthMm = extInnerWidth + 14; // 바닥판 폭: 좌우 각 7mm 홈 끼움
 
     // === 마이다 높이 계산 (ExternalDrawerRenderer + LowerCabinet.tsx 동일 로직) ===
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
@@ -2314,7 +2325,7 @@ export const calculatePanelDetails = (
         extSideDepthMm - drawerSideThickness / 2    // 뒤쪽 끝에서 7.5mm
       ];
       const extGroovePositionY = 10; // 바닥판 홈: 하단에서 10mm
-      const extGrooveHeight = 5;     // 바닥판 두께 = 홈 높이
+      const extGrooveHeight = backPanelThickness + 1; // 홈 폭 = 바닥판 두께 + 1mm
       extDrawerPanels.push(
         { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
           boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,

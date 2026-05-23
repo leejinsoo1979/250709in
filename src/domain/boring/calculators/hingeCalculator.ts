@@ -30,6 +30,11 @@ export interface HingeShelfAvoidanceOptions {
   maxMarginMm?: number;
 }
 
+export interface HingeShelfCollisionRange {
+  bottomMm: number;
+  topMm: number;
+}
+
 // ============================================
 // 힌지 개수 계산
 // ============================================
@@ -84,7 +89,7 @@ export function calculateHingePositions(
 
 export function avoidHingePositionsForShelves(
   hingePositions: number[],
-  shelfPositions: number[] = [],
+  shelfPositions: Array<number | HingeShelfCollisionRange> = [],
   doorHeight: number,
   options: HingeShelfAvoidanceOptions = {}
 ): number[] {
@@ -93,29 +98,57 @@ export function avoidHingePositionsForShelves(
   const minY = options.minMarginMm ?? DEFAULT_HINGE_SETTINGS.topBottomMargin;
   const maxY = doorHeight - (options.maxMarginMm ?? DEFAULT_HINGE_SETTINGS.topBottomMargin);
   const shelves = shelfPositions
-    .filter(position => Number.isFinite(position))
-    .sort((a, b) => a - b);
+    .map(position => {
+      if (typeof position === 'number') {
+        return Number.isFinite(position)
+          ? { bottomMm: position, topMm: position }
+          : null;
+      }
+
+      if (!position || !Number.isFinite(position.bottomMm) || !Number.isFinite(position.topMm)) {
+        return null;
+      }
+
+      return {
+        bottomMm: Math.min(position.bottomMm, position.topMm),
+        topMm: Math.max(position.bottomMm, position.topMm),
+      };
+    })
+    .filter((position): position is HingeShelfCollisionRange => position !== null)
+    .sort((a, b) => a.bottomMm - b.bottomMm);
 
   if (shelves.length === 0 || maxY <= minY) {
     return hingePositions.map(position => Math.round(position * 1000) / 1000);
   }
 
   const collidesWithShelf = (position: number) => (
-    shelves.some(shelf => Math.abs(position - shelf) < clearance)
+    shelves.some(shelf => {
+      if (position < shelf.bottomMm) return shelf.bottomMm - position < clearance;
+      if (position > shelf.topMm) return position - shelf.topMm < clearance;
+      return true;
+    })
   );
   const clamp = (position: number) => Math.max(minY, Math.min(maxY, position));
+  const getCollision = (position: number) => (
+    shelves.find(shelf => {
+      if (position < shelf.bottomMm) return shelf.bottomMm - position < clearance;
+      if (position > shelf.topMm) return position - shelf.topMm < clearance;
+      return true;
+    })
+  );
 
   return hingePositions
     .map(originalPosition => {
       let position = originalPosition;
 
       for (let attempt = 0; attempt < shelves.length + 2; attempt += 1) {
-        const shelf = shelves.find(shelfPosition => Math.abs(position - shelfPosition) < clearance);
+        const shelf = getCollision(position);
         if (shelf === undefined) break;
 
-        const below = shelf - clearance;
-        const above = shelf + clearance;
-        const preferredBelow = position < shelf || (position === shelf && position <= doorHeight / 2);
+        const below = shelf.bottomMm - clearance;
+        const above = shelf.topMm + clearance;
+        const shelfCenter = (shelf.bottomMm + shelf.topMm) / 2;
+        const preferredBelow = position < shelfCenter || (position === shelfCenter && position <= doorHeight / 2);
         const candidates = preferredBelow ? [below, above] : [above, below];
         const validCandidates = candidates
           .map(clamp)

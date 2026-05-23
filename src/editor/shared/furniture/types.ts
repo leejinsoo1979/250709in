@@ -224,7 +224,7 @@ export interface PlacedModule {
   sectionDepthDirections?: ('front' | 'back')[];
 
   // 백패널 두께 설정 (기본값: 9mm)
-  backPanelThickness?: number; // 백패널 두께 (mm) - 3, 5, 9 중 선택
+  backPanelThickness?: number; // 백패널/서랍 바닥재 두께 (mm) - 3, 4.5, 6, 9 중 선택
 
   // 텍스처 결 방향 설정 (패널별 개별 제어)
   panelGrainDirections?: {

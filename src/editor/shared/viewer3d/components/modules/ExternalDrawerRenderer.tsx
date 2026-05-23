@@ -134,13 +134,14 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const cX = 0;
 
   const bottomThk = bpThk;
+  const bottomThkMm = bottomThk / 0.01;
   const bottomDepth = drawerBodyDepth;
   const bottomZPos = drawerBodyCenterZ;
   const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
-  const bottomWidth = drawerInnerWidth + mmToThreeUnits(15);
+  const bottomWidth = drawerInnerWidth + mmToThreeUnits(14);
 
-  // 뒷판 높이: 측판높이 - 15mm(바닥갭) - 9mm(바닥판두께)
-  const backHeightMm = sideHeightMm - 15 - 9;
+  // 뒷판 높이: 측판높이 - 15mm(바닥갭) - 바닥판두께
+  const backHeightMm = sideHeightMm - 15 - bottomThkMm;
   const backHeight = mmToThreeUnits(backHeightMm);
   const bottomTopYPos = bottomY + bottomThk / 2;
   const backY = bottomTopYPos + backHeight / 2;
@@ -502,8 +503,15 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
   const DRAWER_SIDE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm);
   const HANDLE_PLATE_THICKNESS = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
-  const backPanelThickness = backPanelThicknessOverride != null
-    ? mmToThreeUnits(backPanelThicknessOverride)
+  const normalizedBackPanelThicknessOverride = backPanelThicknessOverride === 9.5
+    ? 9
+    : backPanelThicknessOverride === 5 || backPanelThicknessOverride === 5.5
+      ? 6
+      : backPanelThicknessOverride === 3.5
+        ? 3
+        : backPanelThicknessOverride;
+  const backPanelThickness = normalizedBackPanelThicknessOverride != null
+    ? mmToThreeUnits(normalizedBackPanelThicknessOverride)
     : mmToThreeUnits(9);
 
   // === 외부서랍 전용 좌우측판 스펙 ===
