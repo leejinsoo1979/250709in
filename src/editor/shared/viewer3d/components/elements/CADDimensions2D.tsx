@@ -1070,8 +1070,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               });
             }
 
-            // 상부장/키큰장(full): 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
-            if (modCat_l2 === 'upper' || modCat_l2 === 'full') {
+            // 상부장: 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
+            if (modCat_l2 === 'upper') {
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
               const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
@@ -1490,22 +1490,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 }
               }
               // 하단갭은 doorSegs 밖 별도 분기에서 바닥 기준으로 표시
-            } else if (modCat === 'upper') {
-              // 상부장 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 (항상 천장 기준)
-              const isDroppedZoneU = (mod as any).zone === 'dropped';
-              const ceilingAbsMmU = isDroppedZoneU && spaceInfo.droppedCeiling?.enabled
-                ? (spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0))
-                : spaceInfo.height;
-              const topGapMmU = Math.round(Math.max(0, ceilingAbsMmU - doorTopAbsMm));
-              if (topGapMmU > 0) {
-                doorSegs.push({
-                  bottomY: mmToThreeUnits(doorTopAbsMm),
-                  topY: mmToThreeUnits(ceilingAbsMmU),
-                  heightMm: topGapMmU,
-                  key: `upper-door-topgap-${moduleIndex}`,
-                  isUpper: true
-                });
-              }
             }
           });
 
@@ -1591,25 +1575,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                      {bottomGapMm}
-                    </Text>
-                  </group>
-                );
-              })()}
-              {/* 상부장 도어 하단갭: 바닥(또는 마감재 상단) ~ 상부장 도어 하단 (하부장이 없을 때만 표시) */}
-              {(() => {
-                if (upperDoorSegs.length === 0) return null;
-                if (allLowerDoorSegs.length > 0) return null; // 하부장/키큰장이 있으면 그쪽 하단갭으로 처리됨
-                const lowestBottomY = Math.min(...upperDoorSegs.map(s => s.bottomY));
-                const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
-                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
-                if (bottomGapMm <= 0) return null;
-                return (
-                  <group key="r-upper-door-bottomgap">
-                    <ExtLine points={[[0, bottomStartY, upperDimExtZ], [0, bottomStartY, upperDimZ]]} color={dimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, bottomStartY, upperDimZ], [0, lowestBottomY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, upperDimZ], [0.008, bottomStartY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, upperDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
                     </Text>
                   </group>
