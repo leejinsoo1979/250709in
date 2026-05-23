@@ -702,7 +702,7 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <div
                     className={styles.dropdownItemWithSubmenu}
-                    style={{ display: user?.email === 'sbbc212@gmail.com' ? undefined : 'none' }}
+                    style={{ display: (user?.email === 'sbbc212@gmail.com' || hasFullAccess) ? undefined : 'none' }}
                     onMouseEnter={() => {
                       if (submenuTimeoutRef.current) {
                         clearTimeout(submenuTimeoutRef.current);
