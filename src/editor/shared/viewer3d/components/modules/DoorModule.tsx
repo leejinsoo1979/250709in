@@ -630,7 +630,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, isTransparentMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
-  const { dimensionColor } = useDimensionColor(); // 치수 색상
+  const { doorDimensionColor } = useDimensionColor(); // 도어 치수 색상
 
   const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
   const effectiveShowDimensions = isPanelSimulationPresentation ? false : showDimensions;
@@ -640,7 +640,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const [hingeGapEditBases, setHingeGapEditBases] = useState<Record<string, { topDistancesMm: number[]; doorHeightMm: number }>>({});
   const [isDoorDimensionHovered, setIsDoorDimensionHovered] = useState(false);
   const doorDimensionHoverColor = '#0b3d91';
-  const activeDoorDimensionColor = isDoorDimensionHovered ? doorDimensionHoverColor : dimensionColor;
+  const activeDoorDimensionColor = isDoorDimensionHovered ? doorDimensionHoverColor : doorDimensionColor;
   const doorDimensionHoverHandlers = {
     onPointerOver: (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();

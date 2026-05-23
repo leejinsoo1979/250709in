@@ -393,7 +393,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const view2DDirection = useUIStore(s => s.view2DDirection);
   const showDimensions = useUIStore(s => s.showDimensions);
   const { doorsOpen, isIndividualDoorOpen } = useUIStore();
-  const { dimensionColor } = useDimensionColor();
+  const { doorDimensionColor } = useDimensionColor();
   const { gl } = useThree();
 
   // === 서랍 오픈 상태 (도어 오픈과 연동, 재질 속장탭 제외) ===
@@ -706,7 +706,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           maidaZ={maidaZ}
           viewMode={viewMode as '3D' | '2D'}
           view2DDirection={view2DDirection as any}
-          dimensionColor={dimensionColor}
+          dimensionColor={doorDimensionColor}
           mmToThreeUnits={mmToThreeUnits}
           side={maidaDimensionSide}
         />
@@ -774,7 +774,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
               maidaZ={maidaZ}
               viewMode={viewMode as '3D' | '2D'}
               view2DDirection={view2DDirection as any}
-              dimensionColor={dimensionColor}
+              dimensionColor={doorDimensionColor}
               mmToThreeUnits={mmToThreeUnits}
             />
           </group>

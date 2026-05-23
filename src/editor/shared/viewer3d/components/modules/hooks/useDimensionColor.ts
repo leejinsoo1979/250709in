@@ -14,19 +14,26 @@ export const useDimensionColor = () => {
   const { viewMode } = useSpace3DView();
   
   const getThemeColor = () => {
+    if (typeof window === 'undefined') return '#10b981';
     const computedStyle = getComputedStyle(document.documentElement);
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
+
+  const themeColor = getThemeColor();
   
   const dimensionColor = viewMode === '3D'
-    ? getThemeColor()
+    ? themeColor
     : (view2DTheme === 'dark' ? '#b0b0b0' : '#555555');
+
+  const doorDimensionColor = themeColor;
   
   // 치수 텍스트 크기 통일 (2D: 0.4, 3D: 0.5)
   const baseFontSize = viewMode === '3D' ? 0.5 : 0.4;
 
   return {
     dimensionColor,
+    doorDimensionColor,
+    themeColor,
     baseFontSize,
     viewMode,
     view2DTheme

@@ -438,7 +438,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const view2DDirection = useUIStore(s => s.view2DDirection);
   const view2DTheme = useUIStore(s => s.view2DTheme);
   const showDimensions = useUIStore(s => s.showDimensions);
-  const { dimensionColor } = useDimensionColor();
+  const { doorDimensionColor } = useDimensionColor();
 
   // 도어 오픈 상태 (ExternalDrawerRenderer와 동일 로직)
   const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
@@ -745,7 +745,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             maidaZ={maidaZ}
             viewMode={viewMode as '3D' | '2D'}
             view2DDirection={view2DDirection as any}
-            dimensionColor={dimensionColor}
+            dimensionColor={doorDimensionColor}
             mmToThreeUnits={mmToThreeUnits}
           />
         </group>
@@ -758,7 +758,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           maidaZ={maidaZ}
           viewMode={viewMode as '3D' | '2D'}
           view2DDirection={view2DDirection as any}
-          dimensionColor={dimensionColor}
+          dimensionColor={doorDimensionColor}
           mmToThreeUnits={mmToThreeUnits}
           side={maidaDimensionSide}
         />
@@ -822,7 +822,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const view2DDirection = useUIStore(s => s.view2DDirection);
   const view2DTheme = useUIStore(s => s.view2DTheme);
   const showDimensions = useUIStore(s => s.showDimensions);
-  const { dimensionColor } = useDimensionColor();
+  const { doorDimensionColor } = useDimensionColor();
 
   // 도어 오픈 상태 (ExternalDrawerRenderer와 동일 로직)
   const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
@@ -1212,7 +1212,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
             maidaZ={maidaZ}
             viewMode={viewMode as '3D' | '2D'}
             view2DDirection={view2DDirection as any}
-            dimensionColor={dimensionColor}
+            dimensionColor={doorDimensionColor}
             mmToThreeUnits={mmToThreeUnits}
           />
         </group>
@@ -1226,7 +1226,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         maidaZ={maidaZ}
         viewMode={viewMode as '3D' | '2D'}
         view2DDirection={view2DDirection as any}
-        dimensionColor={dimensionColor}
+        dimensionColor={doorDimensionColor}
         mmToThreeUnits={mmToThreeUnits}
         side={maidaDimensionSide}
       />
