@@ -549,7 +549,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
               args={[drawerWidth - (DRAWER_SIDE_THICKNESS * 2 + mmToThreeUnits(62)), bottomThk, bottomDepth]}
-              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + bottomThk/2, bottomZ]}
+              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(11) + bottomThk/2, bottomZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -586,7 +586,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
           const mat = getPanelMaterial(panelName);
           // 바닥판 윗면 Y 좌표 (바닥판 두께 = 백패널 두께)
-          const bottomTopY = centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + backPanelThickness;
+          const bottomTopY = centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(11) + backPanelThickness;
           // 뒷판 기존 상단 Y (변경 없음)
           const origBackTop = centerY + (drawerHeight - mmToThreeUnits(30)) / 2;
           // 뒷판 높이: 상단 ~ 바닥판 윗면

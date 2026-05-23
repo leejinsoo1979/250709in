@@ -1553,9 +1553,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 뒷판';
                               const mat = getPanelMaterial(pn);
-                              // 바닥판 윗면 Y = 측판하단 + 13mm + bottomT (바닥판 Y와 동일 공식)
+                              // 바닥판 윗면 Y = 측판하단 + 14mm + bottomT (홈 상단 기준)
                               const sidePanelBottom2 = drawerCenterY - drawerSideH / 2;
-                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(13) + bottomT;
+                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(14) + bottomT;
                               const origBackTop = drawerCenterY + drawerSideH / 2;
                               const backH = origBackTop - bottomTopY2;
                               const backCY = (origBackTop + bottomTopY2) / 2;
@@ -1585,9 +1585,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
                               // 바닥판 폭: 측판 안쪽거리 + 좌우 각 7mm 홈 끼움
                               const bottomWidth = drawerAreaWidth - drawerSideT * 2 + mmToThreeUnits(14);
-                              // 바닥판 Y: 측판 하단에서 13mm 위 (바닥판 하단 = 측판 하단 + 13mm)
+                              // 바닥판 Y: 홈 하단이 아니라 홈 상단에 붙도록 1mm 올림
                               const sidePanelBottom = drawerCenterY - drawerSideH / 2;
-                              const bottomY = sidePanelBottom + mmToThreeUnits(13) + bottomT / 2;
+                              const bottomY = sidePanelBottom + mmToThreeUnits(14) + bottomT / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
@@ -1642,7 +1642,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               // 보링 Y: 다른 서랍(DrawerRenderer)과 동일 — 측판 상단에서 20mm, 바닥판 윗면에서 20mm 위
                               const drawerTopY = drawerCenterY + drawerSideH / 2;
                               const sidePanelBottomForBoring = drawerCenterY - drawerSideH / 2;
-                              const bottomTopYForBoring = sidePanelBottomForBoring + mmToThreeUnits(13) + bottomT; // 바닥판 윗면
+                              const bottomTopYForBoring = sidePanelBottomForBoring + mmToThreeUnits(14) + bottomT; // 바닥판 윗면
                               const edgeOffsetY = mmToThreeUnits(20);
                               const topBoringY = drawerTopY - edgeOffsetY;
                               const bottomBoringY = bottomTopYForBoring + edgeOffsetY;
@@ -2562,9 +2562,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const drawerSideHmm = DRAWER_SIDE_H_PER_TIER_MM[idx];
                       const drawerSideH = mmToThreeUnits(drawerSideHmm);
                       const sideCenterY = startY + drawerSideH / 2;
-                      // 바닥판 Y = 측판 하단 + 10mm + bottomT/2 (기존: centerY - drawerH/2 + basicThk + 10 + bottomT/2)
-                      //   여기서는 측판 H 기준이므로 측판 하단(startY) + 10 + bottomT/2
-                      const bottomCY = startY + mmToThreeUnits(10) + DRAWER_BOTTOM_T / 2;
+                      // 바닥판 Y = 홈 하단이 아니라 홈 상단에 붙도록 1mm 올림
+                      const bottomCY = startY + mmToThreeUnits(11) + DRAWER_BOTTOM_T / 2;
                       const bottomTopYInner = bottomCY + DRAWER_BOTTOM_T / 2;
                       // 뒷판: 바닥판 윗면 ~ 측판 윗면 (기존: 상단~bottomTopY 의 중간)
                       const sideTopY = sideCenterY + drawerSideH / 2;
