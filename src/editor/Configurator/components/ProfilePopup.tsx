@@ -7,6 +7,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { updateUserProfile } from '@/firebase/userProfiles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { useAdmin } from '@/hooks/useAdmin';
 import styles from './ProfilePopup.module.css';
 
 interface ProfilePopupProps {
@@ -22,15 +23,25 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [userPlan, setUserPlan] = useState<string>('free');
+  const { adminRole, isAdmin: hasAdminAccess, isSuperAdmin: hasSuperAdminAccess } = useAdmin(user);
   // 닉네임 편집 상태
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [nameSaving, setNameSaving] = useState(false);
   const [displayNameLocal, setDisplayNameLocal] = useState<string | null>(null);
+  const effectiveIsSuperAdmin = hasSuperAdminAccess || isSuperAdmin;
+  const effectiveIsAdmin = hasAdminAccess || isAdmin;
 
   // 슈퍼 관리자 권한 + plan 체크 — popup 열릴 때마다 강제로 최신값 fetch (서버 우선)
   useEffect(() => {
-    if (!isOpen || !user) return;
+    if (!isOpen || !user) {
+      setIsSuperAdmin(false);
+      setIsAdmin(false);
+      setUserPlan('free');
+      return;
+    }
+    setIsSuperAdmin(false);
+    setIsAdmin(false);
     const superAdminEmails = ['sbbc212@gmail.com'];
     const isEmailSuper = superAdminEmails.includes(user.email || '');
     if (isEmailSuper) {
@@ -42,6 +53,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
         if (userDoc.exists()) {
           const data = userDoc.data();
           setIsSuperAdmin(isEmailSuper || data.role === 'superadmin');
+          setIsAdmin(data.isPartner === true);
           setUserPlan(data.plan || 'free');
         }
       }).catch(() => {
@@ -49,6 +61,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
           if (d.exists()) {
             const data = d.data();
             setIsSuperAdmin(isEmailSuper || data.role === 'superadmin');
+            setIsAdmin(data.isPartner === true);
             setUserPlan(data.plan || 'free');
           }
         });
@@ -214,8 +227,9 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 <p className={styles.headerEmail}>{user.email}</p>
                 {(() => {
                   const isEnt = userPlan === 'enterprise';
-                  const label = isSuperAdmin ? '👑 슈퍼관리자' : isAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
-                  const bg = isSuperAdmin ? '#000000' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
+                  const isFactory = adminRole === 'factory';
+                  const label = effectiveIsSuperAdmin ? '👑 슈퍼관리자' : isFactory ? '제조파트너사' : effectiveIsAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
+                  const bg = effectiveIsSuperAdmin ? '#000000' : isFactory ? '#f97316' : effectiveIsAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
                   return (
                     <span
                       style={{
@@ -251,8 +265,9 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
             {/* 회원 등급 — 최상단에 강조 표시 */}
             {(() => {
               const isEnt = userPlan === 'enterprise';
-              const label = isSuperAdmin ? '👑 슈퍼관리자' : isAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
-              const bg = isSuperAdmin ? '#000000' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
+              const isFactory = adminRole === 'factory';
+              const label = effectiveIsSuperAdmin ? '👑 슈퍼관리자' : isFactory ? '제조파트너사' : effectiveIsAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
+              const bg = effectiveIsSuperAdmin ? '#000000' : isFactory ? '#f97316' : effectiveIsAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
               return (
                 <div className={styles.infoRow}>
                   <div className={styles.infoLabel}>
@@ -314,7 +329,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>{t('profile.quickMenu')}</h4>
             <div className={styles.menuSection}>
-              {isSuperAdmin && (
+              {effectiveIsAdmin && (
                 <button className={`${styles.menuItem} ${styles.adminMenuItem}`} onClick={() => {
                   onClose();
                   navigate('/admin');
