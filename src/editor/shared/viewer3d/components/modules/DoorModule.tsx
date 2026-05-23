@@ -1798,7 +1798,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const guideColor = '#38bdf8';
     const textColor = view2DTheme === 'dark' ? '#E0F2FE' : '#075985';
     const yFromTop = (distanceMm: number) => doorHeight / 2 - mmToThreeUnits(distanceMm);
-    const textX = dimX + direction * mmToThreeUnits(72);
+    const textX = dimX + direction * mmToThreeUnits(96);
 
     return (
       <group name={`${keyPrefix}-hinge-position-guides`} renderOrder={100010}>
@@ -1862,13 +1862,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '2px',
-                    padding: '4px 6px',
+                    gap: '1px',
+                    padding: '2px 4px',
                     border: `1px solid ${guideColor}`,
-                    borderRadius: '4px',
+                    borderRadius: '3px',
                     background: view2DTheme === 'dark' ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.92)',
                     color: textColor,
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.25)'
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.18)'
                   }}
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => event.stopPropagation()}
@@ -1930,18 +1930,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       event.currentTarget.select();
                     }}
                     style={{
-                      width: '70px',
-                      height: '24px',
+                      width: '44px',
+                      height: '18px',
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
                       color: textColor,
-                      fontSize: '13px',
+                      fontSize: '11px',
                       fontWeight: 700,
                       textAlign: 'center'
                     }}
                   />
-                  <span style={{ fontSize: '11px', fontWeight: 700 }}>mm</span>
                 </div>
               </Html>
             </React.Fragment>

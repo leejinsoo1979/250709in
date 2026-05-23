@@ -5,6 +5,8 @@ import * as THREE from 'three';
 interface CustomZoomControllerProps {
   minDistance: number;
   maxDistance: number;
+  minZoom?: number;
+  maxZoom?: number;
   viewMode: '2D' | '3D';
   zoomSpeed?: number;
   controlsRef?: React.MutableRefObject<any>;
@@ -17,6 +19,8 @@ interface CustomZoomControllerProps {
 export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({ 
   minDistance, 
   maxDistance, 
+  minZoom = 0.5,
+  maxZoom = 160,
   viewMode,
   zoomSpeed = 1.0,
   controlsRef
@@ -50,28 +54,25 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
       // 현재 줌값
       const currentZoom = camera.zoom;
 
-      // 휠 방향에 따른 줌 계산
-      const delta = event.deltaY;
+      // 휠 방향에 따른 줌 계산. 트랙패드는 deltaY가 1 미만~수 px 단위로 자주 들어와서
+      // 일반 마우스 휠처럼 100으로 나누면 줌인이 거의 체감되지 않는다.
+      const deltaUnit = event.deltaMode === WheelEvent.DOM_DELTA_LINE
+        ? 3
+        : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+          ? 24
+          : 1;
+      const normalizedDelta = event.deltaY * deltaUnit;
+      const isTrackpad = event.ctrlKey
+        || (event.deltaMode === WheelEvent.DOM_DELTA_PIXEL && Math.abs(event.deltaY) < 50);
+      const wheelSteps = isTrackpad
+        ? THREE.MathUtils.clamp(Math.abs(normalizedDelta) / 18, 0.25, 2.5)
+        : THREE.MathUtils.clamp(Math.abs(normalizedDelta) / 100, 0.75, 4);
+      const zoomBase = 1 + Math.max(0.05, zoomSpeed);
+      let newZoom = currentZoom * Math.pow(zoomBase, normalizedDelta < 0 ? wheelSteps : -wheelSteps);
 
-      // 트랙패드 감지: deltaY가 작고 정밀한 값이면 트랙패드
-      const isTrackpad = Math.abs(delta) < 50;
-
-      // 트랙패드는 적절한 배율 사용 (맥북 트랙패드 최적화)
-      const zoomInFactor = isTrackpad ? 1.04 : 1.15;   // 트랙패드: 4% / 마우스: 15%
-      const zoomOutFactor = isTrackpad ? 0.96 : 0.85;  // 트랙패드: 4% / 마우스: 15%
-
-      let newZoom;
-
-      if (delta < 0) {
-        // 휠 위: 줌인(확대)
-        newZoom = currentZoom * zoomInFactor;
-      } else {
-        // 휠 아래: 줌아웃(축소)
-        newZoom = currentZoom * zoomOutFactor;
-      }
-
-      // 줌 범위 제한: 축소는 0.95에서 멈춤 (너무 작게 축소되어 화면 밖으로 날아가는 현상 방지)
-      newZoom = Math.max(0.95, newZoom);
+      // 컨트롤 설정의 줌 범위를 그대로 적용한다. 기존 0.95 고정 하한 때문에
+      // 2D에서 줌아웃이 거의 되지 않았다.
+      newZoom = THREE.MathUtils.clamp(newZoom, minZoom, maxZoom);
       
       if (newZoom !== currentZoom) {
         // 마우스 포인터를 NDC 좌표로 변환 (-1 ~ 1)
@@ -122,7 +123,7 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
     };
-  }, [gl, invalidate, minDistance, maxDistance, viewMode, zoomSpeed, camera]);
+  }, [gl, invalidate, minDistance, maxDistance, minZoom, maxZoom, viewMode, zoomSpeed, camera]);
 
   // 이 컴포넌트는 렌더링하지 않음 (기능만 제공)
   return null;

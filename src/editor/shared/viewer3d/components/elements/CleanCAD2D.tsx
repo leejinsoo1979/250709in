@@ -8200,6 +8200,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topFrameHeight = isTopFrameOff
               ? Math.max(0, Math.round(topFrameRefMod?.topFrameGap ?? 0))
               : Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
+            const topFrameDimensionValue = isTopFrameOff
+              ? Math.max(0, Math.round(topFrameRefMod?.topFrameGap ?? 0))
+              : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
+            const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
             const topSegmentColor = frameDimensionColor;
             const countertopThicknessMm = bottomFrameRefCategory === 'lower'
               ? resolveCountertopThicknessMm(bottomFrameRefMod, spaceInfo)
@@ -8224,14 +8229,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : lowerGuideFrontZ;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
-            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
+            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameDimensionHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
 
             const bottomY = 0; // 바닥
             const floorFinishTopYLocal = mmToThreeUnits(floorFinishHeightMm); // 바닥마감재 상단
             const baseStartYLocal = floorFinishHeightMm > 0 ? floorFinishTopYLocal : bottomY; // 받침대 시작점
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 걸래받이 상단
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
-            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상단 몰딩 상단
+            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameDimensionHeight); // 상단 몰딩 상단
 
             // 좌측뷰 대상 가구의 높이만 사용
             let maxFurnitureTop = topFrameTopY;
@@ -8564,7 +8569,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
-                {topFrameHeight > 0 && (
+                {topFrameDimensionHeight > 0 && (
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
@@ -8593,7 +8598,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {topFrameHeight}
+                    {topFrameDimensionValue || topFrameDimensionHeight}
                   </Text>
                 </group>
                 )}
@@ -8910,7 +8915,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.3}
                 />
                 )}
-                {topFrameHeight > 0 && (
+                {topFrameDimensionHeight > 0 && (
                   <>
                     <Line
                       points={[[0, cabinetAreaTopY, upperGuideFrontZ], [0, cabinetAreaTopY, rightDimensionZ - mmToThreeUnits(20)]]}
@@ -9520,6 +9525,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topFrameHeight = isTopFrameOff
               ? Math.max(0, Math.round(topFrameRefMod?.topFrameGap ?? 0))
               : Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
+            const topFrameDimensionValue = isTopFrameOff
+              ? Math.max(0, Math.round(topFrameRefMod?.topFrameGap ?? 0))
+              : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
+            const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
             const topSegmentColor = frameDimensionColor;
             const countertopThicknessMm = bottomFrameRefCategory === 'lower'
               ? resolveCountertopThicknessMm(bottomFrameRefMod, spaceInfo)
@@ -9544,14 +9554,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : lowerGuideFrontZ;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
-            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
+            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameDimensionHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
 
             const bottomY = 0;
             const floorFinishTopYRight = mmToThreeUnits(floorFinishHeightMm);
             const baseStartYRight = floorFinishHeightMm > 0 ? floorFinishTopYRight : bottomY;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
-            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight);
+            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameDimensionHeight);
 
             // 우측뷰 대상 가구(rightmostModules[0])의 높이만 사용
             let maxFurnitureTop = topFrameTopY;
@@ -9893,7 +9903,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
-                {topFrameHeight > 0 && (
+                {topFrameDimensionHeight > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
@@ -9922,7 +9932,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {topFrameHeight}
+                    {topFrameDimensionValue || topFrameDimensionHeight}
                 </Text>
               </group>
                 )}
@@ -9976,7 +9986,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.3}
                 />
                 )}
-                {topFrameHeight > 0 && (
+                {topFrameDimensionHeight > 0 && (
                   <>
                     <Line
                       points={[[spaceWidth, cabinetAreaTopY, upperGuideFrontZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}

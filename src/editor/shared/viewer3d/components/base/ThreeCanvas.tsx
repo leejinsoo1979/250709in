@@ -1614,8 +1614,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             <CustomZoomController
               minDistance={controlsConfig.minDistance}
               maxDistance={controlsConfig.maxDistance}
+              minZoom={controlsConfig.minZoom}
+              maxZoom={controlsConfig.maxZoom}
               viewMode={viewMode}
-              zoomSpeed={0.1}
+              zoomSpeed={0.22}
               controlsRef={controlsRef}
             />
           )}
