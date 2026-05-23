@@ -1376,12 +1376,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               }
             } else {
-              // 키큰장 (원본 로직 복구)
+              // 키큰장: doorTopGapVal/doorBottomGapVal은 몸통 기준 갭이므로
+              // 천장/바닥 기준 절대 좌표로 변환할 때 상단몰딩/받침대를 빼야 한다.
               const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
               const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
                 ? (spaceInfo.floorFinish?.height || 0) : 0;
-              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
-              doorTopAbsMm = effectiveH_door - doorTopGapVal;
+              const topFrameValForDoor = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              const baseFrameValForDoor = (mod as any).hasBase === false ? 0
+                : ((mod as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+              // 가구 천장 = 전체 천장 - 상단몰딩, 도어 상단 = 가구 천장 + 몸통기준 상단갭
+              const cabinetTopAbsForDoor = effectiveH_door - topFrameValForDoor;
+              doorTopAbsMm = cabinetTopAbsForDoor + doorTopGapVal;
+              // 가구 바닥 = 바닥마감재 + 받침대, 도어 하단 = 가구 바닥 - 몸통기준 하단갭
+              const cabinetBottomAbsForDoor = floorFinishForDoor + baseFrameValForDoor;
+              doorBottomAbsMm = cabinetBottomAbsForDoor - doorBottomGapVal;
               doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
 
               // 도어분절 가구(shelf-split / pantry-cabinet-split): 도어 2장으로 분리 표시
