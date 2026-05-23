@@ -4255,8 +4255,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           {canRenderPanelSimulation && <PanelSimulationSummaryPopup />}
           <PanelSimulationPlaybackControls enabled={canRenderPanelSimulation} />
 
-          {/* 분할 모드 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
-          {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (
+          {/* 분할 모드 버튼 - 2D 모드 + 슈퍼어드민(sbbc212@gmail.com)만 표시 */}
+          {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && auth.currentUser?.email === 'sbbc212@gmail.com' && (
             <button
               onClick={() => {
                 setView2DDirection('all');
