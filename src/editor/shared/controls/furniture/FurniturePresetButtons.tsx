@@ -139,8 +139,9 @@ const isGroupApplicable = (
       return /lower-drawer-|lower-induction-cabinet-|lower-door-lift-touch|lower-top-down-touch/.test(id);
     }
     case 'topBottom': {
-      // 상부장은 상부몰딩/걸레받이 무관
-      return category !== 'upper';
+      // 상부장도 높이(freeHeight/customHeight)는 이식 대상이다.
+      // 상부몰딩/걸레받이 필드는 값이 있는 경우에만 함께 전달된다.
+      return true;
     }
     case 'backPanel':
       // 거의 모든 가구가 가짐
