@@ -192,6 +192,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             const drawerFrontBackWidth = drawerWidth - drawerSideThickness * 2; // 앞판/뒷판
             const drawerBodyHeight = individualDrawerHeight - 30;
             const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (D-bt)-60-15
+            const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThickness);
 
             const drawerMaidaWidth = innerWidth - 48; // 전면 개구부 기준 좌우 24mm 갭
 
@@ -208,7 +209,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
               width: drawerFrontBackWidth,
-              height: drawerBodyHeight,
+              height: drawerFrontBackHeight,
               thickness: drawerSideThickness, // 15mm
               material: 'PB'
             });
@@ -217,7 +218,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
               width: drawerFrontBackWidth,
-              height: drawerBodyHeight,
+              height: drawerFrontBackHeight,
               thickness: drawerSideThickness, // 15mm
               material: 'PB'
             });
@@ -245,7 +246,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
               width: drawerWidth - drawerSideThickness * 2 + 14,
-              depth: drawerBodyDepth - 20,
+              depth: Math.max(0, drawerBodyDepth - 1),
               thickness: drawerBottomThickness,
               material: 'MDF'
             });

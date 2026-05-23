@@ -477,6 +477,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const sidePanelGapMm = isCoatedThickness ? 0 : 1;
   const sidePanelGap = mmToThreeUnits(sidePanelGapMm);
   const backPanelWidth = innerWidth - sidePanelGap + mmToThreeUnits(backPanelConfig.widthExtension);
+  const backPanelTopClearance = mmToThreeUnits(1);
 
   // 디버깅: BaseFurnitureShell이 받은 props 확인
   React.useEffect(() => {
@@ -1576,9 +1577,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 바닥';
                               const mat = getPanelMaterial(pn);
-                              // 바닥판 깊이: 측판 깊이 - 앞쪽 10mm 홈 여유 (다른 서랍 동일)
-                              const bottomDepth2 = drawerSideDepth - mmToThreeUnits(10);
-                              const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
+                              // 바닥판 깊이: 측판 깊이보다 1mm 짧게, 앞쪽에서 공차
+                              const bottomDepth2 = Math.max(0, drawerSideDepth - mmToThreeUnits(1));
+                              const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(0.5);
                               // 바닥판 폭: 측판 안쪽거리 + 좌우 각 7mm 홈 끼움
                               const bottomWidth = drawerAreaWidth - drawerSideT * 2 + mmToThreeUnits(14);
                               // 바닥판 Y: 홈 하단 12mm에서 1mm 올림
@@ -1925,9 +1926,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const sectionZOffsetBackN = depthDiffSec === 0
                   ? 0
                   : (secDir === 'back' ? depthDiffSec / 2 : -depthDiffSec / 2);
-                // 백패널 높이 = 섹션 외경 높이 그대로 (측판과 동일)
-                const backPanelHeight = sh;
-                const backPanelY = cursorY + sh / 2;
+                // 백패널은 조립 공차를 위해 섹션 측판보다 1mm 낮고, 하단 고정/상단 공차로 배치
+                const backPanelHeight = Math.max(0, sh - backPanelTopClearance);
+                const backPanelY = cursorY + backPanelHeight / 2;
                 // 의류장 공식: -secDepth/2 + backThk/2 + depthOffset + ±depthDiff/2
                 const backPanelZ = -secDepth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset) + sectionZOffsetBackN;
                 const reinforcementZ = backPanelZ - backPanelThickness / 2 - reinforcementDepth / 2;
@@ -1944,7 +1945,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     (isPullOutForHole && (idx === 1 || idx === 2))
                       ? [{
                           x: 0,
-                          y: -sh / 2 + mmToThreeUnits(149),
+                          y: -backPanelHeight / 2 + mmToThreeUnits(149),
                           radius: mmToThreeUnits(26), // 52파이 → 반지름 26mm
                         }]
                       : undefined;
@@ -2060,19 +2061,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const originalLowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
                 const originalUpperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
 
-                // 백패널 높이 = 원본 + 확장 (측판과 동일하게)
-                const lowerBackPanelHeight = applyOffset
+                // 백패널 높이 = 측판 높이보다 1mm 낮게, 상단에서 공차
+                const lowerBackPanelHeightRaw = applyOffset
                   ? originalLowerBackPanelHeight + totalHeightExtension + basicThickness
                   : originalLowerBackPanelHeight + totalHeightExtension;
 
-                const upperBackPanelHeight = applyOffset
+                const upperBackPanelHeightRaw = applyOffset
                   ? originalUpperBackPanelHeight + totalHeightExtension - basicThickness
                   : originalUpperBackPanelHeight + totalHeightExtension;
+                const lowerBackPanelHeight = Math.max(0, lowerBackPanelHeightRaw - backPanelTopClearance);
+                const upperBackPanelHeight = Math.max(0, upperBackPanelHeightRaw - backPanelTopClearance);
 
-                // 백패널 Y 위치 조정 (상하 확장 동일하므로 오프셋 없음)
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2;
+                // 백패널 Y 위치: 하단은 섹션 하단에 고정하고 상단만 1mm 낮춘다.
+                const lowerBackPanelY = -height/2 + lowerBackPanelHeight/2;
                 const upperOffset = applyOffset ? basicThickness : 0;
-                const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperSectionHeight/2;
+                const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperBackPanelHeight/2;
 
                 // 섹션별 백패널 Z 위치 계산
                 const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
@@ -2243,20 +2246,23 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             </>
           ) : (
             <>
-              {/* 단일 섹션 백패널 - basicThickness에 맞춰 동적 확장하여 측판과 동일 높이 */}
+              {/* 단일 섹션 백패널 - 조립 공차를 위해 상단에서 1mm 짧게 */}
               {(() => {
                 // 백패널 높이 확장값: basicThickness에 따라 동적 계산
                 const totalHeightExtension = basicThickness * 2 - mmToThreeUnits(10);
 
-                // 원본 백패널 높이 + 동적 확장 = 측판 높이와 동일
-                const singleBackPanelHeight = innerHeight + mmToThreeUnits(backPanelConfig.heightExtension) + totalHeightExtension;
+                // 원본 백패널 높이 + 동적 확장에서 상단 공차 1mm를 뺀다.
+                const singleBackPanelFullHeight = innerHeight + mmToThreeUnits(backPanelConfig.heightExtension) + totalHeightExtension;
+                const singleBackPanelHeight = Math.max(0, singleBackPanelFullHeight - backPanelTopClearance);
+                const singleBackPanelY = -backPanelTopClearance / 2;
 
                 console.log('🔍 단일 섹션 백패널 높이:', {
                   innerHeightMm: innerHeight / 0.01,
                   originalExtensionMm: backPanelConfig.heightExtension,
                   totalHeightExtensionMm: totalHeightExtension / 0.01,
                   finalHeightMm: singleBackPanelHeight / 0.01,
-                  sidePanel_heightMm: height / 0.01
+                  sidePanel_heightMm: height / 0.01,
+                  topClearanceMm: backPanelTopClearance / 0.01
                 });
 
                 return (
@@ -2264,7 +2270,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     <BoxWithEdges
                       key={`back-panel-${getPanelMaterial('백패널').uuid}`}
                       args={[backPanelWidth, singleBackPanelHeight, backPanelThickness]}
-                      position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
+                      position={[0, singleBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
                       material={getPanelMaterial('백패널')}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -2296,7 +2302,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             <BoxWithEdges
                               key="reinforcement-bottom"
                               args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                              position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+                              position={[0, singleBackPanelY - singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                               material={material}
                               renderMode={renderMode}
                               furnitureId={placedFurnitureId}
@@ -2309,7 +2315,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           <BoxWithEdges
                             key="reinforcement-top"
                             args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                            position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
+                            position={[0, singleBackPanelY + singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                             material={material}
                             renderMode={renderMode}
                             furnitureId={placedFurnitureId}
@@ -2640,8 +2646,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 바닥판 */}
                           <BoxWithEdges
                             key={`glass-d${idx}-bottom`}
-                            args={[bottomPanelW, DRAWER_BOTTOM_T, drawerBodyD - mmToThreeUnits(10)]}
-                            position={[0, bottomCY, drawerBodyCenterZ - mmToThreeUnits(5)]}
+                            args={[bottomPanelW, DRAWER_BOTTOM_T, Math.max(0, drawerBodyD - mmToThreeUnits(1))]}
+                            position={[0, bottomCY, drawerBodyCenterZ - mmToThreeUnits(0.5)]}
                             material={getPanelMaterial(`${sectionPrefix} 바닥`)}
                             renderMode={renderMode}
                             isDragging={isDragging}

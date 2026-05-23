@@ -29,6 +29,7 @@ export const calculatePanelDetails = (
   const drawerHandleThickness = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // MDF 재질 - 백패널과 동일
+  const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
   
   const height = moduleData.dimensions.height;
   // 내경 = 전체폭 - 실제 측판두께×2 (18.5T는 18.5×2)
@@ -164,7 +165,7 @@ export const calculatePanelDetails = (
         id: `panel-${panelId++}`,
         name: `${moduleData.name} - 뒷판`,
         width: innerWidth + 10,
-        height: Math.round(sectionHeightMm) + 10,
+        height: Math.max(0, Math.round(sectionHeightMm) - backPanelTopClearance),
         thickness: backPanelThickness,  // 9mm
         material: 'MDF',
         color: 'MW',
@@ -189,6 +190,7 @@ export const calculatePanelDetails = (
           const drawerBodyWidth = customWidth - 76;
           const drawerBodyHeight = individualDrawerHeight - 30;
           const drawerBodyDepth = customDepth - 47 - drawerHandleThickness;
+          const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThickness);
           
           // 서랍 손잡이판 (도어와 같은 역할이므로 PET 재질)
           panels.push({
@@ -208,7 +210,7 @@ export const calculatePanelDetails = (
             id: `panel-${panelId++}`,
             name: `${moduleData.name} - 서랍${drawerNum} 앞판`,
             width: drawerBodyWidth,
-            height: drawerBodyHeight,
+            height: drawerFrontBackHeight,
             thickness: drawerSideThickness,  // 15mm
             material: 'PB',
             color: 'MW',
@@ -221,7 +223,7 @@ export const calculatePanelDetails = (
             id: `panel-${panelId++}`,
             name: `${moduleData.name} - 서랍${drawerNum} 뒷판`,
             width: drawerBodyWidth,
-            height: drawerBodyHeight,
+            height: drawerFrontBackHeight,
             thickness: drawerSideThickness,  // 15mm
             material: 'PB',
             color: 'MW',
@@ -260,7 +262,7 @@ export const calculatePanelDetails = (
             id: `panel-${panelId++}`,
             name: `${moduleData.name} - 서랍${drawerNum} 바닥판`,
             width: drawerBodyWidth - 26,
-            height: drawerBodyDepth - 26,
+            height: drawerSideDepth,
             thickness: drawerBottomThickness,  // 5mm
             material: 'MDF',
             color: 'MW',
@@ -430,10 +432,10 @@ export const calculatePanelDetails = (
 
       // 서랍 바닥판
       panels.push({
-        id: `panel-${panelId++}`,
-        name: `${moduleData.name} - 서랍1 바닥`,
-        width: drawerInnerWidth,
-        height: Math.round(drawerSideDepth - 10),
+      id: `panel-${panelId++}`,
+      name: `${moduleData.name} - 서랍1 바닥`,
+      width: drawerInnerWidth,
+      height: Math.max(0, Math.round(drawerSideDepth) - 1),
         thickness: backPanelThickness, // MDF 9mm
         material: 'MDF',
         color: 'MW',
@@ -511,7 +513,7 @@ export const calculatePanelDetails = (
       id: `panel-${panelId++}`,
       name: `${moduleData.name} - 뒷판`,
       width: innerWidth,
-      height: innerHeight,
+      height: Math.max(0, height - backPanelTopClearance),
       thickness: backPanelThickness,  // 9mm
       material: 'MDF',
       color: 'MW',

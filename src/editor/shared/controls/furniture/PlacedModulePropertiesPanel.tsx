@@ -309,6 +309,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
   const drawerHandleThickness = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
+  const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
   
   const height = moduleData.dimensions.height;
   // 내경 = 전체폭 - 실제 측판두께×2 (18.5T는 18.5×2)
@@ -492,7 +493,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
       targetPanel.push({
         name: `${sectionName} ${t('furniture.backPanel')}`,
         width: innerWidth + 10,
-        height: Math.round(sectionHeightMm) + 10,
+        height: Math.max(0, Math.round(sectionHeightMm) - backPanelTopClearance),
         thickness: backPanelThickness,
         material: 'MDF'  // 뒷판은 MDF 재질
       });
@@ -553,12 +554,13 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
           const drawerFrontBackWidth = drawerWidth - drawerSideThickness * 2; // 앞판/뒷판 폭 (좌우 측판에 끼워짐)
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
           const drawerBodyDepth = customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
+          const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThickness);
 
           // 서랍 앞판 (두께 15mm)
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
             width: drawerFrontBackWidth,
-            height: drawerBodyHeight,
+            height: drawerFrontBackHeight,
             thickness: drawerSideThickness, // 15mm
             material: 'PB'  // 서랍 본체는 PB 재질
           });
@@ -567,7 +569,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
             width: drawerFrontBackWidth,
-            height: drawerBodyHeight,
+            height: drawerFrontBackHeight,
             thickness: drawerSideThickness, // 15mm
             material: 'PB'  // 서랍 본체는 PB 재질
           });
@@ -595,7 +597,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
             width: drawerWidth - drawerSideThickness * 2 + 14,
-            depth: drawerBodyDepth - 20, // drawerBodyDepth - 20
+            depth: Math.max(0, drawerBodyDepth - 1), // 측판 깊이보다 앞쪽 1mm 공차
             thickness: drawerBottomThickness,
             material: 'MDF'  // 서랍 바닥판은 MDF 재질
           });

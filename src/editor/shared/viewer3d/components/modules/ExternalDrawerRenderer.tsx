@@ -135,8 +135,8 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   const bottomThk = bpThk;
   const bottomThkMm = bottomThk / 0.01;
-  const bottomDepth = drawerBodyDepth;
-  const bottomZPos = drawerBodyCenterZ;
+  const bottomDepth = Math.max(0, drawerBodyDepth - mmToThreeUnits(1));
+  const bottomZPos = drawerBodyCenterZ - mmToThreeUnits(0.5);
   const bottomY = sideBottomY + mmToThreeUnits(13) + bottomThk / 2;
   const bottomWidth = drawerInnerWidth + mmToThreeUnits(14);
 

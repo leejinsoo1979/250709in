@@ -138,7 +138,8 @@ describe('panelDetails regression baselines', () => {
     expect(panels.some(panel => panel.name === '우측판')).toBe(false)
     expect(findPanel(panels, '서랍받침대').depth).toBe(269)
     expect(findPanel(panels, '서랍속장(좌)').width).toBe(233)
-    expect(findPanel(panels, '서랍1 바닥').depth).toBe(232)
+    expect(findPanel(panels, '서랍1 좌측판').width).toBe(242)
+    expect(findPanel(panels, '서랍1 바닥').depth).toBe(241)
   })
 
   it('상판내림 30T 패널 목록은 상판/앞판 기준 치수를 고정한다', () => {
