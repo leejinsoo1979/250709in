@@ -1596,6 +1596,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   </group>
                 );
               })()}
+              {/* 상부장 도어 하단갭: 바닥(또는 마감재 상단) ~ 상부장 도어 하단 (하부장이 없을 때만 표시) */}
+              {(() => {
+                if (upperDoorSegs.length === 0) return null;
+                if (allLowerDoorSegs.length > 0) return null; // 하부장/키큰장이 있으면 그쪽 하단갭으로 처리됨
+                const lowestBottomY = Math.min(...upperDoorSegs.map(s => s.bottomY));
+                const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
+                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
+                if (bottomGapMm <= 0) return null;
+                return (
+                  <group key="r-upper-door-bottomgap">
+                    <ExtLine points={[[0, bottomStartY, upperDimExtZ], [0, bottomStartY, upperDimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, bottomStartY, upperDimZ], [0, lowestBottomY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, upperDimZ], [0.008, bottomStartY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, upperDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      {bottomGapMm}
+                    </Text>
+                  </group>
+                );
+              })()}
             </>
           );
         })()}

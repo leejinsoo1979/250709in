@@ -89,7 +89,7 @@ export function calculateCamHousingBorings(
   const borings: Boring[] = [];
 
   // 보링 면: 상판은 하면, 하판은 상면
-  const face = isTopPanel ? 'bottom' : 'top';
+  const face: 'top' | 'bottom' = isTopPanel ? 'bottom' : 'top';
   const panelName = isTopPanel ? '상판' : '하판';
 
   xPositions.forEach((xPos, xIndex) => {
@@ -101,7 +101,7 @@ export function calculateCamHousingBorings(
       borings.push({
         id: `cam-housing-${panelName}-${side}-${row}`,
         type: 'cam-housing' as const,
-        face: face as const,
+        face,
         x: xPos,
         y: yPos,
         diameter: BORING_DIAMETERS['cam-housing'],
