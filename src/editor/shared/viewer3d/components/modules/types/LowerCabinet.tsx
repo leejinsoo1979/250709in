@@ -1272,9 +1272,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   doorTopGap,
   doorBottomGap
 }) => {
+  const uiSelectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
+  const uiSelectedFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
+  const activePopup = useUIStore(state => state.activePopup);
+  const storeSelectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
   const placedModuleForCorner = useFurnitureStore(state => (
     placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
   )) as any;
+  const isCurrentModuleFocused = !!placedFurnitureId && (
+    uiSelectedFurnitureId === placedFurnitureId ||
+    storeSelectedFurnitureId === placedFurnitureId ||
+    (uiSelectedFurnitureIds?.includes(placedFurnitureId) ?? false) ||
+    (activePopup?.type === 'furnitureEdit' && activePopup?.id === placedFurnitureId)
+  );
   const maidaDimensionSide: 'left' | 'right' | null = (() => {
     const resolvedSlotIndex = typeof slotIndex === 'number'
       ? slotIndex
@@ -1282,9 +1292,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         ? placedModuleForCorner.slotIndex
         : undefined;
     const indexedSlotWidths = spaceInfo ? calculateSpaceIndexing(spaceInfo).slotWidths : undefined;
-    const effectiveSlotWidths = Array.isArray(slotWidths) && slotWidths.length > 0
-      ? slotWidths
-      : indexedSlotWidths;
+    // slotWidths prop은 듀얼 하부장에서 내부 좌/우 폭만 들어올 수 있으므로
+    // 외곽 슬롯 판정에는 전체 공간 인덱싱 결과를 우선 사용해야 한다.
+    const effectiveSlotWidths = Array.isArray(indexedSlotWidths) && indexedSlotWidths.length > 0
+      ? indexedSlotWidths
+      : slotWidths;
     const slotCount = Array.isArray(effectiveSlotWidths) ? effectiveSlotWidths.length : 0;
     const isDual = !!placedModuleForCorner?.isDualSlot || moduleData.id.includes('dual-');
 
@@ -1292,15 +1304,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       const endSlotIndex = resolvedSlotIndex + (isDual ? 1 : 0);
       if (resolvedSlotIndex <= 0) return 'left';
       if (endSlotIndex >= slotCount - 1) return 'right';
-      if (!isEditMode) return null;
-      const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
-      return x >= 0 ? 'right' : 'left';
+      return isCurrentModuleFocused ? 'left' : null;
+    }
+
+    if (spaceInfo?.layoutMode !== 'free-placement') {
+      return isCurrentModuleFocused ? 'left' : null;
     }
 
     if (placedModuleForCorner?.placementWall === 'right') return 'right';
     if (placedModuleForCorner?.placementWall === 'left') return 'left';
     const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
-    if (Math.abs(x) < 0.001 && !isEditMode) return null;
+    if (Math.abs(x) < 0.001 && !isCurrentModuleFocused) return null;
     return x > 0 ? 'right' : 'left';
   })();
   const isRightCornerCabinet = moduleData.id.includes('right-corner');
