@@ -16,6 +16,9 @@ const AdminLayout = () => {
   // 인증 및 권한 체크가 모두 완료된 상태
   const loading = authLoading || adminLoading;
 
+  // 공장 파트너사 role: 발주 관련 메뉴만 노출
+  const isFactoryRole = adminRole === 'factory';
+
   useEffect(() => {
     console.log('🔐 AdminLayout 상태:', { authLoading, adminLoading, user: !!user, isAdmin, isSuperAdmin });
 
@@ -96,21 +99,25 @@ const AdminLayout = () => {
             <span>대시보드</span>
           </NavLink>
 
-          <NavLink
-            to="/admin/users"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <UsersIcon size={20} />
-            <span>사용자 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <UsersIcon size={20} />
+              <span>사용자 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/enterprise"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineOfficeBuilding size={20} />
-            <span>기업회원 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/enterprise"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineOfficeBuilding size={20} />
+              <span>기업회원 관리</span>
+            </NavLink>
+          )}
 
           <NavLink
             to="/admin/partners"
@@ -138,93 +145,115 @@ const AdminLayout = () => {
             </NavLink>
           )}
 
-          <NavLink
-            to="/admin/teams"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <UserIcon size={20} />
-            <span>팀 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/teams"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <UserIcon size={20} />
+              <span>팀 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/projects"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineFolder size={20} />
-            <span>프로젝트 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/projects"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineFolder size={20} />
+              <span>프로젝트 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/shares"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineShare size={20} />
-            <span>공유 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/shares"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineShare size={20} />
+              <span>공유 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/logs"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineClipboardList size={20} />
-            <span>로그 및 알림</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/logs"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineClipboardList size={20} />
+              <span>로그 및 알림</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/messages"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineMail size={20} />
-            <span>메시지 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/messages"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineMail size={20} />
+              <span>메시지 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/chatbot"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineChatAlt2 size={20} />
-            <span>챗봇 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/chatbot"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineChatAlt2 size={20} />
+              <span>챗봇 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/api-keys"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineKey size={20} />
-            <span>API 키 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/api-keys"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineKey size={20} />
+              <span>API 키 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/subscriptions"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineCreditCard size={20} />
-            <span>구독 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/subscriptions"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineCreditCard size={20} />
+              <span>구독 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/billing"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineCreditCard size={20} />
-            <span>결제 관리</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/billing"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineCreditCard size={20} />
+              <span>결제 관리</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/security"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineLockClosed size={20} />
-            <span>보안 설정</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/security"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineLockClosed size={20} />
+              <span>보안 설정</span>
+            </NavLink>
+          )}
 
-          <NavLink
-            to="/admin/settings"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <SettingsIcon size={20} />
-            <span>시스템 설정</span>
-          </NavLink>
+          {!isFactoryRole && (
+            <NavLink
+              to="/admin/settings"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <SettingsIcon size={20} />
+              <span>시스템 설정</span>
+            </NavLink>
+          )}
         </nav>
       </aside>
 

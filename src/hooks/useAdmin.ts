@@ -6,7 +6,7 @@ import { db } from '@/firebase/config';
 // 슈퍼 관리자 이메일 (프로젝트 소유자)
 const SUPER_ADMIN_EMAIL = 'sbbc212@gmail.com';
 
-export type AdminRole = 'super' | 'admin' | 'support' | 'sales';
+export type AdminRole = 'super' | 'admin' | 'support' | 'sales' | 'factory';
 
 export const useAdmin = (user: User | null, authLoading?: boolean) => {
   const [isAdmin, setIsAdmin] = useState(false);

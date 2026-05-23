@@ -5,10 +5,12 @@
 import { doc, setDoc, deleteDoc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './config';
 
+export type AdminRoleValue = 'admin' | 'support' | 'sales' | 'factory';
+
 export interface AdminData {
   email: string;
   displayName: string;
-  role: 'admin' | 'support' | 'sales';
+  role: AdminRoleValue;
   grantedAt: Date;
   grantedBy: string; // 권한을 부여한 사람의 UID
 }
@@ -16,7 +18,7 @@ export interface AdminData {
 /**
  * 관리자 권한 부여
  */
-export async function grantAdminRole(userId: string, userData: { email: string; displayName: string }, grantedBy: string, role: 'admin' | 'support' | 'sales' = 'admin'): Promise<void> {
+export async function grantAdminRole(userId: string, userData: { email: string; displayName: string }, grantedBy: string, role: AdminRoleValue = 'admin'): Promise<void> {
   try {
     const adminRef = doc(db, 'admins', userId);
     await setDoc(adminRef, {
