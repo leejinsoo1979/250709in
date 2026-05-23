@@ -1327,8 +1327,17 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const color = placedModule.color || 'MW';
       const moduleHingePosition = (placedModule as any).hingePosition || 'right';
       const moduleHingeType = (placedModule as any).hingeType || 'A';
-      const moduleDoorTopGap = (placedModule as any).doorTopGap ?? 5;
-      const moduleDoorBottomGap = (placedModule as any).doorBottomGap ?? 25;
+      // 메인 useLivePanelData 경로와 동일한 도어 갭 기본값을 사용한다.
+      // 구독 경로가 쓰이더라도 옵티마이저 도어/경첩 보링이 다른 기준으로 계산되면 안 된다.
+      const rawDoorTopGap = (placedModule as any).doorTopGap;
+      const rawDoorBottomGap = (placedModule as any).doorBottomGap;
+      const modId = placedModule.moduleId || '';
+      const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
+      const isDoorLiftMod = modId.includes('lower-door-lift-') && !modId.includes('-half-');
+      const isTopDownMod = modId.includes('lower-top-down-') && !modId.includes('-half-');
+      const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? -80 : isLowerMod ? -20 : 5;
+      const moduleDoorTopGap = (rawDoorTopGap === undefined || (isLowerMod && rawDoorTopGap === 0)) ? defaultTopGap : rawDoorTopGap;
+      const moduleDoorBottomGap = (rawDoorBottomGap === undefined || (isLowerMod && rawDoorBottomGap === 0)) ? (isLowerMod ? 5 : 25) : rawDoorBottomGap;
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
@@ -1396,18 +1405,25 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         rightEpAdj2,                        // rightEpAdjacentFurniture
         (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
         (placedModule as any).topPanelNotchSide,  // 따내기 위치
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
+        placedModule.stoneTopThickness,
+        (() => {
+          const stT = placedModule.stoneTopThickness || 0;
+          const fo = placedModule.stoneTopFrontOffset;
+          if (stT > 0 && (fo === undefined || fo === 0)) {
+            return isTopDownMod ? (stT === 30 ? 33 : 23) : isDoorLiftMod ? 0 : 23;
+          }
+          return fo;
+        })(),
+        placedModule.stoneTopBackOffset,
+        placedModule.stoneTopLeftOffset,
+        placedModule.stoneTopRightOffset,
+        placedModule.stoneTopBackLip,
+        placedModule.stoneTopBackLipThickness,
+        placedModule.stoneTopBackLipDepthOffset,
+        placedModule.stoneTopBackLipTopOffset,
+        placedModule.stoneTopBackLipTopBackOffset,
+        placedModule.stoneTopBackLipFullFill,
+        placedModule.stoneTopBackLipFillHeight,
         (placedModule as any).hasTopFrame === false
           ? 0
           : ((placedModule as any).endPanelTopOffset !== undefined ? (placedModule as any).endPanelTopOffset : topFrameH2),

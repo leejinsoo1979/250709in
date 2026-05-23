@@ -19,6 +19,23 @@ export interface RawPanel {
   color?: string;
   grain?: Grain;
   canRotate?: boolean;
+  boringPositions?: number[];
+  boringDepthPositions?: number[];
+  boringDepthGroups?: Array<{ y: number; depthPositions: number[]; boringType?: 'fixed-panel' | 'movable-shelf' }>;
+  groovePositions?: Array<{ y: number; height: number; depth: number }>;
+  screwPositions?: number[];
+  screwDepthPositions?: number[];
+  isDoor?: boolean;
+  isLeftHinge?: boolean;
+  screwHoleSpacing?: number;
+  bracketBoringPositions?: number[];
+  bracketBoringDepthPositions?: number[];
+  isBracketSide?: boolean;
+  cornerNotch?: { width: number; depth: number; side: 'left' | 'right' };
+  sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+  rebate?: { width: number; height: number; position: string };
+  meshName?: string;
+  furnitureId?: string;
 }
 
 export interface NormalizedPanel {
@@ -31,6 +48,23 @@ export interface NormalizedPanel {
   material: string;
   grain: 'H' | 'V' | 'NONE';
   canRotate: boolean;
+  boringPositions?: number[];
+  boringDepthPositions?: number[];
+  boringDepthGroups?: Array<{ y: number; depthPositions: number[]; boringType?: 'fixed-panel' | 'movable-shelf' }>;
+  groovePositions?: Array<{ y: number; height: number; depth: number }>;
+  screwPositions?: number[];
+  screwDepthPositions?: number[];
+  isDoor?: boolean;
+  isLeftHinge?: boolean;
+  screwHoleSpacing?: number;
+  bracketBoringPositions?: number[];
+  bracketBoringDepthPositions?: number[];
+  isBracketSide?: boolean;
+  cornerNotch?: { width: number; depth: number; side: 'left' | 'right' };
+  sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+  rebate?: { width: number; height: number; position: string };
+  meshName?: string;
+  furnitureId?: string;
 }
 
 /**
@@ -133,7 +167,24 @@ export function normalizePanel(panel: RawPanel, targetUnit: Unit = 'mm'): Normal
     quantity: panel.quantity || 1,
     material: panel.material || 'PB',
     grain: normalizeGrain(panel.grain, panel.canRotate, swapped),
-    canRotate: panel.canRotate !== false
+    canRotate: panel.canRotate !== false,
+    boringPositions: panel.boringPositions,
+    boringDepthPositions: panel.boringDepthPositions,
+    boringDepthGroups: panel.boringDepthGroups,
+    groovePositions: panel.groovePositions,
+    screwPositions: panel.screwPositions,
+    screwDepthPositions: panel.screwDepthPositions,
+    isDoor: panel.isDoor,
+    isLeftHinge: panel.isLeftHinge,
+    screwHoleSpacing: panel.screwHoleSpacing,
+    bracketBoringPositions: panel.bracketBoringPositions,
+    bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
+    isBracketSide: panel.isBracketSide,
+    cornerNotch: panel.cornerNotch,
+    sideNotches: panel.sideNotches,
+    rebate: panel.rebate,
+    meshName: panel.meshName,
+    furnitureId: panel.furnitureId
   };
 }
 
