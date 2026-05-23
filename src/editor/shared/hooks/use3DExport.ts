@@ -88,9 +88,11 @@ export const use3DExport = () => {
           // 5b. 화이트리스트: 가구 패널 메쉬만 유지
           // BoxWithEdges가 생성하는 메쉬 이름 패턴만 허용
           const allowedMeshPatterns = [
-            'furniture-mesh',   // 가구 패널 (측판, 선반, 상판, 하판, 보강대 등)
+            'furniture-mesh',   // 가구 패널 (측판, 선반, 상판, 하판, 보강대 등) + 도어 본체
             'back-panel-mesh',  // 백패널
             'clothing-rod-mesh', // 옷봉
+            'door-edge-banding', // 도어 엣지 밴딩 (도어 본체 mesh)
+            '도어',              // 한글 도어 이름 포함된 mesh (안전망)
           ];
 
           const isFurnitureMesh = allowedMeshPatterns.some(p => name.includes(p));
