@@ -1638,9 +1638,13 @@ export const calculatePanelDetails = (
     );
     // 도어 하단(바닥에서 doorBottomGap) → 측판 하단(바닥에서 baseHeight)
     // 측판 기준 Y = 힌지Y + (doorBottomGap - baseHeight)
+    const isUpperCabinetForBracket =
+      moduleData.category === 'upper' || moduleData.id.includes('upper-cabinet');
     const bracketYOffset = spaceHeight
       ? (doorBottomGap ?? 25) - (baseHeight ?? 65)
-      : 2; // fallback: 기존 doorGap
+      : isUpperCabinetForBracket
+        ? doorVerticalGeometry.bottomMm
+        : 2; // fallback: 기존 doorGap
     const bracketYPositions = bracketHingeYPositions
       ? hingeYPositions.map(y => y - (baseHeight ?? 65))
       : hingeYPositions.map(y => y + bracketYOffset);

@@ -25,6 +25,7 @@ import {
   resolveDefaultDoorHingePositionsMm,
   resolveHingeOppositeDoorWidthAdjustment
 } from '@/editor/shared/utils/doorGeometryCalculator';
+import { avoidHingePositionsForShelves } from '@/domain/boring/calculators/hingeCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
@@ -1675,14 +1676,73 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorHeight
   );
   const hasCustomHingePositions = customHingePositionsMm.length > 0;
+  const shelfCollisionRangesMm = useMemo(() => {
+    const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
+    if (!cabinetHeightMm || !moduleData) return [];
+
+    const sections = (
+      storePlacedModule?.customSections ||
+      (moduleData.modelConfig as any)?.sections ||
+      (moduleData.modelConfig as any)?.leftSections ||
+      []
+    ) as any[];
+    if (!Array.isArray(sections) || sections.length === 0) return [];
+
+    const thicknessMm = panelThickness || 18;
+    const doorBottomBelowCabinetMm = isUpperCabinet
+      ? doorBottomGap
+      : isLowerCabinet
+        ? doorBottomGap
+        : 0;
+    const availableHeightMm = cabinetHeightMm - thicknessMm * 2;
+    let currentYFromBottom = thicknessMm;
+    const ranges: Array<{ bottomMm: number; topMm: number }> = [];
+
+    sections.forEach(section => {
+      const sectionHeightMm = section.heightType === 'absolute'
+        ? section.height
+        : availableHeightMm * ((section.height || section.heightRatio || 100) / 100);
+      const shelfPositions = Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0
+        ? section.shelfPositions.filter((position: number) => position > 0)
+        : (section.type === 'shelf' && section.count && section.count > 0)
+          ? Array.from({ length: section.count }, (_, index) => (
+            sectionHeightMm / (section.count + 1) * (index + 1)
+          ))
+          : [];
+
+      shelfPositions.forEach((position: number) => {
+        const shelfCenterFromCabinetBottom = currentYFromBottom + position;
+        ranges.push({
+          bottomMm: shelfCenterFromCabinetBottom - thicknessMm / 2 + doorBottomBelowCabinetMm,
+          topMm: shelfCenterFromCabinetBottom + thicknessMm / 2 + doorBottomBelowCabinetMm,
+        });
+      });
+      currentYFromBottom += sectionHeightMm;
+    });
+
+    return ranges.filter(range => range.topMm > 0 && range.bottomMm < actualDoorHeight);
+  }, [
+    actualDoorHeight,
+    doorBottomGap,
+    effectiveInternalHeight,
+    isLowerCabinet,
+    isUpperCabinet,
+    moduleData,
+    panelThickness,
+    storePlacedModule?.customSections
+  ]);
   const effectiveHingePositionsMm = hasCustomHingePositions
     ? customHingePositionsMm
-    : resolveDefaultDoorHingePositionsMm({
-      doorHeightMm: actualDoorHeight,
-      isUpperCabinet,
-      isLowerCabinet,
-      hingeMode
-    });
+    : avoidHingePositionsForShelves(
+      resolveDefaultDoorHingePositionsMm({
+        doorHeightMm: actualDoorHeight,
+        isUpperCabinet,
+        isLowerCabinet,
+        hingeMode
+      }),
+      shelfCollisionRangesMm,
+      actualDoorHeight
+    );
   const hingePositionsField = splitDoorPanelName === '상부 도어'
     ? 'upperDoorHingePositionsMm'
     : splitDoorPanelName === '하부 도어'

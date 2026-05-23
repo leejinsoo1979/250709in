@@ -120,7 +120,7 @@ export const resolveDoorLeafDimensions = (
   if (isTallCabinet) {
     leafHeightMm = cabinetHeightMm + (doorTopGapMm ?? 0) + (doorBottomGapMm ?? 0)
   } else if (isUpperCabinet) {
-    leafHeightMm = cabinetHeightMm - 5 + 28
+    leafHeightMm = cabinetHeightMm + (doorTopGapMm ?? 5) + (doorBottomGapMm ?? 28)
   } else if (isLowerCabinet) {
     if (classification.isTopDown) {
       // 상판내림은 몸통 높이 증감분을 상단 전대/대리석 앞판이 흡수한다.
@@ -197,13 +197,15 @@ export const resolveDoorVerticalGeometry = (
   const classification = classifyModule(moduleId)
   const isUpperCabinet = cabinetCategory === 'upper' || classification.isUpperCabinet
   const isLowerCabinet = cabinetCategory === 'lower' || classification.isLowerCabinet
-  const doorTopGap = doorTopGapMm ?? 5
   let bottomMm: number
   let topMm: number
 
   if (isUpperCabinet) {
-    topMm = (spaceHeightMm ?? cabinetBottomMm + cabinetHeightMm) - doorTopGap
-    bottomMm = topMm - leafDimensions.leafHeightMm
+    const upperDoorTopGap = doorTopGapMm ?? 5
+    const upperDoorBottomGap = doorBottomGapMm ?? 28
+    const cabinetTopMm = spaceHeightMm ?? cabinetBottomMm + cabinetHeightMm
+    topMm = cabinetTopMm + upperDoorTopGap
+    bottomMm = cabinetTopMm - cabinetHeightMm - upperDoorBottomGap
   } else if (isLowerCabinet) {
     if (classification.isTopDown) {
       bottomMm = cabinetBottomMm - 5

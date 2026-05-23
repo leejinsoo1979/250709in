@@ -249,7 +249,7 @@ describe('doorGeometryCalculator', () => {
     })).toEqual([120, 735, 1350, 1965, 2580])
   })
 
-  it('상부장 도어 패널 높이는 패널리스트 기존 기준값을 유지한다', () => {
+  it('상부장 도어 패널 높이는 상단/하단 갭만큼 몸통 밖으로 확장한다', () => {
     const result = resolveDoorLeafDimensions({
       moduleId: 'upper-cabinet-basic',
       cabinetCategory: 'upper',
@@ -259,7 +259,7 @@ describe('doorGeometryCalculator', () => {
 
     expect(result.leafCount).toBe(1)
     expect(result.leafWidthMm).toBe(497)
-    expect(result.leafHeightMm).toBe(808)
+    expect(result.leafHeightMm).toBe(818)
   })
 
   it('하부 상판내림 도어 높이는 710mm 고정값을 유지한다', () => {
@@ -386,7 +386,7 @@ describe('doorGeometryCalculator', () => {
     expect(result.centerYMm).toBe(440)
   })
 
-  it('상부장 도어 세로 위치는 공간 상단 기준 top gap을 유지한다', () => {
+  it('상부장 도어 세로 위치는 몸통 상단에서 위로, 하단에서 아래로 확장한다', () => {
     const result = resolveDoorVerticalGeometry({
       moduleId: 'upper-cabinet-basic',
       cabinetCategory: 'upper',
@@ -396,10 +396,10 @@ describe('doorGeometryCalculator', () => {
       doorTopGapMm: 5
     })
 
-    expect(result.leafHeightMm).toBe(808)
-    expect(result.topMm).toBe(2395)
+    expect(result.leafHeightMm).toBe(818)
+    expect(result.topMm).toBe(2405)
     expect(result.bottomMm).toBe(1587)
-    expect(result.centerYMm).toBe(1991)
+    expect(result.centerYMm).toBe(1996)
   })
 
   it('키큰장 도어 세로 위치는 몸통 기준 상하 갭을 유지한다', () => {

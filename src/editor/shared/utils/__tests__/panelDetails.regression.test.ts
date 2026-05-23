@@ -20,6 +20,7 @@ interface PanelDetail {
   boringPositions?: number[]
   screwPositions?: number[]
   hingeCount?: number
+  bracketBoringPositions?: number[]
 }
 
 const getRequiredModule = (id: string, width: number, depth: number) => {
@@ -239,6 +240,23 @@ describe('panelDetails regression baselines', () => {
     })
     expect(findPanel(panels, '백패널').height).toBe(510)
     expect(panels.some(panel => panel.name?.includes('보강대'))).toBe(false)
+  })
+
+  it('상부장 2단형 H1000은 선반과 경첩 보링이 50mm 이상 이격된다', () => {
+    const panels = calculatePanels('upper-cabinet-2tier-500', 500, 300, {
+      hasDoor: true,
+      hingePosition: 'left',
+      backPanelThicknessMm: 9,
+      freeHeight: 1000
+    })
+
+    const door = findPanel(panels, '도어')
+    const leftSide = findPanel(panels, '좌측판')
+
+    expect(door.height).toBe(1033)
+    expect(door.boringPositions).toEqual([120, 469, 913])
+    expect(leftSide.bracketBoringPositions).toEqual([92, 441, 885])
+    expect(491 - leftSide.bracketBoringPositions![1]).toBe(50)
   })
 
   it('키큰장찬넬 프레임 패널은 옵티마이저 패널 목록에 포함된다', () => {
