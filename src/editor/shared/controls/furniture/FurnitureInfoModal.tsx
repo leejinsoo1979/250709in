@@ -430,7 +430,9 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       spaceInfo,
       placedModule: placedModule as any,
       moduleWidthMm: customWidth
-    })
+    }),
+    undefined,
+    placedModule?.lowerSectionTopOffset
   );
 
   // 서라운드 패널 (공간 전체 단위)

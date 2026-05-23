@@ -66,7 +66,8 @@ export const calculatePanelDetails = (
     upperDoorBottomGap?: number;
     lowerDoorTopGap?: number;
     lowerDoorBottomGap?: number;
-  }
+  },
+  lowerSectionTopOffsetMm: number = 0
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -572,6 +573,8 @@ export const calculatePanelDetails = (
       const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       const horizontalPanelWidth = innerWidth - sidePanelGap;
 
+      const lowerTopPanelFrontReduction = Math.max(0, lowerSectionTopOffsetMm || 0);
+
       if (isKitchenNSectionFurniture) {
         const isFridgeNoBackLower = moduleData.id.includes('fridge-cabinet') && sectionIndex === 0;
         const lowerBackReduction = isFridgeNoBackLower ? basicThickness - 1 : 26;
@@ -590,7 +593,7 @@ export const calculatePanelDetails = (
           panels.lower.push({
             name: '(하)상판',
             width: horizontalPanelWidth,
-            depth: customDepth - lowerBackReduction,
+            depth: customDepth - lowerBackReduction - lowerTopPanelFrontReduction,
             thickness: basicThickness,
             material: 'PB'
           });
@@ -628,7 +631,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,
-            depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
+            depth: customDepth - 26 - (sectionIndex === 0 ? lowerTopPanelFrontReduction : 0), // 백패널과 맞닿게 26mm 감소 + 하부상판 앞 옵셋
             thickness: basicThickness,
             material: 'PB'
           });

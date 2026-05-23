@@ -53,6 +53,7 @@ interface PanelDetailOptions {
   customUpperDoorHingePositionsMm?: number[]
   customLowerDoorHingePositionsMm?: number[]
   customSections?: SectionConfig[]
+  lowerSectionTopOffsetMm?: number
 }
 
 const calculatePanels = (
@@ -109,7 +110,10 @@ const calculatePanels = (
     options.customHingePositionsMm,
     options.customUpperDoorHingePositionsMm,
     options.customLowerDoorHingePositionsMm,
-    options.customSections
+    options.customSections,
+    undefined,
+    undefined,
+    options.lowerSectionTopOffsetMm
   )
 }
 
@@ -315,6 +319,20 @@ describe('panelDetails regression baselines', () => {
     expect(names).not.toContain('(하)좌측')
     expect(names).not.toContain('(상)좌측')
     expect(names).not.toContain('(상)후면 보강대 1')
+  })
+
+  it('하부섹션 상판 옵셋은 실제 (하)상판 깊이에 반영한다', () => {
+    const panels = calculatePanels('single-pull-out-cabinet-600', 600, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9,
+      lowerSectionTopOffsetMm: 85
+    })
+
+    const lowerTopPanels = panels.filter(panel => panel.name === '(하)상판')
+    expect(lowerTopPanels.length).toBeGreaterThan(0)
+    lowerTopPanels.forEach(panel => {
+      expect(panel.depth).toBe(489)
+    })
   })
 
   it('주방 키큰장 팬트리장/냉장고장 백패널과 보강대는 3D 이름으로 생성된다', () => {

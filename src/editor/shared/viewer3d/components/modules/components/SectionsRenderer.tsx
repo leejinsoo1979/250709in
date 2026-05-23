@@ -1039,8 +1039,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
       if (detail.type === 'fixed-panel') {
         // 천판/지판/섹션 구분판은 BaseFurnitureShell의 실제 수평 패널 렌더링 깊이와 동일해야 한다.
-        const panelDepth = sectionDepth - fixedPanelBackReduction;
-        const panelCenterZ = directionOffset + fixedPanelBackReduction / 2;
+        const isLowerTopDivider = detail.role === 'section-divider' && (detail.roleIndex ?? 0) % 2 === 0;
+        const frontInset = isLowerTopDivider ? mmToThreeUnits(lowerSectionTopOffsetMm || 0) : 0;
+        const panelDepth = sectionDepth - fixedPanelBackReduction - frontInset;
+        const panelCenterZ = directionOffset + fixedPanelBackReduction / 2 - frontInset / 2;
         const panelFrontZ = panelCenterZ + panelDepth / 2;
         const panelBackZ = panelCenterZ - panelDepth / 2;
 
@@ -1078,6 +1080,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     modelConfig,
     sectionDepthDirections,
     sectionDepths,
+    lowerSectionTopOffsetMm,
     shelfFrontInsetMm,
     shelfZOffset,
   ]);

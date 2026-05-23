@@ -514,7 +514,9 @@ export function useLivePanelData() {
           placedModule.upperDoorHingePositionsMm,
           placedModule.lowerDoorHingePositionsMm,
           (placedModule as any).customSections,
-          doorOuterOpenSides
+          doorOuterOpenSides,
+          undefined,
+          (placedModule as any).lowerSectionTopOffset
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1352,7 +1354,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.upperDoorHingePositionsMm,
         placedModule.lowerDoorHingePositionsMm,
         (placedModule as any).customSections,
-        doorOuterOpenSides2
+        doorOuterOpenSides2,
+        undefined,
+        (placedModule as any).lowerSectionTopOffset
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
