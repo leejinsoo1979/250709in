@@ -145,6 +145,25 @@ function calculateFurnitureDimensions(
   };
 }
 
+function resolveTopPanelDepthForBoring(
+  placedModule: PlacedModule,
+  moduleData: ModuleData,
+  depth: number,
+  panelThickness: number,
+  sections: SectionConfig[]
+) {
+  const lastSection = sections[sections.length - 1] as any;
+  const topOffsetMm = Number((lastSection?.topPanelDepthOffset) ?? 0);
+  const placedTopOffsetMm = Number(((placedModule as any).lowerSectionTopOffset) ?? 0);
+
+  if (moduleData.id.includes('shelf-split')) {
+    const backPanelThickness = Number((placedModule as any).backPanelThickness ?? 9);
+    return Math.max(1, depth - 39 - panelThickness * 2 - backPanelThickness);
+  }
+
+  return Math.max(1, depth - topOffsetMm - placedTopOffsetMm);
+}
+
 /**
  * 도어 개수 결정 (가구 너비 기준)
  */
@@ -228,15 +247,11 @@ export function convertFurnitureToBoring(
     case 'tall':
     default: {
       // 상판/하판 실제 깊이 계산 (목찬넬/옵셋 반영)
-      // section.topPanelDepthOffset 이 있으면 그만큼 빼서 실제 상판 깊이 산출
-      const lastSection = sections[sections.length - 1] as any;
+      // shelf-split 하부섹션 상판은 패널 산출의 목찬넬 공식과 같은 깊이를 쓴다.
       const firstSection = sections[0] as any;
-      const topOffsetMm = Number((lastSection?.topPanelDepthOffset) ?? 0);
       const bottomOffsetMm = Number((firstSection?.bottomPanelDepthOffset) ?? 0);
-      // placedModule 자체에 lowerSectionTopOffset이 있으면 그것도 반영 (가구 단위 옵셋)
-      const placedTopOffsetMm = Number(((placedModule as any).lowerSectionTopOffset) ?? 0);
 
-      const actualTopDepth = Math.max(1, dims.depth - topOffsetMm - placedTopOffsetMm);
+      const actualTopDepth = resolveTopPanelDepthForBoring(placedModule, moduleData, dims.depth, panelThickness, sections);
       const actualBottomDepth = Math.max(1, dims.depth - bottomOffsetMm);
 
       const lowerParams: LowerCabinetParams = {
