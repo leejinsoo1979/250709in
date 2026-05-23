@@ -91,9 +91,23 @@ export const use3DExport = () => {
             'furniture-mesh',   // 가구 패널 (측판, 선반, 상판, 하판, 보강대 등) + 도어 본체
             'back-panel-mesh',  // 백패널
             'clothing-rod-mesh', // 옷봉
-            'door-edge-banding', // 도어 엣지 밴딩 (도어 본체 mesh)
-            '도어',              // 한글 도어 이름 포함된 mesh (안전망)
           ];
+
+          // 도어 엣지 밴딩 오버레이는 도어 본체 앞에 떠있는 작은 box mesh들이라 export 시 제외
+          // (userData.edgeBandingOverlay로 부모 그룹 식별 → 자식 mesh 모두 스킵)
+          let parentForBanding = child.parent;
+          let isBandingOverlay = false;
+          while (parentForBanding) {
+            if (parentForBanding.userData?.edgeBandingOverlay) {
+              isBandingOverlay = true;
+              break;
+            }
+            parentForBanding = parentForBanding.parent;
+          }
+          if (isBandingOverlay) {
+            childrenToRemove.push(child);
+            return;
+          }
 
           const isFurnitureMesh = allowedMeshPatterns.some(p => name.includes(p));
 
