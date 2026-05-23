@@ -5063,9 +5063,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : topFrameH;
                 if (displayTopFrame <= 0) return null;
                 const singleLowerTopRef = singleLowerCountertopH > 0 ? singleLowerCountertopTopY : furnitureTopY;
+                const sectionSplitTopRef = hasSectionSplit
+                  ? mmToThreeUnits(floorFinishForHeight + bottomFrameH + sectionHeights.reduce((sum, h) => sum + h, 0))
+                  : singleLowerTopRef;
                 const topFrameBottomRef = topRefMod_L?.hasTopFrame === false
                   ? effectiveCeilingY - mmToThreeUnits(userTopGap)
-                  : (hasDualCabinet ? upperCabinetTopY : singleLowerTopRef);
+                  : (hasDualCabinet ? upperCabinetTopY : sectionSplitTopRef);
                 return (
                   <>
                     <NativeLine name="dimension_line"
@@ -5988,9 +5991,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : rTopFrameH;
                 if (displayTopFrame <= 0) return null;
                 const rSingleLowerTopRef = rSingleLowerCountertopH > 0 ? rSingleLowerCountertopTopY : rFurnitureTopY;
+                const rSectionSplitTopRef = rHasSectionSplit
+                  ? mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rSectionHeights.reduce((sum, h) => sum + h, 0))
+                  : rSingleLowerTopRef;
                 const topFrameBottomRef = topRefMod_R?.hasTopFrame === false
                   ? rEffectiveCeilingY - mmToThreeUnits(userTopGap)
-                  : (rHasDualCabinet ? rUpperCabinetTopY : rSingleLowerTopRef);
+                  : (rHasDualCabinet ? rUpperCabinetTopY : rSectionSplitTopRef);
                 return (
                   <>
                     <NativeLine name="dimension_line"
@@ -8184,7 +8190,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? findSideCompanion('lower')
               : viewMod;
             const topFrameRefMod = viewModCategoryForFrame === 'lower'
-              ? findSideCompanion('upper')
+              ? (findSideCompanion('upper') ?? viewMod)
               : viewMod;
             const bottomFrameRefCategory = getSideCategory(bottomFrameRefMod);
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
@@ -9510,7 +9516,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? findSideCompanion('lower')
               : viewMod;
             const topFrameRefMod = viewModCategoryForFrame === 'lower'
-              ? findSideCompanion('upper')
+              ? (findSideCompanion('upper') ?? viewMod)
               : viewMod;
             const bottomFrameRefCategory = getSideCategory(bottomFrameRefMod);
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)

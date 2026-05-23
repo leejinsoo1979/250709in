@@ -265,12 +265,15 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     && !moduleIdForAbsorb.includes('-4drawer-shelf-')
     && !moduleIdForAbsorb.includes('-2drawer-shelf-')
     && !moduleIdForAbsorb.includes('shelf-split');
+  const isShelfSplitModule = moduleIdForAbsorb.includes('shelf-split');
+  const shouldStabilizeShelfBoundary = isPlainShelfModule || isShelfSplitModule;
+  const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+    ? (spaceInfo?.baseConfig?.height ?? 60)
+    : 0;
   let shelfFloatAbsorbedMm = 0;
   let shelfBaseAbsorbedMm = 0;
-  if (isPlainShelfModule) {
-    const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
-      ? (spaceInfo?.baseConfig?.height ?? 60)
-      : 0;
+  let shelfBaseFrameDeltaMm = 0;
+  if (shouldStabilizeShelfBoundary) {
     const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
       && spaceInfo?.baseConfig?.placementType === 'float';
     const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
@@ -283,6 +286,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       // 걸레받이 ON + 전역 띄움: 띄움 높이만큼 가구가 줄어듦 → 하부에서 차감
       shelfFloatAbsorbedMm = globalFloatMm;
     }
+  }
+  if (isShelfSplitModule && hasBase !== false && typeof baseFrameHeight === 'number') {
+    shelfBaseFrameDeltaMm = baseFrameHeight - globalBaseMm;
   }
 
   // 공통 로직도 항상 호출 (조건부 사용)
@@ -304,6 +310,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     upperSectionDepthDirection,
     shelfFloatAbsorbedMm,
     shelfBaseAbsorbedMm,
+    shelfBaseFrameDeltaMm,
   } as any);
 
   const resolveSplitDoorDepthPlacement = (sectionIndex: number) => {
@@ -1568,10 +1575,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           {moduleData?.id?.includes('shelf-split') && (() => {
             const mmToUnits = (mm: number) => mm * 0.01;
             const notchHeightMm = 80;
-            // 하부섹션 실제 height (customSections 우선, 없으면 modelConfig.sections[0].height)
+            // 하부섹션 실제 height.
+            // 상단몰딩/걸레받이 변경 시 useBaseFurniture가 보정한 section height를 우선 사용해야
+            // 가구 바닥 이동분과 상쇄되어 목찬넬 월드 위치가 튀지 않는다.
             const lowerSectionHmm =
-              (customSections?.[0]?.height as number | undefined) ??
               (baseFurniture.modelConfig?.sections?.[0]?.height as number | undefined) ??
+              (customSections?.[0]?.height as number | undefined) ??
               860;
             // 노치 상단 = 하부섹션 상단(=측판 (하) 상단), 노치 하단 = 그 - 80mm
             const notchFromBottomMm = lowerSectionHmm - notchHeightMm;
@@ -1727,10 +1736,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             //  - 도어분절 팬트리장(pantry-cabinet-split): 하부섹션 1825, 도어 분절 갭 3mm
             const isPantrySplit = moduleData?.id?.includes('pantry-cabinet-split');
             const defaultLowerSectionTopMm = isPantrySplit ? 1825 : 860;
-            // customSections가 있으면 첫 섹션의 height를 동적으로 사용 (사용자 섹션 H 변경 반영)
-            const customLowerSecH = (customSections && customSections.length > 0)
-              ? customSections[0].height
-              : undefined;
+            // useBaseFurniture가 프레임/걸레받이 변경분까지 반영한 section height를 우선 사용한다.
+            const customLowerSecH = (baseFurniture.modelConfig?.sections?.[0]?.height as number | undefined)
+              ?? ((customSections && customSections.length > 0) ? customSections[0].height : undefined);
             const lowerSectionTopMm = (typeof customLowerSecH === 'number' && customLowerSecH > 0)
               ? customLowerSecH
               : defaultLowerSectionTopMm;

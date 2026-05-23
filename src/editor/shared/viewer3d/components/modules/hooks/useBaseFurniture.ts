@@ -31,8 +31,10 @@ interface BaseFurnitureOptions {
   // 선반장 전용: 띄움/걸레받이 흡수를 섹션별로 분배할 때 사용
   // - shelfFloatAbsorbedMm: 띄움으로 가구가 줄어든 양 (mm). 하부 섹션에서 차감.
   // - shelfBaseAbsorbedMm: 걸레받이 토글 OFF로 가구가 늘어난 양 (mm). 하부 섹션에 추가.
+  // - shelfBaseFrameDeltaMm: 걸레받이 높이 변경으로 가구 바닥이 올라간 양 (mm). 하부 섹션에서 차감.
   shelfFloatAbsorbedMm?: number;
   shelfBaseAbsorbedMm?: number;
+  shelfBaseFrameDeltaMm?: number;
 }
 
 // 가구 기본 설정 반환 타입
@@ -96,6 +98,7 @@ export const useBaseFurniture = (
     backPanelThicknessMm = DEFAULT_BACK_PANEL_THICKNESS, // 백패널 두께 (기본값: 9mm)
     shelfFloatAbsorbedMm = 0,
     shelfBaseAbsorbedMm = 0,
+    shelfBaseFrameDeltaMm = 0,
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -134,6 +137,7 @@ export const useBaseFurniture = (
       !mid.includes('-2drawer-shelf-') &&
       !mid.includes('shelf-split')
     );
+    const isShelfSplit = !!mid && mid.includes('shelf-split');
 
     // absolute 섹션들의 합 = 원래 dimensions.height (FurnitureItem 변경 전)
     const originalSectionsTotal = sections.reduce((sum: number, s: SectionConfig) => {
@@ -156,12 +160,14 @@ export const useBaseFurniture = (
     );
 
     // 선반장(single-shelf/dual-shelf) + 2섹션: 경계는 바닥 기준 1060mm로 고정된다.
+    // 도어분절 현관장(shelf-split)도 목찬넬/도어 분절 기준선이 하부 경계를 따라야 한다.
     // FurnitureItem이 renderHeightMm = original - float + base 로 합쳐서 전달하므로,
-    // 하부는 원본 하부 + 걸레받이 흡수 - 띄움, 상부는 남은 높이를 흡수한다.
-    if (isPlainShelf && sections.length === 2) {
+    // 하부는 원본 하부 + 걸레받이 흡수 - 띄움 - 걸레받이 높이 증가분,
+    // 상부는 남은 높이를 흡수한다. 상단몰딩 변화는 상부 섹션만 흡수한다.
+    if ((isPlainShelf || isShelfSplit) && sections.length === 2) {
       const basicThicknessMm = sourceModelConfig.basicThickness || 18;
       const lowerOrig = sections[0].height;
-      const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm));
+      const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm - shelfBaseFrameDeltaMm));
       const newUpperH = Math.max(0, Math.round(renderHeightMm - newLowerH));
 
       const rescaleShelfPositions = (section: SectionConfig, newHeight: number): SectionConfig => {
@@ -301,7 +307,7 @@ export const useBaseFurniture = (
       ...sourceModelConfig,
       sections: scaledSections
     };
-  }, [internalHeight, moduleData.dimensions.height, originalModelConfig, customSections, shelfFloatAbsorbedMm, shelfBaseAbsorbedMm]);
+  }, [internalHeight, moduleData.dimensions.height, originalModelConfig, customSections, shelfFloatAbsorbedMm, shelfBaseAbsorbedMm, shelfBaseFrameDeltaMm]);
   
   // 기본 판재 두께 변환 (mm -> Three.js 단위)
   const basicThickness = mmToThreeUnits(modelConfig.basicThickness || 18);
