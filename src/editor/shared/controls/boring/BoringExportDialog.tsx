@@ -10,6 +10,7 @@ import {
   downloadCSVAsZip,
   downloadDXF,
   downloadMPR,
+  downloadMPRAsZip,
   downloadCIX,
 } from '@/domain/boring/exporters';
 import type {
@@ -61,11 +62,13 @@ const BoringExportDialog: React.FC<BoringExportDialogProps> = ({
         const shouldZip = result.files.length > 1;
 
         if (shouldZip) {
-          // ZIP으로 다운로드
-          await downloadCSVAsZip(
-            result.files.map((f) => ({ filename: f.filename, content: f.content })),
-            `boring_data_${selectedFormat}.zip`
-          );
+          const files = result.files.map((f) => ({ filename: f.filename, content: f.content }));
+          if (selectedFormat === 'mpr') {
+            await downloadMPRAsZip(files, `boring_data_${selectedFormat}.zip`);
+          } else {
+            // ZIP으로 다운로드
+            await downloadCSVAsZip(files, `boring_data_${selectedFormat}.zip`);
+          }
         } else {
           // 단일 파일 다운로드
           const file = result.files[0];

@@ -27,6 +27,9 @@ export {
   generateSinglePanelMPR,
   exportToMPR,
   downloadMPR,
+  downloadMPRAsZip,
+  encodeMPRContent,
+  encodeMPRZipFileName,
 } from './mprExporter';
 
 // CIX 내보내기 (Biesse bSolid)

@@ -10,6 +10,8 @@ import {
 import {
   exportToMPR,
   exportToCIX,
+  encodeMPRContent,
+  encodeMPRZipFileName,
 } from '@/domain/boring/exporters';
 import JSZip from 'jszip';
 import type { PanelBoringData, Boring } from '@/domain/boring/types';
@@ -346,10 +348,13 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     // 패널별 개별 MPR 파일을 ZIP으로 묶어서 다운로드
     const zip = new JSZip();
     result.files.forEach(file => {
-      zip.file(file.filename, file.content);
+      zip.file(file.filename, encodeMPRContent(file.content), { binary: true });
     });
 
-    const blob = await zip.generateAsync({ type: 'blob' });
+    const blob = await zip.generateAsync({
+      type: 'blob',
+      encodeFileName: encodeMPRZipFileName,
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

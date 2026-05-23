@@ -11,6 +11,7 @@ import type {
   BoringType,
 } from '../types';
 import { DEFAULT_MPR_EXPORT_SETTINGS } from '../constants';
+import { encodeCp949 } from './cp949Encoder';
 
 // ============================================
 // imos MPR 블록 생성
@@ -289,7 +290,7 @@ export function exportToMPR(
       files.push({
         filename: `${safeName}.mpr`,
         content,
-        size: new Blob([content]).size,
+        size: new Blob([encodeMPRContent(content)]).size,
       });
     });
 
@@ -336,8 +337,16 @@ export function exportToMPR(
 /**
  * MPR 파일 다운로드
  */
+export function encodeMPRContent(content: string): Uint8Array {
+  return encodeCp949(content);
+}
+
+export function encodeMPRZipFileName(filename: string): string {
+  return String.fromCharCode(...encodeCp949(filename));
+}
+
 export function downloadMPR(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'application/octet-stream' });
+  const blob = new Blob([encodeMPRContent(content)], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -348,8 +357,34 @@ export function downloadMPR(content: string, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
+export async function downloadMPRAsZip(
+  files: Array<{ filename: string; content: string }>,
+  zipFilename: string = 'mpr_data.zip'
+): Promise<void> {
+  const JSZip = (await import('jszip')).default;
+  const zip = new JSZip();
+
+  files.forEach((file) => {
+    zip.file(file.filename, encodeMPRContent(file.content), { binary: true });
+  });
+
+  const blob = await zip.generateAsync({
+    type: 'blob',
+    encodeFileName: encodeMPRZipFileName,
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = zipFilename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 export default {
   generateSinglePanelMPR,
   exportToMPR,
   downloadMPR,
+  downloadMPRAsZip,
 };
