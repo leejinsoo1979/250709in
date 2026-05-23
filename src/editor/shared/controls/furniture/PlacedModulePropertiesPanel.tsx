@@ -35,19 +35,33 @@ const isPlainShoeShelfModuleId = (moduleId?: string): boolean => {
     && !moduleId.includes('shelf-split');
 };
 
-const getPlainShoeShelfOffsets = (module: any, spaceInfo: any) => {
-  const floorBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+const isShelfSplitModuleId = (moduleId?: string): boolean => {
+  return !!moduleId?.includes('shelf-split');
+};
+
+const usesStableShelfSectionBoundary = (moduleId?: string): boolean => {
+  return isPlainShoeShelfModuleId(moduleId) || isShelfSplitModuleId(moduleId);
+};
+
+const getStableShelfSectionOffsets = (module: any, spaceInfo: any) => {
+  const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
     ? (spaceInfo?.baseConfig?.height ?? 60)
     : 0;
   const baseAbsorbedMm = module?.hasBase === false
-    ? (module?.baseFrameHeight ?? floorBaseMm)
+    ? globalBaseMm
     : 0;
-  const isGlobalFloat = spaceInfo?.baseConfig?.type === 'stand'
+  const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
     && spaceInfo?.baseConfig?.placementType === 'float';
+  const globalFloatMm = isFloatPlacement ? Math.max(0, spaceInfo?.baseConfig?.floatHeight ?? 0) : 0;
   const floatAbsorbedMm = module?.hasBase === false
     ? Math.max(0, module?.individualFloatHeight ?? 0)
-    : (isGlobalFloat ? Math.max(0, spaceInfo?.baseConfig?.floatHeight ?? 0) : 0);
-  return { baseAbsorbedMm, floatAbsorbedMm };
+    : globalFloatMm;
+  const baseFrameDeltaMm = isShelfSplitModuleId(module?.moduleId)
+    && module?.hasBase !== false
+    && typeof module?.baseFrameHeight === 'number'
+    ? module.baseFrameHeight - globalBaseMm
+    : 0;
+  return { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm };
 };
 
 const getPlainShoeShelfSectionHeights = (
@@ -56,9 +70,9 @@ const getPlainShoeShelfSectionHeights = (
   sections: SectionConfig[],
   sectionBasisH: number
 ): number[] | null => {
-  if (!isPlainShoeShelfModuleId(module?.moduleId) || sections.length !== 2) return null;
-  const { baseAbsorbedMm, floatAbsorbedMm } = getPlainShoeShelfOffsets(module, spaceInfo);
-  const lowerH = Math.max(0, Math.round((sections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm));
+  if (!usesStableShelfSectionBoundary(module?.moduleId) || sections.length !== 2) return null;
+  const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(module, spaceInfo);
+  const lowerH = Math.max(0, Math.round((sections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
   const upperH = Math.max(0, Math.round(sectionBasisH - lowerH));
   return [lowerH, upperH];
 };
@@ -5118,7 +5132,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const sectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
             const isPlainShoeShelfForSections = !isCustom
               && !!mcSections
-              && isPlainShoeShelfModuleId(currentPlacedModule.moduleId);
+              && usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
             const plainShoeShelfSectionHeights = isPlainShoeShelfForSections && mcSections
               ? getPlainShoeShelfSectionHeights(currentPlacedModule, spaceInfo, mcSections, sectionBasisH)
               : null;
@@ -5388,8 +5402,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 nextEffectiveHeights[sIdx] = inputVal;
                                 const nextSectionBasisH = nextEffectiveHeights.reduce((sum, h) => sum + h, 0);
                                 const nextBodyH = Math.max(300, Math.min(3000, nextSectionBasisH - absorbedTopForSections - absorbedBaseForSections));
-                                const { baseAbsorbedMm, floatAbsorbedMm } = getPlainShoeShelfOffsets(currentPlacedModule, spaceInfo);
-                                const canonicalLowerH = Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm));
+                                const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(currentPlacedModule, spaceInfo);
+                                const canonicalLowerH = Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm + baseFrameDeltaMm));
                                 const canonicalUpperH = Math.max(0, Math.round(nextEffectiveHeights[1]));
                                 const effectiveHeightsForShelves = [nextEffectiveHeights[0], nextEffectiveHeights[1]];
                                 const newSections = mcSections.map((s: any, idx: number) => {

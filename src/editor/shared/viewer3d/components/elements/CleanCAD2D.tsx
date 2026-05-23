@@ -7,7 +7,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, calculateEvenShelfPositions } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -7211,18 +7211,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           && !mid.includes('-4drawer-shelf-')
           && !mid.includes('-2drawer-shelf-')
           && !mid.includes('shelf-split');
+        const isShelfSplitEff = mid.includes('shelf-split');
+        const usesStableShelfBoundary = isPlainShelfEff || isShelfSplitEff;
         const originalSections = (moduleData.modelConfig?.sections
           || moduleData.modelConfig?.leftSections
           || []) as any[];
+        const heightSourceSections = effectiveSections.length > 0 ? effectiveSections : originalSections;
         let getEffectiveSectionHeight: (_sec: any, idx: number) => number;
-        if (isPlainShelfEff && originalSections.length >= 2) {
-          // 선반장 분배: lowerNew = lowerOrig + baseAbsorbed - floatAbsorbed
-          const lowerOrig = originalSections[0].height || 0;
+        if (usesStableShelfBoundary && heightSourceSections.length >= 2) {
+          // 선반장/도어분절 현관장 분배:
+          // lowerNew = lowerOrig + baseAbsorbed - floatAbsorbed - baseFrameDelta
+          const lowerOrig = heightSourceSections[0].height || 0;
           const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
             ? (spaceInfo?.baseConfig?.height ?? 60)
             : 0;
           const baseAbsorbedMm = (module as any).hasBase === false
-            ? ((module as any).baseFrameHeight ?? globalBaseMm)
+            ? globalBaseMm
             : 0;
           const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
             && spaceInfo?.baseConfig?.placementType === 'float';
@@ -7230,20 +7234,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const floatAbsorbedMm = (module as any).hasBase === false
             ? Math.max(0, (module as any).individualFloatHeight ?? 0)
             : globalFloatMm;
-          const newLowerH = Math.max(0, Math.round(lowerOrig + baseAbsorbedMm - floatAbsorbedMm));
+          const baseFrameDeltaMm = isShelfSplitEff
+            && (module as any).hasBase !== false
+            && typeof (module as any).baseFrameHeight === 'number'
+            ? ((module as any).baseFrameHeight - globalBaseMm)
+            : 0;
+          const newLowerH = Math.max(0, Math.round(lowerOrig + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
           const newUpperH = Math.max(0, Math.round(furnitureOuterH - newLowerH));
           getEffectiveSectionHeight = (_sec: any, idx: number) => {
             if (idx === 0) return newLowerH;
             if (idx === 1) return newUpperH;
-            return originalSections[idx]?.height || 0;
+            return heightSourceSections[idx]?.height || 0;
           };
         } else {
-          const absorbIdx = isEntrywayEff ? 0 : originalSections.length - 1;
-          const fixedSumOuter = originalSections.reduce((s: number, sec: any, i: number) =>
+          const absorbIdx = isEntrywayEff ? 0 : heightSourceSections.length - 1;
+          const fixedSumOuter = heightSourceSections.reduce((s: number, sec: any, i: number) =>
             i === absorbIdx ? s : s + (sec.height || 0), 0);
           const absorbEffectiveOuter = Math.max(0, furnitureOuterH - fixedSumOuter);
           getEffectiveSectionHeight = (_sec: any, idx: number) => {
-            return idx === absorbIdx ? absorbEffectiveOuter : (originalSections[idx]?.height || 0);
+            return idx === absorbIdx ? absorbEffectiveOuter : (heightSourceSections[idx]?.height || 0);
           };
         }
 
@@ -7262,8 +7271,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           // 일반 선반장(single-shelf/dual-shelf)은 하부 섹션에서 띄움/걸레받이를 이미 흡수하므로
           // 상부 스피너에 추가 띄움 보정을 넣으면 실제 선반 위치와 어긋난다.
-          const labelOffsetMm = (isShoeLabel && !isPlainShelfEff && sectionIdx !== 0) ? -floatMm : 0;
-          const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+          const labelOffsetMm = (isShoeLabel && !usesStableShelfBoundary && sectionIdx !== 0) ? -floatMm : 0;
+          const rawShelfPositions = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+          const hasCustomShelfPositions = !!(module as any).customSections
+            && (section.count ?? 0) > 0
+            && rawShelfPositions.length >= (section.count ?? 0);
+          const shouldResolveRenderedShelfPositions = usesStableShelfBoundary
+            && !hasCustomShelfPositions
+            && (section.count ?? 0) > 0
+            && rawShelfPositions.length > 0;
+          const posArr: number[] = shouldResolveRenderedShelfPositions
+            ? calculateEvenShelfPositions(
+              Math.max(0, sectionHeight - 2 * basicThickness),
+              section.count ?? rawShelfPositions.length,
+              basicThickness
+            )
+            : rawShelfPositions;
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
@@ -7293,8 +7316,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const updated = [...gaps];
             updated[gapIdx] = safeGap;
             // 섹션 외경을 spaceInfo 실시간 값으로 재계산 (받침/프레임 변경 즉시 반영)
-            const isLastSec2 = sectionIdx === effectiveSections.length - 1;
-            const sectionOuterH2 = isLastSec2 ? sectionOuterH : ((section.height as number) || sectionHeight);
+            const sectionOuterH2 = sectionOuterH;
             const innerH = Math.max(0, sectionOuterH2 - 2 * basicThickness);
             const otherCount = updated.length - 1;
             if (otherCount > 0) {
