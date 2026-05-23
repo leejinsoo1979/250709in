@@ -4273,12 +4273,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
               const doorInstallKey = placedModule.hasDoor ? 'door1' : 'door0';
+              const isUpperShelfForKey = actualModuleData?.category === 'upper' && !!(
+                actualModuleData.modelConfig?.sections?.some((section: any) => section.type === 'shelf') ||
+                actualModuleData.modelConfig?.leftSections?.some((section: any) => section.type === 'shelf')
+              );
+              const upperShelfPositionsKey = isUpperShelfForKey && adjustedCustomSections
+                ? adjustedCustomSections.map((section: any) => (
+                  Array.isArray(section.shelfPositions)
+                    ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+                    : ''
+                )).join('|')
+                : '';
               // key에서 height를 제거 — H 변경마다 BoxModule이 unmount/remount 되면서
               // 그 1~2 프레임 사이 클릭이 raycaster에 안 잡혀 "허공 클릭"으로 처리되어
               // closeAllPopups()가 호출되는 race를 막음. H는 internalHeight prop으로 반영.
               return (
                 <BoxModule
-                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}-${doorInstallKey}`}
+                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-usp${upperShelfPositionsKey}-rus${removeUpperSafetyShelfKey}-${doorInstallKey}`}
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김

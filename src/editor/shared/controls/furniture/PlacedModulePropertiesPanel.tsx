@@ -1726,6 +1726,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-entryway-') ||
+        (currentPlacedModule.moduleId.includes('upper-cabinet') && (
+          moduleData.modelConfig?.sections?.some((section: SectionConfig) => section.type === 'shelf') ||
+          moduleData.modelConfig?.leftSections?.some((section: SectionConfig) => section.type === 'shelf')
+        )) ||
         currentPlacedModule.moduleId.includes('lower-half-cabinet') ||
         currentPlacedModule.moduleId.includes('lower-door-lift-half') ||
         currentPlacedModule.moduleId.includes('lower-top-down-half');
@@ -7389,6 +7393,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-entryway-') ||
+            (currentPlacedModule.moduleId.includes('upper-cabinet') && (
+              moduleData.modelConfig?.sections?.some((section: SectionConfig) => section.type === 'shelf') ||
+              moduleData.modelConfig?.leftSections?.some((section: SectionConfig) => section.type === 'shelf')
+            )) ||
             currentPlacedModule.moduleId.includes('lower-half-cabinet') ||
             currentPlacedModule.moduleId.includes('lower-door-lift-half') ||
             currentPlacedModule.moduleId.includes('lower-top-down-half')
@@ -7434,6 +7442,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ) => {
               const section = effectiveSections[sectionIdx];
               if (!section || section.type !== 'shelf') return null;
+              const currentShelfCount = count || section.count || section.shelfPositions?.length || 0;
               // 섹션 외경 계산
               // 1섹션 가구(상부장 3단형 등): 가구 자체 높이를 그대로 섹션 외경으로 사용
               // 2섹션 가구(옷장 등): 마지막 섹션은 가구외경 - 고정섹션합, 첫 섹션은 section.height 그대로
@@ -7458,9 +7467,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   : isLastR
                   ? Math.max(0, furnitureOuterR - fixedSumR)
                   : ((section.height as number) || 0));
+              const getResolvedShelfPositions = () => {
+                const storedPositions = Array.isArray(section.shelfPositions)
+                  ? [...section.shelfPositions]
+                  : [];
+                if (storedPositions.length === currentShelfCount) return storedPositions;
+                if (currentShelfCount <= 0) return [];
+                const innerH = Math.max(0, sectionHeight - 2 * basicThickness);
+                return calculateEvenShelfPositions(innerH, currentShelfCount, basicThickness);
+              };
 
               const handleCountChange = (delta: number) => {
-                const newCount = Math.max(0, Math.min(10, count + delta));
+                const newCount = Math.max(0, Math.min(10, currentShelfCount + delta));
                 setCount(newCount);
                 // 내경 기반(섹션 외경 - 2t)으로 균등 선반 위치 계산
                 const innerH = sectionHeight - 2 * basicThickness;
@@ -7480,13 +7498,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const handlePosBlur = (i: number) => {
                 const val = parseInt(posInputs[i], 10);
                 if (isNaN(val) || val < 0 || val > sectionHeight) {
-                  const positions = section.shelfPositions || [];
+                  const positions = getResolvedShelfPositions();
                   const newInputs = [...posInputs];
                   newInputs[i] = Math.round(positions[i] || 0).toString();
                   setPosInputs(newInputs);
                   return;
                 }
-                const currentPositions = section.shelfPositions ? [...section.shelfPositions] : [];
+                const currentPositions = getResolvedShelfPositions();
                 currentPositions[i] = val;
                 const newSections = [...effectiveSections];
                 newSections[sectionIdx] = { ...section, shelfPositions: currentPositions };
@@ -7497,7 +7515,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 const cur = parseInt(posInputs[i], 10) || 0;
                 const next = Math.max(0, Math.min(Math.round(sectionHeight), cur + (direction === 'up' ? 1 : -1)));
                 handlePosChange(i, next.toString());
-                const currentPositions = section.shelfPositions ? [...section.shelfPositions] : [];
+                const currentPositions = getResolvedShelfPositions();
                 currentPositions[i] = next;
                 const newSections = [...effectiveSections];
                 newSections[sectionIdx] = { ...section, shelfPositions: currentPositions };
@@ -7511,38 +7529,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>선반 갯수</span>
                     <button
                       onClick={() => handleCountChange(-1)}
-                      disabled={count <= 0}
+                      disabled={currentShelfCount <= 0}
                       style={{
                         width: '28px', height: '28px', border: '1px solid var(--theme-border)',
-                        borderRadius: '4px', background: 'var(--theme-surface)', cursor: count <= 0 ? 'not-allowed' : 'pointer',
+                        borderRadius: '4px', background: 'var(--theme-surface)', cursor: currentShelfCount <= 0 ? 'not-allowed' : 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-                        color: count <= 0 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
+                        color: currentShelfCount <= 0 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
                       }}
                     >−</button>
-                    <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{count}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{currentShelfCount}</span>
                     <button
                       onClick={() => handleCountChange(1)}
-                      disabled={count >= 10}
+                      disabled={currentShelfCount >= 10}
                       style={{
                         width: '28px', height: '28px', border: '1px solid var(--theme-border)',
-                        borderRadius: '4px', background: 'var(--theme-surface)', cursor: count >= 10 ? 'not-allowed' : 'pointer',
+                        borderRadius: '4px', background: 'var(--theme-surface)', cursor: currentShelfCount >= 10 ? 'not-allowed' : 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-                        color: count >= 10 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
+                        color: currentShelfCount >= 10 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
                       }}
                     >+</button>
                     <button
                       onClick={() => {
-                        if (count <= 0) return;
+                        if (currentShelfCount <= 0) return;
                         const halfT = basicThickness / 2;
                         const innerH = Math.max(0, sectionHeight - 2 * basicThickness);
-                        const totalInner = innerH - count * basicThickness;
-                        const baseGap = Math.floor(totalInner / (count + 1));
-                        const remainder = totalInner - baseGap * (count + 1);
-                        const evenGaps: number[] = Array(count + 1).fill(baseGap);
+                        const totalInner = innerH - currentShelfCount * basicThickness;
+                        const baseGap = Math.floor(totalInner / (currentShelfCount + 1));
+                        const remainder = totalInner - baseGap * (currentShelfCount + 1);
+                        const evenGaps: number[] = Array(currentShelfCount + 1).fill(baseGap);
                         evenGaps[0] += remainder;
                         const newPositions: number[] = [];
                         let acc = 0;
-                        for (let k = 0; k < count; k++) {
+                        for (let k = 0; k < currentShelfCount; k++) {
                           acc += evenGaps[k];
                           newPositions.push(Math.round(acc + k * basicThickness + halfT));
                         }
@@ -7551,19 +7569,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
                         updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
                       }}
-                      disabled={count <= 0}
+                      disabled={currentShelfCount <= 0}
                       style={{
                         marginLeft: '8px', height: '28px', padding: '0 10px',
                         border: '1px solid var(--theme-border)', borderRadius: '4px',
                         background: 'var(--theme-surface)',
-                        cursor: count <= 0 ? 'not-allowed' : 'pointer',
+                        cursor: currentShelfCount <= 0 ? 'not-allowed' : 'pointer',
                         fontSize: '11px',
-                        color: count <= 0 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)',
+                        color: currentShelfCount <= 0 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)',
                       }}
                     >초기화</button>
                   </div>
                   {(() => {
-                    const shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+                    const shelfPos: number[] = getResolvedShelfPositions().sort((a, b) => a - b);
                     if (shelfPos.length === 0) return null;
                     const n = shelfPos.length;
                     const halfT = basicThickness / 2;
