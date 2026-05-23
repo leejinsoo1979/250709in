@@ -227,6 +227,18 @@ export function convertFurnitureToBoring(
     case 'lower':
     case 'tall':
     default: {
+      // 상판/하판 실제 깊이 계산 (목찬넬/옵셋 반영)
+      // section.topPanelDepthOffset 이 있으면 그만큼 빼서 실제 상판 깊이 산출
+      const lastSection = sections[sections.length - 1] as any;
+      const firstSection = sections[0] as any;
+      const topOffsetMm = Number((lastSection?.topPanelDepthOffset) ?? 0);
+      const bottomOffsetMm = Number((firstSection?.bottomPanelDepthOffset) ?? 0);
+      // placedModule 자체에 lowerSectionTopOffset이 있으면 그것도 반영 (가구 단위 옵셋)
+      const placedTopOffsetMm = Number(((placedModule as any).lowerSectionTopOffset) ?? 0);
+
+      const actualTopDepth = Math.max(1, dims.depth - topOffsetMm - placedTopOffsetMm);
+      const actualBottomDepth = Math.max(1, dims.depth - bottomOffsetMm);
+
       const lowerParams: LowerCabinetParams = {
         id: furnitureId,
         name: furnitureName,
@@ -244,6 +256,9 @@ export function convertFurnitureToBoring(
         // 커스텀 선반 위치 지원 (실제 선반/패널 위치에만 보링)
         customShelfYPositions: useCustomPositions ? customShelfYPositions : undefined,
         useCustomPositions,
+        // 상판/하판 실제 깊이 — 보링 위치가 이 기준으로 계산됨
+        topPanelDepth: actualTopDepth,
+        bottomPanelDepth: actualBottomDepth,
       };
       result = generateLowerCabinetBorings(lowerParams);
       break;

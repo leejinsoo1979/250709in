@@ -35,6 +35,11 @@ export interface LowerCabinetParams {
   settings?: Partial<BoringSettings>;
   customShelfYPositions?: number[];  // 커스텀 선반/패널 Y 위치 (바닥판 중심부터의 mm)
   useCustomPositions?: boolean;      // true면 32mm 피치 대신 커스텀 위치 사용
+  // 상판 실제 깊이 (목찬넬/옵셋 반영) — 보링 위치 계산용
+  // 없으면 depth를 그대로 사용
+  topPanelDepth?: number;
+  // 하판 실제 깊이 — 옵셋 등 반영. 없으면 depth 사용
+  bottomPanelDepth?: number;
 }
 
 export interface LowerCabinetBoringResult {
@@ -153,11 +158,16 @@ function generateHorizontalPanelBorings(
   const panelId = `${params.id}-${isTopPanel ? 'top' : 'bottom'}`;
   const borings: Boring[] = [];
 
-  // 캠 하우징 보링
+  // 상판/하판의 실제 깊이 (목찬넬/옵셋 반영). 없으면 기본 internalDepth 사용
+  const actualPanelDepth = isTopPanel
+    ? (params.topPanelDepth ?? dims.internalDepth)
+    : (params.bottomPanelDepth ?? dims.internalDepth);
+
+  // 캠 하우징 보링 — 실제 패널 깊이 기준으로 위치 재계산
   const camHousingBorings = calculateCamHousingBorings(
     {
       panelWidth: dims.internalWidth,
-      panelDepth: dims.internalDepth,
+      panelDepth: actualPanelDepth,
       settings: settings.camLock,
     },
     isTopPanel
@@ -168,7 +178,7 @@ function generateHorizontalPanelBorings(
   if (!isTopPanel && params.hasAdjustableFoot) {
     const footBorings = calculateAdjustableFootBorings({
       panelWidth: dims.internalWidth,
-      panelDepth: dims.internalDepth,
+      panelDepth: actualPanelDepth,
       settings: settings.adjustableFoot,
     });
     borings.push(...footBorings.borings);
@@ -181,7 +191,7 @@ function generateHorizontalPanelBorings(
     panelType: isTopPanel ? 'top' : 'bottom',
     panelName: isTopPanel ? '상판' : '하판',
     width: dims.internalWidth,
-    height: dims.internalDepth,
+    height: actualPanelDepth,
     thickness: params.thickness,
     material: params.material,
     grain: 'H',
