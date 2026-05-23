@@ -1644,8 +1644,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   const stretcherThickness = baseFurniture.basicThickness;
                   const stretcherZ = vertZ - baseFurniture.basicThickness / 2 - stretcherThickness / 2;
                   const stretcherBackZ = stretcherZ - stretcherThickness / 2; // 전대 뒷면
-                  // 백패널 앞면 Z (대략): -depth/2 + 백패널두께 + depthOffset(가구재두께-1mm) → 보수적으로 -depth/2 + basicThickness
-                  const backPanelFrontZ = -baseFurniture.depth / 2 + baseFurniture.basicThickness;
+                  const backPanelDepthOffset = baseFurniture.basicThickness - mmToUnits(1);
+                  const backPanelFrontZ = -baseFurniture.depth / 2 + baseFurniture.backPanelThickness + backPanelDepthOffset;
                   const topPanelDepth = stretcherBackZ - backPanelFrontZ;
                   const topPanelCenterZ = (stretcherBackZ + backPanelFrontZ) / 2;
                   if (topPanelDepth <= 0) return null;
