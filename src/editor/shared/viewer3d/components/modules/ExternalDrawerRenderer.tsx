@@ -137,11 +137,11 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const bottomThkMm = bottomThk / 0.01;
   const bottomDepth = drawerBodyDepth;
   const bottomZPos = drawerBodyCenterZ;
-  const bottomY = sideBottomY + mmToThreeUnits(16) + bottomThk / 2;
+  const bottomY = sideBottomY + mmToThreeUnits(13) + bottomThk / 2;
   const bottomWidth = drawerInnerWidth + mmToThreeUnits(14);
 
-  // 뒷판 높이: 측판높이 - 16mm(홈 상단 기준 바닥갭) - 바닥판두께
-  const backHeightMm = sideHeightMm - 16 - bottomThkMm;
+  // 뒷판 높이: 측판높이 - 13mm(홈 하단 12mm + 끼움 여유 1mm) - 바닥판두께
+  const backHeightMm = sideHeightMm - 13 - bottomThkMm;
   const backHeight = mmToThreeUnits(backHeightMm);
   const bottomTopYPos = bottomY + bottomThk / 2;
   const backY = bottomTopYPos + backHeight / 2;

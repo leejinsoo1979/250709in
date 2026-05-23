@@ -416,7 +416,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   children
 }) => {
   // backPanelConfig 기본값: depthOffset과 lowerHeightBonus를 basicThickness 기반으로 동적 설정
-  const basicThicknessMm = basicThickness / 0.01; // Three.js → mm 변환
+  const basicThicknessMm = Math.round((basicThickness / 0.01) * 10) / 10; // Three.js → mm 변환
   const backPanelConfig = {
     widthExtension: 14,
     heightExtension: 10,
@@ -473,7 +473,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
   // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요 (0mm)
   // 18/15mm는 기존대로 좌우 0.5mm씩 총 1mm 이격
-  const sidePanelGapMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : 1;
+  const isCoatedThickness = Math.abs(basicThicknessMm - 18.5) < 0.01 || Math.abs(basicThicknessMm - 15.5) < 0.01;
+  const sidePanelGapMm = isCoatedThickness ? 0 : 1;
   const sidePanelGap = mmToThreeUnits(sidePanelGapMm);
   const backPanelWidth = innerWidth - sidePanelGap + mmToThreeUnits(backPanelConfig.widthExtension);
 
@@ -1325,8 +1326,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         // 섹션 뒷면 Z
                         const lowerSecBackZ = lowerSecFrontZ - lowerSecDepthForFrame;
 
-                        // 수직 패널: 측판에서 27mm 안쪽, 레일 부착용
-                        const vertXOffset = mmToThreeUnits(27);
+                        // 수직 패널: 앞 프레임 폭 50mm 기준, 레일 부착용
+                        const horizWidth = mmToThreeUnits(50);
+                        const vertXOffset = horizWidth - basicThickness;
+                        const frameSideGap = mmToThreeUnits(isCoatedThickness ? 0 : 0.5);
                         // 전면 수평 패널: 섹션 앞면에서 85mm 안쪽
                         const frontHorizZ = lowerSecFrontZ - mmToThreeUnits(85) - basicThickness/2;
                         // 후면 수평 패널: 섹션 백패널 앞면에 맞닿음
@@ -1338,16 +1341,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const vertBackEdge = backHorizZ - basicThickness/2;
                         const vertDepth = vertFrontEdge - vertBackEdge;
                         const vertZ = (vertFrontEdge + vertBackEdge) / 2;
-                        // 수평 패널 폭: 27mm + basicThickness
-                        const horizWidth = vertXOffset + basicThickness;
-
                         return (
                           <>
                             {/* 좌측 수직 패널 (레일 부착) */}
                             <BoxWithEdges
                               key={`drawer-frame-left-vert-${getPanelMaterial('서랍속장(좌)').uuid}`}
                               args={[basicThickness, drawerFrameH, vertDepth]}
-                              position={[-halfInnerW + vertXOffset + basicThickness/2 + mmToThreeUnits(0.5), drawerFrameCenterY, vertZ]}
+                              position={[-halfInnerW + vertXOffset + basicThickness/2 + frameSideGap, drawerFrameCenterY, vertZ]}
                               material={getPanelMaterial('서랍속장(좌)')}
                               renderMode={renderMode}
                               isDragging={isDragging}
@@ -1362,7 +1362,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             <BoxWithEdges
                               key={`drawer-frame-right-vert-${getPanelMaterial('서랍속장(우)').uuid}`}
                               args={[basicThickness, drawerFrameH, vertDepth]}
-                              position={[halfInnerW - vertXOffset - basicThickness/2 - mmToThreeUnits(0.5), drawerFrameCenterY, vertZ]}
+                              position={[halfInnerW - vertXOffset - basicThickness/2 - frameSideGap, drawerFrameCenterY, vertZ]}
                               material={getPanelMaterial('서랍속장(우)')}
                               renderMode={renderMode}
                               isDragging={isDragging}
@@ -1377,7 +1377,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             <BoxWithEdges
                               key={`drawer-frame-left-front-${getPanelMaterial('서랍속장(좌) 전면').uuid}`}
                               args={[horizWidth, drawerFrameH, basicThickness]}
-                              position={[-halfInnerW + horizWidth/2 + mmToThreeUnits(0.5), drawerFrameCenterY, frontHorizZ]}
+                              position={[-halfInnerW + horizWidth/2 + frameSideGap, drawerFrameCenterY, frontHorizZ]}
                               material={getPanelMaterial('서랍속장(좌) 전면')}
                               renderMode={renderMode}
                               isDragging={isDragging}
@@ -1392,7 +1392,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             <BoxWithEdges
                               key={`drawer-frame-right-front-${getPanelMaterial('서랍속장(우) 전면').uuid}`}
                               args={[horizWidth, drawerFrameH, basicThickness]}
-                              position={[halfInnerW - horizWidth/2 - mmToThreeUnits(0.5), drawerFrameCenterY, frontHorizZ]}
+                              position={[halfInnerW - horizWidth/2 - frameSideGap, drawerFrameCenterY, frontHorizZ]}
                               material={getPanelMaterial('서랍속장(우) 전면')}
                               renderMode={renderMode}
                               isDragging={isDragging}
@@ -1407,7 +1407,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             <BoxWithEdges
                               key={`drawer-frame-left-back-${getPanelMaterial('서랍속장(좌) 후면').uuid}`}
                               args={[horizWidth, drawerFrameH, basicThickness]}
-                              position={[-halfInnerW + horizWidth/2 + mmToThreeUnits(0.5), drawerFrameCenterY, backHorizZ]}
+                              position={[-halfInnerW + horizWidth/2 + frameSideGap, drawerFrameCenterY, backHorizZ]}
                               material={getPanelMaterial('서랍속장(좌) 후면')}
                               renderMode={renderMode}
                               isDragging={isDragging}
@@ -1422,7 +1422,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             <BoxWithEdges
                               key={`drawer-frame-right-back-${getPanelMaterial('서랍속장(우) 후면').uuid}`}
                               args={[horizWidth, drawerFrameH, basicThickness]}
-                              position={[halfInnerW - horizWidth/2 - mmToThreeUnits(0.5), drawerFrameCenterY, backHorizZ]}
+                              position={[halfInnerW - horizWidth/2 - frameSideGap, drawerFrameCenterY, backHorizZ]}
                               material={getPanelMaterial('서랍속장(우) 후면')}
                               renderMode={renderMode}
                               isDragging={isDragging}
@@ -1451,17 +1451,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const drawerSideH = drawerH;
 
                         // 서랍 패널 두께
-                        const basicThicknessMm = basicThickness / 0.01;
-                        const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
+                        const drawerPanelThicknessMm = isCoatedThickness ? 15.5 : 15;
                         const drawerSideT = mmToThreeUnits(drawerPanelThicknessMm);
                         const maidaT = mmToThreeUnits(drawerPanelThicknessMm);
                         const bottomT = backPanelThickness; // 바닥판 두께 = 백패널 두께 (다른 서랍과 동일하게 동적)
 
-                        // 서랍 영역: 날개벽 수직패널 안쪽면 사이에서 좌우 5mm 갭
-                        const vertXOff = mmToThreeUnits(27);
-                        const frameT = basicThickness;
-                        const wingInnerWidth = innerWidth - sidePanelGap - (vertXOff + frameT) * 2;
-                        const drawerAreaWidth = wingInnerWidth - mmToThreeUnits(5) * 2;
+                        // 서랍 외경: 내경 - 좌우날개 100mm - 레일 공차 11mm
+                        const drawerAreaWidth = innerWidth - sidePanelGap - mmToThreeUnits(111);
 
                         // 서랍은 하부 섹션 안에 있으므로 하부 섹션 깊이 기준으로 계산
                         // (lowerSectionDepthMm 변경 시 서랍도 따라가도록)
@@ -1553,9 +1549,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 뒷판';
                               const mat = getPanelMaterial(pn);
-                              // 바닥판 윗면 Y = 측판하단 + 14mm + bottomT (홈 상단 기준)
+                              // 바닥판 윗면 Y = 측판하단 + 13mm + bottomT (홈 하단 12mm + 끼움 여유 1mm)
                               const sidePanelBottom2 = drawerCenterY - drawerSideH / 2;
-                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(14) + bottomT;
+                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(13) + bottomT;
                               const origBackTop = drawerCenterY + drawerSideH / 2;
                               const backH = origBackTop - bottomTopY2;
                               const backCY = (origBackTop + bottomTopY2) / 2;
@@ -1585,9 +1581,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
                               // 바닥판 폭: 측판 안쪽거리 + 좌우 각 7mm 홈 끼움
                               const bottomWidth = drawerAreaWidth - drawerSideT * 2 + mmToThreeUnits(14);
-                              // 바닥판 Y: 홈 하단이 아니라 홈 상단에 붙도록 1mm 올림
+                              // 바닥판 Y: 홈 하단 12mm에서 1mm 올림
                               const sidePanelBottom = drawerCenterY - drawerSideH / 2;
-                              const bottomY = sidePanelBottom + mmToThreeUnits(14) + bottomT / 2;
+                              const bottomY = sidePanelBottom + mmToThreeUnits(13) + bottomT / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
@@ -1615,7 +1611,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-maida-${mat.uuid}`}
-                                  args={[innerWidth - sidePanelGap - mmToThreeUnits(12) * 2, maidaH, maidaT]}
+                                  args={[innerWidth - sidePanelGap - mmToThreeUnits(24) * 2, maidaH, maidaT]}
                                   position={[0, maidaCenterY, wingFrontFaceZ - maidaT/2]}
                                   material={mat}
                                   renderMode={renderMode}
@@ -2515,7 +2511,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   - 마이다는 추가 안 함
               */}
               {(() => {
-                const drawerPanelTmm = (basicThickness / 0.01 === 18.5 || basicThickness / 0.01 === 15.5) ? 15.5 : 15;
+                const drawerPanelTmm = isCoatedThickness ? 15.5 : 15;
                 const DRAWER_SIDE_T = mmToThreeUnits(drawerPanelTmm);
                 const DRAWER_BOTTOM_T = backPanelThickness;
                 const DRAWER_SIDE_H_PER_TIER_MM = [126, 146]; // [아래, 위]
@@ -2562,8 +2558,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const drawerSideHmm = DRAWER_SIDE_H_PER_TIER_MM[idx];
                       const drawerSideH = mmToThreeUnits(drawerSideHmm);
                       const sideCenterY = startY + drawerSideH / 2;
-                      // 바닥판 Y = 홈 하단이 아니라 홈 상단에 붙도록 1mm 올림
-                      const bottomCY = startY + mmToThreeUnits(11) + DRAWER_BOTTOM_T / 2;
+                      // 바닥판 Y = 홈 하단 12mm에서 1mm 올림
+                      const bottomCY = startY + mmToThreeUnits(13) + DRAWER_BOTTOM_T / 2;
                       const bottomTopYInner = bottomCY + DRAWER_BOTTOM_T / 2;
                       // 뒷판: 바닥판 윗면 ~ 측판 윗면 (기존: 상단~bottomTopY 의 중간)
                       const sideTopY = sideCenterY + drawerSideH / 2;
@@ -2575,7 +2571,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const sectionPrefix = `유리장 서랍${idx + 1}`;
                       const drawerBottomGroove = (face: 'left' | 'right') => [{
                         face,
-                        fromY: mmToThreeUnits(10),
+                        fromY: mmToThreeUnits(12),
                         height: DRAWER_BOTTOM_T + mmToThreeUnits(1),
                         fromZ: 0,
                         depth: drawerBodyD,

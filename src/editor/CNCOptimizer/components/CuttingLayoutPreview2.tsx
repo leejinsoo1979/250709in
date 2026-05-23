@@ -1573,7 +1573,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.lineWidth = 1 / (baseScale * scale);
 
         panel.groovePositions.forEach((groove) => {
-          // groove.y = 하단에서의 Y 위치 (10mm, height 기준)
+          // groove.y = 하단에서의 Y 위치 (12mm, height 기준)
           // groove.height = 홈 높이 (5mm)
           // 홈은 패널 width 방향 전체에 걸쳐 있음 (깊이 방향)
           const grooveY = groove.y;

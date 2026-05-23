@@ -31,9 +31,8 @@ export const calculatePanelDetails = (
   const drawerBottomThickness = backPanelThickness; // MDF 재질 - 백패널과 동일
   
   const height = moduleData.dimensions.height;
-  // 18.5/15.5mm는 양면 접합 두께이므로 innerWidth는 정수 두께로 계산 (슬롯폭 유지)
-  const innerWidthThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? Math.floor(basicThickness) : basicThickness;
-  const innerWidth = customWidth - (innerWidthThickness * 2);
+  // 내경 = 전체폭 - 실제 측판두께×2 (18.5T는 18.5×2)
+  const innerWidth = customWidth - (basicThickness * 2);
   const innerHeight = height - (basicThickness * 2);
   
   // 섹션 정보 가져오기
@@ -354,7 +353,7 @@ export const calculatePanelDetails = (
       });
 
       // 3. 서랍속장(날개벽) — 수평 패널 전면/후면 × 좌/우 = 4개
-      const wingHorizWidth = 27 + drawerSideThickness; // 42mm
+      const wingHorizWidth = 50; // 앞 프레임 폭 50mm 고정
       ['좌', '우'].forEach(side => {
         ['전면', '후면'].forEach(face => {
           panels.push({
@@ -371,8 +370,8 @@ export const calculatePanelDetails = (
         });
       });
 
-      // 4. 속서랍 — 날개벽 안쪽면 사이에서 좌우 5mm 갭
-      const drawerAreaWidth = innerWidth - 2 * (27 + drawerSideThickness) - 10;
+      // 4. 속서랍 — 내경 - 좌우날개 100mm - 레일 공차 11mm
+      const drawerAreaWidth = innerWidth - 111;
       const drawerSideDepth = customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
       const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
       const drawerBackH = 155 - 18 - backPanelThickness; // 측판높이 - 하단여유 - 바닥판두께
@@ -442,11 +441,11 @@ export const calculatePanelDetails = (
         grain: 'NONE'
       });
 
-      // 서랍 마이다 (앞판 = 하부상판~받침대 범위, 좌우 12mm 갭)
+      // 서랍 마이다 (앞판 = 하부상판~받침대 범위, 좌우 24mm 갭)
       panels.push({
         id: `panel-${panelId++}`,
         name: `${moduleData.name} - 서랍1(마이다)`,
-        width: innerWidth - 24,
+        width: innerWidth - 48,
         height: 212,
         thickness: drawerSideThickness,
         material: 'PB',

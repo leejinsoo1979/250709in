@@ -71,9 +71,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
     
     const height = moduleData.dimensions.height;
-    // 18.5/15.5mm는 양면 접합 두께이므로 innerWidth는 정수 두께로 계산 (슬롯폭 유지)
-    const innerWidthThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? Math.floor(basicThickness) : basicThickness;
-    const innerWidth = customWidth - (innerWidthThickness * 2);
+    // 내경 = 전체폭 - 실제 측판두께×2 (18.5T는 18.5×2)
+    const innerWidth = customWidth - (basicThickness * 2);
     const innerHeight = height - (basicThickness * 2);
     
     // 섹션 정보 가져오기
@@ -189,15 +188,17 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             }
             
             // 서랍 본체 크기 계산 (DrawerRenderer.tsx 3D 렌더링과 완전 일치)
-            const drawerWidth = innerWidth - 48; // innerWidth - 48mm (좌우 24mm 간격)
-            const drawerFrontBackWidth = drawerWidth - 107; // 앞판/뒷판
+            const drawerWidth = innerWidth - 111; // 내경 - 좌우날개 100mm - 레일 공차 11mm
+            const drawerFrontBackWidth = drawerWidth - drawerSideThickness * 2; // 앞판/뒷판
             const drawerBodyHeight = individualDrawerHeight - 30;
             const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (D-bt)-60-15
 
-            // 서랍 손잡이판 (마이다) - PB 15mm = drawerWidth (서랍 본체 폭)
+            const drawerMaidaWidth = innerWidth - 48; // 전면 개구부 기준 좌우 24mm 갭
+
+            // 서랍 손잡이판 (마이다) - PB
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
-              width: drawerWidth,
+              width: drawerMaidaWidth,
               height: individualDrawerHeight,
               thickness: drawerHandleThickness,
               material: 'PB'
@@ -243,7 +244,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             // 측판 홈 깊이 7.5mm에서 0.5mm 여유를 두고 좌우 각 7mm씩 끼움
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
-              width: drawerWidth - (drawerSideThickness * 2 + 62),
+              width: drawerWidth - drawerSideThickness * 2 + 14,
               depth: drawerBodyDepth - 20,
               thickness: drawerBottomThickness,
               material: 'MDF'
