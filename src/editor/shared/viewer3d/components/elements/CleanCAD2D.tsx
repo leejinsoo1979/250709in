@@ -7374,17 +7374,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           });
           // 스피너 전용: 클릭한 선반 k만 1mm 이동 (나머지 선반 위치 불변)
           const moveShelf = (k: number, delta: number) => {
-            const currentPositions = section.shelfPositions && section.shelfPositions.length === n
-              ? [...section.shelfPositions]
-              : posArr.slice();
+            const latestModule = useFurnitureStore.getState().placedModules.find(m => m.id === module.id);
+            const latestSections = ((latestModule as any)?.customSections || effectiveSections) as any[];
+            const latestSection = latestSections[sectionIdx] || section;
+            const latestPositionSource = Array.isArray(latestSection.shelfPositions) && latestSection.shelfPositions.length === n
+              ? latestSection.shelfPositions
+              : posArr;
+            const currentPositions = [...latestPositionSource].sort((a, b) => a - b);
             const newPos = currentPositions[k] + delta;
             // 위/아래 선반/경계와 충돌 방지
             const minBound = k > 0 ? currentPositions[k - 1] + basicThickness : 0;
             const maxBound = k < n - 1 ? currentPositions[k + 1] - basicThickness : innerH;
             if (newPos <= minBound || newPos >= maxBound) return;
             currentPositions[k] = newPos;
-            const newSections = [...effectiveSections];
-            newSections[sectionIdx] = { ...section, shelfPositions: currentPositions };
+            const newSections = latestSections.map((s: any) => ({
+              ...s,
+              ...(Array.isArray(s.shelfPositions) ? { shelfPositions: [...s.shelfPositions] } : {})
+            }));
+            newSections[sectionIdx] = { ...latestSection, shelfPositions: currentPositions };
             updatePlacedModule(module.id, { customSections: newSections });
           };
           // 스피너: 각 선반(posArr[k]) 위에 배치 — 선반 위로/아래로 1mm 이동

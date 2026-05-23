@@ -313,6 +313,16 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     shelfBaseFrameDeltaMm,
   } as any);
 
+  const sectionShelfPositionsKey = useMemo(() => {
+    const sections = (baseFurniture.modelConfig as any)?.sections;
+    if (!Array.isArray(sections)) return '';
+    return sections
+      .map((section: any) => Array.isArray(section.shelfPositions)
+        ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+        : '')
+      .join('|');
+  }, [baseFurniture.modelConfig]);
+
   const resolveSplitDoorDepthPlacement = (sectionIndex: number) => {
     const baseDepthMm = baseFurniture.actualDepthMm || moduleData.dimensions.depth || 600;
     const fallbackDepthMm = sectionIndex === 0 ? lowerSectionDepth : upperSectionDepth;
@@ -1513,7 +1523,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
             <SectionsRenderer
-              key={`sections-${placedFurnitureId}-${JSON.stringify(placedSectionDepths)}-${JSON.stringify(placedSectionDepthDirections)}`}
+              key={`sections-${placedFurnitureId}-${JSON.stringify(placedSectionDepths)}-${JSON.stringify(placedSectionDepthDirections)}-${sectionShelfPositionsKey}`}
               modelConfig={baseFurniture.modelConfig}
               height={baseFurniture.height}
               innerWidth={baseFurniture.innerWidth}
