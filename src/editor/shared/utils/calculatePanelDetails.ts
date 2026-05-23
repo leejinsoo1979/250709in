@@ -8,6 +8,7 @@ import type { DoorOuterOpenSides } from './doorOuterGap';
 import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from './topDownCabinetGeometry';
 import { getDirectLowerDowelShelfPositionsMm } from './lowerCabinetDowelShelves';
+import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -851,7 +852,10 @@ export const calculatePanelDetails = (
           const drawerWidth = drawerInnerWidth - 111; // 서랍 전체 폭 (Type5/6: 좌측컬럼 내경 기준)
           const drawerFrontBackWidth = drawerWidth - drawerSideThickness * 2; // 앞판/뒷판 폭 = 서랍 외경 - 좌우 측판
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
-          const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (= 3D: (D-bt)-60-15)
+          const drawerRailSizing = resolveDrawerRailSizingMm(customDepth, backPanelThickness, basicThickness);
+          const drawerBodyDepth = drawerRailSizing.railSizeMm != null
+            ? drawerRailSizing.drawerSideDepthMm
+            : (customDepth - basicThickness) - 60 - drawerHandleThickness;
           const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThickness);
 
           const drawerMaidaWidth = drawerInnerWidth - 48; // 전면 개구부 기준 좌우 24mm 갭
@@ -1202,7 +1206,10 @@ export const calculatePanelDetails = (
 
       // 4. 속서랍 — 내경 - 좌우날개 100mm - 레일 공차 11mm
       const drawerAreaWidth = horizontalPanelWidth - 111;
-      const drawerSideDepth = customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
+      const drawerRailSizing = resolveDrawerRailSizingMm(customDepth, backPanelThickness, basicThickness, lowerTopOffset);
+      const drawerSideDepth = drawerRailSizing.railSizeMm != null
+        ? drawerRailSizing.drawerSideDepthMm
+        : customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
       const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
       const drawerBackH = 155 - 18 - backPanelThickness;
 
@@ -1228,7 +1235,7 @@ export const calculatePanelDetails = (
       panels.lower.push({
         name: '서랍1 앞판',
         width: Math.round(drawerInnerWidth),
-        depth: 155,
+        depth: Math.round(drawerBackH),
         thickness: drawerSideThickness,
         material: 'PB'
       });
@@ -1793,7 +1800,10 @@ export const calculatePanelDetails = (
                 const drawerWidth = areaWidth - 111; // 내경 - 좌우날개 100mm - 레일 공차 11mm
                 const drawerFrontBackWidth = drawerWidth - drawerSideThicknessCC * 2; // 앞/뒷판 = 서랍 외경 - 좌우 측판
                 const drawerBodyHeight = dh - 30;
-                const drawerBodyDepth = (customDepth - basicThicknessCC) - 60 - drawerHandleThicknessCC;
+                const drawerRailSizing = resolveDrawerRailSizingMm(customDepth, backPanelThickness, basicThicknessCC);
+                const drawerBodyDepth = drawerRailSizing.railSizeMm != null
+                  ? drawerRailSizing.drawerSideDepthMm
+                  : (customDepth - basicThicknessCC) - 60 - drawerHandleThicknessCC;
                 const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThicknessCC);
 
                 const drawerMaidaWidth = areaWidth - 48; // 전면 개구부 기준 좌우 24mm 갭

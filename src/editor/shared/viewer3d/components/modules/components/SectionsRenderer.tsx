@@ -357,10 +357,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           if (section.count && section.count > 0 && !isDowelShelfModule) {
             // 섹션별 강조 확인
             const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+            const shelfPositionsKey = Array.isArray(section.shelfPositions)
+              ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+              : '';
 
             sectionContent = (
               <ShelfRenderer
-                key={`shelf-section-${index}-d${currentSectionDepth.toFixed(4)}-z${currentShelfZOffset.toFixed(4)}`}
+                key={`shelf-section-${index}-d${currentSectionDepth.toFixed(4)}-z${currentShelfZOffset.toFixed(4)}-p${shelfPositionsKey}`}
                 shelfCount={section.count}
                 innerWidth={currentSectionInnerWidth}
                 innerHeight={sectionHeight}

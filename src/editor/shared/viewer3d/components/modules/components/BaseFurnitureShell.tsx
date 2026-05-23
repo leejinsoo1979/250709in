@@ -15,6 +15,7 @@ import { useDimensionColor } from '../hooks/useDimensionColor';
 import { VentilationCap } from './VentilationCap';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
+import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -1473,8 +1474,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           : depth/2;
                         // 마이다 앞면 = 섹션 앞면 - 30mm
                         const wingFrontFaceZ = drawerSectionFrontZ - mmToThreeUnits(30);
-                        // 측판 깊이 = (섹션깊이 - basicThickness - 60) - 마이다두께
-                        const drawerSideDepth = drawerSectionDepth - basicThickness - mmToThreeUnits(60) - maidaT;
+                        // 측판 깊이 = 레일 규격 + 날개 앞뒤 두께 - 10mm
+                        const drawerRailSizing = resolveDrawerRailSizingMm(
+                          drawerSectionDepth / 0.01,
+                          backPanelThickness / 0.01,
+                          basicThickness / 0.01,
+                          85
+                        );
+                        const drawerSideDepth = drawerRailSizing.railSizeMm != null
+                          ? mmToThreeUnits(drawerRailSizing.drawerSideDepthMm)
+                          : drawerSectionDepth - basicThickness - mmToThreeUnits(60) - maidaT;
                         const drawerSideFrontZ = wingFrontFaceZ - maidaT;
                         const drawerBackZ = drawerSideFrontZ - drawerSideDepth;
                         const drawerSideCenterZ = (drawerSideFrontZ + drawerBackZ) / 2;
@@ -1529,11 +1538,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               const mat = getPanelMaterial(pn);
                               // 앞판 앞면 = 측판 앞면 (= 마이다 뒷면)
                               const drawerSideFrontZForFront = wingFrontFaceZ - maidaT;
+                              const drawerFrontBackHeight = Math.max(0, drawerSideH - mmToThreeUnits(13) - bottomT);
+                              const sidePanelBottom2 = drawerCenterY - drawerSideH / 2;
+                              const frontCY = sidePanelBottom2 + mmToThreeUnits(13) + bottomT + drawerFrontBackHeight / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-front-${mat.uuid}`}
-                                  args={[drawerAreaWidth - drawerSideT * 2, drawerSideH, drawerSideT]}
-                                  position={[0, drawerCenterY, drawerSideFrontZForFront - drawerSideT/2]}
+                                  args={[drawerAreaWidth - drawerSideT * 2, drawerFrontBackHeight, drawerSideT]}
+                                  position={[0, frontCY, drawerSideFrontZForFront - drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}

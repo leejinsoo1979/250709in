@@ -4262,7 +4262,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // 도어분절 가구: 섹션 높이 변경 시 분절 위치 갱신을 위해 height도 key에 포함
               const isDoorSplitForKey = !!(actualModuleData?.id?.includes('shelf-split') || actualModuleData?.id?.includes('pantry-cabinet-split'));
               const customSectionsKey = adjustedCustomSections
-                ? adjustedCustomSections.map((s: any) => isDoorSplitForKey ? `${s.count || 0}h${Math.round(s.height || 0)}` : `${s.count || 0}`).join('|')
+                ? adjustedCustomSections.map((s: any) => {
+                    if (!isDoorSplitForKey) return `${s.count || 0}`;
+                    const shelfKey = Array.isArray(s.shelfPositions)
+                      ? s.shelfPositions.map((position: number) => Math.round(position)).join(',')
+                      : '';
+                    return `${s.count || 0}h${Math.round(s.height || 0)}p${shelfKey}`;
+                  }).join('|')
                 : '';
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';

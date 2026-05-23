@@ -18,6 +18,7 @@ import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { FurniturePresetButtons } from './FurniturePresetButtons';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
@@ -553,7 +554,10 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
           const drawerWidth = innerWidth - 111; // 서랍 전체 폭
           const drawerFrontBackWidth = drawerWidth - drawerSideThickness * 2; // 앞판/뒷판 폭 (좌우 측판에 끼워짐)
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
-          const drawerBodyDepth = customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
+          const drawerRailSizing = resolveDrawerRailSizingMm(customDepth, backPanelThickness, basicThickness);
+          const drawerBodyDepth = drawerRailSizing.railSizeMm != null
+            ? drawerRailSizing.drawerSideDepthMm
+            : customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
           const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThickness);
 
           // 서랍 앞판 (두께 15mm)

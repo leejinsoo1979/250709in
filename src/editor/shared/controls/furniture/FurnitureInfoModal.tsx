@@ -4,6 +4,7 @@ import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
@@ -191,7 +192,10 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             const drawerWidth = innerWidth - 111; // 내경 - 좌우날개 100mm - 레일 공차 11mm
             const drawerFrontBackWidth = drawerWidth - drawerSideThickness * 2; // 앞판/뒷판
             const drawerBodyHeight = individualDrawerHeight - 30;
-            const drawerBodyDepth = (customDepth - basicThickness) - 60 - drawerHandleThickness; // (D-bt)-60-15
+            const drawerRailSizing = resolveDrawerRailSizingMm(customDepth, backPanelThickness, basicThickness);
+            const drawerBodyDepth = drawerRailSizing.railSizeMm != null
+              ? drawerRailSizing.drawerSideDepthMm
+              : (customDepth - basicThickness) - 60 - drawerHandleThickness; // (D-bt)-60-15
             const drawerFrontBackHeight = Math.max(0, drawerBodyHeight - 13 - drawerBottomThickness);
 
             const drawerMaidaWidth = innerWidth - 48; // 전면 개구부 기준 좌우 24mm 갭

@@ -247,7 +247,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           const shelfMat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
-              key={`shelf-${i}-${shelfMat.uuid}`}
+              key={`shelf-${i}-${Math.round(positionMm)}-${shelfMat.uuid}`}
               args={[innerWidth - sidePanelGap, basicThickness, shelfDepth]}
               position={[0, relativeYPosition, shelfZPosition]}
               material={shelfMat}
