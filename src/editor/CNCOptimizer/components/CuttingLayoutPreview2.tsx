@@ -1500,7 +1500,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 우측판: 뒤=X=0, 앞=X=width → 홈은 X=0 쪽
         // 좌측판: 뒤=X=width, 앞=X=0 → 홈은 X=width 쪽
         const isLeftSidePanelForGroove = panel.name?.includes('좌측');
-        const backPanelDepthOffset = 17; // mm (측판 뒤쪽 끝에서 백패널까지 거리)
+        const backPanelDepthOffset = 16; // mm (측판 뒤쪽 끝에서 백패널 홈 시작까지 거리)
         const grooveWidth = 10; // mm (홈 폭)
 
         let grooveStartX: number;

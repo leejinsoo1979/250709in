@@ -187,10 +187,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     face,
     fromY: 0,
     height: panelHeight,
-    fromZ: basicThickness - mmToThreeUnits(1),
-    depth: backPanelThickness + mmToThreeUnits(1),
+    fromZ: basicThickness - mmToThreeUnits(2),
+    depth: mmToThreeUnits(10),
     cutDepth: mmToThreeUnits(5.5),
-  }], [basicThickness, backPanelThickness, mmToThreeUnits]);
+  }], [basicThickness, mmToThreeUnits]);
 
   // 우측 스타일러장은 항상 Z=0 중심 (660mm 깊이 기준)
 

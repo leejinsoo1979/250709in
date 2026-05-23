@@ -537,7 +537,7 @@ export class SimpleDXFExporter {
 
         // 백패널 홈 (가구 측판)
         if (isFurnitureSide) {
-          const bpOff = 17, gw = 10;
+          const bpOff = 16, gw = 10;
           const gsX = isLeftSide ? origW - bpOff - gw : bpOff;
           let gx: number, gy: number, gWidth: number, gHeight: number;
           if (panel.rotated) {

@@ -281,6 +281,7 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '목찬넬프레임수평(1)')).toBeDefined()
     expect(findPanel(panels, '목찬넬프레임수직(1)')).toBeDefined()
     expect(findPanel(panels, '전대')).toBeDefined()
+    expect(findPanel(panels, '(하)상판').depth).toBe(296)
   })
 
   it('주방 키큰장 인출장 패널 목록은 3D 옵티마이저 mesh 이름과 일치한다', () => {

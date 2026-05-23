@@ -574,6 +574,14 @@ export const calculatePanelDetails = (
       const horizontalPanelWidth = innerWidth - sidePanelGap;
 
       const lowerTopPanelFrontReduction = Math.max(0, lowerSectionTopOffsetMm || 0);
+      const resolveLowerTopPanelDepth = () => {
+        if (moduleData.id.includes('shelf-split')) {
+          // 도어분절 현관장 하부상판은 3D의 목찬넬 뒤쪽 전대 뒷면부터 백패널 앞면까지의 부재다.
+          // BoxModule shelf-split 렌더링 공식과 동일: D - 40 - t - (backT + t - 1)
+          return Math.max(1, customDepth - 39 - basicThickness * 2 - backPanelThickness);
+        }
+        return customDepth - 26 - lowerTopPanelFrontReduction;
+      };
 
       if (isKitchenNSectionFurniture) {
         const isFridgeNoBackLower = moduleData.id.includes('fridge-cabinet') && sectionIndex === 0;
@@ -631,7 +639,9 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,
-            depth: customDepth - 26 - (sectionIndex === 0 ? lowerTopPanelFrontReduction : 0), // 백패널과 맞닿게 26mm 감소 + 하부상판 앞 옵셋
+            depth: sectionIndex === 0
+              ? resolveLowerTopPanelDepth()
+              : customDepth - 26, // 백패널과 맞닿게 26mm 감소 + 하부상판 앞 옵셋/목찬넬 반영
             thickness: basicThickness,
             material: 'PB'
           });

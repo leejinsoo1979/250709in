@@ -145,10 +145,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     face,
     fromY: 0,
     height: panelHeight,
-    fromZ: basicThickness - mmToThreeUnits(1),
-    depth: backPanelThickness + mmToThreeUnits(1),
+    fromZ: basicThickness - mmToThreeUnits(2),
+    depth: mmToThreeUnits(10),
     cutDepth: mmToThreeUnits(5.5),
-  }], [basicThickness, backPanelThickness, mmToThreeUnits]);
+  }], [basicThickness, mmToThreeUnits]);
 
   // 패널 강조용 형광색 material
   const highlightMaterial = React.useMemo(() =>

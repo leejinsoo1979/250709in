@@ -447,8 +447,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       face,
       fromY: 0,
       height: panelHeight,
-      fromZ: mmToThreeUnits(backPanelConfig.depthOffset),
-      depth: backPanelThickness + mmToThreeUnits(1),
+      // 홈은 뒤쪽 기준 16mm부터 10mm 폭, 백패널 9T는 뒤에서 17mm 위치에 들어간다.
+      fromZ: mmToThreeUnits(backPanelConfig.depthOffset - 1),
+      depth: mmToThreeUnits(10),
       cutDepth: mmToThreeUnits(5.5),
     }];
   }, [backPanelConfig.depthOffset, backPanelThickness, hasBackPanel, isGlassCabinet, mmToThreeUnits]);
