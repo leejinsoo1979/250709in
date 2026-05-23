@@ -95,7 +95,7 @@ const calculate2DOrthographicZoom = (
   const overrideScale = zoomMultiplierOverride ?? 1;
 
   // 기존 맥북 기준 카메라 크기는 유지하고, 화면이 작아 잘릴 때만 자동으로 줌아웃한다.
-  return Math.max(0.5, Math.min(160, Math.min(legacyZoom, fitZoom * overrideScale)));
+  return Math.max(0.5, Math.min(1000, Math.min(legacyZoom, fitZoom * overrideScale)));
 };
 
 /**

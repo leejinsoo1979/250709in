@@ -108,9 +108,9 @@ export const useOrbitControlsConfig = (
       enableRotate: !is2DMode, // 2D 모드에서는 회전 비활성화, 3D 모드에서만 허용
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
-      // 2D 초기 오쏘 줌도 최대 160까지 계산될 수 있으므로 같은 상한을 유지한다.
+      // 2D에서는 상세 작업을 위해 훨씬 더 가까이 확대할 수 있게 둔다.
       minZoom: is2DMode ? 0.5 : 0.05,
-      maxZoom: 160,
+      maxZoom: is2DMode ? 1000 : 160,
       rotateSpeed: 0.5, // 회전 속도를 0.5로 낮춤 (기본값 1.0보다 느리게, 더 묵직하게)
       zoomSpeed: isMobile && is2DMode ? -1.0 : 1.0, // 모바일 2D 모드에서 줌 제스처 반전
       enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임

@@ -20,7 +20,7 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
   minDistance, 
   maxDistance, 
   minZoom = 0.5,
-  maxZoom = 160,
+  maxZoom = 1000,
   viewMode,
   zoomSpeed = 1.0,
   controlsRef
