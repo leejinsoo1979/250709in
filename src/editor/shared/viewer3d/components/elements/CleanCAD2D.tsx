@@ -8233,6 +8233,55 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const upperGuideFrontZ = topFrameRefMod && topFrameRefData
               ? resolveSideDimensionDepthSpanZ(topFrameRefMod, topFrameRefData, 'upper', furnitureZOffset, furnitureDepth).frontZ
               : lowerGuideFrontZ;
+            const sideSectionHeights = (() => {
+              if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
+              const mid = viewMod.moduleId || '';
+              const isSectionedShoe = mid.includes('-entryway-') || mid.includes('-shelf-');
+              if (!isSectionedShoe) return [] as number[];
+              const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+              const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
+              if (sections.length < 2) return [] as number[];
+              const bodyBottomMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
+              const bodyTopMm = Math.max(0, spaceInfo.height - topFrameDimensionHeight);
+              const sectionBasisH = Math.max(0, Math.round(bodyTopMm - bodyBottomMm));
+              const rawHeights = sections.map(s => {
+                if (s.heightType === 'absolute') return s.height || 0;
+                return Math.round(sectionBasisH * (s.height || 0) / 100);
+              });
+              const isEntryway = mid.includes('-entryway-');
+              const isPlainShelf = (mid.startsWith('single-shelf-') || mid.startsWith('dual-shelf-'))
+                && !mid.includes('-4drawer-shelf-')
+                && !mid.includes('-2drawer-shelf-')
+                && !mid.includes('shelf-split');
+              const isShelfSplit = mid.includes('shelf-split');
+              if (isEntryway) {
+                const fixedSum = rawHeights.slice(1).reduce((sum, h) => sum + h, 0);
+                return [Math.max(0, sectionBasisH - fixedSum), ...rawHeights.slice(1)];
+              }
+              if (isPlainShelf || isShelfSplit) {
+                const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
+                  ? (spaceInfo.baseConfig?.height ?? 60)
+                  : 0;
+                const baseAbsorbedMm = (viewMod as any).hasBase === false
+                  ? ((viewMod as any).baseFrameHeight ?? globalBaseForShelf)
+                  : 0;
+                const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
+                  && spaceInfo.baseConfig?.placementType === 'float';
+                const globalFloatMm = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+                const floatAbsorbedMm = (viewMod as any).hasBase === false
+                  ? Math.max(0, (viewMod as any).individualFloatHeight ?? 0)
+                  : globalFloatMm;
+                const baseFrameDeltaMm = isShelfSplit && (viewMod as any).hasBase !== false && typeof (viewMod as any).baseFrameHeight === 'number'
+                  ? ((viewMod as any).baseFrameHeight - globalBaseForShelf)
+                  : 0;
+                const newLowerH = Math.max(0, Math.round((rawHeights[0] || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
+                return [newLowerH, Math.max(0, sectionBasisH - newLowerH)];
+              }
+              const fixedSum = rawHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
+              return [...rawHeights.slice(0, -1), Math.max(0, sectionBasisH - fixedSum)];
+            })();
+            const hasSideSectionSplit = sideSectionHeights.length >= 2;
+            const sideSectionStartMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameDimensionHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
@@ -8400,7 +8449,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {isFloating && maxLowerCabinetHeightMm > 0 && (
+                {isFloating && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ]]}
@@ -8435,7 +8484,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
-                {!isFloating && (
+                {!isFloating && !hasSideSectionSplit && (
                 <group>
                   <Line
                     points={[[0, furnitureStartY, rightDimensionZ], [0, furnitureTopY, rightDimensionZ]]}
@@ -8505,7 +8554,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {isFloating && adjustedUpperCabinetHeightMm > 0 && (
+                {isFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
@@ -8540,7 +8589,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!isFloating && maxUpperCabinetHeightMm > 0 && (
+                {!isFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
@@ -8571,6 +8620,59 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {maxUpperCabinetHeightMm}
                   </Text>
+                </group>
+                )}
+
+                {/* full 신발장/선반장: 측면뷰에서도 실제 상하부 섹션 경계 기준으로 높이 분리 */}
+                {hasSideSectionSplit && (
+                <group>
+                  {sideSectionHeights.map((secH, idx) => {
+                    const secBottomMm = sideSectionStartMm + sideSectionHeights.slice(0, idx).reduce((sum, h) => sum + h, 0);
+                    const secTopMm = secBottomMm + secH;
+                    const secBottomY = mmToThreeUnits(secBottomMm);
+                    const secTopY = mmToThreeUnits(secTopMm);
+                    const boundaryFrontZ = Math.max(lowerGuideFrontZ, upperGuideFrontZ);
+                    return (
+                      <React.Fragment key={`left-side-sec-${idx}`}>
+                        <Line
+                          points={[[0, secBottomY, rightDimensionZ], [0, secTopY, rightDimensionZ]]}
+                          color={dimensionColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([0, secBottomY, rightDimensionZ], [0, secBottomY + 0.015, rightDimensionZ])}
+                          color={dimensionColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([0, secTopY, rightDimensionZ], [0, secTopY - 0.015, rightDimensionZ])}
+                          color={dimensionColor}
+                          lineWidth={0.6}
+                        />
+                        <Text
+                          renderOrder={100001}
+                          depthTest={false}
+                          position={[0, (secBottomY + secTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                          fontSize={baseFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
+                          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                        >
+                          {secH}
+                        </Text>
+                        {idx < sideSectionHeights.length - 1 && (
+                          <Line
+                            points={[[0, secTopY, boundaryFrontZ], [0, secTopY, rightDimensionZ - mmToThreeUnits(20)]]}
+                            color={dimensionColor}
+                            lineWidth={0.3}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </group>
                 )}
 
@@ -9558,6 +9660,55 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const upperGuideFrontZ = topFrameRefMod && topFrameRefData
               ? resolveSideDimensionDepthSpanZ(topFrameRefMod, topFrameRefData, 'upper', furnitureZOffset, furnitureDepth).frontZ
               : lowerGuideFrontZ;
+            const sideSectionHeights = (() => {
+              if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
+              const mid = viewMod.moduleId || '';
+              const isSectionedShoe = mid.includes('-entryway-') || mid.includes('-shelf-');
+              if (!isSectionedShoe) return [] as number[];
+              const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+              const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
+              if (sections.length < 2) return [] as number[];
+              const bodyBottomMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
+              const bodyTopMm = Math.max(0, spaceInfo.height - topFrameDimensionHeight);
+              const sectionBasisH = Math.max(0, Math.round(bodyTopMm - bodyBottomMm));
+              const rawHeights = sections.map(s => {
+                if (s.heightType === 'absolute') return s.height || 0;
+                return Math.round(sectionBasisH * (s.height || 0) / 100);
+              });
+              const isEntryway = mid.includes('-entryway-');
+              const isPlainShelf = (mid.startsWith('single-shelf-') || mid.startsWith('dual-shelf-'))
+                && !mid.includes('-4drawer-shelf-')
+                && !mid.includes('-2drawer-shelf-')
+                && !mid.includes('shelf-split');
+              const isShelfSplit = mid.includes('shelf-split');
+              if (isEntryway) {
+                const fixedSum = rawHeights.slice(1).reduce((sum, h) => sum + h, 0);
+                return [Math.max(0, sectionBasisH - fixedSum), ...rawHeights.slice(1)];
+              }
+              if (isPlainShelf || isShelfSplit) {
+                const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
+                  ? (spaceInfo.baseConfig?.height ?? 60)
+                  : 0;
+                const baseAbsorbedMm = (viewMod as any).hasBase === false
+                  ? ((viewMod as any).baseFrameHeight ?? globalBaseForShelf)
+                  : 0;
+                const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
+                  && spaceInfo.baseConfig?.placementType === 'float';
+                const globalFloatMm = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+                const floatAbsorbedMm = (viewMod as any).hasBase === false
+                  ? Math.max(0, (viewMod as any).individualFloatHeight ?? 0)
+                  : globalFloatMm;
+                const baseFrameDeltaMm = isShelfSplit && (viewMod as any).hasBase !== false && typeof (viewMod as any).baseFrameHeight === 'number'
+                  ? ((viewMod as any).baseFrameHeight - globalBaseForShelf)
+                  : 0;
+                const newLowerH = Math.max(0, Math.round((rawHeights[0] || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
+                return [newLowerH, Math.max(0, sectionBasisH - newLowerH)];
+              }
+              const fixedSum = rawHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
+              return [...rawHeights.slice(0, -1), Math.max(0, sectionBasisH - fixedSum)];
+            })();
+            const hasSideSectionSplit = sideSectionHeights.length >= 2;
+            const sideSectionStartMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameDimensionHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
@@ -9734,7 +9885,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {isFloating && maxLowerCabinetHeightMm > 0 && (
+                {isFloating && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ]]}
@@ -9769,7 +9920,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
-                {!isFloating && (
+                {!isFloating && !hasSideSectionSplit && (
                 <group>
                   <Line
                     points={[[spaceWidth, furnitureStartY, leftDimensionZ], [spaceWidth, furnitureTopY, leftDimensionZ]]}
@@ -9839,7 +9990,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {isFloating && adjustedUpperCabinetHeightMm > 0 && (
+                {isFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
@@ -9874,7 +10025,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!isFloating && maxUpperCabinetHeightMm > 0 && (
+                {!isFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}
@@ -9905,6 +10056,59 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {maxUpperCabinetHeightMm}
                   </Text>
+                </group>
+                )}
+
+                {/* full 신발장/선반장: 측면뷰에서도 실제 상하부 섹션 경계 기준으로 높이 분리 */}
+                {hasSideSectionSplit && (
+                <group>
+                  {sideSectionHeights.map((secH, idx) => {
+                    const secBottomMm = sideSectionStartMm + sideSectionHeights.slice(0, idx).reduce((sum, h) => sum + h, 0);
+                    const secTopMm = secBottomMm + secH;
+                    const secBottomY = mmToThreeUnits(secBottomMm);
+                    const secTopY = mmToThreeUnits(secTopMm);
+                    const boundaryFrontZ = Math.max(lowerGuideFrontZ, upperGuideFrontZ);
+                    return (
+                      <React.Fragment key={`right-side-sec-${idx}`}>
+                        <Line
+                          points={[[spaceWidth, secBottomY, leftDimensionZ], [spaceWidth, secTopY, leftDimensionZ]]}
+                          color={dimensionColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([spaceWidth, secBottomY, leftDimensionZ], [spaceWidth, secBottomY + 0.015, leftDimensionZ])}
+                          color={dimensionColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([spaceWidth, secTopY, leftDimensionZ], [spaceWidth, secTopY - 0.015, leftDimensionZ])}
+                          color={dimensionColor}
+                          lineWidth={0.6}
+                        />
+                        <Text
+                          renderOrder={100001}
+                          depthTest={false}
+                          position={[spaceWidth, (secBottomY + secTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                          fontSize={baseFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
+                          rotation={[0, 0, 0]}
+                        >
+                          {secH}
+                        </Text>
+                        {idx < sideSectionHeights.length - 1 && (
+                          <Line
+                            points={[[spaceWidth, secTopY, boundaryFrontZ], [spaceWidth, secTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                            color={dimensionColor}
+                            lineWidth={0.3}
+                          />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </group>
                 )}
 

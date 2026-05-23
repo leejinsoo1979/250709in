@@ -1490,6 +1490,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 }
               }
               // 하단갭은 doorSegs 밖 별도 분기에서 바닥 기준으로 표시
+            } else if (modCat === 'upper') {
+              // 상부장 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 (항상 천장 기준)
+              const isDroppedZoneU = (mod as any).zone === 'dropped';
+              const ceilingAbsMmU = isDroppedZoneU && spaceInfo.droppedCeiling?.enabled
+                ? (spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0))
+                : spaceInfo.height;
+              const topGapMmU = Math.round(Math.max(0, ceilingAbsMmU - doorTopAbsMm));
+              if (topGapMmU > 0) {
+                doorSegs.push({
+                  bottomY: mmToThreeUnits(doorTopAbsMm),
+                  topY: mmToThreeUnits(ceilingAbsMmU),
+                  heightMm: topGapMmU,
+                  key: `upper-door-topgap-${moduleIndex}`,
+                  isUpper: true
+                });
+              }
             }
           });
 

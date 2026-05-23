@@ -78,12 +78,26 @@ function isMovableShelfPanel(panel: any): boolean {
   return true;
 }
 
+function findPanelByName(panels: any[], predicate: (name: string) => boolean): any | undefined {
+  return panels.find(panel => predicate(panel?.name || ''));
+}
+
 function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number) {
   const fixedPanels = modulePanels.filter(isMainHorizontalPanel);
   const shelfPanels = modulePanels.filter(isMovableShelfPanel);
-  const bottomPanel = fixedPanels[0];
-  const topPanel = fixedPanels[fixedPanels.length - 1];
-  const sectionDividerPanels = fixedPanels.slice(1, -1);
+  const bottomPanel = findPanelByName(fixedPanels, name => name.includes('(하)바닥'))
+    ?? findPanelByName(fixedPanels, name => name === '바닥' || name.endsWith('바닥'))
+    ?? fixedPanels[0];
+  const topPanel = findPanelByName(fixedPanels, name => name.includes('(상)상판'))
+    ?? findPanelByName(fixedPanels, name => name === '상판' || name.endsWith('상판') || name.endsWith('천판'))
+    ?? fixedPanels[fixedPanels.length - 1];
+  const splitSectionDividerPanels = [
+    findPanelByName(fixedPanels, name => name.includes('(하)상판')),
+    findPanelByName(fixedPanels, name => name.includes('(상)바닥')),
+  ].filter(Boolean);
+  const sectionDividerPanels = splitSectionDividerPanels.length > 0
+    ? splitSectionDividerPanels
+    : fixedPanels.slice(1, -1);
 
   return (detail: ShelfBoringPositionDetail): number => {
     if (detail.role === 'movable-shelf') {

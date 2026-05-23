@@ -50,12 +50,22 @@ function calculateCamHousingXPositions(
 
 /**
  * 캠 하우징 Y 위치 계산
- * positions 배열에 정의된 위치 사용
+ * 패널 깊이 기준으로 앞쪽 끝/뒤쪽 끝에서 edgeDistance 위치에 배치
+ * (분절판처럼 패널 깊이가 가구 깊이와 다른 경우에도 항상 패널 양 끝 기준으로 잡힘)
  */
 function calculateCamHousingYPositions(
+  panelDepth: number,
   settings: CamLockSettings
 ): number[] {
-  return settings.positions;  // [37, 69] 기본값
+  // 첫 번째: 앞쪽 끝에서 edgeDistance(=37)
+  // 두 번째: 뒤쪽 끝에서 edgeDistance(=37) = panelDepth - 37
+  // 패널이 너무 얕아서 둘이 교차하면 중앙 단일 위치만 반환
+  const front = settings.edgeDistance;
+  const back = panelDepth - settings.edgeDistance;
+  if (back <= front) {
+    return [panelDepth / 2];
+  }
+  return [front, back];
 }
 
 // ============================================
@@ -74,7 +84,7 @@ export function calculateCamHousingBorings(
 ): Boring[] {
   const settings = { ...DEFAULT_CAM_LOCK_SETTINGS, ...params.settings };
   const xPositions = calculateCamHousingXPositions(params.panelWidth, settings);
-  const yPositions = calculateCamHousingYPositions(settings);
+  const yPositions = calculateCamHousingYPositions(params.panelDepth, settings);
 
   const borings: Boring[] = [];
 
@@ -118,8 +128,8 @@ export function calculateCamBoltBorings(params: CamBoltBoringParams): Boring[] {
   const settings = { ...DEFAULT_CAM_LOCK_SETTINGS, ...params.settings };
   const borings: Boring[] = [];
 
-  // X 위치 (패널 깊이 방향)
-  const xPositions = settings.positions;  // [37, 69]
+  // X 위치 (패널 깊이 방향) — 측판 깊이 양 끝에서 edgeDistance(=37) 위치
+  const xPositions = calculateCamHousingYPositions(params.panelDepth, settings);
 
   // 상판 연결부 캠볼트 (측판 상단)
   if (params.hasTopConnection) {
