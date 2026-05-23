@@ -88,6 +88,21 @@ export const useAdmin = (user: User | null, authLoading?: boolean) => {
           setIsSuperAdmin(false);
           setAdminRole(adminData.role || 'admin');
         } else {
+          // admins 컬렉션에 없으면 users.isPartner 체크 — 공장 파트너사는 factory role로 자동 admin 진입 허용
+          try {
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            const userData = userDoc.exists() ? userDoc.data() : null;
+            if (userData?.isPartner === true) {
+              console.log('🔐 useAdmin: 공장 파트너사 확인됨 — factory role 부여', { uid: user.uid });
+              setIsAdmin(true);
+              setIsSuperAdmin(false);
+              setAdminRole('factory');
+              setLoading(false);
+              return;
+            }
+          } catch (userErr) {
+            console.warn('🔐 useAdmin: users 문서 조회 실패', userErr);
+          }
           console.log('🔐 useAdmin: 관리자 권한 없음', { uid: user.uid });
           setIsAdmin(false);
           setIsSuperAdmin(false);

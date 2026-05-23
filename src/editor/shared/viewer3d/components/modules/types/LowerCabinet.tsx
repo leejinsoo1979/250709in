@@ -2679,7 +2679,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       })()}
 
       {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}
-      {showFurniture && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+      {showFurniture && (
         <AdjustableFootsRenderer
           width={adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width}
           depth={baseFurniture.depth}
