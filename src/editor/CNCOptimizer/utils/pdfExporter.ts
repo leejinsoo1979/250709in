@@ -258,23 +258,9 @@ export class PDFExporter {
             depthPositions = [edgeOffset, originalWidth / 2, originalWidth - edgeOffset];
           }
         } else {
-          // 가구 측판: 선반핀 보링 (3개)
-          // 좌측판/우측판에 따라 앞/뒤 방향이 대칭
-          const isLeftSidePanel = panel.name?.includes('좌측');
-          const backPanelThickness = 18;
-          const edgeOffset = 50;
-
-          let frontX: number, backX: number;
-          if (isLeftSidePanel) {
-            frontX = edgeOffset;
-            backX = originalWidth - backPanelThickness - edgeOffset;
-          } else {
-            frontX = originalWidth - edgeOffset;
-            backX = backPanelThickness + edgeOffset;
-          }
-          const safeBackX = isLeftSidePanel ? Math.max(backX, frontX + 40) : Math.min(backX, frontX - 40);
-          const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = isLeftSidePanel ? [frontX, safeCenterX, safeBackX] : [safeBackX, safeCenterX, frontX];
+          depthPositions = (panel as any).boringDepthPositions?.length > 0
+            ? (panel as any).boringDepthPositions
+            : [30, originalWidth / 2, Math.max(30, originalWidth - 30)];
         }
 
         // 보링 홀 그리기
@@ -291,7 +277,12 @@ export class PDFExporter {
         // 따라서 원본 시트 좌표를 기준으로 보링 위치 계산 후 PDF 좌표로 변환
 
         panel.boringPositions.forEach((boringPosMm: number) => {
-          depthPositions.forEach((depthPosMm: number) => {
+          const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - boringPosMm) < 0.01);
+          const depthPositionsForY = !isDrawerSidePanel && !isDrawerFrontPanel && group?.depthPositions?.length > 0
+            ? group.depthPositions
+            : depthPositions;
+
+          depthPositionsForY.forEach((depthPosMm: number) => {
             // 옵티마이저와 동일하게 시트 좌표 계산
             let sheetBoringX: number, sheetBoringY: number;
 
@@ -1259,11 +1250,16 @@ export class PDFExporter {
       const xPositions = (panel as any).boringDepthPositions || [];
 
       // 기본 X위치 (depthPositions가 없는 경우)
-      const defaultXPositions = xPositions.length > 0 ? xPositions : [50, panel.width / 2, panel.width - 50];
+      const defaultXPositions = xPositions.length > 0
+        ? xPositions
+        : [30, panel.width / 2, Math.max(30, panel.width - 30)];
 
       // 각 Y위치 × X위치 조합으로 보링 좌표 출력
       yPositions.forEach((yPos: number) => {
-        defaultXPositions.forEach((xPos: number) => {
+        const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - yPos) < 0.01);
+        const xPositionsForY = group?.depthPositions?.length > 0 ? group.depthPositions : defaultXPositions;
+
+        xPositionsForY.forEach((xPos: number) => {
           csv += `${panel.id},"${panelName}","${furnitureId}","${furnitureName}",${xPos.toFixed(1)},${yPos.toFixed(1)},5,13\n`;
         });
       });

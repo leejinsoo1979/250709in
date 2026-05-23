@@ -25,6 +25,26 @@ interface ExportBarProps {
   shelfBoringPositions?: Record<string, number[]>; // 가구별 보링 위치 (moduleKey -> positions)
 }
 
+const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
+  const name = panelName || '';
+  if (!name) return false;
+  if (name.includes('서랍') || name.includes('인조대리석') || name.includes('전자렌지') || name.includes('트레이')) return false;
+  if (name.includes('걸레받이') || name.includes('몰딩') || name.includes('프레임') || name.includes('찬넬')) return false;
+
+  return (
+    name.includes('상판') ||
+    name.includes('바닥') ||
+    name.includes('지판') ||
+    name.includes('고정선반') ||
+    name.includes('옷봉 선반')
+  );
+};
+
+const resolveMprFixedPanelDepthPositions = (panelDepth: number): number[] => {
+  if (panelDepth <= 60) return [];
+  return [30, panelDepth / 2, Math.max(30, panelDepth - 30)];
+};
+
 export default function ExportBar({ optimizationResults, shelfBoringPositions = {} }: ExportBarProps){
   const { panels, stock } = useCNCStore();
   const placedModules = useFurnitureStore((state) => state.placedModules);
@@ -154,11 +174,15 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     const borings: Boring[] = [];
     let boringIdx = 0;
 
-    // 1) 선반핀 보링 (측판: Ø5mm, depth=12)
+    const panelThickness = panel.thickness || ((panel.material === 'PET') ? 18.5 : 18);
+
+    // 1) 측판 보링
+    // - 고정선반/천지판 결합: Ø6 관통
+    // - 이동선반 다보: Ø5 depth=12
     if (!panel.isDoor && panel.boringPositions && panel.boringPositions.length > 0) {
       const yPositions = panel.boringPositions;
       const xPositions = panel.boringDepthPositions || [];
-      // 가구 측판(서랍 아닌)은 DXF와 동일하게 3열: 앞50mm, 중앙, 뒤(width-68)mm
+      // 가구 측판은 boringDepthGroups가 있으면 Y별 부재 깊이 기준을 우선한다.
       const isDrawerPanel = panel.name?.includes('서랍');
       let defaultXPositions: number[];
       if (xPositions.length > 0) {
@@ -166,25 +190,25 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       } else if (isDrawerPanel) {
         defaultXPositions = [50, panel.width - 50];
       } else {
-        // 가구 측판: DXF(simpleDxfExporter.ts)와 동일한 3열 계산
-        const bpt = 18; // 패널 두께 (백패널 쪽 오프셋)
-        const eo = 50;  // 앞뒤 가장자리 오프셋
-        const fX = eo;  // 앞에서 50mm
-        const sBX = Math.max(panel.width - bpt - eo, fX + 40); // 뒤에서 68mm (최소 간격 40mm 보장)
-        const cX = Math.round((fX + sBX) / 2); // 중앙
-        defaultXPositions = [fX, cX, sBX];
+        defaultXPositions = [30, panel.width / 2, Math.max(30, panel.width - 30)];
       }
 
       yPositions.forEach((yPos) => {
-        defaultXPositions.forEach((xPos) => {
+        const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - yPos) < 0.01);
+        const xPositionsForY = group?.depthPositions?.length > 0 ? group.depthPositions : defaultXPositions;
+        const isFixedPanelBoring = group?.boringType === 'fixed-panel'
+          || (!group?.boringType && !isDrawerPanel && xPositionsForY.length >= 3);
+
+        xPositionsForY.forEach((xPos) => {
           borings.push({
             id: `shelf-${boringIdx++}`,
             type: 'shelf-pin',
             face: 'top',
             x: xPos,
             y: yPos,
-            diameter: 5,
-            depth: 12,
+            diameter: isFixedPanelBoring ? 6 : 5,
+            depth: isFixedPanelBoring ? panelThickness : 12,
+            note: isFixedPanelBoring ? 'fixed-panel-through' : 'movable-shelf-pin',
           });
         });
       });
@@ -219,27 +243,51 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
             face: 'top',
             x: xPos,
             y: yPos,
-            diameter: 8,
-            depth: 13,
+            diameter: 3,
+            depth: 3,
             angle: -90,
+            note: 'door-fixing-screw',
           });
         });
       });
     }
 
-    // 4) 브라켓 타공 (측판: Ø5mm, depth=12)
+    // 4) 도어 피스고정/브라켓 타공 (전면 20mm, 32mm 피치): Ø3mm, depth=3
     if (panel.isBracketSide && panel.bracketBoringPositions && panel.bracketBoringPositions.length > 0) {
       const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
       panel.bracketBoringPositions.forEach((yPos) => {
         bracketXPositions.forEach((xPos) => {
           borings.push({
             id: `bracket-${boringIdx++}`,
-            type: 'shelf-pin',
+            type: 'hinge-screw',
             face: 'top',
             x: xPos,
             y: yPos,
+            diameter: 3,
+            depth: 3,
+            note: 'door-fixing-screw',
+          });
+        });
+      });
+    }
+
+    // 5) 천지판/고정선반 측면 보링: Ø5mm, depth=30
+    if (!panel.isDoor && isMprFixedHorizontalPanel(panel.name)) {
+      const sideBoreDepthPositions = resolveMprFixedPanelDepthPositions(panel.height);
+      sideBoreDepthPositions.forEach((depthPos) => {
+        ([
+          { face: 'left' as const, x: 0 },
+          { face: 'right' as const, x: panel.width },
+        ]).forEach(({ face, x }) => {
+          borings.push({
+            id: `fixed-side-${boringIdx++}`,
+            type: 'shelf-pin',
+            face,
+            x,
+            y: depthPos,
             diameter: 5,
-            depth: 12,
+            depth: 30,
+            note: 'fixed-panel-side-bore',
           });
         });
       });
@@ -263,7 +311,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       panelName: panel.name,
       width: panel.width,
       height: panel.height,
-      thickness: panel.thickness || ((panel.material === 'PET') ? 18.5 : 18),
+      thickness: panelThickness,
       material: panel.material || 'PB',
       grain: panel.grain === 'HORIZONTAL' ? 'H' : panel.grain === 'VERTICAL' ? 'V' : 'N',
       borings,

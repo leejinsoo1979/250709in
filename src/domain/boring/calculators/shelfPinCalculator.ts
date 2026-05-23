@@ -129,14 +129,17 @@ export function calculateShelfPinBorings(params: ShelfPinBoringParams): ShelfPin
     settings.endMargin = params.endMargin;
   }
 
-  // 커스텀 Y 위치가 제공되면 해당 위치만 사용, 아니면 32mm 피치 시스템
-  const yPositions = params.customYPositions && params.customYPositions.length > 0
+  // 커스텀 Y 위치가 제공되면 이동선반 실제 위치만 사용, 아니면 32mm 피치 시스템
+  const hasCustomYPositions = !!params.customYPositions && params.customYPositions.length > 0;
+  const yPositions = hasCustomYPositions
     ? params.customYPositions.filter(y => y > 0 && y < params.panelHeight)
     : calculateShelfPinYPositions(params.panelHeight, settings);
 
   // 백패널 두께 (기본 18mm)
   const backPanelThickness = params.backPanelThickness ?? 18;
-  const xPositions = calculateShelfPinXPositions(params.panelDepth, settings, backPanelThickness);
+  const xPositions = hasCustomYPositions
+    ? [30, Math.max(30, params.panelDepth - 30)]
+    : calculateShelfPinXPositions(params.panelDepth, settings, backPanelThickness);
 
   const borings: Boring[] = [];
 

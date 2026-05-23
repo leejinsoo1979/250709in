@@ -39,6 +39,13 @@ interface CuttingLayoutPreview2Props {
   onSimulationComplete?: () => void;
 }
 
+function getDepthPositionsForBoring(panel: any, boringY: number, fallback: number[]): number[] {
+  const group = panel.boringDepthGroups?.find((item: any) => Math.abs(item.y - boringY) < 0.01);
+  return group?.depthPositions?.length > 0
+    ? group.depthPositions
+    : fallback;
+}
+
 const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   result,
   highlightedPanelId,
@@ -1096,34 +1103,17 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             console.log(`[BORING DEBUG] ${panel.name}: 사용 기본값 (3개)`);
           }
         } else {
-          // 가구 측판: 선반핀 보링 (3개)
-          // 좌측판/우측판에 따라 앞/뒤 방향이 대칭
-          // 우측판: X=0이 뒤(백패널), X=width가 앞(도어)
-          // 좌측판: X=0이 앞(도어), X=width가 뒤(백패널)
-          const isLeftSidePanel = panel.name?.includes('좌측');
-          const backPanelThickness = 18; // 백패널 두께
-          const edgeOffset = 50; // 끝에서 50mm
-
-          let frontX: number, backX: number;
-          if (isLeftSidePanel) {
-            frontX = edgeOffset; // 좌측판: 앞=X=0쪽
-            backX = originalWidth - backPanelThickness - edgeOffset; // 뒤=X=width쪽
-          } else {
-            frontX = originalWidth - edgeOffset; // 우측판: 앞=X=width쪽
-            backX = backPanelThickness + edgeOffset; // 뒤=X=0쪽
-          }
-
-          // 최소 간격 보장 (패널이 너무 작은 경우 대비)
-          const safeBackX = isLeftSidePanel ? Math.max(backX, frontX + 40) : Math.min(backX, frontX - 40);
-          const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = isLeftSidePanel ? [frontX, safeCenterX, safeBackX] : [safeBackX, safeCenterX, frontX];
+          // 가구 측판: Y 위치별로 고정패널 3공/이동선반 2공을 구분한다.
+          depthPositions = panel.boringDepthPositions && panel.boringDepthPositions.length > 0
+            ? panel.boringDepthPositions
+            : [30, originalWidth / 2, Math.max(30, originalWidth - 30)];
         }
 
         console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}`);
         console.log(`[BORING] ${panel.name}: panel.width=${originalWidth}, panel.height=${originalHeight}`);
         console.log(`[BORING] ${panel.name}: 시트 배치 size=(${placedWidth}x${placedHeight}), pos=(${x.toFixed(0)},${y.toFixed(0)})`);
         console.log(`[BORING] ${panel.name}: boringPositions(Y/height)=[${panel.boringPositions.map(p=>p.toFixed(1)).join(',')}]`);
-        console.log(`[BORING] ${panel.name}: depthPositions(X/width)=[${depthPositions.map(d=>d.toFixed(1)).join(',')}]`);
+        console.log(`[BORING] ${panel.name}: depthPositions(X/width)=[${depthPositions.map(d=>d.toFixed(1)).join(',')}]`, 'boringDepthGroups=', (panel as any).boringDepthGroups);
 
         // 보링 색상 및 크기 (2D 도면과 동일)
         const boringColor = boringColors['shelf-pin'];
@@ -1132,9 +1122,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // 각 보링 위치에 홀 그리기
         // 서랍 측판: boringPositions=Y위치(높이방향), depthPositions=X위치(좌우 양끝)
-        // 가구 측판: boringPositions=Y위치(높이방향), depthPositions=X위치(깊이방향 3개)
+        // 가구 측판: boringPositions=Y위치, depthPositions=Y별 깊이방향 2개/3개
         panel.boringPositions.forEach((boringPosMm, yIdx) => {
-          depthPositions.forEach((depthPosMm, xIdx) => {
+          const depthPositionsForY = isDrawerSidePanel || isDrawerFrontPanel
+            ? depthPositions
+            : getDepthPositionsForBoring(panel, boringPosMm, depthPositions);
+
+          depthPositionsForY.forEach((depthPosMm, xIdx) => {
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
 
@@ -2162,20 +2156,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       if (isDrawerSidePanel && panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
         depthPositions = panel.boringDepthPositions;
       } else {
-        const backPanelThickness = 18;
-        const edgeOffset = 50;
-        const frontX = edgeOffset;
-        const backX = originalWidth - backPanelThickness - edgeOffset;
-        const safeBackX = Math.max(backX, frontX + 40);
-        const safeCenterX = (frontX + safeBackX) / 2;
-        depthPositions = [frontX, safeCenterX, safeBackX];
+        depthPositions = panel.boringDepthPositions?.length > 0
+          ? panel.boringDepthPositions
+          : [30, originalWidth / 2, Math.max(30, originalWidth - 30)];
       }
 
       for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
         const boringPosMm = panel.boringPositions[yIdx];
+        const depthPositionsForY = isDrawerSidePanel
+          ? depthPositions
+          : getDepthPositionsForBoring(panel, boringPosMm, depthPositions);
 
-        for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
-          const depthPosMm = depthPositions[xIdx];
+        for (let xIdx = 0; xIdx < depthPositionsForY.length; xIdx++) {
+          const depthPosMm = depthPositionsForY[xIdx];
 
           // 서랍 측판 vs 가구 측판 (그리기 로직과 동일하게)
           let boringX: number, boringY: number;
@@ -2348,21 +2341,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         if (isDrawerSidePanel && panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
           depthPositions = panel.boringDepthPositions;
         } else {
-          const backPanelThickness = 18;
-          const edgeOffset = 50;
-          const frontX = edgeOffset;
-          const backX = originalWidth - backPanelThickness - edgeOffset;
-          const safeBackX = Math.max(backX, frontX + 40);
-          const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = [frontX, safeCenterX, safeBackX];
+          depthPositions = panel.boringDepthPositions?.length > 0
+            ? panel.boringDepthPositions
+            : [30, originalWidth / 2, Math.max(30, originalWidth - 30)];
         }
 
         // 각 보링 위치 체크
         for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
           const boringPosMm = panel.boringPositions[yIdx];
+          const depthPositionsForY = isDrawerSidePanel
+            ? depthPositions
+            : getDepthPositionsForBoring(panel, boringPosMm, depthPositions);
 
-          for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
-            const depthPosMm = depthPositions[xIdx];
+          for (let xIdx = 0; xIdx < depthPositionsForY.length; xIdx++) {
+            const depthPosMm = depthPositionsForY[xIdx];
 
             // 시트 좌표로 변환 - 서랍 측판 vs 가구 측판
             let boringX: number, boringY: number;

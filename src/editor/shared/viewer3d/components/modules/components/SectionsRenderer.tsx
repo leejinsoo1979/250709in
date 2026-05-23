@@ -970,8 +970,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
   };
   
-  // 모든 보링 위치 수집 (선반 + 상판/바닥판 중심 위치)
-  // 보링 위치는 가구 바닥 기준 mm 값 (패널 중심)
+  // 모든 보링 위치 수집
+  // - 이동선반: 선반 밑면 위치
+  // - 고정 패널(상판/바닥판/섹션구분판): 패널 중심 위치
+  // 보링 위치는 가구 바닥 기준 mm 값
   //
   // ShelfRenderer에서 선반 Y 위치 계산과 동일한 방식 사용:
   // - 선반 Y = sectionCenterY - sectionHeight/2 + mmToThreeUnits(positionMm)
@@ -979,9 +981,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // - currentYPosition 초기값: -height/2 + basicThickness
   // - currentYPosition 업데이트: currentYPosition += sectionHeight
   // 선반/패널 보링 위치 계산 (유틸리티 함수 사용)
-  const allBoringPositions = useMemo(() => {
+  const allBoringResult = useMemo(() => {
     const { sections } = modelConfig;
-    if (!sections || sections.length === 0) return [];
+    if (!sections || sections.length === 0) return { positions: [], details: [] };
 
     const result = calculateShelfBoringPositionsFromThreeUnits({
       sections,
@@ -989,8 +991,97 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       basicThicknessInThreeUnits: basicThickness,
     });
 
-    return result.positions;
-  }, [modelConfig, height, basicThickness]);
+    const sectionRanges: Array<{ start: number; end: number }> = [];
+    const totalHeightMm = height * 100;
+    const basicThicknessMm = basicThickness * 100;
+    const availableHeightMm = totalHeightMm - basicThicknessMm * 2;
+    let currentY = basicThicknessMm;
+
+    sections.forEach(section => {
+      const sectionHeightMm = section.heightType === 'absolute'
+        ? section.height
+        : availableHeightMm * (section.height / 100);
+      sectionRanges.push({
+        start: currentY - basicThicknessMm,
+        end: currentY + sectionHeightMm,
+      });
+      currentY += sectionHeightMm;
+    });
+
+    const backPanelThickness = depth - adjustedDepthForShelves;
+    const fixedPanelBackReduction = backPanelThickness + basicThickness - mmToThreeUnits(1);
+    const getSectionDepth = (sectionIndex: number) => {
+      const rawSecDepth = sectionDepths?.[sectionIndex];
+      return (rawSecDepth !== undefined && rawSecDepth > 0)
+        ? (rawSecDepth > 10 ? mmToThreeUnits(rawSecDepth) : rawSecDepth)
+        : depth;
+    };
+    const getSectionDirectionOffset = (sectionIndex: number) => {
+      const sectionDepth = getSectionDepth(sectionIndex);
+      const depthDiff = depth - sectionDepth;
+      const sectionDir = sectionDepthDirections?.[sectionIndex] || 'front';
+      return depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
+    };
+    const getSectionIndexByY = (yMm: number) => {
+      const foundIndex = sectionRanges.findIndex(range => yMm >= range.start && yMm <= range.end);
+      return foundIndex >= 0 ? foundIndex : 0;
+    };
+    const buildHoleZPositions = (detail: typeof result.details[number]) => {
+      const sectionIndex = detail.role === 'top-panel'
+        ? Math.max(0, sections.length - 1)
+        : detail.role === 'section-divider'
+          ? Math.min(
+            sections.length - 1,
+            Math.max(0, Math.floor((detail.roleIndex ?? 0) / 2) + ((detail.roleIndex ?? 0) % 2))
+          )
+          : getSectionIndexByY(detail.y);
+      const sectionDepth = getSectionDepth(sectionIndex);
+      const directionOffset = getSectionDirectionOffset(sectionIndex);
+
+      if (detail.type === 'fixed-panel') {
+        // 천판/지판/섹션 구분판은 BaseFurnitureShell의 실제 수평 패널 렌더링 깊이와 동일해야 한다.
+        const panelDepth = sectionDepth - fixedPanelBackReduction;
+        const panelCenterZ = directionOffset + fixedPanelBackReduction / 2;
+        const panelFrontZ = panelCenterZ + panelDepth / 2;
+        const panelBackZ = panelCenterZ - panelDepth / 2;
+
+        return [
+          panelFrontZ - mmToThreeUnits(30),
+          panelCenterZ,
+          panelBackZ + mmToThreeUnits(30),
+        ];
+      }
+
+      const shelfDepth = sectionDepth - backPanelThickness - basicThickness - mmToThreeUnits(shelfFrontInsetMm);
+      const shelfCenterZ = shelfZOffset + directionOffset + basicThickness / 2 - mmToThreeUnits(shelfFrontInsetMm) / 2;
+      const shelfFrontZ = shelfCenterZ + shelfDepth / 2;
+      const shelfBackZ = shelfCenterZ - shelfDepth / 2;
+
+      return [
+        shelfFrontZ - mmToThreeUnits(30),
+        shelfBackZ + mmToThreeUnits(30),
+      ];
+    };
+
+    return {
+      positions: result.positions,
+      details: result.details.map(detail => ({
+        ...detail,
+        holeZPositions: buildHoleZPositions(detail),
+      })),
+    };
+  }, [
+    adjustedDepthForShelves,
+    basicThickness,
+    depth,
+    height,
+    mmToThreeUnits,
+    modelConfig,
+    sectionDepthDirections,
+    sectionDepths,
+    shelfFrontInsetMm,
+    shelfZOffset,
+  ]);
 
   return (
     <>
@@ -1002,7 +1093,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         depth={depth}
         basicThickness={basicThickness}
         innerWidth={innerWidth}
-        boringPositions={allBoringPositions}
+        boringPositions={allBoringResult.positions}
+        boringDetails={allBoringResult.details}
         mmToThreeUnits={mmToThreeUnits}
       />
     </>

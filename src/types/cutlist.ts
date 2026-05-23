@@ -7,6 +7,12 @@ export interface GroovePosition {
   depth: number;   // 홈 깊이 (mm)
 }
 
+export interface BoringDepthGroup {
+  y: number;
+  depthPositions: number[];
+  boringType?: 'fixed-panel' | 'movable-shelf';
+}
+
 export interface Panel {
   id: string;
   label: string;
@@ -19,6 +25,7 @@ export interface Panel {
   canRotate?: boolean;
   boringPositions?: number[];  // 측판 보링 Y위치 (패널 기준 mm)
   boringDepthPositions?: number[];  // 측판 보링 X위치 (패널 기준 mm, 서랍 측판용)
+  boringDepthGroups?: BoringDepthGroup[];  // Y 위치별 보링 X위치
   groovePositions?: GroovePosition[];  // 바닥판 끼우는 홈 위치 (서랍 앞판/뒷판용)
   // 도어 힌지 보링 전용 필드
   screwPositions?: number[];

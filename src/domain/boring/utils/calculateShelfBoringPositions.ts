@@ -20,9 +20,25 @@ export interface CalculateShelfBoringPositionsParams {
   basicThicknessMm: number;
 }
 
+export type ShelfBoringPositionType = 'fixed-panel' | 'movable-shelf';
+export type ShelfBoringPositionRole = 'bottom-panel' | 'top-panel' | 'section-divider' | 'movable-shelf';
+
+export interface ShelfBoringPositionDetail {
+  /** 가구 바닥 기준 보링 위치 (mm) */
+  y: number;
+  /** 고정 패널은 3공, 이동 선반은 2공 */
+  type: ShelfBoringPositionType;
+  /** 깊이 기준 부재 매칭용 역할 */
+  role: ShelfBoringPositionRole;
+  /** 같은 역할 내 순번 */
+  roleIndex?: number;
+}
+
 export interface ShelfBoringPositionsResult {
   /** 모든 보링 위치 (가구 바닥 기준 mm, 측판 기준) */
   positions: number[];
+  /** 각 보링 위치의 패널/선반 타입 */
+  details: ShelfBoringPositionDetail[];
   /** 바닥판 보링 위치 */
   bottomPanel: number;
   /** 상판 보링 위치 */
@@ -55,6 +71,7 @@ export function calculateShelfBoringPositions(
   if (!sections || sections.length === 0) {
     return {
       positions: [],
+      details: [],
       bottomPanel: 0,
       topPanel: 0,
       shelves: [],
@@ -62,15 +79,20 @@ export function calculateShelfBoringPositions(
     };
   }
 
-  const halfThicknessMm = basicThicknessMm / 2; // 9mm - 패널 중심까지의 거리
+  const halfThicknessMm = basicThicknessMm / 2; // 패널 중심에서 상/하면까지의 거리
   const shelves: number[] = [];
   const sectionDividers: number[] = [];
+  const details: ShelfBoringPositionDetail[] = [];
+  let shelfDetailIndex = 0;
+  let sectionDividerDetailIndex = 0;
 
   // 1. 바닥판 중심 위치 (가구 바닥에서 9mm = 18/2)
   const bottomPanel = halfThicknessMm;
+  details.push({ y: bottomPanel, type: 'fixed-panel', role: 'bottom-panel' });
 
   // 2. 상판 중심 위치 (가구 전체 높이 - 9mm)
   const topPanel = totalHeightMm - halfThicknessMm;
+  details.push({ y: topPanel, type: 'fixed-panel', role: 'top-panel' });
 
   // 3. 선반 및 섹션 구분 패널 위치 계산
   const availableHeightMm = totalHeightMm - basicThicknessMm * 2; // 상판+바닥판 제외
@@ -93,9 +115,16 @@ export function calculateShelfBoringPositions(
       section.shelfPositions.forEach(pos => {
         // pos > 0 조건: 0은 치수 표시용이므로 무시
         if (pos > 0) {
-          // ShelfRenderer 계산 방식과 동일:
-          // 절대 Y = currentYPositionFromBottom + pos
-          shelves.push(currentYPositionFromBottom + pos);
+          // 이동선반 보링은 선반 중심선이 아니라 선반 밑면이 타공 중심이다.
+          // shelfPositions의 pos는 선반 중심이므로, 두께 절반만큼 아래로 내린다.
+          const shelfBoringY = currentYPositionFromBottom + pos - halfThicknessMm;
+          shelves.push(shelfBoringY);
+          details.push({
+            y: shelfBoringY,
+            type: 'movable-shelf',
+            role: 'movable-shelf',
+            roleIndex: shelfDetailIndex++,
+          });
         }
       });
     }
@@ -107,23 +136,50 @@ export function calculateShelfBoringPositions(
       const sectionEndFromBottom = currentYPositionFromBottom + sectionHeightMm - basicThicknessMm;
 
       // 하부섹션 상판 중심 (섹션 끝에서 9mm 아래)
-      sectionDividers.push(sectionEndFromBottom - halfThicknessMm);
+      const lowerTopPanel = sectionEndFromBottom - halfThicknessMm;
+      sectionDividers.push(lowerTopPanel);
+      details.push({
+        y: lowerTopPanel,
+        type: 'fixed-panel',
+        role: 'section-divider',
+        roleIndex: sectionDividerDetailIndex++,
+      });
       // 상부섹션 바닥판 중심 (섹션 끝에서 9mm 위)
-      sectionDividers.push(sectionEndFromBottom + halfThicknessMm);
+      const upperBottomPanel = sectionEndFromBottom + halfThicknessMm;
+      sectionDividers.push(upperBottomPanel);
+      details.push({
+        y: upperBottomPanel,
+        type: 'fixed-panel',
+        role: 'section-divider',
+        roleIndex: sectionDividerDetailIndex++,
+      });
     }
 
     // 다음 섹션으로 이동
     currentYPositionFromBottom += sectionHeightMm;
   });
 
-  // 모든 위치 합치기
-  const allPositions = [bottomPanel, topPanel, ...shelves, ...sectionDividers];
-
   // 중복 제거 및 정렬
-  const uniquePositions = [...new Set(allPositions)].sort((a, b) => a - b);
+  const uniqueDetailsMap = new Map<number, ShelfBoringPositionDetail>();
+  details.forEach(detail => {
+    const key = Math.round(detail.y * 1000) / 1000;
+    const existing = uniqueDetailsMap.get(key);
+    uniqueDetailsMap.set(key, {
+      y: key,
+      // 같은 위치가 겹치면 고정 패널을 우선한다.
+      type: existing?.type === 'fixed-panel' || detail.type === 'fixed-panel'
+        ? 'fixed-panel'
+        : 'movable-shelf',
+      role: existing?.type === 'fixed-panel' ? existing.role : detail.role,
+      roleIndex: existing?.type === 'fixed-panel' ? existing.roleIndex : detail.roleIndex,
+    });
+  });
+  const uniqueDetails = Array.from(uniqueDetailsMap.values()).sort((a, b) => a.y - b.y);
+  const uniquePositions = uniqueDetails.map(detail => detail.y);
 
   return {
     positions: uniquePositions,
+    details: uniqueDetails,
     bottomPanel,
     topPanel,
     shelves,
@@ -183,6 +239,8 @@ export function calculateShelfBoringPositionsFromThreeUnits(params: {
 export interface SectionBoringInfo {
   /** 섹션 내 보링 위치 (섹션 바닥 기준 mm) */
   positions: number[];
+  /** 섹션 내 보링 위치의 타입 정보 */
+  details: ShelfBoringPositionDetail[];
   /** 섹션 시작 위치 (가구 바닥 기준 mm) */
   sectionStart: number;
   /** 섹션 끝 위치 (가구 바닥 기준 mm) */
@@ -196,6 +254,8 @@ export interface SectionBoringPositionsResult {
   sectionPositions: SectionBoringInfo[];
   /** 전체 가구의 모든 보링 위치 (가구 바닥 기준 mm) */
   allPositions: number[];
+  /** 전체 가구의 모든 보링 위치 타입 정보 */
+  allDetails: ShelfBoringPositionDetail[];
 }
 
 export function calculateSectionBoringPositions(
@@ -207,6 +267,7 @@ export function calculateSectionBoringPositions(
     return {
       sectionPositions: [],
       allPositions: [],
+      allDetails: [],
     };
   }
 
@@ -240,6 +301,7 @@ export function calculateSectionBoringPositions(
   // 전체 보링 위치 계산
   const fullResult = calculateShelfBoringPositions(params);
   const allPositions = fullResult.positions;
+  const allDetails = fullResult.details;
 
   console.log('[SECTION BORING] sectionRanges:', sectionRanges);
   console.log('[SECTION BORING] allPositions (absolute):', allPositions);
@@ -305,6 +367,15 @@ export function calculateSectionBoringPositions(
     const transformedPositions = sectionBorings.map(pos => {
       return pos - panelBottomAbsolute;
     });
+    const transformedDetails = allDetails
+      .filter(detail => sectionBorings.some(pos => Math.abs(pos - detail.y) < 0.001))
+      .map(detail => ({
+        y: detail.y - panelBottomAbsolute,
+        type: detail.type,
+        role: detail.role,
+        roleIndex: detail.roleIndex,
+      }))
+      .sort((a, b) => a.y - b.y);
 
     console.log(`[SECTION BORING] Section ${sectionIndex}:`, {
       range,
@@ -315,6 +386,7 @@ export function calculateSectionBoringPositions(
 
     return {
       positions: transformedPositions.sort((a, b) => a - b),
+      details: transformedDetails,
       sectionStart: range.start,
       sectionEnd: range.end,
       height: range.height,
@@ -324,6 +396,7 @@ export function calculateSectionBoringPositions(
   return {
     sectionPositions,
     allPositions,
+    allDetails,
   };
 }
 

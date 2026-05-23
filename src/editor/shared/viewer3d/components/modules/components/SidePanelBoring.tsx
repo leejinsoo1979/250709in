@@ -2,6 +2,11 @@ import React from 'react';
 import * as THREE from 'three';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
+
+type SidePanelBoringDetail = ShelfBoringPositionDetail & {
+  holeZPositions?: number[];
+};
 
 interface SidePanelBoringProps {
   // 치수
@@ -14,6 +19,7 @@ interface SidePanelBoringProps {
   // 보링 위치 (mm 단위, 가구 바닥 기준 절대 위치)
   // 선반 위치 + 섹션 상판/바닥판 위치 포함
   boringPositions?: number[];
+  boringDetails?: SidePanelBoringDetail[];
 
   // 유틸 함수
   mmToThreeUnits: (mm: number) => number;
@@ -29,10 +35,8 @@ interface SidePanelBoringProps {
  * - 정면뷰: 양쪽 측판에 보링 표시 (관통이므로 측판 두께 영역에 표시)
  * - 탑뷰: 양쪽 측판에 보링 표시 (위에서 내려다본 관통홀)
  *
- * - 각 보링 위치에 3개의 홀 표시:
- *   - 앞쪽 끝에서 50mm 떨어진 위치
- *   - 뒤쪽 끝에서 50mm 떨어진 위치
- *   - 가운데 (깊이 중앙)
+ * - 이동선반은 선반 깊이 기준 앞/뒤 30mm 2개
+ * - 천판/지판/섹션 구분판은 해당 패널 깊이 기준 앞 30mm, 중앙, 뒤 30mm 3개
  * - 홀 지름: 3mm (빈 원 - outline만 표시)
  * - 보링 위치: 선반 위치 + 섹션 상판/바닥판 위치
  */
@@ -43,6 +47,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   innerWidth,
   width,
   boringPositions = [],
+  boringDetails = [],
   mmToThreeUnits,
 }) => {
   const { viewMode, renderMode } = useSpace3DView();
@@ -65,14 +70,25 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   const holeDiameter = 3; // mm
   const holeOuterRadius = mmToThreeUnits(holeDiameter / 2);
   const holeInnerRadius = holeOuterRadius * 0.6; // 안쪽 반지름 (빈 원 효과)
-  const edgeOffset = mmToThreeUnits(50); // 끝에서 50mm 떨어진 위치
+  const edgeOffset = mmToThreeUnits(30); // 선반 앞뒤 끝에서 30mm 떨어진 위치
   const holeColor = '#666666'; // 회색
 
-  // 3개의 홀 Z 위치 (깊이 방향)
-  const frontZ = depth / 2 - edgeOffset; // 앞쪽 끝에서 50mm
-  const backZ = -depth / 2 + basicThickness + edgeOffset; // 뒤쪽 끝에서 50mm (백패널 두께 고려)
-  const centerZ = (frontZ + backZ) / 2; // 가운데
-  const holeZPositions = [frontZ, centerZ, backZ];
+  const frontZ = depth / 2 - edgeOffset;
+  const centerZ = 0;
+  const backZ = -depth / 2 + edgeOffset;
+  const getHoleZPositions = (boringPosMm: number) => {
+    const detail = boringDetails.find(item => Math.abs(item.y - boringPosMm) < 0.001);
+    if (detail?.holeZPositions && detail.holeZPositions.length > 0) {
+      return detail.holeZPositions;
+    }
+
+    return detail?.type === 'fixed-panel'
+      ? [frontZ, centerZ, backZ]
+      : [frontZ, backZ];
+  };
+  const topViewHoleZPositions = Array.from(new Set(
+    boringPositions.flatMap(pos => getHoleZPositions(pos).map(z => Math.round(z * 100000) / 100000))
+  )).sort((a, b) => b - a);
 
   // 가구 전체 너비 (width가 없으면 innerWidth + 측판 두께*2로 계산)
   const totalWidth = width || (innerWidth + basicThickness * 2);
@@ -91,7 +107,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
           return (
             <group key={`boring-${boringIndex}`}>
-              {holeZPositions.map((zPos, holeIndex) => (
+              {getHoleZPositions(boringPosMm).map((zPos, holeIndex) => (
                 <mesh
                   key={`hole-${boringIndex}-${holeIndex}`}
                   position={[xPosition, boringY, zPos]}
@@ -192,7 +208,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
   // 탑뷰 (top) - 양쪽 측판에 보링 표시 (위에서 내려다본 관통홀)
   // 탑뷰에서는 Y축 방향으로 관통된 모든 보링이 겹쳐서 보임
-  // 깊이(Z) 방향의 3개 위치에 3mm 너비 관통홀 표시 (좌/우 세로선 2개로 표현)
+  // 깊이(Z) 방향의 2개 위치에 3mm 너비 관통홀 표시 (좌/우 세로선 2개로 표현)
   if (view2DDirection === 'top') {
     // 좌측판 X 중앙
     const leftPanelXCenter = -totalWidth / 2 + basicThickness / 2;
@@ -206,8 +222,8 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
     return (
       <group>
-        {/* 좌측판 보링 - 깊이 방향 3개 위치 */}
-        {holeZPositions.map((zPos, holeIndex) => (
+        {/* 좌측판 보링 - 깊이 방향 2개 위치 */}
+        {topViewHoleZPositions.map((zPos, holeIndex) => (
           <group key={`left-hole-${holeIndex}`}>
             {/* 앞쪽 세로선 */}
             <mesh
@@ -237,8 +253,8 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
             </mesh>
           </group>
         ))}
-        {/* 우측판 보링 - 깊이 방향 3개 위치 */}
-        {holeZPositions.map((zPos, holeIndex) => (
+        {/* 우측판 보링 - 깊이 방향 2개 위치 */}
+        {topViewHoleZPositions.map((zPos, holeIndex) => (
           <group key={`right-hole-${holeIndex}`}>
             {/* 앞쪽 세로선 */}
             <mesh

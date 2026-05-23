@@ -140,14 +140,32 @@ ORI=""
 /**
  * <102 \BohrVert\ 수직 보링 블록 생성
  */
-function generateBohrVert(boring: Boring): string {
+function formatMprNumber(value: number): string {
+  return Number.isInteger(value) ? `${value}` : value.toFixed(1);
+}
+
+function isFixedPanelThroughBoring(boring: Boring): boolean {
+  return boring.note === 'fixed-panel-through';
+}
+
+function generateBohrVert(boring: Boring, panel: PanelBoringData): string {
   // 보링 타입별 기본값 설정
   let ti = boring.depth;        // 깊이
+  let du = boring.diameter;      // 직경
   let bm = 'LS';                // 보링 모드 (LS=단일)
   let wi = '';                  // 각도 (생략 가능)
 
+  if (isFixedPanelThroughBoring(boring)) {
+    ti = panel.thickness;
+    du = 6;
+    bm = 'LSL';
+  } else if (boring.type === 'hinge-screw') {
+    ti = 3;
+    du = 3;
+  }
+
   // 관통 보링 (depth >= thickness 또는 cam-bolt 등)
-  if (boring.type === 'cam-bolt') {
+  if (boring.type === 'cam-bolt' || ti >= panel.thickness) {
     bm = 'LSL';  // 관통
   }
 
@@ -160,13 +178,51 @@ function generateBohrVert(boring: Boring): string {
 XA="${boring.x.toFixed(1)}"
 YA="${boring.y.toFixed(1)}"
 ZA="T"
-TI="${ti}"
+TI="${formatMprNumber(ti)}"
 AB="32"
 BM="${bm}"
-DU="${boring.diameter}"
+DU="${formatMprNumber(du)}"
 AN="1"
 MI="0"${wi}
 ??="bohrver=1  "
+
+`;
+}
+
+function getHorizontalBoringAngle(boring: Boring): number {
+  switch (boring.face) {
+    case 'right':
+      return 180;
+    case 'front':
+      return 90;
+    case 'back':
+      return -90;
+    case 'left':
+    default:
+      return 0;
+  }
+}
+
+/**
+ * <103 \BohrHoriz\ 수평/측면 보링 블록 생성
+ */
+function generateBohrHoriz(boring: Boring): string {
+  const wi = boring.angle ?? getHorizontalBoringAngle(boring);
+  const ti = boring.note === 'fixed-panel-side-bore' ? 30 : boring.depth;
+  const du = boring.note === 'fixed-panel-side-bore' ? 5 : boring.diameter;
+
+  return `<103 \\BohrHoriz\\
+XA="${boring.x.toFixed(1)}"
+YA="${boring.y.toFixed(1)}"
+ZA="T/2"
+TI="${formatMprNumber(ti)}"
+AB="32"
+BM="LS"
+DU="${formatMprNumber(du)}"
+AN="1"
+MI="0"
+WI="${wi}"
+??="bohrhor=1  "
 
 `;
 }
@@ -199,7 +255,11 @@ export function generateSinglePanelMPR(
 
   // <102 보링들
   panel.borings.forEach((boring) => {
-    mpr += generateBohrVert(boring);
+    if (boring.face === 'top' || boring.face === 'bottom') {
+      mpr += generateBohrVert(boring, panel);
+    } else {
+      mpr += generateBohrHoriz(boring);
+    }
   });
 
   // 파일 끝 마커

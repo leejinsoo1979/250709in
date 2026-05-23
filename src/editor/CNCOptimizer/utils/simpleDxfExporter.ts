@@ -471,17 +471,18 @@ export class SimpleDXFExporter {
             depthPos = (panel as any).boringDepthPositions?.length > 0
               ? (panel as any).boringDepthPositions : [50, origW / 2, origW - 50];
           } else {
-            const bpt = 18, eo = 50;
-            let fX: number, bX: number;
-            if (isLeftSide) { fX = eo; bX = origW - bpt - eo; }
-            else { fX = origW - eo; bX = bpt + eo; }
-            const sBX = isLeftSide ? Math.max(bX, fX + 40) : Math.min(bX, fX - 40);
-            const cX = (fX + sBX) / 2;
-            depthPos = isLeftSide ? [fX, cX, sBX] : [sBX, cX, fX];
+            depthPos = (panel as any).boringDepthPositions?.length > 0
+              ? (panel as any).boringDepthPositions
+              : [30, origW / 2, Math.max(30, origW - 30)];
           }
 
           ((panel as any).boringPositions as number[]).forEach((bPosMm: number) => {
-            depthPos.forEach((dPosMm: number) => {
+            const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - bPosMm) < 0.01);
+            const depthPosForY = !isDrawerSide && !isDrawerFront && group?.depthPositions?.length > 0
+              ? group.depthPositions
+              : depthPos;
+
+            depthPosForY.forEach((dPosMm: number) => {
               let sx: number, sy: number;
               if (isDrawerSide || isDrawerFront) {
                 sx = panel.x + bPosMm; sy = panel.y + dPosMm;

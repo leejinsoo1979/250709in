@@ -399,18 +399,19 @@ export class DXFExporter {
             ? (panel as any).boringDepthPositions
             : [50, origW / 2, origW - 50];
         } else {
-          // 가구 측판
-          const bpt = 18, eo = 50;
-          let frontX: number, backX: number;
-          if (isLeftSidePanel) { frontX = eo; backX = origW - bpt - eo; }
-          else { frontX = origW - eo; backX = bpt + eo; }
-          const safeBack = isLeftSidePanel ? Math.max(backX, frontX + 40) : Math.min(backX, frontX - 40);
-          const center = (frontX + safeBack) / 2;
-          depthPositions = isLeftSidePanel ? [frontX, center, safeBack] : [safeBack, center, frontX];
+          // 가구 측판은 Y별로 고정패널 3공/이동선반 2공이 섞일 수 있다.
+          depthPositions = (panel as any).boringDepthPositions?.length > 0
+            ? (panel as any).boringDepthPositions
+            : [30, origW / 2, Math.max(30, origW - 30)];
         }
 
         ((panel as any).boringPositions as number[]).forEach((boringPosMm: number) => {
-          depthPositions.forEach((depthPosMm: number) => {
+          const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - boringPosMm) < 0.01);
+          const depthPositionsForY = !isDrawerSidePanel && !isDrawerFrontPanel && group?.depthPositions?.length > 0
+            ? group.depthPositions
+            : depthPositions;
+
+          depthPositionsForY.forEach((depthPosMm: number) => {
             let sx: number, sy: number;
             if (isDrawerSidePanel || isDrawerFrontPanel) {
               sx = panel.x + boringPosMm;

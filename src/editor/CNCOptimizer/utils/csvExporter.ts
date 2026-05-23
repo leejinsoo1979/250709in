@@ -118,7 +118,7 @@ function getBoringTypeName(
  * 각 보링 홀: Panel_Name (패널명 보링타입 Y인덱스-X인덱스), Hole_No, X, Y, Z(타공깊이), Diameter
  *
  * 측판 보링 좌표 기준 (CNC 테이블에 패널을 놓았을 때):
- * - X: 깊이 방향 (앞쪽 50mm, 중앙, 뒤쪽 50mm - 백패널 18mm 제외)
+ * - X: 깊이 방향 (고정패널: 부재 앞 30mm/중앙/뒤 30mm, 이동선반: 앞뒤 30mm)
  * - Y: 높이 방향 (패널 하단 = 0)
  * - Z: 타공 깊이 (관통홀이므로 패널 두께 = 18mm)
  * - Diameter: 3mm
@@ -133,8 +133,6 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
 
   const HOLE_DIAMETER = 3; // mm
   const HOLE_DEPTH = panelThickness; // mm (관통홀 = 패널 두께)
-  const EDGE_OFFSET = 50; // mm (앞/뒤 끝에서 50mm)
-  const BACK_PANEL_THICKNESS = panelThickness; // mm
 
   let globalHoleNo = 1;
 
@@ -148,18 +146,12 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
     const panelWidth = panel.width;
     const panelHeight = panel.height;
 
-    // X 위치 결정: boringDepthPositions가 있으면 사용, 없으면 기본 3개
+    // X 위치 결정: Y별 boringDepthGroups가 있으면 고정패널 3공/이동선반 2공을 구분
     let xPositions: number[];
     if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
-      // 서랍 측판: 앞뒤 2개 (7.5mm, width-7.5mm)
       xPositions = panel.boringDepthPositions;
     } else {
-      // 가구 측판: 3개 (50mm, 중간, 뒤쪽)
-      const frontX = EDGE_OFFSET; // 50mm
-      const backX = panelWidth - BACK_PANEL_THICKNESS - EDGE_OFFSET;
-      const safeBackX = Math.max(backX, frontX + 40);
-      const centerX = (frontX + safeBackX) / 2;
-      xPositions = [frontX, centerX, safeBackX];
+      xPositions = [30, panelWidth / 2, Math.max(30, panelWidth - 30)];
     }
 
     // 패널명에서 쉼표 제거
@@ -168,12 +160,13 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
     // 보링 위치를 Y 내림차순 정렬 (상단→하단, 상판→선반→지판 순서)
     const sortedBoringPositions = [...panel.boringPositions].sort((a, b) => b - a);
 
-    // 각 Y 위치에 대해 3개의 X 위치
     sortedBoringPositions.forEach((yPos, yIndex) => {
       const boringTypeName = getBoringTypeName(yPos, panelHeight, panel.name);
       const yIndexLabel = yIndex + 1; // 1부터 시작
+      const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - yPos) < 0.01);
+      const xPositionsForY = group?.depthPositions?.length > 0 ? group.depthPositions : xPositions;
 
-      xPositions.forEach((xPos, xIndex) => {
+      xPositionsForY.forEach((xPos, xIndex) => {
         const xIndexLabel = xIndex + 1; // 1부터 시작
 
         // Panel_Name 형식: "(상)좌측 상판보링 1-1"

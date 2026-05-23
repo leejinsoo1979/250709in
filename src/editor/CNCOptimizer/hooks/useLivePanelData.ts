@@ -4,9 +4,10 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculatePanelDetails as calculatePanelDetailsShared, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
 import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
-import { Panel } from '../types';
+import type { BoringDepthGroup, Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
+import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
@@ -36,6 +37,92 @@ function isInsertFrameVerticalPanel(panelName?: string): boolean {
     panelName.includes('키큰장찬넬 좌EP') ||
     panelName.includes('키큰장찬넬 우EP')
   ));
+}
+
+function getShelfBoringDepthPositions(type: ShelfBoringPositionDetail['type'], panelDepth: number): number[] | undefined {
+  if (panelDepth <= 60) return undefined;
+
+  if (type === 'fixed-panel') {
+    return [30, panelDepth / 2, panelDepth - 30];
+  }
+
+  return [30, panelDepth - 30];
+}
+
+function getPanelReferenceDepth(panel: any): number {
+  const depth = Number(panel?.depth ?? 0);
+  if (depth > 0) return depth;
+  return Number(panel?.width ?? 0);
+}
+
+function isMainHorizontalPanel(panel: any): boolean {
+  const name = panel?.name || '';
+  if (!name) return false;
+  if (name.includes('서랍') || name.includes('인조대리석') || name.includes('전자렌지') || name.includes('트레이')) return false;
+  if (name.includes('걸레받이') || name.includes('몰딩') || name.includes('프레임') || name.includes('찬넬')) return false;
+
+  return (
+    name.includes('바닥') ||
+    name.includes('바닥판') ||
+    name.includes('지판') ||
+    name.includes('상판') ||
+    name.includes('천판') ||
+    name.includes('고정선반')
+  );
+}
+
+function isMovableShelfPanel(panel: any): boolean {
+  const name = panel?.name || '';
+  if (!name.includes('선반')) return false;
+  if (name.includes('옷봉') || name.includes('유리') || name.includes('금속')) return false;
+  return true;
+}
+
+function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number) {
+  const fixedPanels = modulePanels.filter(isMainHorizontalPanel);
+  const shelfPanels = modulePanels.filter(isMovableShelfPanel);
+  const bottomPanel = fixedPanels[0];
+  const topPanel = fixedPanels[fixedPanels.length - 1];
+  const sectionDividerPanels = fixedPanels.slice(1, -1);
+
+  return (detail: ShelfBoringPositionDetail): number => {
+    if (detail.role === 'movable-shelf') {
+      return getPanelReferenceDepth(shelfPanels[detail.roleIndex ?? 0]) || fallbackDepth;
+    }
+    if (detail.role === 'bottom-panel') {
+      return getPanelReferenceDepth(bottomPanel) || fallbackDepth;
+    }
+    if (detail.role === 'top-panel') {
+      return getPanelReferenceDepth(topPanel) || fallbackDepth;
+    }
+    if (detail.role === 'section-divider') {
+      return getPanelReferenceDepth(sectionDividerPanels[detail.roleIndex ?? 0]) || fallbackDepth;
+    }
+
+    return fallbackDepth;
+  };
+}
+
+function toBoringDepthGroups(
+  details: ShelfBoringPositionDetail[],
+  getReferenceDepth: (detail: ShelfBoringPositionDetail) => number,
+  transformY: (y: number) => number = y => y
+): BoringDepthGroup[] | undefined {
+  const groups = details
+    .map(detail => {
+      const panelDepth = getReferenceDepth(detail);
+      const depthPositions = getShelfBoringDepthPositions(detail.type, panelDepth);
+      if (!depthPositions) return null;
+
+      return {
+        y: transformY(detail.y),
+        depthPositions,
+        boringType: detail.type,
+      };
+    })
+    .filter((group): group is BoringDepthGroup => Boolean(group));
+
+  return groups.length > 0 ? groups : undefined;
 }
 
 function resolveOptimizerGrain(
@@ -492,9 +579,10 @@ export function useLivePanelData() {
           basicThicknessMm,
         });
         const allBoringPositions = boringResult.positions;
+        const allBoringDetails = boringResult.details;
+        const resolveReferenceDepth = createReferenceDepthResolver(modulePanels, moduleData.dimensions.depth);
 
         // 분리 측판용 섹션 높이 계산 (allBoringPositions에서 직접 분리)
-        const halfThicknessMm = basicThicknessMm / 2; // 9mm
         let lowerSectionHeightForBoring = 0;
         if (sections.length >= 2) {
           const sec0 = sections[0];
@@ -547,6 +635,7 @@ export function useLivePanelData() {
 
           // 측판의 보링 위치 결정
           let panelBoringPositions: number[] | undefined = undefined;
+          let panelBoringDepthGroups: BoringDepthGroup[] | undefined = undefined;
 
           if (isSidePanel) {
             if (isDrawerSidePanel) {
@@ -566,26 +655,29 @@ export function useLivePanelData() {
               const isLowerSection = panel.name.includes('(하)');
               const isSplitPanel = isUpperSection || isLowerSection;
               const panelHeight = panel.height || panel.depth || furnitureHeight;
+              const sidePanelDepth = panel.width || panel.depth || 0;
 
               if (isSplitPanel) {
                 // 분리 측판: allBoringPositions에서 직접 섹션 범위 필터링
                 // (2D 뷰어 SidePanelBoring과 동일한 소스 데이터 사용)
                 if (isLowerSection) {
                   // 하부: 절대좌표 <= lowerCutoff 범위, 로컬좌표 = 그대로 (panelBottom=0)
-                  panelBoringPositions = allBoringPositions
-                    .filter(pos => pos <= lowerCutoff);
+                  const lowerDetails = allBoringDetails.filter(detail => detail.y <= lowerCutoff);
+                  panelBoringPositions = lowerDetails.map(detail => detail.y);
+                  panelBoringDepthGroups = toBoringDepthGroups(lowerDetails, resolveReferenceDepth);
                 } else {
                   // 상부: 절대좌표 > lowerCutoff 범위, 로컬좌표 = pos - lowerCutoff
-                  panelBoringPositions = allBoringPositions
-                    .filter(pos => pos > lowerCutoff)
-                    .map(pos => pos - lowerCutoff);
+                  const upperDetails = allBoringDetails.filter(detail => detail.y > lowerCutoff);
+                  panelBoringPositions = upperDetails.map(detail => detail.y - lowerCutoff);
+                  panelBoringDepthGroups = toBoringDepthGroups(upperDetails, resolveReferenceDepth, y => y - lowerCutoff);
                 }
                 panelBoringPositions.sort((a, b) => a - b);
                 console.log(`  [BORING] 분리 측판 "${panel.name}" (${isLowerSection ? '하부' : '상부'}): allBoringPositions에서 직접 분리 → ${panelBoringPositions.length}개:`, panelBoringPositions);
               } else {
                 // 통짜 측판: 전체 보링 그대로
-                panelBoringPositions = allBoringPositions
-                  .filter(pos => pos >= 0 && pos <= panelHeight);
+                const panelDetails = allBoringDetails.filter(detail => detail.y >= 0 && detail.y <= panelHeight);
+                panelBoringPositions = panelDetails.map(detail => detail.y);
+                panelBoringDepthGroups = toBoringDepthGroups(panelDetails, resolveReferenceDepth);
                 console.log(`  [BORING] 통짜 측판 "${panel.name}": ${panelBoringPositions.length}개:`, panelBoringPositions);
               }
             }
@@ -607,6 +699,11 @@ export function useLivePanelData() {
           } else if (isDrawerSidePanel) {
             // 서랍 측판은 이미 위에서 panelBoringPositions 처리됨
             panelBoringDepthPositions = panel.boringDepthPositions;
+          } else if (isSidePanel && panelBoringPositions && panelBoringPositions.length > 0) {
+            const sidePanelDepth = panel.width || panel.depth || 0;
+            panelBoringDepthPositions = panelBoringDepthGroups?.[0]?.depthPositions ?? (
+              sidePanelDepth > 60 ? [30, sidePanelDepth - 30] : undefined
+            );
           }
 
           // ★★★ 도어 패널 보링 처리 ★★★
@@ -640,7 +737,8 @@ export function useLivePanelData() {
             quantity: 1,
             grain: grainValue,
             boringPositions: panelBoringPositions,
-            boringDepthPositions: panelBoringDepthPositions, // 서랍 측판/앞판만
+            boringDepthPositions: panelBoringDepthPositions,
+            boringDepthGroups: panelBoringDepthGroups,
             groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
             // 도어 전용 필드
             screwPositions: isDoorPanel ? screwPositions : undefined,
@@ -1305,6 +1403,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         basicThicknessMm,
       });
       const allBoringPositions = boringResult.positions;
+      const allBoringDetails = boringResult.details;
+      const resolveReferenceDepth = createReferenceDepthResolver(modulePanels, moduleData.dimensions.depth);
 
       console.log(`[OPT BORING DEBUG] allBoringPositions=`, allBoringPositions);
 
@@ -1351,6 +1451,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
         // 측판의 보링 위치 결정
         let panelBoringPositions: number[] | undefined = undefined;
+        let panelBoringDepthGroups: BoringDepthGroup[] | undefined = undefined;
 
         if (isSidePanel) {
           // 서랍 본체 측판인 경우: calculatePanelDetails에서 이미 계산된 boringPositions 사용
@@ -1378,7 +1479,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
             const isSplitPanel = isUpperSection || isLowerSection;
             // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
             const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
-            const halfThickness = basicThicknessMm / 2; // 9mm
+            const sidePanelDepth = panel.width || panel.depth || 0;
 
             console.log(`[OPT BORING] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
 
@@ -1387,13 +1488,14 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
             // (2D 뷰어 SidePanelBoring과 동일한 소스 데이터 사용)
             if (isLowerSection) {
               // 하부: 절대좌표 <= lowerCutoff 범위
-              panelBoringPositions = allBoringPositions
-                .filter(pos => pos <= lowerCutoff2);
+              const lowerDetails = allBoringDetails.filter(detail => detail.y <= lowerCutoff2);
+              panelBoringPositions = lowerDetails.map(detail => detail.y);
+              panelBoringDepthGroups = toBoringDepthGroups(lowerDetails, resolveReferenceDepth);
             } else {
               // 상부: 절대좌표 > lowerCutoff 범위, 로컬좌표 = pos - lowerCutoff
-              panelBoringPositions = allBoringPositions
-                .filter(pos => pos > lowerCutoff2)
-                .map(pos => pos - lowerCutoff2);
+              const upperDetails = allBoringDetails.filter(detail => detail.y > lowerCutoff2);
+              panelBoringPositions = upperDetails.map(detail => detail.y - lowerCutoff2);
+              panelBoringDepthGroups = toBoringDepthGroups(upperDetails, resolveReferenceDepth, y => y - lowerCutoff2);
             }
             panelBoringPositions.sort((a, b) => a - b);
             console.log(`[OPT BORING] 분리 측판 "${panel.name}" (${isLowerSection ? '하부' : '상부'}): allBoringPositions에서 직접 분리 → ${panelBoringPositions.length}개:`, panelBoringPositions);
@@ -1402,8 +1504,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
             // allBoringPositions는 가구 바닥 기준 절대 좌표
             // 가장자리 보링도 포함하도록 >= 및 <= 사용
             console.log(`[OPT BORING] 통짜 측판 - allBoringPositions:`, allBoringPositions);
-            panelBoringPositions = allBoringPositions
-              .filter(pos => pos >= 0 && pos <= panelHeight);
+            const panelDetails = allBoringDetails.filter(detail => detail.y >= 0 && detail.y <= panelHeight);
+            panelBoringPositions = panelDetails.map(detail => detail.y);
+            panelBoringDepthGroups = toBoringDepthGroups(panelDetails, resolveReferenceDepth);
             console.log(`[OPT BORING] result:`, panelBoringPositions);
           }
 
@@ -1427,6 +1530,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         } else if (isDrawerSidePanel) {
           // 서랍 측판은 이미 위에서 panelBoringPositions 처리됨
           panelBoringDepthPositions = panel.boringDepthPositions;
+        } else if (isSidePanel && panelBoringPositions && panelBoringPositions.length > 0) {
+          const sidePanelDepth = panel.width || panel.depth || 0;
+          panelBoringDepthPositions = panelBoringDepthGroups?.[0]?.depthPositions ?? (
+            sidePanelDepth > 60 ? [30, sidePanelDepth - 30] : undefined
+          );
         }
 
         // ★★★ 도어 패널 보링 처리 ★★★
@@ -1458,7 +1566,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           quantity: 1,
           grain: grainValue,
           boringPositions: panelBoringPositions,
-          boringDepthPositions: panelBoringDepthPositions, // 서랍 측판/앞판만
+          boringDepthPositions: panelBoringDepthPositions,
+          boringDepthGroups: panelBoringDepthGroups,
           groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
           // 도어 전용 필드
           screwPositions: isDoorPanel ? screwPositions : undefined,

@@ -228,6 +228,7 @@ export const optimizePanels = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        boringDepthGroups: originalPanel.boringDepthGroups,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
@@ -324,6 +325,7 @@ export const optimizePanelsImproved = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        boringDepthGroups: originalPanel.boringDepthGroups,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
@@ -483,6 +485,7 @@ export const optimizePanelsMultiple = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        boringDepthGroups: originalPanel.boringDepthGroups,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
@@ -597,6 +600,7 @@ export const optimizePanelsMultipleImproved = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        boringDepthGroups: originalPanel.boringDepthGroups,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
