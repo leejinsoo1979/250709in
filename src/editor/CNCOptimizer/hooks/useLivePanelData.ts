@@ -13,6 +13,11 @@ import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstant
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import {
+  getDirectLowerDowelShelfBoringDetails,
+  hasDirectLowerTopPanel,
+  isDirectLowerDowelShelfModule,
+} from '@/editor/shared/utils/lowerCabinetDowelShelves';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -137,6 +142,50 @@ function toBoringDepthGroups(
     .filter((group): group is BoringDepthGroup => Boolean(group));
 
   return groups.length > 0 ? groups : undefined;
+}
+
+function calculateModuleShelfBoringDetails({
+  moduleData,
+  placedModule,
+  sections,
+  furnitureHeight,
+  basicThicknessMm,
+}: {
+  moduleData: any;
+  placedModule: any;
+  sections: any[];
+  furnitureHeight: number;
+  basicThicknessMm: number;
+}) {
+  const baseResult = calculateShelfBoringPositions({
+    sections,
+    totalHeightMm: furnitureHeight,
+    basicThicknessMm,
+  });
+
+  const moduleId = moduleData?.id || placedModule?.moduleId || '';
+  if (!isDirectLowerDowelShelfModule(moduleId)) {
+    return baseResult;
+  }
+
+  const directShelfDetails = getDirectLowerDowelShelfBoringDetails({
+    moduleId,
+    cabinetHeightMm: furnitureHeight,
+    basicThicknessMm,
+    sections,
+  });
+  const fixedDetails = baseResult.details.filter(detail => (
+    detail.type === 'fixed-panel' &&
+    (hasDirectLowerTopPanel(moduleId) || detail.role !== 'top-panel')
+  ));
+  const details = [...fixedDetails, ...directShelfDetails].sort((a, b) => a.y - b.y);
+
+  return {
+    ...baseResult,
+    positions: details.map(detail => detail.y),
+    details,
+    shelves: directShelfDetails.map(detail => detail.y),
+  };
 }
 
 function resolveOptimizerGrain(
@@ -589,9 +638,11 @@ export function useLivePanelData() {
         console.log(`[BORING DEBUG] Module ${moduleIndex}: modelConfig=`, modelConfig);
 
         // 전체 가구 보링 위치 계산
-        const boringResult = calculateShelfBoringPositions({
+        const boringResult = calculateModuleShelfBoringDetails({
+          moduleData,
+          placedModule,
           sections,
-          totalHeightMm: furnitureHeight,
+          furnitureHeight,
           basicThicknessMm,
         });
         const allBoringPositions = boringResult.positions;
@@ -1415,9 +1466,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);
 
       // 전체 가구 보링 위치 계산
-      const boringResult = calculateShelfBoringPositions({
+      const boringResult = calculateModuleShelfBoringDetails({
+        moduleData,
+        placedModule,
         sections,
-        totalHeightMm: furnitureHeight,
+        furnitureHeight,
         basicThicknessMm,
       });
       const allBoringPositions = boringResult.positions;

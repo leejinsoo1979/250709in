@@ -1,3 +1,5 @@
+import { calculateHingePositions } from '@/domain/boring/calculators/hingeCalculator'
+import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants'
 import { classifyModule } from './moduleClassification'
 
 export type DoorHingeSide = 'left' | 'right'
@@ -276,33 +278,50 @@ export const normalizeDoorHingePositionsMm = (
 
 export const resolveDefaultDoorHingePositionsMm = ({
   doorHeightMm,
-  isUpperCabinet = false,
-  isLowerCabinet = false,
   hingeMode = 'auto'
 }: DefaultDoorHingePositionsInput): number[] => {
   if (!Number.isFinite(doorHeightMm) || doorHeightMm <= 0) {
     return []
   }
 
-  if (isUpperCabinet || hingeMode === 'upper2') {
-    return normalizeDoorHingePositionsMm([100, doorHeightMm - 100], doorHeightMm)
-  }
-
-  if (isLowerCabinet && hingeMode !== 'lower4' && hingeMode !== 'lower5') {
-    return normalizeDoorHingePositionsMm([149, doorHeightMm - 100], doorHeightMm)
+  if (hingeMode === 'upper2') {
+    return normalizeDoorHingePositionsMm(
+      calculateHingePositions(doorHeightMm, {
+        ...DEFAULT_HINGE_SETTINGS,
+        minDoorHeightFor3Hinges: Number.POSITIVE_INFINITY
+      }),
+      doorHeightMm
+    )
   }
 
   if (hingeMode === 'lower5') {
-    return normalizeDoorHingePositionsMm([149, 749, doorHeightMm / 2, doorHeightMm - 700, doorHeightMm - 100], doorHeightMm)
+    return normalizeDoorHingePositionsMm(
+      calculateHingePositions(doorHeightMm, {
+        ...DEFAULT_HINGE_SETTINGS,
+        minDoorHeightFor3Hinges: 0,
+        minDoorHeightFor4Hinges: 0,
+        minDoorHeightFor5Hinges: 0
+      }),
+      doorHeightMm
+    )
   }
 
-  // 도어 H가 작아 749와 (H-700)이 가까워지면 중간 2점이 겹쳐 보임
-  // → H < 1500이면 3점(149/중앙/H-100)으로 기본 배치, 사용자가 필요하면 추가
-  if (doorHeightMm < 1500) {
-    return normalizeDoorHingePositionsMm([149, doorHeightMm / 2, doorHeightMm - 100], doorHeightMm)
+  if (hingeMode === 'lower4') {
+    return normalizeDoorHingePositionsMm(
+      calculateHingePositions(doorHeightMm, {
+        ...DEFAULT_HINGE_SETTINGS,
+        minDoorHeightFor3Hinges: 0,
+        minDoorHeightFor4Hinges: 0,
+        minDoorHeightFor5Hinges: Number.POSITIVE_INFINITY
+      }),
+      doorHeightMm
+    )
   }
 
-  return normalizeDoorHingePositionsMm([149, 749, doorHeightMm - 700, doorHeightMm - 100], doorHeightMm)
+  return normalizeDoorHingePositionsMm(
+    calculateHingePositions(doorHeightMm),
+    doorHeightMm
+  )
 }
 
 export const calculateSingleDoorOpenGeometry = (

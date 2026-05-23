@@ -103,7 +103,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     height: panelHeight,
     fromZ: basicThickness - mmToThreeUnits(2),
     depth: mmToThreeUnits(10),
-    cutDepth: mmToThreeUnits(5.5),
+    cutDepth: mmToThreeUnits(7.5),
   }], [basicThickness, mmToThreeUnits]);
 
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
@@ -780,7 +780,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           const leftLowerSectionHeightMm = modelConfig.leftSections?.[0]?.height || 0;
           const lowerBoundaryMm = basicThicknessMmVal + leftLowerSectionHeightMm;
           const furnitureHeightMm = height / 0.01;
-          const bpWidth = innerWidth + mmToThreeUnits(10); // 전체 내경폭 + 확장
+          const bpWidth = innerWidth - sidePanelGap + mmToThreeUnits(14); // 18T 계열 보정 후 좌우 7mm 삽입
           const lowerH = mmToThreeUnits(lowerBoundaryMm);
           const upperH = mmToThreeUnits(furnitureHeightMm - lowerBoundaryMm);
           const lowerY = -height / 2 + lowerH / 2;
@@ -854,7 +854,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         return (
           <>
             <BoxWithEdges
-              args={[innerWidth + mmToThreeUnits(10), backPanelHeight, backPanelThickness]}
+              args={[innerWidth - sidePanelGap + mmToThreeUnits(14), backPanelHeight, backPanelThickness]}
               position={[0, 0, backPanelZ]}
               material={material}
               renderMode={renderMode}

@@ -77,6 +77,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     mmToThreeUnits,
     modelConfig
   } = baseFurniture;
+  const basicThicknessMmVal = basicThickness / 0.01;
+  const sidePanelGap = (basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 0 : mmToThreeUnits(1);
 
   const { view2DDirection, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView();
@@ -189,7 +191,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     height: panelHeight,
     fromZ: basicThickness - mmToThreeUnits(2),
     depth: mmToThreeUnits(10),
-    cutDepth: mmToThreeUnits(5.5),
+    cutDepth: mmToThreeUnits(7.5),
   }], [basicThickness, mmToThreeUnits]);
 
   // 우측 스타일러장은 항상 Z=0 중심 (660mm 깊이 기준)
@@ -1010,7 +1012,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         />
       </>
       
-      {/* 뒷면 판재 - 좌/우 분리 (9mm 얇은 백패널, 각각 상하좌우 5mm 확장) */}
+      {/* 뒷면 판재 - 좌/우 분리 (9mm 얇은 백패널, 좌우 7mm 삽입) */}
       <>
         {/* 좌측 백패널 - 하부/상부 분할 (visibleSectionIndex가 1이 아닐 때만) */}
         {visibleSectionIndex !== 1 && (() => {
@@ -1056,7 +1058,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               <>
                 <BoxWithEdges
                   key="left-backpanel-full"
-                  args={[leftWidth + mmToThreeUnits(10), fullBackPanelHeight, backPanelThickness]}
+                  args={[leftWidth - sidePanelGap + mmToThreeUnits(14), fullBackPanelHeight, backPanelThickness]}
                   position={[leftXOffset, 0, fullBackPanelZ]}
                   material={material}
                   renderMode={renderMode}
@@ -1126,7 +1128,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               {/* 하부 백패널 */}
               <BoxWithEdges
                 key="left-backpanel-lower"
-                args={[leftWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
+                args={[leftWidth - sidePanelGap + mmToThreeUnits(14), lowerBackPanelHeight, backPanelThickness]}
                 position={[leftXOffset, lowerBackPanelY, lowerBackPanelZ]}
                 material={material}
                 renderMode={renderMode}
@@ -1173,7 +1175,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               {/* 상부 백패널 */}
               <BoxWithEdges
                 key="left-backpanel-upper"
-                args={[leftWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
+                args={[leftWidth - sidePanelGap + mmToThreeUnits(14), upperBackPanelHeight, backPanelThickness]}
                 position={[leftXOffset, upperBackPanelY, upperBackPanelZ]}
                 material={material}
                 renderMode={renderMode}
@@ -1244,7 +1246,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           return (
             <>
               <BoxWithEdges
-                args={[rightWidth + mmToThreeUnits(10), rightBackPanelHeight, backPanelThickness]}
+                args={[rightWidth - sidePanelGap + mmToThreeUnits(14), rightBackPanelHeight, backPanelThickness]}
                 position={[rightXOffset, 0, rightBackPanelZ]}
                 material={material}
                 renderMode={renderMode}

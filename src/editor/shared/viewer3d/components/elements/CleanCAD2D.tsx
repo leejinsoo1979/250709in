@@ -8199,7 +8199,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 하부 OFF 시 상단몰딩에 흡수된 걸래받이 크기 (FurnitureItem의 topDelta 계산과 동일)
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const canAbsorbBaseInSideView = bottomFrameRefCategory === 'full' || bottomFrameRefCategory === 'lower';
-            const canAbsorbBaseIntoTopFrame = bottomFrameRefCategory === 'full';
+            const isShelfSplitSideView = !!viewMod?.moduleId?.includes('shelf-split')
+              || !!bottomFrameRefMod?.moduleId?.includes('shelf-split')
+              || !!topFrameRefMod?.moduleId?.includes('shelf-split');
+            const canAbsorbBaseIntoTopFrame = bottomFrameRefCategory === 'full' && !isShelfSplitSideView;
             const baseFrameAbsorbed = canAbsorbBaseIntoTopFrame && bottomFrameRefMod?.hasBase === false
               ? (bottomFrameRefMod.baseFrameHeight ?? globalBaseMm)
               : 0;
@@ -8263,7 +8266,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? (spaceInfo.baseConfig?.height ?? 60)
                   : 0;
                 const baseAbsorbedMm = (viewMod as any).hasBase === false
-                  ? ((viewMod as any).baseFrameHeight ?? globalBaseForShelf)
+                  ? globalBaseForShelf
                   : 0;
                 const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
                   && spaceInfo.baseConfig?.placementType === 'float';
@@ -9626,7 +9629,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const canAbsorbBaseInSideView = bottomFrameRefCategory === 'full' || bottomFrameRefCategory === 'lower';
-            const canAbsorbBaseIntoTopFrame = bottomFrameRefCategory === 'full';
+            const isShelfSplitSideView = !!viewMod?.moduleId?.includes('shelf-split')
+              || !!bottomFrameRefMod?.moduleId?.includes('shelf-split')
+              || !!topFrameRefMod?.moduleId?.includes('shelf-split');
+            const canAbsorbBaseIntoTopFrame = bottomFrameRefCategory === 'full' && !isShelfSplitSideView;
             const baseFrameAbsorbed = canAbsorbBaseIntoTopFrame && bottomFrameRefMod?.hasBase === false
               ? (bottomFrameRefMod.baseFrameHeight ?? globalBaseMm)
               : 0;
@@ -9690,7 +9696,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? (spaceInfo.baseConfig?.height ?? 60)
                   : 0;
                 const baseAbsorbedMm = (viewMod as any).hasBase === false
-                  ? ((viewMod as any).baseFrameHeight ?? globalBaseForShelf)
+                  ? globalBaseForShelf
                   : 0;
                 const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
                   && spaceInfo.baseConfig?.placementType === 'float';

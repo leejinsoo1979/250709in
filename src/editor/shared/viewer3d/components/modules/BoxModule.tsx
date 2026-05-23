@@ -1778,7 +1778,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 <group position={[0, 0, lowerDoorDepthPlacement.zOffset]}>
                   <DoorModule
                     key="shelf-split-lower-door"
-                    hingeMode={isPantrySplit ? 'lower4' : 'auto'}
+                    hingeMode="auto"
                     hideWidthDimension={false}
                     moduleWidth={doorWidth || moduleData.dimensions.width}
                     moduleDepth={lowerDoorDepthPlacement.moduleDepthMm}
@@ -1814,11 +1814,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     splitDoorPanelName="하부 도어"
                   />
                 </group>
-                {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) + 경첩 2개 (도어분절 팬트리장 사양) */}
+                {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
                 <group position={[0, 0, upperDoorDepthPlacement.zOffset]}>
                   <DoorModule
                     key="shelf-split-upper-door"
-                    hingeMode={isPantrySplit ? 'upper2' : 'auto'}
+                    hingeMode="auto"
                     moduleWidth={doorWidth || moduleData.dimensions.width}
                     moduleDepth={upperDoorDepthPlacement.moduleDepthMm}
                     hingePosition={hingePosition}

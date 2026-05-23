@@ -1,12 +1,13 @@
 import { ModuleData, type SectionConfig } from '@/data/modules';
-import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/calculators/hingeCalculator';
+import { avoidHingePositionsForShelves, calculateHingePositions, calculateHingeCount } from '@/domain/boring/calculators/hingeCalculator';
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import type { FreeSurroundConfig } from '@/store/core/spaceConfigStore';
-import { normalizeDoorHingePositionsMm, resolveDoorLeafDimensions } from './doorGeometryCalculator';
+import { normalizeDoorHingePositionsMm, resolveDoorLeafDimensions, resolveDoorVerticalGeometry } from './doorGeometryCalculator';
 import type { DoorOuterOpenSides } from './doorOuterGap';
 import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
-import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from './topDownCabinetGeometry';
+import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from './topDownCabinetGeometry';
+import { getDirectLowerDowelShelfPositionsMm } from './lowerCabinetDowelShelves';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -207,6 +208,7 @@ export const calculatePanelDetails = (
   // 내경 = 전체폭 - 실제 측판두께×2 (18.5mm면 18.5×2, 18mm면 18×2)
   const innerWidth = customWidth - (basicThickness * 2);
   const _innerHeight = height - (basicThickness * 2);
+  const standardSidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
   
   // 섹션 정보 가져오기
   // 듀얼 타입5,6 특별 처리 (leftSections/rightSections 구조)
@@ -663,15 +665,14 @@ export const calculatePanelDetails = (
             || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
             || moduleData.id.includes('lower-drawer-');
           if (!noTopPanel) {
-            // 상판내림: 10mm → 앞에서 8mm 추가 축소, 30mm → 앞에서 10mm 추가 축소
             const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-            const topDownExtraFrontReductionMm = isTopDownForTop
-              ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -10.5 : 0)
+            const topDownFrontReductionMm = isTopDownForTop
+              ? resolveTopDownTopPanelFrontReductionMm(basicThickness, stoneTopThickness)
               : 0;
             const topPanelEntry: any = {
               name: `${sectionPrefix}상판`,
               width: horizontalPanelWidth,
-              depth: customDepth - 26 - topDownExtraFrontReductionMm, // 백패널과 맞닿게 26mm 감소 + 두께별 조정
+              depth: customDepth - 26 - topDownFrontReductionMm, // 3D 상판내림 상판 렌더링 깊이와 동일
               thickness: basicThickness,
               material: 'PB'
             };
@@ -691,10 +692,9 @@ export const calculatePanelDetails = (
 
       // === 백패널 (섹션별로 분리) ===
       // 백패널 계산:
-      // - 가로: innerWidth + 10 (내경폭에서 좌우 5mm씩 확장)
+      // - 가로: innerWidth - sidePanelGap + 14 (18T 계열은 좌우 0.5mm씩 보정 후 홈 안쪽으로 좌우 7mm씩 삽입)
       // - 세로: 섹션 내경높이 + 10 (섹션 내경높이에서 상하 5mm씩 확장)
-      // 예: 가구 586×1000 → 백패널 560×974
-      //     가로: 586-(18+18)+10=560, 세로: 1000-(18+18)+10=974
+      // 예: 가구 600×1000, 18/18.5T → 백패널 폭 577
 
       // 백패널 높이 계산
       // 기본: 섹션높이 - 상하판(36) + heightExtension(10) + 상하확장(26) = 섹션높이
@@ -703,7 +703,8 @@ export const calculatePanelDetails = (
       let backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
       // Type5/6 (4drawer-pantshanger, 2drawer-styler): 상/하부 섹션 경계에서 높이 분할
-      let backPanelWidth = innerWidth + 10;
+      const getBackPanelWidth = (baseWidth: number) => baseWidth - sidePanelGap + 14;
+      let backPanelWidth = getBackPanelWidth(innerWidth);
       let backPanelNamePrefix = sectionPrefix;
       if (isType5or6) {
         // 바지걸이장은 전체 내경폭, 스타일러장은 좌측 컬럼 폭으로 산출한다.
@@ -712,7 +713,7 @@ export const calculatePanelDetails = (
         const lowerBoundaryMm = basicThickness + leftLowerSectionHeightMm;
         const furnitureHeightMm = moduleData.dimensions.height;
         if (isStylerCabinet) {
-          backPanelWidth = stylerLeftColumnWidth + 10;
+          backPanelWidth = getBackPanelWidth(stylerLeftColumnWidth);
           backPanelNamePrefix = sectionPrefix ? `좌${sectionPrefix}` : '좌';
         }
         if (sectionIndex === 0) {
@@ -773,7 +774,7 @@ export const calculatePanelDetails = (
         if (sectionHasBackPanel) {
           targetPanel.push({
             name: `${backPanelNamePrefix}백패널`,
-            width: backPanelWidth, // 내경폭 + 좌우 5mm씩 확장
+            width: backPanelWidth, // 내경폭 + 홈 안쪽 좌우 7mm씩 삽입
             height: isGlassCabinetModule ? 510 : backPanelHeight, // 유리장은 서랍모듈 뒤 MDF 백패널만 CNC 대상
             thickness: backPanelThickness, // 9mm
             material: 'MDF'
@@ -887,7 +888,7 @@ export const calculatePanelDetails = (
             groovePositions: [{
               y: drawerGroovePositionY,
               height: drawerGrooveHeight,
-              depth: 5 // 홈 깊이 5mm
+              depth: 7.5 // 홈 깊이 7.5mm
             }],
             // 마이다 보링 위치 (서랍 측판과 연결용)
             boringPositions: drawerFrontBoringYPositions, // Y위치 (height 기준): 상하 30mm
@@ -904,7 +905,7 @@ export const calculatePanelDetails = (
             groovePositions: [{
               y: drawerGroovePositionY,
               height: drawerGrooveHeight,
-              depth: 5 // 홈 깊이 5mm
+              depth: 7.5 // 홈 깊이 7.5mm
             }]
           });
 
@@ -937,7 +938,7 @@ export const calculatePanelDetails = (
             groovePositions: [{
               y: drawerGroovePositionY,
               height: drawerGrooveHeight,
-              depth: 5 // 홈 깊이 5mm
+              depth: 7.5 // 홈 깊이 7.5mm
             }]
           });
 
@@ -954,7 +955,7 @@ export const calculatePanelDetails = (
             groovePositions: [{
               y: drawerGroovePositionY,
               height: drawerGrooveHeight,
-              depth: 5 // 홈 깊이 5mm
+              depth: 7.5 // 홈 깊이 7.5mm
             }]
           });
 
@@ -1124,6 +1125,12 @@ export const calculatePanelDetails = (
       moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half') ||
       moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
     if (hasDirectLowerDowelShelves) {
+      const directShelfPositions = getDirectLowerDowelShelfPositionsMm({
+        moduleId: moduleData.id,
+        cabinetHeightMm: height,
+        basicThicknessMm: basicThickness,
+        sections: customSectionsOverride || moduleData.modelConfig?.sections,
+      });
       const directShelfFrontInsetMm = resolveShelfFrontInsetMm({
         moduleId: moduleData.id,
         cabinetCategory: 'lower',
@@ -1131,9 +1138,9 @@ export const calculatePanelDetails = (
       });
       const backReductionMm = backPanelThickness + basicThickness - 1;
       const shelfDepthMm = customDepth - backReductionMm - directShelfFrontInsetMm;
-      for (let i = 1; i <= 2; i++) {
-        const shelfName = `선반 ${i}`;
-        if (panels.lower.some(panel => panel.name === shelfName)) continue;
+      directShelfPositions.forEach((_, index) => {
+        const shelfName = `선반 ${index + 1}`;
+        if (panels.lower.some(panel => panel.name === shelfName)) return;
         panels.lower.push({
           name: shelfName,
           width: innerWidth,
@@ -1141,7 +1148,7 @@ export const calculatePanelDetails = (
           thickness: 18,
           material: 'PB',
         });
-      }
+      });
     }
 
     // === 현관장 H 전용: 서랍받침대 + 서랍속장(날개벽) + 속서랍 ===
@@ -1278,7 +1285,7 @@ export const calculatePanelDetails = (
       const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
       panels.upper.push({
         name: '우백패널',
-        width: stylerRightColumnWidth + 10,
+        width: stylerRightColumnWidth - standardSidePanelGap + 14,
         height,
         thickness: backPanelThickness,
         material: 'MDF'
@@ -1361,7 +1368,6 @@ export const calculatePanelDetails = (
       cabinetCategory: moduleData.category,
       doorWidthMm: doorWidth,
       cabinetHeightMm: height,
-      spaceHeightMm: spaceHeight,
       doorTopGapMm: doorTopGap,
       doorBottomGapMm: doorBottomGap,
       doorGapMm: doorGap,
@@ -1371,6 +1377,64 @@ export const calculatePanelDetails = (
     const actualDoorH = doorLeafDimensions.leafHeightMm;
     const isDoorSplitPanelModule = moduleData.id.includes('pantry-cabinet-split') || moduleData.id.includes('shelf-split');
     let bracketHingeYPositions: number[] | null = null;
+    const getShelfCenterPositionsFromBottom = () => {
+      const targetSections = customSectionsOverride || sections;
+      if (!Array.isArray(targetSections) || targetSections.length === 0) return [];
+
+      const directLowerShelfPositions = getDirectLowerDowelShelfPositionsMm({
+        moduleId: moduleData.id,
+        cabinetHeightMm: height,
+        basicThicknessMm: basicThickness,
+        sections: targetSections,
+      });
+      if (directLowerShelfPositions.length > 0) {
+        return directLowerShelfPositions.map(position => basicThickness + position);
+      }
+
+      const availableHeightMm = height - basicThickness * 2;
+      let currentYFromBottom = basicThickness;
+      const shelfCenters: number[] = [];
+
+      targetSections.forEach(section => {
+        const sectionHeightMm = section.heightType === 'absolute'
+          ? section.height
+          : availableHeightMm * ((section.height || 100) / 100);
+        const hasShelfPositionList = Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0;
+        const shelfPositions = hasShelfPositionList
+          ? section.shelfPositions!.filter(position => position > 0)
+          : (section.type === 'shelf' && section.count && section.count > 0)
+            ? Array.from({ length: section.count }, (_, index) => (
+              sectionHeightMm / (section.count! + 1) * (index + 1)
+            ))
+            : [];
+
+        shelfPositions.forEach(position => {
+          shelfCenters.push(currentYFromBottom + position);
+        });
+        currentYFromBottom += sectionHeightMm;
+      });
+
+      return shelfCenters;
+    };
+    const shelfCentersFromBottom = getShelfCenterPositionsFromBottom();
+    const resolveDoorShelfCollisions = (doorBottomMm: number, doorH: number) => (
+      shelfCentersFromBottom
+        .map(shelfY => shelfY - doorBottomMm)
+        .filter(shelfY => shelfY > 0 && shelfY < doorH)
+    );
+    const doorVerticalGeometry = resolveDoorVerticalGeometry({
+      moduleId: moduleData.id,
+      cabinetCategory: moduleData.category,
+      doorWidthMm: doorWidth,
+      cabinetHeightMm: height,
+      doorTopGapMm: doorTopGap,
+      doorBottomGapMm: doorBottomGap,
+      doorGapMm: doorGap,
+      isDualSlot: isDualSlot || moduleData.id.includes('dual'),
+      hingeSide: hingePosition ?? 'left',
+      cabinetBottomMm: 0,
+    });
+    const defaultDoorShelfCollisions = resolveDoorShelfCollisions(doorVerticalGeometry.bottomMm, actualDoorH);
 
     const calculateFixedHingePositions = (doorH: number, hingeCount: number) => {
       const margin = DEFAULT_HINGE_SETTINGS.topBottomMargin;
@@ -1388,14 +1452,19 @@ export const calculatePanelDetails = (
       doorH: number,
       isLeftHinge: boolean,
       fixedHingeCount?: number,
-      customPositionsMm?: number[]
+      customPositionsMm?: number[],
+      shelfCollisionPositionsMm: number[] = []
     ) => {
       const customHingePositions = normalizeDoorHingePositionsMm(customPositionsMm, doorH);
       const hingePositions = customHingePositions.length > 0
         ? customHingePositions
-        : fixedHingeCount
-          ? calculateFixedHingePositions(doorH, fixedHingeCount)
-          : calculateHingePositions(doorH);
+        : avoidHingePositionsForShelves(
+          fixedHingeCount
+            ? calculateFixedHingePositions(doorH, fixedHingeCount)
+            : calculateHingePositions(doorH),
+          shelfCollisionPositionsMm,
+          doorH
+        );
       // 힌지컵 X 위치 (도어 가장자리에서 cupEdgeDistance)
       const cupX = isLeftHinge
         ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
@@ -1428,9 +1497,10 @@ export const calculatePanelDetails = (
       heightMm: number,
       isLeftHinge: boolean,
       fixedHingeCount?: number,
-      customPositionsMm?: number[]
+      customPositionsMm?: number[],
+      shelfCollisionPositionsMm: number[] = []
     ) => {
-      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm);
+      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm, shelfCollisionPositionsMm);
       panels.door.push({
         name,
         width: widthMm,
@@ -1495,16 +1565,22 @@ export const calculatePanelDetails = (
 
         const lowerHinges = normalizeDoorHingePositionsMm(customLowerDoorHingePositionsMm, lowerDoorH);
         const upperHinges = normalizeDoorHingePositionsMm(customUpperDoorHingePositionsMm, upperDoorH);
-        const resolvedLowerHinges = lowerHinges.length > 0 ? lowerHinges : calculateFixedHingePositions(lowerDoorH, 4);
-        const resolvedUpperHinges = upperHinges.length > 0 ? upperHinges : calculateFixedHingePositions(upperDoorH, 2);
+        const lowerDoorShelfCollisions = resolveDoorShelfCollisions(lowerDoorBottomMm, lowerDoorH);
+        const upperDoorShelfCollisions = resolveDoorShelfCollisions(upperDoorBottomMm, upperDoorH);
+        const resolvedLowerHinges = lowerHinges.length > 0
+          ? lowerHinges
+          : avoidHingePositionsForShelves(calculateHingePositions(lowerDoorH), lowerDoorShelfCollisions, lowerDoorH);
+        const resolvedUpperHinges = upperHinges.length > 0
+          ? upperHinges
+          : avoidHingePositionsForShelves(calculateHingePositions(upperDoorH), upperDoorShelfCollisions, upperDoorH);
         bracketHingeYPositions?.push(
           ...resolvedLowerHinges.map(y => lowerDoorBottomMm + y),
           ...resolvedUpperHinges.map(y => upperDoorBottomMm + y)
         );
 
         const adjustedLeafWidth = getOuterAdjustedDoorWidth(leaf);
-        pushDoorPanel(`${prefix}하부 도어`, adjustedLeafWidth, lowerDoorH, isLeftHinge, 4, customLowerDoorHingePositionsMm);
-        pushDoorPanel(`${prefix}상부 도어`, adjustedLeafWidth, upperDoorH, isLeftHinge, 2, customUpperDoorHingePositionsMm);
+        pushDoorPanel(`${prefix}하부 도어`, adjustedLeafWidth, lowerDoorH, isLeftHinge, undefined, resolvedLowerHinges);
+        pushDoorPanel(`${prefix}상부 도어`, adjustedLeafWidth, upperDoorH, isLeftHinge, undefined, resolvedUpperHinges);
       });
 
       bracketHingeYPositions = Array.from(new Set(bracketHingeYPositions)).sort((a, b) => a - b);
@@ -1520,7 +1596,7 @@ export const calculatePanelDetails = (
           : leaf.name === 'right'
             ? '우측 도어'
             : '도어';
-        pushDoorPanel(doorName, getOuterAdjustedDoorWidth(leaf), leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm);
+        pushDoorPanel(doorName, getOuterAdjustedDoorWidth(leaf), leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm, defaultDoorShelfCollisions);
       });
     }
 
@@ -1532,7 +1608,11 @@ export const calculatePanelDetails = (
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환
     // 브라켓 보링: 도어 힌지 Y위치를 측판 기준으로 변환
     // 도어 높이 = actualDoorH (위에서 이미 계산됨)
-    const hingeYPositions = bracketHingeYPositions ?? calculateHingePositions(actualDoorH);
+    const hingeYPositions = bracketHingeYPositions ?? (
+      normalizeDoorHingePositionsMm(customHingePositionsMm, actualDoorH).length > 0
+        ? normalizeDoorHingePositionsMm(customHingePositionsMm, actualDoorH)
+        : avoidHingePositionsForShelves(calculateHingePositions(actualDoorH), defaultDoorShelfCollisions, actualDoorH)
+    );
     // 도어 하단(바닥에서 doorBottomGap) → 측판 하단(바닥에서 baseHeight)
     // 측판 기준 Y = 힌지Y + (doorBottomGap - baseHeight)
     const bracketYOffset = spaceHeight
@@ -2237,12 +2317,12 @@ export const calculatePanelDetails = (
       extDrawerPanels.push(
         { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
           boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,
-          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 5 }] },
+          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 7.5 }] },
         { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
           boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,
-          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 5 }] },
+          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 7.5 }] },
         { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB',
-          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 5 }] },
+          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 7.5 }] },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재

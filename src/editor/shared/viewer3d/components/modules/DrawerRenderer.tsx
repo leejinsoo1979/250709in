@@ -517,7 +517,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       height: drawerBottomPanelThickness + mmToThreeUnits(1),
       fromZ: 0,
       depth: drawerBodyDepth,
-      cutDepth: mmToThreeUnits(5.5),
+      cutDepth: mmToThreeUnits(7.5),
     }];
 
     return (

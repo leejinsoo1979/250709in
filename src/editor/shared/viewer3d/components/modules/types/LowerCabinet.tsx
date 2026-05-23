@@ -15,6 +15,7 @@ import { useDimensionColor } from '../hooks/useDimensionColor';
 
 import DoorModule from '../DoorModule';
 import BoxWithEdges from '../components/BoxWithEdges';
+import SidePanelBoring from '../components/SidePanelBoring';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
@@ -23,7 +24,9 @@ import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
-import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
+import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
+import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
+import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -1404,6 +1407,90 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     return userThk;
   });
 
+  const lowerCabinetSideBoringResult = useMemo(() => {
+    const moduleId = moduleData.id;
+    const isTopDownForBoring = moduleId.includes('lower-top-down-') || moduleId.includes('dual-lower-top-down-');
+    const isDirectDowelShelf = isDirectLowerDowelShelfModule(moduleId);
+    if (!isTopDownForBoring && !isDirectDowelShelf) {
+      return { positions: [], details: [] };
+    }
+
+    const sections = Array.isArray(placedModuleForCorner?.customSections)
+      ? placedModuleForCorner.customSections
+      : (moduleData.modelConfig?.sections || []);
+    if (!sections.length) {
+      return { positions: [], details: [] };
+    }
+
+    const basicThicknessMm = baseFurniture.basicThickness / 0.01;
+    const cabinetHeightMm = adjustedHeight / 0.01;
+    const depthMm = baseFurniture.depth / 0.01;
+    const backPanelMm = backPanelThickness || 9;
+    const backReductionMm = backPanelMm + basicThicknessMm - 1;
+    const baseBoring = calculateShelfBoringPositions({
+      sections,
+      totalHeightMm: cabinetHeightMm,
+      basicThicknessMm,
+    });
+    const boringDetails = isDirectDowelShelf
+      ? [
+        ...baseBoring.details.filter(detail => (
+          detail.type === 'fixed-panel' &&
+          (hasDirectLowerTopPanel(moduleId) || detail.role !== 'top-panel')
+        )),
+        ...getDirectLowerDowelShelfBoringDetails({
+          moduleId,
+          cabinetHeightMm,
+          basicThicknessMm,
+          sections,
+        }),
+      ].sort((a, b) => a.y - b.y)
+      : baseBoring.details;
+
+    const shelfFrontInsetMm = resolveShelfFrontInsetMm({
+      moduleId,
+      cabinetCategory: 'lower',
+      depthMm,
+    });
+    const topPanelFrontReductionMm = isTopDownForBoring
+      ? resolveTopDownTopPanelFrontReductionMm(basicThicknessMm, stoneThickness)
+      : 0;
+    const mmToUnits = (mm: number) => mm * 0.01;
+    const buildHoleZPositions = (detail: typeof boringDetails[number]) => {
+      const frontReductionMm = detail.type === 'movable-shelf'
+        ? shelfFrontInsetMm
+        : detail.role === 'top-panel'
+          ? topPanelFrontReductionMm
+          : 0;
+      const panelDepthMm = Math.max(1, depthMm - backReductionMm - frontReductionMm);
+      const panelCenterZ = mmToUnits(backReductionMm - frontReductionMm) / 2;
+      const panelFrontZ = panelCenterZ + mmToUnits(panelDepthMm) / 2;
+      const panelBackZ = panelCenterZ - mmToUnits(panelDepthMm) / 2;
+
+      return detail.type === 'fixed-panel'
+        ? [panelFrontZ - mmToUnits(30), panelCenterZ, panelBackZ + mmToUnits(30)]
+        : [panelFrontZ - mmToUnits(30), panelBackZ + mmToUnits(30)];
+    };
+    const details = boringDetails.map(detail => ({
+      ...detail,
+      holeZPositions: buildHoleZPositions(detail),
+    }));
+
+    return {
+      positions: details.map(detail => detail.y),
+      details,
+    };
+  }, [
+    adjustedHeight,
+    backPanelThickness,
+    baseFurniture.basicThickness,
+    baseFurniture.depth,
+    moduleData.id,
+    moduleData.modelConfig?.sections,
+    placedModuleForCorner?.customSections,
+    stoneThickness,
+  ]);
+
   // ㄱ자 꺾인 안쪽 전대(가로전대) 높이 결정
   // - 상판내림 터치/2단/3단/반통/한통: stoneThickness별로 결정
   //   · 대리석 10mm = 65mm, 20mm = 55mm (기본), 30mm = 45mm
@@ -1691,11 +1778,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
               topPanelFrontReduction={(() => {
                 if (!moduleData.id.includes('lower-top-down-')) return 0;
-                const btMm = baseFurniture.basicThickness / 0.01; // 가구재 두께 mm
-                const baseReduction = btMm + 0.5; // 기본: 전대 두께 + 0.5 여유 (예: 18+0.5=18.5, 15+0.5=15.5)
-                if (stoneThickness === 30) return baseReduction + 10; // 30mm: 추가 10mm 축소
-                if (stoneThickness === 10) return baseReduction - 10.5; // 10mm: 10.5mm 앞으로 확장 (기존 18mm 확장에서 7.5mm 축소)
-                return baseReduction;
+                return resolveTopDownTopPanelFrontReductionMm(baseFurniture.basicThickness / 0.01, stoneThickness);
               })()}
               topStretcher={isTopDownModule ? { heightMm: topDownStretcherHeightMm, depthMm: 40 } : undefined}
               stoneTopThickness={stoneThickness}
@@ -2156,9 +2239,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               ? useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId)
               : undefined;
             const customSecForShelves = (placedModuleForShelves as any)?.customSections;
-            const customShelfSec = Array.isArray(customSecForShelves)
-              ? customSecForShelves.find((s: any) => s?.type === 'shelf')
-              : undefined;
 
             const mmToUnits = (mm: number) => mm * 0.01;
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
@@ -2166,37 +2246,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const depthMm = baseFurniture.depth / 0.01;
             const backPanelMm = (backPanelThickness || 9);
 
-            let referenceHeightMm: number;
-            const hasTopPanel = isDoorLiftHalf || isTopDownHalf;
-
-            if (isTopDownHalf) {
-              // 상판내림 반통/한통: 선반은 가구 바닥~노치 시작점(가구상단-120) 영역에 균등 분할
-              // H 늘어나면 노치도 위로 따라가니 선반 분할 영역도 함께 늘어남
-              referenceHeightMm = cabinetHeightMm - 120;
-            } else if (hasTopPanel) {
-              referenceHeightMm = cabinetHeightMm - basicThicknessMm * 2;
-            } else {
-              referenceHeightMm = cabinetHeightMm - basicThicknessMm;
-            }
-
             // 팝업에서 사용자 정의한 선반 갯수/위치 우선
-            //  - customShelfSec.count === 0이면 렌더링 안 함 (선반 없음)
+            //  - customSections count === 0이면 렌더링 안 함 (선반 없음)
             //  - shelfPositions가 있으면 그대로 사용
             //  - 없으면 기본 균등 분할 (기존 동작)
-            let shelfPositions: number[];
-            if (customShelfSec) {
-              const cnt = typeof customShelfSec.count === 'number' ? customShelfSec.count : 2;
-              if (cnt <= 0) return null;
-              if (Array.isArray(customShelfSec.shelfPositions) && customShelfSec.shelfPositions.length === cnt) {
-                shelfPositions = customShelfSec.shelfPositions as number[];
-              } else {
-                const gap = referenceHeightMm / (cnt + 1);
-                shelfPositions = Array.from({ length: cnt }, (_, k) => gap * (k + 1));
-              }
-            } else {
-              const shelfInterval = referenceHeightMm / 3;
-              shelfPositions = [shelfInterval, shelfInterval * 2];
-            }
+            const shelfPositions = getDirectLowerDowelShelfPositionsMm({
+              moduleId,
+              cabinetHeightMm,
+              basicThicknessMm,
+              sections: customSecForShelves || moduleData.modelConfig?.sections,
+            });
+            if (shelfPositions.length === 0) return null;
 
             const shelfThicknessMm = 18;
             const shelfFrontInsetMm = resolveShelfFrontInsetMm({
@@ -2228,6 +2288,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               />
             ));
           })()}
+
+          <SidePanelBoring
+            height={adjustedHeight}
+            depth={baseFurniture.depth}
+            basicThickness={baseFurniture.basicThickness}
+            innerWidth={baseFurniture.innerWidth}
+            boringPositions={lowerCabinetSideBoringResult.positions}
+            boringDetails={lowerCabinetSideBoringResult.details}
+            mmToThreeUnits={(mm) => mm * 0.01}
+          />
 
           </BaseFurnitureShell>
 

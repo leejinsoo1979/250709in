@@ -108,26 +108,29 @@ export function calculateShelfBoringPositions(
       sectionHeightMm = availableHeightMm * (section.height / 100);
     }
 
-    // 선반 위치가 있으면 추가
-    // 주의: shelfPositions: [0]은 "치수 표시용"으로만 사용되며 실제 선반이 아님
-    // pos === 0은 무시해야 함 (shelving.ts에서 치수 표시용으로 사용)
-    if (section.shelfPositions && section.shelfPositions.length > 0) {
-      section.shelfPositions.forEach(pos => {
-        // pos > 0 조건: 0은 치수 표시용이므로 무시
-        if (pos > 0) {
-          // 이동선반 보링은 선반 중심선이 아니라 선반 밑면이 타공 중심이다.
-          // shelfPositions의 pos는 선반 중심이므로, 두께 절반만큼 아래로 내린다.
-          const shelfBoringY = currentYPositionFromBottom + pos - halfThicknessMm;
-          shelves.push(shelfBoringY);
-          details.push({
-            y: shelfBoringY,
-            type: 'movable-shelf',
-            role: 'movable-shelf',
-            roleIndex: shelfDetailIndex++,
-          });
-        }
+    // 선반 위치가 있으면 그대로 쓰고, 위치 목록이 없는 count 기반 선반은 렌더러처럼 균등 분할한다.
+    // 주의: shelfPositions: [0]은 "치수 표시용"으로만 사용되며 실제 선반이 아니므로 count fallback을 타지 않는다.
+    const hasShelfPositionList = Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0;
+    const shelfPositionsForBoring = hasShelfPositionList
+      ? section.shelfPositions!.filter(pos => pos > 0)
+      : (section.type === 'shelf' && section.count && section.count > 0)
+        ? Array.from({ length: section.count }, (_, shelfIndex) => (
+          sectionHeightMm / (section.count! + 1) * (shelfIndex + 1)
+        ))
+        : [];
+
+    shelfPositionsForBoring.forEach(pos => {
+      // 이동선반 보링은 선반 중심선이 아니라 선반 밑면이 타공 중심이다.
+      // shelfPositions의 pos는 선반 중심이므로, 두께 절반만큼 아래로 내린다.
+      const shelfBoringY = currentYPositionFromBottom + pos - halfThicknessMm;
+      shelves.push(shelfBoringY);
+      details.push({
+        y: shelfBoringY,
+        type: 'movable-shelf',
+        role: 'movable-shelf',
+        roleIndex: shelfDetailIndex++,
       });
-    }
+    });
 
     // 섹션 구분 패널 (마지막 섹션이 아닌 경우)
     // BaseFurnitureShell에서 하부섹션 상판과 상부섹션 바닥판이 별도로 렌더링됨

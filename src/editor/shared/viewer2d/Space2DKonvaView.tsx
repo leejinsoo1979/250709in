@@ -29,7 +29,7 @@ interface ViewportState {
 // Constants
 const GRID_SIZE = 100; // 100mm grid
 const MIN_SCALE = 0.1;
-const MAX_SCALE = 5;
+const MAX_SCALE = 50;
 const SCALE_FACTOR = 1.18;
 const RESIZE_DEBOUNCE_DELAY = 100; // ms
 const STAGE_CONTAINER_ID = 'konva-stage-container-2d'; // Unique ID for stage container

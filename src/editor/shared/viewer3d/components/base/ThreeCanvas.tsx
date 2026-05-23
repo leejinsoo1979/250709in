@@ -1668,7 +1668,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             minAzimuthAngle={controlsConfig.minAzimuthAngle}
             maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
             enablePan={controlsConfig.enablePan && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
-            enableZoom={viewMode !== '2D' && controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
+            enableZoom={controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             enableRotate={controlsConfig.enableRotate && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             minDistance={controlsConfig.minDistance}
             maxDistance={controlsConfig.maxDistance}

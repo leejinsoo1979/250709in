@@ -306,7 +306,7 @@ interface BaseFurnitureShellProps {
 
   // 백패널 설정 (하드코딩 제거)
   backPanelConfig?: {
-    widthExtension: number;      // 백패널 너비 연장 (mm) - 기본 10
+    widthExtension: number;      // 백패널 너비 연장 (mm) - 기본 14
     heightExtension: number;      // 백패널 기본 높이 연장 (mm) - 기본 10
     lowerHeightBonus: number;     // 하부 백패널 추가 높이 (mm) - 기본 18
     depthOffset: number;          // 백패널 깊이 오프셋 (mm) - 기본 17
@@ -418,7 +418,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   // backPanelConfig 기본값: depthOffset과 lowerHeightBonus를 basicThickness 기반으로 동적 설정
   const basicThicknessMm = basicThickness / 0.01; // Three.js → mm 변환
   const backPanelConfig = {
-    widthExtension: 10,
+    widthExtension: 14,
     heightExtension: 10,
     lowerHeightBonus: basicThicknessMm, // 가구재 두께 (18 또는 15)
     depthOffset: basicThicknessMm - 1, // 가구재 두께 - 1mm (17 또는 14)
@@ -450,7 +450,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       // 홈은 뒤쪽 기준 16mm부터 10mm 폭, 백패널 9T는 뒤에서 17mm 위치에 들어간다.
       fromZ: mmToThreeUnits(backPanelConfig.depthOffset - 1),
       depth: mmToThreeUnits(10),
-      cutDepth: mmToThreeUnits(5.5),
+      cutDepth: mmToThreeUnits(7.5),
     }];
   }, [backPanelConfig.depthOffset, backPanelThickness, hasBackPanel, isGlassCabinet, mmToThreeUnits]);
 
@@ -475,6 +475,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   // 18/15mm는 기존대로 좌우 0.5mm씩 총 1mm 이격
   const sidePanelGapMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : 1;
   const sidePanelGap = mmToThreeUnits(sidePanelGapMm);
+  const backPanelWidth = innerWidth - sidePanelGap + mmToThreeUnits(backPanelConfig.widthExtension);
 
   // 디버깅: BaseFurnitureShell이 받은 props 확인
   React.useEffect(() => {
@@ -1954,7 +1955,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   elements.push(
                     <BoxWithEdges
                       key={`back-panel-sec-${idx}-${getPanelMaterial(`(${idx + 1}단)백패널`).uuid}`}
-                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), backPanelHeight, backPanelThickness]}
+                      args={[backPanelWidth, backPanelHeight, backPanelThickness]}
                       position={[0, backPanelY, backPanelZ]}
                       material={getPanelMaterial(`(${idx + 1}단)백패널`)}
                       renderMode={renderMode}
@@ -2107,7 +2108,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {lowerHasBackPanel && (
                     <BoxWithEdges
                       key={`lower-back-${getPanelMaterial('(하)백패널').uuid}`}
-                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), lowerBackPanelHeight, backPanelThickness]}
+                      args={[backPanelWidth, lowerBackPanelHeight, backPanelThickness]}
                       position={[0, lowerBackPanelY, lowerBackPanelZ]}
                       material={getPanelMaterial('(하)백패널')}
                       renderMode={renderMode}
@@ -2126,7 +2127,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {upperHasBackPanel && (
                     <BoxWithEdges
                       key={`upper-back-${getPanelMaterial('(상)백패널').uuid}`}
-                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
+                      args={[backPanelWidth, upperBackPanelHeight, backPanelThickness]}
                       position={[0, upperBackPanelY, upperBackPanelZ]}
                       material={getPanelMaterial('(상)백패널')}
                       renderMode={renderMode}
@@ -2266,7 +2267,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <>
                     <BoxWithEdges
                       key={`back-panel-${getPanelMaterial('백패널').uuid}`}
-                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), singleBackPanelHeight, backPanelThickness]}
+                      args={[backPanelWidth, singleBackPanelHeight, backPanelThickness]}
                       position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
                       material={getPanelMaterial('백패널')}
                       renderMode={renderMode}
@@ -2579,7 +2580,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         height: DRAWER_BOTTOM_T + mmToThreeUnits(1),
                         fromZ: 0,
                         depth: drawerBodyD,
-                        cutDepth: mmToThreeUnits(5.5),
+                        cutDepth: mmToThreeUnits(7.5),
                       }];
                       return (
                         <animated.group key={`glass-drawer-${idx}`} position-z={glassDrawerSpring.z}>
@@ -3090,7 +3091,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 백패널 두께
                 const tileBackThk = backPanelThickness;
                 // 백패널 폭 (가구 내경)
-                const tileBackW = innerWidth + mmToThreeUnits(10);
+                const tileBackW = backPanelWidth;
                 // 백패널 Z(중심): 가구 뒤쪽 안쪽 면에서 살짝 앞으로 (z-fighting 방지 2mm 옵셋)
                 const tileBackZ = -depth / 2 + tileBackThk / 2 + mmToThreeUnits(backPanelConfig.depthOffset) + mmToThreeUnits(2);
 

@@ -147,7 +147,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     height: panelHeight,
     fromZ: basicThickness - mmToThreeUnits(2),
     depth: mmToThreeUnits(10),
-    cutDepth: mmToThreeUnits(5.5),
+    cutDepth: mmToThreeUnits(7.5),
   }], [basicThickness, mmToThreeUnits]);
 
   // 패널 강조용 형광색 material
@@ -431,7 +431,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               <>
                 {/* 하부 섹션 백패널 */}
                 <BoxWithEdges
-                  args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
+                  args={[innerWidth - sidePanelGap + mmToThreeUnits(14), lowerBackPanelHeight, backPanelThickness]}
                   position={[0, lowerBackPanelY, -lowerSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + lowerZOffset]}
                   material={material}
                   renderMode={renderMode}
@@ -444,7 +444,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
                 {/* 상부 섹션 백패널 */}
                 <BoxWithEdges
-                  args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
+                  args={[innerWidth - sidePanelGap + mmToThreeUnits(14), upperBackPanelHeight, backPanelThickness]}
                   position={[0, upperBackPanelY, -upperSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + upperZOffset]}
                   material={material}
                   renderMode={renderMode}
@@ -524,7 +524,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         // 단일 섹션: 기존 통짜 백패널
         <>
           <BoxWithEdges
-            args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
+            args={[innerWidth - sidePanelGap + mmToThreeUnits(14), innerHeight + mmToThreeUnits(36), backPanelThickness]}
             position={[0, 0, -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1))]}
             material={material}
             renderMode={renderMode}

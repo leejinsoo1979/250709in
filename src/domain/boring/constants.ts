@@ -46,9 +46,9 @@ export const DEFAULT_HINGE_SETTINGS: BlumClipTopSettings = {
   topBottomMargin: 120,   // 도어 상단/하단에서 힌지 중심까지
 
   // 문 높이별 힌지 개수 기준
-  minDoorHeightFor3Hinges: 1400,
-  minDoorHeightFor4Hinges: 2000,
-  minDoorHeightFor5Hinges: 2600,
+  minDoorHeightFor3Hinges: 900,
+  minDoorHeightFor4Hinges: 1600,
+  minDoorHeightFor5Hinges: 2400,
 };
 
 // ============================================

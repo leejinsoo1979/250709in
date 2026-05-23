@@ -47,4 +47,45 @@ describe('calculateShelfBoringPositions', () => {
       { y: 209, type: 'fixed-panel', role: 'top-panel' }
     ]);
   });
+
+  it('uses even shelf positions when a shelf section only has count', () => {
+    const result = calculateShelfBoringPositions({
+      sections: [{
+        type: 'shelf',
+        heightType: 'absolute',
+        height: 300,
+        count: 2
+      }],
+      totalHeightMm: 336,
+      basicThicknessMm: 18
+    });
+
+    expect(result.shelves).toEqual([109, 209]);
+    expect(result.details).toEqual([
+      { y: 9, type: 'fixed-panel', role: 'bottom-panel' },
+      { y: 109, type: 'movable-shelf', role: 'movable-shelf', roleIndex: 0 },
+      { y: 209, type: 'movable-shelf', role: 'movable-shelf', roleIndex: 1 },
+      { y: 327, type: 'fixed-panel', role: 'top-panel' }
+    ]);
+  });
+
+  it('does not create a count fallback for zero sentinel shelf positions', () => {
+    const result = calculateShelfBoringPositions({
+      sections: [{
+        type: 'shelf',
+        heightType: 'absolute',
+        height: 300,
+        count: 1,
+        shelfPositions: [0]
+      }],
+      totalHeightMm: 336,
+      basicThicknessMm: 18
+    });
+
+    expect(result.shelves).toEqual([]);
+    expect(result.details).toEqual([
+      { y: 9, type: 'fixed-panel', role: 'bottom-panel' },
+      { y: 327, type: 'fixed-panel', role: 'top-panel' }
+    ]);
+  });
 });

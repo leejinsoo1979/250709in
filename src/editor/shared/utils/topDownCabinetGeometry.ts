@@ -65,3 +65,13 @@ export const getTopDownStoneFrontVisibleHeightMm = (
 ) => {
   return TOP_DOWN_STONE_FRONT_HEIGHT_MM;
 };
+
+export const resolveTopDownTopPanelFrontReductionMm = (
+  basicThicknessMm: number,
+  stoneTopThicknessMm: number = 20
+) => {
+  const baseReductionMm = basicThicknessMm + 0.5;
+  if (stoneTopThicknessMm === 30) return baseReductionMm + 10;
+  if (stoneTopThicknessMm === 10) return baseReductionMm - 10.5;
+  return baseReductionMm;
+};

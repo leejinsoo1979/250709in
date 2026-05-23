@@ -228,25 +228,25 @@ describe('doorGeometryCalculator', () => {
     expect(normalizeDoorHingePositionsMm([100], 0)).toEqual([])
   })
 
-  it('기본 경첩 위치는 기존 2D 뷰어 배치 기준과 일치한다', () => {
+  it('기본 경첩 위치는 도어 높이별 120mm 기준과 일치한다', () => {
     expect(resolveDefaultDoorHingePositionsMm({
       doorHeightMm: 800,
       isUpperCabinet: true
-    })).toEqual([100, 700])
+    })).toEqual([120, 680])
 
     expect(resolveDefaultDoorHingePositionsMm({
       doorHeightMm: 780,
       isLowerCabinet: true
-    })).toEqual([149, 680])
+    })).toEqual([120, 660])
 
     expect(resolveDefaultDoorHingePositionsMm({
       doorHeightMm: 2100
-    })).toEqual([149, 749, 1400, 2000])
+    })).toEqual([120, 740, 1360, 1980])
 
     expect(resolveDefaultDoorHingePositionsMm({
       doorHeightMm: 2700,
       hingeMode: 'lower5'
-    })).toEqual([149, 749, 1350, 2000, 2600])
+    })).toEqual([120, 735, 1350, 1965, 2580])
   })
 
   it('상부장 도어 패널 높이는 패널리스트 기존 기준값을 유지한다', () => {

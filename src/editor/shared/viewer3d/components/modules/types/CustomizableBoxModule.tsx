@@ -212,7 +212,7 @@ ShelfGapInput.displayName = 'ShelfGapInput';
  * 기존 BaseFurnitureShell과 동일한 체결 구조:
  * - 측판(좌/우): 전체 높이, 전체 깊이 (구조체)
  * - 상판/하판: 측판 사이에 끼워넣기, 깊이 26mm 줄임, 좌우 0.5mm씩 줄임
- * - 백패널: 9mm 두께, 측판보다 넓게 (innerW + 10mm), 뒤쪽 배치
+ * - 백패널: 9mm 두께, 측판 홈 안쪽으로 삽입 (innerW + 14mm), 뒤쪽 배치
  *
  * 내부 요소(서랍/옷봉/선반)는 기존 DrawerRenderer, ClothingRod, ShelfRenderer를
  * 그대로 재사용하여 동일한 생성 공식/보링/타공 방식을 유지합니다.
@@ -277,7 +277,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   // 15mm/18mm: 좌우 0.5mm씩 줄임 (총 1mm), 15.5mm/18.5mm: 갭 없음
   const widthReductionMm = (panelThickness === 15.5 || panelThickness === 18.5) ? 0 : 1;
   const widthReduction = mmToUnit(widthReductionMm);
-  const backPanelWidthExtMm = 10; // 백패널 너비 확장 (좌우 5mm씩)
+  const backPanelWidthExtMm = 14; // 백패널 너비 확장 (좌우 7mm씩)
   const backPanelDepthOffsetMm = 17; // 백패널 뒤쪽에서의 오프셋
   const drawerTopInsetMm = 85; // 서랍 섹션 상판 앞쪽 들여쓰기
   const drawerTopInset = mmToUnit(drawerTopInsetMm);
@@ -291,7 +291,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     height: panelHeight,
     fromZ: mmToUnit(backPanelDepthOffsetMm),
     depth: backPanelT + mmToUnit(1),
-    cutDepth: mmToUnit(5.5),
+    cutDepth: mmToUnit(7.5),
   }] : undefined;
 
   // Three.js 단위 치수
@@ -1617,7 +1617,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // ── 좌측 백패널 ── (측판과 동일 높이)
       if (getAreaShowBackPanel('left') !== false) {
       const leftBackH = boxH + leftSideExt;
-      const leftBackW = leftInnerW + mmToUnit(backPanelWidthExtMm / 2);
+      const leftBackW = leftInnerW - widthReduction / 2 + mmToUnit(backPanelWidthExtMm / 2);
       meshes.push(
         <BoxWithEdges key={`${prefix}-back-left`}
           args={[leftBackW, leftBackH, backPanelT]}
@@ -1629,7 +1629,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
       // ── 우측 백패널 ── (측판과 동일 높이)
       if (getAreaShowBackPanel('right') !== false) {
-      const rightBackW = rightInnerW + mmToUnit(backPanelWidthExtMm / 2);
+      const rightBackW = rightInnerW - widthReduction / 2 + mmToUnit(backPanelWidthExtMm / 2);
       const rightBackH = boxH + rightSideExt;
       meshes.push(
         <BoxWithEdges key={`${prefix}-back-right`}
@@ -1731,7 +1731,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // 좌측 백패널 (측판과 동일 높이)
       if (getAreaShowBackPanel('left') !== false) {
         const leftBackH = boxH + singleSideExt;
-        const leftBackW = leftInnerW + mmToUnit(backPanelWidthExtMm / 2);
+        const leftBackW = leftInnerW - widthReduction / 2 + mmToUnit(backPanelWidthExtMm / 2);
         meshes.push(
           <BoxWithEdges key={`${prefix}-back-left`}
             args={[leftBackW, leftBackH, backPanelT]}
@@ -1744,7 +1744,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // 우측 백패널 (측판과 동일 높이)
       if (getAreaShowBackPanel('right') !== false) {
         const rightBackH = boxH + singleSideExt;
-        const rightBackW = rightInnerW + mmToUnit(backPanelWidthExtMm / 2);
+        const rightBackW = rightInnerW - widthReduction / 2 + mmToUnit(backPanelWidthExtMm / 2);
         meshes.push(
           <BoxWithEdges key={`${prefix}-back-right`}
             args={[rightBackW, rightBackH, backPanelT]}
@@ -1758,7 +1758,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // 칸막이 없을 때: 단일 백패널 (측판과 동일 높이)
       if (section.showBackPanel !== false) {
       const backPanelH = boxH + singleSideExt;
-      const backPanelW = bInnerW + mmToUnit(backPanelWidthExtMm);
+      const backPanelW = bInnerW - widthReduction + mmToUnit(backPanelWidthExtMm);
       const backPanelZ = -boxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
       meshes.push(
         <BoxWithEdges
@@ -1975,7 +1975,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // 백패널 (측판과 동일 높이)
       if (hsGetAreaShowBackPanel(side) !== false) {
       const bpH = sbBoxH + hsSideExt;
-      const bpW = subInnerW + mmToUnit(backPanelWidthExtMm);
+      const bpW = subInnerW - widthReduction + mmToUnit(backPanelWidthExtMm);
       const bpZ = -subBoxD / 2 + backPanelT / 2 + mmToUnit(backPanelDepthOffsetMm);
       subMeshes.push(
         <BoxWithEdges

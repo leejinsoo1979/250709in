@@ -150,7 +150,7 @@ describe('panelDetails regression baselines', () => {
       stoneTopThickness: 30
     })
 
-    expect(findPanel(panels, '상판').depth).toBe(614)
+    expect(findPanel(panels, '상판').depth).toBe(595.5)
     expect(findPanel(panels, '인조대리석 상판').depth).toBe(673)
     expect(findPanel(panels, '인조대리석 앞판').height).toBe(80)
   })

@@ -24,6 +24,12 @@ export interface HingeBoringResult {
   hingePositions: number[]; // Y 위치 (하단부터)
 }
 
+export interface HingeShelfAvoidanceOptions {
+  clearanceMm?: number;
+  minMarginMm?: number;
+  maxMarginMm?: number;
+}
+
 // ============================================
 // 힌지 개수 계산
 // ============================================
@@ -74,6 +80,55 @@ export function calculateHingePositions(
   }
 
   return positions;
+}
+
+export function avoidHingePositionsForShelves(
+  hingePositions: number[],
+  shelfPositions: number[] = [],
+  doorHeight: number,
+  options: HingeShelfAvoidanceOptions = {}
+): number[] {
+  if (!Array.isArray(hingePositions) || hingePositions.length === 0) return [];
+  const clearance = options.clearanceMm ?? 50;
+  const minY = options.minMarginMm ?? DEFAULT_HINGE_SETTINGS.topBottomMargin;
+  const maxY = doorHeight - (options.maxMarginMm ?? DEFAULT_HINGE_SETTINGS.topBottomMargin);
+  const shelves = shelfPositions
+    .filter(position => Number.isFinite(position))
+    .sort((a, b) => a - b);
+
+  if (shelves.length === 0 || maxY <= minY) {
+    return hingePositions.map(position => Math.round(position * 1000) / 1000);
+  }
+
+  const collidesWithShelf = (position: number) => (
+    shelves.some(shelf => Math.abs(position - shelf) < clearance)
+  );
+  const clamp = (position: number) => Math.max(minY, Math.min(maxY, position));
+
+  return hingePositions
+    .map(originalPosition => {
+      let position = originalPosition;
+
+      for (let attempt = 0; attempt < shelves.length + 2; attempt += 1) {
+        const shelf = shelves.find(shelfPosition => Math.abs(position - shelfPosition) < clearance);
+        if (shelf === undefined) break;
+
+        const below = shelf - clearance;
+        const above = shelf + clearance;
+        const preferredBelow = position < shelf || (position === shelf && position <= doorHeight / 2);
+        const candidates = preferredBelow ? [below, above] : [above, below];
+        const validCandidates = candidates
+          .map(clamp)
+          .filter(candidate => !collidesWithShelf(candidate));
+
+        position = validCandidates.length > 0
+          ? validCandidates.sort((a, b) => Math.abs(a - originalPosition) - Math.abs(b - originalPosition))[0]
+          : clamp(candidates[0]);
+      }
+
+      return Math.round(position * 1000) / 1000;
+    })
+    .sort((a, b) => a - b);
 }
 
 // ============================================
@@ -190,6 +245,7 @@ export function calculateHingeBorings(params: HingeBoringParams): HingeBoringRes
 export default {
   calculateHingeCount,
   calculateHingePositions,
+  avoidHingePositionsForShelves,
   calculateDoorCupBorings,
   calculateSidePanelScrewBorings,
   calculateHingeBorings,
