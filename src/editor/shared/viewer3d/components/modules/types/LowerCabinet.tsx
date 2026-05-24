@@ -27,6 +27,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
+import { resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -1437,7 +1438,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         : rawBackPanelMm === 3.5
           ? 3
           : rawBackPanelMm;
-    const backReductionMm = backPanelMm + basicThicknessMm - 1;
+    const backPanelOffsetThicknessMm = resolveNominalBackPanelOffsetThicknessMm(basicThicknessMm);
+    const backReductionMm = backPanelMm + backPanelOffsetThicknessMm - 1;
     const baseBoring = calculateShelfBoringPositions({
       sections,
       totalHeightMm: cabinetHeightMm,
@@ -2295,7 +2297,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               cabinetCategory: 'lower',
               depthMm: depthMm
             }); // 깊이 < 400 → 20mm, 깊이 ≥ 400 → 72mm
-            const backReductionMm = backPanelMm + basicThicknessMm - 1; // 26mm (바닥판과 동일)
+            const backPanelOffsetThicknessMm = resolveNominalBackPanelOffsetThicknessMm(basicThicknessMm);
+            const backReductionMm = backPanelMm + backPanelOffsetThicknessMm - 1; // 바닥판과 동일
             const shelfDepthMm = depthMm - backReductionMm - shelfFrontInsetMm;
             const shelfWidth = baseFurniture.innerWidth;
             const shelfDepth = mmToUnits(shelfDepthMm);

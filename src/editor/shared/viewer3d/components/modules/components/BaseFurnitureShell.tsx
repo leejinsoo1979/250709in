@@ -16,6 +16,7 @@ import { VentilationCap } from './VentilationCap';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
+import { resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -418,11 +419,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 }) => {
   // backPanelConfig 기본값: depthOffset과 lowerHeightBonus를 basicThickness 기반으로 동적 설정
   const basicThicknessMm = Math.round((basicThickness / 0.01) * 10) / 10; // Three.js → mm 변환
+  const backPanelOffsetThicknessMm = resolveNominalBackPanelOffsetThicknessMm(basicThicknessMm);
   const backPanelConfig = {
     widthExtension: 14,
     heightExtension: 10,
     lowerHeightBonus: basicThicknessMm, // 가구재 두께 (18 또는 15)
-    depthOffset: basicThicknessMm - 1, // 가구재 두께 - 1mm (17 또는 14)
+    depthOffset: backPanelOffsetThicknessMm - 1, // 백패널 홈 기준: 18.5T/15.5T도 18T/15T 명목값 사용
     yOffsetFor4Drawer: 9,
     yOffsetFor2Drawer: 9,
     lowerYAdjustment: 0.05,
@@ -494,7 +496,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
 
   // 백패널 두께 기반 상/하판/선반 깊이 줄임량 (백패널 + (가구재두께 - 1mm) 오프셋)
-  const backReductionForPanels = backPanelThickness + basicThickness - mmToThreeUnits(1);
+  const backReductionForPanels = backPanelThickness + mmToThreeUnits(backPanelOffsetThicknessMm) - mmToThreeUnits(1);
   // 상/하판/칸막이 Z축 오프셋 (backReduction의 절반 = 앞쪽 고정, 뒤에서 줄임)
   const panelZOffset = backReductionForPanels / 2;
 
@@ -2948,7 +2950,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const SHELF_FRAME_THICK_MM = 18;
                 const GLASS_THICKNESS_MM = 5;
                 const FRONT_OFFSET_MM = 50; // 천판과 동일한 앞 옵셋
-                const BACK_REDUCTION_MM = (basicThickness / 0.01) - 1; // 천판 backReduction과 동일 (백패널 옵셋)
+                const BACK_REDUCTION_MM = backPanelOffsetThicknessMm - 1; // 천판 backReduction과 동일 (백패널 옵셋)
 
                 const fW = mmToThreeUnits(SHELF_FRAME_WIDTH_MM);
                 const fT = mmToThreeUnits(SHELF_FRAME_THICK_MM);

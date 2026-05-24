@@ -16,6 +16,7 @@ import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resol
 import { getDirectLowerDowelShelfPositionsMm, isDirectLowerDowelShelfModule } from './lowerCabinetDowelShelves';
 import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
+import { resolveNominalBackPanelOffsetThicknessMm } from './panelThickness';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -205,7 +206,8 @@ export const calculatePanelDetails = (
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
-  const backReductionForPanelsMm = backPanelThickness + basicThickness - 1;
+  const backPanelOffsetThickness = resolveNominalBackPanelOffsetThicknessMm(basicThickness);
+  const backReductionForPanelsMm = backPanelThickness + backPanelOffsetThickness - 1;
   
   // 선반 앞면 30mm 옵셋 (다보선반: 상부장·하부장 공통)
   const isUpperCabinet = moduleData.category === 'upper';
@@ -620,7 +622,7 @@ export const calculatePanelDetails = (
 
       if (isKitchenNSectionFurniture) {
         const isFridgeNoBackLower = moduleData.id.includes('fridge-cabinet') && sectionIndex === 0;
-        const lowerBackReduction = isFridgeNoBackLower ? basicThickness - 1 : backReductionForPanelsMm;
+        const lowerBackReduction = isFridgeNoBackLower ? backPanelOffsetThickness - 1 : backReductionForPanelsMm;
 
         // 3D BaseFurnitureShell은 N섹션 키큰장 수평재를 고정 이름으로 렌더링한다.
         if (sectionIndex === 0) {
@@ -1810,7 +1812,7 @@ export const calculatePanelDetails = (
     const drawerHandleThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerSideThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerBottomThicknessCC = backPanelThickness; // MDF 재질, 백패널과 동일
-    const backReductionForCustomPanelsMm = backPanelThickness + basicThicknessCC - 1;
+    const backReductionForCustomPanelsMm = backPanelThickness + resolveNominalBackPanelOffsetThicknessMm(basicThicknessCC) - 1;
     const targetPanel = panels.upper.length > 0 ? panels.upper : panels.lower;
 
     customConfig.sections.forEach((section, secIdx) => {
@@ -2125,8 +2127,8 @@ export const calculatePanelDetails = (
     const glassFrameWidth = glassDrawerModuleInnerWidth;
     const glassWoodChannelHeight = 60;
     const glassWoodChannelVerticalHeight = glassWoodChannelHeight - doorPanelCutThickness;
-    const backPanelDepthOffset = basicThickness - 1;
-    const rearAlignedPanelDepth = customDepth - 57 - backPanelThickness - basicThickness;
+    const backPanelDepthOffset = backPanelOffsetThickness - 1;
+    const rearAlignedPanelDepth = customDepth - 57 - backPanelThickness - backPanelOffsetThickness;
     const topRearInnerPanelDepth = drawerModuleBottomDepth - basicThickness;
 
     glassPanelsTarget.push(

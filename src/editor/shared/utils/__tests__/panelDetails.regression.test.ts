@@ -51,6 +51,7 @@ interface PanelDetailOptions {
   doorTopGap?: number
   doorBottomGap?: number
   backPanelThicknessMm?: number
+  basicThicknessMm?: number
   freeHeight?: number
   stoneTopThickness?: number
   customHingePositionsMm?: number[]
@@ -66,7 +67,16 @@ const calculatePanels = (
   depth: number,
   options: PanelDetailOptions = {}
 ) => {
-  const moduleData = getRequiredModule(id, width, depth)
+  const rawModuleData = getRequiredModule(id, width, depth)
+  const moduleData = options.basicThicknessMm == null
+    ? rawModuleData
+    : {
+        ...rawModuleData,
+        modelConfig: {
+          ...rawModuleData.modelConfig,
+          basicThickness: options.basicThicknessMm
+        }
+      }
 
   return calculatePanelDetails(
     moduleData,
@@ -148,6 +158,19 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '서랍1 앞판').groovePositions).toBeUndefined()
     expect(findPanel(panels, '서랍1 뒷판').groovePositions).toBeUndefined()
     expect(findPanel(panels, '서랍1 바닥').depth).toBe(275)
+  })
+
+  it('18.5T도 백패널 홈 기준 후면 오프셋은 18T와 동일하게 계산한다', () => {
+    const panels = calculatePanels('single-entryway-h-500', 500, 380, {
+      hasDoor: true,
+      backPanelThicknessMm: 3,
+      basicThicknessMm: 18.5
+    })
+
+    expect(findPanel(panels, '(하)바닥').depth).toBe(360)
+    expect(findPanel(panels, '(하)상판').depth).toBe(360)
+    expect(findPanel(panels, '(상)바닥').depth).toBe(360)
+    expect(findPanel(panels, '(상)상판').depth).toBe(360)
   })
 
   it('상판내림 30T 패널 목록은 상판/앞판 기준 치수를 고정한다', () => {
