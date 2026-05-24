@@ -203,6 +203,7 @@ export const calculatePanelDetails = (
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
+  const backReductionForPanelsMm = backPanelThickness + basicThickness - 1;
   
   // 선반 앞면 30mm 옵셋 (다보선반: 상부장·하부장 공통)
   const isUpperCabinet = moduleData.category === 'upper';
@@ -574,7 +575,7 @@ export const calculatePanelDetails = (
         const skipMiddlePanel = isPantsHanger && isLastSection;
 
         if (!skipMiddlePanel) {
-          const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth) - 26; // 백패널과 맞닿게 26mm 감소
+          const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth) - backReductionForPanelsMm; // 백패널과 맞닿게 감소
           const isFirstSection = sectionIndex === 0;
           const leftLowerHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
           const furnitureHeightMm = moduleData.dimensions.height;
@@ -611,12 +612,12 @@ export const calculatePanelDetails = (
           // BoxModule shelf-split 렌더링 공식과 동일: D - 40 - t - (backT + t - 1)
           return Math.max(1, customDepth - 39 - basicThickness * 2 - backPanelThickness);
         }
-        return customDepth - 26 - lowerTopPanelFrontReduction;
+        return customDepth - backReductionForPanelsMm - lowerTopPanelFrontReduction;
       };
 
       if (isKitchenNSectionFurniture) {
         const isFridgeNoBackLower = moduleData.id.includes('fridge-cabinet') && sectionIndex === 0;
-        const lowerBackReduction = isFridgeNoBackLower ? basicThickness - 1 : 26;
+        const lowerBackReduction = isFridgeNoBackLower ? basicThickness - 1 : backReductionForPanelsMm;
 
         // 3D BaseFurnitureShell은 N섹션 키큰장 수평재를 고정 이름으로 렌더링한다.
         if (sectionIndex === 0) {
@@ -639,7 +640,7 @@ export const calculatePanelDetails = (
           panels.upper.push({
             name: '(상)바닥',
             width: horizontalPanelWidth,
-            depth: customDepth - 26,
+            depth: customDepth - backReductionForPanelsMm,
             thickness: basicThickness,
             material: 'PB'
           });
@@ -648,7 +649,7 @@ export const calculatePanelDetails = (
           panels.upper.push({
             name: '(상)상판',
             width: horizontalPanelWidth,
-            depth: customDepth - 26,
+            depth: customDepth - backReductionForPanelsMm,
             thickness: basicThickness,
             material: 'PB'
           });
@@ -659,7 +660,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}바닥`,
             width: horizontalPanelWidth,
-            depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
+            depth: customDepth - backReductionForPanelsMm, // 백패널과 맞닿게 감소
             thickness: basicThickness,
             material: 'PB'
           });
@@ -672,7 +673,7 @@ export const calculatePanelDetails = (
             width: horizontalPanelWidth,
             depth: sectionIndex === 0
               ? resolveLowerTopPanelDepth()
-              : customDepth - 26, // 백패널과 맞닿게 26mm 감소 + 하부상판 앞 옵셋/목찬넬 반영
+              : customDepth - backReductionForPanelsMm, // 백패널과 맞닿게 감소 + 하부상판 앞 옵셋/목찬넬 반영
             thickness: basicThickness,
             material: 'PB'
           });
@@ -683,7 +684,7 @@ export const calculatePanelDetails = (
             targetPanel.push({
               name: `${sectionPrefix}바닥`,
               width: horizontalPanelWidth,
-              depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
+              depth: customDepth - backReductionForPanelsMm, // 백패널과 맞닿게 감소
               thickness: basicThickness,
               material: 'PB'
             });
@@ -701,7 +702,7 @@ export const calculatePanelDetails = (
             const topPanelEntry: any = {
               name: `${sectionPrefix}상판`,
               width: horizontalPanelWidth,
-              depth: customDepth - 26 - topDownFrontReductionMm, // 3D 상판내림 상판 렌더링 깊이와 동일
+              depth: customDepth - backReductionForPanelsMm - topDownFrontReductionMm, // 3D 상판내림 상판 렌더링 깊이와 동일
               thickness: basicThickness,
               material: 'PB'
             };
@@ -1087,7 +1088,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}선반 1`,
             width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
-            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
+            depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
             thickness: basicThickness,
             material: 'PB'
           });
@@ -1098,7 +1099,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}선반 ${i}`,
             width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
-            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
+            depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
             thickness: basicThickness,
             material: 'PB'  // 기본 재질
           });
@@ -1120,7 +1121,7 @@ export const calculatePanelDetails = (
       const microwaveSideGap = 2;
       const microwaveTrayThickness = 18;
       const microwaveTrayDepth = 450;
-      const backPanelFrontOffset = backPanelThickness + basicThickness - 1;
+      const backPanelFrontOffset = backReductionForPanelsMm;
       const wingDepth = customDepth - microwaveFrontInset - backPanelFrontOffset;
       const wingInnerSpan = innerWidth - microwaveWingThickness * 2;
       const trayAndFrameWidth = wingInnerSpan - microwaveSideGap * 2;
@@ -1174,7 +1175,7 @@ export const calculatePanelDetails = (
         cabinetCategory: 'lower',
         depthMm: customDepth,
       });
-      const backReductionMm = backPanelThickness + basicThickness - 1;
+      const backReductionMm = backReductionForPanelsMm;
       const shelfDepthMm = customDepth - backReductionMm - directShelfFrontInsetMm;
       directShelfPositions.forEach((_, index) => {
         const shelfName = `선반 ${index + 1}`;
@@ -1191,7 +1192,7 @@ export const calculatePanelDetails = (
 
     // === 현관장 H 전용: 서랍받침대 + 서랍속장(날개벽) + 속서랍 ===
     if (moduleData.id.includes('entryway-h')) {
-      const backReduction = backPanelThickness + 17; // 26mm
+      const backReduction = backReductionForPanelsMm;
       const lowerTopOffset = 85; // 하부 상판 앞쪽 오프셋
       const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       const horizontalPanelWidth = innerWidth - sidePanelGap;
@@ -1312,7 +1313,7 @@ export const calculatePanelDetails = (
     panels.upper.push({
       name: '(상)선반 1',
       width: innerWidth - sidePanelGap,
-      depth: customDepth - 8 - basicThickness - shelfFrontInsetMm,
+      depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm,
       thickness: basicThickness,
       material: 'PB'
     });
@@ -1385,7 +1386,7 @@ export const calculatePanelDetails = (
           rTargetPanel.push({
             name: `${rSectionPrefix}선반 1`,
             width: rightHorizontalPanelWidth,
-            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm,
+            depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm,
             thickness: basicThickness,
             material: 'PB'
           });
@@ -1395,7 +1396,7 @@ export const calculatePanelDetails = (
           rTargetPanel.push({
             name: `${rSectionPrefix}선반 ${i}`,
             width: rightHorizontalPanelWidth,
-            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm,
+            depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm,
             thickness: basicThickness,
             material: 'PB'
           });
@@ -1826,6 +1827,7 @@ export const calculatePanelDetails = (
     const drawerHandleThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerSideThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerBottomThicknessCC = backPanelThickness; // MDF 재질, 백패널과 동일
+    const backReductionForCustomPanelsMm = backPanelThickness + basicThicknessCC - 1;
     const targetPanel = panels.upper.length > 0 ? panels.upper : panels.lower;
 
     customConfig.sections.forEach((section, secIdx) => {
@@ -1836,7 +1838,7 @@ export const calculatePanelDetails = (
       if (section.hasPartition && section.partitionPosition) {
         targetPanel.push({
           name: `${sectionPrefix}칸막이`,
-          width: customDepth - 26, // 백패널 여유
+          width: customDepth - backReductionForCustomPanelsMm, // 백패널 여유
           height: section.height,
           thickness: basicThicknessCC,
           material: 'PB'
@@ -1861,7 +1863,7 @@ export const calculatePanelDetails = (
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}선반 ${i + 1}`,
                   width: horizontalW,
-                  depth: customDepth - 8 - basicThicknessCC,
+                  depth: customDepth - backReductionForCustomPanelsMm,
                   thickness: basicThicknessCC,
                   material: 'PB'
                 });
@@ -1947,7 +1949,7 @@ export const calculatePanelDetails = (
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}옷봉 선반`,
                   width: horizontalW,
-                  depth: customDepth - 8 - basicThicknessCC,
+                  depth: customDepth - backReductionForCustomPanelsMm,
                   thickness: basicThicknessCC,
                   material: 'PB'
                 });
@@ -1980,14 +1982,14 @@ export const calculatePanelDetails = (
         for (let d = 0; d < numDividers; d++) {
           targetPanel.push({
             name: `${sectionPrefix}좌우 분할판 ${d + 1}A`,
-            width: customDepth - 26,
+            width: customDepth - backReductionForCustomPanelsMm,
             height: section.height,
             thickness: basicThicknessCC,
             material: 'PB'
           });
           targetPanel.push({
             name: `${sectionPrefix}좌우 분할판 ${d + 1}B`,
-            width: customDepth - 26,
+            width: customDepth - backReductionForCustomPanelsMm,
             height: section.height,
             thickness: basicThicknessCC,
             material: 'PB'

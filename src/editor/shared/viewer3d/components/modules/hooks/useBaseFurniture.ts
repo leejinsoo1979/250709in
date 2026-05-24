@@ -261,9 +261,17 @@ export const useBaseFurniture = (
     };
 
     const scaledSections = sections.map((section: SectionConfig, idx: number) => {
+      const hasCustomShelfPositions = !!customSections
+        && Array.isArray(section.shelfPositions)
+        && (section.count ?? 0) > 0
+        && section.shelfPositions.length >= (section.count ?? 0);
+
       if (idx !== absorbingIdx) {
         // 하부 섹션: 높이는 고정이되, shelfPositions는 현재 섹션 내경 기준으로 균등 재분할
         // (띄움 배치 등 렌더 높이 변화 시 기존 절대 위치가 비균등으로 보이는 문제 방지)
+        if (hasCustomShelfPositions) {
+          return section;
+        }
         if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
           // [0]은 치수 표시용 sentinel 이므로 유지, 실제 선반 갯수 = count 로 균등 재계산
           const realCount = section.count;
@@ -291,6 +299,12 @@ export const useBaseFurniture = (
       const upperSafetyShelfSection = preserveUpperSafetyShelfGap(section, newSectionHeight);
       if (upperSafetyShelfSection) {
         return upperSafetyShelfSection;
+      }
+      if (hasCustomShelfPositions) {
+        return {
+          ...section,
+          height: newSectionHeight,
+        };
       }
       if (!isLowerAbsorbShoeCabinetHeight && section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
         const realCount = section.count;

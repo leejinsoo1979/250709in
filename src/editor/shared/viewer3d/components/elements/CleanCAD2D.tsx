@@ -7370,14 +7370,31 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           const applyGapEdit = (gapIdx: number, newGap: number) => {
             const safeGap = Math.max(0, Math.round(newGap));
-            const updated = [...gaps];
-            updated[gapIdx] = safeGap;
+            const latestModule = useFurnitureStore.getState().placedModules.find(m => m.id === module.id);
+            const latestSections = ((latestModule as any)?.customSections || effectiveSections) as any[];
+            const latestSection = latestSections[sectionIdx] || section;
+            const latestPositionSource = Array.isArray(latestSection.shelfPositions) && latestSection.shelfPositions.length === n
+              ? latestSection.shelfPositions
+              : posArr;
+            const latestPositions = [...latestPositionSource].sort((a, b) => a - b);
             // 섹션 외경을 spaceInfo 실시간 값으로 재계산 (받침/프레임 변경 즉시 반영)
             const sectionOuterH2 = sectionOuterH;
-            const innerH = Math.max(0, sectionOuterH2 - 2 * basicThickness);
+            const sectionInnerH = Math.max(0, sectionOuterH2 - 2 * basicThickness);
+            const latestGaps: number[] = [];
+            for (let k = 0; k <= n; k++) {
+              if (k === 0) {
+                latestGaps.push(Math.max(0, Math.round(latestPositions[0] - halfT)));
+              } else if (k === n) {
+                latestGaps.push(Math.max(0, Math.round(sectionInnerH - latestPositions[n - 1] - halfT)));
+              } else {
+                latestGaps.push(Math.max(0, Math.round(latestPositions[k] - latestPositions[k - 1] - basicThickness)));
+              }
+            }
+            const updated = [...latestGaps];
+            updated[gapIdx] = safeGap;
             const otherCount = updated.length - 1;
             if (otherCount > 0) {
-              const remaining = innerH - safeGap - n * basicThickness;
+              const remaining = sectionInnerH - safeGap - n * basicThickness;
               const eachOther = Math.max(0, Math.round(remaining / otherCount));
               for (let k = 0; k < updated.length; k++) {
                 if (k !== gapIdx) updated[k] = eachOther;
@@ -7385,7 +7402,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 반올림 오차 흡수
               const lastIdx = gapIdx === updated.length - 1 ? updated.length - 2 : updated.length - 1;
               const sumAll = updated.reduce((s, v) => s + v, 0);
-              updated[lastIdx] += Math.round(innerH - sumAll - n * basicThickness);
+              updated[lastIdx] += Math.round(sectionInnerH - sumAll - n * basicThickness);
               updated[lastIdx] = Math.max(0, updated[lastIdx]);
             }
             // pos[k] = sum(gaps[0..k]) + k*basicThickness + halfT (선반 중심)
@@ -7395,8 +7412,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               acc += updated[k];
               newPositions.push(Math.round(acc + k * basicThickness + halfT));
             }
-            const newSections = [...effectiveSections];
-            newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
+            const newSections = latestSections.map((s: any) => ({
+              ...s,
+              ...(Array.isArray(s.shelfPositions) ? { shelfPositions: [...s.shelfPositions] } : {})
+            }));
+            newSections[sectionIdx] = { ...latestSection, shelfPositions: newPositions };
             updatePlacedModule(module.id, { customSections: newSections });
           };
           // 신발장(현관장 H/선반장)의 하부 섹션 마지막 칸(받침대 아래)은 라벨 표시 안 함
