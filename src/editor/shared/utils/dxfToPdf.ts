@@ -203,7 +203,11 @@ export const resolvePlacedModuleExportDepth = (
     ...(module.sectionDepths ?? [])
   ].filter((depth): depth is number => typeof depth === 'number' && Number.isFinite(depth) && depth > 0);
 
-  const categoryDefaultDepth = getCategoryDefaultFurnitureDepth(spaceInfo.depth, module.moduleId);
+  const categoryDefaultDepth = getCategoryDefaultFurnitureDepth(
+    spaceInfo.depth,
+    module.moduleId,
+    spaceInfo.furnitureDepthDefaults
+  );
 
   if (explicitDepths.length === 0) {
     return categoryDefaultDepth ?? Math.min(spaceInfo.depth || 600, 600);

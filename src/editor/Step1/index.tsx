@@ -96,6 +96,7 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           } : {}),
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,
+          furnitureDepthDefaults: defaults.furnitureDepthDefaults ?? current.furnitureDepthDefaults,
           // 프레임 설정 (surroundMode)
           ...(defaults.surroundMode ? {
             surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,

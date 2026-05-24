@@ -334,13 +334,15 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       return { moduleDepthMm: baseDepthMm, zOffset: 0 };
     }
 
-    // UI의 '뒤고정'은 front 값이다. 뒷면을 고정하고 깊이를 변경하면(줄이거나 늘리면)
-    // 도어도 새 앞선으로 이동해야 한다. (이전: 늘릴 때(>=baseDepth) 분기 빠짐 → 도어 안 따라옴)
+    // UI의 '뒤고정'은 front 값이다. 가구 본체 섹션은 SectionsRenderer에서
+    // `directionOffset = -depthDiff / 2` (depthDiff = baseDepth - sectionDepth)
+    // 으로 절반만 이동(중앙 기준)한다. 도어도 가구 본체 새 앞면에 맞추려면
+    // 절반(+depthDiff 절댓값/2)만큼만 앞으로 이동시켜야 한다.
     if (sectionDirection === 'front') {
-      const diffMm = baseDepthMm - sectionDepthMm; // 음수면 늘어난 것 → zOffset 양수(앞으로)
+      const diffMm = baseDepthMm - sectionDepthMm; // 음수면 늘어난 것
       return {
         moduleDepthMm: sectionDepthMm,
-        zOffset: -baseFurniture.mmToThreeUnits(diffMm),
+        zOffset: -baseFurniture.mmToThreeUnits(diffMm) / 2,
       };
     }
 

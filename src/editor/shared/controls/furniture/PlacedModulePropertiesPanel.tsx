@@ -15,6 +15,7 @@ import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstant
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
+import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
@@ -1086,17 +1087,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     };
   }, [activePopup.type, closeAllPopups]);
   
-  // 기본 가구 깊이 계산 (가구별 defaultDepth 우선, 없으면 fallback)
+  // 기본 가구 깊이 계산
   const getDefaultDepth = useCallback((moduleData?: ModuleData) => {
-    // 가구별 기본 깊이가 정의되어 있으면 사용
-    if (moduleData?.defaultDepth) {
-      return Math.min(moduleData.defaultDepth, spaceInfo.depth);
-    }
-    
-    // 기존 로직 (fallback)
-    const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
-    return Math.min(spaceBasedDepth, FURNITURE_LIMITS.DEPTH.DEFAULT_FALLBACK);
-  }, [spaceInfo.depth]);
+    return getDefaultFurnitureDepth(spaceInfo, moduleData);
+  }, [spaceInfo]);
 
   // 현재 편집 중인 배치된 모듈 찾기 (조건부 렌더링 전에 미리 계산)
   const currentPlacedModule = activePopup.type === 'furnitureEdit' && activePopup.id 

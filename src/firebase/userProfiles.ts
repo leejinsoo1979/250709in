@@ -18,6 +18,7 @@ import { db, auth, app } from './config';
 import { getCurrentUserAsync } from './auth';
 import { UserProfile } from './types';
 import { getUserPlan, getPlanLimits, PlanType } from './plans';
+import type { FurnitureDepthDefaults } from '@/store/core/spaceConfigStore';
 
 // 컬렉션 참조
 const USER_PROFILES_COLLECTION = 'userProfiles';
@@ -744,6 +745,7 @@ export type SpaceConfigDefaults = {
   baseFrameOffset?: number;
   furnitureSingleWidth?: number;
   furnitureDualWidth?: number;
+  furnitureDepthDefaults?: FurnitureDepthDefaults;
   surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
   installType?: 'builtin' | 'semistanding-left' | 'semistanding-right' | 'freestanding';
   placementType?: 'slot' | 'free';

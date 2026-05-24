@@ -625,7 +625,11 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   if (customDepth === undefined) {
-    customDepth = getCategoryDefaultFurnitureDepth(spaceInfo.depth, furnitureId);
+    customDepth = getCategoryDefaultFurnitureDepth(
+      spaceInfo.depth,
+      furnitureId,
+      spaceInfo.furnitureDepthDefaults
+    );
   }
 
   // 고정폭 모듈 (빌트인 냉장고장 582 / Insert 프레임 136): 항상 고정폭 유지 (자유 모드 포함)

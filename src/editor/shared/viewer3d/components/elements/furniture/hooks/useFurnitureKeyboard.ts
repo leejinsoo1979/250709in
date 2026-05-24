@@ -7,6 +7,7 @@ import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import {
   buildSideWallSlotSizesMm,
   calculateSideWallPlacementRangeMm,
@@ -117,16 +118,7 @@ export const useFurnitureKeyboard = ({
 
       const getPlacementDefaultDepth = (moduleId: string): number => {
         const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
-        if (moduleId.includes('upper-cabinet')) {
-          return Math.min(300, spaceInfo.depth || 600);
-        }
-        if (moduleId.includes('-entryway-') || moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) {
-          return Math.min(380, spaceInfo.depth || 600);
-        }
-        if (moduleData?.defaultDepth) {
-          return Math.min(moduleData.defaultDepth, spaceInfo.depth || 600);
-        }
-        return Math.min(Math.floor((spaceInfo.depth || 600) * 0.9), 580);
+        return getDefaultFurnitureDepth(spaceInfo, moduleData);
       };
 
       const getSideSlotSizes = (wall: 'left' | 'right') => {

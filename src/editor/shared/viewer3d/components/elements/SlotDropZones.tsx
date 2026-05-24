@@ -24,6 +24,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopup';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAlert } from '@/contexts/AlertContext';
+import { getDefaultFurnitureDepth as resolveDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
 // 빌트인 냉장고장: 폭 582 / 깊이 600 고정 모듈
 // 슬롯 너비와 무관하게 582로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
@@ -46,28 +47,8 @@ const getModulePlacementFlags = (moduleData: ModuleData | undefined) => {
   };
 };
 
-const isShoeCabinetModule = (moduleId: string): boolean => {
-  const key = moduleId.replace(/-[\d.]+$/, '');
-  return !moduleId.includes('upper-cabinet-') && (
-    moduleId.includes('-entryway-') ||
-    moduleId.includes('-4drawer-shelf-') ||
-    moduleId.includes('-2drawer-shelf-') ||
-    /(^|-)shelf$/.test(key)
-  );
-};
-
-const getPlacementDefaultDepth = (moduleData: ModuleData | undefined, spaceDepth: number): number => {
-  const moduleId = moduleData?.id || '';
-  if (moduleId.includes('upper-cabinet')) {
-    return Math.min(300, spaceDepth);
-  }
-  if (isShoeCabinetModule(moduleId)) {
-    return Math.min(380, spaceDepth);
-  }
-  if (moduleData?.defaultDepth) {
-    return Math.min(moduleData.defaultDepth, spaceDepth);
-  }
-  return Math.min(Math.floor(spaceDepth * 0.9), 580);
+const getPlacementDefaultDepth = (moduleData: ModuleData | undefined, spaceInfo: SpaceInfo): number => {
+  return resolveDefaultFurnitureDepth(spaceInfo, moduleData);
 };
 
 // currentDragData에서 모듈 ID 추출 헬퍼 함수
@@ -507,7 +488,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     
     // 기본 가구 깊이 계산 함수 (미리 정의)
     const getDefaultDepth = (moduleData: ModuleData | undefined) => {
-      return getPlacementDefaultDepth(moduleData, spaceInfo.depth);
+      return getPlacementDefaultDepth(moduleData, spaceInfo);
     };
     
     // 듀얼 가구가 기둥에 침범당하면 배치 불가
@@ -557,7 +538,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     let customDepth;
     if (isFirstFurnitureInColumnC) {
       // Column C 첫 번째 가구는 원래 깊이 사용
-      customDepth = currentCustomDepth || getPlacementDefaultDepth(actualModuleData, spaceInfo.depth);
+      customDepth = currentCustomDepth || getPlacementDefaultDepth(actualModuleData, spaceInfo);
 // console.log('🔵 Column C 첫 번째 가구 깊이 설정:', {
         // currentCustomDepth,
         // defaultDepth: actualModuleData.defaultDepth,
@@ -1911,7 +1892,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
 
         // 미리보기용 기본 깊이 계산 함수
         const getPreviewDepth = (moduleData: ModuleData) => {
-          return getPlacementDefaultDepth(moduleData, spaceInfo.depth);
+          return getPlacementDefaultDepth(moduleData, spaceInfo);
         };
 
         // Z축 위치 계산 상수 - 실제 공간 깊이 사용

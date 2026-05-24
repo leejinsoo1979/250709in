@@ -383,7 +383,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         if (module.customDepth === undefined || module.customDepth === null) {
           module.customDepth = getCategoryDefaultFurnitureDepth(
             spaceInfo.depth || 600,
-            module.moduleId || ''
+            module.moduleId || '',
+            spaceInfo.furnitureDepthDefaults
           );
         }
       } catch {}

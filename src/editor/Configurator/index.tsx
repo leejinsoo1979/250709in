@@ -2417,6 +2417,7 @@ const Configurator: React.FC = () => {
             } : {}),
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
+            ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'
@@ -2674,6 +2675,9 @@ const Configurator: React.FC = () => {
                 ...(baseSpaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
                 top: userDefaults.frameTop,
               };
+            }
+            if (userDefaults.furnitureDepthDefaults) {
+              baseSpaceInfo.furnitureDepthDefaults = userDefaults.furnitureDepthDefaults;
             }
           }
           // Firebase에 새 디자인 파일로 저장

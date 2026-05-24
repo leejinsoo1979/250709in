@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSpaceConfigDefaults, updateSpaceConfigDefaults, SpaceConfigDefaults } from '@/firebase/userProfiles';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import commonStyles from '@/editor/shared/controls/styles/common.module.css';
 import styles from './SpaceDefaultsModal.module.css';
 
@@ -21,6 +22,15 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   baseFrameOffset: 0,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
+  furnitureDepthDefaults: {
+    wardrobe: 580,
+    shoe: 380,
+    lowerBasic: 580,
+    lowerDoorLift: 580,
+    lowerTopDown: 580,
+    upper: 300,
+    tall: 580,
+  },
   placementType: 'slot',
   surroundMode: 'full-surround',
   installType: 'builtin' as const,
@@ -152,9 +162,14 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     const load = async () => {
       const defaults = await getSpaceConfigDefaults();
       if (defaults) {
+        const cleanDefaults = Object.fromEntries(Object.entries(defaults).filter(([, v]) => v !== undefined));
         setValues(prev => ({
           ...prev,
-          ...Object.fromEntries(Object.entries(defaults).filter(([, v]) => v !== undefined)),
+          ...cleanDefaults,
+          furnitureDepthDefaults: {
+            ...prev.furnitureDepthDefaults,
+            ...defaults.furnitureDepthDefaults,
+          },
         }));
       }
       setLoading(false);
@@ -169,6 +184,17 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
 
   const h = (key: keyof SpaceConfigDefaults) => (v: number) => set(key, v);
 
+  const hDepth = (key: keyof NonNullable<SpaceConfigDefaults['furnitureDepthDefaults']>) => (v: number) => {
+    setValues(prev => ({
+      ...prev,
+      furnitureDepthDefaults: {
+        ...prev.furnitureDepthDefaults,
+        [key]: v,
+      },
+    }));
+    setMessage(null);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     const { error } = await updateSpaceConfigDefaults(values);
@@ -176,6 +202,9 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     if (error) {
       setMessage({ text: error, type: 'error' });
     } else {
+      useSpaceConfigStore.getState().setSpaceInfo({
+        furnitureDepthDefaults: values.furnitureDepthDefaults,
+      });
       const cb = onSaved;
       onClose();
       if (cb) cb();
@@ -259,6 +288,26 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               selected={values.placementType}
               onChange={(id) => set('placementType', id as any)}
             />
+          </div>
+
+          {/* 카테고리별 기본 깊이 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>카테고리별 기본 깊이</div>
+            <div className={styles.row}>
+              <NumberInput label="의류장" value={values.furnitureDepthDefaults.wardrobe ?? 580} onChange={hDepth('wardrobe')} min={100} max={1200} step={10} />
+              <NumberInput label="신발장" value={values.furnitureDepthDefaults.shoe ?? 380} onChange={hDepth('shoe')} min={100} max={1200} step={10} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="기본하부장" value={values.furnitureDepthDefaults.lowerBasic ?? 580} onChange={hDepth('lowerBasic')} min={100} max={1200} step={10} />
+              <NumberInput label="도어올림하부장" value={values.furnitureDepthDefaults.lowerDoorLift ?? 580} onChange={hDepth('lowerDoorLift')} min={100} max={1200} step={10} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="상판내림하부장" value={values.furnitureDepthDefaults.lowerTopDown ?? 580} onChange={hDepth('lowerTopDown')} min={100} max={1200} step={10} />
+              <NumberInput label="상부장" value={values.furnitureDepthDefaults.upper ?? 300} onChange={hDepth('upper')} min={100} max={1200} step={10} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="키큰장" value={values.furnitureDepthDefaults.tall ?? 580} onChange={hDepth('tall')} min={100} max={1200} step={10} />
+            </div>
           </div>
 
           {/* 바닥마감재 상태 */}

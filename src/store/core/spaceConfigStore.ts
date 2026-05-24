@@ -17,6 +17,17 @@ export interface FrameSize {
   topOffset?: number; // 자유배치 상단몰딩 옵셋 (mm, 천장에서 아래로)
 }
 
+export type FurnitureDepthDefaultKey =
+  | 'wardrobe'
+  | 'shoe'
+  | 'lowerBasic'
+  | 'lowerDoorLift'
+  | 'lowerTopDown'
+  | 'upper'
+  | 'tall'
+
+export type FurnitureDepthDefaults = Partial<Record<FurnitureDepthDefaultKey, number>>
+
 type LegacyFrameSize = Partial<FrameSize> & {
   upper?: number;
   base?: number;
@@ -208,6 +219,8 @@ export interface SpaceInfo {
   // 자유배치 가구 기본 너비 (mm)
   furnitureSingleWidth?: number;  // 싱글 가구 기본 너비 (기본 500)
   furnitureDualWidth?: number;    // 듀얼 가구 기본 너비 (기본 1000)
+  // 카테고리별 가구 기본 깊이 (mm)
+  furnitureDepthDefaults?: FurnitureDepthDefaults;
 
   // 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간)
   stepCeiling?: StepCeilingConfig;

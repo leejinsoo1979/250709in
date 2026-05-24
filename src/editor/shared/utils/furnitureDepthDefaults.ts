@@ -1,4 +1,4 @@
-import type { SpaceInfo } from '@/store/core/spaceConfigStore'
+import type { FurnitureDepthDefaultKey, FurnitureDepthDefaults, SpaceInfo } from '@/store/core/spaceConfigStore'
 import type { ModuleData } from '@/data/modules'
 import { classifyModule } from './moduleClassification'
 
@@ -6,11 +6,69 @@ export const isShoeCabinetModuleId = (moduleId = ''): boolean => {
   return classifyModule(moduleId).isShoeCabinet
 }
 
+const isCornerCabinetModuleId = (moduleId = ''): boolean => {
+  return moduleId.includes('left-corner') || moduleId.includes('right-corner')
+}
+
+export const resolveFurnitureDepthDefaultKey = (
+  moduleId = ''
+): FurnitureDepthDefaultKey | undefined => {
+  if (!moduleId || isCornerCabinetModuleId(moduleId)) {
+    return undefined
+  }
+
+  const classification = classifyModule(moduleId)
+
+  if (classification.isUpperCabinet) {
+    return 'upper'
+  }
+
+  if (classification.isShoeCabinet) {
+    return 'shoe'
+  }
+
+  if (classification.isTopDown) {
+    return 'lowerTopDown'
+  }
+
+  if (classification.isDoorLift) {
+    return 'lowerDoorLift'
+  }
+
+  if (
+    moduleId.includes('lower-half-cabinet') ||
+    moduleId.includes('dual-lower-half-cabinet')
+  ) {
+    return 'lowerBasic'
+  }
+
+  if (
+    moduleId.includes('hanging') ||
+    moduleId.includes('pantshanger') ||
+    moduleId.includes('styler')
+  ) {
+    return 'wardrobe'
+  }
+
+  if (classification.isPantry || classification.isFridge) {
+    return 'tall'
+  }
+
+  return undefined
+}
+
 export const getCategoryDefaultFurnitureDepth = (
   spaceDepth: number,
-  moduleId = ''
+  moduleId = '',
+  defaults?: FurnitureDepthDefaults
 ): number | undefined => {
   const classification = classifyModule(moduleId)
+  const defaultKey = resolveFurnitureDepthDefaultKey(moduleId)
+  const configuredDepth = defaultKey ? defaults?.[defaultKey] : undefined
+
+  if (typeof configuredDepth === 'number' && configuredDepth > 0) {
+    return Math.min(configuredDepth, spaceDepth)
+  }
 
   if (classification.isUpperCabinet) {
     return Math.min(300, spaceDepth)
@@ -28,7 +86,11 @@ export const getDefaultFurnitureDepth = (
   moduleData?: ModuleData | null
 ): number => {
   const moduleId = moduleData?.id || ''
-  const categoryDepth = getCategoryDefaultFurnitureDepth(spaceInfo.depth, moduleId)
+  const categoryDepth = getCategoryDefaultFurnitureDepth(
+    spaceInfo.depth,
+    moduleId,
+    spaceInfo.furnitureDepthDefaults
+  )
 
   if (categoryDepth !== undefined) {
     return categoryDepth
@@ -46,4 +108,8 @@ export const resolveInitialFurnitureDepth = (
   spaceInfo: SpaceInfo,
   moduleId: string,
   requestedDepth: number
-): number => getCategoryDefaultFurnitureDepth(spaceInfo.depth, moduleId) ?? requestedDepth
+): number => getCategoryDefaultFurnitureDepth(
+  spaceInfo.depth,
+  moduleId,
+  spaceInfo.furnitureDepthDefaults
+) ?? requestedDepth

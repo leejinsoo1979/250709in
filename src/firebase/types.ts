@@ -1,7 +1,7 @@
 import { User } from 'firebase/auth';
 import { Timestamp } from 'firebase/firestore';
 import { BasicInfo } from '@/store/core/projectStore';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import type { SpaceInfo, FurnitureDepthDefaults } from '@/store/core/spaceConfigStore';
 import { PlacedModule, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 
 // Firebase 사용자 타입 (확장 가능)
@@ -219,6 +219,7 @@ export interface UserProfile {
     baseFrameOffset?: number;
     furnitureSingleWidth?: number;
     furnitureDualWidth?: number;
+    furnitureDepthDefaults?: FurnitureDepthDefaults;
     surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
     installType?: 'builtin' | 'semistanding-left' | 'semistanding-right' | 'freestanding';
     placementType?: 'slot' | 'free';

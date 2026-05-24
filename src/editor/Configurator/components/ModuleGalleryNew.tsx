@@ -6,6 +6,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
+import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import styles from './ModuleGalleryNew.module.css';
 
 type FurnitureType = 'tall' | 'lower' | 'panel';
@@ -102,24 +103,6 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
         positionX = indexing.threeUnitPositions[availableSlotIndex];
       }
       
-      // 기본 깊이 계산 (상부장 300 먼저, 신발장 380)
-      const getDefaultDepth = (moduleData: any) => {
-        const mid = moduleData?.id || moduleId || '';
-        const isUpperCabinet = mid.includes('upper-cabinet');
-        if (isUpperCabinet) {
-          return Math.min(300, spaceInfo.depth);
-        }
-        const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-        if (isShoeCabinet) {
-          return Math.min(380, spaceInfo.depth);
-        }
-        if (moduleData?.defaultDepth) {
-          return Math.min(moduleData.defaultDepth, spaceInfo.depth);
-        }
-        const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
-        return Math.min(spaceBasedDepth, 580);
-      };
-      
       // 고유 ID 생성
       const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
@@ -134,7 +117,7 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
         },
         rotation: 0,
         hasDoor: useUIStore.getState().doorInstallIntent || placedModules.some((m: any) => ((m as any).placementWall || 'front') === 'front' && m.hasDoor === true),
-        customDepth: getDefaultDepth(moduleData),
+        customDepth: getDefaultFurnitureDepth(spaceInfo, moduleData),
         slotIndex: availableSlotIndex,
         isDualSlot: isDualFurniture,
         isValidInCurrentSpace: true

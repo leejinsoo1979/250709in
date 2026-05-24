@@ -440,6 +440,7 @@ const SimpleDashboard: React.FC = () => {
             } : {}),
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
+            ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'
