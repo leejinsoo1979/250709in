@@ -430,6 +430,9 @@ export const calculatePanelDetails = (
       // 그 외는 통짜로 첫 번째 섹션에만 추가
       if (sections.length >= 2 && isSplitSidePanelFurniture) {
         const sidePanelHeight = adjustedSectionHeight;
+        const splitSidePanelNotches = moduleData.id.includes('shelf-split') && sectionIndex === 0
+          ? [{ y: 80, z: 40, fromBottom: sidePanelHeight - 80 }]
+          : undefined;
         // 냉장고장(반통/built-in 제외): 좌우 측판은 가구재 두께 −3mm (18→15, 18.5→15.5)
         // 3D BaseFurnitureShell line 644 와 동일한 분기
         const isFridgeCabinetSplitSide =
@@ -438,34 +441,40 @@ export const calculatePanelDetails = (
           ? Math.max(basicThickness - 3, 1)
           : basicThickness;
         // 상하 분리: 각 섹션마다 좌측판 추가
-        targetPanel.push({
+        const leftSplitSideEntry: any = {
           name: isKitchenNSectionFurniture ? `좌측판${sectionIndex + 1}` : `${sectionPrefix}좌측`,
           width: leftSideDepth,
           height: sidePanelHeight,
           thickness: splitSideThickness,
           material: 'PB'
-        });
+        };
+        if (splitSidePanelNotches) leftSplitSideEntry.sideNotches = splitSidePanelNotches;
+        targetPanel.push(leftSplitSideEntry);
 
         if (isStylerCabinet) {
           // 스타일러장: 우측판은 첫 번째 섹션에서만 전체 높이 통짜로 추가
           if (sectionIndex === 0) {
-            targetPanel.push({
+            const rightStylerSideEntry: any = {
               name: '우측판',
               width: rightSideDepth,
               height: height,
               thickness: splitSideThickness,
               material: 'PB'
-            });
+            };
+            if (splitSidePanelNotches) rightStylerSideEntry.sideNotches = splitSidePanelNotches;
+            targetPanel.push(rightStylerSideEntry);
           }
         } else {
           // 일반 분할 측판 가구: 우측판도 섹션별 분할
-          targetPanel.push({
+          const rightSplitSideEntry: any = {
             name: isKitchenNSectionFurniture ? `우측판${sectionIndex + 1}` : `${sectionPrefix}우측`,
             width: rightSideDepth,
             height: sidePanelHeight,
             thickness: splitSideThickness,
             material: 'PB'
-          });
+          };
+          if (splitSidePanelNotches) rightSplitSideEntry.sideNotches = splitSidePanelNotches;
+          targetPanel.push(rightSplitSideEntry);
         }
       } else if (sectionIndex === 0) {
         // 통짜 측판: 첫 번째 섹션에 전체 높이로 추가

@@ -21,6 +21,7 @@ interface PanelDetail {
   screwPositions?: number[]
   hingeCount?: number
   bracketBoringPositions?: number[]
+  sideNotches?: Array<{ y: number; z: number; fromBottom: number }>
 }
 
 const getRequiredModule = (id: string, width: number, depth: number) => {
@@ -293,6 +294,49 @@ describe('panelDetails regression baselines', () => {
     expect(doorNames).toEqual(['하부 도어', '상부 도어'])
   })
 
+  it('도어분절 현관장 도어 보링은 상하부 도어별 120mm 기본 공식을 따른다', () => {
+    const panels = calculatePanels('single-shelf-split-500', 500, 380, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const lowerDoor = findPanel(panels, '하부 도어')
+    const upperDoor = findPanel(panels, '상부 도어')
+
+    expect(lowerDoor.height).toBe(820)
+    expect(lowerDoor.boringPositions).toEqual([120, 700])
+    expect(lowerDoor.screwPositions).toEqual([97.5, 142.5, 677.5, 722.5])
+    expect(lowerDoor.hingeCount).toBe(2)
+    expect(upperDoor.height).toBe(1560)
+    expect(upperDoor.boringPositions).toEqual([120, 780, 1440])
+    expect(upperDoor.screwPositions).toEqual([97.5, 142.5, 757.5, 802.5, 1417.5, 1462.5])
+    expect(upperDoor.hingeCount).toBe(3)
+  })
+
+  it('듀얼 도어분절 현관장 도어 보링도 좌우 도어별 120mm 기본 공식을 따른다', () => {
+    const panels = calculatePanels('dual-shelf-split-1000', 1000, 380, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const doors = panels.filter(panel => panel.isDoor)
+
+    expect(doors.map(panel => panel.name)).toEqual([
+      '좌측 하부 도어',
+      '좌측 상부 도어',
+      '우측 하부 도어',
+      '우측 상부 도어'
+    ])
+    doors.filter(panel => panel.name?.includes('하부')).forEach(panel => {
+      expect(panel.height).toBe(820)
+      expect(panel.boringPositions).toEqual([120, 700])
+      expect(panel.hingeCount).toBe(2)
+    })
+    doors.filter(panel => panel.name?.includes('상부')).forEach(panel => {
+      expect(panel.height).toBe(1560)
+      expect(panel.boringPositions).toEqual([120, 780, 1440])
+      expect(panel.hingeCount).toBe(3)
+    })
+  })
+
   it('도어분절 현관장 하부 상단 목찬넬은 옵티마이저 패널 목록에 포함된다', () => {
     const panels = calculatePanels('single-shelf-split-500', 500, 380, {
       hasDoor: true,
@@ -303,6 +347,8 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
     expect(findPanel(panels, '전대')).toBeDefined()
     expect(findPanel(panels, '(하)상판').depth).toBe(296)
+    expect(findPanel(panels, '(하)좌측').sideNotches).toEqual([{ y: 80, z: 40, fromBottom: 780 }])
+    expect(findPanel(panels, '(하)우측').sideNotches).toEqual([{ y: 80, z: 40, fromBottom: 780 }])
   })
 
   it('주방 키큰장 인출장 패널 목록은 3D 옵티마이저 mesh 이름과 일치한다', () => {

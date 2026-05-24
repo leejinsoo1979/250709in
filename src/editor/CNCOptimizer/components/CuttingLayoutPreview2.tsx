@@ -1064,7 +1064,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // sideNotch: fromBottom=바닥에서 노치 하단까지, y=노치높이, z=노치깊이(앞면에서 안쪽으로)
           // 보링 위치 기준: 좌측판 앞면=x, 우측판 앞면=x+width (거울 대칭)
           const panelH = panel.rotated ? panel.width : panel.height;
-          const isRightSide = panel.name.includes('우측판');
+          const isRightSide = panel.name.includes('우측판') || panel.name.includes('우측');
           for (const sn of panel.sideNotches) {
             const isTopEdge = (sn.fromBottom + sn.y) >= panelH - 1;
 

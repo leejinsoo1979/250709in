@@ -2,7 +2,10 @@ import React from 'react';
 import * as THREE from 'three';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
+import { avoidHingePositionsForShelves } from '@/domain/boring/calculators/hingeCalculator';
+import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, resolveDoorVerticalGeometry, type DoorCabinetCategory } from '@/editor/shared/utils/doorGeometryCalculator';
 
 type SidePanelBoringDetail = ShelfBoringPositionDetail & {
   holeZPositions?: number[];
@@ -20,6 +23,12 @@ interface SidePanelBoringProps {
   // 선반 위치 + 섹션 상판/바닥판 위치 포함
   boringPositions?: number[];
   boringDetails?: SidePanelBoringDetail[];
+  hingeBracketPositions?: number[];
+  hingeBracketDepthOffsetsMm?: number[];
+  placedFurnitureId?: string;
+  category?: string;
+  doorTopGap?: number;
+  doorBottomGap?: number;
 
   // 유틸 함수
   mmToThreeUnits: (mm: number) => number;
@@ -48,10 +57,21 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   width,
   boringPositions = [],
   boringDetails = [],
+  hingeBracketPositions,
+  hingeBracketDepthOffsetsMm = [20, 52],
+  placedFurnitureId,
+  category,
+  doorTopGap,
+  doorBottomGap,
   mmToThreeUnits,
 }) => {
   const { viewMode, renderMode } = useSpace3DView();
   const view2DDirection = useUIStore(state => state.view2DDirection);
+  const placedModule = useFurnitureStore(state => (
+    placedFurnitureId
+      ? state.placedModules.find(module => module.id === placedFurnitureId)
+      : undefined
+  ));
 
   // wireframe 모드에서는 보링 홀 표시하지 않음
   if (renderMode === 'wireframe') return null;
@@ -61,8 +81,70 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
     return null;
   }
 
+  const autoHingeBracketPositions = React.useMemo(() => {
+    if (!placedModule?.hasDoor) return [];
+
+    const unitPerMm = mmToThreeUnits(1);
+    if (!unitPerMm) return [];
+
+    const heightMm = height / unitPerMm;
+    const basicThicknessMm = basicThickness / unitPerMm;
+    const doorWidthMm = (width || innerWidth + basicThickness * 2) / unitPerMm;
+    const cabinetCategory = (category || placedModule.moduleData?.category || 'generic') as DoorCabinetCategory;
+    const doorGeometry = resolveDoorVerticalGeometry({
+      moduleId: placedModule.moduleId,
+      cabinetCategory,
+      doorWidthMm,
+      cabinetHeightMm: heightMm,
+      doorTopGapMm: doorTopGap ?? (placedModule as any).doorTopGap,
+      doorBottomGapMm: doorBottomGap ?? (placedModule as any).doorBottomGap,
+      isDualSlot: placedModule.isDualSlot,
+      hingeSide: placedModule.hingePosition ?? 'right',
+      cabinetBottomMm: 0,
+    });
+    const customPositions = normalizeDoorHingePositionsMm(
+      placedModule.hingePositionsMm,
+      doorGeometry.leafHeightMm
+    );
+    const defaultPositions = resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: doorGeometry.leafHeightMm,
+    });
+    const shelfCollisionRanges = boringDetails
+      .filter(detail => detail.role === 'movable-shelf')
+      .map(detail => ({
+        bottomMm: detail.y - basicThicknessMm / 2 - doorGeometry.bottomMm,
+        topMm: detail.y + basicThicknessMm / 2 - doorGeometry.bottomMm,
+      }));
+    const resolvedPositions = customPositions.length > 0
+      ? customPositions
+      : avoidHingePositionsForShelves(
+        defaultPositions,
+        shelfCollisionRanges,
+        doorGeometry.leafHeightMm
+      );
+    const sidePanelOffsetMm = doorGeometry.bottomMm;
+
+    return resolvedPositions
+      .map(position => position + sidePanelOffsetMm)
+      .filter(position => position >= 0 && position <= heightMm);
+  }, [
+    basicThickness,
+    boringDetails,
+    category,
+    depth,
+    doorBottomGap,
+    doorTopGap,
+    height,
+    innerWidth,
+    mmToThreeUnits,
+    placedModule,
+    width,
+  ]);
+
+  const resolvedHingeBracketPositions = hingeBracketPositions ?? autoHingeBracketPositions;
+
   // 보링 위치가 없으면 렌더링하지 않음
-  if (boringPositions.length === 0) {
+  if (boringPositions.length === 0 && resolvedHingeBracketPositions.length === 0) {
     return null;
   }
 
@@ -72,6 +154,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   const holeInnerRadius = holeOuterRadius * 0.6; // 안쪽 반지름 (빈 원 효과)
   const edgeOffset = mmToThreeUnits(30); // 선반 앞뒤 끝에서 30mm 떨어진 위치
   const holeColor = '#666666'; // 회색
+  const hingeBracketHoleColor = '#00CCCC';
 
   const frontZ = depth / 2 - edgeOffset;
   const centerZ = 0;
@@ -122,6 +205,33 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
                   />
                 </mesh>
               ))}
+            </group>
+          );
+        })}
+        {resolvedHingeBracketPositions.map((positionMm, hingeIndex) => {
+          const boringY = -height / 2 + mmToThreeUnits(positionMm);
+
+          return (
+            <group key={`hinge-bracket-${hingeIndex}`}>
+              {hingeBracketDepthOffsetsMm.map((depthOffsetMm, holeIndex) => {
+                const zPos = depth / 2 - mmToThreeUnits(depthOffsetMm);
+
+                return (
+                  <mesh
+                    key={`hinge-bracket-hole-${hingeIndex}-${holeIndex}`}
+                    position={[xPosition, boringY, zPos]}
+                    rotation={[0, Math.PI / 2, 0]}
+                    renderOrder={110}
+                  >
+                    <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
+                    <meshBasicMaterial
+                      color={hingeBracketHoleColor}
+                      side={THREE.DoubleSide}
+                      depthTest={false}
+                    />
+                  </mesh>
+                );
+              })}
             </group>
           );
         })}

@@ -1689,6 +1689,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (!Array.isArray(sections) || sections.length === 0) return [];
 
     const thicknessMm = panelThickness || 18;
+    const splitDoorBottomFromCabinetBottomMm = splitDoorPanelName && forcedDoorYMm !== undefined
+      ? forcedDoorYMm + cabinetHeightMm / 2 - actualDoorHeight / 2
+      : null;
     const doorBottomBelowCabinetMm = isUpperCabinet
       ? doorBottomGap
       : isLowerCabinet
@@ -1712,9 +1715,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
       shelfPositions.forEach((position: number) => {
         const shelfCenterFromCabinetBottom = currentYFromBottom + position;
+        const shelfBottomFromCabinetBottom = shelfCenterFromCabinetBottom - thicknessMm / 2;
+        const shelfTopFromCabinetBottom = shelfCenterFromCabinetBottom + thicknessMm / 2;
         ranges.push({
-          bottomMm: shelfCenterFromCabinetBottom - thicknessMm / 2 + doorBottomBelowCabinetMm,
-          topMm: shelfCenterFromCabinetBottom + thicknessMm / 2 + doorBottomBelowCabinetMm,
+          bottomMm: splitDoorBottomFromCabinetBottomMm !== null
+            ? shelfBottomFromCabinetBottom - splitDoorBottomFromCabinetBottomMm
+            : shelfBottomFromCabinetBottom + doorBottomBelowCabinetMm,
+          topMm: splitDoorBottomFromCabinetBottomMm !== null
+            ? shelfTopFromCabinetBottom - splitDoorBottomFromCabinetBottomMm
+            : shelfTopFromCabinetBottom + doorBottomBelowCabinetMm,
         });
       });
       currentYFromBottom += sectionHeightMm;
@@ -1725,10 +1734,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     actualDoorHeight,
     doorBottomGap,
     effectiveInternalHeight,
+    forcedDoorYMm,
     isLowerCabinet,
     isUpperCabinet,
     moduleData,
     panelThickness,
+    splitDoorPanelName,
     storePlacedModule?.customSections
   ]);
   const effectiveHingePositionsMm = hasCustomHingePositions

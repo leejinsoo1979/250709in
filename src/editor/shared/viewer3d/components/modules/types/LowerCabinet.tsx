@@ -2311,6 +2311,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             innerWidth={baseFurniture.innerWidth}
             boringPositions={lowerCabinetSideBoringResult.positions}
             boringDetails={lowerCabinetSideBoringResult.details}
+            placedFurnitureId={placedFurnitureId}
+            category={moduleData.category}
+            doorTopGap={doorTopGap}
+            doorBottomGap={doorBottomGap}
             mmToThreeUnits={(mm) => mm * 0.01}
           />
 
