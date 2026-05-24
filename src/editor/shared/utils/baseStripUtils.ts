@@ -29,7 +29,7 @@ const MERGE_TOLERANCE_MM = 1;
  * 양수 = 뒤로, 음수 = 앞으로
  */
 export function getLowerDepthZOffsetMM(module: PlacedModule): number {
-  const fullDepth = module.freeDepth || 600;
+  const fullDepth = module.customDepth ?? module.freeDepth ?? 600;
   const lowerDepth = module.lowerSectionDepth ?? module.customDepth;
   if (!lowerDepth || lowerDepth >= fullDepth) return 0;
   const diff = fullDepth - lowerDepth;

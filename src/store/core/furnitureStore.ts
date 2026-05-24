@@ -533,7 +533,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
       if (sections && sections.length === 2) {
-        const defaultDepth = newModuleData.dimensions.depth;
+        const defaultDepth = module.customDepth ?? module.freeDepth ?? newModuleData.dimensions.depth;
 
         // 섹션 깊이가 설정되지 않은 경우 기본값으로 초기화
         if (module.lowerSectionDepth === undefined) {

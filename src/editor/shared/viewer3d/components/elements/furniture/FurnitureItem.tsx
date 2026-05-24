@@ -3220,17 +3220,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   React.useEffect(() => {
     if (categoryDefaultDepth === undefined) return;
     if (placedModule.columnSlotInfo) return;
-    if (storedCustomDepth !== undefined && Math.abs(storedCustomDepth - moduleDepth) >= 0.5) return;
-    if (Math.abs((storedCustomDepth ?? moduleDepth) - categoryDefaultDepth) < 0.5) return;
-    const updates: Partial<PlacedModule> = { customDepth: categoryDefaultDepth };
+    const depthToApply = effectiveCustomDepth ?? categoryDefaultDepth;
+    const updates: Partial<PlacedModule> = {};
+    if (storedCustomDepth === undefined || Math.abs(storedCustomDepth - moduleDepth) < 0.5) {
+      if (Math.abs((storedCustomDepth ?? moduleDepth) - categoryDefaultDepth) >= 0.5) {
+        updates.customDepth = categoryDefaultDepth;
+      }
+    }
     const isStaleLowerDepth = placedModule.lowerSectionDepth === undefined
       || Math.abs(placedModule.lowerSectionDepth - moduleDepth) < 0.5;
     const isStaleUpperDepth = placedModule.upperSectionDepth === undefined
       || Math.abs(placedModule.upperSectionDepth - moduleDepth) < 0.5;
-    if (isStaleLowerDepth) updates.lowerSectionDepth = categoryDefaultDepth;
-    if (isStaleUpperDepth) updates.upperSectionDepth = categoryDefaultDepth;
+    if (isStaleLowerDepth) updates.lowerSectionDepth = depthToApply;
+    if (isStaleUpperDepth) updates.upperSectionDepth = depthToApply;
+    if (Object.keys(updates).length === 0) return;
     updatePlacedModule(placedModule.id, updates);
-  }, [categoryDefaultDepth, moduleDepth, placedModule.columnSlotInfo, placedModule.id, storedCustomDepth, updatePlacedModule]);
+  }, [
+    categoryDefaultDepth,
+    effectiveCustomDepth,
+    moduleDepth,
+    placedModule.columnSlotInfo,
+    placedModule.id,
+    placedModule.lowerSectionDepth,
+    placedModule.upperSectionDepth,
+    storedCustomDepth,
+    updatePlacedModule,
+  ]);
 
   const widthResetPayload = React.useMemo(() => {
     if (!shouldResetWidth) return null;
