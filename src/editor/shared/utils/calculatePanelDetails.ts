@@ -13,7 +13,7 @@ import {
 import type { DoorOuterOpenSides } from './doorOuterGap';
 import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from './topDownCabinetGeometry';
-import { getDirectLowerDowelShelfPositionsMm } from './lowerCabinetDowelShelves';
+import { getDirectLowerDowelShelfPositionsMm, isDirectLowerDowelShelfModule } from './lowerCabinetDowelShelves';
 import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
 
@@ -211,7 +211,8 @@ export const calculatePanelDetails = (
   const isUpperCabinet = moduleData.category === 'upper';
   const shelfFrontInsetMm = resolveShelfFrontInsetMm({
     moduleId: moduleData.id,
-    cabinetCategory: moduleData.category
+    cabinetCategory: moduleData.category,
+    depthMm: customDepth
   });
 
   const originalHeight = moduleData.dimensions.height;
@@ -1095,7 +1096,7 @@ export const calculatePanelDetails = (
             material: 'PB'
           });
         }
-      } else if (section.type === 'shelf' && section.count) {
+      } else if (section.type === 'shelf' && section.count && !isDirectLowerDowelShelfModule(moduleData.id)) {
         // 선반 구역 (ShelfRenderer.tsx 참조)
         for (let i = 1; i <= section.count; i++) {
           targetPanel.push({
@@ -1162,9 +1163,7 @@ export const calculatePanelDetails = (
 
     // LowerCabinet.tsx에서 직접 렌더링하는 하부장 다보선반.
     // 해당 모듈들은 modelConfig section count가 0이라 기존 섹션 루프에서는 패널목록에 누락된다.
-    const hasDirectLowerDowelShelves =
-      moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half') ||
-      moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
+    const hasDirectLowerDowelShelves = isDirectLowerDowelShelfModule(moduleData.id);
     if (hasDirectLowerDowelShelves) {
       const directShelfPositions = getDirectLowerDowelShelfPositionsMm({
         moduleId: moduleData.id,
