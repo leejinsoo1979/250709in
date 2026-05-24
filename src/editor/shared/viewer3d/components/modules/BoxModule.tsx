@@ -1832,6 +1832,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     forcedDoorHeightMm={lowerDoorH}
                     forcedDoorYMm={lowerDoorY}
                     splitDoorPanelName="하부 도어"
+                    splitDoorTopGapMm={Math.max(0, upperDoorBottomMm - lowerDoorTopMm)}
                   />
                 </group>
                 {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
@@ -1871,7 +1872,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     forcedDoorHeightMm={upperDoorH}
                     forcedDoorYMm={upperDoorY}
                     splitDoorPanelName="상부 도어"
-                    splitDoorBottomGapMm={Math.max(0, upperDoorBottomMm - lowerDoorTopMm)}
                     hideWidthDimension={true}
                   />
                 </group>

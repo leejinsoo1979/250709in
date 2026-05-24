@@ -580,6 +580,7 @@ interface DoorModuleProps {
   hideWidthDimension?: boolean; // 도어 가로 폭 치수 숨김 (분절 상부 도어용)
   hingeMode?: 'auto' | 'upper2' | 'lower4' | 'lower5'; // 경첩 개수 강제 — 도어분절 가구용
   splitDoorPanelName?: '하부 도어' | '상부 도어'; // 도어분절 가구의 패널 목록 이름
+  splitDoorTopGapMm?: number; // 하부 분절 도어 상단의 도어 간격
   splitDoorBottomGapMm?: number; // 상부 분절 도어 하단의 도어 간격
   hingePositionsMm?: number[];
   upperDoorHingePositionsMm?: number[];
@@ -619,6 +620,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   hideWidthDimension = false, // 도어 가로 폭 치수 숨김
   hingeMode = 'auto', // 경첩 개수 모드
   splitDoorPanelName,
+  splitDoorTopGapMm,
   splitDoorBottomGapMm,
   hingePositionsMm,
   upperDoorHingePositionsMm,
@@ -1526,6 +1528,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorBottomWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm - actualDoorHeight / 2;
   const dimensionDoorTopGapMm = Math.max(0, Math.round(fullSpaceHeight - doorTopWorldMm));
   const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm));
+  const splitDoorTopGapDimensionMm = splitDoorPanelName === '하부 도어'
+    ? Math.max(0, Math.round(splitDoorTopGapMm ?? 0))
+    : 0;
   const splitDoorBottomGapDimensionMm = splitDoorPanelName === '상부 도어'
     ? Math.max(0, Math.round(splitDoorBottomGapMm ?? 0))
     : 0;
@@ -1544,14 +1549,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     ? lowerCountertopBottomGapMm
     : dimensionDoorTopGapMm;
   const showDoorTopGapDimension = splitDoorPanelName === '하부 도어'
-    ? false
+    ? splitDoorTopGapDimensionMm > 0
     : isLowerCabinet
       ? (shouldUseLowerCountertopTopGapDimension && lowerCountertopBottomGapMm > 0)
       : dimensionDoorTopGapMm > 0;
   const showDoorBottomGapDimension = splitDoorPanelName === '상부 도어'
     ? splitDoorBottomGapDimensionMm > 0
     : !isUpperCabinet && dimensionDoorBottomGapMm > 0;
-  const doorTopGapDimensionMm = showDoorTopGapDimension ? effectiveDoorTopGapDimensionMm : 0;
+  const doorTopGapDimensionMm = showDoorTopGapDimension
+    ? (splitDoorPanelName === '하부 도어' ? splitDoorTopGapDimensionMm : effectiveDoorTopGapDimensionMm)
+    : 0;
   const doorBottomGapDimensionMm = showDoorBottomGapDimension
     ? (splitDoorPanelName === '상부 도어' ? splitDoorBottomGapDimensionMm : dimensionDoorBottomGapMm)
     : 0;
