@@ -166,6 +166,31 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('TI="7.5"');
   });
 
+  it('does not export back-panel grooves on bottom panels', () => {
+    const panel = {
+      id: 'lower-bottom-1',
+      name: '(하)바닥',
+      width: 354,
+      height: 1162,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'HORIZONTAL',
+      sideBoringPositions: [30, 177, 324],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const mpr = generateSinglePanelMPR(converted);
+
+    expect(converted.panelType).toBe('bottom');
+    expect(mpr).not.toContain('BACK_PANEL_GROOVE');
+    expect(mpr).not.toContain('백패널 홈');
+    expect(mpr).not.toContain('<105 \\Ktasche\\');
+  });
+
   it('mirrors furniture right-side panel top borings only in MPR coordinates', () => {
     const panel = {
       id: 'right-side-1',

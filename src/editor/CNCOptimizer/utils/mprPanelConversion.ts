@@ -182,7 +182,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
   else if (panel.name?.includes('서랍') && panel.name?.includes('우측판')) panelType = 'drawer-side-right';
   else if (panel.name?.includes('우측')) panelType = 'side-right';
   else if (panel.name?.includes('상판')) panelType = 'top';
-  else if (panel.name?.includes('하판')) panelType = 'bottom';
+  else if (panel.name?.includes('하판') || panel.name?.includes('바닥') || panel.name?.includes('지판')) panelType = 'bottom';
   else if (panel.name?.includes('선반')) panelType = 'shelf';
   else if (panel.name?.includes('서랍')) panelType = 'drawer-front';
   else if (panel.name?.includes('뒷판') || panel.name?.includes('백패널')) panelType = 'back-panel';

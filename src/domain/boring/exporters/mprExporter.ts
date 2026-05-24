@@ -275,7 +275,7 @@ function isFurnitureSidePanelForBackPanelGroove(panel: PanelBoringData): boolean
   if (panel.panelType !== 'side-left' && panel.panelType !== 'side-right') return false;
   if (name.includes('서랍') || name.includes('도어') || name.includes('Door')) return false;
   if (name.includes('서라운드') || name.includes('커튼박스')) return false;
-  return isLeftSidePanel(panel) || isRightSidePanel(panel) || name.includes('측판');
+  return name.includes('좌측') || name.includes('우측') || name.includes('측판');
 }
 
 interface SideNotchRect {
