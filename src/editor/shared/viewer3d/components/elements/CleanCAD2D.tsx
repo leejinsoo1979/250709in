@@ -4961,13 +4961,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ) : hasSectionSplit ? (
                 <>
                   {/* 섹션별 구분 틱 & 치수 (하부→상부 순서) */}
-                  {sectionHeights.map((secH, idx) => {
-                    const secBottomMm = floorFinishForHeight + bottomFrameH + sectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
-                    const secTopMm = secBottomMm + secH;
-                    const secBottomY = mmToThreeUnits(secBottomMm);
-                    const secTopY = mmToThreeUnits(secTopMm);
+                  {(() => {
+                    const displaySegments = sectionHeights.map((secH, idx) => {
+                      const secBottomMm = floorFinishForHeight + bottomFrameH + sectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
+                      const secTopMm = secBottomMm + secH;
+                      return {
+                        bottomMm: secBottomMm,
+                        topMm: secTopMm,
+                        heightMm: Math.round(secH),
+                        key: `sec-${idx}`,
+                      };
+                    });
+
+                    return displaySegments.map((seg, idx) => {
+                    const secH = seg.heightMm;
+                    const secBottomY = mmToThreeUnits(seg.bottomMm);
+                    const secTopY = mmToThreeUnits(seg.topMm);
                     return (
-                      <React.Fragment key={`left-sec-${idx}`}>
+                      <React.Fragment key={`left-${seg.key}-${idx}`}>
                         {/* 섹션 상단 구분 틱 */}
                         <NativeLine name="dimension_line"
                           points={[[innerX - mmToThreeUnits(15), secTopY, bodyDimZ_L], [innerX + mmToThreeUnits(15), secTopY, bodyDimZ_L]]}
@@ -4982,7 +4993,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           {secH}
                         </Text>
                         {/* 섹션 경계 연장선 */}
-                        {idx < sectionHeights.length - 1 && (
+                        {idx < displaySegments.length - 1 && (
                           <NativeLine name="dimension_line"
                             points={[[leftOffset, secTopY, bodyExtZ_L], [innerX - mmToThreeUnits(20), secTopY, bodyExtZ_L]]}
                             color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -4990,7 +5001,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         )}
                       </React.Fragment>
                     );
-                  })}
+                    });
+                  })()}
                 </>
               ) : (
                 <>
@@ -5074,13 +5086,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 상단몰딩/상단갭 구분 틱 & 치수 — 토글 OFF여도 사용자 입력 상단갭 표시 */}
               {(() => {
+                const isShelfSplitTopDim = !!leftViewMod?.moduleId?.includes('shelf-split') && sectionHeights.length >= 2;
+                const shelfSplitTopFrameForDim = isShelfSplitTopDim
+                  ? Math.max(0, Math.round(effectiveH - floorFinishForHeight - bottomFrameH - sectionHeights.reduce((sum, h) => sum + h, 0)))
+                  : null;
                 // 토글 OFF + 사용자 입력 상단갭이 있으면 그 값을 표시 (몰딩 자리가 빈 공간)
                 const userTopGap = topRefMod_L?.hasTopFrame === false
-                  ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
+                  ? Math.max(0, Math.round(shelfSplitTopFrameForDim ?? topRefMod_L?.topFrameGap ?? 0))
                   : 0;
                 const displayTopFrame = topRefMod_L?.hasTopFrame === false
                   ? userTopGap
-                  : topFrameH;
+                  : Math.max(0, Math.round(shelfSplitTopFrameForDim ?? topFrameH));
                 if (displayTopFrame <= 0) return null;
                 const singleLowerTopRef = singleLowerCountertopH > 0 ? singleLowerCountertopTopY : furnitureTopY;
                 const sectionSplitTopRef = hasSectionSplit
@@ -8835,6 +8851,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 6. 도어/마이다 높이 치수선 (선택된 슬롯의 가구 기준) */}
                 {(() => {
+                  if (currentViewDirection === 'front') return null;
                   if (!sideViewMod || sideViewMod.isSurroundPanel) return null;
 
                   const doorModule = sideViewMod;
@@ -8982,6 +8999,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const upperBY = mmToThreeUnits(upperDoorBottomAbs);
                     const upperTY = mmToThreeUnits(upperDoorTopAbs);
                     const upperMidY = (upperBY + upperTY) / 2;
+                    const splitGapH = upperDoorBottomAbs - lowerDoorTopAbs;
+                    const splitGapBY = mmToThreeUnits(lowerDoorTopAbs);
+                    const splitGapTY = mmToThreeUnits(upperDoorBottomAbs);
+                    const splitGapMidY = (splitGapBY + splitGapTY) / 2;
 
                     const renderSplitDim = (bY: number, tY: number, midY: number, heightMm: number, key: string) => (
                       <group key={key} name={`door-dimension-height-${key}`}>
@@ -9006,6 +9027,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     return (
                       <group name="door-dimension-height-split">
                         {lowerDoorH > 0 && renderSplitDim(lowerBY, lowerTY, lowerMidY, lowerDoorH, 'lower')}
+                        {splitGapH > 0 && renderSplitDim(splitGapBY, splitGapTY, splitGapMidY, splitGapH, 'split-gap')}
                         {upperDoorH > 0 && renderSplitDim(upperBY, upperTY, upperMidY, upperDoorH, 'upper')}
                       </group>
                     );

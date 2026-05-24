@@ -51,12 +51,51 @@ export const Hinge: React.FC<HingeProps> = ({
 
   const mainCirclePoints = generateCirclePoints(mainRadius);
   const smallCirclePoints = generateCirclePoints(smallRadius);
-  const sideLineSegments = useMemo(() => {
-    return hingeSidePaths.map(pathData => {
-      const points = parseSVGPath(pathData.d, pathData.matrix);
-      console.log('Parsed path:', { d: pathData.d.substring(0, 20), pointCount: points.length, firstPoint: points[0] });
-      return points;
-    });
+  const sideGeometry = useMemo(() => {
+    const segments = hingeSidePaths.map(pathData => parseSVGPath(pathData.d, pathData.matrix));
+    const allPoints = segments.flat();
+    const getSegmentCenter = (segmentIndex: number) => {
+      const points = segments[segmentIndex] || [];
+      if (points.length === 0) return null;
+      const xs = points.map(point => point[0]);
+      const ys = points.map(point => point[1]);
+      return {
+        x: (Math.min(...xs) + Math.max(...xs)) / 2,
+        y: (Math.min(...ys) + Math.max(...ys)) / 2,
+      };
+    };
+    if (allPoints.length === 0) {
+      return {
+        segments,
+        centerX: 0,
+        centerY: 0,
+        height: 1,
+        boreAnchorX: 0,
+        frontBoreY: 0,
+        rearBoreY: 1,
+      };
+    }
+
+    const xs = allPoints.map(point => point[0]);
+    const ys = allPoints.map(point => point[1]);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const frontBore = getSegmentCenter(17);
+    const rearBore = getSegmentCenter(30);
+    const fallbackCenterX = (minX + maxX) / 2;
+    const fallbackCenterY = (minY + maxY) / 2;
+
+    return {
+      segments,
+      centerX: fallbackCenterX,
+      centerY: fallbackCenterY,
+      height: Math.max(1, maxY - minY),
+      boreAnchorX: frontBore?.x ?? fallbackCenterX,
+      frontBoreY: frontBore?.y ?? fallbackCenterY,
+      rearBoreY: rearBore?.y ?? (fallbackCenterY + 1),
+    };
   }, []);
 
   // Only render in 2D view
@@ -68,43 +107,33 @@ export const Hinge: React.FC<HingeProps> = ({
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
     const [, y, z] = position;
     const sidePosition: [number, number, number] = [z, y, 0];
-
-    console.log('Hinge side view rendering:', {
-      view2DDirection,
-      viewDirection,
-      position,
-      sidePosition,
-      pathCount: hingeSidePaths.length
-    });
-
-    console.log('Total line segments:', sideLineSegments.length, 'First segment points:', sideLineSegments[0]?.length);
-
-    // SVG viewBox: 0 0 491 348
-    // 목표 크기: 35mm 높이
-    const svgViewBoxWidth = 491;
-    const svgViewBoxHeight = 348;
-    const targetHeightMm = 35;
-    const targetHeight = mmToThreeUnits(targetHeightMm);
-    const scale = targetHeight / svgViewBoxHeight;
-
-    console.log('Scale calculation:', { targetHeight, scale });
-
-    // SVG 중심을 원점에 맞추기
-    const offsetX = -svgViewBoxWidth / 2;
-    const offsetY = -svgViewBoxHeight / 2;
+    const bracketBoreSpacingMm = 32;
+    const bracketBoreSpacing = mmToThreeUnits(bracketBoreSpacingMm);
+    const sourceBoreSpacing = Math.max(1, Math.abs(sideGeometry.rearBoreY - sideGeometry.frontBoreY));
+    const scale = bracketBoreSpacing / sourceBoreSpacing;
+    const sideMultiplier = view2DDirection === 'right' ? -1 : 1;
 
     return (
       <group name="door-hinge" position={sidePosition}>
-        <group name="door-hinge-side" position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
-          {sideLineSegments.map((points, index) => {
+        <group name="door-hinge-side">
+          {sideGeometry.segments.map((points, index) => {
             if (points.length < 2) return null;
+            const centeredPoints = points.map(([x, pointY]) => ([
+              (sideGeometry.frontBoreY - pointY) * scale,
+              -((x - sideGeometry.boreAnchorX) * scale * sideMultiplier),
+              0,
+            ] as [number, number, number]));
             return (
               <Line
                 key={index}
                 name="door-hinge"
-                points={points}
+                points={centeredPoints}
                 color={lineColor}
-                lineWidth={1}
+                lineWidth={2}
+                renderOrder={200000}
+                depthTest={false}
+                depthWrite={false}
+                transparent={true}
               />
             );
           })}

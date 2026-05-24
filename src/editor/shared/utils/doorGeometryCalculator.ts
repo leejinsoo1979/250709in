@@ -55,6 +55,7 @@ export interface SidePanelMatchedHingePositionsInput {
   customDoorPositionsMm?: number[] | null
   defaultDoorPositionsMm?: number[]
   clearanceMm?: number
+  preserveEdgePositionsMm?: boolean
 }
 
 export interface SidePanelMatchedHingePositions {
@@ -106,6 +107,14 @@ export interface DefaultDoorHingePositionsInput {
   isUpperCabinet?: boolean
   isLowerCabinet?: boolean
   hingeMode?: DoorHingeMode
+}
+
+export interface SideAnchoredDoorHingePositionsInput {
+  doorHeightMm: number
+  doorBottomOnSideMm: number
+  defaultDoorPositionsMm?: number[]
+  firstSidePositionMm?: number
+  lastSidePositionMm?: number
 }
 
 const DEFAULT_PANEL_THICKNESS_MM = 18
@@ -344,13 +353,51 @@ export const resolveDefaultDoorHingePositionsMm = ({
   )
 }
 
+export const resolveSideAnchoredDoorHingePositionsMm = ({
+  doorHeightMm,
+  doorBottomOnSideMm,
+  defaultDoorPositionsMm,
+  firstSidePositionMm,
+  lastSidePositionMm,
+}: SideAnchoredDoorHingePositionsInput): number[] => {
+  const basePositions = normalizeDoorHingePositionsMm(
+    defaultDoorPositionsMm && defaultDoorPositionsMm.length > 0
+      ? defaultDoorPositionsMm
+      : calculateHingePositions(doorHeightMm),
+    doorHeightMm
+  )
+  if (basePositions.length < 2 || !Number.isFinite(doorBottomOnSideMm)) {
+    return basePositions
+  }
+
+  const positions = [...basePositions]
+  if (Number.isFinite(firstSidePositionMm)) {
+    positions[0] = (firstSidePositionMm as number) - doorBottomOnSideMm
+  }
+  if (Number.isFinite(lastSidePositionMm)) {
+    positions[positions.length - 1] = (lastSidePositionMm as number) - doorBottomOnSideMm
+  }
+
+  if (positions.length > 2) {
+    const first = positions[0]
+    const last = positions[positions.length - 1]
+    const spacing = (last - first) / (positions.length - 1)
+    for (let index = 1; index < positions.length - 1; index += 1) {
+      positions[index] = first + spacing * index
+    }
+  }
+
+  return normalizeDoorHingePositionsMm(positions, doorHeightMm)
+}
+
 export const resolveSidePanelMatchedHingePositions = ({
   doorHeightMm,
   doorBottomOnSideMm,
   shelfCollisionRangesOnSideMm = [],
   customDoorPositionsMm,
   defaultDoorPositionsMm,
-  clearanceMm = 50
+  clearanceMm = 50,
+  preserveEdgePositionsMm = false
 }: SidePanelMatchedHingePositionsInput): SidePanelMatchedHingePositions => {
   if (!Number.isFinite(doorHeightMm) || doorHeightMm <= 0 || !Number.isFinite(doorBottomOnSideMm)) {
     return { doorPositionsMm: [], sidePositionsMm: [] }
@@ -376,7 +423,7 @@ export const resolveSidePanelMatchedHingePositions = ({
 
   const sideCandidates = doorCandidates.map(position => doorBottomOnSideMm + position)
   const sideHeightForClamp = doorBottomOnSideMm + doorHeightMm
-  const sidePositions = avoidHingePositionsForShelves(
+  const avoidedSidePositions = avoidHingePositionsForShelves(
     sideCandidates,
     shelfCollisionRangesOnSideMm,
     sideHeightForClamp,
@@ -386,6 +433,13 @@ export const resolveSidePanelMatchedHingePositions = ({
       maxMarginMm: DEFAULT_HINGE_SETTINGS.topBottomMargin
     }
   )
+  const sidePositions = preserveEdgePositionsMm && avoidedSidePositions.length >= 2
+    ? avoidedSidePositions.map((position, index) => {
+      if (index === 0) return sideCandidates[0]
+      if (index === avoidedSidePositions.length - 1) return sideCandidates[sideCandidates.length - 1]
+      return position
+    })
+    : avoidedSidePositions
 
   return {
     sidePositionsMm: sidePositions,

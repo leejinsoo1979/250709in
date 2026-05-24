@@ -72,19 +72,24 @@ const getPlainShoeShelfSectionHeights = (
   sectionBasisH: number
 ): number[] | null => {
   if (!usesStableShelfSectionBoundary(module?.moduleId) || sections.length !== 2) return null;
+  const sourceSections = isShelfSplitModuleId(module?.moduleId)
+    && Array.isArray(module?.customSections)
+    && module.customSections.length >= 2
+    ? module.customSections
+    : sections;
   if (isShelfSplitModuleId(module?.moduleId) && Array.isArray(module?.customSections)) {
     return [
-      Math.max(0, Math.round(sections[0]?.height || 0)),
-      Math.max(0, Math.round(sections[1]?.height || 0)),
+      Math.max(0, Math.round(sourceSections[0]?.height || 0)),
+      Math.max(0, Math.round(sourceSections[1]?.height || 0)),
     ];
   }
   const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(module, spaceInfo);
-  const lowerH = Math.max(0, Math.round((sections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
+  const lowerH = Math.max(0, Math.round((sourceSections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
   const remainingUpperH = Math.max(0, Math.round(sectionBasisH - lowerH));
   const hasExplicitShelfSplitSections = isShelfSplitModuleId(module?.moduleId)
     && Array.isArray(module?.customSections);
   const upperH = hasExplicitShelfSplitSections
-    ? Math.min(remainingUpperH, Math.max(0, Math.round(sections[1]?.height || 0)))
+    ? Math.min(remainingUpperH, Math.max(0, Math.round(sourceSections[1]?.height || 0)))
     : remainingUpperH;
   return [lowerH, upperH];
 };

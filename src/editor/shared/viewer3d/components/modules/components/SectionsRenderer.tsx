@@ -18,6 +18,7 @@ import { calculateShelfBoringPositionsFromThreeUnits } from '@/domain/boring';
 import {
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
+  resolveSideAnchoredDoorHingePositionsMm,
   resolveSidePanelMatchedHingePositions,
   type DoorCabinetCategory
 } from '@/editor/shared/utils/doorGeometryCalculator';
@@ -1161,14 +1162,28 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         doorBottomOnSideMm: lowerDoorBottomMm,
         shelfCollisionRangesOnSideMm: shelfCollisionRanges,
         customDoorPositionsMm: currentPlacedModule.lowerDoorHingePositionsMm,
-        defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: lowerDoorHeightMm })
+        defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
+          doorHeightMm: lowerDoorHeightMm,
+          doorBottomOnSideMm: lowerDoorBottomMm,
+          defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: lowerDoorHeightMm }),
+          firstSidePositionMm: 120,
+          lastSidePositionMm: lowerSectionHeightMm - 120,
+        }),
+        preserveEdgePositionsMm: true
       });
       const resolvedUpper = resolveSidePanelMatchedHingePositions({
         doorHeightMm: upperDoorHeightMm,
         doorBottomOnSideMm: upperDoorBottomMm,
         shelfCollisionRangesOnSideMm: shelfCollisionRanges,
         customDoorPositionsMm: currentPlacedModule.upperDoorHingePositionsMm,
-        defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: upperDoorHeightMm })
+        defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
+          doorHeightMm: upperDoorHeightMm,
+          doorBottomOnSideMm: upperDoorBottomMm,
+          defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: upperDoorHeightMm }),
+          firstSidePositionMm: lowerSectionHeightMm + 120,
+          lastSidePositionMm: upperSectionTopMm - 120,
+        }),
+        preserveEdgePositionsMm: true
       });
 
       return [
@@ -1220,7 +1235,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       customDoorPositionsMm: currentPlacedModule.hingePositionsMm,
       defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
         doorHeightMm: doorGeometry.leafHeightMm,
-      })
+      }),
+      preserveEdgePositionsMm: true
     });
 
     return resolvedPositions.sidePositionsMm

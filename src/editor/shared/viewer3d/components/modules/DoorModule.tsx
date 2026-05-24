@@ -24,6 +24,7 @@ import {
   normalizeDoorHingePositionsMm,
   resolveDefaultDoorHingePositionsMm,
   resolveHingeOppositeDoorWidthAdjustment,
+  resolveSideAnchoredDoorHingePositionsMm,
   resolveSidePanelMatchedHingePositions
 } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
@@ -1727,17 +1728,66 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorBottomOnSideMm = doorCenterLocalForDimensionMm +
     (effectiveInternalHeight || moduleData?.dimensions?.height || 0) / 2 -
     actualDoorHeight / 2;
+  const defaultHingePositionsMm = (() => {
+    const defaultPositions = resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: actualDoorHeight,
+      isUpperCabinet,
+      isLowerCabinet,
+      hingeMode
+    });
+    if (splitDoorPanelName !== '상부 도어' && splitDoorPanelName !== '하부 도어') {
+      return defaultPositions;
+    }
+
+    const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
+    const sections = (
+      storePlacedModule?.customSections ||
+      (moduleData?.modelConfig as any)?.sections ||
+      []
+    ) as any[];
+    const lowerSection = sections[0];
+    const lowerSectionTopMm = lowerSection?.heightType === 'absolute'
+      ? Number(lowerSection.height || 0)
+      : Number.isFinite(Number(lowerSection?.height || lowerSection?.heightRatio))
+        ? cabinetHeightMm * (Number(lowerSection.height || lowerSection.heightRatio) / 100)
+        : moduleIdentifier.includes('pantry-cabinet-split')
+          ? 1825
+          : 860;
+    const upperSection = sections[1];
+    const upperSectionHeightMm = upperSection?.heightType === 'absolute'
+      ? Number(upperSection.height || 0)
+      : Number.isFinite(Number(upperSection?.height || upperSection?.heightRatio))
+        ? cabinetHeightMm * (Number(upperSection.height || upperSection.heightRatio) / 100)
+        : Math.max(0, cabinetHeightMm - lowerSectionTopMm);
+    const upperSectionTopMm = upperSectionHeightMm > 0
+      ? Math.min(cabinetHeightMm, lowerSectionTopMm + upperSectionHeightMm)
+      : cabinetHeightMm;
+
+    if (splitDoorPanelName === '하부 도어') {
+      return resolveSideAnchoredDoorHingePositionsMm({
+        doorHeightMm: actualDoorHeight,
+        doorBottomOnSideMm,
+        defaultDoorPositionsMm: defaultPositions,
+        firstSidePositionMm: 120,
+        lastSidePositionMm: lowerSectionTopMm - 120,
+      });
+    }
+
+    return resolveSideAnchoredDoorHingePositionsMm({
+      doorHeightMm: actualDoorHeight,
+      doorBottomOnSideMm,
+      defaultDoorPositionsMm: defaultPositions,
+      firstSidePositionMm: lowerSectionTopMm + 120,
+      lastSidePositionMm: upperSectionTopMm - 120,
+    });
+  })();
   const effectiveHingePositionsMm = resolveSidePanelMatchedHingePositions({
     doorHeightMm: actualDoorHeight,
     doorBottomOnSideMm,
     shelfCollisionRangesOnSideMm: shelfCollisionRangesMm,
     customDoorPositionsMm: hasCustomHingePositions ? customHingePositionsMm : undefined,
-    defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
-      doorHeightMm: actualDoorHeight,
-      isUpperCabinet,
-      isLowerCabinet,
-      hingeMode
-    })
+    defaultDoorPositionsMm: defaultHingePositionsMm,
+    preserveEdgePositionsMm: true
   }).doorPositionsMm;
   const hingePositionsField = splitDoorPanelName === '상부 도어'
     ? 'upperDoorHingePositionsMm'
@@ -1757,21 +1807,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     smallCircleXOffset: number,
     positionsMm: number[],
     keyPrefix: string
-  ) => positionsMm.map((positionMm, index) => (
-    <Hinge
-      key={`${keyPrefix}-${positionMm}-${index}`}
-      position={[
-        hingeX,
-        -doorHeight / 2 + mmToThreeUnits(positionMm),
-        doorThicknessUnits / 2 + 0.001
-      ]}
-      mainDiameter={17.5}
-      smallCircleDiameter={4}
-      smallCircleXOffset={smallCircleXOffset}
-      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-      view2DDirection={view2DDirection}
-    />
-  ));
+  ) => {
+    if (isSide2DView) return null;
+
+    return positionsMm.map((positionMm, index) => (
+      <Hinge
+        key={`${keyPrefix}-${positionMm}-${index}`}
+        position={[
+          hingeX,
+          -doorHeight / 2 + mmToThreeUnits(positionMm),
+          doorThicknessUnits / 2 + 0.001
+        ]}
+        mainDiameter={17.5}
+        smallCircleDiameter={4}
+        smallCircleXOffset={smallCircleXOffset}
+        viewDirection="front"
+        view2DDirection={view2DDirection}
+      />
+    ));
+  };
+
+  const renderSidePanelAnchoredHingeMarkers = (keyPrefix: string) => {
+    return null;
+  };
 
   const clearHingeGapDraft = (draftKey: string) => {
     setHingeGapDrafts((prev) => {
@@ -2448,6 +2506,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
+        {!moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('dual-side-panel-hinge')}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
         <group position={leftDoorOpenGeometry.parentPosition}>
@@ -3363,7 +3422,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
 
     return (
-      <group position={singleDoorOpenGeometry.parentPosition}>
+      <group>
+        {!moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('single-side-panel-hinge')}
+        <group position={singleDoorOpenGeometry.parentPosition}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
           <group position={singleDoorOpenGeometry.childPosition}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
@@ -4024,6 +4085,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         </animated.group>
 
         {/* 측면뷰 하부장/걸래받이 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
+        </group>
       </group>
     );
   }

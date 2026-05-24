@@ -7,6 +7,7 @@ import {
   normalizeDoorHingePositionsMm,
   resolveDoorLeafDimensions,
   resolveDoorVerticalGeometry,
+  resolveSideAnchoredDoorHingePositionsMm,
   resolveSidePanelMatchedHingePositions
 } from './doorGeometryCalculator';
 import type { DoorOuterOpenSides } from './doorOuterGap';
@@ -1492,15 +1493,17 @@ export const calculatePanelDetails = (
       doorBottomOnSideMm: number,
       doorH: number,
       customPositionsMm?: number[],
-      fixedHingeCount?: number
+      fixedHingeCount?: number,
+      defaultPositionsMm?: number[]
     ) => resolveSidePanelMatchedHingePositions({
       doorHeightMm: doorH,
       doorBottomOnSideMm,
       shelfCollisionRangesOnSideMm: shelfRangesFromBottom,
       customDoorPositionsMm: customPositionsMm,
-      defaultDoorPositionsMm: fixedHingeCount
+      defaultDoorPositionsMm: defaultPositionsMm ?? (fixedHingeCount
         ? calculateFixedHingePositions(doorH, fixedHingeCount)
-        : calculateHingePositions(doorH)
+        : calculateHingePositions(doorH)),
+      preserveEdgePositionsMm: true
     });
 
     // 도어 보링 데이터 생성 헬퍼
@@ -1634,12 +1637,28 @@ export const calculatePanelDetails = (
         const resolvedLower = resolveMatchedHingePositions(
           lowerDoorBottomMm,
           lowerDoorH,
-          customLowerDoorHingePositionsMm
+          customLowerDoorHingePositionsMm,
+          undefined,
+          resolveSideAnchoredDoorHingePositionsMm({
+            doorHeightMm: lowerDoorH,
+            doorBottomOnSideMm: lowerDoorBottomMm,
+            defaultDoorPositionsMm: calculateHingePositions(lowerDoorH),
+            firstSidePositionMm: DEFAULT_HINGE_SETTINGS.topBottomMargin,
+            lastSidePositionMm: lowerSectionTopMm - DEFAULT_HINGE_SETTINGS.topBottomMargin,
+          })
         );
         const resolvedUpper = resolveMatchedHingePositions(
           upperDoorBottomMm,
           upperDoorH,
-          customUpperDoorHingePositionsMm
+          customUpperDoorHingePositionsMm,
+          undefined,
+          resolveSideAnchoredDoorHingePositionsMm({
+            doorHeightMm: upperDoorH,
+            doorBottomOnSideMm: upperDoorBottomMm,
+            defaultDoorPositionsMm: calculateHingePositions(upperDoorH),
+            firstSidePositionMm: lowerSectionTopMm + DEFAULT_HINGE_SETTINGS.topBottomMargin,
+            lastSidePositionMm: upperSectionTopMm - DEFAULT_HINGE_SETTINGS.topBottomMargin,
+          })
         );
         bracketHingeYPositions?.push(
           ...resolvedLower.sidePositionsMm,

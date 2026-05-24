@@ -1100,8 +1100,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const upperSectionTopMm = sectionInfo.heightsMm.length >= 2
       ? Math.min(bounds.cabinetHeightMm, sectionInfo.heightsMm[0] + sectionInfo.heightsMm[1])
       : bounds.cabinetHeightMm;
-    const lowerTopGap = (mod as any).lowerDoorTopGap ?? (isPantrySplit ? 2 : 40);
-    const upperBottomGap = (mod as any).upperDoorBottomGap ?? (isPantrySplit ? 1 : 20);
+    const defaultLowerTopGap = isPantrySplit ? 2 : 40;
+    const defaultUpperBottomGap = isPantrySplit ? 1 : 20;
+    const lowerTopGap = typeof (mod as any).lowerDoorTopGap === 'number' && (mod as any).lowerDoorTopGap > 0
+      ? (mod as any).lowerDoorTopGap
+      : defaultLowerTopGap;
+    const upperBottomGap = typeof (mod as any).upperDoorBottomGap === 'number' && (mod as any).upperDoorBottomGap > 0
+      ? (mod as any).upperDoorBottomGap
+      : defaultUpperBottomGap;
     const lowerBottomGap = (mod as any).lowerDoorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
     const upperTopGap = (mod as any).upperDoorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
     const lowerDoorTopFromBottom = lowerSectionTopMm - lowerTopGap;
@@ -1112,11 +1118,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const lowerDoorTopAbs = bounds.cabinetBottomAbsMm + lowerDoorTopFromBottom;
     const upperDoorBottomAbs = bounds.cabinetBottomAbsMm + upperDoorBottomFromBottom;
     const upperDoorTopAbs = bounds.cabinetBottomAbsMm + upperSectionTopMm - upperTopGap;
+    const splitGapHeightMm = Math.max(0, upperDoorBottomAbs - lowerDoorTopAbs);
+    const ceilingAbsMm = getEffectiveDoorSpaceHeightMm(mod);
+    const topGapHeightMm = Math.max(0, ceilingAbsMm - upperDoorTopAbs);
     return {
       lower: {
         bottomAbsMm: lowerDoorBottomAbs,
         topAbsMm: lowerDoorTopAbs,
         heightMm: lowerDoorTopAbs - lowerDoorBottomAbs,
+      },
+      splitGap: {
+        bottomAbsMm: lowerDoorTopAbs,
+        topAbsMm: upperDoorBottomAbs,
+        heightMm: splitGapHeightMm,
       },
       upper: {
         bottomAbsMm: upperDoorBottomAbs,
@@ -1125,8 +1139,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       },
       topGap: {
         bottomAbsMm: upperDoorTopAbs,
-        topAbsMm: bounds.cabinetTopAbsMm,
-        heightMm: bounds.cabinetTopAbsMm - upperDoorTopAbs,
+        topAbsMm: ceilingAbsMm,
+        heightMm: topGapHeightMm,
       },
     };
   };
@@ -1645,6 +1659,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   topY: mmToThreeUnits(splitBounds.lower.topAbsMm),
                   heightMm: Math.round(splitBounds.lower.heightMm),
                   key: `door-split-lower-${moduleIndex}`,
+                  isUpper: false,
+                });
+              }
+              if (splitBounds.splitGap.heightMm > 0) {
+                doorSegs.push({
+                  bottomY: mmToThreeUnits(splitBounds.splitGap.bottomAbsMm),
+                  topY: mmToThreeUnits(splitBounds.splitGap.topAbsMm),
+                  heightMm: Math.round(splitBounds.splitGap.heightMm),
+                  key: `door-split-gap-${moduleIndex}`,
                   isUpper: false,
                 });
               }
@@ -3018,6 +3041,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   topY: mmToThreeUnits(splitBounds.lower.topAbsMm),
                   heightMm: Math.round(splitBounds.lower.heightMm),
                   key: `door-split-lower-r-${moduleIndex}`,
+                  isUpper: false,
+                });
+              }
+              if (splitBounds.splitGap.heightMm > 0) {
+                doorSegs_r.push({
+                  bottomY: mmToThreeUnits(splitBounds.splitGap.bottomAbsMm),
+                  topY: mmToThreeUnits(splitBounds.splitGap.topAbsMm),
+                  heightMm: Math.round(splitBounds.splitGap.heightMm),
+                  key: `door-split-gap-r-${moduleIndex}`,
                   isUpper: false,
                 });
               }

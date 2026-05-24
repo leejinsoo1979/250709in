@@ -50,7 +50,8 @@ export const hingeSidePaths: HingePathData[] = [
 export function parseSVGPath(d: string, matrix: [number, number, number, number, number, number]): [number, number, number][] {
   const points: [number, number, number][] = [];
 
-  // SVG 경로를 명령 단위로 파싱 (M0 0V-212.96L-.16-215.36 형태)
+  // SVG 경로를 명령 단위로 파싱한다. M/L 뒤에 명령 문자 없이 좌표가
+  // 연속되는 SVG 축약형은 이전 명령을 반복한 것으로 처리해야 한다.
   const tokens = d.match(/[MLHVZmlhvz]|[-+]?[\d.]+/gi) || [];
 
   let currentX = 0;
@@ -58,6 +59,10 @@ export function parseSVGPath(d: string, matrix: [number, number, number, number,
   let startX = 0;
   let startY = 0;
   let i = 0;
+  let command = '';
+
+  const isCommand = (token: string) => /^[MLHVZmlhvz]$/.test(token);
+  const readNumber = () => parseFloat(tokens[i++]);
 
   const applyMatrix = (x: number, y: number): [number, number] => {
     const [a, b, c, d, e, f] = matrix;
@@ -73,12 +78,20 @@ export function parseSVGPath(d: string, matrix: [number, number, number, number,
   };
 
   while (i < tokens.length) {
-    const cmd = tokens[i++];
+    const token = tokens[i++];
+    if (isCommand(token)) {
+      command = token;
+    } else {
+      i -= 1;
+    }
+
+    if (!command) break;
+    const cmd = command;
 
     switch (cmd.toUpperCase()) {
       case 'M': {
-        const x = parseFloat(tokens[i++]);
-        const y = parseFloat(tokens[i++]);
+        const x = readNumber();
+        const y = readNumber();
         if (cmd === 'M') {
           currentX = x;
           currentY = y;
@@ -89,12 +102,13 @@ export function parseSVGPath(d: string, matrix: [number, number, number, number,
         startX = currentX;
         startY = currentY;
         addPoint(currentX, currentY);
+        command = cmd === 'M' ? 'L' : 'l';
         break;
       }
 
       case 'L': {
-        const x = parseFloat(tokens[i++]);
-        const y = parseFloat(tokens[i++]);
+        const x = readNumber();
+        const y = readNumber();
         if (cmd === 'L') {
           currentX = x;
           currentY = y;
@@ -107,7 +121,7 @@ export function parseSVGPath(d: string, matrix: [number, number, number, number,
       }
 
       case 'H': {
-        const x = parseFloat(tokens[i++]);
+        const x = readNumber();
         if (cmd === 'H') {
           currentX = x;
         } else {
@@ -118,7 +132,7 @@ export function parseSVGPath(d: string, matrix: [number, number, number, number,
       }
 
       case 'V': {
-        const y = parseFloat(tokens[i++]);
+        const y = readNumber();
         if (cmd === 'V') {
           currentY = y;
         } else {
@@ -132,6 +146,7 @@ export function parseSVGPath(d: string, matrix: [number, number, number, number,
         currentX = startX;
         currentY = startY;
         addPoint(currentX, currentY);
+        command = '';
         break;
       }
     }

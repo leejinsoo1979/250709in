@@ -878,6 +878,8 @@ const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): numbe
   return isFullSurround ? -3 : 5;
 };
 
+const isShelfSplitModuleId = (moduleId?: string): boolean => !!moduleId?.includes('shelf-split');
+
 const RightPanel: React.FC<RightPanelProps> = ({
   activeTab,
   onTabChange,
@@ -1448,6 +1450,25 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const slotColWidth = indexing.columnWidth || 0;
               // 저장된 topFrameOffset 그대로 표시 (Configurator effect가 surroundType별로 동기화)
               const getTopOffsetDisplay = (m: any) => m?.topFrameOffset ?? 0;
+              const computeShelfSplitTopDistance = (m: any) => {
+                if (!m) return null;
+                const sections = Array.isArray(m?.customSections) ? m.customSections : [];
+                if (!isShelfSplitModuleId(m?.moduleId) || sections.length < 2) return null;
+                const baseDistance = m.hasBase === false
+                  ? (m.individualFloatHeight ?? 0)
+                  : (m.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+                const sectionTop = baseDistance + sections
+                  .slice(0, 2)
+                  .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
+                return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
+              };
+              const getTopSizeDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? m?.topFrameThickness ?? globalTop;
+              const getTopOffGapDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? m?.topFrameGap ?? getTopSizeDisplay(m);
+              const getTopGapDisplay = (m: any) => (
+                m?.hasTopFrame === false
+                  ? getTopOffGapDisplay(m)
+                  : 0
+              );
 
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
@@ -1457,7 +1478,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const allBaseOnMerge = slotMods.length > 0 && slotMods.every(m => m.hasBase !== false);
                 const toggleAllTopMerge = () => {
                   const newVal = !allTopOnMerge;
-                  slotMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) }));
+                  slotMods.forEach(m => updatePlacedModule(m.id, {
+                    hasTopFrame: newVal,
+                    topFrameGap: newVal ? 0 : getTopOffGapDisplay(m),
+                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                  }));
                 };
                 const toggleAllBaseMerge = () => {
                   const newVal = !allBaseOnMerge;
@@ -1493,13 +1518,20 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             label={group.label}
                             enabled={allEnabled}
                             widthMM={group.totalWidthMm}
-                            heightMM={firstMod?.topFrameThickness ?? globalTop}
+                            heightMM={getTopSizeDisplay(firstMod)}
                             offset={getTopOffsetDisplay(firstMod)}
-                            gap={firstMod?.topFrameGap ?? 0}
+                            gap={getTopGapDisplay(firstMod)}
                             userBaseHeightDefault={userDefaults.frameTop}
                             onToggle={() => {
                               const newVal = !allEnabled;
-                              group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) }));
+                              group.moduleIds.forEach(id => {
+                                const target = slotMods.find(m => m.id === id);
+                                updatePlacedModule(id, {
+                                  hasTopFrame: newVal,
+                                  topFrameGap: newVal ? 0 : getTopOffGapDisplay(target),
+                                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                                });
+                              });
                             }}
                             onHeightChange={(v) => {
                               group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
@@ -1584,7 +1616,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const next = !topFrameAllMode;
                 setTopFrameAllMode(next);
                 // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
-                sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) }));
+                sorted.forEach(m => updatePlacedModule(m.id, {
+                  hasTopFrame: true,
+                  topFrameGap: 0,
+                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
+                }));
               };
               const toggleAllBase = () => {
                 const next = !baseFrameAllMode;
@@ -1621,12 +1657,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           label="전체"
                           enabled={unifiedEnabled}
                           widthMM={Math.round(totalWidthMM * 10) / 10}
-                          sizeMM={first.topFrameThickness ?? globalTop}
+                          sizeMM={getTopSizeDisplay(first)}
                           offset={getTopOffsetDisplay(first)}
-                          gap={first.topFrameGap ?? 0}
+                          gap={getTopGapDisplay(first)}
                           onToggle={() => {
                             const newVal = !unifiedEnabled;
-                            sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) }));
+                            sorted.forEach(m => updatePlacedModule(m.id, {
+                              hasTopFrame: newVal,
+                              topFrameGap: newVal ? 0 : getTopOffGapDisplay(m),
+                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                            }));
                           }}
                           onSizeChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
                           onOffsetChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
@@ -1645,12 +1685,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           label={`${toAlpha(topNum)}(상)`}
                           enabled={mod.hasTopFrame !== false}
                           widthMM={modWidthMM}
-                          sizeMM={mod.topFrameThickness ?? globalTop}
+                          sizeMM={getTopSizeDisplay(mod)}
                           offset={getTopOffsetDisplay(mod)}
-                          gap={mod.topFrameGap ?? 0}
+                          gap={getTopGapDisplay(mod)}
                           onToggle={() => {
                             const newVal = !(mod.hasTopFrame !== false);
-                            updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
+                            updatePlacedModule(mod.id, {
+                              hasTopFrame: newVal,
+                              topFrameGap: newVal ? 0 : getTopOffGapDisplay(mod),
+                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                            });
                           }}
                           onSizeChange={(v) => {
                             updatePlacedModule(mod.id, { topFrameThickness: v });

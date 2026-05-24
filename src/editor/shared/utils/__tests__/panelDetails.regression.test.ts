@@ -297,7 +297,7 @@ describe('panelDetails regression baselines', () => {
     expect(doorNames).toEqual(['하부 도어', '상부 도어'])
   })
 
-  it('도어분절 현관장 도어 보링은 상하부 도어별 120mm 기본 공식을 따른다', () => {
+  it('도어분절 현관장 도어 보링은 측판 섹션 기준 120mm 기본 공식을 따른다', () => {
     const panels = calculatePanels('single-shelf-split-500', 500, 380, {
       hasDoor: true,
       backPanelThicknessMm: 9
@@ -306,16 +306,16 @@ describe('panelDetails regression baselines', () => {
     const upperDoor = findPanel(panels, '상부 도어')
 
     expect(lowerDoor.height).toBe(820)
-    expect(lowerDoor.boringPositions).toEqual([120, 700])
-    expect(lowerDoor.screwPositions).toEqual([97.5, 142.5, 677.5, 722.5])
+    expect(lowerDoor.boringPositions).toEqual([120, 740])
+    expect(lowerDoor.screwPositions).toEqual([97.5, 142.5, 717.5, 762.5])
     expect(lowerDoor.hingeCount).toBe(2)
     expect(upperDoor.height).toBe(1560)
-    expect(upperDoor.boringPositions).toEqual([120, 780, 1440])
-    expect(upperDoor.screwPositions).toEqual([97.5, 142.5, 757.5, 802.5, 1417.5, 1462.5])
+    expect(upperDoor.boringPositions).toEqual([140, 790, 1440])
+    expect(upperDoor.screwPositions).toEqual([117.5, 162.5, 767.5, 812.5, 1417.5, 1462.5])
     expect(upperDoor.hingeCount).toBe(3)
   })
 
-  it('듀얼 도어분절 현관장 도어 보링도 좌우 도어별 120mm 기본 공식을 따른다', () => {
+  it('듀얼 도어분절 현관장 도어 보링도 좌우 도어별 섹션 기준 120mm 기본 공식을 따른다', () => {
     const panels = calculatePanels('dual-shelf-split-1000', 1000, 380, {
       hasDoor: true,
       backPanelThicknessMm: 9
@@ -330,12 +330,12 @@ describe('panelDetails regression baselines', () => {
     ])
     doors.filter(panel => panel.name?.includes('하부')).forEach(panel => {
       expect(panel.height).toBe(820)
-      expect(panel.boringPositions).toEqual([120, 700])
+      expect(panel.boringPositions).toEqual([120, 740])
       expect(panel.hingeCount).toBe(2)
     })
     doors.filter(panel => panel.name?.includes('상부')).forEach(panel => {
       expect(panel.height).toBe(1560)
-      expect(panel.boringPositions).toEqual([120, 780, 1440])
+      expect(panel.boringPositions).toEqual([140, 790, 1440])
       expect(panel.hingeCount).toBe(3)
     })
   })

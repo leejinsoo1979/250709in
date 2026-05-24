@@ -120,7 +120,8 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
       customDoorPositionsMm: placedModule.hingePositionsMm,
-      defaultDoorPositionsMm: defaultPositions
+      defaultDoorPositionsMm: defaultPositions,
+      preserveEdgePositionsMm: true
     });
 
     return resolvedPositions.sidePositionsMm
