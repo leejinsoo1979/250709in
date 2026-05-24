@@ -4,12 +4,12 @@ import type { PlacedPanel } from '../types';
 import { convertPlacedPanelToMprBoringData } from './mprPanelConversion';
 
 describe('convertPlacedPanelToMprBoringData', () => {
-  it('keeps horizontal panel coordinates so side bores are on left/right edges', () => {
+  it('converts optimizer horizontal panel coordinates so side bores are on product left/right edges', () => {
     const panel = {
       id: 'top-1',
       name: '상판',
-      width: 764,
-      height: 580,
+      width: 580,
+      height: 764,
       x: 0,
       y: 0,
       rotated: false,
@@ -50,8 +50,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const panel = {
       id: 'unknown-fixed-1',
       name: '패널A',
-      width: 800,
-      height: 410,
+      width: 410,
+      height: 800,
       x: 0,
       y: 0,
       rotated: false,

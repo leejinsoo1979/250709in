@@ -21,6 +21,10 @@ export const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
 };
 
 function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } {
+  if (!panel.isDoor && panel.sideBoringPositions?.length) {
+    return { width: panel.height, height: panel.width };
+  }
+
   return { width: panel.width, height: panel.height };
 }
 
