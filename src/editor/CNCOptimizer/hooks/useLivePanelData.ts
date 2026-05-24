@@ -95,7 +95,8 @@ function isMainHorizontalPanel(panel: any): boolean {
     name.includes('지판') ||
     name.includes('상판') ||
     name.includes('천판') ||
-    name.includes('고정선반')
+    name.includes('고정선반') ||
+    name.includes('옷봉 선반')
   );
 }
 
@@ -113,6 +114,7 @@ function findPanelByName(panels: any[], predicate: (name: string) => boolean): a
 function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number) {
   const fixedPanels = modulePanels.filter(isMainHorizontalPanel);
   const shelfPanels = modulePanels.filter(isMovableShelfPanel);
+  const fixedShelfPanels = fixedPanels.filter(panel => (panel?.name || '').includes('옷봉 선반'));
   const bottomPanel = findPanelByName(fixedPanels, name => name.includes('(하)바닥'))
     ?? findPanelByName(fixedPanels, name => name === '바닥' || name.endsWith('바닥'))
     ?? fixedPanels[0];
@@ -139,6 +141,9 @@ function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number
     }
     if (detail.role === 'section-divider') {
       return getPanelReferenceDepth(sectionDividerPanels[detail.roleIndex ?? 0]) || fallbackDepth;
+    }
+    if (detail.role === 'fixed-shelf') {
+      return getPanelReferenceDepth(fixedShelfPanels[detail.roleIndex ?? 0]) || fallbackDepth;
     }
 
     return fallbackDepth;

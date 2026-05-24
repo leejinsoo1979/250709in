@@ -31,7 +31,7 @@ export interface AdditionalDowelBoringOptions {
 }
 
 export type ShelfBoringPositionType = 'fixed-panel' | 'movable-shelf' | 'additional-dowel';
-export type ShelfBoringPositionRole = 'bottom-panel' | 'top-panel' | 'section-divider' | 'movable-shelf' | 'additional-dowel';
+export type ShelfBoringPositionRole = 'bottom-panel' | 'top-panel' | 'section-divider' | 'fixed-shelf' | 'movable-shelf' | 'additional-dowel';
 
 export interface ShelfBoringPositionDetail {
   /** 가구 바닥 기준 보링 위치 (mm) */
@@ -100,6 +100,7 @@ export function calculateShelfBoringPositions(
   const sectionDividers: number[] = [];
   const details: ShelfBoringPositionDetail[] = [];
   let shelfDetailIndex = 0;
+  let fixedShelfDetailIndex = 0;
   let sectionDividerDetailIndex = 0;
 
   // 1. 바닥판 중심 위치 (가구 바닥에서 9mm = 18/2)
@@ -162,6 +163,19 @@ export function calculateShelfBoringPositions(
           });
         });
       }
+    });
+
+    const fixedShelfPositionsForBoring = section.type === 'hanging' && Array.isArray(section.shelfPositions)
+      ? section.shelfPositions.filter(pos => pos > 0)
+      : [];
+
+    fixedShelfPositionsForBoring.forEach(pos => {
+      details.push({
+        y: currentYPositionFromBottom + pos,
+        type: 'fixed-panel',
+        role: 'fixed-shelf',
+        roleIndex: fixedShelfDetailIndex++,
+      });
     });
 
     // 섹션 구분 패널 (마지막 섹션이 아닌 경우)
