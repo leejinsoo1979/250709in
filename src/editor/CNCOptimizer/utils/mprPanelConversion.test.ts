@@ -99,4 +99,27 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('BR="10"');
     expect(mpr).toContain('TI="7.5"');
   });
+
+  it('does not export stale boring data on drawer front panels', () => {
+    const panel = {
+      id: 'drawer-front-1',
+      name: '서랍1 앞판',
+      width: 420,
+      height: 130,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      boringPositions: [50, 80],
+      boringDepthPositions: [50, 210, 370],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+
+    expect(converted.panelType).toBe('drawer-front');
+    expect(converted.borings).toEqual([]);
+  });
 });

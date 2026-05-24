@@ -54,11 +54,12 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
 
   const panelThickness = panel.thickness || ((panel.material === 'PET') ? 18.5 : 18);
   const mprSize = getMprPanelSize(panel);
+  const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
 
   // 1) 측판 보링
   // - 고정선반/천지판 결합: Ø6 관통
   // - 이동선반 다보: Ø5 depth=12
-  if (!panel.isDoor && panel.boringPositions && panel.boringPositions.length > 0) {
+  if (!panel.isDoor && !isDrawerFrontPanel && panel.boringPositions && panel.boringPositions.length > 0) {
     const yPositions = panel.boringPositions;
     const xPositions = panel.boringDepthPositions || [];
     const isDrawerPanel = panel.name?.includes('서랍');

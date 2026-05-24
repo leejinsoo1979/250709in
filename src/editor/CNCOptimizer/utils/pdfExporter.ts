@@ -245,7 +245,8 @@ export class PDFExporter {
 
       // ★★★ 타공(보링) 표시 - CuttingLayoutPreview2.tsx 완전 복사 ★★★
       const isDoorPanel = panel.name?.includes('도어') || panel.name?.includes('Door');
-      if (panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel) {
+      const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
+      if (panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel && !isDrawerFrontPanel) {
         const originalWidth = panel.width;
         const originalHeight = panel.height;
 
@@ -253,10 +254,9 @@ export class PDFExporter {
         const placedWidth = panel.rotated ? originalHeight : originalWidth;
         const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
-        // 서랍 측판/앞판 여부 확인
+        // 서랍 측판 여부 확인
         const isDrawerSidePanel = panel.name?.includes('서랍') &&
           (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
-        const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
 
         // 보링 X위치 결정 (깊이 방향)
         let depthPositions: number[] = [];
@@ -266,13 +266,6 @@ export class PDFExporter {
           } else {
             const sideThickness = 15;
             depthPositions = [sideThickness / 2, originalWidth - sideThickness / 2];
-          }
-        } else if (isDrawerFrontPanel) {
-          if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
-            depthPositions = panel.boringDepthPositions;
-          } else {
-            const edgeOffset = 50;
-            depthPositions = [edgeOffset, originalWidth / 2, originalWidth - edgeOffset];
           }
         } else {
           depthPositions = (panel as any).boringDepthPositions?.length > 0
@@ -295,7 +288,7 @@ export class PDFExporter {
 
         panel.boringPositions.forEach((boringPosMm: number) => {
           const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - boringPosMm) < 0.01);
-          const depthPositionsForY = !isDrawerSidePanel && !isDrawerFrontPanel && group?.depthPositions?.length > 0
+          const depthPositionsForY = !isDrawerSidePanel && group?.depthPositions?.length > 0
             ? group.depthPositions
             : depthPositions;
 
@@ -303,7 +296,7 @@ export class PDFExporter {
             // 옵티마이저와 동일하게 시트 좌표 계산
             let sheetBoringX: number, sheetBoringY: number;
 
-            if (isDrawerSidePanel || isDrawerFrontPanel) {
+            if (isDrawerSidePanel) {
               if (panel.rotated) {
                 // 서랍 측판/앞판 회전 배치: 깊이 방향이 시트 X축, 높이 방향이 시트 Y축
                 sheetBoringX = panel.x + depthPosMm;

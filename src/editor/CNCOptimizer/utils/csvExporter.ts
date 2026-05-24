@@ -137,10 +137,11 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
   let globalHoleNo = 1;
 
   panels.forEach(panel => {
+    const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
     const hasFaceBorings = panel.boringPositions && panel.boringPositions.length > 0;
 
     // 보링 위치가 있는 패널만 처리
-    if (!hasFaceBorings) {
+    if (!hasFaceBorings || isDrawerFrontPanel) {
       return;
     }
 

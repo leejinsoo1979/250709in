@@ -19,6 +19,7 @@ interface PanelDetail {
   isLeftHinge?: boolean
   boringPositions?: number[]
   screwPositions?: number[]
+  boringDepthPositions?: number[]
   hingeCount?: number
   bracketBoringPositions?: number[]
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>
@@ -246,6 +247,12 @@ describe('panelDetails regression baselines', () => {
 
     expectedDrawerModulePanels.forEach((name) => {
       expect(findPanel(panels, name)).toBeDefined()
+    })
+    const drawerFrontPanelNames = ['유리장 서랍1 앞판', '유리장 서랍2 앞판']
+    drawerFrontPanelNames.forEach((name) => {
+      const panel = findPanel(panels, name)
+      expect(panel.boringPositions).toBeUndefined()
+      expect(panel.boringDepthPositions).toBeUndefined()
     })
     expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
     expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })

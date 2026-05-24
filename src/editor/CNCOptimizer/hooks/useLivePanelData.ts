@@ -922,19 +922,13 @@ export function useLivePanelData() {
             }
           }
 
-          // ★★★ 서랍 앞판 마이다 보링 처리 ★★★
-          // calculatePanelDetails에서 이미 계산된 boringPositions/boringDepthPositions 사용
+          // 서랍 앞판에는 보링을 내보내지 않는다.
           let panelBoringDepthPositions: number[] | undefined = undefined;
 
           if (isDrawerFrontPanel) {
-            if (panel.boringPositions && panel.boringPositions.length > 0) {
-              panelBoringPositions = panel.boringPositions;
-              panelBoringDepthPositions = panel.boringDepthPositions;
-              console.log(`[BORING] ★ 서랍 앞판 감지! "${panel.name}" - boringPositions:`, panelBoringPositions);
-              console.log(`[BORING]   boringDepthPositions:`, panelBoringDepthPositions);
-            } else {
-              console.log(`[BORING] 서랍 앞판 "${panel.name}": boringPositions 없음 (calculatePanelDetails에서 계산 안됨)`);
-            }
+            panelBoringPositions = undefined;
+            panelBoringDepthGroups = undefined;
+            console.log(`[BORING] 서랍 앞판 "${panel.name}": 보링 제외`);
           } else if (isDrawerSidePanel) {
             // 서랍 측판은 이미 위에서 panelBoringPositions 처리됨
             panelBoringDepthPositions = panel.boringDepthPositions;
@@ -1726,7 +1720,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
         // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
-        // 서랍 앞판: "서랍1 앞판" 등 - 마이다 보링 대상
+        // 서랍 앞판: "서랍1 앞판" 등 - 보링 제외 대상
         const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
         // 도어 패널 여부
         const isDoorPanel = panel.isDoor === true || panel.name.includes('도어') || panel.name.includes('Door');
@@ -1807,19 +1801,13 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
         }
 
-        // ★★★ 서랍 앞판 마이다 보링 처리 ★★★
-        // calculatePanelDetails에서 이미 계산된 boringPositions/boringDepthPositions 사용
+        // 서랍 앞판에는 보링을 내보내지 않는다.
         let panelBoringDepthPositions: number[] | undefined = undefined;
 
         if (isDrawerFrontPanel) {
-          if (panel.boringPositions && panel.boringPositions.length > 0) {
-            panelBoringPositions = panel.boringPositions;
-            panelBoringDepthPositions = panel.boringDepthPositions;
-            console.log(`[OPT BORING] ★ 서랍 앞판 감지! "${panel.name}" - boringPositions:`, panelBoringPositions);
-            console.log(`[OPT BORING]   boringDepthPositions:`, panelBoringDepthPositions);
-          } else {
-            console.log(`[OPT BORING] 서랍 앞판 "${panel.name}": boringPositions 없음`);
-          }
+          panelBoringPositions = undefined;
+          panelBoringDepthGroups = undefined;
+          console.log(`[OPT BORING] 서랍 앞판 "${panel.name}": 보링 제외`);
         } else if (isDrawerSidePanel) {
           // 서랍 측판은 이미 위에서 panelBoringPositions 처리됨
           panelBoringDepthPositions = panel.boringDepthPositions;

@@ -406,16 +406,12 @@ export class DXFExporter {
       };
 
       // ★★★ 선반핀/서랍 보링 표시 ★★★
-      if ((panel as any).boringPositions && (panel as any).boringPositions.length > 0 && !isDoorPanel) {
+      if ((panel as any).boringPositions && (panel as any).boringPositions.length > 0 && !isDoorPanel && !isDrawerFrontPanel) {
         let depthPositions: number[] = [];
         if (isDrawerSidePanel) {
           depthPositions = (panel as any).boringDepthPositions?.length > 0
             ? (panel as any).boringDepthPositions
             : [7.5, origW - 7.5];
-        } else if (isDrawerFrontPanel) {
-          depthPositions = (panel as any).boringDepthPositions?.length > 0
-            ? (panel as any).boringDepthPositions
-            : [50, origW / 2, origW - 50];
         } else {
           // 가구 측판은 Y별로 고정패널 3공/이동선반 2공이 섞일 수 있다.
           depthPositions = (panel as any).boringDepthPositions?.length > 0
@@ -425,13 +421,13 @@ export class DXFExporter {
 
         ((panel as any).boringPositions as number[]).forEach((boringPosMm: number) => {
           const group = (panel as any).boringDepthGroups?.find((item: any) => Math.abs(item.y - boringPosMm) < 0.01);
-          const depthPositionsForY = !isDrawerSidePanel && !isDrawerFrontPanel && group?.depthPositions?.length > 0
+          const depthPositionsForY = !isDrawerSidePanel && group?.depthPositions?.length > 0
             ? group.depthPositions
             : depthPositions;
 
           depthPositionsForY.forEach((depthPosMm: number) => {
             let sx: number, sy: number;
-            if (isDrawerSidePanel || isDrawerFrontPanel) {
+            if (isDrawerSidePanel) {
               if (panel.rotated) {
                 sx = panel.x + depthPosMm;
                 sy = panel.y + boringPosMm;

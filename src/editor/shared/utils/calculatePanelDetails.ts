@@ -902,31 +902,13 @@ export const calculatePanelDetails = (
           const drawerGroovePositionY = 12; // 측판 하단에서 12mm 위치에 홈 시작
           const drawerGrooveHeight = drawerBottomThickness + 1; // 홈 폭 = 바닥판 두께 + 1mm
 
-          // 서랍 앞판 마이다 보링 위치 계산
-          // X(너비) 방향: 좌측 50mm, 중앙, 우측 50mm (3개)
-          // Y(높이) 방향: 상단 50mm, 하단 50mm (2개)
-          const drawerFrontBoringEdgeX = 50; // 좌우 끝에서 50mm
-          const drawerFrontBoringEdgeY = 50; // 상하 끝에서 50mm
-          const drawerFrontBoringXPositions = [
-            drawerFrontBoringEdgeX, // 좌측에서 50mm
-            drawerFrontBackWidth / 2, // 중앙
-            drawerFrontBackWidth - drawerFrontBoringEdgeX // 우측에서 50mm
-          ];
-          const drawerFrontBoringYPositions = [
-            drawerFrontBoringEdgeY, // 하단에서 30mm
-            drawerFrontBackHeight - drawerFrontBoringEdgeY // 상단에서 50mm
-          ];
-
           // 서랍 앞판 (두께 15mm)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 앞판`,
             width: drawerFrontBackWidth,
             height: drawerFrontBackHeight,
             thickness: drawerSideThickness, // 15mm
-            material: 'PB',  // 서랍 본체는 PB 재질
-            // 마이다 보링 위치 (서랍 측판과 연결용)
-            boringPositions: drawerFrontBoringYPositions, // Y위치 (height 기준): 상하 30mm
-            boringDepthPositions: drawerFrontBoringXPositions // X위치 (width 기준): 좌 50mm, 중앙, 우 50mm
+            material: 'PB'  // 서랍 본체는 PB 재질
           });
 
           // 서랍 뒷판 (두께 15mm)
