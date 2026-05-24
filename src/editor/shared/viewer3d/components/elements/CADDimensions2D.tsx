@@ -48,6 +48,44 @@ const ExtLine: React.FC<{
 
 const mmToThreeUnits = (mm: number) => mm * 0.01;
 
+const isShoeCabinetDimensionModuleId = (moduleId?: string): boolean => {
+  const id = moduleId || '';
+  const key = id.replace(/-[\d.]+$/, '');
+  return !id.includes('upper-cabinet-') && (
+    id.includes('entryway') ||
+    id.includes('shelf-split') ||
+    id.includes('-4drawer-shelf-') ||
+    id.includes('-2drawer-shelf-') ||
+    /(^|-)shelf$/.test(key)
+  );
+};
+
+const resolveShoeCabinetDoorFrontZ = (
+  modules: PlacedModule[],
+  panelDepthMm: number
+): number | undefined => {
+  const shoeModule = modules.find(mod => mod.hasDoor && isShoeCabinetDimensionModuleId(mod.moduleId));
+  if (!shoeModule) return undefined;
+
+  const furnitureDepthMm = Math.min(panelDepthMm, 600);
+  const panelDepth = mmToThreeUnits(panelDepthMm);
+  const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+  const doorThickness = mmToThreeUnits(20);
+  const zOffset = -panelDepth / 2;
+  const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+  const rawDepthMm = shoeModule.customDepth
+    ?? shoeModule.upperSectionDepth
+    ?? shoeModule.lowerSectionDepth
+    ?? 380;
+  const actualDepthMm = shoeModule.moduleId?.includes('-entryway-') && Math.abs(rawDepthMm - 400) < 0.5
+    ? 380
+    : rawDepthMm;
+  const depth = mmToThreeUnits(actualDepthMm);
+  const furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
+
+  return furnitureZ + depth / 2 + doorThickness;
+};
+
 /**
  * 미드웨이 치수 편집 UI (HTML 오버레이)
  * - 2D 치수선 위에 투명 HTML div를 덮어 확실히 클릭 가능하게 함
@@ -1422,10 +1460,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const zOff_ud = -panelDepth_ud / 2;
           const fzOff_ud = zOff_ud + (panelDepth_ud - furnitureDepth_ud) / 2;
           // 하부장/키큰장 도어 앞면 Z (도어 포함)
-          const lowerDoorFrontZ = fzOff_ud + furnitureDepth_ud / 2;
-          // 도어 치수선: 도어 앞면에서 150mm 바깥, 연장선: 30mm부터
-          const dimZ = lowerDoorFrontZ + mmToThreeUnits(150);
-          const dimExtZ = lowerDoorFrontZ + mmToThreeUnits(30);
+          const defaultDoorFrontZ = fzOff_ud + furnitureDepth_ud / 2;
+          const hasShoeDoorDimensionModule = visibleFurniture.some(module => {
+            const mod = module as PlacedModule;
+            return mod.hasDoor && isShoeCabinetDimensionModuleId(mod.moduleId);
+          });
+          const lowerDoorFrontZ = hasShoeDoorDimensionModule
+            ? (resolveShoeCabinetDoorFrontZ(visibleFurniture as PlacedModule[], panelDepthMm_ud) ?? defaultDoorFrontZ)
+            : defaultDoorFrontZ;
+          // 도어 치수선: 신발장 측면뷰는 도어에 더 가깝게 배치
+          const dimOffsetMm = hasShoeDoorDimensionModule ? 100 : 150;
+          const dimZ = lowerDoorFrontZ + mmToThreeUnits(dimOffsetMm);
+          const dimExtZ = lowerDoorFrontZ + mmToThreeUnits(hasShoeDoorDimensionModule ? 20 : 30);
+          const dimTextZ = dimZ + mmToThreeUnits(hasShoeDoorDimensionModule ? 45 : 60);
           // 상부장 Z: 하부장 뒷면에 정렬 (하부장 뒷면 = fzOff_ud - furnitureDepth_ud/2 - doorThk_ud)
           // 상부장 깊이 (첫 번째 상부장 모듈 기준)
           const firstUpperMod = visibleFurniture.find(m => getModuleCategory(m as PlacedModule) === 'upper') as PlacedModule | undefined;
@@ -1607,7 +1654,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ], [0, seg.topY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, dimZ], [0.008, seg.bottomY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, dimZ], [0.008, seg.topY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimTextZ]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
@@ -1637,7 +1684,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <ExtLine points={[[0, bottomStartY, dimExtZ], [0, bottomStartY, dimZ]]} color={doorDimensionColor} />
                     <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimTextZ]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
                     </Text>
                   </group>
@@ -2775,9 +2822,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorThk_rd = mmToThreeUnits(20);
           const zOff_rd = -mmToThreeUnits(panelDepthMm_rd) / 2;
           const fzOff_rd = zOff_rd + (mmToThreeUnits(panelDepthMm_rd) - furnitureDepth_rd) / 2;
-          const doorFrontZ_rd = fzOff_rd + furnitureDepth_rd / 2;
-          const dimZ_r = doorFrontZ_rd + mmToThreeUnits(150);
-          const dimExtZ_r = doorFrontZ_rd + mmToThreeUnits(30);
+          const defaultDoorFrontZ_rd = fzOff_rd + furnitureDepth_rd / 2;
+          const hasShoeDoorDimensionModule_r = visibleFurniture.some(module => {
+            const mod = module as PlacedModule;
+            return mod.hasDoor && isShoeCabinetDimensionModuleId(mod.moduleId);
+          });
+          const doorFrontZ_rd = hasShoeDoorDimensionModule_r
+            ? (resolveShoeCabinetDoorFrontZ(visibleFurniture as PlacedModule[], panelDepthMm_rd) ?? defaultDoorFrontZ_rd)
+            : defaultDoorFrontZ_rd;
+          const dimOffsetMm_r = hasShoeDoorDimensionModule_r ? 100 : 150;
+          const dimZ_r = doorFrontZ_rd + mmToThreeUnits(dimOffsetMm_r);
+          const dimExtZ_r = doorFrontZ_rd + mmToThreeUnits(hasShoeDoorDimensionModule_r ? 20 : 30);
+          const dimTextZ_r = dimZ_r + mmToThreeUnits(hasShoeDoorDimensionModule_r ? 45 : 60);
           const firstUpperMod_r = visibleFurniture.find(m => getModuleCategory(m as PlacedModule) === 'upper') as PlacedModule | undefined;
           const upperModDepthMm_r = firstUpperMod_r?.upperSectionDepth || firstUpperMod_r?.customDepth || 300;
           const upperModDepth_r = mmToThreeUnits(upperModDepthMm_r);
@@ -2938,7 +2994,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ_r], [0, seg.topY, dimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, dimZ_r], [0.008, seg.bottomY, dimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, dimZ_r], [0.008, seg.topY, dimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimTextZ_r]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
