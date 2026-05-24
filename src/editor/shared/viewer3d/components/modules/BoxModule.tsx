@@ -1759,10 +1759,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               : cabinetH;
             const defaultLowerDoorTopGapMm = isPantrySplit ? 2 : 40;
             const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : 20;
-            const effectiveLowerDoorTopGapMm = (typeof lowerDoorTopGap === 'number' && lowerDoorTopGap > 0)
+            const effectiveLowerDoorTopGapMm = typeof lowerDoorTopGap === 'number'
               ? lowerDoorTopGap
               : defaultLowerDoorTopGapMm;
-            const effectiveUpperDoorBottomGapMm = (typeof upperDoorBottomGap === 'number' && upperDoorBottomGap > 0)
+            const effectiveUpperDoorBottomGapMm = typeof upperDoorBottomGap === 'number'
               ? upperDoorBottomGap
               : defaultUpperDoorBottomGapMm;
             const effectiveLowerDoorBottomGapMm = lowerDoorBottomGap ?? doorBottomGap ?? 0;
@@ -1871,6 +1871,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     forcedDoorHeightMm={upperDoorH}
                     forcedDoorYMm={upperDoorY}
                     splitDoorPanelName="상부 도어"
+                    splitDoorBottomGapMm={Math.max(0, upperDoorBottomMm - lowerDoorTopMm)}
                     hideWidthDimension={true}
                   />
                 </group>
