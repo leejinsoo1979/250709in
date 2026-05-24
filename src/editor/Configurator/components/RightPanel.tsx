@@ -73,11 +73,12 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
           />
         </div>
-        {/* 높이 */}
+        {/* 높이 — 토글 OFF면 0 표시 + 입력 비활성화 */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
           <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
           <input type="text" inputMode="numeric"
-            value={sizeText} placeholder="0"
+            value={enabled ? sizeText : '0'} placeholder="0"
+            disabled={!enabled}
             onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -91,13 +92,14 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
             }}
             onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
             onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
-            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: enabled ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)', cursor: enabled ? 'text' : 'not-allowed' }}
           />
         </div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
           <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
           <input type="text" inputMode="numeric"
-            value={offsetText} placeholder="0"
+            value={enabled ? offsetText : '0'} placeholder="0"
+            disabled={!enabled}
             onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -111,14 +113,15 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
             }}
             onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
             onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
-            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: enabled ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)', cursor: enabled ? 'text' : 'not-allowed' }}
           />
         </div>
         {showGap && (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>갭</span>
             <input type="text" inputMode="numeric"
-              value={gapText} placeholder="0"
+              value={enabled ? gapText : '0'} placeholder="0"
+              disabled={!enabled}
               onFocus={() => { gapEditingRef.current = true; setHighlightedFrame(hlKey); }}
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -132,7 +135,7 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
               }}
               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
               onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); onGapChange?.(clamped); }}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: enabled ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)', cursor: enabled ? 'text' : 'not-allowed' }}
             />
           </div>
         )}

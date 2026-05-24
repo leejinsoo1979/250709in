@@ -6076,7 +6076,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <div style={cellStyle}>
                         <span style={cellLabelStyle}>높이</span>
                         <input type="text" inputMode="numeric"
-                          value={topSize || ''} placeholder="0"
+                          value={topEnabled ? (topSize || '') : '0'} placeholder="0"
+                          disabled={!topEnabled}
                           onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -6112,13 +6113,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
                             });
                           }}
-                          style={inputStyle}
+                          style={{ ...inputStyle, opacity: topEnabled ? 1 : 0.5, cursor: topEnabled ? 'text' : 'not-allowed' }}
                         />
                       </div>
                       <div style={cellStyle}>
                         <span style={cellLabelStyle}>옵셋</span>
                         <input type="text" inputMode="numeric"
-                          value={topOffset !== 0 ? topOffset : ''} placeholder="0"
+                          value={topEnabled ? (topOffset !== 0 ? topOffset : '') : '0'} placeholder="0"
+                          disabled={!topEnabled}
                           onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -6140,13 +6142,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
                             updatePlacedModule(mod.id, { topFrameOffset: clamped });
                           }}
-                          style={inputStyle}
+                          style={{ ...inputStyle, opacity: topEnabled ? 1 : 0.5, cursor: topEnabled ? 'text' : 'not-allowed' }}
                         />
                       </div>
                       <div style={cellStyle}>
                         <span style={cellLabelStyle}>갭</span>
                         <input type="text" inputMode="numeric"
-                          value={topGap !== 0 ? topGap : ''} placeholder="0"
+                          value={topEnabled ? (topGap !== 0 ? topGap : '') : '0'} placeholder="0"
+                          disabled={!topEnabled}
                           onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -6179,7 +6182,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ...getUpperShelfGapSyncUpdates({ topFrameGap: clamped }),
                             });
                           }}
-                          style={inputStyle}
+                          style={{ ...inputStyle, opacity: topEnabled ? 1 : 0.5, cursor: topEnabled ? 'text' : 'not-allowed' }}
                         />
                       </div>
                     </div>
