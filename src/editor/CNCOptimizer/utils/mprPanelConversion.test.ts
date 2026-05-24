@@ -97,8 +97,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const mpr = generateSinglePanelMPR(converted);
     expect(mpr).toContain('<105 \\Ktasche\\');
     expect(mpr).toContain('KM="서랍 바닥홈 1: L 500 x W 10, 바닥기준 12, 깊이 7.5"');
-    expect(mpr).toContain('XA="250.0"');
-    expect(mpr).toContain('YA="17.0"');
+    expect(mpr).toContain('XA="0.0"');
+    expect(mpr).toContain('YA="12.0"');
     expect(mpr).toContain('LA="500"');
     expect(mpr).toContain('BR="10"');
     expect(mpr).toContain('TI="7.5"');
@@ -129,8 +129,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('X=380.0000');
     expect(mpr).toContain('Y=860.0000');
     expect(mpr).toContain('<105 \\Ktasche\\');
-    expect(mpr).toContain('XA="360.0"');
-    expect(mpr).toContain('YA="820.0"');
+    expect(mpr).toContain('XA="340.0"');
+    expect(mpr).toContain('YA="780.0"');
     expect(mpr).toContain('LA="40"');
     expect(mpr).toContain('BR="80"');
   });
@@ -159,8 +159,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('Y=0.0000');
     expect(mpr).toContain('Y=860.0000');
     expect(mpr).toContain('KM="백패널 홈: 10 x 860, 뒤기준 16"');
-    expect(mpr).toContain('XA="359.0"');
-    expect(mpr).toContain('YA="430.0"');
+    expect(mpr).toContain('XA="354.0"');
+    expect(mpr).toContain('YA="0.0"');
     expect(mpr).toContain('LA="10"');
     expect(mpr).toContain('BR="860"');
     expect(mpr).toContain('TI="7.5"');

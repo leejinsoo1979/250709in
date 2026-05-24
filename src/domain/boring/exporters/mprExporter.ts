@@ -400,13 +400,10 @@ function generateSideNotchPocket(
   const rect = resolveSideNotchRect(panel, notch);
   if (!rect) return '';
 
-  const centerX = rect.startX + rect.width / 2;
-  const centerY = rect.startY + rect.height / 2;
-
   return `<105 \\Ktasche\\
 KM="측판 따내기 ${index + 1}: ${formatMprNumber(rect.width)} x ${formatMprNumber(rect.height)}, 바닥기준 ${formatMprNumber(notch.fromBottom)}"
-XA="${centerX.toFixed(1)}"
-YA="${centerY.toFixed(1)}"
+XA="${rect.startX.toFixed(1)}"
+YA="${rect.startY.toFixed(1)}"
 ZA="T"
 LA="${formatMprNumber(rect.width)}"
 BR="${formatMprNumber(rect.height)}"
@@ -422,13 +419,10 @@ function generateBackPanelGroovePocket(panel: PanelBoringData): string {
   const rect = resolveBackPanelGrooveRect(panel);
   if (!rect) return '';
 
-  const centerX = rect.startX + rect.width / 2;
-  const centerY = rect.startY + rect.height / 2;
-
   return `<105 \\Ktasche\\
 KM="백패널 홈: ${formatMprNumber(rect.width)} x ${formatMprNumber(rect.height)}, 뒤기준 ${formatMprNumber(BACK_PANEL_GROOVE_REAR_OFFSET_MM)}"
-XA="${centerX.toFixed(1)}"
-YA="${centerY.toFixed(1)}"
+XA="${rect.startX.toFixed(1)}"
+YA="${rect.startY.toFixed(1)}"
 ZA="T"
 LA="${formatMprNumber(rect.width)}"
 BR="${formatMprNumber(rect.height)}"
@@ -450,13 +444,10 @@ function generateDrawerBottomGroovePocket(
   const grooveDepth = Math.max(0, Math.min(groove.depth, panel.thickness));
   if (panel.width <= 0 || grooveWidth <= 0 || grooveDepth <= 0) return '';
 
-  const centerX = panel.width / 2;
-  const centerY = grooveStartY + grooveWidth / 2;
-
   return `<105 \\Ktasche\\
 KM="서랍 바닥홈 ${index + 1}: L ${formatMprNumber(panel.width)} x W ${formatMprNumber(grooveWidth)}, 바닥기준 ${formatMprNumber(groove.y)}, 깊이 ${formatMprNumber(grooveDepth)}"
-XA="${centerX.toFixed(1)}"
-YA="${centerY.toFixed(1)}"
+XA="0.0"
+YA="${grooveStartY.toFixed(1)}"
 ZA="T"
 LA="${formatMprNumber(panel.width)}"
 BR="${formatMprNumber(grooveWidth)}"
