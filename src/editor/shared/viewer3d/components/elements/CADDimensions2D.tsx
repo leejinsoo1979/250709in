@@ -1102,10 +1102,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       : bounds.cabinetHeightMm;
     const defaultLowerTopGap = isPantrySplit ? 2 : 40;
     const defaultUpperBottomGap = isPantrySplit ? 1 : 20;
-    const lowerTopGap = typeof (mod as any).lowerDoorTopGap === 'number' && (mod as any).lowerDoorTopGap > 0
+    const lowerTopGap = typeof (mod as any).lowerDoorTopGap === 'number'
       ? (mod as any).lowerDoorTopGap
       : defaultLowerTopGap;
-    const upperBottomGap = typeof (mod as any).upperDoorBottomGap === 'number' && (mod as any).upperDoorBottomGap > 0
+    const upperBottomGap = typeof (mod as any).upperDoorBottomGap === 'number'
       ? (mod as any).upperDoorBottomGap
       : defaultUpperBottomGap;
     const lowerBottomGap = (mod as any).lowerDoorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
@@ -1403,28 +1403,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           segments_l2.sort((a, b) => a.bottomY - b.bottomY);
 
-          const allSegments_l2: typeof segments_l2 = [];
-          for (let i = 0; i < segments_l2.length; i++) {
-            allSegments_l2.push(segments_l2[i]);
-            if (i < segments_l2.length - 1) {
-              const gapBottomY = segments_l2[i].topY;
-              const gapTopY = segments_l2[i + 1].bottomY;
-              const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
-              if (gapMm > 0) {
-                // 상부장이 바로 위에 있으면 (미드웨이) upperModuleId 전달 → 편집 가능
-                const upperAbove = segments_l2[i + 1].upperModuleId;
-                const upperCurH = segments_l2[i + 1].currentHeightMm;
-                allSegments_l2.push({
-                  bottomY: gapBottomY,
-                  topY: gapTopY,
-                  heightMm: gapMm,
-                  key: `gap-${i}`,
-                  upperModuleId: upperAbove,
-                  currentHeightMm: upperCurH,
-                });
-              }
-            }
-          }
+          const allSegments_l2 = segments_l2;
 
           // 하부장의 받침대/바닥마감재도 표시
           const hasLower = visibleFurniture.some(m => getModuleCategory(m as PlacedModule) === 'lower' || getModuleCategory(m as PlacedModule) === 'full');
@@ -2889,18 +2868,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (segments_rl2.length === 0) return null;
           segments_rl2.sort((a, b) => a.bottomY - b.bottomY);
 
-          const allSegments_rl2: typeof segments_rl2 = [];
-          for (let i = 0; i < segments_rl2.length; i++) {
-            allSegments_rl2.push(segments_rl2[i]);
-            if (i < segments_rl2.length - 1) {
-              const gapBottomY = segments_rl2[i].topY;
-              const gapTopY = segments_rl2[i + 1].bottomY;
-              const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
-              if (gapMm > 0) {
-                allSegments_rl2.push({ bottomY: gapBottomY, topY: gapTopY, heightMm: gapMm, key: `gap-${i}` });
-              }
-            }
-          }
+          const allSegments_rl2 = segments_rl2;
 
           const hasLower_r = visibleFurniture.some(m => getModuleCategory(m as PlacedModule) === 'lower' || getModuleCategory(m as PlacedModule) === 'full');
 

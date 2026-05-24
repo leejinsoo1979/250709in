@@ -1608,10 +1608,10 @@ export const calculatePanelDetails = (
         : height;
       const defaultLowerDoorTopGapMm = isPantryDoorSplitModule ? 2 : 40;
       const defaultUpperDoorBottomGapMm = isPantryDoorSplitModule ? 1 : 20;
-      const effectiveLowerDoorTopGapMm = typeof splitDoorGaps?.lowerDoorTopGap === 'number' && splitDoorGaps.lowerDoorTopGap > 0
+      const effectiveLowerDoorTopGapMm = typeof splitDoorGaps?.lowerDoorTopGap === 'number'
         ? splitDoorGaps.lowerDoorTopGap
         : defaultLowerDoorTopGapMm;
-      const effectiveUpperDoorBottomGapMm = typeof splitDoorGaps?.upperDoorBottomGap === 'number' && splitDoorGaps.upperDoorBottomGap > 0
+      const effectiveUpperDoorBottomGapMm = typeof splitDoorGaps?.upperDoorBottomGap === 'number'
         ? splitDoorGaps.upperDoorBottomGap
         : defaultUpperDoorBottomGapMm;
       const effectiveLowerDoorBottomGapMm = splitDoorGaps?.lowerDoorBottomGap ?? doorBottomGap ?? 0;
