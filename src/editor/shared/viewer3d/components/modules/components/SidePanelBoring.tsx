@@ -15,6 +15,25 @@ type SidePanelBoringDetail = ShelfBoringPositionDetail & {
   holeZPositions?: number[];
 };
 
+type HingeBracketDetail = {
+  yMm: number;
+  zPositions: number[];
+};
+
+const usesDrawerFrontInsteadOfHingedDoor = (moduleId?: string) => {
+  if (!moduleId) return false;
+
+  return moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-2tier')
+    || moduleId.includes('lower-door-lift-3tier')
+    || moduleId.includes('lower-door-lift-touch-')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('lower-induction-cabinet')
+    || moduleId.includes('dual-lower-induction-cabinet');
+};
+
 interface SidePanelBoringProps {
   // 치수
   height: number; // 가구 전체 높이 (Three.js 단위)
@@ -29,6 +48,7 @@ interface SidePanelBoringProps {
   boringDetails?: SidePanelBoringDetail[];
   hingeBracketPositions?: number[];
   hingeBracketDepthOffsetsMm?: number[];
+  hingeBracketDetails?: HingeBracketDetail[];
   placedFurnitureId?: string;
   category?: string;
   doorTopGap?: number;
@@ -63,6 +83,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   boringDetails = [],
   hingeBracketPositions,
   hingeBracketDepthOffsetsMm = [20, 52],
+  hingeBracketDetails,
   placedFurnitureId,
   category,
   doorTopGap,
@@ -87,6 +108,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
   const autoHingeBracketPositions = React.useMemo(() => {
     if (!placedModule?.hasDoor) return [];
+    if (usesDrawerFrontInsteadOfHingedDoor(placedModule.moduleId)) return [];
 
     const unitPerMm = mmToThreeUnits(1);
     if (!unitPerMm) return [];
@@ -141,9 +163,13 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   ]);
 
   const resolvedHingeBracketPositions = hingeBracketPositions ?? autoHingeBracketPositions;
+  const resolvedHingeBracketDetails = hingeBracketDetails ?? resolvedHingeBracketPositions.map(position => ({
+    yMm: position,
+    zPositions: hingeBracketDepthOffsetsMm.map(depthOffsetMm => depth / 2 - mmToThreeUnits(depthOffsetMm)),
+  }));
 
   // 보링 위치가 없으면 렌더링하지 않음
-  if (boringPositions.length === 0 && resolvedHingeBracketPositions.length === 0) {
+  if (boringPositions.length === 0 && resolvedHingeBracketDetails.length === 0) {
     return null;
   }
 
@@ -207,30 +233,26 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
             </group>
           );
         })}
-        {resolvedHingeBracketPositions.map((positionMm, hingeIndex) => {
-          const boringY = -height / 2 + mmToThreeUnits(positionMm);
+        {resolvedHingeBracketDetails.map((detail, hingeIndex) => {
+          const boringY = -height / 2 + mmToThreeUnits(detail.yMm);
 
           return (
             <group key={`hinge-bracket-${hingeIndex}`}>
-              {hingeBracketDepthOffsetsMm.map((depthOffsetMm, holeIndex) => {
-                const zPos = depth / 2 - mmToThreeUnits(depthOffsetMm);
-
-                return (
-                  <mesh
-                    key={`hinge-bracket-hole-${hingeIndex}-${holeIndex}`}
-                    position={[xPosition, boringY, zPos]}
-                    rotation={[0, Math.PI / 2, 0]}
-                    renderOrder={110}
-                  >
-                    <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
-                    <meshBasicMaterial
-                      color={hingeBracketHoleColor}
-                      side={THREE.DoubleSide}
-                      depthTest={false}
-                    />
-                  </mesh>
-                );
-              })}
+              {detail.zPositions.map((zPos, holeIndex) => (
+                <mesh
+                  key={`hinge-bracket-hole-${hingeIndex}-${holeIndex}`}
+                  position={[xPosition, boringY, zPos]}
+                  rotation={[0, Math.PI / 2, 0]}
+                  renderOrder={110}
+                >
+                  <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
+                  <meshBasicMaterial
+                    color={hingeBracketHoleColor}
+                    side={THREE.DoubleSide}
+                    depthTest={false}
+                  />
+                </mesh>
+              ))}
             </group>
           );
         })}
