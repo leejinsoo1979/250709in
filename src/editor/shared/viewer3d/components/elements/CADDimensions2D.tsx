@@ -270,7 +270,7 @@ const computeFurnitureHeightMm = (
       heightMm = moduleData?.dimensions.height || 0;
     }
     if (!mod.isFreePlacement && heightMm > 0) {
-      if (mod.topFrameThickness !== undefined || mod.moduleId?.includes('shelf-split')) {
+      if (isTall && (mod.topFrameThickness !== undefined || mod.moduleId?.includes('shelf-split'))) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         heightMm -= (resolveTopFrameDistanceMm(mod, spaceInfo, globalTop) - globalTop);
       }
@@ -1935,7 +1935,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })()}
 
 
-        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 걸래받이 + 가구높이) */}
+        {/* 하부장: 걸레받이+몸통 H, 상부장: 몸통 H */}
         {(selectedModCategory === 'lower' || selectedModCategory === 'upper') && selectedMod && (() => {
           let selModData = getModuleById(
             selectedMod.moduleId,
@@ -1947,50 +1947,54 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           }
           if (!selModData) return null;
           const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
-          // 하부장 + 상판: 상판 두께를 총 높이에 포함 (PET=18.5, 인조대리석=선택값)
           const selModCatCombined = getModuleCategory(selectedMod);
-          const stoneThicknessCombined = _stoneTopThk(selectedMod);
-          const stoneAddition = (selModCatCombined === 'lower' && stoneThicknessCombined > 0) ? stoneThicknessCombined : 0;
-          const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm + stoneAddition);
-          const totalFromFloorY = mmToThreeUnits(totalFromFloorMm);
+          const selectedBaseFrameMm = selModCatCombined === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
+            ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
+            : 0;
+          const selectedDimensionHeightMm = selModCatCombined === 'lower'
+            ? selectedBaseFrameMm + selFurnitureHeightMm
+            : selFurnitureHeightMm;
+          const dimensionBottomMm = selModCatCombined === 'upper'
+            ? (isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
+                - resolveTopFrameDistanceMm(selectedMod, spaceInfo, spaceInfo.frameSize?.top ?? 30, isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
+                - selFurnitureHeightMm
+            : floorFinishHeightMm;
+          const dimensionTopMm = dimensionBottomMm + selectedDimensionHeightMm;
+          const dimensionBottomY = mmToThreeUnits(dimensionBottomMm);
+          const dimensionTopY = mmToThreeUnits(dimensionTopMm);
           // 가구 도어 앞면 Z 계산 (도어 치수와 동일 기준)
           const panelDepthMm_c = spaceInfo.depth || 1500;
           const furnitureDepthMm_c = Math.min(panelDepthMm_c, 600);
           const zOff_c = -mmToThreeUnits(panelDepthMm_c) / 2;
           const fzOff_c = zOff_c + (mmToThreeUnits(panelDepthMm_c) - mmToThreeUnits(furnitureDepthMm_c)) / 2;
           const doorFrontZ_c = fzOff_c + mmToThreeUnits(furnitureDepthMm_c) / 2;
-          // 합산 치수: 도어 앞면에서 300mm 바깥 (도어 치수 150mm + 간격 150mm)
+          // H 치수: 도어 앞면에서 300mm 바깥 (도어 치수 150mm + 간격 150mm)
           const dimZ_combined = doorFrontZ_c + mmToThreeUnits(300);
           const dimZ_combined_ext = doorFrontZ_c + mmToThreeUnits(30);
           return (
             <group>
-              {/* 보조 가이드 연장선 - 바닥 */}
-              <ExtLine points={[[0, 0, dimZ_combined_ext], [0, 0, dimZ_combined]]} color={dimensionColor} />
-              {/* 보조 가이드 연장선 - 가구 상단 */}
-              <ExtLine points={[[0, totalFromFloorY, dimZ_combined_ext], [0, totalFromFloorY, dimZ_combined]]} color={dimensionColor} />
-              {/* 메인 치수선 (바닥 ~ 가구 상단) */}
+              <ExtLine points={[[0, dimensionBottomY, dimZ_combined_ext], [0, dimensionBottomY, dimZ_combined]]} color={dimensionColor} />
+              <ExtLine points={[[0, dimensionTopY, dimZ_combined_ext], [0, dimensionTopY, dimZ_combined]]} color={dimensionColor} />
               <NativeLine name="dimension_line"
-                points={[[0, 0, dimZ_combined], [0, totalFromFloorY, dimZ_combined]]}
+                points={[[0, dimensionBottomY, dimZ_combined], [0, dimensionTopY, dimZ_combined]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 티크 마크 - 바닥 */}
               <NativeLine name="dimension_line"
-                points={[[-0.008, 0, dimZ_combined], [0.008, 0, dimZ_combined]]}
+                points={[[-0.008, dimensionBottomY, dimZ_combined], [0.008, dimensionBottomY, dimZ_combined]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 티크 마크 - 가구 상단 */}
               <NativeLine name="dimension_line"
-                points={[[-0.008, totalFromFloorY, dimZ_combined], [0.008, totalFromFloorY, dimZ_combined]]}
+                points={[[-0.008, dimensionTopY, dimZ_combined], [0.008, dimensionTopY, dimZ_combined]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <Text
-                position={[0, totalFromFloorY / 2, dimZ_combined + mmToThreeUnits(60)]}
+                position={[0, (dimensionBottomY + dimensionTopY) / 2, dimZ_combined + mmToThreeUnits(60)]}
                 fontSize={largeFontSize} color={textColor}
                 anchorX="center" anchorY="middle"
                 renderOrder={100001} depthTest={false}
                 rotation={[0, -Math.PI / 2, Math.PI / 2]}
               >
-                {totalFromFloorMm}
+                {Math.round(selectedDimensionHeightMm)}
               </Text>
             </group>
           );
@@ -3275,7 +3279,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 걸래받이 + 가구높이) — 우측뷰 */}
+        {/* 하부장: 걸레받이+몸통 H, 상부장: 몸통 H — 우측뷰 */}
         {(selectedModCategory === 'lower' || selectedModCategory === 'upper') && selectedMod && (() => {
           let selModData_r = getModuleById(
             selectedMod.moduleId,
@@ -3287,50 +3291,54 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           }
           if (!selModData_r) return null;
           const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
-          // 하부장 + 상판: 상판 두께를 총 높이에 포함 (PET=18.5, 인조대리석=선택값)
           const selModCatCombined_r = getModuleCategory(selectedMod);
-          const stoneThicknessCombined_r = _stoneTopThk(selectedMod);
-          const stoneAddition_r = (selModCatCombined_r === 'lower' && stoneThicknessCombined_r > 0) ? stoneThicknessCombined_r : 0;
-          const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r + stoneAddition_r);
-          const totalFromFloorY_r = mmToThreeUnits(totalFromFloorMm_r);
+          const selectedBaseFrameMm_r = selModCatCombined_r === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
+            ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
+            : 0;
+          const selectedDimensionHeightMm_r = selModCatCombined_r === 'lower'
+            ? selectedBaseFrameMm_r + selFurnitureHeightMm_r
+            : selFurnitureHeightMm_r;
+          const dimensionBottomMm_r = selModCatCombined_r === 'upper'
+            ? (isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
+                - resolveTopFrameDistanceMm(selectedMod, spaceInfo, spaceInfo.frameSize?.top ?? 30, isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
+                - selFurnitureHeightMm_r
+            : floorFinishHeightMm;
+          const dimensionTopMm_r = dimensionBottomMm_r + selectedDimensionHeightMm_r;
+          const dimensionBottomY_r = mmToThreeUnits(dimensionBottomMm_r);
+          const dimensionTopY_r = mmToThreeUnits(dimensionTopMm_r);
           // 가구 도어 앞면 Z 계산
           const panelDepthMm_cr = spaceInfo.depth || 1500;
           const furnitureDepthMm_cr = Math.min(panelDepthMm_cr, 600);
           const zOff_cr = -mmToThreeUnits(panelDepthMm_cr) / 2;
           const fzOff_cr = zOff_cr + (mmToThreeUnits(panelDepthMm_cr) - mmToThreeUnits(furnitureDepthMm_cr)) / 2;
           const doorFrontZ_cr = fzOff_cr + mmToThreeUnits(furnitureDepthMm_cr) / 2;
-          // 합산 치수: 도어 앞면에서 300mm 바깥
+          // H 치수: 도어 앞면에서 300mm 바깥
           const dimZ_combined_r = doorFrontZ_cr + mmToThreeUnits(300);
           const dimZ_combined_r_ext = doorFrontZ_cr + mmToThreeUnits(30);
           return (
             <group>
-              {/* 보조 가이드 연장선 - 바닥 */}
-              <ExtLine points={[[0, 0, dimZ_combined_r_ext], [0, 0, dimZ_combined_r]]} color={dimensionColor} />
-              {/* 보조 가이드 연장선 - 가구 상단 */}
-              <ExtLine points={[[0, totalFromFloorY_r, dimZ_combined_r_ext], [0, totalFromFloorY_r, dimZ_combined_r]]} color={dimensionColor} />
-              {/* 메인 치수선 (바닥 ~ 가구 상단) */}
+              <ExtLine points={[[0, dimensionBottomY_r, dimZ_combined_r_ext], [0, dimensionBottomY_r, dimZ_combined_r]]} color={dimensionColor} />
+              <ExtLine points={[[0, dimensionTopY_r, dimZ_combined_r_ext], [0, dimensionTopY_r, dimZ_combined_r]]} color={dimensionColor} />
               <NativeLine name="dimension_line"
-                points={[[0, 0, dimZ_combined_r], [0, totalFromFloorY_r, dimZ_combined_r]]}
+                points={[[0, dimensionBottomY_r, dimZ_combined_r], [0, dimensionTopY_r, dimZ_combined_r]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 티크 마크 - 바닥 */}
               <NativeLine name="dimension_line"
-                points={[[-0.008, 0, dimZ_combined_r], [0.008, 0, dimZ_combined_r]]}
+                points={[[-0.008, dimensionBottomY_r, dimZ_combined_r], [0.008, dimensionBottomY_r, dimZ_combined_r]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
-              {/* 티크 마크 - 가구 상단 */}
               <NativeLine name="dimension_line"
-                points={[[-0.008, totalFromFloorY_r, dimZ_combined_r], [0.008, totalFromFloorY_r, dimZ_combined_r]]}
+                points={[[-0.008, dimensionTopY_r, dimZ_combined_r], [0.008, dimensionTopY_r, dimZ_combined_r]]}
                 color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
               />
               <Text
-                position={[0, totalFromFloorY_r / 2, dimZ_combined_r + mmToThreeUnits(60)]}
+                position={[0, (dimensionBottomY_r + dimensionTopY_r) / 2, dimZ_combined_r + mmToThreeUnits(60)]}
                 fontSize={largeFontSize} color={textColor}
                 anchorX="center" anchorY="middle"
                 renderOrder={100001} depthTest={false}
                 rotation={[0, Math.PI / 2, Math.PI / 2]}
               >
-                {totalFromFloorMm_r}
+                {Math.round(selectedDimensionHeightMm_r)}
               </Text>
             </group>
           );

@@ -1633,7 +1633,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
       // freeHeight가 없을 때만 topFrameThickness delta 보정
       // 단, 걸래받이이 OFF일 때는 그 공간을 가구가 차지하므로 차감하지 않는 delta 계산
-      if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined) {
+      if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined && isTallCabinetForY) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         const topDelta = placedModule.topFrameThickness - globalTop;
         furnitureHeightMm -= topDelta;
