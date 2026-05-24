@@ -4962,6 +4962,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <>
                   {/* 섹션별 구분 틱 & 치수 (하부→상부 순서) */}
                   {(() => {
+                    const suppressOuterSectionDims = currentViewDirection === 'front'
+                      && !!leftViewMod?.moduleId?.includes('shelf-split');
+                    if (suppressOuterSectionDims) return null;
+
                     const displaySegments = sectionHeights.map((secH, idx) => {
                       const secBottomMm = floorFinishForHeight + bottomFrameH + sectionHeights.slice(0, idx).reduce((a, b) => a + b, 0);
                       const secTopMm = secBottomMm + secH;
@@ -5002,6 +5006,99 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       </React.Fragment>
                     );
                     });
+                  })()}
+                  {/* 정면뷰 도어분절 현관장: 측면뷰와 동일하게 상/하단·도어사이 갭까지 외부 치수 표시 */}
+                  {currentViewDirection === 'front' && leftViewMod?.moduleId?.includes('shelf-split') && (leftViewMod as any)?.hasDoor !== false && (() => {
+                    const sectionBaseMm = floorFinishForHeight + bottomFrameH;
+                    const lowerSectionH = Math.max(0, Math.round(sectionHeights[0] || 0));
+                    const sectionTotalH = sectionHeights.reduce((sum, h) => sum + Math.max(0, Math.round(h || 0)), 0);
+                    if (lowerSectionH <= 0 || sectionTotalH <= 0) return null;
+
+                    const lowerDoorTopGap = typeof (leftViewMod as any).lowerDoorTopGap === 'number'
+                      ? (leftViewMod as any).lowerDoorTopGap
+                      : 40;
+                    const upperDoorBottomGap = typeof (leftViewMod as any).upperDoorBottomGap === 'number'
+                      ? (leftViewMod as any).upperDoorBottomGap
+                      : 20;
+                    const lowerDoorBottomGap = (leftViewMod as any).lowerDoorBottomGap ?? (leftViewMod as any).doorBottomGap ?? 0;
+                    const upperDoorTopGap = (leftViewMod as any).upperDoorTopGap ?? (leftViewMod as any).doorTopGap ?? 0;
+
+                    const lowerDoorBottomAbs = sectionBaseMm - lowerDoorBottomGap;
+                    const lowerDoorTopAbs = sectionBaseMm + lowerSectionH - lowerDoorTopGap;
+                    const upperDoorBottomAbs = sectionBaseMm + lowerSectionH - upperDoorBottomGap;
+                    const upperDoorTopAbs = sectionBaseMm + sectionTotalH - upperDoorTopGap;
+                    const doorSegments = [
+                      {
+                        key: 'lower-door',
+                        bottomAbs: lowerDoorBottomAbs,
+                        topAbs: lowerDoorTopAbs,
+                      },
+                      {
+                        key: 'split-gap',
+                        bottomAbs: lowerDoorTopAbs,
+                        topAbs: upperDoorBottomAbs,
+                      },
+                      {
+                        key: 'upper-door',
+                        bottomAbs: upperDoorBottomAbs,
+                        topAbs: upperDoorTopAbs,
+                      },
+                    ]
+                      .map(seg => ({
+                        ...seg,
+                        heightMm: Math.round(seg.topAbs - seg.bottomAbs),
+                        bottomY: mmToThreeUnits(seg.bottomAbs),
+                        topY: mmToThreeUnits(seg.topAbs),
+                      }))
+                      .filter(seg => seg.heightMm > 0 && seg.topY > seg.bottomY);
+
+                    if (doorSegments.length === 0) return null;
+
+                    const doorDimX = innerX + mmToThreeUnits(60);
+                    const doorTextX = doorDimX + mmToThreeUnits(22);
+                    const tickHalf = mmToThreeUnits(8);
+                    const extStartX = leftOffset;
+                    const extEndX = doorDimX - mmToThreeUnits(12);
+                    const doorColor = primaryColor;
+
+                    return (
+                      <group name="front-shelf-split-door-dimensions">
+                        {doorSegments.map(seg => {
+                          const midY = (seg.bottomY + seg.topY) / 2;
+                          return (
+                            <React.Fragment key={`front-shelf-door-${seg.key}`}>
+                              <NativeLine name="dimension_line"
+                                points={[[doorDimX, seg.bottomY, bodyDimZ_L], [doorDimX, seg.topY, bodyDimZ_L]]}
+                                color={doorColor} lineWidth={0.8} renderOrder={100002} depthTest={false}
+                              />
+                              <NativeLine name="dimension_line"
+                                points={[[doorDimX - tickHalf, seg.bottomY, bodyDimZ_L], [doorDimX + tickHalf, seg.bottomY, bodyDimZ_L]]}
+                                color={doorColor} lineWidth={0.8} renderOrder={100002} depthTest={false}
+                              />
+                              <NativeLine name="dimension_line"
+                                points={[[doorDimX - tickHalf, seg.topY, bodyDimZ_L], [doorDimX + tickHalf, seg.topY, bodyDimZ_L]]}
+                                color={doorColor} lineWidth={0.8} renderOrder={100002} depthTest={false}
+                              />
+                              <NativeLine name="dimension_line"
+                                points={[[extStartX, seg.bottomY, bodyExtZ_L], [extEndX, seg.bottomY, bodyExtZ_L]]}
+                                color={doorColor} lineWidth={0.4} renderOrder={100002} depthTest={false}
+                              />
+                              <NativeLine name="dimension_line"
+                                points={[[extStartX, seg.topY, bodyExtZ_L], [extEndX, seg.topY, bodyExtZ_L]]}
+                                color={doorColor} lineWidth={0.4} renderOrder={100002} depthTest={false}
+                              />
+                              <Text renderOrder={100003} depthTest={false}
+                                position={[doorTextX, midY, bodyTextZ_L]}
+                                fontSize={baseFontSize} color={doorColor} anchorX="left" anchorY="middle"
+                                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                              >
+                                {seg.heightMm}
+                              </Text>
+                            </React.Fragment>
+                          );
+                        })}
+                      </group>
+                    );
                   })()}
                 </>
               ) : (
@@ -5172,12 +5269,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
               )}
               {/* 가구(내경) 상단 = 하부장 상단 (가구 있을 때만) */}
-              {leftmostMod && (
-                <NativeLine name="dimension_line"
-                  points={[[innerX - mmToThreeUnits(20), furnitureTopY, bodyExtZ_L], [leftOffset, furnitureTopY, bodyExtZ_L]]}
-                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                />
-              )}
+              {leftmostMod && (() => {
+                const bodyTopYForExt = leftViewMod?.moduleId?.includes('shelf-split') && sectionHeights.length >= 2
+                  ? mmToThreeUnits(floorFinishForHeight + bottomFrameH + sectionHeights.reduce((sum, h) => sum + h, 0))
+                  : furnitureTopY;
+                return (
+                  <NativeLine name="dimension_line"
+                    points={[[innerX - mmToThreeUnits(20), bodyTopYForExt, bodyExtZ_L], [leftOffset, bodyTopYForExt, bodyExtZ_L]]}
+                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                  />
+                );
+              })()}
               {/* 듀얼: 상부장 하단 경계 연장선 */}
               {hasDualCabinet && upperCabinetBottomY > furnitureTopY + 0.001 && (
                 <NativeLine name="dimension_line"

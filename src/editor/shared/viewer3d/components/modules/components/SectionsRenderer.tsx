@@ -280,6 +280,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     // 나머지 공간 계산
     const remainingHeight = availableHeight - totalFixedHeight;
     
+    const isShelfSplitFurniture = !!furnitureId?.includes('shelf-split');
+    const shouldPreserveExplicitShelfSplitSections = isShelfSplitFurniture
+      && sections.length >= 2
+      && sections.every((section: SectionConfig) => section.heightType === 'absolute')
+      && totalFixedHeight > 0;
+
     // 모든 섹션의 높이 계산
     // 각 absolute 섹션은 자체 지정 높이를 사용 (useBaseFurniture에서 이미 비례 조정됨)
     const allSections = sections.map((section: SectionConfig, index: number) => {
@@ -298,7 +304,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
 
     // 마지막 섹션은 나머지 공간을 채우도록 조정 (오차 보정)
-    if (allSections.length >= 2) {
+    // 도어분절 현관장은 섹션 높이를 줄이면 그만큼 상단 갭/몰딩이 생기므로
+    // 명시된 섹션 높이를 다시 늘려 채우면 정면 내경 표시가 실제와 어긋난다.
+    if (allSections.length >= 2 && !shouldPreserveExplicitShelfSplitSections) {
       const lastIdx = allSections.length - 1;
       const lowerSectionsHeight = allSections
         .slice(0, lastIdx)
@@ -748,6 +756,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 'topY_mm': topY * 100,
                     // 'internal_mm': actualInternalHeight
                   // });
+                } else if (isShelfSplit && section.type === 'shelf') {
+                  const sectionBottomY = sectionCenterY - sectionHeight / 2;
+                  const sectionTopY = sectionCenterY + sectionHeight / 2;
+                  // shelf-split은 하부 상판이 일반 판재가 아니라 목찬넬/상부 바닥판 구조다.
+                  // 하부: 하부 바닥판 윗면 -> 상부 바닥판 아랫면
+                  // 상부: 상부 바닥판 윗면 -> 최상단 상판 아랫면
+                  bottomY = sectionBottomY;
+                  topY = sectionTopY - basicThickness * 2;
+                  actualInternalHeight = Math.max(0, (topY - bottomY) / 0.01);
                 } else {
                   // 다른 타입은 기본값 사용
                   const sectionBottomY = sectionCenterY - sectionHeight/2;

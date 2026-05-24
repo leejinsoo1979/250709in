@@ -126,7 +126,7 @@ const DoorGapInput: React.FC<{
     if (!isFocused) {
       setLocalVal(displayFromStore(storeValue));
     }
-  }, [storeValue, isFocused, isCf, refDistanceMm]);
+  }, [storeValue, isFocused, isCf, isCfTopInset, refDistanceMm]);
 
   const commit = () => {
     setIsFocused(false);
@@ -4555,7 +4555,9 @@ const Configurator: React.FC = () => {
               <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
               {entries.map((entry) => {
                 const { topDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
-                const referenceMode = entry.splitPart === 'upper' ? 'cfTopInset' : (entry.splitPart ? 'body' : doorGapRefMode);
+                const referenceMode = entry.splitPart === 'upper'
+                  ? (doorGapRefMode === 'cf' ? 'cfTopInset' : 'body')
+                  : (entry.splitPart ? 'body' : doorGapRefMode);
                 return <DoorGapInput key={`top-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.topField}
                   storeValue={entry.topValue}
                   onCommit={handleIndividualDoorGapChange}
@@ -4567,7 +4569,9 @@ const Configurator: React.FC = () => {
               <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
               {entries.map((entry) => {
                 const { bottomDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
-                const referenceMode = entry.splitPart === 'lower' ? 'cf' : (entry.splitPart ? 'body' : doorGapRefMode);
+                const referenceMode = entry.splitPart === 'lower'
+                  ? doorGapRefMode
+                  : (entry.splitPart ? 'body' : doorGapRefMode);
                 return <DoorGapInput key={`bot-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.bottomField}
                   storeValue={entry.bottomValue}
                   onCommit={handleIndividualDoorGapChange}
