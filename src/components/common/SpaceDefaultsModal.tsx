@@ -251,25 +251,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             <Toggle options={SURROUND_OPTIONS} selected={values.surroundMode} onChange={(id) => set('surroundMode', id as any)} />
           </div>
 
-          {/* 프레임 사이즈 */}
-          <div className={styles.section}>
-            <div className={styles.sectionLabel}>프레임 사이즈</div>
-            <div className={styles.row}>
-              <NumberInput label="상부 size" value={values.frameTop} onChange={h('frameTop')} min={0} max={200} step={1} />
-              <NumberInput label="상부 옵셋" value={values.frameTopOffset} onChange={h('frameTopOffset')} min={-200} max={200} step={1} />
-            </div>
-            <div className={styles.row}>
-              <NumberInput label="하부 size" value={values.baseHeight} onChange={h('baseHeight')} min={0} max={200} step={1} />
-              <NumberInput label="하부 옵셋" value={values.baseFrameOffset} onChange={h('baseFrameOffset')} min={-200} max={200} step={1} />
-            </div>
-            {values.surroundMode !== 'no-surround' && (
-              <div className={styles.row}>
-                <NumberInput label="좌측" value={values.frameLeft} onChange={h('frameLeft')} min={0} max={200} step={1} />
-                <NumberInput label="우측" value={values.frameRight} onChange={h('frameRight')} min={0} max={200} step={1} />
-              </div>
-            )}
-          </div>
-
           {/* 배치타입 */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>배치타입</div>

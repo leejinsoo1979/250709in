@@ -1012,9 +1012,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // - currentYPosition 업데이트: currentYPosition += sectionHeight
   // 선반/패널 보링 위치 계산 (유틸리티 함수 사용)
   const allBoringResult = useMemo(() => {
-    if (isLowerDowelBoringOwnedByLowerCabinet) {
-      return { positions: [], details: [] };
-    }
     const { sections } = modelConfig;
     if (!sections || sections.length === 0) return { positions: [], details: [] };
     const isShelfSplitBoring = !!furnitureId?.includes('shelf-split');
@@ -1288,27 +1285,33 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     modelConfig.sections,
   ]);
 
+  const sideBoringDetails = isLowerDowelBoringOwnedByLowerCabinet
+    ? allBoringResult.details.filter(detail => detail.role === 'additional-dowel')
+    : allBoringResult.details;
+  const sideBoringPositions = sideBoringDetails.map(detail => detail.y);
+  const sideHingeBracketPositions = isLowerDowelBoringOwnedByLowerCabinet
+    ? []
+    : hingeBracketPositions;
+
   return (
     <>
       {renderSections()}
 
       {/* 측면뷰에서 선반핀 보링 시각화 */}
-      {!isLowerDowelBoringOwnedByLowerCabinet && (
-        <SidePanelBoring
-          height={height}
-          depth={depth}
-          basicThickness={basicThickness}
-          innerWidth={innerWidth}
-          boringPositions={allBoringResult.positions}
-          boringDetails={allBoringResult.details}
-          hingeBracketPositions={hingeBracketPositions}
-          placedFurnitureId={placedFurnitureId}
-          category={category}
-          doorTopGap={doorTopGap}
-          doorBottomGap={doorBottomGap}
-          mmToThreeUnits={mmToThreeUnits}
-        />
-      )}
+      <SidePanelBoring
+        height={height}
+        depth={depth}
+        basicThickness={basicThickness}
+        innerWidth={innerWidth}
+        boringPositions={sideBoringPositions}
+        boringDetails={sideBoringDetails}
+        hingeBracketPositions={sideHingeBracketPositions}
+        placedFurnitureId={placedFurnitureId}
+        category={category}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
+        mmToThreeUnits={mmToThreeUnits}
+      />
     </>
   );
 };
