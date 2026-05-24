@@ -1,4 +1,8 @@
-import { calculateHingePositions } from '@/domain/boring/calculators/hingeCalculator'
+import {
+  avoidHingePositionsForShelves,
+  calculateHingePositions,
+  type HingeShelfCollisionRange
+} from '@/domain/boring/calculators/hingeCalculator'
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants'
 import { classifyModule } from './moduleClassification'
 
@@ -42,6 +46,20 @@ export interface DoorVerticalGeometry extends DoorLeafDimensions {
   bottomMm: number
   topMm: number
   centerYMm: number
+}
+
+export interface SidePanelMatchedHingePositionsInput {
+  doorHeightMm: number
+  doorBottomOnSideMm: number
+  shelfCollisionRangesOnSideMm?: HingeShelfCollisionRange[]
+  customDoorPositionsMm?: number[] | null
+  defaultDoorPositionsMm?: number[]
+  clearanceMm?: number
+}
+
+export interface SidePanelMatchedHingePositions {
+  doorPositionsMm: number[]
+  sidePositionsMm: number[]
 }
 
 export interface SingleDoorOpenGeometryInput {
@@ -324,6 +342,58 @@ export const resolveDefaultDoorHingePositionsMm = ({
     calculateHingePositions(doorHeightMm),
     doorHeightMm
   )
+}
+
+export const resolveSidePanelMatchedHingePositions = ({
+  doorHeightMm,
+  doorBottomOnSideMm,
+  shelfCollisionRangesOnSideMm = [],
+  customDoorPositionsMm,
+  defaultDoorPositionsMm,
+  clearanceMm = 50
+}: SidePanelMatchedHingePositionsInput): SidePanelMatchedHingePositions => {
+  if (!Number.isFinite(doorHeightMm) || doorHeightMm <= 0 || !Number.isFinite(doorBottomOnSideMm)) {
+    return { doorPositionsMm: [], sidePositionsMm: [] }
+  }
+
+  const customDoorPositions = normalizeDoorHingePositionsMm(customDoorPositionsMm, doorHeightMm)
+  if (customDoorPositions.length > 0) {
+    return {
+      doorPositionsMm: customDoorPositions,
+      sidePositionsMm: customDoorPositions.map(position => Math.round((doorBottomOnSideMm + position) * 1000) / 1000)
+    }
+  }
+
+  const doorCandidates = normalizeDoorHingePositionsMm(
+    defaultDoorPositionsMm && defaultDoorPositionsMm.length > 0
+      ? defaultDoorPositionsMm
+      : calculateHingePositions(doorHeightMm),
+    doorHeightMm
+  )
+  if (doorCandidates.length === 0) {
+    return { doorPositionsMm: [], sidePositionsMm: [] }
+  }
+
+  const sideCandidates = doorCandidates.map(position => doorBottomOnSideMm + position)
+  const sideHeightForClamp = doorBottomOnSideMm + doorHeightMm
+  const sidePositions = avoidHingePositionsForShelves(
+    sideCandidates,
+    shelfCollisionRangesOnSideMm,
+    sideHeightForClamp,
+    {
+      clearanceMm,
+      minMarginMm: doorBottomOnSideMm + DEFAULT_HINGE_SETTINGS.topBottomMargin,
+      maxMarginMm: DEFAULT_HINGE_SETTINGS.topBottomMargin
+    }
+  )
+
+  return {
+    sidePositionsMm: sidePositions,
+    doorPositionsMm: normalizeDoorHingePositionsMm(
+      sidePositions.map(position => position - doorBottomOnSideMm),
+      doorHeightMm
+    )
+  }
 }
 
 export const calculateSingleDoorOpenGeometry = (

@@ -105,15 +105,19 @@ const DoorGapInput: React.FC<{
   onCommit: (moduleId: string, field: DoorGapField, val: string, syncModuleIds?: string[]) => void;
   highlightModuleIds?: string[]; // 전체 동기화 시 전체 도어 ID들
   // 표시 기준 모드. 'body' = 몸통 기준(저장값 그대로). 'cf' = 천장·바닥 기준 (거리 - 저장값으로 표시)
-  referenceMode?: 'body' | 'cf';
+  referenceMode?: 'body' | 'cf' | 'cfTopInset';
   // 천장/바닥 기준으로 변환할 때 필요한 거리 (mm).
   //   field=doorTopGap → 천장 ~ 가구 상단 거리
   //   field=doorBottomGap → 가구 하단 ~ 바닥 거리
   refDistanceMm?: number;
 }> = ({ moduleId, field, storeValue, onCommit, highlightModuleIds, referenceMode = 'body', refDistanceMm = 0 }) => {
-  const isCf = referenceMode === 'cf';
+  const isCf = referenceMode === 'cf' || referenceMode === 'cfTopInset';
+  const isCfTopInset = referenceMode === 'cfTopInset';
   // 표시값 계산
-  const displayFromStore = (v: number) => isCf ? String(Math.round(refDistanceMm - v)) : String(v);
+  const displayFromStore = (v: number) => {
+    if (!isCf) return String(v);
+    return String(Math.round(isCfTopInset ? refDistanceMm + v : refDistanceMm - v));
+  };
   const [localVal, setLocalVal] = useState(displayFromStore(storeValue));
   const [isFocused, setIsFocused] = useState(false);
 
@@ -130,9 +134,9 @@ const DoorGapInput: React.FC<{
     if (isCf) {
       const raw = parseFloat(localVal);
       if (!isNaN(raw)) {
-        // 0 ≤ v ≤ refDistance (천장/바닥 뚫기 방지)
-        const clamped = Math.max(0, Math.min(refDistanceMm, raw));
-        toCommit = String(Math.round(refDistanceMm - clamped));
+        // 천장/바닥 기준 입력을 몸통 기준 저장값으로 되돌린다.
+        const clamped = Math.max(0, isCfTopInset ? raw : Math.min(refDistanceMm, raw));
+        toCommit = String(Math.round(isCfTopInset ? clamped - refDistanceMm : refDistanceMm - clamped));
       }
     }
     onCommit(moduleId, field, toCommit, highlightModuleIds);
@@ -696,6 +700,19 @@ const Configurator: React.FC = () => {
     const moduleId = mod?.moduleId || '';
     return moduleId.includes('shelf-split') || moduleId.includes('pantry-cabinet-split');
   }, []);
+  const computeShelfSplitTopDistance = useCallback((mod: any, effectiveHeight = spaceInfo.height): number | null => {
+    const moduleId = mod?.moduleId || '';
+    const sections = Array.isArray(mod?.customSections) ? mod.customSections : [];
+    if (!moduleId.includes('shelf-split') || sections.length < 2) return null;
+
+    const baseDistance = mod.hasBase === false
+      ? (mod.individualFloatHeight ?? 0)
+      : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+    const sectionTop = baseDistance + sections
+      .slice(0, 2)
+      .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
+    return Math.max(0, Math.round(effectiveHeight - sectionTop));
+  }, [spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.type, spaceInfo.height]);
   // 키큰장 / 상하부장 분리
   const fullDoorIndices = useMemo(() => doorNumberMap
     .map((info, i) => ({ info, i }))
@@ -708,6 +725,12 @@ const Configurator: React.FC = () => {
         const isPantrySplit = (mod.moduleId || '').includes('pantry-cabinet-split');
         const lowerTopDefault = isPantrySplit ? 2 : 40;
         const upperBottomDefault = isPantrySplit ? 1 : 20;
+        const lowerTopValue = typeof mod.lowerDoorTopGap === 'number' && mod.lowerDoorTopGap > 0
+          ? mod.lowerDoorTopGap
+          : lowerTopDefault;
+        const upperBottomValue = typeof mod.upperDoorBottomGap === 'number' && mod.upperDoorBottomGap > 0
+          ? mod.upperDoorBottomGap
+          : upperBottomDefault;
         return [
           {
             key: `${mod.id}-lower`,
@@ -715,7 +738,7 @@ const Configurator: React.FC = () => {
             label: `도어 ${info.label}(하)`,
             topField: 'lowerDoorTopGap' as DoorGapField,
             bottomField: 'lowerDoorBottomGap' as DoorGapField,
-            topValue: mod.lowerDoorTopGap ?? lowerTopDefault,
+            topValue: lowerTopValue,
             bottomValue: mod.lowerDoorBottomGap ?? (mod.doorBottomGap ?? 0),
             category: 'lower' as const,
             splitPart: 'lower' as const
@@ -727,7 +750,7 @@ const Configurator: React.FC = () => {
             topField: 'upperDoorTopGap' as DoorGapField,
             bottomField: 'upperDoorBottomGap' as DoorGapField,
             topValue: mod.upperDoorTopGap ?? (mod.doorTopGap ?? 0),
-            bottomValue: mod.upperDoorBottomGap ?? upperBottomDefault,
+            bottomValue: upperBottomValue,
             category: 'upper' as const,
             splitPart: 'upper' as const
           }
@@ -779,14 +802,41 @@ const Configurator: React.FC = () => {
   //     "가구 상단~천장 거리"는 상단몰딩 두께와 정확히 같음.
   const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
     if (!mod) return { topDistance: 0, bottomDistance: 0 };
-    const topFrameMm = mod.hasTopFrame === false
+    const shelfSplitTopDistance = computeShelfSplitTopDistance(mod);
+    const topFrameMm = shelfSplitTopDistance !== null
+      ? shelfSplitTopDistance
+      : mod.hasTopFrame === false
       ? 0
       : (mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
     const baseFrameMm = mod.hasBase === false
       ? (mod.individualFloatHeight ?? 0)
       : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
     return { topDistance: Math.max(0, topFrameMm), bottomDistance: Math.max(0, baseFrameMm) };
-  }, [spaceInfo]);
+  }, [computeShelfSplitTopDistance, spaceInfo]);
+
+  const computeSplitDoorRefDistances = useCallback((
+    mod: any,
+    splitPart?: 'lower' | 'upper' | null
+  ): { topDistance: number; bottomDistance: number } => {
+    const baseDistances = computeRefDistances(mod);
+    if (!mod || !splitPart || !isDoorSplitSettingModule(mod)) {
+      return baseDistances;
+    }
+
+    const customSections = Array.isArray(mod.customSections) ? mod.customSections : [];
+    if (splitPart === 'upper' && customSections.length >= 2) {
+      const bottomDistance = baseDistances.bottomDistance;
+      const sectionTopFromFloor = bottomDistance + customSections
+        .slice(0, 2)
+        .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
+      return {
+        topDistance: Math.max(0, Math.round((spaceInfo.height || 0) - sectionTopFromFloor)),
+        bottomDistance
+      };
+    }
+
+    return baseDistances;
+  }, [computeRefDistances, isDoorSplitSettingModule, spaceInfo.height]);
 
   // 개별 모드: 개별 가구 도어 갭 변경 (전체선택 시 모든 도어에 동일 적용)
   const handleIndividualDoorGapChange = (moduleId: string, field: DoorGapField, val: string, syncModuleIds?: string[]) => {
@@ -4504,22 +4554,24 @@ const Configurator: React.FC = () => {
             <tr>
               <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
               {entries.map((entry) => {
-                const { topDistance } = computeRefDistances(entry.mod);
+                const { topDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
+                const referenceMode = entry.splitPart === 'upper' ? 'cfTopInset' : (entry.splitPart ? 'body' : doorGapRefMode);
                 return <DoorGapInput key={`top-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.topField}
                   storeValue={entry.topValue}
                   onCommit={handleIndividualDoorGapChange}
-                  referenceMode={entry.splitPart ? 'body' : doorGapRefMode}
+                  referenceMode={referenceMode}
                   refDistanceMm={topDistance} />;
               })}
             </tr>
             <tr>
               <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
               {entries.map((entry) => {
-                const { bottomDistance } = computeRefDistances(entry.mod);
+                const { bottomDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
+                const referenceMode = entry.splitPart === 'lower' ? 'cf' : (entry.splitPart ? 'body' : doorGapRefMode);
                 return <DoorGapInput key={`bot-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.bottomField}
                   storeValue={entry.bottomValue}
                   onCommit={handleIndividualDoorGapChange}
-                  referenceMode={entry.splitPart ? 'body' : doorGapRefMode}
+                  referenceMode={referenceMode}
                   refDistanceMm={bottomDistance} />;
               })}
             </tr>
@@ -6144,14 +6196,19 @@ const Configurator: React.FC = () => {
                     const globalBaseLocal = spaceInfo.baseConfig?.height ?? 65;
                     const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
                     const unifiedEnabled = topFreeMods.every(m => m.hasTopFrame !== false);
+                    const firstTopActualFrame = computeShelfSplitTopDistance(firstTop) ?? (firstTop.topFrameThickness ?? globalTop);
                     if (unifiedEnabled) {
                       return <FrameOffsetRow key="top-all-free"
                         num={1} label="전체"
                         enabled={true}
-                        sizeMM={firstTop.topFrameThickness ?? globalTop}
+                        sizeMM={firstTopActualFrame}
                         offset={firstTop.topFrameOffset ?? topOffsetDefaultU}
                         gap={firstTop.topFrameGap ?? 0}
-                        onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: false, topFrameGap: m.topFrameGap ?? 0, doorTopGap: -5 }))}
+                        onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, {
+                          hasTopFrame: false,
+                          topFrameGap: computeShelfSplitTopDistance(m) ?? (m.topFrameGap ?? 0),
+                          doorTopGap: -5
+                        }))}
                         onSizeChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: Math.max(0, v) }))}
                         onOffsetChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
                         onGapChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
@@ -6244,18 +6301,37 @@ const Configurator: React.FC = () => {
                   const dcDrop = (isDroppedZone && spaceInfo.droppedCeiling?.enabled && !spaceInfo.stepCeiling?.enabled)
                     ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
                   const effectiveSpaceHeight = spaceInfo.height - stepDrop - dcDrop;
-                  const actualTopFrameSize = Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight);
+                  const actualTopFrameSize = computeShelfSplitTopDistance(mod, effectiveSpaceHeight)
+                    ?? Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight);
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
                     gap={mod.topFrameGap ?? 0}
                     onToggle={() => {
                       const newVal = !(mod.hasTopFrame !== false);
-                      updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
+                      updatePlacedModule(mod.id, {
+                        hasTopFrame: newVal,
+                        topFrameGap: newVal ? 0 : actualTopFrameSize,
+                        doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                      });
                     }}
                     onSizeChange={(v) => {
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+                      const shelfSplitSections = Array.isArray((mod as any).customSections) ? (mod as any).customSections : [];
+                      if ((mod.moduleId || '').includes('shelf-split') && shelfSplitSections.length >= 2) {
+                        const lowerH = Number(shelfSplitSections[0]?.height) || 0;
+                        const nextUpperH = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - Math.max(0, v) - lowerH);
+                        const nextSections = shelfSplitSections.map((section: any, idx: number) => (
+                          idx === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
+                        ));
+                        updatePlacedModule(mod.id, {
+                          customSections: nextSections,
+                          topFrameThickness: Math.max(0, v),
+                          upperDoorHingePositionsMm: undefined
+                        });
+                        return;
+                      }
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
                       updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
                     }}

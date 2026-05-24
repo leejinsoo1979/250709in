@@ -1795,6 +1795,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const topSectionDir = (isNSectionTop && topSectionIdx >= 0 && sectionDirArrTop?.[topSectionIdx])
             || upperSectionDepthDirection
             || 'front';
+          const sectionHeightsForTop = getSectionHeights();
+          const isShelfSplitTopPanel = !!moduleData?.id?.includes('shelf-split') && sectionHeightsForTop.length >= 2;
+          const topPanelY = isShelfSplitTopPanel
+            ? (-height / 2 + sectionHeightsForTop.reduce((sum: number, h: number) => sum + h, 0) - basicThickness / 2)
+            : (height / 2 - basicThickness / 2);
 
           return (
             <BoxWithEdges
@@ -1805,7 +1810,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 }
                 return depth - backReduction - frontReduction;
               })()]}
-              position={[0, height/2 - basicThickness/2, (() => {
+              position={[0, topPanelY, (() => {
                 if ((isMultiSectionFurniture() || isNSectionTop) && topSectionDepthMm !== undefined) {
                   const upperDepth = mmToThreeUnits(topSectionDepthMm);
                   const depthDiff = depth - upperDepth;

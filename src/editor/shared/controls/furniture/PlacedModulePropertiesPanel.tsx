@@ -20,6 +20,7 @@ import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { FurniturePresetButtons } from './FurniturePresetButtons';
+import { useAlert } from '@/contexts/AlertContext';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
@@ -71,9 +72,20 @@ const getPlainShoeShelfSectionHeights = (
   sectionBasisH: number
 ): number[] | null => {
   if (!usesStableShelfSectionBoundary(module?.moduleId) || sections.length !== 2) return null;
+  if (isShelfSplitModuleId(module?.moduleId) && Array.isArray(module?.customSections)) {
+    return [
+      Math.max(0, Math.round(sections[0]?.height || 0)),
+      Math.max(0, Math.round(sections[1]?.height || 0)),
+    ];
+  }
   const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(module, spaceInfo);
   const lowerH = Math.max(0, Math.round((sections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
-  const upperH = Math.max(0, Math.round(sectionBasisH - lowerH));
+  const remainingUpperH = Math.max(0, Math.round(sectionBasisH - lowerH));
+  const hasExplicitShelfSplitSections = isShelfSplitModuleId(module?.moduleId)
+    && Array.isArray(module?.customSections);
+  const upperH = hasExplicitShelfSplitSections
+    ? Math.min(remainingUpperH, Math.max(0, Math.round(sections[1]?.height || 0)))
+    : remainingUpperH;
   return [lowerH, upperH];
 };
 
@@ -806,6 +818,7 @@ const calcBackLipFillHeight = (
 
 const PlacedModulePropertiesPanel: React.FC = () => {
   const { t } = useTranslation();
+  const { showAlert } = useAlert();
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
   const setHighlightedPanel = useUIStore(state => state.setHighlightedPanel);
@@ -4477,9 +4490,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
+            const isShelfSplitDoorModule = isShelfSplitModuleId(currentPlacedModule.moduleId);
+            const shelfSplitTopFrameMm = (() => {
+              const sections = Array.isArray((currentPlacedModule as any).customSections) ? (currentPlacedModule as any).customSections : [];
+              if (!isShelfSplitDoorModule || sections.length < 2) return null;
+              const baseDistance = currentPlacedModule.hasBase === false
+                ? (currentPlacedModule.individualFloatHeight ?? 0)
+                : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+              const sectionTop = baseDistance + sections
+                .slice(0, 2)
+                .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
+              return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
+            })();
             // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 바닥 거리 = 걸레받이 높이
             //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
-            const topFrameMm = currentPlacedModule.hasTopFrame === false
+            const topFrameMm = shelfSplitTopFrameMm !== null
+              ? shelfSplitTopFrameMm
+              : currentPlacedModule.hasTopFrame === false
               ? 0
               : (currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
             const baseFrameMm = currentPlacedModule.hasBase === false
@@ -4491,15 +4518,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 천장/바닥 기준 표시값: 도어와 천장/바닥 사이의 실제 거리 (양수)
             //   - 천장 기준 = 천장~가구상단 - 몸통 기준 상단갭
             //   - 바닥 기준 = 가구하단~바닥 - 몸통 기준 하단갭
-            const cfTopValue = String(Math.round(ceilingToBodyTopMm - (parseFloat(doorTopGapInput) || 0)));
+            const cfTopValue = String(Math.round(
+              isShelfSplitDoorModule
+                ? ceilingToBodyTopMm + (parseFloat(doorTopGapInput) || 0)
+                : ceilingToBodyTopMm - (parseFloat(doorTopGapInput) || 0)
+            ));
             const cfBotValue = String(Math.round(bodyBottomToFloorMm - (parseFloat(doorBottomGapInput) || 0)));
 
             // 천장/바닥 기준 입력 → 몸통 기준으로 변환 (0~최대거리로 클램프, 뚫고 나가지 못함)
             const onTopCfChange = (v: string) => {
               const raw = parseFloat(v);
               if (isNaN(raw)) return;
-              const num = Math.max(0, Math.min(ceilingToBodyTopMm, raw));
-              handleDoorTopGapChange(String(Math.round(ceilingToBodyTopMm - num)));
+              const num = Math.max(0, isShelfSplitDoorModule ? raw : Math.min(ceilingToBodyTopMm, raw));
+              handleDoorTopGapChange(String(Math.round(
+                isShelfSplitDoorModule ? num - ceilingToBodyTopMm : ceilingToBodyTopMm - num
+              )));
             };
             const onBotCfChange = (v: string) => {
               const raw = parseFloat(v);
@@ -5398,12 +5431,28 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   setSectionHeightInputs({});
                                   return;
                                 }
+                                const fixedSectionBasisH = plainShoeShelfSectionHeights.reduce((sum, h) => sum + h, 0);
+                                const isLowerSectionInput = sIdx === 0;
+                                const minUpperSectionH = 100;
+                                const currentLowerEffectiveH = plainShoeShelfSectionHeights[0] ?? 0;
+                                const maxInputVal = isLowerSectionInput
+                                  ? Math.max(100, fixedSectionBasisH - minUpperSectionH)
+                                  : Math.max(100, fixedSectionBasisH - currentLowerEffectiveH);
+                                const nextInputVal = Math.min(inputVal, maxInputVal);
+                                const wasClamped = nextInputVal !== inputVal;
                                 const nextEffectiveHeights = [...plainShoeShelfSectionHeights];
-                                nextEffectiveHeights[sIdx] = inputVal;
-                                const nextSectionBasisH = nextEffectiveHeights.reduce((sum, h) => sum + h, 0);
-                                const nextBodyH = Math.max(300, Math.min(3000, nextSectionBasisH - absorbedTopForSections - absorbedBaseForSections));
+                                if (isLowerSectionInput) {
+                                  nextEffectiveHeights[0] = nextInputVal;
+                                  nextEffectiveHeights[1] = Math.max(minUpperSectionH, fixedSectionBasisH - nextInputVal);
+                                } else {
+                                  nextEffectiveHeights[0] = currentLowerEffectiveH;
+                                  nextEffectiveHeights[1] = nextInputVal;
+                                }
+                                const isShelfSplitSectionInput = isShelfSplitModuleId(currentPlacedModule.moduleId);
                                 const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(currentPlacedModule, spaceInfo);
-                                const canonicalLowerH = Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm + baseFrameDeltaMm));
+                                const canonicalLowerH = isShelfSplitSectionInput
+                                  ? Math.max(0, Math.round(nextEffectiveHeights[0]))
+                                  : Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm + baseFrameDeltaMm));
                                 const canonicalUpperH = Math.max(0, Math.round(nextEffectiveHeights[1]));
                                 const effectiveHeightsForShelves = [nextEffectiveHeights[0], nextEffectiveHeights[1]];
                                 const newSections = mcSections.map((s: any, idx: number) => {
@@ -5416,14 +5465,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   }
                                   return updated;
                                 });
-                                const updates: any = { customSections: newSections, freeHeight: nextBodyH };
-                                if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
-                                  const iSpace = calculateInternalSpace(spaceInfo);
-                                  const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                                  updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - nextBodyH));
+                                const sectionUpdates: any = { customSections: newSections };
+                                if (isShelfSplitSectionInput) {
+                                  if (isLowerSectionInput) {
+                                    sectionUpdates.lowerDoorHingePositionsMm = undefined;
+                                    sectionUpdates.upperDoorHingePositionsMm = undefined;
+                                  } else {
+                                    sectionUpdates.upperDoorHingePositionsMm = undefined;
+                                  }
                                 }
-                                updatePlacedModule(currentPlacedModule.id, updates);
-                                setFreeHeightInput(nextBodyH.toString());
+                                updatePlacedModule(currentPlacedModule.id, sectionUpdates);
+                                if (wasClamped) {
+                                  showAlert(
+                                    `상하부섹션과 상단몰딩, 걸레받이의 합은 공간높이를 초과할 수 없습니다. 가능한 최대값 ${maxInputVal}으로 변경했습니다.`,
+                                    { title: '치수 변경 불가' }
+                                  );
+                                }
                                 setSectionHeightInputs({});
                               } else if (isCustom) {
                                 handleSectionHeightBlur(sIdx);
@@ -5788,7 +5845,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             const topEnabled = mod.hasTopFrame !== false;
             const baseEnabled = mod.hasBase !== false;
-            const topSize = mod.topFrameThickness ?? globalTop;
+            const rawTopSize = mod.topFrameThickness ?? globalTop;
+            const computeShelfSplitTopDistance = (targetMod: typeof mod) => {
+              const sections = Array.isArray((targetMod as any).customSections) ? (targetMod as any).customSections : [];
+              if (!isShelfSplitModuleId(targetMod?.moduleId) || sections.length < 2) return null;
+              const baseDistance = targetMod.hasBase === false
+                ? (targetMod.individualFloatHeight ?? 0)
+                : (targetMod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+              const sectionTop = baseDistance + sections
+                .slice(0, 2)
+                .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
+              return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
+            };
+            const actualShelfSplitTopSize = computeShelfSplitTopDistance(mod);
+            const topSize = actualShelfSplitTopSize ?? rawTopSize;
             // 서라운드(전체/양쪽 포함) + 상부장일 때 기본 옵셋 23mm
             const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
             const isSurroundForOffset = spaceInfo.surroundType === 'surround';
@@ -5797,7 +5867,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const topDoorGapOn = isFullSurroundForDoorGap ? -3 : 5;
             const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
             const topOffset = mod.topFrameOffset ?? topOffsetDefault;
-            const topGap = mod.topFrameGap ?? 0;
+            const topGap = topEnabled ? (mod.topFrameGap ?? 0) : (mod.topFrameGap ?? topSize);
             const baseSize = mod.baseFrameHeight ?? bfDefault;
             const baseOffset = mod.baseFrameOffset ?? 0;
             const baseGap = mod.baseFrameGap ?? 0;
@@ -5941,6 +6011,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 customSections: nextSections,
               };
             };
+            const getTopSizeSyncUpdates = (nextSize: number) => {
+              const sections = Array.isArray((mod as any).customSections) ? (mod as any).customSections : [];
+              if (!isShelfSplitModuleId(mod?.moduleId) || sections.length < 2) {
+                return { topFrameThickness: nextSize };
+              }
+              const baseDistance = mod.hasBase === false
+                ? (mod.individualFloatHeight ?? 0)
+                : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+              const lowerH = Number(sections[0]?.height) || 0;
+              const nextUpperH = Math.max(100, (spaceInfo.height ?? 0) - baseDistance - nextSize - lowerH);
+              const nextSections = sections.map((section: any, index: number) => (
+                index === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
+              ));
+              return {
+                topFrameThickness: nextSize,
+                customSections: nextSections,
+                upperDoorHingePositionsMm: undefined,
+              };
+            };
 
             return (
               <>
@@ -5957,6 +6046,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const nextHasTopFrame = !topEnabled;
                       updatePlacedModule(mod.id, {
                         hasTopFrame: nextHasTopFrame,
+                        topFrameGap: nextHasTopFrame ? 0 : topSize,
                         doorTopGap: nextHasTopFrame ? topDoorGapOn : -5,
                         ...getEndPanelGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
@@ -5979,7 +6069,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               e.preventDefault();
                               const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                               updatePlacedModule(mod.id, {
-                                topFrameThickness: next,
+                                ...getTopSizeSyncUpdates(next),
                                 ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
                                 ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
                               });
@@ -5993,7 +6083,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const num = v === '' ? 0 : parseInt(v, 10);
                               const next = Math.max(0, Math.min(9999, num));
                               updatePlacedModule(mod.id, {
-                                topFrameThickness: next,
+                                ...getTopSizeSyncUpdates(next),
                                 ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
                                 ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
                               });
@@ -6003,7 +6093,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setHighlightedFrame(null);
                             const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
                             updatePlacedModule(mod.id, {
-                              topFrameThickness: clamped,
+                              ...getTopSizeSyncUpdates(clamped),
                               ...getEndPanelGapSyncUpdates({ topFrameThickness: clamped }),
                               ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
                             });

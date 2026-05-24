@@ -5238,9 +5238,23 @@ const Room: React.FC<RoomProps> = ({
                     const effectiveTotalFrameHeightMM = Math.max(0, totalFrameHeightMM - modTopFrameGapMM);
                     const modFrameHeight = mmToThreeUnits(effectiveTotalFrameHeightMM);
                     const modTopGapThreeUnits = mmToThreeUnits(modTopFrameGapMM);
-                    // 상부장: 프레임 Y = 천장에서 (gap + 프레임 높이의 절반)만큼 내려온 위치
-                    const modFrameCenterY = modCategory === 'upper'
-                      ? effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2
+                    const shelfSplitSections = modMidShoe.includes('shelf-split') && Array.isArray((mod as any).customSections)
+                      ? (mod as any).customSections
+                      : null;
+                    const shelfSplitTopFrameBottomMm = shelfSplitSections && shelfSplitSections.length >= 2
+                      ? (
+                        (mod.hasBase === false
+                          ? ((mod as any).individualFloatHeight ?? 0)
+                          : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)))
+                        + shelfSplitSections.slice(0, 2).reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0)
+                      )
+                      : null;
+                    const shelfSplitFrameHeightMm = shelfSplitTopFrameBottomMm !== null
+                      ? Math.max(0, Math.round(((effectiveTopY - panelStartY) / mmToThreeUnits(1)) - shelfSplitTopFrameBottomMm))
+                      : effectiveTotalFrameHeightMM;
+                    const renderFrameHeight = mmToThreeUnits(shelfSplitFrameHeightMm);
+                    const modFrameCenterY = shelfSplitTopFrameBottomMm !== null
+                      ? panelStartY + mmToThreeUnits(shelfSplitTopFrameBottomMm + shelfSplitFrameHeightMm / 2)
                       : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
                     // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
@@ -5294,7 +5308,7 @@ const Room: React.FC<RoomProps> = ({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
                       zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
-                      height: modFrameHeight,
+                      height: renderFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
                       key: `free-top-strip-${group.id}-${mod.id}`,
@@ -6174,16 +6188,32 @@ const Room: React.FC<RoomProps> = ({
                       : modCenterForZone > cbBoundaryMm
                   );
                   const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
-                  // 상단몰딩 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
-                  const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   const slotModCategory = getModuleCategory(mod);
+                  const slotModMid = mod.moduleId || '';
+                  const slotShelfSplitSections = slotModMid.includes('shelf-split') && Array.isArray((mod as any).customSections)
+                    ? (mod as any).customSections
+                    : null;
+                  const slotShelfSplitTopFrameBottomMm = slotShelfSplitSections && slotShelfSplitSections.length >= 2
+                    ? (
+                      (mod.hasBase === false
+                        ? ((mod as any).individualFloatHeight ?? 0)
+                        : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)))
+                      + slotShelfSplitSections.slice(0, 2).reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0)
+                    )
+                    : null;
+                  const slotShelfSplitFrameHeightMm = slotShelfSplitTopFrameBottomMm !== null
+                    ? Math.max(0, Math.round((ceilingHeight / mmToThreeUnits(1)) - slotShelfSplitTopFrameBottomMm))
+                    : modTopThickness;
+                  const slotRenderTopHeight = mmToThreeUnits(slotShelfSplitFrameHeightMm);
+                  const modTopY = slotShelfSplitTopFrameBottomMm !== null
+                    ? panelStartY + mmToThreeUnits(slotShelfSplitTopFrameBottomMm + slotShelfSplitFrameHeightMm / 2)
+                    : panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
                   const modTopOffsetMM = mod.topFrameOffset ?? 0;
                   const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   let slotFrameZ = topZPos;
-                  const slotModMid = mod.moduleId || '';
                   const isShoeSlot = (slotModMid.includes('-entryway-') || slotModMid.includes('-shelf-') || slotModMid.includes('-4drawer-shelf-') || slotModMid.includes('-2drawer-shelf-'));
                   if (slotModCategory === 'upper') {
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
@@ -6203,7 +6233,7 @@ const Room: React.FC<RoomProps> = ({
                     widthMm: modWidthMM,
                     centerXmm: modCenterXmm,
                     zPosition: slotFrameZ + modTopZOffset + slotTopBackWallGapZ,
-                    height: modTopHeight,
+                    height: slotRenderTopHeight,
                     yPosition: modTopY,
                     material: topFrameMat,
                     key: `slot-top-${mod.id}`,

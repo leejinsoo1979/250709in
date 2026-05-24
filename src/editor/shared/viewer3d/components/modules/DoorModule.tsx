@@ -23,9 +23,9 @@ import {
   calculateSingleDoorOpenGeometry,
   normalizeDoorHingePositionsMm,
   resolveDefaultDoorHingePositionsMm,
-  resolveHingeOppositeDoorWidthAdjustment
+  resolveHingeOppositeDoorWidthAdjustment,
+  resolveSidePanelMatchedHingePositions
 } from '@/editor/shared/utils/doorGeometryCalculator';
-import { avoidHingePositionsForShelves } from '@/domain/boring/calculators/hingeCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
@@ -1689,14 +1689,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (!Array.isArray(sections) || sections.length === 0) return [];
 
     const thicknessMm = panelThickness || 18;
-    const splitDoorBottomFromCabinetBottomMm = splitDoorPanelName && forcedDoorYMm !== undefined
-      ? forcedDoorYMm + cabinetHeightMm / 2 - actualDoorHeight / 2
-      : null;
-    const doorBottomBelowCabinetMm = isUpperCabinet
-      ? doorBottomGap
-      : isLowerCabinet
-        ? doorBottomGap
-        : 0;
     const availableHeightMm = cabinetHeightMm - thicknessMm * 2;
     let currentYFromBottom = thicknessMm;
     const ranges: Array<{ bottomMm: number; topMm: number }> = [];
@@ -1718,42 +1710,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const shelfBottomFromCabinetBottom = shelfCenterFromCabinetBottom - thicknessMm / 2;
         const shelfTopFromCabinetBottom = shelfCenterFromCabinetBottom + thicknessMm / 2;
         ranges.push({
-          bottomMm: splitDoorBottomFromCabinetBottomMm !== null
-            ? shelfBottomFromCabinetBottom - splitDoorBottomFromCabinetBottomMm
-            : shelfBottomFromCabinetBottom + doorBottomBelowCabinetMm,
-          topMm: splitDoorBottomFromCabinetBottomMm !== null
-            ? shelfTopFromCabinetBottom - splitDoorBottomFromCabinetBottomMm
-            : shelfTopFromCabinetBottom + doorBottomBelowCabinetMm,
+          bottomMm: shelfBottomFromCabinetBottom,
+          topMm: shelfTopFromCabinetBottom,
         });
       });
       currentYFromBottom += sectionHeightMm;
     });
 
-    return ranges.filter(range => range.topMm > 0 && range.bottomMm < actualDoorHeight);
+    return ranges;
   }, [
-    actualDoorHeight,
-    doorBottomGap,
     effectiveInternalHeight,
-    forcedDoorYMm,
-    isLowerCabinet,
-    isUpperCabinet,
     moduleData,
     panelThickness,
-    splitDoorPanelName,
     storePlacedModule?.customSections
   ]);
-  const effectiveHingePositionsMm = hasCustomHingePositions
-    ? customHingePositionsMm
-    : avoidHingePositionsForShelves(
-      resolveDefaultDoorHingePositionsMm({
-        doorHeightMm: actualDoorHeight,
-        isUpperCabinet,
-        isLowerCabinet,
-        hingeMode
-      }),
-      shelfCollisionRangesMm,
-      actualDoorHeight
-    );
+  const doorBottomOnSideMm = doorCenterLocalForDimensionMm +
+    (effectiveInternalHeight || moduleData?.dimensions?.height || 0) / 2 -
+    actualDoorHeight / 2;
+  const effectiveHingePositionsMm = resolveSidePanelMatchedHingePositions({
+    doorHeightMm: actualDoorHeight,
+    doorBottomOnSideMm,
+    shelfCollisionRangesOnSideMm: shelfCollisionRangesMm,
+    customDoorPositionsMm: hasCustomHingePositions ? customHingePositionsMm : undefined,
+    defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: actualDoorHeight,
+      isUpperCabinet,
+      isLowerCabinet,
+      hingeMode
+    })
+  }).doorPositionsMm;
   const hingePositionsField = splitDoorPanelName === '상부 도어'
     ? 'upperDoorHingePositionsMm'
     : splitDoorPanelName === '하부 도어'

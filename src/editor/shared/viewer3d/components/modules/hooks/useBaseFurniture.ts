@@ -166,9 +166,21 @@ export const useBaseFurniture = (
     // 상부는 남은 높이를 흡수한다. 상단몰딩 변화는 상부 섹션만 흡수한다.
     if ((isPlainShelf || isShelfSplit) && sections.length === 2) {
       const basicThicknessMm = sourceModelConfig.basicThickness || 18;
+      if (isShelfSplit && !!customSections) {
+        return {
+          ...sourceModelConfig,
+          sections: [
+            { ...sections[0], height: Math.max(0, Math.round(sections[0].height || 0)) },
+            { ...sections[1], height: Math.max(0, Math.round(sections[1].height || 0)) },
+          ],
+        };
+      }
       const lowerOrig = sections[0].height;
       const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm - shelfBaseFrameDeltaMm));
-      const newUpperH = Math.max(0, Math.round(renderHeightMm - newLowerH));
+      const remainingUpperH = Math.max(0, Math.round(renderHeightMm - newLowerH));
+      const newUpperH = isShelfSplit && !!customSections
+        ? Math.min(remainingUpperH, Math.max(0, Math.round(sections[1].height || 0)))
+        : remainingUpperH;
 
       const rescaleShelfPositions = (section: SectionConfig, newHeight: number): SectionConfig => {
         const hasCustomShelfPositions = !!customSections
@@ -599,7 +611,8 @@ export const useBaseFurniture = (
 
     // 2섹션 의류장/수납장은 전체 높이 변화분을 마지막(상부) 섹션이 흡수한다.
     // 걸레받이 OFF, 바닥마감재, 프레임 개별 조정 시 상부 측판이 천장 쪽 기준을 유지해야 한다.
-    if (sectionHeights.length >= 2) {
+    const shouldFillLastSection = !(moduleData?.id?.includes('shelf-split') && !!customSections);
+    if (sectionHeights.length >= 2 && shouldFillLastSection) {
       const lastIndex = sectionHeights.length - 1;
       const previousSectionsHeight = sectionHeights
         .slice(0, lastIndex)

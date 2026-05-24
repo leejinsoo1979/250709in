@@ -15,8 +15,12 @@ import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater'
 import { getThemeHex } from '@/theme';
 import SidePanelBoring from './SidePanelBoring';
 import { calculateShelfBoringPositionsFromThreeUnits } from '@/domain/boring';
-import { avoidHingePositionsForShelves } from '@/domain/boring/calculators/hingeCalculator';
-import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, resolveDoorVerticalGeometry, type DoorCabinetCategory } from '@/editor/shared/utils/doorGeometryCalculator';
+import {
+  resolveDefaultDoorHingePositionsMm,
+  resolveDoorVerticalGeometry,
+  resolveSidePanelMatchedHingePositions,
+  type DoorCabinetCategory
+} from '@/editor/shared/utils/doorGeometryCalculator';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -988,15 +992,24 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const allBoringResult = useMemo(() => {
     const { sections } = modelConfig;
     if (!sections || sections.length === 0) return { positions: [], details: [] };
+    const isShelfSplitBoring = !!furnitureId?.includes('shelf-split');
+    const explicitSectionTotalMm = isShelfSplitBoring
+      ? sections.reduce((sum, section) => (
+        sum + (section.heightType === 'absolute' ? (Number(section.height) || 0) : 0)
+      ), 0)
+      : 0;
+    const effectiveHeightMm = explicitSectionTotalMm > 0
+      ? explicitSectionTotalMm
+      : height * 100;
 
     const result = calculateShelfBoringPositionsFromThreeUnits({
       sections,
-      heightInThreeUnits: height,
+      heightInThreeUnits: effectiveHeightMm / 100,
       basicThicknessInThreeUnits: basicThickness,
     });
 
     const sectionRanges: Array<{ start: number; end: number }> = [];
-    const totalHeightMm = height * 100;
+    const totalHeightMm = effectiveHeightMm;
     const basicThicknessMm = basicThickness * 100;
     const availableHeightMm = totalHeightMm - basicThicknessMm * 2;
     let currentY = basicThicknessMm;
@@ -1115,52 +1128,52 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const lowerSectionHeightMm = lowerSection?.heightType === 'absolute'
         ? (lowerSection.height || 0)
         : heightMm * (((lowerSection?.height || lowerSection?.heightRatio || 50) as number) / 100);
+      const upperSection = sections[1];
+      const upperSectionHeightMm = upperSection?.heightType === 'absolute'
+        ? (upperSection.height || 0)
+        : Math.max(0, heightMm - lowerSectionHeightMm);
+      const upperSectionTopMm = Math.min(heightMm, lowerSectionHeightMm + upperSectionHeightMm);
       const isPantrySplit = moduleId.includes('pantry-cabinet-split');
-      const lowerDoorTopGapMm = (currentPlacedModule as any).lowerDoorTopGap ?? (isPantrySplit ? 2 : 40);
+      const defaultLowerDoorTopGapMm = isPantrySplit ? 2 : 40;
+      const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : 20;
+      const lowerDoorTopGapMm = (typeof (currentPlacedModule as any).lowerDoorTopGap === 'number' && (currentPlacedModule as any).lowerDoorTopGap > 0)
+        ? (currentPlacedModule as any).lowerDoorTopGap
+        : defaultLowerDoorTopGapMm;
       const lowerDoorBottomGapMm = (currentPlacedModule as any).lowerDoorBottomGap ?? doorBottomGap ?? 0;
-      const upperDoorBottomGapMm = (currentPlacedModule as any).upperDoorBottomGap ?? (isPantrySplit ? 1 : 20);
+      const upperDoorBottomGapMm = (typeof (currentPlacedModule as any).upperDoorBottomGap === 'number' && (currentPlacedModule as any).upperDoorBottomGap > 0)
+        ? (currentPlacedModule as any).upperDoorBottomGap
+        : defaultUpperDoorBottomGapMm;
       const upperDoorTopGapMm = (currentPlacedModule as any).upperDoorTopGap ?? doorTopGap ?? 0;
       const lowerDoorHeightMm = Math.max(1, lowerSectionHeightMm - lowerDoorTopGapMm + lowerDoorBottomGapMm);
       const upperDoorBottomMm = isPantrySplit
         ? lowerSectionHeightMm + upperDoorBottomGapMm
         : lowerSectionHeightMm - upperDoorBottomGapMm;
-      const upperDoorHeightMm = Math.max(1, heightMm + upperDoorTopGapMm - upperDoorBottomMm);
+      const upperDoorHeightMm = Math.max(1, upperSectionTopMm - upperDoorTopGapMm - upperDoorBottomMm);
       const lowerDoorBottomMm = -lowerDoorBottomGapMm;
-      const getDoorShelfCollisionRanges = (doorBottomMm: number, doorHeightMm: number) => (
-        allBoringResult.details
-          .filter(detail => detail.role === 'movable-shelf')
-          .map(detail => ({
-            bottomMm: detail.y - basicThicknessMm / 2 - doorBottomMm,
-            topMm: detail.y + basicThicknessMm / 2 - doorBottomMm,
-          }))
-          .filter(range => range.topMm > 0 && range.bottomMm < doorHeightMm)
-      );
-      const lowerCustomPositions = normalizeDoorHingePositionsMm(
-        currentPlacedModule.lowerDoorHingePositionsMm,
-        lowerDoorHeightMm
-      );
-      const upperCustomPositions = normalizeDoorHingePositionsMm(
-        currentPlacedModule.upperDoorHingePositionsMm,
-        upperDoorHeightMm
-      );
-      const resolvedLower = lowerCustomPositions.length > 0
-        ? lowerCustomPositions
-        : avoidHingePositionsForShelves(
-          resolveDefaultDoorHingePositionsMm({ doorHeightMm: lowerDoorHeightMm }),
-          getDoorShelfCollisionRanges(lowerDoorBottomMm, lowerDoorHeightMm),
-          lowerDoorHeightMm
-        );
-      const resolvedUpper = upperCustomPositions.length > 0
-        ? upperCustomPositions
-        : avoidHingePositionsForShelves(
-          resolveDefaultDoorHingePositionsMm({ doorHeightMm: upperDoorHeightMm }),
-          getDoorShelfCollisionRanges(upperDoorBottomMm, upperDoorHeightMm),
-          upperDoorHeightMm
-        );
+      const shelfCollisionRanges = allBoringResult.details
+        .filter(detail => detail.role === 'movable-shelf')
+        .map(detail => ({
+          bottomMm: detail.y - basicThicknessMm / 2,
+          topMm: detail.y + basicThicknessMm / 2,
+        }));
+      const resolvedLower = resolveSidePanelMatchedHingePositions({
+        doorHeightMm: lowerDoorHeightMm,
+        doorBottomOnSideMm: lowerDoorBottomMm,
+        shelfCollisionRangesOnSideMm: shelfCollisionRanges,
+        customDoorPositionsMm: currentPlacedModule.lowerDoorHingePositionsMm,
+        defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: lowerDoorHeightMm })
+      });
+      const resolvedUpper = resolveSidePanelMatchedHingePositions({
+        doorHeightMm: upperDoorHeightMm,
+        doorBottomOnSideMm: upperDoorBottomMm,
+        shelfCollisionRangesOnSideMm: shelfCollisionRanges,
+        customDoorPositionsMm: currentPlacedModule.upperDoorHingePositionsMm,
+        defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: upperDoorHeightMm })
+      });
 
       return [
-        ...resolvedLower.map(position => lowerDoorBottomMm + position),
-        ...resolvedUpper.map(position => upperDoorBottomMm + position),
+        ...resolvedLower.sidePositionsMm,
+        ...resolvedUpper.sidePositionsMm,
       ].filter(position => position >= 0 && position <= heightMm);
     }
 
@@ -1175,15 +1188,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       hingeSide: currentPlacedModule.hingePosition ?? 'right',
       cabinetBottomMm: 0,
     });
-    const customPositions = normalizeDoorHingePositionsMm(
-      currentPlacedModule.hingePositionsMm,
-      doorGeometry.leafHeightMm
-    );
-    const doorBottomBelowCabinetMm = cabinetCategory === 'upper' || moduleId.includes('upper-cabinet')
-      ? (doorBottomGap ?? (currentPlacedModule as any).doorBottomGap ?? 28)
-      : cabinetCategory === 'lower' || moduleId.includes('lower-cabinet')
-        ? (doorBottomGap ?? (currentPlacedModule as any).doorBottomGap ?? 0)
-        : 0;
     const availableHeightMm = heightMm - basicThicknessMm * 2;
     let currentYFromBottom = basicThicknessMm;
     const shelfCollisionRanges: Array<{ bottomMm: number; topMm: number }> = [];
@@ -1203,27 +1207,23 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       shelfPositions.forEach((position: number) => {
         const shelfCenterFromCabinetBottom = currentYFromBottom + position;
         shelfCollisionRanges.push({
-          bottomMm: shelfCenterFromCabinetBottom - basicThicknessMm / 2 + doorBottomBelowCabinetMm,
-          topMm: shelfCenterFromCabinetBottom + basicThicknessMm / 2 + doorBottomBelowCabinetMm,
+          bottomMm: shelfCenterFromCabinetBottom - basicThicknessMm / 2,
+          topMm: shelfCenterFromCabinetBottom + basicThicknessMm / 2,
         });
       });
       currentYFromBottom += sectionHeightMm;
     });
-    const doorShelfCollisionRanges = shelfCollisionRanges
-      .filter(range => range.topMm > 0 && range.bottomMm < doorGeometry.leafHeightMm);
-    const resolvedPositions = customPositions.length > 0
-      ? customPositions
-      : avoidHingePositionsForShelves(
-        resolveDefaultDoorHingePositionsMm({
-          doorHeightMm: doorGeometry.leafHeightMm,
-        }),
-        doorShelfCollisionRanges,
-        doorGeometry.leafHeightMm
-      );
-    const sidePanelOffsetMm = doorGeometry.bottomMm;
+    const resolvedPositions = resolveSidePanelMatchedHingePositions({
+      doorHeightMm: doorGeometry.leafHeightMm,
+      doorBottomOnSideMm: doorGeometry.bottomMm,
+      shelfCollisionRangesOnSideMm: shelfCollisionRanges,
+      customDoorPositionsMm: currentPlacedModule.hingePositionsMm,
+      defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
+        doorHeightMm: doorGeometry.leafHeightMm,
+      })
+    });
 
-    return resolvedPositions
-      .map(position => position + sidePanelOffsetMm)
+    return resolvedPositions.sidePositionsMm
       .filter(position => position >= 0 && position <= heightMm);
   }, [
     basicThickness,

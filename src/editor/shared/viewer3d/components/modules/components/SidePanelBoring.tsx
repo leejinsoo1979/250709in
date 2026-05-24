@@ -4,8 +4,12 @@ import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
-import { avoidHingePositionsForShelves } from '@/domain/boring/calculators/hingeCalculator';
-import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, resolveDoorVerticalGeometry, type DoorCabinetCategory } from '@/editor/shared/utils/doorGeometryCalculator';
+import {
+  resolveDefaultDoorHingePositionsMm,
+  resolveDoorVerticalGeometry,
+  resolveSidePanelMatchedHingePositions,
+  type DoorCabinetCategory
+} from '@/editor/shared/utils/doorGeometryCalculator';
 
 type SidePanelBoringDetail = ShelfBoringPositionDetail & {
   holeZPositions?: number[];
@@ -102,30 +106,24 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
       hingeSide: placedModule.hingePosition ?? 'right',
       cabinetBottomMm: 0,
     });
-    const customPositions = normalizeDoorHingePositionsMm(
-      placedModule.hingePositionsMm,
-      doorGeometry.leafHeightMm
-    );
     const defaultPositions = resolveDefaultDoorHingePositionsMm({
       doorHeightMm: doorGeometry.leafHeightMm,
     });
     const shelfCollisionRanges = boringDetails
       .filter(detail => detail.role === 'movable-shelf')
       .map(detail => ({
-        bottomMm: detail.y - basicThicknessMm / 2 - doorGeometry.bottomMm,
-        topMm: detail.y + basicThicknessMm / 2 - doorGeometry.bottomMm,
+        bottomMm: detail.y - basicThicknessMm / 2,
+        topMm: detail.y + basicThicknessMm / 2,
       }));
-    const resolvedPositions = customPositions.length > 0
-      ? customPositions
-      : avoidHingePositionsForShelves(
-        defaultPositions,
-        shelfCollisionRanges,
-        doorGeometry.leafHeightMm
-      );
-    const sidePanelOffsetMm = doorGeometry.bottomMm;
+    const resolvedPositions = resolveSidePanelMatchedHingePositions({
+      doorHeightMm: doorGeometry.leafHeightMm,
+      doorBottomOnSideMm: doorGeometry.bottomMm,
+      shelfCollisionRangesOnSideMm: shelfCollisionRanges,
+      customDoorPositionsMm: placedModule.hingePositionsMm,
+      defaultDoorPositionsMm: defaultPositions
+    });
 
-    return resolvedPositions
-      .map(position => position + sidePanelOffsetMm)
+    return resolvedPositions.sidePositionsMm
       .filter(position => position >= 0 && position <= heightMm);
   }, [
     basicThickness,
