@@ -138,10 +138,9 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
 
   panels.forEach(panel => {
     const hasFaceBorings = panel.boringPositions && panel.boringPositions.length > 0;
-    const hasSideBorings = panel.sideBoringPositions && panel.sideBoringPositions.length > 0;
 
     // 보링 위치가 있는 패널만 처리
-    if (!hasFaceBorings && !hasSideBorings) {
+    if (!hasFaceBorings) {
       return;
     }
 
@@ -159,29 +158,6 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
 
     // 패널명에서 쉼표 제거
     const cleanPanelName = panel.name.replace(/,/g, '_');
-
-    panel.sideBoringPositions?.forEach((depthPos, depthIndex) => {
-      [
-        { faceName: '좌측면', x: 0 },
-        { faceName: '우측면', x: panelWidth },
-      ].forEach(({ faceName, x }) => {
-        const boringName = `${cleanPanelName} 피스유도보링 ${faceName}-${depthIndex + 1}`;
-        const line = [
-          boringName,
-          globalHoleNo,
-          Math.round(x),
-          Math.round(depthPos),
-          panel.sideBoringDepth || 30,
-          panel.sideBoringDiameter || 5
-        ].join(',');
-        lines.push(line);
-        globalHoleNo++;
-      });
-    });
-
-    if (!hasFaceBorings) {
-      return;
-    }
 
     // 보링 위치를 Y 내림차순 정렬 (상단→하단, 상판→선반→지판 순서)
     const sortedBoringPositions = [...(panel.boringPositions || [])].sort((a, b) => b - a);

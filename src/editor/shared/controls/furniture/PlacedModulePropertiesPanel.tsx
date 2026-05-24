@@ -1690,7 +1690,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const hasCustomDepth = typeof currentPlacedModule.customDepth === 'number' && currentPlacedModule.customDepth > 0;
         const resolveStored = (v: number | undefined): number | undefined => {
           if (v === undefined) return undefined;
-          if (isShoeCategory && hasCustomDepth && v === modDimDepth) return undefined; // stale 값 무시
+          if (hasCustomDepth && Math.abs(v - modDimDepth) < 0.5 && Math.abs(currentPlacedModule.customDepth! - modDimDepth) >= 0.5) return undefined; // stale 값 무시
           return v;
         };
 
@@ -1703,9 +1703,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
         // 인출장/팬트리장은 sectionDepths 배열 사용 — lowerSectionDepth/upperSectionDepth 자동 설정 안 함
         const needsLowerFix = !isPullOutOrPantryInit && (currentPlacedModule.lowerSectionDepth === undefined
-          || (isShoeCategory && hasCustomDepth && currentPlacedModule.lowerSectionDepth === modDimDepth));
+          || (hasCustomDepth && Math.abs((currentPlacedModule.lowerSectionDepth ?? 0) - modDimDepth) < 0.5 && Math.abs(currentPlacedModule.customDepth! - modDimDepth) >= 0.5));
         const needsUpperFix = !isPullOutOrPantryInit && (currentPlacedModule.upperSectionDepth === undefined
-          || (isShoeCategory && hasCustomDepth && currentPlacedModule.upperSectionDepth === modDimDepth));
+          || (hasCustomDepth && Math.abs((currentPlacedModule.upperSectionDepth ?? 0) - modDimDepth) < 0.5 && Math.abs(currentPlacedModule.customDepth! - modDimDepth) >= 0.5));
         if (needsLowerFix || needsUpperFix) {
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
@@ -2220,12 +2220,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (currentPlacedModule) {
         const lowerD = currentPlacedModule.lowerSectionDepth;
         const upperD = currentPlacedModule.upperSectionDepth;
-        if (lowerD !== undefined && lowerD === oldDepth) {
+        const moduleDefaultDepth = moduleData?.dimensions?.depth;
+        const lowerIsStaleDefault = moduleDefaultDepth !== undefined && lowerD !== undefined
+          && Math.abs(lowerD - moduleDefaultDepth) < 0.5
+          && Math.abs(oldDepth - moduleDefaultDepth) >= 0.5;
+        const upperIsStaleDefault = moduleDefaultDepth !== undefined && upperD !== undefined
+          && Math.abs(upperD - moduleDefaultDepth) < 0.5
+          && Math.abs(oldDepth - moduleDefaultDepth) >= 0.5;
+        if (lowerD !== undefined && (lowerD === oldDepth || lowerIsStaleDefault)) {
           updates.lowerSectionDepth = newDepth;
           setLowerSectionDepth(newDepth);
           setLowerDepthInput(newDepth.toString());
         }
-        if (upperD !== undefined && upperD === oldDepth) {
+        if (upperD !== undefined && (upperD === oldDepth || upperIsStaleDefault)) {
           updates.upperSectionDepth = newDepth;
           setUpperSectionDepth(newDepth);
           setUpperDepthInput(newDepth.toString());

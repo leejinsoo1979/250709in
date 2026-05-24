@@ -22,6 +22,7 @@ import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS 
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 import { FaRegObjectGroup } from 'react-icons/fa';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
+import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
 // 엔드패널 슬롯 계산 기준 두께
 const END_PANEL_THICKNESS = 18; // mm
@@ -2964,10 +2965,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   //   console.log('🟠 [단내림 FurnitureItem]', { ... });
   // }
 
-  // 깊이 계산: customDepth(사용자 지정) > adjustedDepthMm(슬롯-기둥 남는 공간) > moduleDepth
+  // 깊이 계산: 설정 기본 깊이/사용자 지정 깊이 > adjustedDepthMm(슬롯-기둥 남는 공간) > moduleDepth
   // 기둥 앞 배치 front 모드도 customDepth를 존중 (사용자가 기둥과 같은 깊이로 줄인 경우 등)
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  const rawActualDepthMm = placedModule.customDepth ||
+  const categoryDefaultDepth = getCategoryDefaultFurnitureDepth(
+    spaceInfo.depth || 600,
+    placedModule.moduleId || '',
+    spaceInfo.furnitureDepthDefaults
+  );
+  const storedCustomDepth = typeof placedModule.customDepth === 'number' && placedModule.customDepth > 0
+    ? placedModule.customDepth
+    : undefined;
+  const effectiveCustomDepth = categoryDefaultDepth !== undefined
+    && (storedCustomDepth === undefined || Math.abs(storedCustomDepth - moduleDepth) < 0.5)
+    ? categoryDefaultDepth
+    : storedCustomDepth;
+  const rawActualDepthMm = effectiveCustomDepth ||
     (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth
       ? adjustedDepthMm
       : (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
@@ -2976,6 +2989,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? 380
     : rawActualDepthMm;
   const depth = mmToThreeUnits(actualDepthMm);
+  const renderModuleData: ModuleData | null = actualModuleData
+    ? {
+        ...actualModuleData,
+        dimensions: {
+          ...actualModuleData.dimensions,
+          depth: actualDepthMm,
+        },
+      }
+    : actualModuleData;
 
 
 
@@ -3002,15 +3024,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
   const isSideWallFurniture = placedModule.placementWall === 'left' || placedModule.placementWall === 'right';
   const defaultModuleDepthMm = actualModuleData?.dimensions?.depth || actualDepthMm;
-  const resolveSideWallSectionDepth = (sectionDepth?: number) => {
-    if (!isSideWallFurniture) return sectionDepth;
+  const resolveSectionDepthForRender = (sectionDepth?: number) => {
     if (sectionDepth === undefined || sectionDepth === null) return actualDepthMm;
     return Math.abs(sectionDepth - defaultModuleDepthMm) < 0.5
       ? actualDepthMm
       : sectionDepth;
   };
-  const effectiveLowerSectionDepth = resolveSideWallSectionDepth(placedModule.lowerSectionDepth);
-  const effectiveUpperSectionDepth = resolveSideWallSectionDepth(placedModule.upperSectionDepth);
+  const effectiveLowerSectionDepth = resolveSectionDepthForRender(placedModule.lowerSectionDepth);
+  const effectiveUpperSectionDepth = resolveSectionDepthForRender(placedModule.upperSectionDepth);
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
@@ -3034,7 +3055,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
     // 뒤고정(lowerSectionDepthDirection='front'): 뒷면 고정, 깊이 감소 시 앞면이 뒤로 이동
     // → 중심 Z를 감소량만큼 뒤로 이동
-    if (placedModule.lowerSectionDepthDirection === 'front') {
+    if ((placedModule.lowerSectionDepthDirection || 'front') === 'front') {
       const baseDepthMm = actualModuleData?.dimensions.depth || actualDepthMm;
       const depthDiffMm = baseDepthMm - actualDepthMm;
       if (depthDiffMm !== 0) {
@@ -3195,6 +3216,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!shouldResetCustomDepth) return;
     updatePlacedModule(placedModule.id, { customDepth: undefined });
   }, [shouldResetCustomDepth, placedModule.id, updatePlacedModule]);
+
+  React.useEffect(() => {
+    if (categoryDefaultDepth === undefined) return;
+    if (placedModule.columnSlotInfo) return;
+    if (storedCustomDepth !== undefined && Math.abs(storedCustomDepth - moduleDepth) >= 0.5) return;
+    if (Math.abs((storedCustomDepth ?? moduleDepth) - categoryDefaultDepth) < 0.5) return;
+    const updates: Partial<PlacedModule> = { customDepth: categoryDefaultDepth };
+    const isStaleLowerDepth = placedModule.lowerSectionDepth === undefined
+      || Math.abs(placedModule.lowerSectionDepth - moduleDepth) < 0.5;
+    const isStaleUpperDepth = placedModule.upperSectionDepth === undefined
+      || Math.abs(placedModule.upperSectionDepth - moduleDepth) < 0.5;
+    if (isStaleLowerDepth) updates.lowerSectionDepth = categoryDefaultDepth;
+    if (isStaleUpperDepth) updates.upperSectionDepth = categoryDefaultDepth;
+    updatePlacedModule(placedModule.id, updates);
+  }, [categoryDefaultDepth, moduleDepth, placedModule.columnSlotInfo, placedModule.id, storedCustomDepth, updatePlacedModule]);
 
   const widthResetPayload = React.useMemo(() => {
     if (!shouldResetWidth) return null;
@@ -4292,7 +4328,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               return (
                 <BoxModule
                   key={`boxmodule-${placedModule.id}-${customSectionsKey}-usp${upperShelfPositionsKey}-rus${removeUpperSafetyShelfKey}-${doorInstallKey}`}
-                  moduleData={actualModuleData}
+                  moduleData={renderModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김
                   color={furnitureColor}
@@ -4695,7 +4731,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               originalSlotWidth={originalSlotWidthForDoor}
               slotCenterX={doorXOffset}
-              moduleData={actualModuleData}
+              moduleData={renderModuleData}
               isDragging={isDraggingThis}
               isEditMode={isEditModeForView}
               adjustedWidth={furnitureWidthMm}

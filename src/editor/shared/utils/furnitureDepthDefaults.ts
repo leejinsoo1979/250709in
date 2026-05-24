@@ -36,8 +36,9 @@ export const resolveFurnitureDepthDefaultKey = (
   }
 
   if (
-    moduleId.includes('lower-half-cabinet') ||
-    moduleId.includes('dual-lower-half-cabinet')
+    classification.isLowerCabinet &&
+    !classification.isDoorLift &&
+    !classification.isTopDown
   ) {
     return 'lowerBasic'
   }
@@ -45,7 +46,8 @@ export const resolveFurnitureDepthDefaultKey = (
   if (
     moduleId.includes('hanging') ||
     moduleId.includes('pantshanger') ||
-    moduleId.includes('styler')
+    moduleId.includes('styler') ||
+    classification.family === 'full'
   ) {
     return 'wardrobe'
   }

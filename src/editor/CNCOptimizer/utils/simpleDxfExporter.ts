@@ -521,18 +521,6 @@ export class SimpleDXFExporter {
           });
         }
 
-        // 천지판/고정선반 측면 피스 유도보링: Ø5mm, depth 30mm
-        if ((panel as any).sideBoringPositions?.length > 0 && !isDoorPanel) {
-          const radius = ((panel as any).sideBoringDiameter || 5) / 2;
-          ((panel as any).sideBoringPositions as number[]).forEach((depthPosMm: number) => {
-            [0, origW].forEach((edgeX: number) => {
-              const sx = panel.rotated ? panel.x + depthPosMm : panel.x + edgeX;
-              const sy = panel.rotated ? panel.y + edgeX : panel.y + depthPosMm;
-              addDxfBoring(offsetX + sx, offsetY + sy, radius, 2, 4);
-            });
-          });
-        }
-
         // 도어 힌지 보링
         if (isDoorPanel && (panel as any).boringPositions?.length > 0) {
           const cupR = 35 / 2;

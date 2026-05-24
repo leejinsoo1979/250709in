@@ -121,12 +121,6 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
               // 음수 입력 허용: 빈 문자열, '-' 단독, 숫자/소수점/마이너스 조합 허용
               if (v === '' || v === '-' || /^-?\d*\.?\d*$/.test(v)) {
                 setLocalValue(v);
-                if (v !== '' && v !== '-') {
-                  const next = Number(v);
-                  if (!isNaN(next)) {
-                    onChange(Math.max(lo, Math.min(hi, next)));
-                  }
-                }
               }
             }}
             onBlur={(e) => commit(e.target.value)}

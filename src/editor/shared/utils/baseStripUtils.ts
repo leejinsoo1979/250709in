@@ -29,8 +29,8 @@ const MERGE_TOLERANCE_MM = 1;
  * 양수 = 뒤로, 음수 = 앞으로
  */
 export function getLowerDepthZOffsetMM(module: PlacedModule): number {
-  const fullDepth = module.freeDepth || 580;
-  const lowerDepth = module.lowerSectionDepth;
+  const fullDepth = module.freeDepth || 600;
+  const lowerDepth = module.lowerSectionDepth ?? module.customDepth;
   if (!lowerDepth || lowerDepth >= fullDepth) return 0;
   const diff = fullDepth - lowerDepth;
   const dir = module.lowerSectionDepthDirection || 'front';
@@ -111,7 +111,7 @@ export function computeBaseStripGroups(
   const boundsWithModule = baseModules.map((m) => ({
     module: m,
     bounds: getBaseFrameBoundsX(m),
-    depthMM: m.lowerSectionDepth || m.freeDepth || 580,
+    depthMM: m.lowerSectionDepth ?? m.customDepth ?? m.freeDepth ?? 600,
     depthZOffsetMM: getLowerDepthZOffsetMM(m),
   }));
   boundsWithModule.sort((a, b) => a.bounds.left - b.bounds.left);
@@ -177,7 +177,7 @@ export function computeTopStripGroups(
   const boundsWithModule = topModules.map((m) => ({
     module: m,
     bounds: getModuleBoundsX(m),
-    depthMM: m.freeDepth || 580,
+    depthMM: m.upperSectionDepth ?? m.customDepth ?? m.freeDepth ?? 600,
     thicknessMM: m.topFrameThickness || 0,
     freeHeightMM: m.freeHeight || 0,
   }));

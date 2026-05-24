@@ -1603,29 +1603,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
-      // 천지판/고정선반 측면 피스 유도보링 (Ø5, depth 30)
-      if (showBorings && !isDoorPanel && panel.sideBoringPositions && panel.sideBoringPositions.length > 0) {
-        ctx.save();
-        const radius = (panel.sideBoringDiameter || 5) / 2;
-        const boringColor = boringColors['shelf-pin'];
-        ctx.fillStyle = boringColor.fill;
-        ctx.strokeStyle = boringColor.stroke;
-        ctx.lineWidth = 1 / (baseScale * scale);
-
-        panel.sideBoringPositions.forEach((depthPosMm) => {
-          [0, panel.width].forEach((edgeX) => {
-            const boringX = panel.rotated ? x + depthPosMm : x + edgeX;
-            const boringY = panel.rotated ? y + edgeX : y + depthPosMm;
-            ctx.beginPath();
-            ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-          });
-        });
-
-        ctx.restore();
-      }
-
       // ★★★ 도어 패널 보링 표시 (힌지컵 Ø35 + 나사홀 Ø8) ★★★
       const hasDoorBoringData =
         (panel.boringPositions?.length ?? 0) > 0 ||

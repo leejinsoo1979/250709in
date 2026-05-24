@@ -807,12 +807,12 @@ const Room: React.FC<RoomProps> = ({
       const dir = sectionDirArr?.[idx] || 'front';
       return dir === 'back' ? 0 : -mmToThreeUnits(diff);
     }
-    // 기타 가구: 섹션 depth 기반
+    // 기타 가구: 섹션 depth가 없으면 카테고리 기본 깊이로 저장된 customDepth를 같은 축소 깊이로 본다.
     const baseDepth = getModBaseDepthMm(mid);
     let curDepth: number | undefined;
-    if (useSection === 'upper') curDepth = mod.upperSectionDepth;
-    else if (useSection === 'lower') curDepth = mod.lowerSectionDepth;
-    else curDepth = mod.lowerSectionDepth || mod.upperSectionDepth;
+    if (useSection === 'upper') curDepth = mod.upperSectionDepth ?? mod.customDepth;
+    else if (useSection === 'lower') curDepth = mod.lowerSectionDepth ?? mod.customDepth;
+    else curDepth = mod.lowerSectionDepth ?? mod.upperSectionDepth ?? mod.customDepth;
     if (!curDepth || curDepth >= baseDepth) return 0;
     const diff = baseDepth - curDepth;
     const dir = useSection === 'upper'
@@ -5301,13 +5301,14 @@ const Room: React.FC<RoomProps> = ({
                         nSectionFrameZ = nFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                       }
                     }
+                    const generalFrameZ = topZPosition + computeDepthZOffset(mod, 'upper');
                     // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
                     const modTopBackWallGapMm = (mod as any).backWallGap ?? 0;
                     const modTopBackWallGapZ = modTopBackWallGapMm > 0 ? mmToThreeUnits(modTopBackWallGapMm) : 0;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : generalFrameZ))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
                       height: renderFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
