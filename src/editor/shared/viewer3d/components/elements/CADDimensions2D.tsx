@@ -1565,7 +1565,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const zOff_ud = -panelDepth_ud / 2;
           const fzOff_ud = zOff_ud + (panelDepth_ud - furnitureDepth_ud) / 2;
           // 하부장/키큰장 도어 앞면 Z (도어 포함)
-          const defaultDoorFrontZ = fzOff_ud + furnitureDepth_ud / 2;
+          // 도어분절 가구는 sectionDepths 최대값을 기준으로 도어가 더 앞으로 나옴 → 가이드도 같이 이동
+          const doorSplitMod = visibleFurniture.find(m => {
+            const mid = (m as PlacedModule).moduleId || '';
+            return mid.includes('shelf-split') || mid.includes('pantry-cabinet-split');
+          }) as PlacedModule | undefined;
+          const splitSectionDepths = (doorSplitMod as any)?.sectionDepths as number[] | undefined;
+          const maxSplitSectionDepth = (splitSectionDepths && splitSectionDepths.length > 0)
+            ? Math.max(...splitSectionDepths.filter(d => typeof d === 'number' && d > 0))
+            : 0;
+          const splitExtraDepthMm = maxSplitSectionDepth > 0
+            ? Math.max(0, maxSplitSectionDepth - furnitureDepthMm_ud)
+            : 0;
+          const defaultDoorFrontZ = fzOff_ud + furnitureDepth_ud / 2 + mmToThreeUnits(splitExtraDepthMm);
           const hasShoeDoorDimensionModule = visibleFurniture.some(module => {
             const mod = module as PlacedModule;
             return mod.hasDoor && isShoeCabinetDimensionModuleId(mod.moduleId);
