@@ -577,8 +577,22 @@ function PageInner(){
       return;
     }
 
-    // livePanels 내용 기반 키 생성 — 실제 변경 시에만 재동기화
-    const livePanelsKey = livePanels.map(p => `${p.id}:${p.name}:${p.width}:${p.height}:${p.thickness}:${p.material}`).join('|');
+    // livePanels 내용 기반 키 생성 — 보링 데이터 변경도 재동기화 대상이다.
+    const livePanelsKey = livePanels.map(p => [
+      p.id,
+      p.name,
+      p.width,
+      p.height,
+      p.thickness,
+      p.material,
+      p.boringPositions?.join(',') || '',
+      p.boringDepthPositions?.join(',') || '',
+      p.boringDepthGroups?.map(group => `${group.y}:${group.depthPositions.join(',')}:${group.boringType || ''}`).join(';') || '',
+      p.sideBoringPositions?.join(',') || '',
+      p.sideBoringDiameter || '',
+      p.sideBoringDepth || '',
+      p.groovePositions?.map(groove => `${groove.y}:${groove.height}:${groove.depth}`).join(';') || '',
+    ].join(':')).join('|');
     if (livePanelsKey === prevLivePanelsKey.current) {
       return; // 내용이 동일하면 스킵
     }

@@ -85,7 +85,8 @@ function getPanelReferenceDepth(panel: any): number {
 
 function isRodShelfPanelName(panelName?: string): boolean {
   const name = panelName || '';
-  return name.includes('옷봉 선반') || name.includes('옷봉선반');
+  const compactName = name.replace(/\s+/g, '');
+  return compactName.includes('옷봉선반') || compactName.includes('(상)선반1');
 }
 
 function isMainHorizontalPanel(panel: any): boolean {
@@ -438,6 +439,14 @@ function calculateModuleShelfBoringDetails({
   const baseDetailsWithRodShelves = mergeBoringDetails([
     ...baseResult.details,
     ...rodShelfDetails,
+    ...(moduleData?.modelConfig?.hasSharedSafetyShelf && Number.isFinite(Number(moduleData.modelConfig.safetyShelfHeight))
+      ? [{
+          y: Math.round(Number(moduleData.modelConfig.safetyShelfHeight) * 1000) / 1000,
+          type: 'fixed-panel' as const,
+          role: 'fixed-shelf' as const,
+          roleIndex: baseResult.details.filter(detail => detail.role === 'fixed-shelf').length + rodShelfDetails.length,
+        }]
+      : []),
   ]);
   const baseResultWithRodShelves = {
     ...baseResult,
