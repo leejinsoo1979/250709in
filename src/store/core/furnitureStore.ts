@@ -8,6 +8,19 @@ import { useSpaceConfigStore } from './spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
+const isCornerCabinetModuleId = (moduleId?: string): boolean =>
+  !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
+
+const getRequiredCornerStartSlot = (
+  moduleId: string,
+  span: number,
+  columnCount: number
+): number | null => {
+  if (!isCornerCabinetModuleId(moduleId)) return null;
+  if (moduleId.includes('left-corner')) return 0;
+  return Math.max(0, columnCount - span);
+};
+
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
   // 가구 데이터 상태
@@ -542,12 +555,61 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 듀얼 가구인지 확인
       const isDual = module.moduleId.includes('dual-');
       const occupiedSlots = isDual ? [module.slotIndex, module.slotIndex + 1] : [module.slotIndex];
+      const incomingWall = module.placementWall || 'front';
+      const isCornerCabinet = isCornerCabinetModuleId(module.moduleId);
+
+      if (isCornerCabinet) {
+        if (incomingWall !== 'front') {
+          console.warn('[addModule] 코너장은 정면 코너 슬롯에만 배치할 수 있습니다.', {
+            moduleId: module.moduleId,
+            incomingWall
+          });
+          return { placedModules: state.placedModules };
+        }
+
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        const moduleZone = (module.zone || 'normal') as 'normal' | 'dropped';
+        const targetZone = moduleZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+        const requiredStartSlot = getRequiredCornerStartSlot(
+          module.moduleId,
+          occupiedSlots.length,
+          targetZone.columnCount
+        );
+
+        if (requiredStartSlot !== null && module.slotIndex !== requiredStartSlot) {
+          console.warn('[addModule] 코너장 시작 슬롯이 코너와 맞지 않습니다.', {
+            moduleId: module.moduleId,
+            slotIndex: module.slotIndex,
+            requiredStartSlot,
+            columnCount: targetZone.columnCount
+          });
+          return { placedModules: state.placedModules };
+        }
+
+        const hasCornerConflict = state.placedModules.some(existing => {
+          const existingWall = existing.placementWall || 'front';
+          if (existingWall !== 'front') return false;
+          if ((existing.zone || 'normal') !== moduleZone) return false;
+          const existingIsDual = existing.moduleId.includes('dual-') || existing.isDualSlot;
+          const existingSlots = existingIsDual
+            ? [existing.slotIndex, existing.slotIndex + 1]
+            : [existing.slotIndex];
+          return occupiedSlots.some(slot => existingSlots.includes(slot));
+        });
+
+        if (hasCornerConflict) {
+          console.warn('[addModule] 코너 슬롯에 이미 가구가 배치되어 있습니다.', {
+            moduleId: module.moduleId,
+            occupiedSlots
+          });
+          return { placedModules: state.placedModules };
+        }
+      }
 
       // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
       let existingModulesInSlot: typeof state.placedModules = [];
       for (const slotIdx of occupiedSlots) {
         const modulesInThisSlot = state.placedModules.filter(m => {
-          const incomingWall = module.placementWall || 'front';
           const existingWall = m.placementWall || 'front';
           if (incomingWall !== existingWall) return false;
 
@@ -575,10 +637,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         for (const existing of existingModulesInSlot) {
           const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
           const existingCategory = existingModuleData?.category;
+          const existingIsCornerCabinet = isCornerCabinetModuleId(existing.moduleId);
 
           // 상부장-하부장 조합인지 확인
-          if ((newCategory === 'upper' && existingCategory === 'lower') ||
-            (newCategory === 'lower' && existingCategory === 'upper')) {
+          if (!isCornerCabinet && !existingIsCornerCabinet && (
+            (newCategory === 'upper' && existingCategory === 'lower') ||
+            (newCategory === 'lower' && existingCategory === 'upper')
+          )) {
             // 공존 가능 - 계속 진행
 
           } else {
@@ -744,6 +809,56 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         // 듀얼 가구인지 확인 (업데이트된 moduleId 사용)
         const isDual = moduleIdToCheck.includes('dual-');
         const occupiedSlots = isDual ? [newSlotIndex, newSlotIndex + 1] : [newSlotIndex];
+        const targetWallForCorner = targetModule.placementWall || 'front';
+        const isCornerCabinet = isCornerCabinetModuleId(moduleIdToCheck);
+
+        if (isCornerCabinet) {
+          if (targetWallForCorner !== 'front') {
+            console.warn('[updatePlacedModule] 코너장은 정면 코너 슬롯에만 배치할 수 있습니다.', {
+              moduleId: moduleIdToCheck,
+              targetWall: targetWallForCorner
+            });
+            return;
+          }
+
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          const moduleZone = (newZone || 'normal') as 'normal' | 'dropped';
+          const targetZone = moduleZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+          const requiredStartSlot = getRequiredCornerStartSlot(
+            moduleIdToCheck,
+            occupiedSlots.length,
+            targetZone.columnCount
+          );
+
+          if (requiredStartSlot !== null && newSlotIndex !== requiredStartSlot) {
+            console.warn('[updatePlacedModule] 코너장 시작 슬롯이 코너와 맞지 않습니다.', {
+              moduleId: moduleIdToCheck,
+              newSlotIndex,
+              requiredStartSlot,
+              columnCount: targetZone.columnCount
+            });
+            return;
+          }
+
+          const hasCornerConflict = state.placedModules.some(m => {
+            if (m.id === id) return false;
+            if (movingGroupId && m.groupId === movingGroupId) return false;
+            const existingWall = m.placementWall || 'front';
+            if (existingWall !== 'front') return false;
+            if ((m.zone || 'normal') !== moduleZone) return false;
+            const existingIsDual = m.moduleId.includes('dual-') || m.isDualSlot;
+            const existingSlots = existingIsDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
+            return occupiedSlots.some(slot => existingSlots.includes(slot));
+          });
+
+          if (hasCornerConflict) {
+            console.warn('[updatePlacedModule] 코너 슬롯에 이미 가구가 배치되어 있습니다.', {
+              moduleId: moduleIdToCheck,
+              occupiedSlots
+            });
+            return;
+          }
+        }
 
         // 듀얼 가구가 차지하는 모든 슬롯에서 기존 가구들을 체크
         let existingModulesInSlot: typeof state.placedModules = [];
@@ -780,10 +895,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           for (const existing of existingModulesInSlot) {
             const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
             const existingCategory = existingModuleData?.category;
+            const existingIsCornerCabinet = isCornerCabinetModuleId(existing.moduleId);
 
             // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
-            const canCoexist = (isTargetUpper && existingCategory === 'lower') ||
-              (isTargetLower && existingCategory === 'upper');
+            const canCoexist = !isCornerCabinet && !existingIsCornerCabinet && (
+              (isTargetUpper && existingCategory === 'lower') ||
+              (isTargetLower && existingCategory === 'upper')
+            );
 
             if (canCoexist) {
               // 공존 가능하므로 modulesToReplace에 추가하지 않음

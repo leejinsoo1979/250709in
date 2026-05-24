@@ -6,6 +6,19 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, ColumnSlotInfo } from './columnSlotProcessor';
 import { isCustomizableModuleId, getCustomizableCategory } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 
+const isCornerCabinetModuleId = (moduleId?: string): boolean =>
+  !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
+
+const getRequiredCornerStartSlot = (
+  moduleId: string,
+  span: number,
+  columnCount: number
+): number | null => {
+  if (!isCornerCabinetModuleId(moduleId)) return null;
+  if (moduleId.includes('left-corner')) return 0;
+  return Math.max(0, columnCount - span);
+};
+
 /**
  * 특정 슬롯이 사용 가능한지 확인하는 함수
  * @param slotIndex 확인할 슬롯 인덱스
@@ -110,14 +123,27 @@ export const isSlotAvailable = (
     console.log('[SlotDebug] isSlotAvailable:range-fail', { reason: 'single-out-of-range', slotIndex, effectiveColumnCount });
     return false;
   }
-  
-  // 기둥 포함 슬롯 분석
-  const columnSlots = analyzeColumnSlots(spaceInfo);
-  
-  // 목표 슬롯들 계산
+
+  const newIsCornerCabinet = isCornerCabinetModuleId(moduleId);
   const targetSlots = isDualFurniture 
     ? [slotIndex, slotIndex + 1] 
     : [slotIndex];
+
+  if (newIsCornerCabinet) {
+    const requiredStartSlot = getRequiredCornerStartSlot(moduleId, targetSlots.length, effectiveColumnCount);
+    if (requiredStartSlot !== null && slotIndex !== requiredStartSlot) {
+      console.log('[SlotDebug] isSlotAvailable:corner-start-fail', {
+        moduleId,
+        slotIndex,
+        requiredStartSlot,
+        effectiveColumnCount
+      });
+      return false;
+    }
+  }
+  
+  // 기둥 포함 슬롯 분석
+  const columnSlots = analyzeColumnSlots(spaceInfo);
   
   // 디버그 로그 제거 (성능 문제로 인해)
   
@@ -257,13 +283,14 @@ export const isSlotAvailable = (
       const existingCategory = moduleData?.category
         || (isCustomizableModuleId(placedModule.moduleId) ? getCustomizableCategory(placedModule.moduleId) : undefined);
       if (!moduleData && !existingCategory) continue; // 카테고리도 못 구하면 스킵
+      const existingIsCornerCabinet = isCornerCabinetModuleId(placedModule.moduleId);
 
       // 기존 가구의 카테고리 확인
       const isExistingUpper = existingCategory === 'upper';
       const isExistingLower = existingCategory === 'lower';
 
       // 상부장과 하부장은 같은 슬롯에 공존 가능
-      if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
+      if (!newIsCornerCabinet && !existingIsCornerCabinet && ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper))) {
         // 공존 가능한 경우, 이 모듈은 충돌로 간주하지 않음
         console.log('✅ 상부장-하부장 공존 가능 (isSlotAvailable):', {
           기존: { id: placedModule.id, category: existingCategory },

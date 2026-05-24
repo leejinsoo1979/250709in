@@ -112,4 +112,24 @@ describe('calculateShelfBoringPositions', () => {
       { y: 327, type: 'fixed-panel', role: 'top-panel' }
     ]);
   });
+
+  it('does not treat hanging safety shelves as movable dowel shelves', () => {
+    const result = calculateShelfBoringPositions({
+      sections: [{
+        type: 'hanging',
+        heightType: 'absolute',
+        height: 300,
+        count: 1,
+        shelfPositions: [180]
+      }],
+      totalHeightMm: 336,
+      basicThicknessMm: 18
+    });
+
+    expect(result.shelves).toEqual([]);
+    expect(result.details).toEqual([
+      { y: 9, type: 'fixed-panel', role: 'bottom-panel' },
+      { y: 327, type: 'fixed-panel', role: 'top-panel' }
+    ]);
+  });
 });

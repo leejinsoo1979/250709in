@@ -126,7 +126,9 @@ export function calculateShelfBoringPositions(
 
     // 선반 위치가 있으면 그대로 쓰고, 위치 목록이 없는 count 기반 선반은 렌더러처럼 균등 분할한다.
     // 주의: shelfPositions: [0]은 "치수 표시용"으로만 사용되며 실제 선반이 아니므로 count fallback을 타지 않는다.
-    const hasShelfPositionList = Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0;
+    const hasShelfPositionList = section.type === 'shelf'
+      && Array.isArray(section.shelfPositions)
+      && section.shelfPositions.length > 0;
     const shelfPositionsForBoring = hasShelfPositionList
       ? section.shelfPositions!.filter(pos => pos > 0)
       : (section.type === 'shelf' && section.count && section.count > 0)

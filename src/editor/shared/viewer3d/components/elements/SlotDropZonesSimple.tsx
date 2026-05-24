@@ -643,6 +643,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
 
       const moduleData = getModuleById(dragData.moduleData.id, internalSpace, spaceInfo) || dragData.moduleData;
+      if (moduleData.id.includes('left-corner') || moduleData.id.includes('right-corner')) {
+        showAlert('코너장은 정면 좌/우 코너 슬롯에만 배치할 수 있습니다.', { title: '배치 불가' });
+        return true;
+      }
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       const totalSideDepthMm = Math.max(1, spaceInfo.depth || internalSpace.depth || 600);
       const sideWallRange = calculateSideWallPlacementRangeMm(totalSideDepthMm);
