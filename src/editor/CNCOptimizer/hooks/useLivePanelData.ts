@@ -292,6 +292,14 @@ function getPlacedModuleCategory(module: any): 'full' | 'upper' | 'lower' {
   return 'full';
 }
 
+function getPlacedModuleHeightMm(module: any, moduleData: any): number {
+  const fallbackHeight = moduleData?.dimensions?.height ?? 0;
+  const isUpper = getPlacedModuleCategory(module) === 'upper' || moduleData?.category === 'upper';
+  return isUpper
+    ? (module?.customHeight ?? module?.freeHeight ?? fallbackHeight)
+    : (module?.freeHeight ?? module?.customHeight ?? fallbackHeight);
+}
+
 function getPlacedModuleWidthMm(module: any): number {
   return module?.isFreePlacement && module?.freeWidth
     ? module.freeWidth
@@ -705,8 +713,10 @@ export function useLivePanelData() {
         // 보링 위치 계산 (2D 뷰어와 동일한 데이터)
         // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
         const modelConfig = moduleData.modelConfig;
-        const sections = modelConfig?.sections || modelConfig?.leftSections || [];
-        const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
+        const sections = Array.isArray((placedModule as any).customSections) && (placedModule as any).customSections.length > 0
+          ? (placedModule as any).customSections
+          : (modelConfig?.sections || modelConfig?.leftSections || []);
+        const furnitureHeight = getPlacedModuleHeightMm(placedModule, moduleData);
         const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
         console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
@@ -1577,8 +1587,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // 보링 위치 계산 (2D 뷰어와 동일한 데이터)
       // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
       const modelConfig = moduleData.modelConfig;
-      const sections = modelConfig?.sections || modelConfig?.leftSections || [];
-      const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
+      const sections = Array.isArray((placedModule as any).customSections) && (placedModule as any).customSections.length > 0
+        ? (placedModule as any).customSections
+        : (modelConfig?.sections || modelConfig?.leftSections || []);
+      const furnitureHeight = getPlacedModuleHeightMm(placedModule, moduleData);
       const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
       console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);

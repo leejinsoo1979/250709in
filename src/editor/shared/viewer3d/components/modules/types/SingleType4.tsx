@@ -84,6 +84,15 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
 
   const { renderMode, viewMode } = useSpace3DView();
   const { view2DDirection } = useUIStore();
+  const sectionsRenderKey = React.useMemo(() => {
+    const sections = baseFurniture.modelConfig.sections || [];
+    return sections.map((section: any) => {
+      const positions = Array.isArray(section.shelfPositions)
+        ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+        : '';
+      return `${section.type}:${Math.round(section.height || 0)}:${section.count || 0}:${positions}`;
+    }).join('|');
+  }, [baseFurniture.modelConfig.sections]);
 
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
@@ -118,6 +127,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           {!isDragging && (
             <>
               <SectionsRenderer
+                key={`sections-${placedFurnitureId || moduleData.id}-${sectionsRenderKey}`}
                 modelConfig={baseFurniture.modelConfig}
                 height={baseFurniture.height}
                 innerWidth={baseFurniture.innerWidth}

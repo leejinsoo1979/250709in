@@ -71,6 +71,15 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode, viewMode, view2DDirection } = useSpace3DView();
+  const sectionsRenderKey = React.useMemo(() => {
+    const sections = modelConfig.sections || [];
+    return sections.map((section: any) => {
+      const positions = Array.isArray(section.shelfPositions)
+        ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+        : '';
+      return `${section.type}:${Math.round(section.height || 0)}:${section.count || 0}:${positions}`;
+    }).join('|');
+  }, [modelConfig.sections]);
 
   // 플로팅 높이 디버그
   React.useEffect(() => {
@@ -217,6 +226,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           {!isDragging && (
             <>
               <SectionsRenderer
+                key={`sections-${placedFurnitureId || moduleData.id}-${sectionsRenderKey}`}
                 modelConfig={baseFurniture.modelConfig}
                 height={baseFurniture.height}
                 innerWidth={baseFurniture.innerWidth}

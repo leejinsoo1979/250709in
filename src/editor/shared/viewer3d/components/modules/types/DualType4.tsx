@@ -94,6 +94,15 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   const { view2DDirection, showDimensions, showDimensionsText, highlightedSection, highlightedPanel } = useUIStore();
   const { theme } = useTheme();
   const { dimensionColor, baseFontSize } = useDimensionColor();
+  const sectionsRenderKey = React.useMemo(() => {
+    const sections = baseFurniture.modelConfig.sections || [];
+    return sections.map((section: any) => {
+      const positions = Array.isArray(section.shelfPositions)
+        ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+        : '';
+      return `${section.type}:${Math.round(section.height || 0)}:${section.count || 0}:${positions}`;
+    }).join('|');
+  }, [baseFurniture.modelConfig.sections]);
 
   // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
   const basicThicknessMmVal = basicThickness / 0.01;
@@ -579,6 +588,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       {!isDragging && (
         <>
           <SectionsRenderer
+            key={`sections-${placedFurnitureId || moduleData.id}-${sectionsRenderKey}`}
             modelConfig={baseFurniture.modelConfig}
             height={baseFurniture.height}
             innerWidth={baseFurniture.innerWidth}

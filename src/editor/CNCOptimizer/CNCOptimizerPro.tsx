@@ -112,7 +112,10 @@ function PageInner(){
       }
 
       // 가구 높이 계산 (mm)
-      const height = placedModule.customHeight || moduleData.dimensions.height;
+      const isUpperModule = moduleData.category === 'upper' || placedModule.moduleId.includes('upper');
+      const height = isUpperModule
+        ? (placedModule.customHeight ?? placedModule.freeHeight ?? moduleData.dimensions.height)
+        : (placedModule.freeHeight ?? placedModule.customHeight ?? moduleData.dimensions.height);
       const basicThicknessMm = moduleData.modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
       // 실제 이동선반/추가 다보 위치 계산

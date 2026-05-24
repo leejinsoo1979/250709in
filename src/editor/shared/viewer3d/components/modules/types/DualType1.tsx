@@ -112,6 +112,15 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
 
   const { renderMode, viewMode } = useSpace3DView();
   const { view2DDirection } = useUIStore();
+  const sectionsRenderKey = React.useMemo(() => {
+    const sections = baseFurniture.modelConfig.sections || [];
+    return sections.map((section: any) => {
+      const positions = Array.isArray(section.shelfPositions)
+        ? section.shelfPositions.map((position: number) => Math.round(position)).join(',')
+        : '';
+      return `${section.type}:${Math.round(section.height || 0)}:${section.count || 0}:${positions}`;
+    }).join('|');
+  }, [baseFurniture.modelConfig.sections]);
 
   // 섹션별 깊이 계산 (하부 섹션 0, 상부 섹션 1)
   const defaultDepth = depth;
@@ -198,6 +207,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         {!isDragging && (
           <>
             <SectionsRenderer
+              key={`sections-${placedFurnitureId || moduleData.id}-${sectionsRenderKey}`}
               modelConfig={baseFurniture.modelConfig}
               height={baseFurniture.height}
               innerWidth={baseFurniture.innerWidth}

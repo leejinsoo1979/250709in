@@ -15,6 +15,7 @@ import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater'
 import { getThemeHex } from '@/theme';
 import SidePanelBoring from './SidePanelBoring';
 import { calculateShelfBoringPositionsFromThreeUnits } from '@/domain/boring';
+import { isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import {
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
@@ -152,6 +153,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const currentPlacedModule = placedFurnitureId
     ? placedModules.find(m => m.id === placedFurnitureId)
     : undefined;
+  const moduleIdForBoringOwner = currentPlacedModule?.moduleId || furnitureId || '';
+  const isLowerDowelBoringOwnedByLowerCabinet = isDirectLowerDowelShelfModule(moduleIdForBoringOwner);
 
   // Hover 상태 관리 (섹션별)
   const [hoveredSectionIndex, setHoveredSectionIndex] = useState<number | null>(null);
@@ -1009,6 +1012,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // - currentYPosition 업데이트: currentYPosition += sectionHeight
   // 선반/패널 보링 위치 계산 (유틸리티 함수 사용)
   const allBoringResult = useMemo(() => {
+    if (isLowerDowelBoringOwnedByLowerCabinet) {
+      return { positions: [], details: [] };
+    }
     const { sections } = modelConfig;
     if (!sections || sections.length === 0) return { positions: [], details: [] };
     const isShelfSplitBoring = !!furnitureId?.includes('shelf-split');
@@ -1128,6 +1134,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     mmToThreeUnits,
     modelConfig,
     furnitureId,
+    isLowerDowelBoringOwnedByLowerCabinet,
     sectionDepthDirections,
     sectionDepths,
     lowerSectionTopOffsetMm,
@@ -1286,20 +1293,22 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       {renderSections()}
 
       {/* 측면뷰에서 선반핀 보링 시각화 */}
-      <SidePanelBoring
-        height={height}
-        depth={depth}
-        basicThickness={basicThickness}
-        innerWidth={innerWidth}
-        boringPositions={allBoringResult.positions}
-        boringDetails={allBoringResult.details}
-        hingeBracketPositions={hingeBracketPositions}
-        placedFurnitureId={placedFurnitureId}
-        category={category}
-        doorTopGap={doorTopGap}
-        doorBottomGap={doorBottomGap}
-        mmToThreeUnits={mmToThreeUnits}
-      />
+      {!isLowerDowelBoringOwnedByLowerCabinet && (
+        <SidePanelBoring
+          height={height}
+          depth={depth}
+          basicThickness={basicThickness}
+          innerWidth={innerWidth}
+          boringPositions={allBoringResult.positions}
+          boringDetails={allBoringResult.details}
+          hingeBracketPositions={hingeBracketPositions}
+          placedFurnitureId={placedFurnitureId}
+          category={category}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
+          mmToThreeUnits={mmToThreeUnits}
+        />
+      )}
     </>
   );
 };
