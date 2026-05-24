@@ -12698,7 +12698,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 기둥 렌더링 - 조건은 renderColumns 내부에서 처리 */}
       {renderColumns()}
 
-      {/* 3D 모드: 각 가구의 좌/우 측면 외부 바닥 라인에 깊이 치수 표시 (기존 좌측뷰 스타일과 일관성 유지) */}
+      {/* 3D 모드: 각 가구의 좌/우 측면 외부 바닥 라인에 깊이 치수 표시 (선택된 가구만)
+          가구 클릭 → selectedFurnitureId(또는 selectedFurnitureIds) 일치 시에만 활성화 */}
       {is3DMode && showDimensions && placedModules.length > 0 && placedModules.map((module, mIdx) => {
         const moduleData = getModuleById(
           module.moduleId,
@@ -12708,6 +12709,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (!moduleData || !moduleData.dimensions) return null;
         if (module.moduleId?.includes('insert-frame')) return null;
         if (module.moduleId?.includes('glass-cabinet')) return null;
+        // 선택된 가구만 깊이 치수 표시
+        const isSelectedForDepthDim = selectedFurnitureId === module.id
+          || (selectedFurnitureIds ?? []).includes(module.id);
+        if (!isSelectedForDepthDim) return null;
 
         const indexing3D = calculateSpaceIndexing(spaceInfo);
         const isColFront3D = (module as any).columnPlacementMode === 'front';
