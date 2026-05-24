@@ -7191,6 +7191,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // availableHeight = H - 2*t (가구 상하판)
         // 마지막 섹션 = availableHeight - 나머지섹션합
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+        const effectiveTopFrameMm = (module as any).hasTopFrame === false
+          ? ((module as any).topFrameGap ?? 0)
+          : ((module as any).topFrameThickness ?? topFrameMm);
         const spaceHeightMm = spaceInfo.height || 0;
         // 상부장은 3D 렌더와 동일 공식으로 위치 계산 (천장에서 아래로 붙어 있음)
         // furnitureBottomMm = ceilingH - topFrame - H
@@ -7198,14 +7201,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const isUpperCabinet = moduleData.category === 'upper' || mid.includes('upper-cabinet');
         const ownHeightMm = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 0;
         const ceilingHeightForUpper = spaceHeightMm;
-        const upperTopFrameMm = (module as any).topFrameThickness ?? topFrameMm;
         const furnitureBottomMm = isUpperCabinet
-          ? Math.max(0, Math.round(ceilingHeightForUpper - upperTopFrameMm - ownHeightMm))
+          ? Math.max(0, Math.round(ceilingHeightForUpper - effectiveTopFrameMm - ownHeightMm))
           : (floorFinishMm + baseFrameMm + floatMm);
         // 띄움도 가구 외부 빈 공간으로 빼야 입면=측면 일치 (하부 섹션이 흡수하지 않음)
         const furnitureOuterH = isUpperCabinet
           ? ownHeightMm
-          : (spaceHeightMm - topFrameMm - baseFrameMm - floatMm);
+          : (spaceHeightMm - effectiveTopFrameMm - baseFrameMm - floatMm);
         const availableHeight = furnitureOuterH - 2 * basicThickness;
         // 모듈 원본 sections.height 사용 (useBaseFurniture 비례조정 전 값)
         // useBaseFurniture와 동일 공식: renderHeight = 가구외경, absorb = 가구외경 - 다른섹션합
