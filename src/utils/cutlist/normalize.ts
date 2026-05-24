@@ -22,6 +22,9 @@ export interface RawPanel {
   boringPositions?: number[];
   boringDepthPositions?: number[];
   boringDepthGroups?: Array<{ y: number; depthPositions: number[]; boringType?: 'fixed-panel' | 'movable-shelf' }>;
+  sideBoringPositions?: number[];
+  sideBoringDiameter?: number;
+  sideBoringDepth?: number;
   groovePositions?: Array<{ y: number; height: number; depth: number }>;
   screwPositions?: number[];
   screwDepthPositions?: number[];
@@ -51,6 +54,9 @@ export interface NormalizedPanel {
   boringPositions?: number[];
   boringDepthPositions?: number[];
   boringDepthGroups?: Array<{ y: number; depthPositions: number[]; boringType?: 'fixed-panel' | 'movable-shelf' }>;
+  sideBoringPositions?: number[];
+  sideBoringDiameter?: number;
+  sideBoringDepth?: number;
   groovePositions?: Array<{ y: number; height: number; depth: number }>;
   screwPositions?: number[];
   screwDepthPositions?: number[];
@@ -171,6 +177,9 @@ export function normalizePanel(panel: RawPanel, targetUnit: Unit = 'mm'): Normal
     boringPositions: panel.boringPositions,
     boringDepthPositions: panel.boringDepthPositions,
     boringDepthGroups: panel.boringDepthGroups,
+    sideBoringPositions: panel.sideBoringPositions,
+    sideBoringDiameter: panel.sideBoringDiameter,
+    sideBoringDepth: panel.sideBoringDepth,
     groovePositions: panel.groovePositions,
     screwPositions: panel.screwPositions,
     screwDepthPositions: panel.screwDepthPositions,

@@ -24,6 +24,9 @@ export interface Panel {
   boringPositions?: number[]; // 해당 패널의 보링 Y위치 (패널 기준 mm, height 기준 상중하)
   boringDepthPositions?: number[]; // 해당 패널의 보링 X위치 (패널 기준 mm, width 기준 앞뒤)
   boringDepthGroups?: BoringDepthGroup[]; // Y 위치별 보링 X위치 (고정패널 3공/이동선반 2공 혼합용)
+  sideBoringPositions?: number[]; // 천지판/고정선반 측면 피스 유도보링 위치 (패널 height/depth 기준)
+  sideBoringDiameter?: number; // 측면 피스 유도보링 직경
+  sideBoringDepth?: number; // 측면 피스 유도보링 깊이
   groovePositions?: GroovePosition[]; // 바닥판 끼우는 홈 위치
   // 도어 힌지 보링 전용 필드
   screwPositions?: number[]; // 나사홀 Y위치 (힌지컵 상하 각 22.5mm)
@@ -75,6 +78,9 @@ export interface PlacedPanel extends Panel {
   label?: string;
   boringDepthPositions?: number[]; // 서랍 측판 보링 X위치 (width 기준)
   boringDepthGroups?: BoringDepthGroup[];
+  sideBoringPositions?: number[];
+  sideBoringDiameter?: number;
+  sideBoringDepth?: number;
   // 측판 힌지 브라켓 타공 전용 필드
   bracketBoringPositions?: number[];
   bracketBoringDepthPositions?: number[];

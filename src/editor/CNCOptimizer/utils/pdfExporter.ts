@@ -346,6 +346,32 @@ export class PDFExporter {
         });
       }
 
+      // ★★★ 천지판/고정선반 측면 피스 유도보링 표시 (Ø5, depth 30) ★★★
+      if ((panel as any).sideBoringPositions?.length > 0 && !isDoorPanel) {
+        const holeRadius = (((panel as any).sideBoringDiameter || 5) / 2) * scale;
+        this.pdf.setDrawColor(0, 0, 0);
+        this.pdf.setFillColor(255, 255, 255);
+        this.pdf.setLineWidth(0.1);
+
+        ((panel as any).sideBoringPositions as number[]).forEach((depthPosMm: number) => {
+          [0, panel.width].forEach((edgeX: number) => {
+            const sheetBoringX = panel.rotated ? panel.x + depthPosMm : panel.x + edgeX;
+            const sheetBoringY = panel.rotated ? panel.y + edgeX : panel.y + depthPosMm;
+
+            let pdfX: number, pdfY: number;
+            if (isRotated) {
+              pdfX = offsetX + sheetBoringY * scale;
+              pdfY = offsetY + (result.stockPanel.width - sheetBoringX) * scale;
+            } else {
+              pdfX = offsetX + sheetBoringX * scale;
+              pdfY = offsetY + sheetBoringY * scale;
+            }
+
+            this.pdf.circle(pdfX, pdfY, holeRadius, 'FD');
+          });
+        });
+      }
+
       // ★★★ 도어 패널 보링 표시 (힌지컵 Ø35 + 나사홀 Ø8) ★★★
       if (isDoorPanel && panel.boringPositions && panel.boringPositions.length > 0) {
         const originalWidth = panel.width;

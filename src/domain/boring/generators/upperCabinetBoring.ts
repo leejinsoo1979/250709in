@@ -197,6 +197,39 @@ function generateSidePanelBorings(
 // 상판/하판 보링 생성
 // ============================================
 
+function calculateFixedHorizontalSideBorings(panelWidth: number, panelDepth: number): Boring[] {
+  if (panelDepth <= 60) return [];
+
+  const depthPositions = Array.from(new Set(
+    [30, panelDepth / 2, Math.max(30, panelDepth - 30)]
+      .map(pos => Math.round(pos * 10) / 10)
+      .filter(pos => pos >= 0 && pos <= panelDepth)
+  ));
+
+  return depthPositions.flatMap((depthPos, index) => ([
+    {
+      id: `fixed-side-left-${index + 1}`,
+      type: 'shelf-pin' as const,
+      face: 'left' as const,
+      x: 0,
+      y: depthPos,
+      diameter: 5,
+      depth: 30,
+      note: 'fixed-panel-side-bore',
+    },
+    {
+      id: `fixed-side-right-${index + 1}`,
+      type: 'shelf-pin' as const,
+      face: 'right' as const,
+      x: panelWidth,
+      y: depthPos,
+      diameter: 5,
+      depth: 30,
+      note: 'fixed-panel-side-bore',
+    },
+  ]));
+}
+
 function generateHorizontalPanelBorings(
   params: UpperCabinetParams,
   isTopPanel: boolean,
@@ -216,6 +249,7 @@ function generateHorizontalPanelBorings(
     isTopPanel
   );
   borings.push(...camHousingBorings);
+  borings.push(...calculateFixedHorizontalSideBorings(dims.internalWidth, dims.internalDepth));
 
   // 상부장은 조절발 없음 (하부장과의 차이)
 

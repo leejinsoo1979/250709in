@@ -35,7 +35,10 @@ const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
 
   return (
     name.includes('상판') ||
+    name.includes('천판') ||
+    name.includes('하판') ||
     name.includes('바닥') ||
+    name.includes('바닥판') ||
     name.includes('지판') ||
     name.includes('고정선반') ||
     name.includes('옷봉 선반')
@@ -61,7 +64,8 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     const allPanels: PlacedPanel[] = [];
     optimizationResults.forEach(result => {
       result.panels.forEach(panel => {
-        if (panel.boringPositions && panel.boringPositions.length > 0) {
+        if ((panel.boringPositions && panel.boringPositions.length > 0) ||
+            (panel.sideBoringPositions && panel.sideBoringPositions.length > 0)) {
           allPanels.push(panel);
         }
       });
@@ -287,7 +291,11 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
     // 5) 천지판/고정선반 측면 보링: Ø5mm, depth=30
     if (!panel.isDoor && isMprFixedHorizontalPanel(panel.name)) {
-      const sideBoreDepthPositions = resolveMprFixedPanelDepthPositions(panel.height);
+      const sideBoreDepthPositions = panel.sideBoringPositions?.length
+        ? panel.sideBoringPositions
+        : resolveMprFixedPanelDepthPositions(panel.height);
+      const sideBoreDiameter = panel.sideBoringDiameter || 5;
+      const sideBoreDepth = panel.sideBoringDepth || 30;
       sideBoreDepthPositions.forEach((depthPos) => {
         ([
           { face: 'left' as const, x: 0 },
@@ -299,8 +307,8 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
             face,
             x,
             y: depthPos,
-            diameter: 5,
-            depth: 30,
+            diameter: sideBoreDiameter,
+            depth: sideBoreDepth,
             note: 'fixed-panel-side-bore',
           });
         });

@@ -100,6 +100,19 @@ function isMainHorizontalPanel(panel: any): boolean {
   );
 }
 
+const FIXED_HORIZONTAL_SIDE_BORING_DIAMETER = 5;
+const FIXED_HORIZONTAL_SIDE_BORING_DEPTH = 30;
+
+function resolveFixedHorizontalSideBoringPositions(panelDepth: number): number[] | undefined {
+  if (!Number.isFinite(panelDepth) || panelDepth <= 60) return undefined;
+
+  const positions = [30, panelDepth / 2, Math.max(30, panelDepth - 30)]
+    .map(pos => Math.round(pos * 10) / 10)
+    .filter(pos => pos >= 0 && pos <= panelDepth);
+
+  return Array.from(new Set(positions)).sort((a, b) => a - b);
+}
+
 function isMovableShelfPanel(panel: any): boolean {
   const name = panel?.name || '';
   if (!name.includes('선반')) return false;
@@ -901,6 +914,10 @@ export function useLivePanelData() {
             }
           }
 
+          const panelSideBoringPositions = isMainHorizontalPanel(panel)
+            ? resolveFixedHorizontalSideBoringPositions(panel.height || panel.depth || 0)
+            : undefined;
+
           console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);
 
           return {
@@ -916,6 +933,9 @@ export function useLivePanelData() {
             boringPositions: panelBoringPositions,
             boringDepthPositions: panelBoringDepthPositions,
             boringDepthGroups: panelBoringDepthGroups,
+            sideBoringPositions: panelSideBoringPositions,
+            sideBoringDiameter: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DIAMETER : undefined,
+            sideBoringDepth: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DEPTH : undefined,
             groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
             // 도어 전용 필드
             screwPositions: isDoorPanel ? screwPositions : undefined,
@@ -1776,6 +1796,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
         }
 
+        const panelSideBoringPositions = isMainHorizontalPanel(panel)
+          ? resolveFixedHorizontalSideBoringPositions(panel.height || panel.depth || 0)
+          : undefined;
+
         return {
           id: `m${moduleIndex}_p${panelIndex}`,
           name: furnitureLabel2 ? `${furnitureLabel2} ${panel.name}` : panel.name,
@@ -1789,6 +1813,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           boringPositions: panelBoringPositions,
           boringDepthPositions: panelBoringDepthPositions,
           boringDepthGroups: panelBoringDepthGroups,
+          sideBoringPositions: panelSideBoringPositions,
+          sideBoringDiameter: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DIAMETER : undefined,
+          sideBoringDepth: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DEPTH : undefined,
           groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
           // 도어 전용 필드
           screwPositions: isDoorPanel ? screwPositions : undefined,

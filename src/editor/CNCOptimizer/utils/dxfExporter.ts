@@ -458,6 +458,19 @@ export class DXFExporter {
         });
       }
 
+      // ★★★ 천지판/고정선반 측면 피스 유도보링 표시 (Ø5, depth 30) ★★★
+      if ((panel as any).sideBoringPositions?.length > 0 && !isDoorPanel) {
+        const radius = ((panel as any).sideBoringDiameter || 5) / 2;
+        ((panel as any).sideBoringPositions as number[]).forEach((depthPosMm: number) => {
+          [0, origW].forEach((edgeX: number) => {
+            const sx = panel.rotated ? panel.x + depthPosMm : panel.x + edgeX;
+            const sy = panel.rotated ? panel.y + edgeX : panel.y + depthPosMm;
+            const [dx, dy] = toDxf(sx, sy);
+            this.addBoringHole(dx, dy, radius, 2, 'BORING');
+          });
+        });
+      }
+
       // ★★★ 도어 힌지 보링 표시 ★★★
       if (isDoorPanel && (panel as any).boringPositions && (panel as any).boringPositions.length > 0) {
         const cupRadius = 35 / 2;

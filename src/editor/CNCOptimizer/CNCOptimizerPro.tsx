@@ -476,6 +476,9 @@ function PageInner(){
             boringPositions: p.boringPositions, // 보링 Y위치 유지
             boringDepthPositions: p.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
             boringDepthGroups: p.boringDepthGroups,
+            sideBoringPositions: p.sideBoringPositions,
+            sideBoringDiameter: p.sideBoringDiameter,
+            sideBoringDepth: p.sideBoringDepth,
             groovePositions: p.groovePositions, // 홈 위치 유지 (서랍 앞판/뒷판)
             // 도어 힌지 보링 필드
             screwPositions: p.screwPositions,
@@ -637,6 +640,9 @@ function PageInner(){
           boringPositions: p.boringPositions,
           boringDepthPositions: p.boringDepthPositions,
           boringDepthGroups: p.boringDepthGroups,
+          sideBoringPositions: p.sideBoringPositions,
+          sideBoringDiameter: p.sideBoringDiameter,
+          sideBoringDepth: p.sideBoringDepth,
           groovePositions: p.groovePositions
         });
 
@@ -653,6 +659,9 @@ function PageInner(){
           boringPositions: p.boringPositions,
           boringDepthPositions: p.boringDepthPositions,
           boringDepthGroups: p.boringDepthGroups,
+          sideBoringPositions: p.sideBoringPositions,
+          sideBoringDiameter: p.sideBoringDiameter,
+          sideBoringDepth: p.sideBoringDepth,
           groovePositions: p.groovePositions,
           // 도어 힌지 보링 필드
           screwPositions: p.screwPositions,
@@ -947,6 +956,9 @@ function PageInner(){
               boringPositions: p.boringPositions, // 보링 위치 유지
               boringDepthPositions: p.boringDepthPositions, // 보링 X 위치
               boringDepthGroups: p.boringDepthGroups,
+              sideBoringPositions: p.sideBoringPositions,
+              sideBoringDiameter: p.sideBoringDiameter,
+              sideBoringDepth: p.sideBoringDepth,
               groovePositions: p.groovePositions, // 홈 위치
               // 도어 힌지 보링 필드
               screwPositions: p.screwPositions,
@@ -1067,6 +1079,9 @@ function PageInner(){
             boringPositions: p.boringPositions,
             boringDepthPositions: p.boringDepthPositions,
             boringDepthGroups: p.boringDepthGroups,
+            sideBoringPositions: p.sideBoringPositions,
+            sideBoringDiameter: p.sideBoringDiameter,
+            sideBoringDepth: p.sideBoringDepth,
             groovePositions: p.groovePositions,
             screwPositions: p.screwPositions,
             screwDepthPositions: p.screwDepthPositions,
