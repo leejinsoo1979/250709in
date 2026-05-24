@@ -1508,6 +1508,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     baseFurniture.depth,
     moduleData.id,
     moduleData.modelConfig?.sections,
+    placedModuleForCorner?.additionalDowelBoringCount,
+    placedModuleForCorner?.additionalDowelBoringsEnabled,
     placedModuleForCorner?.customSections,
     stoneThickness,
   ]);

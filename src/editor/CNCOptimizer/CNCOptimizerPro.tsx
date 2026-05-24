@@ -11,6 +11,10 @@ import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useFurnitureBoring, calculateShelfBoringPositions, calculateSectionBoringPositions } from '@/domain/boring';
+import {
+  getDirectLowerDowelShelfBoringDetails,
+  isDirectLowerDowelShelfModule,
+} from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
@@ -111,7 +115,7 @@ function PageInner(){
       const height = placedModule.customHeight || moduleData.dimensions.height;
       const basicThicknessMm = moduleData.modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
 
-      // 실제 선반/패널 위치 계산
+      // 실제 이동선반/추가 다보 위치 계산
       const result = calculateShelfBoringPositions({
         sections: moduleData.modelConfig.sections,
         totalHeightMm: height,
@@ -122,10 +126,33 @@ function PageInner(){
           spacingMm: 32,
         },
       });
+      const moduleId = moduleData?.id || placedModule.moduleId || '';
+      const details = isDirectLowerDowelShelfModule(moduleId)
+        ? getDirectLowerDowelShelfBoringDetails({
+          moduleId,
+          cabinetHeightMm: height,
+          basicThicknessMm,
+          sections: moduleData.modelConfig.sections,
+          additionalDowelBorings: {
+            enabled: !!placedModule.additionalDowelBoringsEnabled,
+            count: placedModule.additionalDowelBoringCount ?? 0,
+            spacingMm: 32,
+          },
+        })
+        : result.details.filter(detail => detail.role === 'movable-shelf' || detail.role === 'additional-dowel');
 
-      if (result.positions.length > 0) {
-        // 키: "m{moduleIndex}" - useLivePanelData의 패널 ID와 매칭
-        positionsMap[`m${moduleIndex}`] = result.positions;
+      const positions = details
+        .filter(detail => (
+          detail.role === 'movable-shelf' ||
+          detail.role === 'additional-dowel'
+        ))
+        .map(detail => detail.y);
+
+      if (positions.length > 0) {
+        // useFurnitureBoring은 placedModule.id로 조회한다.
+        positionsMap[placedModule.id] = positions;
+        // 기존 프리뷰/내보내기 호환용 키도 같이 유지한다.
+        positionsMap[`m${moduleIndex}`] = positions;
       }
     });
 
