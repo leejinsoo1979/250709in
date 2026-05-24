@@ -186,6 +186,8 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       const xPositions = panel.boringDepthPositions || [];
       // 가구 측판은 boringDepthGroups가 있으면 Y별 부재 깊이 기준을 우선한다.
       const isDrawerPanel = panel.name?.includes('서랍');
+      const isDrawerSidePanel = isDrawerPanel &&
+        (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
       let defaultXPositions: number[];
       if (xPositions.length > 0) {
         defaultXPositions = xPositions;
@@ -203,14 +205,16 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
         xPositionsForY.forEach((xPos) => {
           borings.push({
-            id: `shelf-${boringIdx++}`,
-            type: 'shelf-pin',
+            id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
+            type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
             face: 'top',
             x: xPos,
             y: yPos,
-            diameter: isFixedPanelBoring ? 6 : 5,
-            depth: isFixedPanelBoring ? panelThickness : 12,
-            note: isFixedPanelBoring ? 'fixed-panel-through' : 'movable-shelf-pin',
+            diameter: isDrawerSidePanel ? 3 : (isFixedPanelBoring ? 6 : 5),
+            depth: isDrawerSidePanel ? panelThickness : (isFixedPanelBoring ? panelThickness : 12),
+            note: isDrawerSidePanel
+              ? 'drawer-panel-connector'
+              : (isFixedPanelBoring ? 'fixed-panel-through' : 'movable-shelf-pin'),
           });
         });
       });
@@ -298,6 +302,8 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     // 패널 타입 판별
     let panelType: PanelBoringData['panelType'] = 'side-left';
     if (panel.isDoor) panelType = 'door';
+    else if (panel.name?.includes('서랍') && panel.name?.includes('좌측판')) panelType = 'drawer-side-left';
+    else if (panel.name?.includes('서랍') && panel.name?.includes('우측판')) panelType = 'drawer-side-right';
     else if (panel.name?.includes('우측')) panelType = 'side-right';
     else if (panel.name?.includes('상판')) panelType = 'top';
     else if (panel.name?.includes('하판')) panelType = 'bottom';

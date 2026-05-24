@@ -2,6 +2,18 @@ import jsPDF from 'jspdf';
 import JSZip from 'jszip';
 import { OptimizedResult, Panel } from '../types';
 
+function isFurnitureRightSidePanel(panel: any): boolean {
+  const name = panel?.name || '';
+  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
+}
+
+function resolveFurnitureSideDepthPosition(panel: any, depthPosMm: number): number {
+  const originalWidth = panel.width || 0;
+  return isFurnitureRightSidePanel(panel)
+    ? originalWidth - depthPosMm
+    : depthPosMm;
+}
+
 interface FurnitureData {
   projectName: string;
   spaceInfo: any;
@@ -287,20 +299,28 @@ export class PDFExporter {
             let sheetBoringX: number, sheetBoringY: number;
 
             if (isDrawerSidePanel || isDrawerFrontPanel) {
-              // 서랍 측판/앞판: boringPosMm → X, depthPosMm → Y
-              sheetBoringX = panel.x + boringPosMm;
-              sheetBoringY = panel.y + depthPosMm;
+              if (panel.rotated) {
+                // 서랍 측판/앞판 회전 배치: 깊이 방향이 시트 X축, 높이 방향이 시트 Y축
+                sheetBoringX = panel.x + depthPosMm;
+                sheetBoringY = panel.y + boringPosMm;
+              } else {
+                // 서랍 측판/앞판 비회전 배치: 높이 방향이 시트 X축, 깊이 방향이 시트 Y축
+                sheetBoringX = panel.x + boringPosMm;
+                sheetBoringY = panel.y + depthPosMm;
+              }
             } else if (panel.rotated) {
               // 가구 측판 (rotated=true) - Y좌표 뒤집기: 하단 기준 → 상단 기준
               const flippedBoringY = originalHeight - boringPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
               const scaleX = placedWidth / originalWidth;
               const scaleY = placedHeight / originalHeight;
-              sheetBoringX = panel.x + depthPosMm * scaleX;
+              sheetBoringX = panel.x + resolvedDepthPosMm * scaleX;
               sheetBoringY = panel.y + flippedBoringY * scaleY;
             } else {
               // 가구 측판 (rotated=false) - Y좌표 뒤집기: 하단 기준 → 상단 기준
               const flippedBoringY = originalHeight - boringPosMm;
-              sheetBoringX = panel.x + depthPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+              sheetBoringX = panel.x + resolvedDepthPosMm;
               sheetBoringY = panel.y + flippedBoringY;
             }
 

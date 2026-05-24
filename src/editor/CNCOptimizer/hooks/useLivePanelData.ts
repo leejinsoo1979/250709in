@@ -13,6 +13,7 @@ import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstant
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import {
   getDirectLowerDowelShelfBoringDetails,
   hasDirectLowerTopPanel,
@@ -122,15 +123,55 @@ function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number
   };
 }
 
+function createBoringFrontInsetResolver({
+  moduleId,
+  basicThicknessMm,
+  lowerSectionTopOffsetMm,
+  shelfFrontInsetMm,
+}: {
+  moduleId: string;
+  basicThicknessMm: number;
+  lowerSectionTopOffsetMm: number;
+  shelfFrontInsetMm: number;
+}) {
+  return (detail: ShelfBoringPositionDetail): number => {
+    if (detail.role === 'movable-shelf') {
+      return shelfFrontInsetMm;
+    }
+
+    const isLowerTopDivider = detail.role === 'section-divider' && (detail.roleIndex ?? 0) % 2 === 0;
+    if (!isLowerTopDivider) {
+      return 0;
+    }
+
+    if (moduleId.includes('shelf-split')) {
+      return 40 + basicThicknessMm;
+    }
+
+    return Math.max(0, lowerSectionTopOffsetMm || 0);
+  };
+}
+
 function toBoringDepthGroups(
   details: ShelfBoringPositionDetail[],
   getReferenceDepth: (detail: ShelfBoringPositionDetail) => number,
-  transformY: (y: number) => number = y => y
+  transformY: (y: number) => number = y => y,
+  options: {
+    getSideDepth?: (detail: ShelfBoringPositionDetail) => number;
+    getFrontInset?: (detail: ShelfBoringPositionDetail) => number;
+  } = {}
 ): BoringDepthGroup[] | undefined {
   const groups = details
     .map(detail => {
       const panelDepth = getReferenceDepth(detail);
-      const depthPositions = getShelfBoringDepthPositions(detail.type, panelDepth);
+      const localDepthPositions = getShelfBoringDepthPositions(detail.type, panelDepth);
+      if (!localDepthPositions) return null;
+
+      const sideDepth = options.getSideDepth?.(detail) ?? panelDepth;
+      const frontInset = Math.max(0, options.getFrontInset?.(detail) ?? 0);
+      const depthPositions = localDepthPositions.map(pos => (
+        Math.max(0, Math.min(sideDepth, frontInset + pos))
+      ));
       if (!depthPositions) return null;
 
       return {
@@ -654,7 +695,22 @@ export function useLivePanelData() {
         });
         const allBoringPositions = boringResult.positions;
         const allBoringDetails = boringResult.details;
-        const resolveReferenceDepth = createReferenceDepthResolver(modulePanels, moduleData.dimensions.depth);
+        const resolveReferenceDepth = createReferenceDepthResolver(modulePanels, depth);
+        const shelfFrontInsetMm = resolveShelfFrontInsetMm({
+          moduleId: moduleData?.id || placedModule?.moduleId || '',
+          cabinetCategory: moduleData?.category,
+          depthMm: depth,
+        });
+        const resolveBoringFrontInset = createBoringFrontInsetResolver({
+          moduleId: moduleData?.id || placedModule?.moduleId || '',
+          basicThicknessMm,
+          lowerSectionTopOffsetMm: (placedModule as any).lowerSectionTopOffset ?? 0,
+          shelfFrontInsetMm,
+        });
+        const boringDepthGroupOptions = {
+          getSideDepth: () => depth,
+          getFrontInset: resolveBoringFrontInset,
+        };
 
         // 분리 측판용 섹션 높이 계산 (allBoringPositions에서 직접 분리)
         let lowerSectionHeightForBoring = 0;
@@ -738,12 +794,12 @@ export function useLivePanelData() {
                   // 하부: 절대좌표 <= lowerCutoff 범위, 로컬좌표 = 그대로 (panelBottom=0)
                   const lowerDetails = allBoringDetails.filter(detail => detail.y <= lowerCutoff);
                   panelBoringPositions = lowerDetails.map(detail => detail.y);
-                  panelBoringDepthGroups = toBoringDepthGroups(lowerDetails, resolveReferenceDepth);
+                  panelBoringDepthGroups = toBoringDepthGroups(lowerDetails, resolveReferenceDepth, y => y, boringDepthGroupOptions);
                 } else {
                   // 상부: 절대좌표 > lowerCutoff 범위, 로컬좌표 = pos - lowerCutoff
                   const upperDetails = allBoringDetails.filter(detail => detail.y > lowerCutoff);
                   panelBoringPositions = upperDetails.map(detail => detail.y - lowerCutoff);
-                  panelBoringDepthGroups = toBoringDepthGroups(upperDetails, resolveReferenceDepth, y => y - lowerCutoff);
+                  panelBoringDepthGroups = toBoringDepthGroups(upperDetails, resolveReferenceDepth, y => y - lowerCutoff, boringDepthGroupOptions);
                 }
                 panelBoringPositions.sort((a, b) => a - b);
                 console.log(`  [BORING] 분리 측판 "${panel.name}" (${isLowerSection ? '하부' : '상부'}): allBoringPositions에서 직접 분리 → ${panelBoringPositions.length}개:`, panelBoringPositions);
@@ -751,7 +807,7 @@ export function useLivePanelData() {
                 // 통짜 측판: 전체 보링 그대로
                 const panelDetails = allBoringDetails.filter(detail => detail.y >= 0 && detail.y <= panelHeight);
                 panelBoringPositions = panelDetails.map(detail => detail.y);
-                panelBoringDepthGroups = toBoringDepthGroups(panelDetails, resolveReferenceDepth);
+                panelBoringDepthGroups = toBoringDepthGroups(panelDetails, resolveReferenceDepth, y => y, boringDepthGroupOptions);
                 console.log(`  [BORING] 통짜 측판 "${panel.name}": ${panelBoringPositions.length}개:`, panelBoringPositions);
               }
             }
@@ -1505,7 +1561,22 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       });
       const allBoringPositions = boringResult.positions;
       const allBoringDetails = boringResult.details;
-      const resolveReferenceDepth = createReferenceDepthResolver(modulePanels, moduleData.dimensions.depth);
+      const resolveReferenceDepth = createReferenceDepthResolver(modulePanels, depth);
+      const shelfFrontInsetMm = resolveShelfFrontInsetMm({
+        moduleId: moduleData?.id || placedModule?.moduleId || '',
+        cabinetCategory: moduleData?.category,
+        depthMm: depth,
+      });
+      const resolveBoringFrontInset = createBoringFrontInsetResolver({
+        moduleId: moduleData?.id || placedModule?.moduleId || '',
+        basicThicknessMm,
+        lowerSectionTopOffsetMm: (placedModule as any).lowerSectionTopOffset ?? 0,
+        shelfFrontInsetMm,
+      });
+      const boringDepthGroupOptions = {
+        getSideDepth: () => depth,
+        getFrontInset: resolveBoringFrontInset,
+      };
 
       console.log(`[OPT BORING DEBUG] allBoringPositions=`, allBoringPositions);
 
@@ -1591,12 +1662,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
               // 하부: 절대좌표 <= lowerCutoff 범위
               const lowerDetails = allBoringDetails.filter(detail => detail.y <= lowerCutoff2);
               panelBoringPositions = lowerDetails.map(detail => detail.y);
-              panelBoringDepthGroups = toBoringDepthGroups(lowerDetails, resolveReferenceDepth);
+              panelBoringDepthGroups = toBoringDepthGroups(lowerDetails, resolveReferenceDepth, y => y, boringDepthGroupOptions);
             } else {
               // 상부: 절대좌표 > lowerCutoff 범위, 로컬좌표 = pos - lowerCutoff
               const upperDetails = allBoringDetails.filter(detail => detail.y > lowerCutoff2);
               panelBoringPositions = upperDetails.map(detail => detail.y - lowerCutoff2);
-              panelBoringDepthGroups = toBoringDepthGroups(upperDetails, resolveReferenceDepth, y => y - lowerCutoff2);
+              panelBoringDepthGroups = toBoringDepthGroups(upperDetails, resolveReferenceDepth, y => y - lowerCutoff2, boringDepthGroupOptions);
             }
             panelBoringPositions.sort((a, b) => a - b);
             console.log(`[OPT BORING] 분리 측판 "${panel.name}" (${isLowerSection ? '하부' : '상부'}): allBoringPositions에서 직접 분리 → ${panelBoringPositions.length}개:`, panelBoringPositions);
@@ -1607,7 +1678,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
             console.log(`[OPT BORING] 통짜 측판 - allBoringPositions:`, allBoringPositions);
             const panelDetails = allBoringDetails.filter(detail => detail.y >= 0 && detail.y <= panelHeight);
             panelBoringPositions = panelDetails.map(detail => detail.y);
-            panelBoringDepthGroups = toBoringDepthGroups(panelDetails, resolveReferenceDepth);
+            panelBoringDepthGroups = toBoringDepthGroups(panelDetails, resolveReferenceDepth, y => y, boringDepthGroupOptions);
             console.log(`[OPT BORING] result:`, panelBoringPositions);
           }
 

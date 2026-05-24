@@ -920,13 +920,16 @@ export const calculatePanelDetails = (
             }]
           });
 
-          // 서랍 측판 보링 위치 계산 (DrawerRenderer와 동일)
-          // Y위치: 위/중간/아래 3개, 끝에서 20mm (height 기준)
+          // 서랍 측판 보링 위치: DrawerRenderer와 동일 기준.
+          // 하단 보링 = 바닥판 윗면 + 20mm, 상단 보링 = 측판 상단 - 20mm, 중간은 양 끝의 중앙.
           const drawerEdgeOffsetY = 20;
+          const drawerBottomTopY = basicThickness + 10 + drawerBottomThickness - drawerSideThickness;
+          const drawerLowerBoringY = drawerBottomTopY + drawerEdgeOffsetY;
+          const drawerUpperBoringY = drawerBodyHeight - drawerEdgeOffsetY;
           const drawerBoringYPositions = [
-            drawerEdgeOffsetY, // 아래쪽
-            drawerBodyHeight / 2, // 중간
-            drawerBodyHeight - drawerEdgeOffsetY // 위쪽
+            drawerLowerBoringY,
+            (drawerLowerBoringY + drawerUpperBoringY) / 2,
+            drawerUpperBoringY
           ];
           // X위치: 앞판/뒷판 중간 2개 (width=깊이 기준)
           // DrawerRenderer: frontPanelZ = depth/2 - sideThickness/2 = 앞끝에서 sideThickness/2
@@ -2336,17 +2339,20 @@ export const calculatePanelDetails = (
       // 외부서랍: 앞판 없음 (ExternalDrawerRenderer 주석: "서랍 앞판 없음" — 마이다가 앞면 덮음)
       // 서랍 측판 보링/홈 위치 (키큰장 서랍과 동일 로직)
       const extEdgeOffsetY = 20;
+      const extGroovePositionY = 12; // 바닥판 홈: 측판 하단에서 12mm
+      const extGrooveHeight = backPanelThickness + 1; // 홈 폭 = 바닥판 두께 + 1mm
+      const extBottomTopY = 14 + backPanelThickness;
+      const extLowerBoringY = extBottomTopY + extEdgeOffsetY;
+      const extUpperBoringY = extSideHMm - extEdgeOffsetY;
       const extBoringYPositions = [
-        extEdgeOffsetY,              // 아래쪽 20mm
-        extSideHMm / 2,             // 중간
-        extSideHMm - extEdgeOffsetY  // 위쪽
+        extLowerBoringY,
+        (extLowerBoringY + extUpperBoringY) / 2,
+        extUpperBoringY
       ];
       const extBoringXPositions = [
         drawerSideThickness / 2,                    // 앞쪽 끝에서 7.5mm
         extSideDepthMm - drawerSideThickness / 2    // 뒤쪽 끝에서 7.5mm
       ];
-      const extGroovePositionY = 12; // 바닥판 홈: 측판 하단에서 12mm
-      const extGrooveHeight = backPanelThickness + 1; // 홈 폭 = 바닥판 두께 + 1mm
       extDrawerPanels.push(
         { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
           boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,

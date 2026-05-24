@@ -1,5 +1,17 @@
 import { OptimizedResult } from '../types';
 
+function isFurnitureRightSidePanel(panel: any): boolean {
+  const name = panel?.name || '';
+  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
+}
+
+function resolveFurnitureSideDepthPosition(panel: any, depthPosMm: number): number {
+  const originalWidth = panel.width || 0;
+  return isFurnitureRightSidePanel(panel)
+    ? originalWidth - depthPosMm
+    : depthPosMm;
+}
+
 export class DXFExporter {
   private lines: string[] = [];
   
@@ -414,17 +426,24 @@ export class DXFExporter {
           depthPositionsForY.forEach((depthPosMm: number) => {
             let sx: number, sy: number;
             if (isDrawerSidePanel || isDrawerFrontPanel) {
-              sx = panel.x + boringPosMm;
-              sy = panel.y + depthPosMm;
+              if (panel.rotated) {
+                sx = panel.x + depthPosMm;
+                sy = panel.y + boringPosMm;
+              } else {
+                sx = panel.x + boringPosMm;
+                sy = panel.y + depthPosMm;
+              }
             } else if (panel.rotated) {
               const flippedY = origH - boringPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
               const scX = (origH) / origW;
               const scY = (origW) / origH;
-              sx = panel.x + depthPosMm * scX;
+              sx = panel.x + resolvedDepthPosMm * scX;
               sy = panel.y + flippedY * scY;
             } else {
               const flippedY = origH - boringPosMm;
-              sx = panel.x + depthPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+              sx = panel.x + resolvedDepthPosMm;
               sy = panel.y + flippedY;
             }
             const [dx, dy] = toDxf(sx, sy);

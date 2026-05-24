@@ -379,6 +379,8 @@ function PageInner(){
           // Length = 재단방향(결방향) 치수, Width = 직교 치수
           const panelName = (p.name || '').toLowerCase();
           const isBackPanel = panelName.includes('백패널');
+          const isDrawerSidePanel = panelName.includes('서랍') &&
+            (panelName.includes('좌측판') || panelName.includes('우측판'));
 
           let width: number;
           let length: number;
@@ -387,6 +389,10 @@ function PageInner(){
             // 백패널: 높이(Y축) = Length, 가로(X축) = Width
             length = p.height;
             width = p.width;
+          } else if (isDrawerSidePanel) {
+            // 서랍 측판 패널목록 기준: L=깊이, W=높이, 결방향=가로.
+            length = p.width;
+            width = p.height;
           } else if (p.grain === 'VERTICAL') {
             // 세로 결 패널 (측판, 칸막이, 도어 등): Y축(높이) = Length
             length = p.height;
@@ -398,7 +404,11 @@ function PageInner(){
           }
 
           const isStoneTop = p.material === '인조대리석';
-          const grain: Grain = isBackPanel ? 'H' : isStoneTop ? 'NONE' : (p.grain === 'NONE' ? 'NONE' : 'H');
+          const grain: Grain = isStoneTop || p.grain === 'NONE'
+            ? 'NONE'
+            : p.grain === 'VERTICAL'
+              ? 'V'
+              : 'H';
 
           // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
           // p.material을 우선 존중하고, 누락 시 패널 이름으로 판단
@@ -422,7 +432,7 @@ function PageInner(){
             quantity: p.quantity || 1,
             material: material,
             grain: grain,
-            canRotate: true, // CNC 최적화에서는 기본적으로 회전 가능 (나중에 설정에 따라 조정됨)
+            canRotate: isDrawerSidePanel ? false : true, // 서랍 측판은 실제 측면도 방향 고정
             boringPositions: p.boringPositions, // 보링 Y위치 유지
             boringDepthPositions: p.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
             boringDepthGroups: p.boringDepthGroups,
@@ -542,6 +552,8 @@ function PageInner(){
         // 재단방향(grain) 기반으로 Length/Width 결정
         const panelName = (p.name || '').toLowerCase();
         const isBackPanel = panelName.includes('백패널');
+        const isDrawerSidePanel = panelName.includes('서랍') &&
+          (panelName.includes('좌측판') || panelName.includes('우측판'));
 
         let width: number;
         let length: number;
@@ -549,6 +561,10 @@ function PageInner(){
         if (isBackPanel) {
           length = p.height;
           width = p.width;
+        } else if (isDrawerSidePanel) {
+          // 서랍 측판 패널목록 기준: L=깊이, W=높이, 결방향=가로.
+          length = p.width;
+          width = p.height;
         } else if (p.grain === 'VERTICAL') {
           // 세로 결 패널 (측판, 칸막이, 도어 등): Y축(높이) = Length
           length = p.height;
@@ -560,7 +576,11 @@ function PageInner(){
         }
 
         const isStoneTop = p.material === '인조대리석';
-        const grain: Grain = isBackPanel ? 'H' : isStoneTop ? 'NONE' : (p.grain === 'NONE' ? 'NONE' : 'H');
+        const grain: Grain = isStoneTop || p.grain === 'NONE'
+          ? 'NONE'
+          : p.grain === 'VERTICAL'
+            ? 'V'
+            : 'H';
         // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
         let material = p.material || 'PB';
         if (isStoneTop) {
@@ -589,7 +609,7 @@ function PageInner(){
           quantity: p.quantity || 1,
           material: material,
           grain: grain,
-          canRotate: true,
+          canRotate: isDrawerSidePanel ? false : true,
           boringPositions: p.boringPositions,
           boringDepthPositions: p.boringDepthPositions,
           boringDepthGroups: p.boringDepthGroups,
@@ -961,7 +981,9 @@ function PageInner(){
         cfg.list.forEach(p => {
           const hasG = p.grain && p.grain !== 'NONE';
           const proc = Object.assign({}, p);
-          proc.canRotate = !hasG;
+          const isDrawerSidePanel = proc.label?.includes('서랍') &&
+            (proc.label.includes('좌측판') || proc.label.includes('우측판'));
+          proc.canRotate = isDrawerSidePanel ? false : !hasG;
           const gk = settings.considerMaterial
             ? (proc.material || 'PB') + '_' + (proc.thickness || 18)
             : 'THICKNESS_' + (proc.thickness || 18);
@@ -1641,6 +1663,8 @@ function PageInner(){
                       index={index}
                       isActive={index === currentSheetIndex}
                       onClick={() => setCurrentSheetIndex(index)}
+                      portrait={isVisuallyPortrait}
+                      rotation={viewerRotation}
                     />
                   ))}
                 </div>
@@ -1695,7 +1719,8 @@ function PageInner(){
                         }
                       }}
                       allowRotation={!settings.considerGrain}
-                      rotation={0}
+                      rotation={viewerRotation}
+                      onRotationChange={setViewerRotation}
                       sheetInfo={{
                         currentIndex: currentSheetIndex,
                         totalSheets: optimizationResults.length,
@@ -1723,6 +1748,7 @@ function PageInner(){
                           isActive={index === currentSheetIndex}
                           onClick={() => setCurrentSheetIndex(index)}
                           portrait
+                          rotation={viewerRotation}
                         />
                       ))}
                     </div>

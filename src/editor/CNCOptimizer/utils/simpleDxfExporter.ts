@@ -1,5 +1,17 @@
 import { OptimizedResult } from '../types';
 
+function isFurnitureRightSidePanel(panel: any): boolean {
+  const name = panel?.name || '';
+  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
+}
+
+function resolveFurnitureSideDepthPosition(panel: any, depthPosMm: number): number {
+  const originalWidth = panel.width || 0;
+  return isFurnitureRightSidePanel(panel)
+    ? originalWidth - depthPosMm
+    : depthPosMm;
+}
+
 export class SimpleDXFExporter {
   
   public static exportToDXF(results: OptimizedResult[]): string {
@@ -485,13 +497,19 @@ export class SimpleDXFExporter {
             depthPosForY.forEach((dPosMm: number) => {
               let sx: number, sy: number;
               if (isDrawerSide || isDrawerFront) {
-                sx = panel.x + bPosMm; sy = panel.y + dPosMm;
+                if (panel.rotated) {
+                  sx = panel.x + dPosMm; sy = panel.y + bPosMm;
+                } else {
+                  sx = panel.x + bPosMm; sy = panel.y + dPosMm;
+                }
               } else if (panel.rotated) {
                 const fY = origH - bPosMm;
-                sx = panel.x + dPosMm * (origH / origW);
+                const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, dPosMm);
+                sx = panel.x + resolvedDepthPosMm * (origH / origW);
                 sy = panel.y + fY * (origW / origH);
               } else {
-                sx = panel.x + dPosMm; sy = panel.y + (origH - bPosMm);
+                const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, dPosMm);
+                sx = panel.x + resolvedDepthPosMm; sy = panel.y + (origH - bPosMm);
               }
               addDxfBoring(offsetX + sx, offsetY + sy, 1.5, 2, 4);
             });

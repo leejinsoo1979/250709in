@@ -8,6 +8,7 @@ interface SheetThumbnailProps {
   isActive: boolean;
   onClick: () => void;
   portrait?: boolean;
+  rotation?: number;
 }
 
 export default function SheetThumbnail({
@@ -16,6 +17,7 @@ export default function SheetThumbnail({
   isActive,
   onClick,
   portrait = false,
+  rotation = 0,
 }: SheetThumbnailProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -26,19 +28,17 @@ export default function SheetThumbnail({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // 원본 시트 크기
-    const originalWidth = result.stockPanel.width;
-    const originalHeight = result.stockPanel.height;
-
-    // portrait 모드면 회전 없이 원본 그대로, 아니면 가로로 회전
-    const isPortrait = !portrait && originalHeight > originalWidth;
-    const stockWidth = isPortrait ? originalHeight : originalWidth;
-    const stockHeight = isPortrait ? originalWidth : originalHeight;
+    const stockWidth = result.stockPanel.width;
+    const stockHeight = result.stockPanel.height;
+    const normalizedRotation = ((rotation % 360) + 360) % 360;
+    const isQuarterTurn = normalizedRotation === 90 || normalizedRotation === 270;
+    const visualWidth = isQuarterTurn ? stockHeight : stockWidth;
+    const visualHeight = isQuarterTurn ? stockWidth : stockHeight;
 
     // portrait 모드면 세로 캔버스, 아니면 가로 캔버스
     const canvasWidth = portrait ? 60 : 120;
     const canvasHeight = portrait ? 120 : 60;
-    const scale = Math.min(canvasWidth / stockWidth, canvasHeight / stockHeight);
+    const scale = Math.min(canvasWidth / visualWidth, canvasHeight / visualHeight);
     
     // 고화질을 위한 DPR 적용
     const dpr = window.devicePixelRatio || 1;
@@ -63,11 +63,13 @@ export default function SheetThumbnail({
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // 원장 크기 계산 (중앙 정렬)
-    const sheetWidth = stockWidth * scale;
-    const sheetHeight = stockHeight * scale;
-    const offsetX = (canvasWidth - sheetWidth) / 2;
-    const offsetY = (canvasHeight - sheetHeight) / 2;
+    ctx.save();
+    ctx.translate(canvasWidth / 2, canvasHeight / 2);
+    ctx.rotate((rotation * Math.PI) / 180);
+    ctx.scale(scale, scale);
+
+    const offsetX = -stockWidth / 2;
+    const offsetY = -stockHeight / 2;
 
     // 원장 그림자
     ctx.save();
@@ -75,13 +77,13 @@ export default function SheetThumbnail({
     ctx.shadowBlur = 4;
     ctx.shadowOffsetY = 2;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(offsetX, offsetY, sheetWidth, sheetHeight);
+    ctx.fillRect(offsetX, offsetY, stockWidth, stockHeight);
     ctx.restore();
     
     // 원장 테두리
     ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(offsetX, offsetY, sheetWidth, sheetHeight);
+    ctx.lineWidth = 1 / scale;
+    ctx.strokeRect(offsetX, offsetY, stockWidth, stockHeight);
     
     // 테마 색상 가져오기
     const themeColor = getComputedStyle(document.documentElement)
@@ -90,25 +92,10 @@ export default function SheetThumbnail({
     
     // 패널 그리기
     result.panels.forEach(panel => {
-      let x, y, width, height;
-
-      // 패널이 실제로 시트 위에서 차지하는 크기
-      const placedW = panel.rotated ? panel.height : panel.width;
-      const placedH = panel.rotated ? panel.width : panel.height;
-
-      if (isPortrait) {
-        // 세로형 시트를 가로로 회전: 시트의 x→y, y→x 매핑
-        x = offsetX + panel.y * scale;
-        y = offsetY + (originalWidth - panel.x - placedW) * scale;
-        width = placedH * scale;
-        height = placedW * scale;
-      } else {
-        // 가로형 시트는 그대로
-        x = offsetX + panel.x * scale;
-        y = offsetY + panel.y * scale;
-        width = placedW * scale;
-        height = placedH * scale;
-      }
+      const x = offsetX + panel.x;
+      const y = offsetY + panel.y;
+      const width = panel.rotated ? panel.height : panel.width;
+      const height = panel.rotated ? panel.width : panel.height;
       
       // 패널 배경 (재질별 색상 - MDF는 고유 갈색)
       const materialColors: { [key: string]: { fill: string; stroke: string } } = {
@@ -144,9 +131,10 @@ export default function SheetThumbnail({
       
       // 패널 테두리
       ctx.strokeStyle = colors.stroke;
-      ctx.lineWidth = 0.5;
+      ctx.lineWidth = 0.5 / scale;
       ctx.strokeRect(x, y, width, height);
     });
+    ctx.restore();
     
     // 재질 표시 (좌측 상단)
     ctx.save();
@@ -182,7 +170,7 @@ export default function SheetThumbnail({
       ctx.restore();
     }
 
-  }, [result, portrait]);
+  }, [result, portrait, rotation]);
 
   // Get panel thickness (assuming all panels have same thickness)
   const thickness = result.panels.length > 0 ? result.panels[0].thickness : 18;

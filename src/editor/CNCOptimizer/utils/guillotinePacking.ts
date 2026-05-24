@@ -531,14 +531,18 @@ function extractPanelTypeKey(name: string): string {
  */
 function normalizeOrientation(panels: Rect[], binWidth: number, stripDirection?: 'horizontal' | 'vertical' | 'auto'): Rect[] {
   return panels.map(panel => {
-    // 1) 시트에 안 들어가는 경우 필수 스왑
-    if (panel.width > binWidth && panel.height <= binWidth) {
-      return { ...panel, width: panel.height, height: panel.width, rotated: true };
+    const isDrawerSidePanel = panel.name?.includes('서랍') &&
+      (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+
+    // 1) 결방향 고정 패널은 패킹 정규화에서도 스왑 금지.
+    // 서랍 측판은 패널목록 L=깊이/W=높이, 옵티마이저 X=깊이/Y=높이로 별도 변환된 상태라 여기서 다시 돌리면 보링 좌표가 깨진다.
+    if (panel.canRotate === false || isDrawerSidePanel) {
+      return { ...panel, rotated: false };
     }
 
-    // 2) 결방향 있는 패널(canRotate=false)은 스왑 금지
-    if (panel.canRotate === false) {
-      return { ...panel, rotated: false };
+    // 2) 시트에 안 들어가는 경우 필수 스왑
+    if (panel.width > binWidth && panel.height <= binWidth) {
+      return { ...panel, width: panel.height, height: panel.width, rotated: true };
     }
 
     // 3) L방향 우선(vertical strip): 긴 쪽이 height(L방향=y축)로 가도록

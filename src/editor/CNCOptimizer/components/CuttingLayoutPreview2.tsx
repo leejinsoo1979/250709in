@@ -46,6 +46,18 @@ function getDepthPositionsForBoring(panel: any, boringY: number, fallback: numbe
     : fallback;
 }
 
+function isFurnitureRightSidePanel(panel: any): boolean {
+  const name = panel?.name || '';
+  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
+}
+
+function resolveFurnitureSideDepthPosition(panel: any, depthPosMm: number): number {
+  const originalWidth = panel.width || 0;
+  return isFurnitureRightSidePanel(panel)
+    ? originalWidth - depthPosMm
+    : depthPosMm;
+}
+
 const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   result,
   highlightedPanelId,
@@ -1183,18 +1195,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               // 가구 측판 (rotated=true):
               // Y좌표 뒤집기: 하단 기준 → 상단 기준
               const flippedBoringY = originalHeight - boringPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
               const scaleX = placedWidth / originalWidth;
               const scaleY = placedHeight / originalHeight;
-              boringX = x + depthPosMm * scaleX;
+              boringX = x + resolvedDepthPosMm * scaleX;
               boringY = y + flippedBoringY * scaleY;
-              console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(depthPosMm * scaleX).toFixed(1)}, flippedY=${flippedBoringY.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(flippedBoringY * scaleY).toFixed(1)}`);
+              console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)}, resolved=${resolvedDepthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(resolvedDepthPosMm * scaleX).toFixed(1)}, flippedY=${flippedBoringY.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(flippedBoringY * scaleY).toFixed(1)}`);
             } else {
               // 가구 측판 (rotated=false):
               // Y좌표 뒤집기: 하단 기준 → 상단 기준
               const flippedBoringY = originalHeight - boringPosMm;
-              boringX = x + depthPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+              boringX = x + resolvedDepthPosMm;
               boringY = y + flippedBoringY;
-              console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)} → X, flippedY=${flippedBoringY.toFixed(1)} → Y`);
+              console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)}, resolved=${resolvedDepthPosMm.toFixed(1)} → X, flippedY=${flippedBoringY.toFixed(1)} → Y`);
             }
 
             // 호버/선택 상태 확인
@@ -1588,15 +1602,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             (panel.name?.includes('앞판') || panel.name?.includes('뒷판'));
 
           if (isDrawerSidePanelForGroove) {
-            // ★★★ 서랍 측판: width가 시트의 세로(Y축) ★★★
-            // 원본: width=535(깊이), height=225(높이)
-            // 시트 배치: width 방향 → 세로(Y축), height 방향 → 가로(X축)
-            // 홈: 원본 기준 하단(height 방향 Y=10)에 width(깊이=535) 방향 전체
-            // 시트 기준: 좌측(X=grooveY)에 Y축 방향 전체
-            gx = x + grooveY; // 시트 X 위치 (좌측에서 grooveY=10)
-            gw = grooveH; // 홈 너비 (5mm, 가로 방향)
-            gy = y; // 시트 Y 시작
-            gh = height; // 홈 길이 (시트 세로 전체 = 패널 깊이 535)
+            // 서랍 측판: 패널목록/재단 기준 W=높이, L=깊이.
+            // 홈은 측판 하단에서 grooveY 위치이며, 재단 도면에서는 X축 위치에 세로 전체로 표시한다.
+            gx = x + grooveY;
+            gw = grooveH;
+            gy = y;
+            gh = height;
             console.log(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
           } else if (isDrawerFrontBackPanel) {
             // ★★★ 서랍 앞판/뒷판 ★★★
@@ -2173,19 +2184,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // 서랍 측판 vs 가구 측판 (그리기 로직과 동일하게)
           let boringX: number, boringY: number;
           if (isDrawerSidePanel) {
-            // 서랍 측판: boringPosMm → X축, depthPosMm → Y축
             boringX = x + boringPosMm;
             boringY = y + depthPosMm;
           } else if (panel.rotated) {
             // 가구 측판 (rotated)
+            const flippedBoringY = originalHeight - boringPosMm;
+            const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
             const scaleX = placedWidth / originalWidth;
             const scaleY = placedHeight / originalHeight;
-            boringX = x + depthPosMm * scaleX;
-            boringY = y + boringPosMm * scaleY;
+            boringX = x + resolvedDepthPosMm * scaleX;
+            boringY = y + flippedBoringY * scaleY;
           } else {
             // 가구 측판 (not rotated)
-            boringX = x + depthPosMm;
-            boringY = y + boringPosMm;
+            const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+            boringX = x + resolvedDepthPosMm;
+            boringY = y + (originalHeight - boringPosMm);
           }
 
           const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
@@ -2358,12 +2371,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
             // 시트 좌표로 변환 - 서랍 측판 vs 가구 측판
             let boringX: number, boringY: number;
-            if (panel.rotated) {
+            if (isDrawerSidePanel) {
               boringX = x + boringPosMm;
               boringY = y + depthPosMm;
+            } else if (panel.rotated) {
+              const flippedBoringY = originalHeight - boringPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+              const scaleX = placedWidth / originalWidth;
+              const scaleY = placedHeight / originalHeight;
+              boringX = x + resolvedDepthPosMm * scaleX;
+              boringY = y + flippedBoringY * scaleY;
             } else {
-              boringX = x + depthPosMm;
-              boringY = y + boringPosMm;
+              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+              boringX = x + resolvedDepthPosMm;
+              boringY = y + (originalHeight - boringPosMm);
             }
 
             // 클릭 위치와 보링 위치 간 거리 계산
