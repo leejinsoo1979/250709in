@@ -289,11 +289,15 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       });
     }
 
-    // 5) 천지판/고정선반 측면 보링: Ø5mm, depth=30
-    if (!panel.isDoor && isMprFixedHorizontalPanel(panel.name)) {
-      const sideBoreDepthPositions = panel.sideBoringPositions?.length
-        ? panel.sideBoringPositions
-        : resolveMprFixedPanelDepthPositions(panel.height);
+    // 5) 천지판/고정선반 측면 피스 유도보링: Ø5mm, depth=30
+    // 실제 가공은 평면 홀이 아니라 좌/우 엣지면 수평보링이다.
+    // 패널명 판별이 실패해도 live panel data가 전달한 sideBoringPositions가 있으면 반드시 MPR에 포함한다.
+    const sideBoreDepthPositions = panel.sideBoringPositions?.length
+      ? panel.sideBoringPositions
+      : (!panel.isDoor && isMprFixedHorizontalPanel(panel.name)
+        ? resolveMprFixedPanelDepthPositions(panel.height)
+        : []);
+    if (!panel.isDoor && sideBoreDepthPositions.length > 0) {
       const sideBoreDiameter = panel.sideBoringDiameter || 5;
       const sideBoreDepth = panel.sideBoringDepth || 30;
       sideBoreDepthPositions.forEach((depthPos) => {
