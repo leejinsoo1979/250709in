@@ -12740,7 +12740,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           || mid3D.includes('-4drawer-shelf-') || mid3D.includes('-2drawer-shelf-'));
         const isUpper3D = moduleData.category === 'upper' || mid3D.includes('upper-cabinet');
 
-        const actualDepthMm3D = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
+        // 도어분절 가구는 섹션별 깊이 중 최대값 사용 (sectionDepths > upperSectionDepth/lowerSectionDepth > customDepth)
+        const isDoorSplit3D = mid3D.includes('shelf-split') || mid3D.includes('pantry-cabinet-split');
+        const sectionDepthsArr = (module as any).sectionDepths as number[] | undefined;
+        const maxSectionDepth = (sectionDepthsArr && sectionDepthsArr.length > 0)
+          ? Math.max(...sectionDepthsArr.filter(d => typeof d === 'number' && d > 0))
+          : 0;
+        const actualDepthMm3D = isDoorSplit3D && maxSectionDepth > 0
+          ? maxSectionDepth
+          : (module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth);
         const depth3D = mmToThreeUnits(actualDepthMm3D);
 
         let backZ3D: number;
