@@ -1100,21 +1100,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const upperSectionTopMm = sectionInfo.heightsMm.length >= 2
       ? Math.min(bounds.cabinetHeightMm, sectionInfo.heightsMm[0] + sectionInfo.heightsMm[1])
       : bounds.cabinetHeightMm;
-    const defaultLowerTopGap = isPantrySplit ? 2 : 40;
-    const defaultUpperBottomGap = isPantrySplit ? 1 : 20;
+    const defaultLowerTopGap = isPantrySplit ? -2 : -40;
+    const defaultUpperBottomGap = isPantrySplit ? 1 : -20;
     const lowerTopGap = typeof (mod as any).lowerDoorTopGap === 'number'
-      ? (mod as any).lowerDoorTopGap
+      ? ((mod as any).lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? defaultLowerTopGap : (mod as any).lowerDoorTopGap)
       : defaultLowerTopGap;
     const upperBottomGap = typeof (mod as any).upperDoorBottomGap === 'number'
-      ? (mod as any).upperDoorBottomGap
+      ? ((mod as any).upperDoorBottomGap === 20 && !isPantrySplit ? defaultUpperBottomGap : (mod as any).upperDoorBottomGap)
       : defaultUpperBottomGap;
-    const lowerBottomGap = (mod as any).lowerDoorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+    const lowerBottomGap = (mod as any).lowerDoorBottomGap ?? 0;
     const upperTopGap = (mod as any).upperDoorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-    const lowerDoorTopFromBottom = lowerSectionTopMm - lowerTopGap;
-    const upperDoorBottomFromBottom = isPantrySplit
-      ? lowerSectionTopMm + upperBottomGap
-      : lowerSectionTopMm - upperBottomGap;
-    const lowerDoorBottomAbs = bounds.cabinetBottomAbsMm - lowerBottomGap;
+    const lowerDoorTopFromBottom = lowerSectionTopMm + lowerTopGap;
+    const upperDoorBottomFromBottom = lowerSectionTopMm + upperBottomGap;
+    const lowerDoorBottomAbs = bounds.cabinetBottomAbsMm + lowerBottomGap;
     const lowerDoorTopAbs = bounds.cabinetBottomAbsMm + lowerDoorTopFromBottom;
     const upperDoorBottomAbs = bounds.cabinetBottomAbsMm + upperDoorBottomFromBottom;
     const upperDoorTopAbs = bounds.cabinetBottomAbsMm + upperSectionTopMm - upperTopGap;

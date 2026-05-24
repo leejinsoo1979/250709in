@@ -1165,22 +1165,23 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         : Math.max(0, heightMm - lowerSectionHeightMm);
       const upperSectionTopMm = Math.min(heightMm, lowerSectionHeightMm + upperSectionHeightMm);
       const isPantrySplit = moduleId.includes('pantry-cabinet-split');
-      const defaultLowerDoorTopGapMm = isPantrySplit ? 2 : 40;
-      const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : 20;
-      const lowerDoorTopGapMm = (typeof (currentPlacedModule as any).lowerDoorTopGap === 'number' && (currentPlacedModule as any).lowerDoorTopGap > 0)
-        ? (currentPlacedModule as any).lowerDoorTopGap
+      const defaultLowerDoorTopGapMm = isPantrySplit ? -2 : -40;
+      const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : -20;
+      const rawLowerDoorTopGapMm = (currentPlacedModule as any).lowerDoorTopGap;
+      const rawUpperDoorBottomGapMm = (currentPlacedModule as any).upperDoorBottomGap;
+      const lowerDoorTopGapMm = typeof rawLowerDoorTopGapMm === 'number'
+        ? (rawLowerDoorTopGapMm === (isPantrySplit ? 2 : 40) ? defaultLowerDoorTopGapMm : rawLowerDoorTopGapMm)
         : defaultLowerDoorTopGapMm;
-      const lowerDoorBottomGapMm = (currentPlacedModule as any).lowerDoorBottomGap ?? doorBottomGap ?? 0;
-      const upperDoorBottomGapMm = (typeof (currentPlacedModule as any).upperDoorBottomGap === 'number' && (currentPlacedModule as any).upperDoorBottomGap > 0)
-        ? (currentPlacedModule as any).upperDoorBottomGap
+      const lowerDoorBottomGapMm = (currentPlacedModule as any).lowerDoorBottomGap ?? 0;
+      const upperDoorBottomGapMm = typeof rawUpperDoorBottomGapMm === 'number'
+        ? (rawUpperDoorBottomGapMm === 20 && !isPantrySplit ? defaultUpperDoorBottomGapMm : rawUpperDoorBottomGapMm)
         : defaultUpperDoorBottomGapMm;
       const upperDoorTopGapMm = (currentPlacedModule as any).upperDoorTopGap ?? doorTopGap ?? 0;
-      const lowerDoorHeightMm = Math.max(1, lowerSectionHeightMm - lowerDoorTopGapMm + lowerDoorBottomGapMm);
-      const upperDoorBottomMm = isPantrySplit
-        ? lowerSectionHeightMm + upperDoorBottomGapMm
-        : lowerSectionHeightMm - upperDoorBottomGapMm;
+      const lowerDoorTopMm = lowerSectionHeightMm + lowerDoorTopGapMm;
+      const lowerDoorBottomMm = lowerDoorBottomGapMm;
+      const lowerDoorHeightMm = Math.max(1, lowerDoorTopMm - lowerDoorBottomMm);
+      const upperDoorBottomMm = lowerSectionHeightMm + upperDoorBottomGapMm;
       const upperDoorHeightMm = Math.max(1, upperSectionTopMm - upperDoorTopGapMm - upperDoorBottomMm);
-      const lowerDoorBottomMm = -lowerDoorBottomGapMm;
       const shelfCollisionRanges = allBoringResult.details
         .filter(detail => detail.role === 'movable-shelf')
         .map(detail => ({

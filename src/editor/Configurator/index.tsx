@@ -723,13 +723,13 @@ const Configurator: React.FC = () => {
       if (!mod) return [];
       if (isDoorSplitSettingModule(mod)) {
         const isPantrySplit = (mod.moduleId || '').includes('pantry-cabinet-split');
-        const lowerTopDefault = isPantrySplit ? 2 : 40;
-        const upperBottomDefault = isPantrySplit ? 1 : 20;
-        const lowerTopValue = typeof mod.lowerDoorTopGap === 'number' && mod.lowerDoorTopGap > 0
-          ? mod.lowerDoorTopGap
+        const lowerTopDefault = isPantrySplit ? -2 : -40;
+        const upperBottomDefault = isPantrySplit ? 1 : -20;
+        const lowerTopValue = typeof mod.lowerDoorTopGap === 'number'
+          ? (mod.lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? lowerTopDefault : mod.lowerDoorTopGap)
           : lowerTopDefault;
-        const upperBottomValue = typeof mod.upperDoorBottomGap === 'number' && mod.upperDoorBottomGap > 0
-          ? mod.upperDoorBottomGap
+        const upperBottomValue = typeof mod.upperDoorBottomGap === 'number'
+          ? (mod.upperDoorBottomGap === 20 && !isPantrySplit ? upperBottomDefault : mod.upperDoorBottomGap)
           : upperBottomDefault;
         return [
           {
@@ -739,7 +739,7 @@ const Configurator: React.FC = () => {
             topField: 'lowerDoorTopGap' as DoorGapField,
             bottomField: 'lowerDoorBottomGap' as DoorGapField,
             topValue: lowerTopValue,
-            bottomValue: mod.lowerDoorBottomGap ?? (mod.doorBottomGap ?? 0),
+            bottomValue: mod.lowerDoorBottomGap ?? 0,
             category: 'lower' as const,
             splitPart: 'lower' as const
           },

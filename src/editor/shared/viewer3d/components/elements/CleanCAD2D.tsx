@@ -8976,22 +8976,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ? sideSectionHeights[0]
                       : (typeof customLowerH === 'number' && customLowerH > 0)
                         ? customLowerH : defaultLowerSecTopMm;
-                    const defaultLowerDoorTopGapVal = isPantrySplitDim ? 2 : 40;
-                    const defaultUpperDoorBottomGapVal = isPantrySplitDim ? 1 : 20;
+                    const defaultLowerDoorTopGapVal = isPantrySplitDim ? -2 : -40;
+                    const defaultUpperDoorBottomGapVal = isPantrySplitDim ? 1 : -20;
                     const lowerDoorTopGapVal = typeof (doorModule as any).lowerDoorTopGap === 'number'
-                      ? (doorModule as any).lowerDoorTopGap
+                      ? ((doorModule as any).lowerDoorTopGap === (isPantrySplitDim ? 2 : 40) ? defaultLowerDoorTopGapVal : (doorModule as any).lowerDoorTopGap)
                       : defaultLowerDoorTopGapVal;
                     const upperDoorBottomGapVal = typeof (doorModule as any).upperDoorBottomGap === 'number'
-                      ? (doorModule as any).upperDoorBottomGap
+                      ? ((doorModule as any).upperDoorBottomGap === 20 && !isPantrySplitDim ? defaultUpperDoorBottomGapVal : (doorModule as any).upperDoorBottomGap)
                       : defaultUpperDoorBottomGapVal;
-                    const lowerDoorBottomGapVal = (doorModule as any).lowerDoorBottomGap ?? doorBottomGapVal;
+                    const lowerDoorBottomGapVal = (doorModule as any).lowerDoorBottomGap ?? 0;
                     const upperDoorTopGapVal = (doorModule as any).upperDoorTopGap ?? doorTopGapVal;
-                    const lowerDoorTopFromBottom = lowerSecTopMm - lowerDoorTopGapVal;
-                    const upperDoorBottomFromBottom = isPantrySplitDim
-                      ? lowerSecTopMm + upperDoorBottomGapVal
-                      : lowerSecTopMm - upperDoorBottomGapVal;
-                    // 하부도어: 상단 = lowerSecTop - (현관장 40 / 팬트리 1.5)
-                    const lowerDoorBottomAbs = cabinetBottomAbsS - (lowerDoorBottomGapVal || 0);
+                    const lowerDoorTopFromBottom = lowerSecTopMm + lowerDoorTopGapVal;
+                    const upperDoorBottomFromBottom = lowerSecTopMm + upperDoorBottomGapVal;
+                    const lowerDoorBottomAbs = cabinetBottomAbsS + (lowerDoorBottomGapVal || 0);
                     const lowerDoorTopAbs = cabinetBottomAbsS + lowerDoorTopFromBottom;
                     const lowerDoorH = lowerDoorTopAbs - lowerDoorBottomAbs;
                     // 상부도어: 하단 = lowerSecTop ± (현관장 -20 / 팬트리 +1.5)

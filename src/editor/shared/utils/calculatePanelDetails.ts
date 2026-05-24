@@ -1620,23 +1620,21 @@ export const calculatePanelDetails = (
       const upperSectionTopMm = customUpperSectionHeightMm !== undefined
         ? Math.min(height, lowerSectionTopMm + customUpperSectionHeightMm)
         : height;
-      const defaultLowerDoorTopGapMm = isPantryDoorSplitModule ? 2 : 40;
-      const defaultUpperDoorBottomGapMm = isPantryDoorSplitModule ? 1 : 20;
+      const defaultLowerDoorTopGapMm = isPantryDoorSplitModule ? -2 : -40;
+      const defaultUpperDoorBottomGapMm = isPantryDoorSplitModule ? 1 : -20;
       const effectiveLowerDoorTopGapMm = typeof splitDoorGaps?.lowerDoorTopGap === 'number'
-        ? splitDoorGaps.lowerDoorTopGap
+        ? (splitDoorGaps.lowerDoorTopGap === (isPantryDoorSplitModule ? 2 : 40) ? defaultLowerDoorTopGapMm : splitDoorGaps.lowerDoorTopGap)
         : defaultLowerDoorTopGapMm;
       const effectiveUpperDoorBottomGapMm = typeof splitDoorGaps?.upperDoorBottomGap === 'number'
-        ? splitDoorGaps.upperDoorBottomGap
+        ? (splitDoorGaps.upperDoorBottomGap === 20 && !isPantryDoorSplitModule ? defaultUpperDoorBottomGapMm : splitDoorGaps.upperDoorBottomGap)
         : defaultUpperDoorBottomGapMm;
-      const effectiveLowerDoorBottomGapMm = splitDoorGaps?.lowerDoorBottomGap ?? doorBottomGap ?? 0;
+      const effectiveLowerDoorBottomGapMm = splitDoorGaps?.lowerDoorBottomGap ?? 0;
       const effectiveUpperDoorTopGapMm = splitDoorGaps?.upperDoorTopGap ?? doorTopGap ?? 0;
-      const lowerDoorTopMm = lowerSectionTopMm - effectiveLowerDoorTopGapMm;
-      const upperDoorBottomMm = isPantryDoorSplitModule
-        ? lowerSectionTopMm + effectiveUpperDoorBottomGapMm
-        : lowerSectionTopMm - effectiveUpperDoorBottomGapMm;
-      const lowerDoorH = lowerDoorTopMm + effectiveLowerDoorBottomGapMm;
+      const lowerDoorTopMm = lowerSectionTopMm + effectiveLowerDoorTopGapMm;
+      const upperDoorBottomMm = lowerSectionTopMm + effectiveUpperDoorBottomGapMm;
+      const lowerDoorBottomMm = effectiveLowerDoorBottomGapMm;
+      const lowerDoorH = lowerDoorTopMm - lowerDoorBottomMm;
       const upperDoorH = upperSectionTopMm - effectiveUpperDoorTopGapMm - upperDoorBottomMm;
-      const lowerDoorBottomMm = -effectiveLowerDoorBottomGapMm;
 
       bracketHingeYPositions = [];
 
