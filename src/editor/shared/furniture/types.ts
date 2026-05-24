@@ -153,6 +153,8 @@ export interface PlacedModule {
   glassDrawerOffsetMm?: number; // 유리장 서랍 영역(측판+바닥판+서랍2단)의 가구 바닥 기준 위치 (mm, 기본 242)
   insertFrontInsetMm?: number; // 키큰장찬넬 전면 프레임 안쪽 들임 (mm, 0=가구 측면과 라인 일치, 기본 18)
   upperShelfTopGap?: number; // 상부 안전선반 윗면 ~ 상부 섹션 상판 아랫면 간격 (mm)
+  additionalDowelBoringsEnabled?: boolean; // 이동식 선반 기준 상하 다보 보링 추가 여부
+  additionalDowelBoringCount?: number; // 이동식 선반 기준 위/아래 각각 추가할 다보 보링 개수
   cabinetBodyHeight?: number; // 하부장 몸통 높이 (mm, undefined = 기본값 785, 범위 760~800)
   freeLeftGap?: number;      // 자유배치 노서라운드 좌측 이격거리 (mm)
   freeRightGap?: number;     // 자유배치 노서라운드 우측 이격거리 (mm)

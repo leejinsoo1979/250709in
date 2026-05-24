@@ -1439,6 +1439,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       sections,
       totalHeightMm: cabinetHeightMm,
       basicThicknessMm,
+      additionalDowelBorings: {
+        enabled: !!placedModuleForCorner?.additionalDowelBoringsEnabled,
+        count: placedModuleForCorner?.additionalDowelBoringCount ?? 0,
+        spacingMm: 32,
+      },
     });
     const boringDetails = isDirectDowelShelf
       ? [
@@ -1451,6 +1456,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           cabinetHeightMm,
           basicThicknessMm,
           sections,
+          additionalDowelBorings: {
+            enabled: !!placedModuleForCorner?.additionalDowelBoringsEnabled,
+            count: placedModuleForCorner?.additionalDowelBoringCount ?? 0,
+            spacingMm: 32,
+          },
         }),
       ].sort((a, b) => a.y - b.y)
       : baseBoring.details;

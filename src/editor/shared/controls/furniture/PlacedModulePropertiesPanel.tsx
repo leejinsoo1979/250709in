@@ -3716,10 +3716,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
                         // 키큰장찬넬: 슬롯 배치여도 자유배치처럼 좌측 고정 / 우측으로만 확장
                         const isInsertFrameWidth = typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
+                        const isDummyWidth = typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('dummy');
 
                         if (isSlotMode && !isInsertFrameWidth && currentPlacedModule) {
                           // 슬롯 모드: adjustSlotWidth 사용
-                          if (!isNaN(val) && val >= 200 && currentPlacedModule.slotIndex !== undefined) {
+                          const minWidth = isDummyWidth ? 100 : 200;
+                          if (!isNaN(val) && val >= minWidth && currentPlacedModule.slotIndex !== undefined) {
                             // max 검증: internalWidth - 다른 고정합 - 남은슬롯×200
                             const { adjustSlotWidth } = useFurnitureStore.getState();
                             adjustSlotWidth(currentPlacedModule.id, val);
@@ -3905,12 +3907,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           e.preventDefault();
                           const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
                           const isInsertFrameKey = typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
+                          const isDummyWidth = typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('dummy');
                           const freshMod = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule?.id);
 
                           if (isSlotMode && !isInsertFrameKey && currentPlacedModule && freshMod) {
                             // 슬롯 모드: adjustSlotWidth 사용
                             const curW = freshMod.slotCustomWidth ?? freshMod.customWidth ?? moduleData.dimensions.width;
-                            const next = Math.max(200, curW + (e.key === 'ArrowUp' ? 1 : -1));
+                            const minWidth = isDummyWidth ? 100 : 200;
+                            const next = Math.max(minWidth, curW + (e.key === 'ArrowUp' ? 1 : -1));
                             setFreeWidthInput(next.toString());
                             const { adjustSlotWidth } = useFurnitureStore.getState();
                             adjustSlotWidth(currentPlacedModule.id, next);
@@ -7890,6 +7894,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
               }
             };
+            const additionalDowelEnabled = !!(currentPlacedModule as any).additionalDowelBoringsEnabled;
+            const additionalDowelCount = Math.max(1, Math.min(20, Math.round((currentPlacedModule as any).additionalDowelBoringCount ?? 1)));
+            const updateAdditionalDowelCount = (nextCount: number) => {
+              updatePlacedModule(currentPlacedModule.id, {
+                additionalDowelBoringsEnabled: true,
+                additionalDowelBoringCount: Math.max(1, Math.min(20, Math.round(nextCount || 1))),
+              } as any);
+            };
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>선반 설정</h5>
@@ -7900,6 +7912,50 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <span style={knobStyle} />
                     </button>
                     <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>{shelfPresent ? '있음' : '없음'}</span>
+                  </div>
+                )}
+                {shelfPresent && (
+                  <div style={{ padding: '8px', background: 'var(--theme-background)', border: '1px solid var(--theme-border)', borderRadius: '4px', marginBottom: '10px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
+                      <span>다보보링 추가</span>
+                      <input
+                        type="checkbox"
+                        checked={additionalDowelEnabled}
+                        onChange={(e) => {
+                          updatePlacedModule(currentPlacedModule.id, {
+                            additionalDowelBoringsEnabled: e.target.checked,
+                            additionalDowelBoringCount: (currentPlacedModule as any).additionalDowelBoringCount ?? 1,
+                          } as any);
+                        }}
+                      />
+                    </label>
+                    {additionalDowelEnabled && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginTop: '8px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>상하 각각 32mm 간격</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <button
+                            type="button"
+                            onClick={() => updateAdditionalDowelCount(additionalDowelCount - 1)}
+                            disabled={additionalDowelCount <= 1}
+                            style={{ width: '24px', height: '24px', border: '1px solid var(--theme-border)', borderRadius: '4px', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', cursor: additionalDowelCount <= 1 ? 'not-allowed' : 'pointer' }}
+                          >−</button>
+                          <input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={additionalDowelCount}
+                            onChange={(e) => updateAdditionalDowelCount(parseInt(e.target.value, 10) || 1)}
+                            style={{ width: '48px', height: '24px', textAlign: 'center', boxSizing: 'border-box', border: '1px solid var(--theme-border)', borderRadius: '4px', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', fontSize: '12px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => updateAdditionalDowelCount(additionalDowelCount + 1)}
+                            disabled={additionalDowelCount >= 20}
+                            style={{ width: '24px', height: '24px', border: '1px solid var(--theme-border)', borderRadius: '4px', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', cursor: additionalDowelCount >= 20 ? 'not-allowed' : 'pointer' }}
+                          >+</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {(!isLowerHalfCabinet || shelfPresent) && (isSingleSection

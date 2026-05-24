@@ -1024,6 +1024,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       sections,
       heightInThreeUnits: effectiveHeightMm / 100,
       basicThicknessInThreeUnits: basicThickness,
+      additionalDowelBorings: {
+        enabled: !!currentPlacedModule?.additionalDowelBoringsEnabled,
+        count: currentPlacedModule?.additionalDowelBoringCount ?? 0,
+        spacingMm: 32,
+      },
     });
 
     const sectionRanges: Array<{ start: number; end: number }> = [];
@@ -1117,6 +1122,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     basicThickness,
     depth,
     height,
+    currentPlacedModule?.additionalDowelBoringCount,
+    currentPlacedModule?.additionalDowelBoringsEnabled,
     mmToThreeUnits,
     modelConfig,
     furnitureId,

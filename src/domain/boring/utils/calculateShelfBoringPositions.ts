@@ -18,10 +18,20 @@ export interface CalculateShelfBoringPositionsParams {
   totalHeightMm: number;
   /** 기본 패널 두께 (mm), 보통 18mm */
   basicThicknessMm: number;
+  /** 이동식 선반 기준 상하 추가 다보 보링 */
+  additionalDowelBorings?: AdditionalDowelBoringOptions;
 }
 
-export type ShelfBoringPositionType = 'fixed-panel' | 'movable-shelf';
-export type ShelfBoringPositionRole = 'bottom-panel' | 'top-panel' | 'section-divider' | 'movable-shelf';
+export interface AdditionalDowelBoringOptions {
+  enabled?: boolean;
+  /** 기준 선반 위/아래 각각 추가할 보링 개수 */
+  count?: number;
+  /** 보링 간격(mm), 기본 32 */
+  spacingMm?: number;
+}
+
+export type ShelfBoringPositionType = 'fixed-panel' | 'movable-shelf' | 'additional-dowel';
+export type ShelfBoringPositionRole = 'bottom-panel' | 'top-panel' | 'section-divider' | 'movable-shelf' | 'additional-dowel';
 
 export interface ShelfBoringPositionDetail {
   /** 가구 바닥 기준 보링 위치 (mm) */
@@ -66,7 +76,7 @@ export interface ShelfBoringPositionsResult {
 export function calculateShelfBoringPositions(
   params: CalculateShelfBoringPositionsParams
 ): ShelfBoringPositionsResult {
-  const { sections, totalHeightMm, basicThicknessMm } = params;
+  const { sections, totalHeightMm, basicThicknessMm, additionalDowelBorings } = params;
 
   if (!sections || sections.length === 0) {
     return {
@@ -80,6 +90,10 @@ export function calculateShelfBoringPositions(
   }
 
   const halfThicknessMm = basicThicknessMm / 2; // 패널 중심에서 상/하면까지의 거리
+  const additionalDowelCount = additionalDowelBorings?.enabled
+    ? Math.max(0, Math.min(20, Math.round(additionalDowelBorings.count ?? 0)))
+    : 0;
+  const additionalDowelSpacingMm = Math.max(1, Math.round(additionalDowelBorings?.spacingMm ?? 32));
   const shelves: number[] = [];
   const sectionDividers: number[] = [];
   const details: ShelfBoringPositionDetail[] = [];
@@ -130,6 +144,18 @@ export function calculateShelfBoringPositions(
         role: 'movable-shelf',
         roleIndex: shelfDetailIndex++,
       });
+
+      for (let step = 1; step <= additionalDowelCount; step += 1) {
+        const offset = additionalDowelSpacingMm * step;
+        [shelfBoringY - offset, shelfBoringY + offset].forEach(extraY => {
+          if (extraY <= 0 || extraY >= totalHeightMm) return;
+          details.push({
+            y: extraY,
+            type: 'additional-dowel',
+            role: 'additional-dowel',
+          });
+        });
+      }
     });
 
     // 섹션 구분 패널 (마지막 섹션이 아닌 경우)
@@ -167,15 +193,27 @@ export function calculateShelfBoringPositions(
   details.forEach(detail => {
     const key = Math.round(detail.y * 1000) / 1000;
     const existing = uniqueDetailsMap.get(key);
-    uniqueDetailsMap.set(key, {
+    const mergedType: ShelfBoringPositionType = existing?.type === 'fixed-panel' || detail.type === 'fixed-panel'
+      ? 'fixed-panel'
+      : existing?.type === 'movable-shelf' || detail.type === 'movable-shelf'
+        ? 'movable-shelf'
+        : 'additional-dowel';
+    const mergedRole: ShelfBoringPositionRole = existing?.type === 'fixed-panel'
+      ? existing.role
+      : detail.role;
+    const mergedRoleIndex = existing?.type === 'fixed-panel'
+      ? existing.roleIndex
+      : detail.roleIndex;
+    const mergedDetail: ShelfBoringPositionDetail = {
       y: key,
       // 같은 위치가 겹치면 고정 패널을 우선한다.
-      type: existing?.type === 'fixed-panel' || detail.type === 'fixed-panel'
-        ? 'fixed-panel'
-        : 'movable-shelf',
-      role: existing?.type === 'fixed-panel' ? existing.role : detail.role,
-      roleIndex: existing?.type === 'fixed-panel' ? existing.roleIndex : detail.roleIndex,
-    });
+      type: mergedType,
+      role: mergedRole,
+    };
+    if (mergedRoleIndex !== undefined) {
+      mergedDetail.roleIndex = mergedRoleIndex;
+    }
+    uniqueDetailsMap.set(key, mergedDetail);
   });
   const uniqueDetails = Array.from(uniqueDetailsMap.values()).sort((a, b) => a.y - b.y);
   const uniquePositions = uniqueDetails.map(detail => detail.y);
@@ -206,8 +244,9 @@ export function calculateShelfBoringPositionsFromThreeUnits(params: {
   sections: SectionConfig[];
   heightInThreeUnits: number;
   basicThicknessInThreeUnits: number;
+  additionalDowelBorings?: AdditionalDowelBoringOptions;
 }): ShelfBoringPositionsResult {
-  const { sections, heightInThreeUnits, basicThicknessInThreeUnits } = params;
+  const { sections, heightInThreeUnits, basicThicknessInThreeUnits, additionalDowelBorings } = params;
 
   // Three.js 단위를 mm로 변환 (1 Three.js 단위 = 100mm)
   const totalHeightMm = heightInThreeUnits * 100;
@@ -217,6 +256,7 @@ export function calculateShelfBoringPositionsFromThreeUnits(params: {
     sections,
     totalHeightMm,
     basicThicknessMm,
+    additionalDowelBorings,
   });
 }
 

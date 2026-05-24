@@ -48,6 +48,30 @@ describe('calculateShelfBoringPositions', () => {
     ]);
   });
 
+  it('adds upper and lower dowel borings at 32mm pitch from movable shelves', () => {
+    const result = calculateShelfBoringPositions({
+      sections: buildSingleShelfSection(100),
+      totalHeightMm: 218,
+      basicThicknessMm: 18,
+      additionalDowelBorings: {
+        enabled: true,
+        count: 2,
+        spacingMm: 32
+      }
+    });
+
+    expect(result.shelves).toEqual([109]);
+    expect(result.details).toEqual([
+      { y: 9, type: 'fixed-panel', role: 'bottom-panel' },
+      { y: 45, type: 'additional-dowel', role: 'additional-dowel' },
+      { y: 77, type: 'additional-dowel', role: 'additional-dowel' },
+      { y: 109, type: 'movable-shelf', role: 'movable-shelf', roleIndex: 0 },
+      { y: 141, type: 'additional-dowel', role: 'additional-dowel' },
+      { y: 173, type: 'additional-dowel', role: 'additional-dowel' },
+      { y: 209, type: 'fixed-panel', role: 'top-panel' }
+    ]);
+  });
+
   it('uses even shelf positions when a shelf section only has count', () => {
     const result = calculateShelfBoringPositions({
       sections: [{

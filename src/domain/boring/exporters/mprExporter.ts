@@ -228,6 +228,42 @@ WI="${wi}"
 `;
 }
 
+function isRightSidePanel(panel: PanelBoringData): boolean {
+  return panel.panelType === 'side-right'
+    || panel.panelName.includes('우측판')
+    || panel.panelName.includes('우측');
+}
+
+function generateSideNotchPocket(
+  panel: PanelBoringData,
+  notch: { y: number; z: number; fromBottom: number },
+  index: number
+): string {
+  const notchHeight = Math.max(0, Math.min(notch.y, panel.height));
+  const notchDepth = Math.max(0, Math.min(notch.z, panel.width));
+  if (notchHeight <= 0 || notchDepth <= 0) return '';
+
+  const isRight = isRightSidePanel(panel);
+  const startX = isRight ? Math.max(0, panel.width - notchDepth) : 0;
+  const startY = Math.max(0, Math.min(notch.fromBottom, panel.height - notchHeight));
+  const centerX = startX + notchDepth / 2;
+  const centerY = startY + notchHeight / 2;
+
+  return `<105 \\Ktasche\\
+KM="측판 따내기 ${index + 1}: ${formatMprNumber(notchDepth)} x ${formatMprNumber(notchHeight)}, 바닥기준 ${formatMprNumber(notch.fromBottom)}"
+XA="${centerX.toFixed(1)}"
+YA="${centerY.toFixed(1)}"
+ZA="T"
+LA="${formatMprNumber(notchDepth)}"
+BR="${formatMprNumber(notchHeight)}"
+TI="T"
+AN="1"
+MI="0"
+??="ktasche=1  "
+
+`;
+}
+
 // ============================================
 // 메인 내보내기 함수
 // ============================================
@@ -261,6 +297,10 @@ export function generateSinglePanelMPR(
     } else {
       mpr += generateBohrHoriz(boring);
     }
+  });
+
+  panel.sideNotches?.forEach((notch, index) => {
+    mpr += generateSideNotchPocket(panel, notch, index);
   });
 
   // 파일 끝 마커

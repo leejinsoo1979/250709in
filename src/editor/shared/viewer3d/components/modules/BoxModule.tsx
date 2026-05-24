@@ -1720,6 +1720,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               isFloating={spaceInfo?.baseConfig?.placementType === 'float'}
               baseHeight={spaceInfo?.baseConfig?.height || 65}
               baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              frontZInset={moduleData.id.includes('dummy-lower') ? 65 : 0}
               viewMode={viewMode}
             />
           </group>

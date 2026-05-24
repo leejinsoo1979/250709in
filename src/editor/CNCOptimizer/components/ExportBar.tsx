@@ -331,6 +331,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       material: panel.material || 'PB',
       grain: panel.grain === 'HORIZONTAL' ? 'H' : panel.grain === 'VERTICAL' ? 'V' : 'N',
       borings,
+      sideNotches: panel.sideNotches,
     };
   };
 

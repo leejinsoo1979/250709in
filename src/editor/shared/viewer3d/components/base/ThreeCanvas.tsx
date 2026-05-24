@@ -12,6 +12,13 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useAuth } from '@/auth/AuthProvider';
 import { sceneHolder } from '../../sceneHolder';
 import { calculateInternalSpace } from '../../utils/geometry';
+import {
+  buildFurniturePresetUpdates,
+  collectFurniturePresetProps,
+  getApplicableFurniturePresetGroups,
+  getFurniturePresetCategory,
+  getFurniturePresetCategoryLabel,
+} from '@/editor/shared/controls/furniture/furniturePresetTransfer';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -32,9 +39,6 @@ const CameraQuaternionSync: React.FC = () => {
   return null;
 };
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
-
-// 최근 복사한 가구 ID를 전역 수준에서 유지해 Ctrl+V 붙여넣기 시 활용
-let lastCopiedFurnitureId: string | null = null;
 const ALLOWED_PLACEMENT_WALL_EMAIL = 'sbbc212@gmail.com';
 
 
@@ -1015,7 +1019,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         return;
       }
 
-      // Ctrl+C: 선택된 가구를 클립보드에 저장 (즉시 배치 없이 복사만 수행)
+      // Ctrl+C / Cmd+C: 선택된 가구의 속성 저장
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyC') {
         const furnitureState = useFurnitureStore.getState();
         const selectedFurnitureId = uiStateSnapshot.selectedFurnitureId
@@ -1025,57 +1029,74 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         if (selectedFurnitureId) {
           const selectedFurniture = furnitureState.placedModules.find(m => m.id === selectedFurnitureId);
           if (selectedFurniture?.isLocked) {
-            console.log('🔒 잠긴 가구는 복제할 수 없습니다');
+            console.log('🔒 잠긴 가구는 속성을 저장할 수 없습니다');
             return;
           }
 
           e.preventDefault();
           e.stopPropagation();
 
-          lastCopiedFurnitureId = selectedFurnitureId;
-          console.log('📋 가구 복사됨 (키보드):', lastCopiedFurnitureId);
+          if (!selectedFurniture) {
+            console.log('📋 속성 저장 실패: 선택된 가구를 찾을 수 없습니다');
+            return;
+          }
+
+          const category = getFurniturePresetCategory(selectedFurniture);
+          if (!category) {
+            console.log('📋 속성 저장 실패: 가구 카테고리를 찾을 수 없습니다');
+            return;
+          }
+
+          const props = collectFurniturePresetProps(selectedFurniture);
+          useUIStore.getState().setFurniturePreset(category, props);
+          console.log(`📋 ${getFurniturePresetCategoryLabel(category)} 속성 저장됨 (키보드):`, selectedFurniture.id);
         }
       }
 
-      // Ctrl+V: 마지막으로 복사한 가구 붙여넣기 (없으면 현재 선택 가구 사용)
+      // Ctrl+V / Cmd+V: 선택된 가구에 저장된 속성 이식
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV') {
         const furnitureState = useFurnitureStore.getState();
         const uiState = useUIStore.getState();
-        const preferredIds = [
-          uiState.selectedFurnitureId,
-          furnitureState.selectedFurnitureId,
-          furnitureState.selectedPlacedModuleId,
-          lastCopiedFurnitureId
-        ].filter((id): id is string => !!id);
+        const selectedFurnitureId = uiState.selectedFurnitureId
+          || furnitureState.selectedFurnitureId
+          || furnitureState.selectedPlacedModuleId;
 
-        if (preferredIds.length === 0) {
-          console.log('📋 붙여넣기 실패: 복사된 가구가 없습니다');
+        if (!selectedFurnitureId) {
+          console.log('📋 속성 이식 실패: 선택된 가구가 없습니다');
           return;
         }
 
-        const targetFurniture = preferredIds
-          .map(id => furnitureState.placedModules.find(m => m.id === id))
-          .find((module): module is typeof furnitureState.placedModules[number] => !!module);
-
+        const targetFurniture = furnitureState.placedModules.find(m => m.id === selectedFurnitureId);
         if (!targetFurniture) {
-          console.log('📋 붙여넣기 실패: 대상 가구를 찾을 수 없습니다');
+          console.log('📋 속성 이식 실패: 대상 가구를 찾을 수 없습니다');
           return;
         }
 
         if (targetFurniture.isLocked) {
-          console.log('🔒 잠긴 가구는 복제할 수 없습니다');
+          console.log('🔒 잠긴 가구에는 속성을 이식할 수 없습니다');
           return;
         }
 
         e.preventDefault();
         e.stopPropagation();
 
-        lastCopiedFurnitureId = targetFurniture.id;
-        console.log('📋 가구 붙여넣기:', targetFurniture.id);
+        const category = getFurniturePresetCategory(targetFurniture);
+        const preset = category ? uiState.furniturePresets[category] : undefined;
+        if (!category || !preset) {
+          console.log('📋 속성 이식 실패: 저장된 속성이 없습니다');
+          return;
+        }
 
-        window.dispatchEvent(new CustomEvent('duplicate-furniture', {
-          detail: { furnitureId: targetFurniture.id }
-        }));
+        const applicableGroups = getApplicableFurniturePresetGroups(preset.props, targetFurniture, category);
+        const selectedGroups = applicableGroups.map(g => g.id);
+        const updates = buildFurniturePresetUpdates(preset.props, selectedGroups, targetFurniture);
+        if (Object.keys(updates).length === 0) {
+          console.log('📋 속성 이식 실패: 적용할 속성이 없습니다');
+          return;
+        }
+
+        furnitureState.updatePlacedModule(targetFurniture.id, updates as any);
+        console.log(`📋 ${getFurniturePresetCategoryLabel(category)} 속성 이식됨 (키보드):`, targetFurniture.id);
       }
     };
 

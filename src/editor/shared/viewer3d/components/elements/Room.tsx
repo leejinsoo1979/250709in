@@ -5238,7 +5238,7 @@ const Room: React.FC<RoomProps> = ({
                     const effectiveTotalFrameHeightMM = Math.max(0, totalFrameHeightMM - modTopFrameGapMM);
                     const modFrameHeight = mmToThreeUnits(effectiveTotalFrameHeightMM);
                     const modTopGapThreeUnits = mmToThreeUnits(modTopFrameGapMM);
-                    const shelfSplitSections = modMidShoe.includes('shelf-split') && Array.isArray((mod as any).customSections)
+                    const shelfSplitSections = modIdForTopFrame.includes('shelf-split') && Array.isArray((mod as any).customSections)
                       ? (mod as any).customSections
                       : null;
                     const shelfSplitTopFrameBottomMm = shelfSplitSections && shelfSplitSections.length >= 2
@@ -5272,7 +5272,7 @@ const Room: React.FC<RoomProps> = ({
                     const upperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     // 신발장 + 유리장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상단몰딩은 앞면 기준
-                    const modMidShoe = mod.moduleId || '';
+                    const modMidShoe = modIdForTopFrame;
                     const isShoeMod = (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-') || modMidShoe.includes('glass-cabinet'));
                     let shoeFrameZ: number | null = null;
                     if (isShoeMod) {

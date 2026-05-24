@@ -100,6 +100,7 @@ export interface PanelBoringData {
   material: string;    // 재질
   grain: 'H' | 'V' | 'N';  // 결방향 (H=가로, V=세로, N=없음)
   borings: Boring[];
+  sideNotches?: Array<{ y: number; z: number; fromBottom: number }>; // 측판 목찬넬/프레임 따내기
   isMirrored?: boolean;    // 미러링 여부
   mirrorSourceId?: string; // 미러링 원본 ID
 }

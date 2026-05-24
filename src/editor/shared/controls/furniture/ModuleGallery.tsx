@@ -1172,12 +1172,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = lowerMods.filter(m => {
         const id = m.id;
+        const isLowerDummy = /^single-dummy-lower-100(?:\.0+)?$/.test(id);
         const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
         const isTopDown = id.includes('top-down');
+        if (isLowerDummy) return true;
         if (kitchenSubCategory === 'door-raise') return isDoorRaise;
         if (kitchenSubCategory === 'top-down') return isTopDown;
         // 기본장 = 도어올림/상판내림 제외한 나머지
-        return !isDoorRaise && !isTopDown;
+        return !isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-');
       });
     }
   } else if (moduleCategory === 'island') {
@@ -1185,11 +1187,13 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
     categoryModules = lowerMods.filter(m => {
       const id = m.id;
+      const isLowerDummy = /^single-dummy-lower-100(?:\.0+)?$/.test(id);
       const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
       const isTopDown = id.includes('top-down');
+      if (isLowerDummy) return true;
       if (kitchenSubCategory === 'door-raise') return isDoorRaise;
       if (kitchenSubCategory === 'top-down') return isTopDown;
-      return !isDoorRaise && !isTopDown;
+      return !isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-');
     });
   } else {
     // 키큰장(전체형) 모듈 (기존 'tall' 호환) — 주방 전용 모듈 제외 (유리장 포함)

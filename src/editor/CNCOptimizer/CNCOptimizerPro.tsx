@@ -116,6 +116,11 @@ function PageInner(){
         sections: moduleData.modelConfig.sections,
         totalHeightMm: height,
         basicThicknessMm,
+        additionalDowelBorings: {
+          enabled: !!placedModule.additionalDowelBoringsEnabled,
+          count: placedModule.additionalDowelBoringCount ?? 0,
+          spacingMm: 32,
+        },
       });
 
       if (result.positions.length > 0) {

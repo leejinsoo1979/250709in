@@ -1,5 +1,8 @@
 import type { SectionConfig } from '@/data/modules/shelving';
-import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
+import type {
+  AdditionalDowelBoringOptions,
+  ShelfBoringPositionDetail
+} from '@/domain/boring/utils/calculateShelfBoringPositions';
 
 export const isDirectLowerDowelShelfModule = (moduleId = '') => (
   moduleId.includes('lower-half-cabinet') ||
@@ -60,14 +63,16 @@ export const getDirectLowerDowelShelfBoringDetails = ({
   basicThicknessMm,
   sections,
   shelfThicknessMm = 18,
+  additionalDowelBorings,
 }: {
   moduleId?: string;
   cabinetHeightMm: number;
   basicThicknessMm: number;
   sections?: SectionConfig[];
   shelfThicknessMm?: number;
-}): ShelfBoringPositionDetail[] => (
-  getDirectLowerDowelShelfPositionsMm({
+  additionalDowelBorings?: AdditionalDowelBoringOptions;
+}): ShelfBoringPositionDetail[] => {
+  const baseDetails = getDirectLowerDowelShelfPositionsMm({
     moduleId,
     cabinetHeightMm,
     basicThicknessMm,
@@ -77,5 +82,29 @@ export const getDirectLowerDowelShelfBoringDetails = ({
     type: 'movable-shelf',
     role: 'movable-shelf',
     roleIndex: index,
-  }))
-);
+  } as ShelfBoringPositionDetail));
+
+  if (!additionalDowelBorings?.enabled) return baseDetails;
+
+  const count = Math.max(0, Math.min(20, Math.round(additionalDowelBorings.count ?? 0)));
+  const spacingMm = Math.max(1, Math.round(additionalDowelBorings.spacingMm ?? 32));
+  if (count <= 0) return baseDetails;
+
+  const additionalDetails = baseDetails.flatMap(detail => {
+    const positions: ShelfBoringPositionDetail[] = [];
+    for (let step = 1; step <= count; step += 1) {
+      const offset = spacingMm * step;
+      [detail.y - offset, detail.y + offset].forEach(y => {
+        if (y <= 0 || y >= cabinetHeightMm) return;
+        positions.push({
+          y: Math.round(y * 1000) / 1000,
+          type: 'additional-dowel',
+          role: 'additional-dowel',
+        });
+      });
+    }
+    return positions;
+  });
+
+  return [...baseDetails, ...additionalDetails];
+};

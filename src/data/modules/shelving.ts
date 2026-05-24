@@ -3859,6 +3859,9 @@ export const generateShelvingModules = (
   modules.push(createSingleDummyFull(columnWidth, maxHeight));
   modules.push(createSingleDummyUpper(columnWidth));
   modules.push(createSingleDummyLower(columnWidth));
+  if (Math.round(columnWidth * 100) / 100 !== 100) {
+    modules.push(createSingleDummyLower(100));
+  }
 
   return modules;
 };

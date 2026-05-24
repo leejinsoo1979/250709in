@@ -202,6 +202,11 @@ function calculateModuleShelfBoringDetails({
     sections,
     totalHeightMm: furnitureHeight,
     basicThicknessMm,
+    additionalDowelBorings: {
+      enabled: !!placedModule?.additionalDowelBoringsEnabled,
+      count: placedModule?.additionalDowelBoringCount ?? 0,
+      spacingMm: 32,
+    },
   });
 
   const moduleId = moduleData?.id || placedModule?.moduleId || '';
@@ -214,6 +219,11 @@ function calculateModuleShelfBoringDetails({
     cabinetHeightMm: furnitureHeight,
     basicThicknessMm,
     sections,
+    additionalDowelBorings: {
+      enabled: !!placedModule?.additionalDowelBoringsEnabled,
+      count: placedModule?.additionalDowelBoringCount ?? 0,
+      spacingMm: 32,
+    },
   });
   const fixedDetails = baseResult.details.filter(detail => (
     detail.type === 'fixed-panel' &&
