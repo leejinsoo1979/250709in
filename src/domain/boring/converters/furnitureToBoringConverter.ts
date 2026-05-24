@@ -210,7 +210,14 @@ export function convertFurnitureToBoring(
   // 가구 ID 및 이름
   const furnitureId = placedModule.id;
   const furnitureName = moduleData.name;
-  const hasHingedDoor = (placedModule.hasDoor ?? false) && !isDummyModuleId(placedModule.moduleId || moduleData.id);
+  // 서랍 전용 모듈(외부서랍, 인덕션, 터치서랍 등)은 도어가 아닌 마이다 앞판이므로 측판 힌지 보링 제외
+  const moduleIdForHinge = placedModule.moduleId || moduleData.id || '';
+  const isDrawerOnlyModule = moduleIdForHinge.includes('lower-drawer-') ||
+    moduleIdForHinge.includes('lower-induction-') ||
+    moduleIdForHinge.includes('lower-touch-drawer-');
+  const hasHingedDoor = (placedModule.hasDoor ?? false)
+    && !isDummyModuleId(moduleIdForHinge)
+    && !isDrawerOnlyModule;
 
   // 가구 타입별 처리
   switch (cabinetType) {
