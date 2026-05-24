@@ -899,6 +899,7 @@ const shouldExclude = (name: string): boolean => {
     lowerName.includes('debug') ||
     lowerName.includes('camera') ||
     lowerName.includes('light') ||
+    lowerName.includes('maida-v-guide') ||
     // 슬롯 드롭존 및 마커
     lowerName.includes('slot') ||
     lowerName.includes('drop') ||
@@ -3628,8 +3629,9 @@ const isUnexpectedDiagonalLine = (line: DxfLine): boolean => {
   const length = Math.sqrt(dx * dx + dy * dy);
 
   // 정면/탑 도면의 가구 및 치수선은 수평/수직이 기준이다.
-  // 큰 대각선은 1슬롯 코트장처럼 끊긴 선 객체가 PDF/DXF 추출 중 이어진 오류선이다.
-  return dx > 50 && dy > 50 && length > 180;
+  // 1슬롯 코트장처럼 서랍/마이다 보조 V라인이 여러 짧은 대각선 조각으로 추출되는 경우도 제거한다.
+  // 단, 치수 화살표·끝점처럼 아주 짧은 대각선은 유지한다.
+  return dx > 5 && dy > 5 && length > 35;
 };
 
 const buildDxfString = (lines: DxfLine[], texts: DxfText[]): string => {

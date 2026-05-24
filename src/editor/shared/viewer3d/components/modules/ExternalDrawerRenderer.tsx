@@ -290,6 +290,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
                   const t2 = (pos + actual) / totalLen;
                   segments.push(
                     <Line
+                      name="maida-v-guide"
                       key={`${keyPrefix}-${pos}`}
                       points={[
                         [s[0] + dx * t1, s[1] + dy * t1, s[2]],
