@@ -4,9 +4,19 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 
 // 같은 카테고리(full/upper/lower)끼리만 프리셋 주입 허용.
-//   - 가구 폭/깊이/슬롯/위치 등 가구별로 달라야 할 필드는 제외.
+//   - 가구 폭/슬롯/위치 등 가구별로 달라야 할 필드는 제외.
 //   - 그룹별로 묶어서 사용자가 체크박스로 선택해 주입.
 const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
+  {
+    id: 'depth',
+    label: '깊이 (가구 깊이, 상/하부 깊이, 앞고정/뒤고정)',
+    fields: [
+      'customDepth', 'freeDepth',
+      'lowerSectionDepth', 'upperSectionDepth',
+      'lowerSectionDepthDirection', 'upperSectionDepthDirection',
+      'sectionDepths', 'sectionDepthDirections',
+    ],
+  },
   {
     id: 'door',
     label: '도어 설정 (갭, 확장량, 경첩, 도어 분할/확장)',
@@ -17,6 +27,7 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
       'lowerDoorTopGap', 'lowerDoorBottomGap',
       'doorWidthAdjustEnabled', 'doorWidthAdjustMm',
       'hingePosition', 'hingeType',
+      'cornerFrontHingePosition', 'cornerSideHingePosition',
       'hingePositionsMm', 'upperDoorHingePositionsMm', 'lowerDoorHingePositionsMm',
       'doorSettingMode', 'doorOverlayLeft', 'doorOverlayRight', 'doorOverlayTop', 'doorOverlayBottom',
       'doorSplit',
@@ -65,8 +76,14 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
   },
   {
     id: 'shelfRod',
-    label: '옷봉 / 선반 / 내부 구성 (커스텀 섹션)',
-    fields: ['customConfig', 'customSections'],
+    label: '섹션 / 선반 / 내부 구성 (섹션 높이, 선반 갯수, 내부 구성)',
+    fields: [
+      'customConfig', 'customSections',
+      'lowerSectionTopOffset', 'sectionTopOffsets',
+      'lowerSectionWidth', 'upperSectionWidth',
+      'lowerSectionWidthDirection', 'upperSectionWidthDirection',
+      'lowerLeftSectionDepth', 'lowerRightSectionDepth',
+    ],
   },
   {
     id: 'rodShelf',
@@ -116,6 +133,17 @@ const isLowerDrawer2Tier = (moduleId?: string): boolean => {
   return id.includes('lower-drawer-2tier') || id.includes('dual-lower-drawer-2tier');
 };
 
+const clonePresetValue = <T,>(value: T): T => {
+  if (value === undefined || value === null) return value;
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value);
+  }
+  if (typeof value === 'object') {
+    return JSON.parse(JSON.stringify(value));
+  }
+  return value;
+};
+
 // 그룹별로 현재 가구에 적용 가능한지 판단 (가구 종류 기반).
 //   - 프리셋에 해당 필드가 없어도 가구가 이 옵션을 가질 수 있으면 표시 (적용 가능).
 //   - 저장 시점에 사용자가 어떤 값이든 변경했을 수 있으므로 너무 엄격하게 판단하면 안 됨.
@@ -129,6 +157,8 @@ const isGroupApplicable = (
   const mod = targetModule as any;
 
   switch (groupId) {
+    case 'depth':
+      return !id.includes('insert-frame');
     case 'door': {
       // 도어 가질 수 있는 가구만 (insert-frame 같은 채움재는 제외)
       if (id.includes('insert-frame')) return false;
@@ -150,8 +180,8 @@ const isGroupApplicable = (
       // 자유배치이거나 EP 옵션이 있는 가구 (사실상 모든 가구)
       return !id.includes('insert-frame');
     case 'shelfRod': {
-      // 커스텀/커스터마이즈 가능 가구만
-      return id.startsWith('customizable-') || !!mod.customSections || !!mod.customConfig;
+      // 섹션 높이/선반 갯수는 저장 전에는 필드가 없어도 이식 대상이 될 수 있다.
+      return !id.includes('insert-frame');
     }
     case 'rodShelf': {
       // 옷봉/선반 있는 가구 (코트장, 붙박이장 시리즈, 키큰장 일부) — 상부 안전선반 옵션
@@ -198,7 +228,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
     const props: Record<string, any> = {};
     const mod = placedModule as any;
     for (const f of allFields) {
-      if (mod[f] !== undefined) props[f] = mod[f];
+      if (mod[f] !== undefined) props[f] = clonePresetValue(mod[f]);
     }
     return props;
   };
@@ -225,7 +255,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
     );
     const updates: Record<string, any> = {};
     for (const [k, v] of Object.entries(preset.props)) {
-      if (allowedFields.has(k)) updates[k] = v;
+      if (allowedFields.has(k)) updates[k] = clonePresetValue(v);
     }
     const injectedHeight = typeof updates.freeHeight === 'number'
       ? updates.freeHeight
@@ -320,7 +350,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
               속성 이식 — {categoryLabel}
             </h3>
             <div style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)', marginBottom: '18px', lineHeight: 1.5 }}>
-              적용할 그룹을 선택하세요. 가구 폭/깊이/위치는 항상 제외됩니다.<br />
+              적용할 그룹을 선택하세요. 가구 폭/위치는 항상 제외됩니다.<br />
               현재 가구에 의미 없는 그룹은 자동으로 숨김 처리됩니다.
             </div>
             {applicableGroups.length === 0 ? (
