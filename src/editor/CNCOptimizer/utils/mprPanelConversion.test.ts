@@ -104,6 +104,68 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('TI="7.5"');
   });
 
+  it('exports side notch pocket and visible MPR contour at the same coordinates', () => {
+    const panel = {
+      id: 'right-side-with-notch-1',
+      name: '(하)우측',
+      width: 380,
+      height: 860,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      sideNotches: [{ y: 80, z: 40, fromBottom: 780 }],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const mpr = generateSinglePanelMPR(converted);
+
+    expect(mpr).toContain('KP SIDE_NOTCH_1');
+    expect(mpr).toContain('X=340.0000');
+    expect(mpr).toContain('Y=780.0000');
+    expect(mpr).toContain('X=380.0000');
+    expect(mpr).toContain('Y=860.0000');
+    expect(mpr).toContain('<105 \\Ktasche\\');
+    expect(mpr).toContain('XA="360.0"');
+    expect(mpr).toContain('YA="820.0"');
+    expect(mpr).toContain('LA="40"');
+    expect(mpr).toContain('BR="80"');
+  });
+
+  it('exports furniture side back-panel groove as visible contour and pocket machining', () => {
+    const panel = {
+      id: 'left-side-with-back-groove-1',
+      name: '(하)좌측',
+      width: 380,
+      height: 860,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const mpr = generateSinglePanelMPR(converted);
+
+    expect(mpr).toContain('KP BACK_PANEL_GROOVE');
+    expect(mpr).toContain('X=354.0000');
+    expect(mpr).toContain('X=364.0000');
+    expect(mpr).toContain('Y=0.0000');
+    expect(mpr).toContain('Y=860.0000');
+    expect(mpr).toContain('KM="백패널 홈: 10 x 860, 뒤기준 16"');
+    expect(mpr).toContain('XA="359.0"');
+    expect(mpr).toContain('YA="430.0"');
+    expect(mpr).toContain('LA="10"');
+    expect(mpr).toContain('BR="860"');
+    expect(mpr).toContain('TI="7.5"');
+  });
+
   it('mirrors furniture right-side panel top borings only in MPR coordinates', () => {
     const panel = {
       id: 'right-side-1',
