@@ -1139,12 +1139,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     shelfZOffset,
   ]);
 
-  const hingeBracketPositions = useMemo(() => {
-    if (!currentPlacedModule?.hasDoor) return [];
-    if (isDummyModuleId(currentPlacedModule.moduleId || furnitureId)) return [];
+  const hingeBracketResult = useMemo((): {
+    positions: number[];
+    details?: Array<{ yMm: number; zPositions: number[] }>;
+  } => {
+    if (!currentPlacedModule?.hasDoor) return { positions: [] };
+    if (isDummyModuleId(currentPlacedModule.moduleId || furnitureId)) return { positions: [] };
 
     const unitPerMm = mmToThreeUnits(1);
-    if (!unitPerMm) return [];
+    if (!unitPerMm) return { positions: [] };
 
     const heightMm = height / unitPerMm;
     const basicThicknessMm = basicThickness / unitPerMm;
@@ -1217,10 +1220,42 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         preserveEdgePositionsMm: true
       });
 
-      return [
-        ...resolvedLower.sidePositionsMm,
-        ...resolvedUpper.sidePositionsMm,
-      ].filter(position => position >= 0 && position <= heightMm);
+      const lowerPositions = resolvedLower.sidePositionsMm
+        .filter(position => position >= 0 && position <= heightMm);
+      const upperPositions = resolvedUpper.sidePositionsMm
+        .filter(position => position >= 0 && position <= heightMm);
+      const getSectionDepthUnits = (sectionIndex: number) => {
+        const rawSecDepth = sectionDepths?.[sectionIndex];
+        return (rawSecDepth !== undefined && rawSecDepth > 0)
+          ? (rawSecDepth > 10 ? mmToThreeUnits(rawSecDepth) : rawSecDepth)
+          : depth;
+      };
+      const getSectionFrontZ = (sectionIndex: number) => {
+        const sectionDepth = getSectionDepthUnits(sectionIndex);
+        const depthDiff = depth - sectionDepth;
+        const sectionDir = sectionDepthDirections?.[sectionIndex] || 'front';
+        const directionOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
+        return directionOffset + sectionDepth / 2;
+      };
+      const lowerFrontZ = getSectionFrontZ(0);
+      const upperFrontZ = getSectionFrontZ(1);
+      const buildHingeDetails = (positions: number[], frontZ: number) => positions.map(position => ({
+        yMm: position,
+        zPositions: [
+          frontZ - mmToThreeUnits(20),
+          frontZ - mmToThreeUnits(52),
+        ],
+      }));
+      return {
+        positions: [
+          ...lowerPositions,
+          ...upperPositions,
+        ],
+        details: [
+          ...buildHingeDetails(lowerPositions, lowerFrontZ),
+          ...buildHingeDetails(upperPositions, upperFrontZ),
+        ],
+      };
     }
 
     const doorGeometry = resolveDoorVerticalGeometry({
@@ -1270,8 +1305,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       preserveEdgePositionsMm: true
     });
 
-    return resolvedPositions.sidePositionsMm
-      .filter(position => position >= 0 && position <= heightMm);
+    return {
+      positions: resolvedPositions.sidePositionsMm
+        .filter(position => position >= 0 && position <= heightMm),
+    };
   }, [
     basicThickness,
     allBoringResult.details,
@@ -1284,7 +1321,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     innerWidth,
     mmToThreeUnits,
     modelConfig.sections,
+    sectionDepthDirections,
+    sectionDepths,
+    depth,
   ]);
+  const hingeBracketPositions = hingeBracketResult.positions;
+  const hingeBracketDetails = hingeBracketResult.details;
 
   const sideBoringDetails = isLowerDowelBoringOwnedByLowerCabinet
     ? allBoringResult.details.filter(detail => detail.role === 'additional-dowel')
@@ -1293,6 +1335,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const sideHingeBracketPositions = isLowerDowelBoringOwnedByLowerCabinet
     ? []
     : hingeBracketPositions;
+  const sideHingeBracketDetails = isLowerDowelBoringOwnedByLowerCabinet
+    ? undefined
+    : hingeBracketDetails;
 
   return (
     <>
@@ -1307,6 +1352,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         boringPositions={sideBoringPositions}
         boringDetails={sideBoringDetails}
         hingeBracketPositions={sideHingeBracketPositions}
+        hingeBracketDetails={sideHingeBracketDetails}
         placedFurnitureId={placedFurnitureId}
         category={category}
         doorTopGap={doorTopGap}

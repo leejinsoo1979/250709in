@@ -205,5 +205,6 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
     grain: panel.grain === 'HORIZONTAL' ? 'H' : panel.grain === 'VERTICAL' ? 'V' : 'N',
     borings,
     sideNotches: panel.sideNotches,
+    groovePositions: panel.groovePositions,
   };
 }

@@ -1934,18 +1934,17 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
-      // ★★★ 서랍 바닥판 홈 가공 표시 (서랍 앞판/뒷판/좌측판/우측판) ★★★
+      // ★★★ 서랍 바닥판 홈 가공 표시 (서랍 좌측판/우측판) ★★★
       // panel.groovePositions가 있는 서랍 패널에 바닥판 홈 표시
       const isDrawerPanel = panel.name?.includes('서랍');
       const hasGroove = panel.groovePositions && panel.groovePositions.length > 0;
+      const isDrawerSidePanelForGroove = isDrawerSidePanelName(panel.name);
       if (DEBUG_CUTTING_LAYOUT && isDrawerPanel) {
         debugCuttingLayoutLog(`[GROOVE] ${panel.name}: hasGroove=${hasGroove}, groovePositions=`, panel.groovePositions);
       }
-      if (showGrooves && hasGroove && isDrawerPanel) {
+      if (showGrooves && hasGroove && isDrawerPanelForGroove) {
         ctx.save();
 
-        const originalWidth = panel.width;
-        const originalHeight = panel.height;
         const groovePanelColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
         ctx.strokeStyle = groovePanelColor.stroke; // 패널 색상과 동일
         ctx.fillStyle = groovePanelColor.fill; // 패널 색상과 동일
@@ -1960,57 +1959,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
           let gx: number, gy: number, gw: number, gh: number;
 
-          // ★★★ 서랍 측판/앞판/뒷판 바닥판 홈 위치 ★★★
-          const isDrawerSidePanelForGroove = isDrawerSidePanelName(panel.name);
-          const isDrawerFrontBackPanel = panel.name?.includes('서랍') &&
-            (panel.name?.includes('앞판') || panel.name?.includes('뒷판'));
-
-          if (isDrawerSidePanelForGroove) {
-            // 서랍 측판: 패널목록/재단 기준 W=높이, L=깊이.
-            // 홈은 측판 하단에서 grooveY 위치이며, 재단 도면에서는 X축 위치에 세로 전체로 표시한다.
-            gx = x + grooveY;
-            gw = grooveH;
-            gy = y;
-            gh = height;
-            if (DEBUG_CUTTING_LAYOUT) {
-              debugCuttingLayoutLog(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
-            }
-          } else if (isDrawerFrontBackPanel) {
-            // ★★★ 서랍 앞판/뒷판 ★★★
-            // 원본: width=앞판폭, height=서랍높이
-            // 시트 배치: width가 더 길면 세로(Y축)로 배치됨
-            // 홈: 패널 기준 하단(height 방향 Y=10)에 width 방향 전체
-            //
-            // 시트 배치 후:
-            // - width → 시트 세로(Y축) = height 변수
-            // - height → 시트 가로(X축) = width 변수
-            // - 패널 하단(height 방향) → 시트 좌측(X축)
-            // - 홈은 시트 좌측(X=grooveY)에 시트 세로(Y축) 전체
-            gx = x + grooveY; // 시트 X 위치 (좌측에서 grooveY=10)
-            gw = grooveH; // 홈 너비 (5mm)
-            gy = y; // 시트 Y 시작
-            gh = height; // 홈 길이 (시트 세로 전체)
-            if (DEBUG_CUTTING_LAYOUT) {
-              debugCuttingLayoutLog(`[GROOVE DRAW] 서랍앞뒷판 ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, 시트배치 w=${width}, h=${height}, grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
-            }
-          } else if (panel.rotated) {
-            // 기타 회전된 패널
-            gx = x;
-            gw = width;
-            gy = y + grooveY;
-            gh = grooveH;
-            if (DEBUG_CUTTING_LAYOUT) {
-              debugCuttingLayoutLog(`[GROOVE DRAW] rotated ${panel.name}: grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
-            }
-          } else {
-            // 기타 회전 안된 패널
-            gx = x;
-            gw = width;
-            gy = y + grooveY;
-            gh = grooveH;
-            if (DEBUG_CUTTING_LAYOUT) {
-              debugCuttingLayoutLog(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
-            }
+          // 서랍 측판: 패널목록/재단 기준 W=높이, L=깊이.
+          // 홈은 측판 하단에서 grooveY 위치이며, 재단 도면에서는 X축 위치에 세로 전체로 표시한다.
+          gx = x + grooveY;
+          gw = grooveH;
+          gy = y;
+          gh = height;
+          if (DEBUG_CUTTING_LAYOUT) {
+            debugCuttingLayoutLog(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
           }
 
           // 홈 영역 채우기 (반투명)

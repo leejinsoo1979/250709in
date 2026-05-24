@@ -2211,47 +2211,94 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
-  const handleCustomDepthChange = (newDepth: number) => {
-    const oldDepth = customDepth;
-    setCustomDepth(newDepth);
-    if (activePopup.id) {
-      const updates: Record<string, any> = { customDepth: newDepth };
-      // 2섹션 가구: 섹션 깊이가 이전 전체 깊이와 같으면(기본값 그대로) 같이 변경
-      if (currentPlacedModule) {
-        const lowerD = currentPlacedModule.lowerSectionDepth;
-        const upperD = currentPlacedModule.upperSectionDepth;
-        const moduleDefaultDepth = moduleData?.dimensions?.depth;
-        const lowerIsStaleDefault = moduleDefaultDepth !== undefined && lowerD !== undefined
-          && Math.abs(lowerD - moduleDefaultDepth) < 0.5
-          && Math.abs(oldDepth - moduleDefaultDepth) >= 0.5;
-        const upperIsStaleDefault = moduleDefaultDepth !== undefined && upperD !== undefined
-          && Math.abs(upperD - moduleDefaultDepth) < 0.5
-          && Math.abs(oldDepth - moduleDefaultDepth) >= 0.5;
-        if (lowerD !== undefined && (lowerD === oldDepth || lowerIsStaleDefault)) {
-          updates.lowerSectionDepth = newDepth;
-          setLowerSectionDepth(newDepth);
-          setLowerDepthInput(newDepth.toString());
-        }
-        if (upperD !== undefined && (upperD === oldDepth || upperIsStaleDefault)) {
-          updates.upperSectionDepth = newDepth;
-          setUpperSectionDepth(newDepth);
-          setUpperDepthInput(newDepth.toString());
-        }
-        // horizontalSplit 서브박스 깊이도 동기화
-        if (currentPlacedModule.customConfig) {
-          const newSections = currentPlacedModule.customConfig.sections.map((sec: any) => {
-            if (!sec.horizontalSplit) return sec;
-            const hs = { ...sec.horizontalSplit };
-            if (hs.leftDepth === oldDepth) hs.leftDepth = newDepth;
-            if (hs.rightDepth === oldDepth) hs.rightDepth = newDepth;
-            if (hs.centerDepth === oldDepth) hs.centerDepth = newDepth;
-            return { ...sec, horizontalSplit: hs };
-          });
-          updates.customConfig = { ...currentPlacedModule.customConfig, sections: newSections };
-        }
-      }
-      updatePlacedModule(activePopup.id, updates);
+  const buildBodyDepthUpdates = (newDepth: number, includeFreeDepth = false) => {
+    if (!currentPlacedModule) return { customDepth: newDepth };
+
+    const updates: Record<string, any> = {
+      customDepth: newDepth,
+      lowerSectionDepth: newDepth,
+      upperSectionDepth: newDepth,
+      endPanelDepth: newDepth,
+    };
+
+    if (includeFreeDepth || currentPlacedModule.isFreePlacement || currentPlacedModule.freeDepth !== undefined) {
+      updates.freeDepth = newDepth;
     }
+
+    if (Array.isArray((currentPlacedModule as any).sectionDepths)) {
+      updates.sectionDepths = (currentPlacedModule as any).sectionDepths.map(() => newDepth);
+    }
+    if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
+      updates.sectionDepthDirections = [...(currentPlacedModule as any).sectionDepthDirections];
+    }
+
+    if (currentPlacedModule.customConfig) {
+      const newSections = currentPlacedModule.customConfig.sections.map((sec: any) => {
+        if (!sec.horizontalSplit) return sec;
+        const hs = { ...sec.horizontalSplit };
+        if (hs.leftDepth !== undefined) hs.leftDepth = newDepth;
+        if (hs.rightDepth !== undefined) hs.rightDepth = newDepth;
+        if (hs.centerDepth !== undefined) hs.centerDepth = newDepth;
+        return { ...sec, horizontalSplit: hs };
+      });
+      updates.customConfig = { ...currentPlacedModule.customConfig, sections: newSections };
+    }
+
+    return updates;
+  };
+
+  const syncBodyDepthLocalState = (newDepth: number) => {
+    const depthText = newDepth.toString();
+    setCustomDepth(newDepth);
+    setFreeDepthInput(depthText);
+    setDepthInputValue(depthText);
+    setLowerSectionDepth(newDepth);
+    setUpperSectionDepth(newDepth);
+    setLowerDepthInput(depthText);
+    setUpperDepthInput(depthText);
+    setSectionDepthInputs(prev => {
+      const keys = Object.keys(prev);
+      if (keys.length === 0) return prev;
+      return keys.reduce<Record<number, string>>((acc, key) => {
+        acc[Number(key)] = depthText;
+        return acc;
+      }, {});
+    });
+    setHsLeftDepthInput(prev => {
+      const keys = Object.keys(prev);
+      if (keys.length === 0) return prev;
+      return keys.reduce<Record<number, string>>((acc, key) => {
+        acc[Number(key)] = depthText;
+        return acc;
+      }, {});
+    });
+    setHsRightDepthInput(prev => {
+      const keys = Object.keys(prev);
+      if (keys.length === 0) return prev;
+      return keys.reduce<Record<number, string>>((acc, key) => {
+        acc[Number(key)] = depthText;
+        return acc;
+      }, {});
+    });
+    setHsCenterDepthInput(prev => {
+      const keys = Object.keys(prev);
+      if (keys.length === 0) return prev;
+      return keys.reduce<Record<number, string>>((acc, key) => {
+        acc[Number(key)] = depthText;
+        return acc;
+      }, {});
+    });
+  };
+
+  const applyBodyDepthChange = (newDepth: number, includeFreeDepth = false) => {
+    syncBodyDepthLocalState(newDepth);
+    if (activePopup.id) {
+      updatePlacedModule(activePopup.id, buildBodyDepthUpdates(newDepth, includeFreeDepth));
+    }
+  };
+
+  const handleCustomDepthChange = (newDepth: number) => {
+    applyBodyDepthChange(newDepth);
   };
 
   const handleCustomWidthChange = (newWidth: number) => {
@@ -2290,16 +2337,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const applyLowerCabinetDepth = (nextDepth: number) => {
     if (!currentPlacedModule) return;
 
-    updatePlacedModule(currentPlacedModule.id, {
-      freeDepth: nextDepth,
-      customDepth: nextDepth,
-      lowerSectionDepth: nextDepth,
-      upperSectionDepth: nextDepth,
-    });
-    setFreeDepthInput(nextDepth.toString());
-    setCustomDepth(nextDepth);
-    setLowerSectionDepth(nextDepth);
-    setUpperSectionDepth(nextDepth);
+    applyBodyDepthChange(nextDepth, true);
   };
 
   const applyLowerCabinetDepthDirection = (direction: 'front' | 'back') => {
@@ -4206,16 +4244,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
                         const minDepth = isLowerDrawer ? 400 : 100;
                         if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
-                          // 몸통 깊이 변경 시 섹션별 깊이도 함께 업데이트 (이미 사용자가 섹션별 깊이를
-                          // 별도로 설정한 경우는 보존하지 않고 일괄 따라감 → 섹션 치수가 몸통 치수 따라가도록)
-                          updatePlacedModule(currentPlacedModule.id, {
-                            freeDepth: val,
-                            customDepth: val,
-                            lowerSectionDepth: val,
-                            upperSectionDepth: val,
-                            endPanelDepth: val, // EP 길이도 가구 깊이에 맞춰 동기화
-                          });
-                          setFreeDepthInput(val.toString());
+                          applyBodyDepthChange(val, true);
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
@@ -4262,13 +4291,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeDepthInput(next.toString());
                           if (currentPlacedModule) {
-                            updatePlacedModule(currentPlacedModule.id, {
-                              freeDepth: next,
-                              customDepth: next,
-                              lowerSectionDepth: next,
-                              upperSectionDepth: next,
-                              endPanelDepth: next, // EP 길이도 가구 깊이에 맞춰 동기화
-                            });
+                            applyBodyDepthChange(next, true);
                           }
                         }
                       }}

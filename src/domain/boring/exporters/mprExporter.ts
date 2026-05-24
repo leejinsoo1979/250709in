@@ -289,6 +289,34 @@ MI="0"
 `;
 }
 
+function generateDrawerBottomGroovePocket(
+  panel: PanelBoringData,
+  groove: { y: number; height: number; depth: number },
+  index: number
+): string {
+  const grooveStartY = Math.max(0, Math.min(groove.y, panel.height));
+  const grooveWidth = Math.max(0, Math.min(groove.height, panel.height - grooveStartY));
+  const grooveDepth = Math.max(0, Math.min(groove.depth, panel.thickness));
+  if (panel.width <= 0 || grooveWidth <= 0 || grooveDepth <= 0) return '';
+
+  const centerX = panel.width / 2;
+  const centerY = grooveStartY + grooveWidth / 2;
+
+  return `<105 \\Ktasche\\
+KM="서랍 바닥홈 ${index + 1}: L ${formatMprNumber(panel.width)} x W ${formatMprNumber(grooveWidth)}, 바닥기준 ${formatMprNumber(groove.y)}, 깊이 ${formatMprNumber(grooveDepth)}"
+XA="${centerX.toFixed(1)}"
+YA="${centerY.toFixed(1)}"
+ZA="T"
+LA="${formatMprNumber(panel.width)}"
+BR="${formatMprNumber(grooveWidth)}"
+TI="${formatMprNumber(grooveDepth)}"
+AN="1"
+MI="0"
+??="ktasche=1  "
+
+`;
+}
+
 // ============================================
 // 메인 내보내기 함수
 // ============================================
@@ -328,6 +356,10 @@ export function generateSinglePanelMPR(
     mpr += generateSideNotchPocket(panel, notch, index);
   });
 
+  panel.groovePositions?.forEach((groove, index) => {
+    mpr += generateDrawerBottomGroovePocket(panel, groove, index);
+  });
+
   // 파일 끝 마커
   mpr += '!\n';
 
@@ -351,7 +383,7 @@ export function exportToMPR(
     panels.forEach((panel) => {
       const content = generateSinglePanelMPR(panel, finalSettings, projectName);
       // 파일명: panelName으로 (특수문자 제거)
-      const safeName = panel.panelName.replace(/[\/\\:*?"<>|]/g, '_');
+      const safeName = panel.panelName.replace(/[/\\:*?"<>|]/g, '_');
       files.push({
         filename: `${safeName}.mpr`,
         content,

@@ -270,6 +270,12 @@ export function convertFurnitureToBoring(
       const actualTopDepth = resolveTopPanelDepthForBoring(placedModule, moduleData, dims.depth, panelThickness, sections);
       const actualBottomDepth = Math.max(1, dims.depth - bottomOffsetMm);
 
+      // 주방 기본장(lower 카테고리, 도어올림/상판내림 아닌 일반 하부장)은 상판 없음 → 측판 상단 캠볼트 보링 제외
+      const isLowerCategory = moduleData.category === 'lower';
+      const isDoorRaise = moduleIdForHinge.includes('door-lift') || moduleIdForHinge.includes('door-raise');
+      const isTopDownLow = moduleIdForHinge.includes('top-down');
+      const isKitchenBasicCabinet = isLowerCategory && !isDoorRaise && !isTopDownLow;
+
       const lowerParams: LowerCabinetParams = {
         id: furnitureId,
         name: furnitureName,
@@ -290,6 +296,8 @@ export function convertFurnitureToBoring(
         // 상판/하판 실제 깊이 — 보링 위치가 이 기준으로 계산됨
         topPanelDepth: actualTopDepth,
         bottomPanelDepth: actualBottomDepth,
+        // 주방 기본장은 상판 없음
+        hasTopPanel: !isKitchenBasicCabinet,
       };
       result = generateLowerCabinetBorings(lowerParams);
       break;

@@ -215,36 +215,8 @@ function generateDrawerFrontBorings(
   const frontWidth = params.width - 4;  // 좌우 갭
   const frontHeight = drawerHeight - 4;  // 상하 갭
 
-  // 핸들 보링 (중앙 또는 상단)
+  // 서랍 앞판에는 보링 없음 (핸들홀 등 가공 안 함)
   const handleBorings: Boring[] = [];
-
-  // 핸들 설치 위치 (전판 중앙 상단)
-  const handleY = frontHeight - 50;  // 상단에서 50mm
-  const handleSpacing = 96;  // 핸들 나사 간격 (96mm 또는 128mm)
-
-  // 좌측 핸들홀
-  handleBorings.push({
-    id: `drawer-handle-${drawerIndex + 1}-left`,
-    type: 'custom' as const,
-    face: 'front' as const,
-    x: frontWidth / 2 - handleSpacing / 2,
-    y: handleY,
-    diameter: 5,
-    depth: 18,  // 관통
-    note: `서랍${drawerIndex + 1}-핸들-좌`,
-  });
-
-  // 우측 핸들홀
-  handleBorings.push({
-    id: `drawer-handle-${drawerIndex + 1}-right`,
-    type: 'custom' as const,
-    face: 'front' as const,
-    x: frontWidth / 2 + handleSpacing / 2,
-    y: handleY,
-    diameter: 5,
-    depth: 18,  // 관통
-    note: `서랍${drawerIndex + 1}-핸들-우`,
-  });
 
   return {
     panelId,

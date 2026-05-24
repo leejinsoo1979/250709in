@@ -1513,18 +1513,34 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 };
 
 /**
- * 듀얼 현관장 H: 하부(신발선반4 + 속서랍) + 상부(다보선반) — 내부 구조 동일, 도어 2개
+ * 듀얼 현관장 H: 하부(신발선반3 + 속서랍) + 상부(다보선반) — 싱글과 동일 구조, 도어 2개
  */
 const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT;
   const topHeight = maxHeight - bottomHeight;
   const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
+  // 싱글(반통) 현관장 H와 동일 구조: 하부 신발선반 3개 + 상단 속서랍 영역(받침대+서랍 206mm) 보존
+  const drawerZoneMm = FURNITURE_SPECS.ENTRYWAY_DRAWER_ZONE_MM;
+  const lowerShelfInnerHeight = bottomHeight - _t - drawerZoneMm - _t;
+  const shelfPositionsLower = calculateEvenShelfPositions(lowerShelfInnerHeight, 3);
+
   const baseSections: SectionConfig[] = [
-    { type: 'shelf', heightType: 'absolute', height: bottomHeight, count: 4,
-      shelfPositions: calculateEvenShelfPositions(bottomHeight - 2 * _t, 4) },
-    { type: 'shelf', heightType: 'absolute', height: topHeight, count: 4,
-      shelfPositions: calculateEvenShelfPositions(topHeight - 2 * _t, 4) }
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: bottomHeight,
+      count: 3,
+      shelfPositions: shelfPositionsLower,
+      fixedTopZoneMm: drawerZoneMm,
+    },
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: topHeight,
+      count: 4,
+      shelfPositions: calculateEvenShelfPositions(topHeight - 2 * _t, 4),
+    },
   ];
 
   const widthForId = Math.round(dualColumnWidth * 100) / 100;

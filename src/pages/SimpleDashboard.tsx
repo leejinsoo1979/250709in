@@ -425,15 +425,21 @@ const SimpleDashboard: React.FC = () => {
             },
             frameSize: {
               ...spaceConfig.frameSize!,
-              top: defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
+              // 상단몰딩 size(topMoldingSize)가 있으면 우선 적용, 없으면 옛 frameTop 사용
+              top: defaults.topMoldingSize ?? defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
               left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
               right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
-              ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
+              ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
+                topOffset: defaults.topMoldingOffset ?? defaults.frameTopOffset
+              }),
             },
             baseConfig: {
               ...spaceConfig.baseConfig!,
-              height: defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
-              ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
+              // 걸레받이 size(baseboardSize)가 있으면 우선 적용, 없으면 옛 baseHeight 사용
+              height: defaults.baseboardSize ?? defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
+              ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
+                offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
+              }),
             },
             ...(defaults.placementType ? {
               layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,

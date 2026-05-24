@@ -144,6 +144,8 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '서랍1 좌측판').width).toBe(276)
     expect(findPanel(panels, '서랍1 좌측판').groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }])
     expect(findPanel(panels, '서랍1 우측판').groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }])
+    expect(findPanel(panels, '서랍1 앞판').groovePositions).toBeUndefined()
+    expect(findPanel(panels, '서랍1 뒷판').groovePositions).toBeUndefined()
     expect(findPanel(panels, '서랍1 바닥').depth).toBe(275)
   })
 
@@ -206,6 +208,9 @@ describe('panelDetails regression baselines', () => {
       expect(panel.height).toBeLessThan(700)
     })
     expect(Math.max(...drawerFronts.map((panel) => panel.height))).toBeLessThanOrEqual(700)
+    expect(findPanel(panels, '서랍1 좌측판').groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }])
+    expect(findPanel(panels, '서랍1 우측판').groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }])
+    expect(findPanel(panels, '서랍1 뒷판').groovePositions).toBeUndefined()
   })
 
   it('유리장 서랍 모듈 목재 패널은 옵티마이저 패널 목록에 모두 포함된다', () => {

@@ -69,4 +69,34 @@ describe('convertPlacedPanelToMprBoringData', () => {
       note: 'fixed-panel-side-bore',
     }));
   });
+
+  it('exports drawer side bottom grooves as MPR pocket machining', () => {
+    const panel = {
+      id: 'drawer-side-left-1',
+      name: '서랍1 좌측판',
+      width: 500,
+      height: 155,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      groovePositions: [{ y: 12, height: 10, depth: 7.5 }],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+
+    expect(converted.groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }]);
+
+    const mpr = generateSinglePanelMPR(converted);
+    expect(mpr).toContain('<105 \\Ktasche\\');
+    expect(mpr).toContain('KM="서랍 바닥홈 1: L 500 x W 10, 바닥기준 12, 깊이 7.5"');
+    expect(mpr).toContain('XA="250.0"');
+    expect(mpr).toContain('YA="17.0"');
+    expect(mpr).toContain('LA="500"');
+    expect(mpr).toContain('BR="10"');
+    expect(mpr).toContain('TI="7.5"');
+  });
 });

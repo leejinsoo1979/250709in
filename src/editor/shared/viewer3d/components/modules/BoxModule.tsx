@@ -350,6 +350,44 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     return { moduleDepthMm: baseDepthMm, zOffset: 0 };
   };
 
+  const resolveSingleDoorDepthPlacement = () => {
+    const baseDepthMm = baseFurniture.actualDepthMm || moduleData.dimensions.depth || 600;
+    const candidates = [
+      {
+        depthMm: placedSectionDepths?.[0] ?? lowerSectionDepth,
+        direction: placedSectionDepthDirections?.[0] ?? lowerSectionDepthDirection ?? 'front',
+      },
+      {
+        depthMm: placedSectionDepths?.[1] ?? upperSectionDepth,
+        direction: placedSectionDepthDirections?.[1] ?? upperSectionDepthDirection ?? 'front',
+      },
+    ]
+      .filter((candidate): candidate is { depthMm: number; direction: 'front' | 'back' } => (
+        typeof candidate.depthMm === 'number' && candidate.depthMm > 0
+      ))
+      .map(candidate => {
+        const diffMm = baseDepthMm - candidate.depthMm;
+        const zOffset = diffMm === 0
+          ? 0
+          : candidate.direction === 'back'
+            ? baseFurniture.mmToThreeUnits(diffMm) / 2
+            : -baseFurniture.mmToThreeUnits(diffMm) / 2;
+        return {
+          moduleDepthMm: candidate.depthMm,
+          zOffset,
+          frontZ: zOffset + baseFurniture.mmToThreeUnits(candidate.depthMm) / 2,
+        };
+      });
+
+    if (candidates.length === 0) {
+      return { moduleDepthMm: baseDepthMm, zOffset: 0 };
+    }
+
+    return candidates.reduce((frontMost, candidate) => (
+      candidate.frontZ > frontMost.frontZ ? candidate : frontMost
+    ));
+  };
+
 
   // debug useEffects removed for perf
 
@@ -1897,10 +1935,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               </>
             );
           }
+          const singleDoorDepthPlacement = resolveSingleDoorDepthPlacement();
           return (
-            <DoorModule
+            <group position={[0, 0, singleDoorDepthPlacement.zOffset]}>
+              <DoorModule
               moduleWidth={doorWidth || moduleData.dimensions.width} // 무시됨
-              moduleDepth={baseFurniture.actualDepthMm}
+              moduleDepth={singleDoorDepthPlacement.moduleDepthMm}
               hingePosition={hingePosition}
               spaceInfo={spaceInfo}
               color={baseFurniture.doorColor}
@@ -1929,6 +1969,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             individualFloatHeight={individualFloatHeight}
             parentGroupY={parentGroupY}
             />
+            </group>
           );
         }
         return null;

@@ -2976,10 +2976,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const storedCustomDepth = typeof placedModule.customDepth === 'number' && placedModule.customDepth > 0
     ? placedModule.customDepth
     : undefined;
-  const effectiveCustomDepth = categoryDefaultDepth !== undefined
-    && (storedCustomDepth === undefined || Math.abs(storedCustomDepth - moduleDepth) < 0.5)
-    ? categoryDefaultDepth
-    : storedCustomDepth;
+  const effectiveCustomDepth = storedCustomDepth ?? categoryDefaultDepth;
   const rawActualDepthMm = effectiveCustomDepth ||
     (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth
       ? adjustedDepthMm
@@ -3222,15 +3219,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (placedModule.columnSlotInfo) return;
     const depthToApply = effectiveCustomDepth ?? categoryDefaultDepth;
     const updates: Partial<PlacedModule> = {};
-    if (storedCustomDepth === undefined || Math.abs(storedCustomDepth - moduleDepth) < 0.5) {
-      if (Math.abs((storedCustomDepth ?? moduleDepth) - categoryDefaultDepth) >= 0.5) {
-        updates.customDepth = categoryDefaultDepth;
-      }
+    if (storedCustomDepth === undefined && Math.abs(moduleDepth - categoryDefaultDepth) >= 0.5) {
+      updates.customDepth = categoryDefaultDepth;
     }
     const isStaleLowerDepth = placedModule.lowerSectionDepth === undefined
-      || Math.abs(placedModule.lowerSectionDepth - moduleDepth) < 0.5;
+      || (storedCustomDepth === undefined && Math.abs(placedModule.lowerSectionDepth - moduleDepth) < 0.5);
     const isStaleUpperDepth = placedModule.upperSectionDepth === undefined
-      || Math.abs(placedModule.upperSectionDepth - moduleDepth) < 0.5;
+      || (storedCustomDepth === undefined && Math.abs(placedModule.upperSectionDepth - moduleDepth) < 0.5);
     if (isStaleLowerDepth) updates.lowerSectionDepth = depthToApply;
     if (isStaleUpperDepth) updates.upperSectionDepth = depthToApply;
     if (Object.keys(updates).length === 0) return;
@@ -4717,15 +4712,36 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 // 상/하부 섹션 depth가 있으면 도어 Z를 "덜 줄어든 쪽"(max) 기준 + direction 반영
                 const uS = (placedModule as any).upperSectionDepth;
                 const lS = (placedModule as any).lowerSectionDepth;
-                const maxSec = Math.max(uS || 0, lS || 0);
-                if (maxSec > 0 && maxSec < actualDepthMm) {
-                  const isMaxUpper = (uS || 0) >= (lS || 0);
-                  const dir = isMaxUpper
-                    ? ((placedModule as any).upperSectionDepthDirection || 'front')
-                    : ((placedModule as any).lowerSectionDepthDirection || 'front');
-                  if (dir === 'front') {
-                    return furnitureZ - mmToThreeUnits(actualDepthMm - maxSec);
-                  }
+                const candidates = [
+                  {
+                    depthMm: lS,
+                    direction: ((placedModule as any).lowerSectionDepthDirection || 'front') as 'front' | 'back',
+                  },
+                  {
+                    depthMm: uS,
+                    direction: ((placedModule as any).upperSectionDepthDirection || 'front') as 'front' | 'back',
+                  },
+                ]
+                  .filter((candidate): candidate is { depthMm: number; direction: 'front' | 'back' } => (
+                    typeof candidate.depthMm === 'number' && candidate.depthMm > 0
+                  ))
+                  .map(candidate => {
+                    const diffMm = actualDepthMm - candidate.depthMm;
+                    const localZ = diffMm === 0
+                      ? 0
+                      : candidate.direction === 'back'
+                        ? mmToThreeUnits(diffMm) / 2
+                        : -mmToThreeUnits(diffMm) / 2;
+                    return {
+                      localZ,
+                      frontZ: furnitureZ + localZ + mmToThreeUnits(candidate.depthMm) / 2,
+                    };
+                  });
+                if (candidates.length > 0) {
+                  const frontMost = candidates.reduce((best, candidate) => (
+                    candidate.frontZ > best.frontZ ? candidate : best
+                  ));
+                  return furnitureZ + frontMost.localZ;
                 }
                 return furnitureZ;
               })()

@@ -41,7 +41,7 @@ const STOCK_CSV_HEADERS = 'Length,Width,Qty,Label';
 // 보링 CSV 헤더 (별도 파일)
 const BORING_CSV_HEADERS = 'Panel_Name,Hole_No,X,Y,Z,Diameter';
 
-// 홈(Groove) CSV 헤더 (별도 파일) - 서랍 앞판/뒷판의 바닥판 끼우는 홈
+// 홈(Groove) CSV 헤더 (별도 파일) - 서랍 좌우측판의 바닥판 끼우는 홈
 const GROOVE_CSV_HEADERS = 'Panel_Name,Groove_No,Start_X,End_X,Y,Height,Depth';
 
 // 패널 데이터를 CutList Optimizer CSV 형식으로 변환
@@ -193,7 +193,7 @@ export const exportBoringToCSV = (panels: Panel[], panelThickness: number = 18):
 
 /**
  * 패널별 홈(groove) 좌표 CSV 생성
- * 서랍 앞판/뒷판에 바닥판을 끼우는 홈 정보
+ * 서랍 좌우측판에 바닥판을 끼우는 홈 정보
  *
  * 홈 좌표 기준:
  * - Start_X, End_X: 홈 시작/끝 X 좌표 (패널 좌측 기준)
@@ -207,8 +207,10 @@ export const exportGrooveToCSV = (panels: Panel[]): string => {
   let globalGrooveNo = 1;
 
   panels.forEach(panel => {
-    // 홈 정보가 있는 패널만 처리 (서랍 앞판/뒷판)
-    if (!panel.groovePositions || panel.groovePositions.length === 0) {
+    // 홈 정보가 있는 서랍 좌우측판만 처리
+    const isDrawerSidePanel = panel.name?.includes('서랍') &&
+      (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+    if (!isDrawerSidePanel || !panel.groovePositions || panel.groovePositions.length === 0) {
       return;
     }
 
@@ -362,7 +364,7 @@ export const downloadCutListFiles = async (
   // 잠시 대기
   await new Promise(resolve => setTimeout(resolve, 100));
 
-  // 홈(groove) CSV 다운로드 (서랍 앞판/뒷판에 홈이 있는 경우만)
+  // 홈(groove) CSV 다운로드 (서랍 좌우측판에 홈이 있는 경우만)
   const grooveCSV = exportGrooveToCSV(panels);
   const grooveLines = grooveCSV.split('\n');
   if (grooveLines.length > 1) { // 헤더 외에 데이터가 있으면

@@ -540,29 +540,26 @@ export class PDFExporter {
         this.pdf.setLineDashPattern([], 0);
       }
 
-      // 서랍 패널 바닥판 홈 - 옵티마이저와 동일한 방식
+      // 서랍 측판 바닥판 홈 - 옵티마이저와 동일한 방식
       const isDrawerPanel = panel.name?.includes('서랍');
-      if (panel.groovePositions && panel.groovePositions.length > 0 && isDrawerPanel) {
+      const isDrawerSidePanelForGroove = panel.name?.includes('서랍') &&
+        (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+      if (panel.groovePositions && panel.groovePositions.length > 0 && isDrawerPanel && isDrawerSidePanelForGroove) {
         this.pdf.setDrawColor(100, 100, 100);
         this.pdf.setLineWidth(0.1);
         this.pdf.setLineDashPattern([1, 1], 0);
 
-        const isDrawerSidePanelForGroove = panel.name?.includes('서랍') &&
-          (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
-        const isDrawerFrontBackPanel = panel.name?.includes('서랍') &&
-          (panel.name?.includes('앞판') || panel.name?.includes('뒷판'));
-
         panel.groovePositions.forEach((groove: { y: number; height: number; depth: number }) => {
           // groove.y = 하단에서의 Y 위치 (height 기준)
           // groove.height = 홈 높이
-          // 옵티마이저: 서랍 측판/앞뒷판은 시트 좌측(X축)에 세로(Y축) 전체로 그림
+          // 옵티마이저: 서랍 측판은 시트 좌측(X축)에 세로(Y축) 전체로 그림
 
           // 옵티마이저에서의 시트 좌표 (x, y는 패널 위치)
           // gx = x + grooveY, gw = grooveH, gy = y, gh = height
           let sheetGx: number, sheetGy: number, sheetGw: number, sheetGh: number;
 
-          if (isDrawerSidePanelForGroove || isDrawerFrontBackPanel) {
-            // 서랍 측판/앞뒷판: 좌측(X축)에 세로(Y축) 전체
+          if (isDrawerSidePanelForGroove) {
+            // 서랍 측판: 좌측(X축)에 세로(Y축) 전체
             // 시트 좌표: x + groove.y, 너비 groove.height, y부터 height 전체
             sheetGx = panel.x + groove.y;
             sheetGw = groove.height;

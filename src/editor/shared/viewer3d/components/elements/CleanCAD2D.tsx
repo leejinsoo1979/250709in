@@ -8238,7 +8238,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 우측 3구간 높이 치수선 표시 */}
         {showDimensions && <group>
           {(() => {
-            const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120); // 우측 치수선 위치
+            const sideDimensionOffsetZ = mmToThreeUnits(120);
 
             // useMemo로 메모이제이션된 값 사용
             const {
@@ -8332,6 +8332,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const upperGuideFrontZ = topFrameRefMod && topFrameRefData
               ? resolveSideDimensionDepthSpanZ(topFrameRefMod, topFrameRefData, 'upper', furnitureZOffset, furnitureDepth).frontZ
               : lowerGuideFrontZ;
+            const rightDimensionZ = Math.max(lowerGuideFrontZ, upperGuideFrontZ) + sideDimensionOffsetZ;
             const sideSectionHeights = (() => {
               if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
               const mid = viewMod.moduleId || '';
@@ -8870,7 +8871,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     ?? (doorModule.moduleId.includes('upper') ? 'upper'
                       : doorModule.moduleId.startsWith('lower-') ? 'lower' : 'full');
 
-                  const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
+                  const doorDimOffsetZ = mmToThreeUnits(80);
+                  const doorGuideEndInsetZ = mmToThreeUnits(20);
+                  const resolveDoorSectionFrontZ = (section: 'upper' | 'lower' | 'auto') => {
+                    if (!doorModData) return rightDimensionZ;
+                    return resolveSideDimensionDepthSpanZ(
+                      doorModule,
+                      doorModData,
+                      section,
+                      furnitureZOffset,
+                      furnitureDepth
+                    ).frontZ;
+                  };
+                  const defaultDoorSection: 'upper' | 'lower' | 'auto' =
+                    doorCategory === 'upper' ? 'upper' : doorCategory === 'lower' ? 'lower' : 'auto';
+                  const doorGuideFrontZ = resolveDoorSectionFrontZ(defaultDoorSection);
+                  const doorDimZ = doorGuideFrontZ + doorDimOffsetZ;
+                  const doorGuideEndZ = doorDimZ - doorGuideEndInsetZ;
                   const doorColor = '#E91E63';
 
                   // 인덕션장: hasDoor일 때만 마이다 치수 표시
@@ -8916,10 +8933,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                             rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                           >
-                            {Math.round(heightMm)}
-                          </Text>
-                          <Line points={[[0, tY, spaceZOffset], [0, tY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
-                          <Line points={[[0, bY, spaceZOffset], [0, bY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
+                          {Math.round(heightMm)}
+                        </Text>
+                          <Line points={[[0, tY, doorGuideFrontZ], [0, tY, doorGuideEndZ]]} color={doorColor} lineWidth={0.3} />
+                          <Line points={[[0, bY, doorGuideFrontZ], [0, bY, doorGuideEndZ]]} color={doorColor} lineWidth={0.3} />
                         </group>
                       );
                     };
@@ -9006,15 +9023,29 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const splitGapBY = mmToThreeUnits(lowerDoorTopAbs);
                     const splitGapTY = mmToThreeUnits(upperDoorBottomAbs);
                     const splitGapMidY = (splitGapBY + splitGapTY) / 2;
+                    const lowerDoorGuideFrontZ = resolveDoorSectionFrontZ('lower');
+                    const upperDoorGuideFrontZ = resolveDoorSectionFrontZ('upper');
+                    const lowerDoorDimZ = lowerDoorGuideFrontZ + doorDimOffsetZ;
+                    const upperDoorDimZ = upperDoorGuideFrontZ + doorDimOffsetZ;
+                    const splitGapGuideFrontZ = Math.max(lowerDoorGuideFrontZ, upperDoorGuideFrontZ);
+                    const splitGapDimZ = splitGapGuideFrontZ + doorDimOffsetZ;
 
-                    const renderSplitDim = (bY: number, tY: number, midY: number, heightMm: number, key: string) => (
+                    const renderSplitDim = (
+                      bY: number,
+                      tY: number,
+                      midY: number,
+                      heightMm: number,
+                      key: string,
+                      guideFrontZ: number,
+                      dimZ: number
+                    ) => (
                       <group key={key} name={`door-dimension-height-${key}`}>
-                        <Line points={[[0, bY, doorDimZ], [0, tY, doorDimZ]]} color={doorColor} lineWidth={0.6} />
-                        <Line points={createArrowHead([0, bY, doorDimZ], [0, bY + 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
-                        <Line points={createArrowHead([0, tY, doorDimZ], [0, tY - 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                        <Line points={[[0, bY, dimZ], [0, tY, dimZ]]} color={doorColor} lineWidth={0.6} />
+                        <Line points={createArrowHead([0, bY, dimZ], [0, bY + 0.015, dimZ])} color={doorColor} lineWidth={0.6} />
+                        <Line points={createArrowHead([0, tY, dimZ], [0, tY - 0.015, dimZ])} color={doorColor} lineWidth={0.6} />
                         <Text
                           renderOrder={100001} depthTest={false}
-                          position={[0, midY, doorDimZ + mmToThreeUnits(60)]}
+                          position={[0, midY, dimZ + mmToThreeUnits(60)]}
                           fontSize={baseFontSize} color={doorColor}
                           anchorX="center" anchorY="middle"
                           outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
@@ -9022,16 +9053,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         >
                           {Math.round(heightMm)}
                         </Text>
-                        <Line points={[[0, tY, spaceZOffset], [0, tY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
-                        <Line points={[[0, bY, spaceZOffset], [0, bY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
+                        <Line points={[[0, tY, guideFrontZ], [0, tY, dimZ - doorGuideEndInsetZ]]} color={doorColor} lineWidth={0.3} />
+                        <Line points={[[0, bY, guideFrontZ], [0, bY, dimZ - doorGuideEndInsetZ]]} color={doorColor} lineWidth={0.3} />
                       </group>
                     );
 
                     return (
                       <group name="door-dimension-height-split">
-                        {lowerDoorH > 0 && renderSplitDim(lowerBY, lowerTY, lowerMidY, lowerDoorH, 'lower')}
-                        {splitGapH > 0 && renderSplitDim(splitGapBY, splitGapTY, splitGapMidY, splitGapH, 'split-gap')}
-                        {upperDoorH > 0 && renderSplitDim(upperBY, upperTY, upperMidY, upperDoorH, 'upper')}
+                        {lowerDoorH > 0 && renderSplitDim(lowerBY, lowerTY, lowerMidY, lowerDoorH, 'lower', lowerDoorGuideFrontZ, lowerDoorDimZ)}
+                        {splitGapH > 0 && renderSplitDim(splitGapBY, splitGapTY, splitGapMidY, splitGapH, 'split-gap', splitGapGuideFrontZ, splitGapDimZ)}
+                        {upperDoorH > 0 && renderSplitDim(upperBY, upperTY, upperMidY, upperDoorH, 'upper', upperDoorGuideFrontZ, upperDoorDimZ)}
                       </group>
                     );
                   }
@@ -9126,11 +9157,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       </Text>
                       {/* 도어 경계 연장선 */}
                       <Line
-                        points={[[0, doorTopY, spaceZOffset], [0, doorTopY, doorDimZ - mmToThreeUnits(20)]]}
+                        points={[[0, doorTopY, doorGuideFrontZ], [0, doorTopY, doorGuideEndZ]]}
                         color={doorColor} lineWidth={0.3}
                       />
                       <Line
-                        points={[[0, doorBottomY, spaceZOffset], [0, doorBottomY, doorDimZ - mmToThreeUnits(20)]]}
+                        points={[[0, doorBottomY, doorGuideFrontZ], [0, doorBottomY, doorGuideEndZ]]}
                         color={doorColor} lineWidth={0.3}
                       />
                     </group>

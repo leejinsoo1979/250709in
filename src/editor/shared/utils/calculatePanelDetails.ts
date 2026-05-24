@@ -924,11 +924,6 @@ export const calculatePanelDetails = (
             height: drawerFrontBackHeight,
             thickness: drawerSideThickness, // 15mm
             material: 'PB',  // 서랍 본체는 PB 재질
-            groovePositions: [{
-              y: drawerGroovePositionY,
-              height: drawerGrooveHeight,
-              depth: 7.5 // 홈 깊이 7.5mm
-            }],
             // 마이다 보링 위치 (서랍 측판과 연결용)
             boringPositions: drawerFrontBoringYPositions, // Y위치 (height 기준): 상하 30mm
             boringDepthPositions: drawerFrontBoringXPositions // X위치 (width 기준): 좌 50mm, 중앙, 우 50mm
@@ -940,12 +935,7 @@ export const calculatePanelDetails = (
             width: drawerFrontBackWidth,
             height: drawerFrontBackHeight,
             thickness: drawerSideThickness, // 15mm
-            material: 'PB',  // 서랍 본체는 PB 재질
-            groovePositions: [{
-              y: drawerGroovePositionY,
-              height: drawerGrooveHeight,
-              depth: 7.5 // 홈 깊이 7.5mm
-            }]
+            material: 'PB'  // 서랍 본체는 PB 재질
           });
 
           // 서랍 측판 보링 위치: DrawerRenderer와 동일 기준.
@@ -2442,8 +2432,7 @@ export const calculatePanelDetails = (
         { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
           boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,
           groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 7.5 }] },
-        { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB',
-          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 7.5 }] },
+        { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재

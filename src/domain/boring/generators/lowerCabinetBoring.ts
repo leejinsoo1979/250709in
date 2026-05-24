@@ -40,6 +40,8 @@ export interface LowerCabinetParams {
   topPanelDepth?: number;
   // 하판 실제 깊이 — 옵셋 등 반영. 없으면 depth 사용
   bottomPanelDepth?: number;
+  // 상판 유무 (주방 기본장은 상판 없이 인조대리석이 위에 얹어짐 → 측판 상단 캠볼트 보링 제외)
+  hasTopPanel?: boolean;
 }
 
 export interface LowerCabinetBoringResult {
@@ -101,12 +103,13 @@ function generateSidePanelBorings(
   });
   borings.push(...shelfPinResult.borings);
 
-  // 2. 캠 볼트홀 (상판/하판 연결)
+  // 2. 캠 볼트홀 (상판/하판 연결) — 주방 기본장은 상판 없으므로 상단 연결 제외
+  const hasTopPanel = params.hasTopPanel !== false; // 기본값 true (기존 동작 유지), 명시적 false면 상단 제외
   const camBoltBorings = calculateCamBoltBorings({
     panelHeight: dims.sidePanelHeight,
     panelDepth: dims.sidePanelDepth,
     isLeftPanel,
-    hasTopConnection: true,
+    hasTopConnection: hasTopPanel,
     hasBottomConnection: true,
     settings: settings.camLock,
   });

@@ -191,7 +191,16 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await updateSpaceConfigDefaults(values);
+    // 새 필드(topMoldingSize/baseboardSize)를 옛 필드(frameTop/baseHeight)에도 동기화
+    // → 모든 컴포넌트가 어느 필드를 읽든 같은 값 반영됨
+    const synced = {
+      ...values,
+      frameTop: values.topMoldingEnabled ? values.topMoldingSize : 0,
+      frameTopOffset: values.topMoldingOffset,
+      baseHeight: values.baseboardEnabled ? values.baseboardSize : 0,
+      baseFrameOffset: values.baseboardOffset,
+    };
+    const { error } = await updateSpaceConfigDefaults(synced);
     setSaving(false);
     if (error) {
       setMessage({ text: error, type: 'error' });

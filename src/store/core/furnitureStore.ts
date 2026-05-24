@@ -757,6 +757,52 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // position이 변경될 때, 잠긴 이격 영역 안으로 가구가 들어가지 않도록 클램핑
     let finalUpdates = updates;
     const existingModule = state.placedModules.find(m => m.id === id);
+
+    if (existingModule) {
+      const requestedBodyDepth = typeof updates.customDepth === 'number' && updates.customDepth > 0
+        ? updates.customDepth
+        : (typeof updates.freeDepth === 'number' && updates.freeDepth > 0 ? updates.freeDepth : undefined);
+      const currentBodyDepth = typeof existingModule.customDepth === 'number' && existingModule.customDepth > 0
+        ? existingModule.customDepth
+        : (typeof existingModule.freeDepth === 'number' && existingModule.freeDepth > 0 ? existingModule.freeDepth : undefined);
+      const isBodyDepthChanging = requestedBodyDepth !== undefined
+        && (currentBodyDepth === undefined || Math.abs(requestedBodyDepth - currentBodyDepth) >= 0.5);
+
+      if (isBodyDepthChanging) {
+        const depthSyncUpdates: Partial<PlacedModule> & Record<string, any> = {
+          ...finalUpdates,
+          customDepth: requestedBodyDepth,
+          lowerSectionDepth: requestedBodyDepth,
+          upperSectionDepth: requestedBodyDepth,
+          endPanelDepth: requestedBodyDepth,
+        };
+
+        if (existingModule.isFreePlacement || existingModule.freeDepth !== undefined || updates.freeDepth !== undefined) {
+          depthSyncUpdates.freeDepth = requestedBodyDepth;
+        }
+
+        if (Array.isArray((existingModule as any).sectionDepths)) {
+          depthSyncUpdates.sectionDepths = (existingModule as any).sectionDepths.map(() => requestedBodyDepth);
+        }
+
+        if ((existingModule as any).customConfig?.sections) {
+          const customConfig = (existingModule as any).customConfig;
+          depthSyncUpdates.customConfig = {
+            ...customConfig,
+            sections: customConfig.sections.map((section: any) => {
+              if (!section.horizontalSplit) return section;
+              const horizontalSplit = { ...section.horizontalSplit };
+              if (horizontalSplit.leftDepth !== undefined) horizontalSplit.leftDepth = requestedBodyDepth;
+              if (horizontalSplit.rightDepth !== undefined) horizontalSplit.rightDepth = requestedBodyDepth;
+              if (horizontalSplit.centerDepth !== undefined) horizontalSplit.centerDepth = requestedBodyDepth;
+              return { ...section, horizontalSplit };
+            }),
+          };
+        }
+
+        finalUpdates = depthSyncUpdates;
+      }
+    }
     if (existingModule?.isFreePlacement && updates.position) {
       const spaceState = useSpaceConfigStore.getState();
       const lockedWallGaps = spaceState.spaceInfo.lockedWallGaps;
