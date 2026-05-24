@@ -1410,6 +1410,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
   const lowerCabinetSideBoringResult = useMemo(() => {
     const moduleId = moduleData.id;
+    if (moduleId.includes('dummy')) {
+      return { positions: [], details: [] };
+    }
     const isTopDownForBoring = moduleId.includes('lower-top-down-') || moduleId.includes('dual-lower-top-down-');
     const isDirectDowelShelf = isDirectLowerDowelShelfModule(moduleId);
     if (!isTopDownForBoring && !isDirectDowelShelf) {
@@ -2245,6 +2248,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           {(() => {
             if (viewMode === '2D' && view2DDirection === 'top') return null;
             const moduleId = moduleData.id;
+            if (moduleId.includes('dummy')) return null;
             const isRightCornerCabinet = moduleId.includes('right-corner') || moduleId.includes('left-corner');
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
             const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');

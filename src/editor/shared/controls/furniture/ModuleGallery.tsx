@@ -1172,14 +1172,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = lowerMods.filter(m => {
         const id = m.id;
-        const isLowerDummy = /^single-dummy-lower-100(?:\.0+)?$/.test(id);
+        const isBasicLowerDummy = /^single-dummy-lower-half-cabinet-100(?:\.0+)?$/.test(id);
+        const isDoorLiftLowerDummy = /^single-dummy-lower-door-lift-half-100(?:\.0+)?$/.test(id);
+        const isTopDownLowerDummy = /^single-dummy-lower-top-down-half-100(?:\.0+)?$/.test(id);
         const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
         const isTopDown = id.includes('top-down');
-        if (isLowerDummy) return true;
-        if (kitchenSubCategory === 'door-raise') return isDoorRaise;
-        if (kitchenSubCategory === 'top-down') return isTopDown;
+        if (kitchenSubCategory === 'door-raise') return isDoorRaise || isDoorLiftLowerDummy;
+        if (kitchenSubCategory === 'top-down') return isTopDown || isTopDownLowerDummy;
         // 기본장 = 도어올림/상판내림 제외한 나머지
-        return !isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-');
+        return isBasicLowerDummy || (!isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-'));
       });
     }
   } else if (moduleCategory === 'island') {
@@ -1187,13 +1188,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
     categoryModules = lowerMods.filter(m => {
       const id = m.id;
-      const isLowerDummy = /^single-dummy-lower-100(?:\.0+)?$/.test(id);
+      const isBasicLowerDummy = /^single-dummy-lower-half-cabinet-100(?:\.0+)?$/.test(id);
+      const isDoorLiftLowerDummy = /^single-dummy-lower-door-lift-half-100(?:\.0+)?$/.test(id);
+      const isTopDownLowerDummy = /^single-dummy-lower-top-down-half-100(?:\.0+)?$/.test(id);
       const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
       const isTopDown = id.includes('top-down');
-      if (isLowerDummy) return true;
-      if (kitchenSubCategory === 'door-raise') return isDoorRaise;
-      if (kitchenSubCategory === 'top-down') return isTopDown;
-      return !isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-');
+      if (kitchenSubCategory === 'door-raise') return isDoorRaise || isDoorLiftLowerDummy;
+      if (kitchenSubCategory === 'top-down') return isTopDown || isTopDownLowerDummy;
+      return isBasicLowerDummy || (!isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-'));
     });
   } else {
     // 키큰장(전체형) 모듈 (기존 'tall' 호환) — 주방 전용 모듈 제외 (유리장 포함)
@@ -1259,7 +1261,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     if (moduleId.includes('right-corner') || moduleId.includes('left-corner')) return '';
-    // 멍장(더미 가구) 3종 전용 썸네일
+    // 주방 하부 멍장은 카테고리별 이름이 보이도록 텍스트 썸네일을 사용
+    if (moduleId.includes('dummy-lower')) return '';
     if (moduleId.includes('dummy')) return '/images/furniture-thumbnails/dummy.png';
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
     return moduleKey in FURNITURE_ICONS ? FURNITURE_ICONS[moduleKey] : FURNITURE_ICONS['single-2drawer-hanging'];

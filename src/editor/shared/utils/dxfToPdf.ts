@@ -73,6 +73,11 @@ const applyExportUiPatchIfChanged = (patch: ReturnType<typeof createExportViewUi
 // - left: 측면도
 // - top: 평면도
 export type PdfViewDirection = 'front' | 'front-no-door' | 'left' | 'top' | 'door-only';
+export type PdfLineStyle = 'color' | 'monochrome';
+
+export interface PdfExportOptions {
+  lineStyle?: PdfLineStyle;
+}
 
 // DXF에서 추출한 라인 정보
 interface ParsedLine {
@@ -81,6 +86,7 @@ interface ParsedLine {
   x2: number;
   y2: number;
   layer: string;
+  color?: number;
 }
 
 // DXF에서 추출한 텍스트 정보
@@ -90,7 +96,78 @@ interface ParsedText {
   text: string;
   height: number;
   layer: string;
+  color?: number;
 }
+
+const PDF_LAYER_COLORS = {
+  body: [245, 124, 0] as [number, number, number],
+  door: [132, 204, 22] as [number, number, number],
+  channel: [37, 99, 235] as [number, number, number],
+  dimension: [0, 0, 0] as [number, number, number],
+  accessory: [96, 96, 96] as [number, number, number],
+};
+
+const resolvePdfLineColor = (
+  line: ParsedLine,
+  lineStyle: PdfLineStyle
+): [number, number, number] => {
+  if (lineStyle === 'monochrome') {
+    return [0, 0, 0];
+  }
+
+  const layer = line.layer;
+  const dx = Math.abs(line.x2 - line.x1);
+  const dy = Math.abs(line.y2 - line.y1);
+  const isDiagonalDoorGuide = layer === 'DOOR' && dx > 5 && dy > 5;
+
+  if (layer === 'DIMENSIONS' || layer === 'DOOR_DIMENSIONS') {
+    return PDF_LAYER_COLORS.dimension;
+  }
+
+  if (isDiagonalDoorGuide) {
+    return PDF_LAYER_COLORS.body;
+  }
+
+  if (layer === 'DOOR') {
+    return PDF_LAYER_COLORS.door;
+  }
+
+  if (layer === 'WOOD_CHANNEL') {
+    return PDF_LAYER_COLORS.channel;
+  }
+
+  if (
+    (layer === 'FURNITURE_PANEL' || layer === 'BACK_PANEL' || layer === 'DRAWER') &&
+    (line.color === 4 || line.color === 5)
+  ) {
+    return PDF_LAYER_COLORS.channel;
+  }
+
+  if (layer === 'FURNITURE_PANEL' || layer === 'BACK_PANEL' || layer === 'DRAWER' || layer === 'END_PANEL') {
+    return PDF_LAYER_COLORS.body;
+  }
+
+  if (layer === 'ACCESSORIES' || layer === 'CLOTHING_ROD' || layer === 'VENTILATION') {
+    return PDF_LAYER_COLORS.accessory;
+  }
+
+  return PDF_LAYER_COLORS.dimension;
+};
+
+const resolvePdfTextColor = (
+  text: ParsedText,
+  lineStyle: PdfLineStyle
+): [number, number, number] => {
+  if (lineStyle === 'monochrome') {
+    return [0, 0, 0];
+  }
+
+  if (text.layer === 'DOOR') {
+    return PDF_LAYER_COLORS.door;
+  }
+
+  return PDF_LAYER_COLORS.dimension;
+};
 
 export const isDoorDrawingLayer = (layer: string): boolean =>
   layer === 'DOOR' || layer === 'DOOR_DIMENSIONS';
@@ -176,6 +253,7 @@ const parseDxfLines = (dxfString: string): ParsedLine[] => {
     const y1Match = lineData.match(/\s+20\n([-\d.]+)/);
     const x2Match = lineData.match(/\s+11\n([-\d.]+)/);
     const y2Match = lineData.match(/\s+21\n([-\d.]+)/);
+    const colorMatch = lineData.match(/\s+62\n(-?\d+)/);
 
     if (x1Match && y1Match && x2Match && y2Match) {
       lines.push({
@@ -183,7 +261,8 @@ const parseDxfLines = (dxfString: string): ParsedLine[] => {
         y1: parseFloat(y1Match[1]),
         x2: parseFloat(x2Match[1]),
         y2: parseFloat(y2Match[1]),
-        layer
+        layer,
+        color: colorMatch ? parseInt(colorMatch[1], 10) : undefined
       });
     }
   }
@@ -215,6 +294,7 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
     const yMatch = textData.match(/\s+20\n([-\d.]+)/);
     const heightMatch = textData.match(/\s+40\n([-\d.]+)/);
     const contentMatch = textData.match(/\s+1\n([^\n]+)/);
+    const colorMatch = textData.match(/\s+62\n(-?\d+)/);
 
     if (xMatch && yMatch && contentMatch) {
       texts.push({
@@ -222,7 +302,8 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
         y: parseFloat(yMatch[1]),
         text: contentMatch[1].trim(),
         height: heightMatch ? parseFloat(heightMatch[1]) : 25,
-        layer
+        layer,
+        color: colorMatch ? parseInt(colorMatch[1], 10) : undefined
       });
     }
   }
@@ -239,6 +320,7 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
     const yMatch = textData.match(/\s+20\n([-\d.]+)/);
     const heightMatch = textData.match(/\s+40\n([-\d.]+)/);
     const contentMatch = textData.match(/\s+1\n([^\n]+)/);
+    const colorMatch = textData.match(/\s+62\n(-?\d+)/);
 
     if (xMatch && yMatch && contentMatch) {
       texts.push({
@@ -246,7 +328,8 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
         y: parseFloat(yMatch[1]),
         text: contentMatch[1].trim(),
         height: heightMatch ? parseFloat(heightMatch[1]) : 25,
-        layer
+        layer,
+        color: colorMatch ? parseInt(colorMatch[1], 10) : undefined
       });
     }
   }
@@ -291,7 +374,8 @@ const renderToPdf = (
   viewDirection: PdfViewDirection,
   pageWidth: number,
   pageHeight: number,
-  placedModules?: PlacedModule[]
+  placedModules?: PlacedModule[],
+  lineStyle: PdfLineStyle = 'monochrome'
 ) => {
   const margin = 20;
   const titleHeight = 15;
@@ -332,22 +416,24 @@ const renderToPdf = (
   pdf.setTextColor(0, 0, 0);
   pdf.text(getViewTitle(viewDirection), pageWidth / 2, margin + 8, { align: 'center' });
 
-  // 라인 (모노 색상)
-  pdf.setDrawColor(0, 0, 0); // 검정
+  // 라인
   lines.forEach(line => {
     let lw = 0.1;
     if (line.layer === 'DIMENSIONS') lw = 0.08;
     else if (line.layer === 'SPACE_FRAME') lw = 0.15;
-    else if (line.layer === 'FURNITURE_PANEL') lw = 0.12;
+    else if (line.layer === 'FURNITURE_PANEL' || line.layer === 'WOOD_CHANNEL') lw = 0.12;
     else if (line.layer === 'BACK_PANEL') lw = 0.05;
 
+    const color = resolvePdfLineColor(line, lineStyle);
+    pdf.setDrawColor(color[0], color[1], color[2]);
     pdf.setLineWidth(lw);
     pdf.line(toX(line.x1), toY(line.y1), toX(line.x2), toY(line.y2));
   });
 
-  // 텍스트 (모노 색상)
+  // 텍스트
   texts.forEach(text => {
-    pdf.setTextColor(0, 0, 0); // 검정
+    const color = resolvePdfTextColor(text, lineStyle);
+    pdf.setTextColor(color[0], color[1], color[2]);
     pdf.setFontSize(Math.max(text.height * scale * 0.5, 6));
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
@@ -413,9 +499,11 @@ export const downloadDxfAsPdf = async (
   views: PdfViewDirection[] = ['front', 'top', 'left', 'door-only'],
   appendSheetPage: boolean = false,
   sheetMetadata: SheetMetadata = {},
+  options: PdfExportOptions = {},
 ): Promise<void> => {
   console.log('[PDF] DXF to PDF conversion starting...');
   console.log('[PDF] Views to convert: ' + views.join(', '));
+  const lineStyle = options.lineStyle ?? 'monochrome';
 
   // 현재 뷰 상태 저장 (나중에 복원)
   const originalUI = captureExportUiState(useUIStore.getState());
@@ -520,7 +608,7 @@ export const downloadDxfAsPdf = async (
           if (!isFirstPage) pdf.addPage();
           isFirstPage = false;
 
-          renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, group.titleIndex, group.modules);
+          renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, group.titleIndex, group.modules, lineStyle);
         }
       } finally {
         useUIStore.setState(originalUI);
@@ -552,7 +640,7 @@ export const downloadDxfAsPdf = async (
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      renderToPdf(pdf, doorOnlyLines, doorTexts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
+      renderToPdf(pdf, doorOnlyLines, doorTexts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules, lineStyle);
     }
     // 입면도 (도어 없음) - DXF 생성 시 도어 제외
     else if (viewDirection === 'front-no-door') {
@@ -576,7 +664,7 @@ export const downloadDxfAsPdf = async (
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
+      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules, lineStyle);
     }
     else {
       // 일반 뷰 (front, top)
@@ -592,7 +680,7 @@ export const downloadDxfAsPdf = async (
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
+      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules, lineStyle);
     }
   }
 
@@ -603,9 +691,9 @@ export const downloadDxfAsPdf = async (
       // 초기 빈 A4 페이지를 A3 landscape로 교체 (첫 페이지이자 유일한 페이지가 장표)
       pdf.deletePage(1);
       pdf.addPage('a3', 'landscape');
-      await renderSheetContent(pdf, spaceInfo, placedModules, sheetMetadata);
+      await renderSheetContent(pdf, spaceInfo, placedModules, sheetMetadata, lineStyle);
     } else {
-      await appendSheetPageToPdf(pdf, spaceInfo, placedModules, sheetMetadata);
+      await appendSheetPageToPdf(pdf, spaceInfo, placedModules, sheetMetadata, lineStyle);
     }
   }
 
@@ -637,7 +725,8 @@ const renderToPdfWithSlotInfo = (
   pageWidth: number,
   pageHeight: number,
   slotNumber: number,
-  slotModules?: PlacedModule[]
+  slotModules?: PlacedModule[],
+  lineStyle: PdfLineStyle = 'monochrome'
 ) => {
   const margin = 20;
   const titleHeight = 15;
@@ -684,22 +773,24 @@ const renderToPdfWithSlotInfo = (
   pdf.setTextColor(0, 0, 0);
   pdf.text(`Side View (Slot ${slotNumber})`, pageWidth / 2, margin + 8, { align: 'center' });
 
-  // 라인 (모노 색상)
-  pdf.setDrawColor(0, 0, 0);
+  // 라인
   filteredLines.forEach(line => {
     let lw = 0.1;
     if (line.layer === 'DIMENSIONS') lw = 0.08;
     else if (line.layer === 'SPACE_FRAME') lw = 0.15;
-    else if (line.layer === 'FURNITURE_PANEL') lw = 0.12;
+    else if (line.layer === 'FURNITURE_PANEL' || line.layer === 'WOOD_CHANNEL') lw = 0.12;
     else if (line.layer === 'BACK_PANEL') lw = 0.05;
 
+    const color = resolvePdfLineColor(line, lineStyle);
+    pdf.setDrawColor(color[0], color[1], color[2]);
     pdf.setLineWidth(lw);
     pdf.line(toX(line.x1), toY(line.y1), toX(line.x2), toY(line.y2));
   });
 
-  // 텍스트 (모노 색상)
+  // 텍스트
   filteredTexts.forEach(text => {
-    pdf.setTextColor(0, 0, 0);
+    const color = resolvePdfTextColor(text, lineStyle);
+    pdf.setTextColor(color[0], color[1], color[2]);
     pdf.setFontSize(Math.max(text.height * scale * 0.5, 6));
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
@@ -724,6 +815,7 @@ const renderViewToRect = (
   lines: ParsedLine[],
   texts: ParsedText[],
   padding = 6,
+  lineStyle: PdfLineStyle = 'monochrome',
 ) => {
   pdf.setFontSize(9);
   pdf.setTextColor(0, 0, 0);
@@ -759,19 +851,21 @@ const renderViewToRect = (
   const toX = (x: number) => cx + (x - (minX + maxX) / 2) * scale;
   const toY = (y: number) => cy - (y - (minY + maxY) / 2) * scale;
 
-  pdf.setDrawColor(0, 0, 0);
   lines.forEach(line => {
     let lw = 0.08;
     if (line.layer === 'DIMENSIONS') lw = 0.06;
     else if (line.layer === 'SPACE_FRAME') lw = 0.12;
-    else if (line.layer === 'FURNITURE_PANEL') lw = 0.1;
+    else if (line.layer === 'FURNITURE_PANEL' || line.layer === 'WOOD_CHANNEL') lw = 0.1;
     else if (line.layer === 'BACK_PANEL') lw = 0.04;
+    const color = resolvePdfLineColor(line, lineStyle);
+    pdf.setDrawColor(color[0], color[1], color[2]);
     pdf.setLineWidth(lw);
     pdf.line(toX(line.x1), toY(line.y1), toX(line.x2), toY(line.y2));
   });
 
-  pdf.setTextColor(0, 0, 0);
   texts.forEach(t => {
+    const color = resolvePdfTextColor(t, lineStyle);
+    pdf.setTextColor(color[0], color[1], color[2]);
     const fs = Math.max(Math.min(t.height * scale * 0.45, 7), 4);
     pdf.setFontSize(fs);
     pdf.text(t.text, toX(t.x), toY(t.y), { align: 'center' });
@@ -951,10 +1045,11 @@ export const appendSheetPageToPdf = async (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   metadata: SheetMetadata = {},
+  lineStyle: PdfLineStyle = 'monochrome',
 ): Promise<void> => {
   // 현재 포맷과 다르면 A3 landscape 페이지 추가
   pdf.addPage('a3', 'landscape');
-  await renderSheetContent(pdf, spaceInfo, placedModules, metadata);
+  await renderSheetContent(pdf, spaceInfo, placedModules, metadata, lineStyle);
 };
 
 /** 현재 페이지에 "한 장 장표" 렌더링 — 기존 PDF에 append 가능 */
@@ -963,6 +1058,7 @@ const renderSheetContent = async (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   metadata: SheetMetadata = {},
+  lineStyle: PdfLineStyle = 'monochrome',
 ): Promise<void> => {
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
@@ -1022,9 +1118,9 @@ const renderSheetContent = async (
   const frontNoRect:   SheetRect = { x: areaX + topColW, y: areaY, w: topColW, h: topH };
   const topViewRect:   SheetRect = { x: areaX + topColW * 2, y: areaY, w: topColW, h: topH };
 
-  renderViewToRect(pdf, frontWithRect, 'Front View (With Doors)', frontWith.lines, frontWith.texts);
-  renderViewToRect(pdf, frontNoRect,   'Front View (Without Doors)', frontNo.lines, frontNo.texts);
-  renderViewToRect(pdf, topViewRect,   'Top View (Plan)', topView.lines, topView.texts);
+  renderViewToRect(pdf, frontWithRect, 'Front View (With Doors)', frontWith.lines, frontWith.texts, 6, lineStyle);
+  renderViewToRect(pdf, frontNoRect,   'Front View (Without Doors)', frontNo.lines, frontNo.texts, 6, lineStyle);
+  renderViewToRect(pdf, topViewRect,   'Top View (Plan)', topView.lines, topView.texts, 6, lineStyle);
 
   pdf.setLineWidth(0.15);
   pdf.setDrawColor(200, 200, 200);
@@ -1047,7 +1143,7 @@ const renderSheetContent = async (
     for (let idx = 0; idx < sidesInFirstPage; idx++) {
       const sd = sideDataList[idx];
       const rect: SheetRect = { x: areaX + sideColW * idx, y: botY, w: sideColW, h: botH };
-      renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts);
+      renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts, 6, lineStyle);
       if (idx > 0) {
         pdf.setLineWidth(0.15);
         pdf.setDrawColor(200, 200, 200);
@@ -1056,14 +1152,14 @@ const renderSheetContent = async (
       }
     }
   } else {
-    renderViewToRect(pdf, { x: areaX, y: botY, w: sideAreaW, h: botH }, 'Side View (Left)', [], []);
+    renderViewToRect(pdf, { x: areaX, y: botY, w: sideAreaW, h: botH }, 'Side View (Left)', [], [], 6, lineStyle);
   }
   const doorRect: SheetRect = { x: areaX + sideAreaW, y: botY, w: doorAreaW, h: botH };
   pdf.setLineWidth(0.15);
   pdf.setDrawColor(200, 200, 200);
   pdf.line(doorRect.x, botY, doorRect.x, botY + botH);
   pdf.setDrawColor(0, 0, 0);
-  renderViewToRect(pdf, doorRect, 'Door Drawing (Doors Only)', doorOnlyLines, doorOnlyTexts);
+  renderViewToRect(pdf, doorRect, 'Door Drawing (Doors Only)', doorOnlyLines, doorOnlyTexts, 6, lineStyle);
 
   // ─ 추가 페이지: 5개 초과 측면도
   if (sideN > MAX_SIDE_PER_PAGE) {
@@ -1082,7 +1178,7 @@ const renderSheetContent = async (
         const idx = start + k;
         const sd = sideDataList[idx];
         const rect: SheetRect = { x: areaX + pageColW * k, y: areaY, w: pageColW, h: areaH };
-        renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts);
+        renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts, 6, lineStyle);
         if (k > 0) {
           pdf.setLineWidth(0.15);
           pdf.setDrawColor(200, 200, 200);

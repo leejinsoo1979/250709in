@@ -5,7 +5,7 @@ import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExpo
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useProjectStore } from '@/store/core/projectStore';
-import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
+import { downloadDxfAsPdf, type PdfLineStyle, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -31,6 +31,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     '2d-door-only': true,       // 도어 입면도 (가구 없이 도어만)
     'sheet-all-in-one': true,   // 한 장 레이아웃 (모든 뷰 조합)
   });
+  const [pdfLineStyle, setPdfLineStyle] = useState<PdfLineStyle>('color');
   const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'door']);
   
   // 내보내기 훅 사용
@@ -217,6 +218,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
           pdfViews,
           selectedViews['sheet-all-in-one'],
           sheetMetadata,
+          { lineStyle: pdfLineStyle },
         );
       }
 
@@ -340,6 +342,24 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
             {/* PDF 옵션 */}
             {exportType === 'pdf' && (
               <>
+                <div className={styles.section}>
+                  <h3 className={styles.sectionHeader}>도면 스타일</h3>
+                  <div className={styles.formatTabs}>
+                    <button
+                      className={`${styles.formatTab} ${pdfLineStyle === 'color' ? styles.active : ''}`}
+                      onClick={() => setPdfLineStyle('color')}
+                    >
+                      컬러
+                    </button>
+                    <button
+                      className={`${styles.formatTab} ${pdfLineStyle === 'monochrome' ? styles.active : ''}`}
+                      onClick={() => setPdfLineStyle('monochrome')}
+                    >
+                      모노크롬
+                    </button>
+                  </div>
+                </div>
+
                 {/* 포함할 뷰 선택 */}
                 <div className={styles.section}>
                   <div className={styles.sectionHeaderRow}>

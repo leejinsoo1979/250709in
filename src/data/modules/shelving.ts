@@ -3416,15 +3416,15 @@ const createSingleDummyUpper = (columnWidth: number): ModuleData => {
   } as ModuleData;
 };
 
-// 싱글 하부장 멍장
-const createSingleDummyLower = (columnWidth: number): ModuleData => {
+// 싱글 기본 하부장 멍장
+const createSingleDummyLowerBasic = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
   const base = createFurnitureBase(
-    `single-dummy-lower-${widthForId}`,
-    `멍장 ${widthForId}mm`,
-    columnWidth, 1000, FURNITURE_SPECS.DEFAULT_DEPTH,
+    `single-dummy-lower-half-cabinet-${widthForId}`,
+    `기본 멍장 ${widthForId}mm`,
+    columnWidth, 780, FURNITURE_SPECS.DEFAULT_DEPTH,
     '#eeeeee',
-    `멍장 (하부)`,
+    `기본 하부장 멍장`,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     'lower'
   );
@@ -3432,6 +3432,7 @@ const createSingleDummyLower = (columnWidth: number): ModuleData => {
     ...base,
     hasDoor: true,
     isDynamic: true,
+    defaultDepth: 600,
     thumbnail: '/images/furniture-thumbnails/dummy.png',
     modelConfig: {
       ...base.modelConfig,
@@ -3439,6 +3440,71 @@ const createSingleDummyLower = (columnWidth: number): ModuleData => {
       hasOpenFront: false,
       sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
     }
+  } as ModuleData;
+};
+
+// 싱글 도어올림 하부장 멍장
+const createSingleDummyLowerDoorLift = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-dummy-lower-door-lift-half-${widthForId}`,
+    `도어올림 멍장 ${widthForId}mm`,
+    columnWidth, 780, FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#eeeeee',
+    `도어올림 하부장 멍장`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'lower'
+  );
+  return {
+    ...base,
+    hasDoor: true,
+    isDynamic: true,
+    defaultDepth: 600,
+    thumbnail: '/images/furniture-thumbnails/dummy.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
+    }
+  } as ModuleData;
+};
+
+// 싱글 상판내림 하부장 멍장
+const createSingleDummyLowerTopDown = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-dummy-lower-top-down-half-${widthForId}`,
+    `상판내림 멍장 ${widthForId}mm`,
+    columnWidth, 780, FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#eeeeee',
+    `상판내림 하부장 멍장`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'lower'
+  );
+  return {
+    ...base,
+    hasDoor: true,
+    isDynamic: true,
+    defaultDepth: 600,
+    thumbnail: '/images/furniture-thumbnails/dummy.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
+    }
+  } as ModuleData;
+};
+
+// 기존 저장 파일 호환용 하부장 멍장 ID
+const createSingleDummyLowerLegacy = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  return {
+    ...createSingleDummyLowerBasic(columnWidth),
+    id: `single-dummy-lower-${widthForId}`,
+    name: `멍장 ${widthForId}mm`,
+    description: '멍장 (하부)',
   } as ModuleData;
 };
 
@@ -3858,9 +3924,15 @@ export const generateShelvingModules = (
   // === 멍장 (맨 마지막에 표시) ===
   modules.push(createSingleDummyFull(columnWidth, maxHeight));
   modules.push(createSingleDummyUpper(columnWidth));
-  modules.push(createSingleDummyLower(columnWidth));
+  modules.push(createSingleDummyLowerBasic(columnWidth));
+  modules.push(createSingleDummyLowerDoorLift(columnWidth));
+  modules.push(createSingleDummyLowerTopDown(columnWidth));
+  modules.push(createSingleDummyLowerLegacy(columnWidth));
   if (Math.round(columnWidth * 100) / 100 !== 100) {
-    modules.push(createSingleDummyLower(100));
+    modules.push(createSingleDummyLowerBasic(100));
+    modules.push(createSingleDummyLowerDoorLift(100));
+    modules.push(createSingleDummyLowerTopDown(100));
+    modules.push(createSingleDummyLowerLegacy(100));
   }
 
   return modules;

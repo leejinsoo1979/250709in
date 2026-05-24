@@ -989,6 +989,11 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
     return 'BACK_PANEL';
   }
 
+  // 목찬넬 프레임
+  if (combinedNames.includes('목찬넬프레임') || combinedNames.includes('wood-channel') || combinedNames.includes('woodch')) {
+    return 'WOOD_CHANNEL';
+  }
+
   // 옷봉 (브라켓 포함) - 부모가 clothing-rod면 옷봉 레이어
   if (combinedNames.includes('clothing-rod') || combinedNames.includes('clothingrod') || combinedNames.includes('옷봉')) {
     return 'CLOTHING_ROD';
@@ -1067,6 +1072,11 @@ const determineLayer = (name: string): string => {
   // 백패널
   if (lowerName.includes('back-panel') || lowerName.includes('backpanel') || lowerName.includes('백패널')) {
     return 'BACK_PANEL';
+  }
+
+  // 목찬넬 프레임
+  if (lowerName.includes('목찬넬프레임') || lowerName.includes('wood-channel') || lowerName.includes('woodch')) {
+    return 'WOOD_CHANNEL';
   }
 
   // 옷봉
@@ -1460,6 +1470,10 @@ export const extractFromScene = (
         line2Color = 30; // ACI 30 = 오렌지 (가구패널과 동일, 투명도 10%는 CAD에서 별도 설정)
         line2Layer = 'BACK_PANEL';
         console.log(`📐 백패널(Line2): ${name}, 색상 ACI=30으로 강제 설정`);
+      } else if (combinedNames.includes('목찬넬프레임') || combinedNames.includes('wood-channel') || combinedNames.includes('woodch')) {
+        line2Color = 5; // ACI 5 = 파랑
+        line2Layer = 'WOOD_CHANNEL';
+        console.log(`📐 목찬넬(Line2): ${name}, 색상 ACI=5, 레이어=WOOD_CHANNEL`);
       } else if (combinedNames.includes('door-diagonal') ||
                  combinedNames.includes('door-edge') ||
                  combinedNames.includes('door-hinge') ||
@@ -1565,6 +1579,10 @@ export const extractFromScene = (
                            combinedNames.includes('door') ||
                            combinedNames.includes('도어');
 
+        const isWoodChannelEdge = combinedNames.includes('목찬넬프레임') ||
+                                  combinedNames.includes('wood-channel') ||
+                                  combinedNames.includes('woodch');
+
         // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
         const isSpaceFrame = lowerName.includes('space-frame');
 
@@ -1607,7 +1625,7 @@ export const extractFromScene = (
 
         // 가구 패널/공간 프레임/도어 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
         // 보강대(reinforcement)도 탑뷰에서 보여야 하므로 필터링 제외
-        const skipBackFilter = isFurniturePanelEdge || isDrawerEdge || isBackPanelEdge || isReinforcementEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
+        const skipBackFilter = isFurniturePanelEdge || isDrawerEdge || isBackPanelEdge || isWoodChannelEdge || isReinforcementEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
 
         // 레이어 및 색상 결정 이유 로깅
         let lsLayer = layer; // 기본값은 determineLayer에서 결정된 값
@@ -1620,6 +1638,10 @@ export const extractFromScene = (
           lsLayer = 'BACK_PANEL';
           lsColor = 30; // ACI 30 = 오렌지 (2D에서 가구패널과 동일한 색상, 투명도 10%는 CAD에서 별도 설정)
           colorReason = '백패널';
+        } else if (isWoodChannelEdge) {
+          lsLayer = 'WOOD_CHANNEL';
+          lsColor = 5; // ACI 5 = 파랑
+          colorReason = '목찬넬';
         } else if (isReinforcementEdge) {
           lsLayer = 'BACK_PANEL'; // 보강대도 BACK_PANEL 레이어 사용
           lsColor = 30; // ACI 30 = 오렌지 (백패널과 동일)
@@ -1843,6 +1865,7 @@ export const extractFromScene = (
   // 공간 프레임과 가구 패널은 LineSegments 이름으로 구분됨 (공간 프레임: 이름없음 → 연두색, 가구 패널: furniture-edge-* → 원래 색상)
   const shelfMeshes: typeof meshesForEdges = []; // 선반
   const backPanelMeshes: typeof meshesForEdges = []; // 백패널
+  const woodChannelMeshes: typeof meshesForEdges = []; // 목찬넬
   const clothingRodMeshes: typeof meshesForEdges = []; // 옷봉
   const adjustableFootMeshes: typeof meshesForEdges = []; // 조절발
   const otherFurnitureMeshes: typeof meshesForEdges = []; // 기타 (material 색상 사용)
@@ -1879,6 +1902,8 @@ export const extractFromScene = (
       clothingRodMeshes.push(item);
     } else if (name.includes('adjustable-foot') || name.includes('조절발')) {
       adjustableFootMeshes.push(item);
+    } else if (item.layer === 'WOOD_CHANNEL' || name.includes('목찬넬프레임') || name.includes('wood-channel') || name.includes('woodch')) {
+      woodChannelMeshes.push(item);
     } else if (name.includes('백패널') || name.includes('back-panel') || name.includes('backpanel')) {
       backPanelMeshes.push(item);
     } else if (name.includes('선반') || name.includes('shelf')) {
@@ -1890,7 +1915,7 @@ export const extractFromScene = (
     }
   });
 
-  console.log(`  선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 조절발: ${adjustableFootMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
+  console.log(`  선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 목찬넬: ${woodChannelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 조절발: ${adjustableFootMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
 
   let meshEdgeCount = 0;
 
@@ -1911,6 +1936,16 @@ export const extractFromScene = (
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
       console.log(`  ⚪ 백패널: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, BACK_PANEL`);
+    }
+  });
+
+  // 목찬넬 - WOOD_CHANNEL 레이어, 파랑 (ACI 5)
+  woodChannelMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'WOOD_CHANNEL', 5);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  🔵 목찬넬: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, WOOD_CHANNEL`);
     }
   });
 
@@ -3646,6 +3681,7 @@ const buildDxfString = (lines: DxfLine[], texts: DxfText[]): string => {
   dxf.addLayer('DOOR', 3, 'CONTINUOUS');             // 도어 - 연두색 (2D와 동일)
   dxf.addLayer('DOOR_DIMENSIONS', 7, 'CONTINUOUS');  // 도어 치수선 - 흰색
   dxf.addLayer('DRAWER', 30, 'CONTINUOUS');           // 서랍 - 주황색
+  dxf.addLayer('WOOD_CHANNEL', 5, 'CONTINUOUS');      // 목찬넬 - 파랑
   dxf.addLayer('BACK_PANEL', 254, 'CONTINUOUS');     // 백패널 - 매우 연한 회색 (투명도 효과)
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
   dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발 - 회색 (2D와 동일)
@@ -3653,7 +3689,7 @@ const buildDxfString = (lines: DxfLine[], texts: DxfText[]): string => {
   dxf.addLayer('END_PANEL', 3, 'CONTINUOUS');        // 엔드패널 - 연두색
   dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');       // 치수선 - 흰색
 
-  console.log('📦 레이어 생성 완료: SPACE_FRAME, FURNITURE_PANEL, DOOR, BACK_PANEL, CLOTHING_ROD, ACCESSORIES, END_PANEL, DIMENSIONS');
+  console.log('📦 레이어 생성 완료: SPACE_FRAME, FURNITURE_PANEL, DOOR, DRAWER, WOOD_CHANNEL, BACK_PANEL, CLOTHING_ROD, ACCESSORIES, END_PANEL, DIMENSIONS');
 
   // 레이어별 라인 통계
   const layerStats: Record<string, number> = {};
