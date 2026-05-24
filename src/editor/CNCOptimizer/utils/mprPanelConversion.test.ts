@@ -104,6 +104,39 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('TI="7.5"');
   });
 
+  it('mirrors furniture right-side panel top borings only in MPR coordinates', () => {
+    const panel = {
+      id: 'right-side-1',
+      name: '(하)우측',
+      width: 380,
+      height: 860,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      boringPositions: [9.3, 850.8],
+      boringDepthGroups: [
+        { y: 9.3, depthPositions: [30, 180, 330], boringType: 'fixed-panel' },
+        { y: 850.8, depthPositions: [88.5, 209, 329.5], boringType: 'fixed-panel' },
+      ],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const fixedBorings = converted.borings.filter(boring => boring.note === 'fixed-panel-through');
+
+    expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 350, y: 9.3 },
+      { x: 200, y: 9.3 },
+      { x: 50, y: 9.3 },
+      { x: 291.5, y: 850.8 },
+      { x: 171, y: 850.8 },
+      { x: 50.5, y: 850.8 },
+    ]);
+  });
+
   it('does not export stale boring data on drawer front panels', () => {
     const panel = {
       id: 'drawer-front-1',
