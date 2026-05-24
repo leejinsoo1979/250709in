@@ -19,6 +19,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
 import { convertPlacedPanelToMprBoringData } from '../utils/mprPanelConversion';
+import { buildMprAssemblyMetadata } from '../utils/mprAssemblyMetadata';
 import styles from './ExportBar.module.css';
 
 interface ExportBarProps {
@@ -184,6 +185,15 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
     result.files.forEach(file => {
       zip.file(file.filename, encodeMPRContent(file.content), { binary: true });
     });
+    const assemblyMetadata = buildMprAssemblyMetadata({
+      projectName,
+      panels: optimizedPanels,
+      mprPanels: panelBoringData,
+      files: result.files,
+      placedModules,
+      spaceInfo,
+    });
+    zip.file('assembly.json', JSON.stringify(assemblyMetadata, null, 2));
 
     const blob = await zip.generateAsync({
       type: 'blob',
