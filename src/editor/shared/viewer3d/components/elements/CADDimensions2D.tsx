@@ -1574,8 +1574,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const maxSplitSectionDepth = (splitSectionDepths && splitSectionDepths.length > 0)
             ? Math.max(...splitSectionDepths.filter(d => typeof d === 'number' && d > 0))
             : 0;
+          const furnitureDepthMmForSplit = Math.min(panelDepthMm_ud, 600);
           const splitExtraDepthMm = maxSplitSectionDepth > 0
-            ? Math.max(0, maxSplitSectionDepth - furnitureDepthMm_ud)
+            ? Math.max(0, maxSplitSectionDepth - furnitureDepthMmForSplit)
             : 0;
           const defaultDoorFrontZ = fzOff_ud + furnitureDepth_ud / 2 + mmToThreeUnits(splitExtraDepthMm);
           const hasShoeDoorDimensionModule = visibleFurniture.some(module => {
