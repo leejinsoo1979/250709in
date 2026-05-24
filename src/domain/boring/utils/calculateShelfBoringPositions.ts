@@ -42,6 +42,8 @@ export interface ShelfBoringPositionDetail {
   role: ShelfBoringPositionRole;
   /** 같은 역할 내 순번 */
   roleIndex?: number;
+  /** 추가 다보 보링이 따라가는 원본 이동선반 순번 */
+  sourceRoleIndex?: number;
 }
 
 export interface ShelfBoringPositionsResult {
@@ -137,12 +139,13 @@ export function calculateShelfBoringPositions(
       // 이동선반 보링은 선반 중심선이 아니라 선반 밑면이 타공 중심이다.
       // shelfPositions의 pos는 선반 중심이므로, 두께 절반만큼 아래로 내린다.
       const shelfBoringY = currentYPositionFromBottom + pos - halfThicknessMm;
+      const currentShelfDetailIndex = shelfDetailIndex++;
       shelves.push(shelfBoringY);
       details.push({
         y: shelfBoringY,
         type: 'movable-shelf',
         role: 'movable-shelf',
-        roleIndex: shelfDetailIndex++,
+        roleIndex: currentShelfDetailIndex,
       });
 
       for (let step = 1; step <= additionalDowelCount; step += 1) {
@@ -153,6 +156,7 @@ export function calculateShelfBoringPositions(
             y: extraY,
             type: 'additional-dowel',
             role: 'additional-dowel',
+            sourceRoleIndex: currentShelfDetailIndex,
           });
         });
       }
@@ -212,6 +216,11 @@ export function calculateShelfBoringPositions(
     };
     if (mergedRoleIndex !== undefined) {
       mergedDetail.roleIndex = mergedRoleIndex;
+    }
+    if (detail.sourceRoleIndex !== undefined) {
+      mergedDetail.sourceRoleIndex = detail.sourceRoleIndex;
+    } else if (existing?.sourceRoleIndex !== undefined) {
+      mergedDetail.sourceRoleIndex = existing.sourceRoleIndex;
     }
     uniqueDetailsMap.set(key, mergedDetail);
   });

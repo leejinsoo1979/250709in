@@ -52,7 +52,29 @@ function getShelfBoringDepthPositions(type: ShelfBoringPositionDetail['type'], p
     return [30, panelDepth / 2, panelDepth - 30];
   }
 
-  return [30, panelDepth - 30];
+  if (type === 'movable-shelf' || type === 'additional-dowel') {
+    return [30, panelDepth - 30];
+  }
+
+  return undefined;
+}
+
+function getShelfRoleIndex(detail: ShelfBoringPositionDetail): number | undefined {
+  return detail.role === 'additional-dowel'
+    ? detail.sourceRoleIndex
+    : detail.roleIndex;
+}
+
+function isShelfPinBoring(detail: ShelfBoringPositionDetail): boolean {
+  return detail.role === 'movable-shelf' || detail.role === 'additional-dowel';
+}
+
+function isFixedPanelBoringDetail(detail: ShelfBoringPositionDetail): boolean {
+  return detail.type === 'fixed-panel';
+}
+
+function getBoringType(detail: ShelfBoringPositionDetail): 'fixed-panel' | 'movable-shelf' {
+  return detail.type === 'fixed-panel' ? 'fixed-panel' : 'movable-shelf';
 }
 
 function getPanelReferenceDepth(panel: any): number {
@@ -106,8 +128,8 @@ function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number
     : fixedPanels.slice(1, -1);
 
   return (detail: ShelfBoringPositionDetail): number => {
-    if (detail.role === 'movable-shelf') {
-      return getPanelReferenceDepth(shelfPanels[detail.roleIndex ?? 0]) || fallbackDepth;
+    if (isShelfPinBoring(detail)) {
+      return getPanelReferenceDepth(shelfPanels[getShelfRoleIndex(detail) ?? 0]) || fallbackDepth;
     }
     if (detail.role === 'bottom-panel') {
       return getPanelReferenceDepth(bottomPanel) || fallbackDepth;
@@ -135,7 +157,7 @@ function createBoringFrontInsetResolver({
   shelfFrontInsetMm: number;
 }) {
   return (detail: ShelfBoringPositionDetail): number => {
-    if (detail.role === 'movable-shelf') {
+    if (isShelfPinBoring(detail)) {
       return shelfFrontInsetMm;
     }
 
@@ -177,7 +199,7 @@ function toBoringDepthGroups(
       return {
         y: transformY(detail.y),
         depthPositions,
-        boringType: detail.type,
+        boringType: getBoringType(detail),
       };
     })
     .filter((group): group is BoringDepthGroup => Boolean(group));
@@ -226,7 +248,7 @@ function calculateModuleShelfBoringDetails({
     },
   });
   const fixedDetails = baseResult.details.filter(detail => (
-    detail.type === 'fixed-panel' &&
+    isFixedPanelBoringDetail(detail) &&
     (hasDirectLowerTopPanel(moduleId) || detail.role !== 'top-panel')
   ));
   const details = [...fixedDetails, ...directShelfDetails].sort((a, b) => a.y - b.y);

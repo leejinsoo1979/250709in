@@ -19,6 +19,7 @@ import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHe
 import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
+import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import { FurniturePresetButtons } from './FurniturePresetButtons';
 import { useAlert } from '@/contexts/AlertContext';
 import styles from './PlacedModulePropertiesPanel.module.css';
@@ -1102,6 +1103,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     ? placedModules.find(module => module.id === activePopup.id)
     : null;
   const isGlassCabinetModule = !!currentPlacedModule?.moduleId?.includes('glass-cabinet');
+  const isDummyModule = isDummyModuleId(currentPlacedModule?.moduleId);
   const isHingePositionEditMode = !!currentPlacedModule && hingePositionEditModeModuleId === currentPlacedModule.id;
 
   useEffect(() => {
@@ -1110,7 +1112,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (
         activePopup.type !== 'furnitureEdit' ||
         activePopup.id !== hingePositionEditModeModuleId ||
-        currentPlacedModule?.moduleId?.includes('glass-cabinet')
+        currentPlacedModule?.moduleId?.includes('glass-cabinet') ||
+        isDummyModuleId(currentPlacedModule?.moduleId)
       )
     ) {
       setHingePositionEditModeModuleId(null);
@@ -4635,6 +4638,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
              상판내림(top-down-half/2tier/3tier)·도어올림(door-lift-half/2tier/3tier)·기본장은 도어이므로 경첩 표시 */}
           {!showDetails && currentPlacedModule?.hasDoor
             && !isGlassCabinetModule
+            && !isDummyModule
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-') && !currentPlacedModule.moduleId.includes('right-corner') && !currentPlacedModule.moduleId.includes('left-corner'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
@@ -4714,6 +4718,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {!showDetails && currentPlacedModule?.hasDoor
             && !isGlassCabinetModule
+            && !isDummyModule
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)

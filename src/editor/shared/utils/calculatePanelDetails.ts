@@ -15,6 +15,7 @@ import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from './topDownCabinetGeometry';
 import { getDirectLowerDowelShelfPositionsMm } from './lowerCabinetDowelShelves';
 import { resolveDrawerRailSizingMm } from './drawerRailSizing';
+import { isDummyModuleId } from './dummyModule';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -171,6 +172,7 @@ export const calculatePanelDetails = (
   // 도어 없는 모듈 — 마이다(서랍 앞판)만 사용하는 모듈은 도어 강제 차단
   // 3D LowerCabinet.tsx L922의 도어 차단 목록과 동일
   const moduleId = moduleData.id;
+  const isDummyModule = isDummyModuleId(moduleId);
   const isNoDoorModule =
     moduleId.includes('lower-drawer-') ||          // 서랍전용 (싱글/듀얼)
     moduleId.includes('lower-door-lift-2tier') ||   // 도어올림 2단
@@ -1517,6 +1519,18 @@ export const calculatePanelDetails = (
       customPositionsMm?: number[],
       insideFaceHingeSide?: 'left' | 'right'
     ) => {
+      if (isDummyModule) {
+        return {
+          boringPositions: [] as number[],
+          boringDepthPositions: [] as number[],
+          screwPositions: [] as number[],
+          screwDepthPositions: [] as number[],
+          screwHoleSpacing: undefined,
+          hingeCount: 0,
+          isLeftHinge,
+        };
+      }
+
       const hingePositions = normalizeDoorHingePositionsMm(
         customPositionsMm && customPositionsMm.length > 0
           ? customPositionsMm
@@ -1708,7 +1722,7 @@ export const calculatePanelDetails = (
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
     // 도어가 없는 모듈(서랍전용, 인덕션장 등)은 브라켓 보링 불필요
-    if (effectiveHasDoor) {
+    if (effectiveHasDoor && !isDummyModule) {
     // 도어는 상부+하부 섹션 전체를 한장으로 덮는 구조
     // → 상부+하부 합산 높이를 한몸통으로 계산하여 타공점 결정
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환

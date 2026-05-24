@@ -30,6 +30,7 @@ import {
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
+import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import {
   getPanelAssemblySequence,
   getPanelSimulationPlaybackElapsed,
@@ -640,6 +641,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
   const effectiveShowDimensions = isPanelSimulationPresentation ? false : showDimensions;
+  const isDummyDoorModule = isDummyModuleId(moduleData?.id);
   const isSide2DView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
   const isHingePositionEditMode = !!furnitureId && hingePositionEditModeModuleId === furnitureId;
   const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
@@ -660,9 +662,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // doorsOpen: true=전체열기, false=전체닫기, null=개별상태 사용
   const useIndividualState = furnitureId !== undefined;
-  const isDoorOpen = doorsOpen !== null
+  const requestedDoorOpen = doorsOpen !== null
     ? doorsOpen
     : (useIndividualState ? isIndividualDoorOpen(furnitureId, 0) : false);
+  const isDoorOpen = isDummyDoorModule ? false : requestedDoorOpen;
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
@@ -2546,7 +2549,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
-        {!moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('dual-side-panel-hinge')}
+        {!isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('dual-side-panel-hinge')}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
         <group position={leftDoorOpenGeometry.parentPosition}>
@@ -2620,7 +2623,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               
 
               {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
-              {viewMode === '2D' && hasCustomHingePositions && !leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {viewMode === '2D' && hasCustomHingePositions && !leftDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {renderHingeMarkers(
                     -leftDoorWidthUnits / 2 + mmToThreeUnits(24),
@@ -2630,7 +2633,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
                 </>
               )}
-              {viewMode === '2D' && !hasCustomHingePositions && !leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {viewMode === '2D' && !hasCustomHingePositions && !leftDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {renderHingeMarkers(
                     -leftDoorWidthUnits / 2 + mmToThreeUnits(24),
@@ -2640,7 +2643,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
                 </>
               )}
-              {!leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
+              {!leftDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
                 -leftDoorWidthUnits / 2 + mmToThreeUnits(24),
                 'left',
                 effectiveHingePositionsMm,
@@ -2656,6 +2659,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   const longDash = 2.4;
                   const shortDash = 0.9;
                   const gap = 0.9;
+
+                  if (isDummyDoorModule && isFrontView) {
+                    return [
+                      <Line
+                        key="left-dummy-x-1"
+                        points={[
+                          [-leftDoorWidthUnits / 2, -doorHeight / 2, 0],
+                          [leftDoorWidthUnits / 2, doorHeight / 2, 0]
+                        ]}
+                        color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
+                        lineWidth={1}
+                        transparent
+                        opacity={viewMode === '3D' ? 0.5 : 1.0}
+                      />,
+                      <Line
+                        key="left-dummy-x-2"
+                        points={[
+                          [-leftDoorWidthUnits / 2, doorHeight / 2, 0],
+                          [leftDoorWidthUnits / 2, -doorHeight / 2, 0]
+                        ]}
+                        color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
+                        lineWidth={1}
+                        transparent
+                        opacity={viewMode === '3D' ? 0.5 : 1.0}
+                      />
+                    ];
+                  }
 
                   if (isFrontView) {
                     const start1 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0] as const;
@@ -3009,7 +3039,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
               {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
-              {viewMode === '2D' && hasCustomHingePositions && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {viewMode === '2D' && hasCustomHingePositions && !rightDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {renderHingeMarkers(
                     rightDoorWidthUnits / 2 - mmToThreeUnits(24),
@@ -3019,7 +3049,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
                 </>
               )}
-              {viewMode === '2D' && !hasCustomHingePositions && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {viewMode === '2D' && !hasCustomHingePositions && !rightDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {renderHingeMarkers(
                     rightDoorWidthUnits / 2 - mmToThreeUnits(24),
@@ -3029,7 +3059,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
                 </>
               )}
-              {!rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
+              {!rightDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
                 rightDoorWidthUnits / 2 - mmToThreeUnits(24),
                 'right',
                 effectiveHingePositionsMm,
@@ -3045,6 +3075,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   const longDash = 2.4;
                   const shortDash = 0.9;
                   const gap = 0.9;
+
+                  if (isDummyDoorModule && isFrontView) {
+                    return [
+                      <Line
+                        key="right-dummy-x-1"
+                        points={[
+                          [-rightDoorWidthUnits / 2, -doorHeight / 2, 0],
+                          [rightDoorWidthUnits / 2, doorHeight / 2, 0]
+                        ]}
+                        color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
+                        lineWidth={1}
+                        transparent
+                        opacity={viewMode === '3D' ? 0.5 : 1.0}
+                      />,
+                      <Line
+                        key="right-dummy-x-2"
+                        points={[
+                          [-rightDoorWidthUnits / 2, doorHeight / 2, 0],
+                          [rightDoorWidthUnits / 2, -doorHeight / 2, 0]
+                        ]}
+                        color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
+                        lineWidth={1}
+                        transparent
+                        opacity={viewMode === '3D' ? 0.5 : 1.0}
+                      />
+                    ];
+                  }
 
                   if (isFrontView) {
                     const start1 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0] as const;
@@ -3471,7 +3528,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group>
-        {!moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('single-side-panel-hinge')}
+        {!isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('single-side-panel-hinge')}
         <group position={singleDoorOpenGeometry.parentPosition}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
           <group position={singleDoorOpenGeometry.childPosition}>
@@ -3581,7 +3638,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김, 유리장 제외) */}
-            {viewMode === '2D' && hasCustomHingePositions && !singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+            {viewMode === '2D' && hasCustomHingePositions && !singleDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
                 {renderHingeMarkers(
                   adjustedHingePosition === 'left'
@@ -3593,7 +3650,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 )}
               </>
             )}
-            {viewMode === '2D' && !hasCustomHingePositions && !singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+            {viewMode === '2D' && !hasCustomHingePositions && !singleDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
                 {renderHingeMarkers(
                   adjustedHingePosition === 'left'
@@ -3605,7 +3662,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 )}
               </>
             )}
-            {!singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
+            {!singleDoorLocked && !isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
               adjustedHingePosition === 'left'
                 ? -doorWidthUnits / 2 + mmToThreeUnits(24)
                 : doorWidthUnits / 2 - mmToThreeUnits(24),
@@ -3643,6 +3700,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   const shortDash = 0.9;
                   const gap = 0.9;
                   const segments1 = [];
+
+                  if (isDummyDoorModule && isFrontView) {
+                    return [
+                      <Line
+                        key="dummy-x-1"
+                        points={[
+                          [-doorWidthUnits / 2, -doorHeight / 2, 0],
+                          [doorWidthUnits / 2, doorHeight / 2, 0]
+                        ]}
+                        name="door-diagonal"
+                        color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
+                        lineWidth={1}
+                        transparent={true}
+                        opacity={viewMode === '3D' ? 0.5 : 1.0}
+                      />,
+                      <Line
+                        key="dummy-x-2"
+                        points={[
+                          [-doorWidthUnits / 2, doorHeight / 2, 0],
+                          [doorWidthUnits / 2, -doorHeight / 2, 0]
+                        ]}
+                        name="door-diagonal"
+                        color={viewMode === '3D' ? diagonalLineColor3D : '#FF8800'}
+                        lineWidth={1}
+                        transparent={true}
+                        opacity={viewMode === '3D' ? 0.5 : 1.0}
+                      />
+                    ];
+                  }
 
                   if (!isFrontView) {
                     // 측면뷰: 항상 동일한 기준으로 표시 (좌/우측 뷰 모두 동일)

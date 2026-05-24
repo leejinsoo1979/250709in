@@ -1475,7 +1475,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       : 0;
     const mmToUnits = (mm: number) => mm * 0.01;
     const buildHoleZPositions = (detail: typeof boringDetails[number]) => {
-      const frontReductionMm = detail.type === 'movable-shelf'
+      const frontReductionMm = detail.type !== 'fixed-panel'
         ? shelfFrontInsetMm
         : detail.role === 'top-panel'
           ? topPanelFrontReductionMm

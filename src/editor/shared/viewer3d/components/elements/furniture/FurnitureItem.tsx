@@ -21,6 +21,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 import { FaRegObjectGroup } from 'react-icons/fa';
+import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 
 // 엔드패널 슬롯 계산 기준 두께
 const END_PANEL_THICKNESS = 18; // mm
@@ -382,6 +383,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     (selectedFurnitureId === module.id || (selectedFurnitureIds?.includes(module.id) ?? false))
   );
   const isSelected = (selectedFurnitureId === placedModule.id || isMultiSelected || isGroupedSelection) && !isCustomEditing;
+  const isDummyModule = isDummyModuleId(placedModule.moduleId);
   const selectedFurnitureCount = selectedFurnitureIds?.length ?? 0;
   // 선택/편집/줄자모드 중인 가구는 solid로 렌더링
   const effectiveRenderMode = (isSelected || isEditMode || (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode))) ? 'solid' : renderMode;
@@ -5025,7 +5027,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             </div>
 
             {/* 경첩 방향 (싱글 가구만) */}
-            {isCornerCabinet ? (() => {
+            {!isDummyModule && (isCornerCabinet ? (() => {
               const frontHinge = ((placedModule as any).cornerFrontHingePosition || (isRightCornerCabinet ? 'left' : 'right')) as 'left' | 'right';
               const sideHinge = ((placedModule as any).cornerSideHingePosition || (isRightCornerCabinet ? 'right' : 'left')) as 'left' | 'right';
               const renderCornerHingeButtons = (
@@ -5100,7 +5102,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   })}
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </Html>
       )}

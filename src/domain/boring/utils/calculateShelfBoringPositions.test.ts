@@ -63,11 +63,11 @@ describe('calculateShelfBoringPositions', () => {
     expect(result.shelves).toEqual([109]);
     expect(result.details).toEqual([
       { y: 9, type: 'fixed-panel', role: 'bottom-panel' },
-      { y: 45, type: 'additional-dowel', role: 'additional-dowel' },
-      { y: 77, type: 'additional-dowel', role: 'additional-dowel' },
+      { y: 45, type: 'additional-dowel', role: 'additional-dowel', sourceRoleIndex: 0 },
+      { y: 77, type: 'additional-dowel', role: 'additional-dowel', sourceRoleIndex: 0 },
       { y: 109, type: 'movable-shelf', role: 'movable-shelf', roleIndex: 0 },
-      { y: 141, type: 'additional-dowel', role: 'additional-dowel' },
-      { y: 173, type: 'additional-dowel', role: 'additional-dowel' },
+      { y: 141, type: 'additional-dowel', role: 'additional-dowel', sourceRoleIndex: 0 },
+      { y: 173, type: 'additional-dowel', role: 'additional-dowel', sourceRoleIndex: 0 },
       { y: 209, type: 'fixed-panel', role: 'top-panel' }
     ]);
   });

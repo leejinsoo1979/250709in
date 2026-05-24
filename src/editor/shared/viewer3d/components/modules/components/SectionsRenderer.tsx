@@ -22,6 +22,7 @@ import {
   resolveSidePanelMatchedHingePositions,
   type DoorCabinetCategory
 } from '@/editor/shared/utils/doorGeometryCalculator';
+import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -1136,6 +1137,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
   const hingeBracketPositions = useMemo(() => {
     if (!currentPlacedModule?.hasDoor) return [];
+    if (isDummyModuleId(currentPlacedModule.moduleId || furnitureId)) return [];
 
     const unitPerMm = mmToThreeUnits(1);
     if (!unitPerMm) return [];

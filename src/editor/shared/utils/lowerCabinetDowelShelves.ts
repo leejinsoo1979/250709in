@@ -100,6 +100,7 @@ export const getDirectLowerDowelShelfBoringDetails = ({
           y: Math.round(y * 1000) / 1000,
           type: 'additional-dowel',
           role: 'additional-dowel',
+          sourceRoleIndex: detail.roleIndex,
         });
       });
     }

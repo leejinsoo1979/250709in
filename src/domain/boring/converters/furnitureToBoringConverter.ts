@@ -15,6 +15,7 @@ import {
   type DrawerCabinetParams,
 } from '../generators';
 import { DEFAULT_BORING_SETTINGS } from '../constants';
+import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 
 // ============================================
 // 타입 정의
@@ -209,6 +210,7 @@ export function convertFurnitureToBoring(
   // 가구 ID 및 이름
   const furnitureId = placedModule.id;
   const furnitureName = moduleData.name;
+  const hasHingedDoor = (placedModule.hasDoor ?? false) && !isDummyModuleId(placedModule.moduleId || moduleData.id);
 
   // 가구 타입별 처리
   switch (cabinetType) {
@@ -240,7 +242,7 @@ export function convertFurnitureToBoring(
         depth: dims.depth,
         thickness: panelThickness,
         material,
-        hasDoor: placedModule.hasDoor ?? false,
+        hasDoor: hasHingedDoor,
         doorCount: getDoorCount(dims.width),
         isLeftDoor: placedModule.hingePosition === 'left',
         shelfCount: getShelfCount(sections),
@@ -269,7 +271,7 @@ export function convertFurnitureToBoring(
         depth: dims.depth,
         thickness: panelThickness,
         material,
-        hasDoor: placedModule.hasDoor ?? false,
+        hasDoor: hasHingedDoor,
         doorCount: getDoorCount(dims.width),
         isLeftDoor: placedModule.hingePosition === 'left',
         shelfCount: getShelfCount(sections),
