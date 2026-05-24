@@ -1599,12 +1599,22 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const frameWidth = baseFurniture.innerWidth + 2 * baseFurniture.basicThickness;
             const verticalHMm = notchHeightMm - basicThicknessMm;
             const cabinetBottomY = -baseFurniture.height / 2;
+            const lowerSectionDepthForSplit = typeof baseFurniture.lowerSectionDepthMm === 'number' && baseFurniture.lowerSectionDepthMm > 0
+              ? baseFurniture.mmToThreeUnits(baseFurniture.lowerSectionDepthMm)
+              : baseFurniture.depth;
+            const lowerDepthDiffForSplit = baseFurniture.depth - lowerSectionDepthForSplit;
+            const lowerDirForSplit = lowerSectionDepthDirection ?? 'front';
+            const lowerSectionZOffsetForSplit = lowerDepthDiffForSplit === 0
+              ? 0
+              : (lowerDirForSplit === 'back' ? lowerDepthDiffForSplit / 2 : -lowerDepthDiffForSplit / 2);
+            const lowerSectionFrontZ = lowerSectionZOffsetForSplit + lowerSectionDepthForSplit / 2;
+            const lowerSectionBackZ = lowerSectionZOffsetForSplit - lowerSectionDepthForSplit / 2;
             const horzY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
-            const horzZ = baseFurniture.depth / 2 - mmToUnits(40) / 2;
+            const horzZ = lowerSectionFrontZ - mmToUnits(40) / 2;
             const vertY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness + mmToUnits(verticalHMm) / 2;
             // 수직부재 뒷면 = 측판 따내기 안쪽 면 (= depth/2 - 40), 수직 중심 = 뒷면 + basicThickness/2
             // → 수직부재는 수평부재 뒷쪽 끝부분 18mm 영역에 위치 (다른 상판내림 모듈과 동일 패턴)
-            const vertZ = baseFurniture.depth / 2 - mmToUnits(40) + baseFurniture.basicThickness / 2;
+            const vertZ = lowerSectionFrontZ - mmToUnits(40) + baseFurniture.basicThickness / 2;
             return (
               <>
                 <BoxWithEdges
@@ -1664,7 +1674,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   const stretcherZ = vertZ - baseFurniture.basicThickness / 2 - stretcherThickness / 2;
                   const stretcherBackZ = stretcherZ - stretcherThickness / 2; // 전대 뒷면
                   const backPanelDepthOffset = baseFurniture.basicThickness - mmToUnits(1);
-                  const backPanelFrontZ = -baseFurniture.depth / 2 + baseFurniture.backPanelThickness + backPanelDepthOffset;
+                  const backPanelFrontZ = lowerSectionBackZ + baseFurniture.backPanelThickness + backPanelDepthOffset;
                   const topPanelDepth = stretcherBackZ - backPanelFrontZ;
                   const topPanelCenterZ = (stretcherBackZ + backPanelFrontZ) / 2;
                   if (topPanelDepth <= 0) return null;
@@ -1698,8 +1708,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         const isNSectionFoot = !!(moduleData?.id?.includes('pull-out-cabinet') ||
           moduleData?.id?.includes('pantry-cabinet') ||
           (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge')));
-        const lowerSectionDepthMm = isNSectionFoot ? placedSectionDepths?.[0] : undefined;
-        const lowerDir = isNSectionFoot ? (placedSectionDepthDirections?.[0] ?? 'front') : 'front';
+        const isShelfSplitFoot = !!moduleData?.id?.includes('shelf-split');
+        const lowerSectionDepthMm = isNSectionFoot
+          ? placedSectionDepths?.[0]
+          : isShelfSplitFoot
+            ? baseFurniture.lowerSectionDepthMm
+            : undefined;
+        const lowerDir = isNSectionFoot
+          ? (placedSectionDepthDirections?.[0] ?? 'front')
+          : isShelfSplitFoot
+            ? (lowerSectionDepthDirection ?? 'front')
+            : 'front';
         // 짧아진 섹션 길이로 발 간격 그리고, 의류장과 동일 컨벤션으로 그룹 통째 ±depthDiff/2 이동
         const footDepth = (lowerSectionDepthMm && lowerSectionDepthMm > 0)
           ? baseFurniture.mmToThreeUnits(lowerSectionDepthMm)
