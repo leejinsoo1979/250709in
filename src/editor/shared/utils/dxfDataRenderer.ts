@@ -1257,12 +1257,6 @@ export const extractFromScene = (
       }
     }
 
-    // 탑뷰에서만 치수선 제외 (정면뷰, 측면뷰는 치수선 표시)
-    if (viewDirection === 'top' && name.toLowerCase().includes('dimension')) {
-      skippedByFilter++;
-      return;
-    }
-
     // 정면뷰에서 보강대 제외 (정면에서는 보이지 않음)
     if (viewDirection === 'front') {
       const lowerNameCheck = name.toLowerCase();
@@ -1757,15 +1751,8 @@ export const extractFromScene = (
     // Check for Text (drei Text component) - it's a Mesh with troika text data
     // 모든 텍스트는 DIMENSIONS 레이어로 강제 (치수 텍스트이므로)
     // DIMENSIONS 레이어를 끄면 모든 숫자가 함께 사라짐
-    // 탑뷰에서만 치수 텍스트 제외 (정면뷰, 측면뷰는 치수 표시)
     // 도어 치수 텍스트(door-dimension-text)는 DOOR 레이어로 분류
     if (mesh.geometry && (mesh as any).text !== undefined) {
-      // 탑뷰에서만 치수 텍스트 제외
-      if (viewDirection === 'top') {
-        console.log(`📝 ${viewDirection}뷰: 치수 텍스트 제외`);
-        return;
-      }
-
       const textContent = (mesh as any).text;
       if (textContent && typeof textContent === 'string') {
         const worldPos = new THREE.Vector3();
@@ -3544,18 +3531,11 @@ export const generateDxfDrawingData = (
     texts = [...extracted.texts];
     console.log(`📐 front뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
   } else {
-    // 탑뷰: 씬에서 추출한 치수선(DIMENSIONS 레이어)을 제외하고
-    // generateExternalDimensions()에서 생성한 치수선만 사용 (중복 방지)
-    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
-
-    // 씬 추출 라인/텍스트에서 DIMENSIONS 레이어 제외 (외부 치수선으로 대체)
-    const filteredExtractedLines = extracted.lines.filter(line => line.layer !== 'DIMENSIONS');
-    const filteredExtractedTexts = extracted.texts.filter(text => text.layer !== 'DIMENSIONS');
-    console.log(`📐 ${viewDirection}뷰: 씬 치수선 필터링 - 라인 ${extracted.lines.length}→${filteredExtractedLines.length}개, 텍스트 ${extracted.texts.length}→${filteredExtractedTexts.length}개`);
-
-    lines = [...filteredExtractedLines, ...externalDimensions.lines];
-    texts = [...filteredExtractedTexts, ...externalDimensions.texts];
-    console.log(`📐 ${viewDirection}뷰: 씬 추출 + 외부 치수선 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+    // 탑뷰: 화면 2D 탑뷰의 치수 레벨과 동일해야 하므로 씬에 실제 렌더된
+    // 치수선/텍스트를 그대로 사용한다. 별도 생성 치수선은 화면 기준과 어긋날 수 있다.
+    lines = [...extracted.lines];
+    texts = [...extracted.texts];
+    console.log(`📐 ${viewDirection}뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
   }
 
   if (lines.length === 0) {
@@ -3577,8 +3557,15 @@ export const generateDxfDrawingData = (
   const includedLayerSet = includeLayers?.length ? new Set(includeLayers) : null;
   const layerFilteredLines = includedLayerSet ? lines.filter(line => includedLayerSet.has(line.layer)) : lines;
   const layerFilteredTexts = includedLayerSet ? texts.filter(text => includedLayerSet.has(text.layer)) : texts;
+  const geometryFilteredLines = (viewDirection === 'front' || viewDirection === 'top')
+    ? layerFilteredLines.filter(line => !isUnexpectedDiagonalLine(line))
+    : layerFilteredLines;
 
-  const normalizedLines = layerFilteredLines.map(line => ({
+  if (geometryFilteredLines.length !== layerFilteredLines.length) {
+    console.warn(`⚠️ ${viewDirection}뷰 비정상 대각선 ${layerFilteredLines.length - geometryFilteredLines.length}개 제거`);
+  }
+
+  const normalizedLines = geometryFilteredLines.map(line => ({
     ...line,
     color: line.layer === 'DOOR' ? 3 : line.color,
     x1: line.x1 + offsetX,
@@ -3631,6 +3618,18 @@ const getDxfBounds = (
   }
 
   return { minX, maxX, minY, maxY };
+};
+
+const isUnexpectedDiagonalLine = (line: DxfLine): boolean => {
+  if (line.layer === 'DOOR' || line.layer === 'DOOR_DIMENSIONS') return false;
+
+  const dx = Math.abs(line.x2 - line.x1);
+  const dy = Math.abs(line.y2 - line.y1);
+  const length = Math.sqrt(dx * dx + dy * dy);
+
+  // 정면/탑 도면의 가구 및 치수선은 수평/수직이 기준이다.
+  // 큰 대각선은 1슬롯 코트장처럼 끊긴 선 객체가 PDF/DXF 추출 중 이어진 오류선이다.
+  return dx > 50 && dy > 50 && length > 180;
 };
 
 const buildDxfString = (lines: DxfLine[], texts: DxfText[]): string => {

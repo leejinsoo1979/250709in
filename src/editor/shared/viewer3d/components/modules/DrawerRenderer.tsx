@@ -802,11 +802,11 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
 
-        {/* CAD 기호 (삼각형) 및 서랍 깊이 표시 */}
-        {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
+        {/* CAD 기호 (삼각형) 및 서랍 깊이 표시: 정면도 PDF에는 노출되지 않도록 측면뷰에서만 렌더링 */}
+        {showDimensions && showDimensionsText && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
           <group>
-            {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시, 2D 모드에서만 */}
-            {isTopDrawer && viewMode === '2D' && (
+            {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시 */}
+            {isTopDrawer && (
               <NativeLine name="dimension_line"
                 points={[
                   [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), drawerFrontFaceZ + 0.1],
@@ -820,21 +820,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               />
             )}
             
-            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용 (3D에서는 숨김)
+            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용
                 측면뷰에서 서랍 박스 중앙에 보이도록 Z는 서랍 중앙(centerZ)에 배치 */}
-            {viewMode !== '3D' && (
-              <DimensionText
-                value={drawerBodyDepth * 100}
-                position={[
-                  centerX,
-                  centerY,
-                  centerZ
-                ]}
-                prefix="D"
-                color="#008B8B"
-                forceShow={true}
-              />
-            )}
+            <DimensionText
+              value={drawerBodyDepth * 100}
+              position={[
+                centerX,
+                centerY,
+                centerZ
+              ]}
+              prefix="D"
+              color="#008B8B"
+              forceShow={true}
+            />
           </group>
         )}
       </animated.group>
