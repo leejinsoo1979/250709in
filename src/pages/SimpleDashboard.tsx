@@ -435,6 +435,9 @@ const SimpleDashboard: React.FC = () => {
               height: defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
               ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
             },
+            ...(defaults.placementType ? {
+              layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
+            } : {}),
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
             ...(defaults.surroundMode ? {

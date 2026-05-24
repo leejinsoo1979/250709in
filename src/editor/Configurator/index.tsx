@@ -2403,13 +2403,18 @@ const Configurator: React.FC = () => {
               top: defaults.frameTop ?? 30,
               left: defaults.frameLeft ?? 18,
               right: defaults.frameRight ?? 18,
+              ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
             },
             baseConfig: {
               type: 'floor' as const,
               placementType: 'ground' as const,
               ...defaultSpaceConfig.baseConfig,
               height: defaults.baseHeight ?? 60,
+              ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
             },
+            ...(defaults.placementType ? {
+              layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
+            } : {}),
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
             ...(defaults.surroundMode ? {

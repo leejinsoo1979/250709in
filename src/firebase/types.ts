@@ -212,9 +212,11 @@ export interface UserProfile {
     gapLeft?: number;
     gapRight?: number;
     frameTop?: number;
+    frameTopOffset?: number;
     frameLeft?: number;
     frameRight?: number;
     baseHeight?: number;
+    baseFrameOffset?: number;
     furnitureSingleWidth?: number;
     furnitureDualWidth?: number;
     surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
@@ -224,6 +226,20 @@ export interface UserProfile {
     droppedCeilingWidth?: number;
     droppedCeilingDropHeight?: number;
     curtainBoxMode?: 'none' | 'left' | 'right';
+    hasFloorFinish?: boolean;
+    floorFinishHeight?: number;
+    topMoldingEnabled?: boolean;
+    topMoldingSize?: number;
+    topMoldingOffset?: number;
+    topMoldingGap?: number;
+    baseboardEnabled?: boolean;
+    baseboardSize?: number;
+    baseboardOffset?: number;
+    baseboardGap?: number;
+    doorSettingEnabled?: boolean;
+    doorGapMode?: 'body' | 'cf';
+    doorTopGap?: number;
+    doorBottomGap?: number;
   };
 
   createdAt: Timestamp;

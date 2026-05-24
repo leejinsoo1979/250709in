@@ -7498,6 +7498,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           posArr.forEach((pos, k) => {
             const shelfYmm = sectionBottomMm + pos + labelOffsetMm;
             const shelfYThree = mmToThreeUnits(shelfYmm);
+            const stopShelfSpinnerEvent = (e: any) => {
+              e.preventDefault();
+              e.stopPropagation();
+              e.nativeEvent?.preventDefault?.();
+              e.nativeEvent?.stopPropagation?.();
+              e.nativeEvent?.stopImmediatePropagation?.();
+            };
             output.push(
               <Html
                 key={`shelf-spinner-${module.id}-${sectionIdx}-${k}`}
@@ -7511,25 +7518,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px', lineHeight: 0, background: 'transparent', pointerEvents: 'none' }}>
                   <button
                     type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      // 즉시 이동 (클릭 반응 딜레이 제거)
+                    draggable={false}
+                    onPointerDown={(e) => {
+                      stopShelfSpinnerEvent(e);
                       moveShelf(k, 1);
-                      // 길게 누르면 연속 이동: 400ms 후 80ms 간격으로 반복
-                      const startHold = setTimeout(() => {
-                        (e.currentTarget as any)._repeat = setInterval(() => moveShelf(k, 1), 80);
-                      }, 400);
-                      (e.currentTarget as any)._startHold = startHold;
                     }}
-                    onMouseUp={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
-                    onMouseLeave={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
+                    onMouseDown={stopShelfSpinnerEvent}
+                    onPointerMove={stopShelfSpinnerEvent}
+                    onDragStart={stopShelfSpinnerEvent}
+                    onClick={stopShelfSpinnerEvent}
                     style={{
                       width: '40px', height: '24px', fontSize: '16px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
@@ -7539,27 +7536,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold',
                       pointerEvents: 'auto',
+                      userSelect: 'none',
+                      touchAction: 'none',
                     }}
                   >▲</button>
                   <button
                     type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
+                    draggable={false}
+                    onPointerDown={(e) => {
+                      stopShelfSpinnerEvent(e);
                       moveShelf(k, -1);
-                      const startHold = setTimeout(() => {
-                        (e.currentTarget as any)._repeat = setInterval(() => moveShelf(k, -1), 80);
-                      }, 400);
-                      (e.currentTarget as any)._startHold = startHold;
                     }}
-                    onMouseUp={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
-                    onMouseLeave={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
+                    onMouseDown={stopShelfSpinnerEvent}
+                    onPointerMove={stopShelfSpinnerEvent}
+                    onDragStart={stopShelfSpinnerEvent}
+                    onClick={stopShelfSpinnerEvent}
                     style={{
                       width: '40px', height: '24px', fontSize: '16px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
@@ -7570,6 +7561,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold',
                       pointerEvents: 'auto',
+                      userSelect: 'none',
+                      touchAction: 'none',
                     }}
                   >▼</button>
                 </div>
@@ -7745,56 +7738,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '60px', lineHeight: 0, background: 'transparent', gap: '3px' }}>
                   <button
                     type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
+                    draggable={false}
+                    onPointerDown={(e) => {
+                      stopShelfSpinnerEvent(e);
                       moveOffset(1);
-                      const startHold = setTimeout(() => {
-                        (e.currentTarget as any)._repeat = setInterval(() => moveOffset(1), 80);
-                      }, 400);
-                      (e.currentTarget as any)._startHold = startHold;
                     }}
-                    onMouseUp={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
-                    onMouseLeave={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
+                    onMouseDown={stopShelfSpinnerEvent}
+                    onPointerMove={stopShelfSpinnerEvent}
+                    onDragStart={stopShelfSpinnerEvent}
+                    onClick={stopShelfSpinnerEvent}
                     style={{
                       width: '36px', height: '26px', padding: 0, lineHeight: '26px',
                       background: 'rgba(255,255,255,0.95)',
                       color: '#000', border: '1px solid rgba(0,0,0,0.5)', borderRadius: '4px',
                       cursor: 'pointer', fontSize: '16px', fontWeight: 'bold',
                       boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                      userSelect: 'none',
+                      touchAction: 'none',
                     }}
                   >▲</button>
                   <button
                     type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
+                    draggable={false}
+                    onPointerDown={(e) => {
+                      stopShelfSpinnerEvent(e);
                       moveOffset(-1);
-                      const startHold = setTimeout(() => {
-                        (e.currentTarget as any)._repeat = setInterval(() => moveOffset(-1), 80);
-                      }, 400);
-                      (e.currentTarget as any)._startHold = startHold;
                     }}
-                    onMouseUp={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
-                    onMouseLeave={(e) => {
-                      clearTimeout((e.currentTarget as any)?._startHold);
-                      clearInterval((e.currentTarget as any)?._repeat);
-                    }}
+                    onMouseDown={stopShelfSpinnerEvent}
+                    onPointerMove={stopShelfSpinnerEvent}
+                    onDragStart={stopShelfSpinnerEvent}
+                    onClick={stopShelfSpinnerEvent}
                     style={{
                       width: '36px', height: '26px', padding: 0, lineHeight: '26px',
                       background: 'rgba(255,255,255,0.95)',
                       color: '#000', border: '1px solid rgba(0,0,0,0.5)', borderRadius: '4px',
                       cursor: 'pointer', fontSize: '16px', fontWeight: 'bold',
                       boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                      userSelect: 'none',
+                      touchAction: 'none',
                     }}
                   >▼</button>
                 </div>

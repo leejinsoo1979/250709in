@@ -302,11 +302,16 @@ const Header: React.FC<HeaderProps> = ({
             top: defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
             right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
+            ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
           },
           baseConfig: {
             ...spaceConfig.baseConfig!,
             height: defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
+            ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
           },
+          ...(defaults.placementType ? {
+            layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
+          } : {}),
           ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
           ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
           ...(defaults.surroundMode ? {
@@ -346,6 +351,12 @@ const Header: React.FC<HeaderProps> = ({
               width: 100,
               dropHeight: 200,
             },
+          } : {}),
+          ...(defaults.hasFloorFinish !== undefined ? {
+            hasFloorFinish: defaults.hasFloorFinish,
+            ...(defaults.hasFloorFinish ? {
+              floorFinish: { height: defaults.floorFinishHeight ?? 15 },
+            } : { floorFinish: undefined }),
           } : {}),
         };
       }

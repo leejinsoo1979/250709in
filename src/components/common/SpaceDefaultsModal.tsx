@@ -100,7 +100,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
     <div className={styles.numberInput}>
       <div className={styles.inputLabel}>{label}</div>
       <div className={styles.inputGroup}>
-        <button className={styles.inputButton} onClick={() => onChange(Math.max(lo, value - step))} disabled={value <= lo}>−</button>
+        <button type="button" className={styles.inputButton} onClick={() => onChange(Math.max(lo, value - step))} disabled={value <= lo}>−</button>
         <div className={styles.inputField}>
           <input
             type="text"
@@ -111,6 +111,12 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
               // 음수 입력 허용: 빈 문자열, '-' 단독, 숫자/소수점/마이너스 조합 허용
               if (v === '' || v === '-' || /^-?\d*\.?\d*$/.test(v)) {
                 setLocalValue(v);
+                if (v !== '' && v !== '-') {
+                  const next = Number(v);
+                  if (!isNaN(next)) {
+                    onChange(Math.max(lo, Math.min(hi, next)));
+                  }
+                }
               }
             }}
             onBlur={(e) => commit(e.target.value)}
@@ -118,7 +124,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
           />
           <span className={styles.inputUnit}>{unit}</span>
         </div>
-        <button className={styles.inputButton} onClick={() => onChange(Math.min(hi, value + step))} disabled={value >= hi}>+</button>
+        <button type="button" className={styles.inputButton} onClick={() => onChange(Math.min(hi, value + step))} disabled={value >= hi}>+</button>
       </div>
     </div>
   );
@@ -128,7 +134,7 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
 const Toggle: React.FC<{ options: { id: string; label: string }[]; selected: string; onChange: (id: string) => void }> = ({ options, selected, onChange }) => (
   <div className={commonStyles.toggleButtonGroup}>
     {options.map(opt => (
-      <button key={opt.id} className={`${commonStyles.toggleButton} ${selected === opt.id ? commonStyles.toggleButtonActive : ''}`} onClick={() => onChange(opt.id)}>
+      <button type="button" key={opt.id} className={`${commonStyles.toggleButton} ${selected === opt.id ? commonStyles.toggleButtonActive : ''}`} onClick={() => onChange(opt.id)}>
         {opt.label}
       </button>
     ))}
@@ -183,7 +189,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       <div className={styles.modal} onClick={e => e.stopPropagation()}>
         <div className={styles.header}>
           <h3 className={styles.title}>공간설정 기본값</h3>
-          <button className={styles.closeButton} onClick={onClose}>×</button>
+          <button type="button" className={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
         <div className={styles.body}>
@@ -381,8 +387,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             </span>
           )}
           <div className={styles.footerButtons}>
-            <button className={styles.resetButton} onClick={() => { setValues(SYSTEM_DEFAULTS); setMessage(null); }}>초기화</button>
-            <button className={styles.saveButton} onClick={handleSave} disabled={saving}>
+            <button type="button" className={styles.resetButton} onClick={() => { setValues(SYSTEM_DEFAULTS); setMessage(null); }}>초기화</button>
+            <button type="button" className={styles.saveButton} onClick={handleSave} disabled={saving}>
               {saving ? '저장 중...' : '저장'}
             </button>
           </div>

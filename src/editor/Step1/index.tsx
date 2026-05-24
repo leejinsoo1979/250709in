@@ -91,6 +91,9 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
             height: defaults.baseHeight ?? current.baseConfig?.height ?? 60,
             ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
           },
+          ...(defaults.placementType ? {
+            layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
+          } : {}),
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,
           // 프레임 설정 (surroundMode)
