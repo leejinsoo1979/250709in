@@ -113,6 +113,55 @@ function resolveFixedHorizontalSideBoringPositions(panelDepth: number): number[]
   return Array.from(new Set(positions)).sort((a, b) => a - b);
 }
 
+function matchesFixedHorizontalPanelDetail(panel: any, detail: ShelfBoringPositionDetail): boolean {
+  if (!isFixedPanelBoringDetail(detail)) return false;
+
+  const name = panel?.name || '';
+  if (!name) return false;
+
+  if (name.includes('(하)바닥')) return detail.role === 'bottom-panel';
+  if (name.includes('(상)상판')) return detail.role === 'top-panel';
+  if (name.includes('(하)상판') || name.includes('(상)바닥')) return detail.role === 'section-divider';
+
+  if ((name === '바닥' || name.endsWith('바닥') || name.includes('바닥판') || name.includes('지판')) && detail.role === 'bottom-panel') {
+    return true;
+  }
+
+  if ((name === '상판' || name.endsWith('상판') || name.endsWith('천판') || name.includes('천판')) && detail.role === 'top-panel') {
+    return true;
+  }
+
+  if (name.includes('고정선반') || name.includes('옷봉 선반')) {
+    return detail.role === 'fixed-shelf';
+  }
+
+  return false;
+}
+
+function resolveFixedHorizontalSideBoringPositionsFromSidePanel(
+  panel: any,
+  details: ShelfBoringPositionDetail[],
+  getReferenceDepth: (detail: ShelfBoringPositionDetail) => number,
+  options: {
+    getSideDepth?: (detail: ShelfBoringPositionDetail) => number;
+    getFrontInset?: (detail: ShelfBoringPositionDetail) => number;
+  }
+): number[] | undefined {
+  if (!isMainHorizontalPanel(panel)) return undefined;
+
+  const matchingDetails = details.filter(detail => matchesFixedHorizontalPanelDetail(panel, detail));
+  const groups = toBoringDepthGroups(matchingDetails, getReferenceDepth, y => y, options);
+  const positions = groups
+    ?.flatMap(group => group.depthPositions)
+    .filter(pos => Number.isFinite(pos));
+
+  if (positions && positions.length > 0) {
+    return Array.from(new Set(positions.map(pos => Math.round(pos * 10) / 10))).sort((a, b) => a - b);
+  }
+
+  return resolveFixedHorizontalSideBoringPositions(panel.height || panel.depth || 0);
+}
+
 function isMovableShelfPanel(panel: any): boolean {
   const name = panel?.name || '';
   if (!name.includes('선반')) return false;
@@ -914,9 +963,12 @@ export function useLivePanelData() {
             }
           }
 
-          const panelSideBoringPositions = isMainHorizontalPanel(panel)
-            ? resolveFixedHorizontalSideBoringPositions(panel.height || panel.depth || 0)
-            : undefined;
+          const panelSideBoringPositions = resolveFixedHorizontalSideBoringPositionsFromSidePanel(
+            panel,
+            allBoringDetails,
+            resolveReferenceDepth,
+            boringDepthGroupOptions
+          );
 
           console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);
 
@@ -1796,9 +1848,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
         }
 
-        const panelSideBoringPositions = isMainHorizontalPanel(panel)
-          ? resolveFixedHorizontalSideBoringPositions(panel.height || panel.depth || 0)
-          : undefined;
+        const panelSideBoringPositions = resolveFixedHorizontalSideBoringPositionsFromSidePanel(
+          panel,
+          allBoringDetails,
+          resolveReferenceDepth,
+          boringDepthGroupOptions
+        );
 
         return {
           id: `m${moduleIndex}_p${panelIndex}`,
