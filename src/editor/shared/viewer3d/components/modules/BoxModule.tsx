@@ -330,13 +330,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const fallbackDirection = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
     const sectionDirection = placedSectionDepthDirections?.[sectionIndex] ?? fallbackDirection ?? 'front';
 
-    if (!sectionDepthMm || sectionDepthMm <= 0 || sectionDepthMm >= baseDepthMm) {
+    if (!sectionDepthMm || sectionDepthMm <= 0) {
       return { moduleDepthMm: baseDepthMm, zOffset: 0 };
     }
 
-    // UI의 '뒤고정'은 front 값이다. 뒷면을 고정하고 깊이를 줄이면 도어도 새 앞선으로 들어가야 한다.
+    // UI의 '뒤고정'은 front 값이다. 뒷면을 고정하고 깊이를 변경하면(줄이거나 늘리면)
+    // 도어도 새 앞선으로 이동해야 한다. (이전: 늘릴 때(>=baseDepth) 분기 빠짐 → 도어 안 따라옴)
     if (sectionDirection === 'front') {
-      const diffMm = baseDepthMm - sectionDepthMm;
+      const diffMm = baseDepthMm - sectionDepthMm; // 음수면 늘어난 것 → zOffset 양수(앞으로)
       return {
         moduleDepthMm: sectionDepthMm,
         zOffset: -baseFurniture.mmToThreeUnits(diffMm),
