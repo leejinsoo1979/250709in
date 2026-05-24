@@ -68,6 +68,14 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     });
     return allPanels;
   }, [optimizationResults]);
+
+  const optimizedPanels = useMemo(() => {
+    const allPanels: PlacedPanel[] = [];
+    optimizationResults.forEach(result => {
+      result.panels.forEach(panel => allPanels.push(panel));
+    });
+    return allPanels;
+  }, [optimizationResults]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -329,17 +337,12 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
   // imos MPR 내보내기
   const handleExportMPR = async () => {
     // 모든 패널 수집 (보링 유무와 무관하게 재단 데이터 필요)
-    const allPanels: PlacedPanel[] = [];
-    optimizationResults.forEach(result => {
-      result.panels.forEach(panel => allPanels.push(panel));
-    });
-
-    if (allPanels.length === 0) {
+    if (optimizedPanels.length === 0) {
       alert('내보낼 패널 데이터가 없습니다.');
       return;
     }
 
-    const panelBoringData = allPanels.map(convertToPanelBoringData);
+    const panelBoringData = optimizedPanels.map(convertToPanelBoringData);
     const projectName = basicInfo?.title || 'project';
     const timestamp = new Date().toISOString().slice(0, 10);
 
@@ -373,12 +376,12 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
   // Biesse CIX 내보내기
   const handleExportCIX = async () => {
-    if (panelsWithBoring.length === 0) {
-      alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
+    if (optimizedPanels.length === 0) {
+      alert('내보낼 패널 데이터가 없습니다.');
       return;
     }
 
-    const panelBoringData = panelsWithBoring.map(convertToPanelBoringData);
+    const panelBoringData = optimizedPanels.map(convertToPanelBoringData);
     const projectName = basicInfo?.title || 'project';
     const timestamp = new Date().toISOString().slice(0, 10);
 
@@ -409,6 +412,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
   const hasData = panels.length > 0 || stock.length > 0 || optimizationResults.length > 0;
   const hasBoringData = panelsWithBoring.length > 0;
+  const hasOptimizedPanelData = optimizedPanels.length > 0;
 
   return (
     <div className={styles.exportDropdown} ref={dropdownRef}>
@@ -469,7 +473,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
           <button
             className={styles.menuItem}
             onClick={handleExportMPR}
-            disabled={!hasBoringData}
+            disabled={!hasOptimizedPanelData}
           >
             <Cpu size={16} />
             <div className={styles.menuItemContent}>
@@ -481,7 +485,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
           <button
             className={styles.menuItem}
             onClick={handleExportCIX}
-            disabled={!hasBoringData}
+            disabled={!hasOptimizedPanelData}
           >
             <Cpu size={16} />
             <div className={styles.menuItemContent}>

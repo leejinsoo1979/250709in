@@ -1491,14 +1491,14 @@ export const calculatePanelDetails = (
           shelfCollisionPositionsMm,
           doorH
         );
-      // 힌지컵 X 위치 (도어 가장자리에서 cupEdgeDistance)
+      // 옵티마이저/MPR은 도어 안쪽면 기준이므로 정면 힌지 방향을 좌우 미러링한다.
       const cupX = isLeftHinge
-        ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
-        : doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
-      // 나사홀 X 위치 (힌지컵 중심에서 도어 안쪽으로 screwRowDistance만큼)
+        ? doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance
+        : DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
+      // 나사홀은 안쪽면에서 힌지컵보다 도어 중심 방향으로 들어간다.
       const screwX = isLeftHinge
-        ? cupX + DEFAULT_HINGE_SETTINGS.screwRowDistance
-        : cupX - DEFAULT_HINGE_SETTINGS.screwRowDistance;
+        ? cupX - DEFAULT_HINGE_SETTINGS.screwRowDistance
+        : cupX + DEFAULT_HINGE_SETTINGS.screwRowDistance;
       // 나사홀 Y 오프셋 (힌지컵 중심에서 상하)
       const screwHoleSpacing = hingeType === 'B' ? 48 : 45;
       const screwYOffset = screwHoleSpacing / 2; // A: 22.5mm, B: 24mm

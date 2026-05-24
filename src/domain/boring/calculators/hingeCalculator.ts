@@ -180,10 +180,10 @@ export function calculateDoorCupBorings(
   const settings = { ...DEFAULT_HINGE_SETTINGS, ...params.settings };
   const positions = calculateHingePositions(params.doorHeight, settings);
 
-  // X 위치: 도어 가장자리에서 3mm
+  // X 위치: 도어 안쪽면 가공 기준. 정면 힌지 방향은 좌우 미러링되어 보인다.
   const xPosition = params.isLeftHinge
-    ? settings.cupEdgeDistance  // 좌측힌지: 왼쪽 가장자리
-    : params.doorWidth - settings.cupEdgeDistance;  // 우측힌지: 오른쪽 가장자리
+    ? params.doorWidth - settings.cupEdgeDistance
+    : settings.cupEdgeDistance;
 
   return positions.map((yPos, index) => ({
     id: `hinge-cup-${index + 1}`,

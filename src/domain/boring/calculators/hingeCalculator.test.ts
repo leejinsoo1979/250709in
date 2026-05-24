@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   avoidHingePositionsForShelves,
+  calculateDoorCupBorings,
   calculateHingeCount,
   calculateHingePositions,
 } from './hingeCalculator';
@@ -51,5 +52,19 @@ describe('hingeCalculator', () => {
       [{ bottomMm: 1351, topMm: 1369 }],
       2100
     )).toEqual([120, 740, 1419, 1980]);
+  });
+
+  it('mirrors door cup x positions for the inside machining face', () => {
+    expect(calculateDoorCupBorings({
+      doorWidth: 497,
+      doorHeight: 650,
+      isLeftHinge: false,
+    })[0].x).toBe(22.5);
+
+    expect(calculateDoorCupBorings({
+      doorWidth: 497,
+      doorHeight: 650,
+      isLeftHinge: true,
+    })[0].x).toBe(474.5);
   });
 });

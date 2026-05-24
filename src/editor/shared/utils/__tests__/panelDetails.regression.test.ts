@@ -460,6 +460,8 @@ describe('panelDetails regression baselines', () => {
     expect(doors[0].name).toBe('도어')
     expect(doors[0].width).toBe(497)
     expect(doors[0].isLeftHinge).toBe(false)
+    expect(doors[0].boringDepthPositions).toEqual([22.5])
+    expect(doors[0].screwDepthPositions).toEqual([32])
     expect(doors[0].height).toBeGreaterThan(0)
   })
 
