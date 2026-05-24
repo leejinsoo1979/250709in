@@ -238,6 +238,8 @@ describe('panelDetails regression baselines', () => {
     expectedDrawerModulePanels.forEach((name) => {
       expect(findPanel(panels, name)).toBeDefined()
     })
+    expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
+    expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
     expect(findPanel(panels, '백패널').height).toBe(510)
     expect(panels.some(panel => panel.name?.includes('보강대'))).toBe(false)
   })
@@ -297,8 +299,8 @@ describe('panelDetails regression baselines', () => {
       backPanelThicknessMm: 9
     })
 
-    expect(findPanel(panels, '목찬넬프레임수평(1)')).toBeDefined()
-    expect(findPanel(panels, '목찬넬프레임수직(1)')).toBeDefined()
+    expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
+    expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
     expect(findPanel(panels, '전대')).toBeDefined()
     expect(findPanel(panels, '(하)상판').depth).toBe(296)
   })

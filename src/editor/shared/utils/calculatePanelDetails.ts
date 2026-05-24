@@ -178,6 +178,8 @@ export const calculatePanelDetails = (
 
   // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
   const doorWidth = originalWidth || customWidth;
+  const doorPanelCutThickness = 18.5;
+  const doorPanelCutMaterial = 'PET';
   
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
@@ -2075,7 +2077,7 @@ export const calculatePanelDetails = (
 
     const glassFrameWidth = glassDrawerModuleInnerWidth;
     const glassWoodChannelHeight = 60;
-    const glassWoodChannelVerticalHeight = glassWoodChannelHeight - basicThickness;
+    const glassWoodChannelVerticalHeight = glassWoodChannelHeight - doorPanelCutThickness;
     const backPanelDepthOffset = basicThickness - 1;
     const rearAlignedPanelDepth = customDepth - 57 - backPanelThickness - basicThickness;
     const topRearInnerPanelDepth = drawerModuleBottomDepth - basicThickness;
@@ -2085,15 +2087,15 @@ export const calculatePanelDetails = (
         name: '목찬넬프레임수평(1)',
         width: glassFrameWidth,
         depth: 40,
-        thickness: basicThickness,
-        material: 'PB'
+        thickness: doorPanelCutThickness,
+        material: doorPanelCutMaterial
       },
       {
         name: '목찬넬프레임수직(1)',
         width: glassFrameWidth,
         height: glassWoodChannelVerticalHeight,
-        thickness: basicThickness,
-        material: 'PB'
+        thickness: doorPanelCutThickness,
+        material: doorPanelCutMaterial
       },
       {
         name: '전대',
@@ -2690,22 +2692,22 @@ export const calculatePanelDetails = (
   // BoxModule.tsx의 shelf-split 전용 렌더링과 동일한 부재를 패널 목록에도 노출한다.
   if (moduleData.id.includes('shelf-split')) {
     const woodChannelHeight = 80;
-    const woodChannelVerticalHeight = woodChannelHeight - basicThickness;
+    const woodChannelVerticalHeight = woodChannelHeight - doorPanelCutThickness;
     const channelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
     panels.frame.push(
       {
         name: '목찬넬프레임수평(1)',
         width: customWidth,
         depth: 40,
-        thickness: basicThickness,
-        material: 'PB',
+        thickness: doorPanelCutThickness,
+        material: doorPanelCutMaterial,
       },
       {
         name: '목찬넬프레임수직(1)',
         width: customWidth,
         height: woodChannelVerticalHeight,
-        thickness: basicThickness,
-        material: 'PB',
+        thickness: doorPanelCutThickness,
+        material: doorPanelCutMaterial,
       },
       {
         name: '전대',
