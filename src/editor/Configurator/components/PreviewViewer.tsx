@@ -101,6 +101,7 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
               isEmbedded={true}
               readOnly={true}
               hideEdges={true}
+              showViewCubeGizmo={false}
               onFurnitureClick={handleFurnitureClick}
             />
           </div>

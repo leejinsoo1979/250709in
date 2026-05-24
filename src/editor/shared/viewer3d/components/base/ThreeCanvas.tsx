@@ -56,6 +56,8 @@ interface ThreeCanvasProps {
   sceneRef?: React.MutableRefObject<any>;
   /** OrbitControls 준비 시 콜백 (줌 슬라이더 등 외부 제어용) */
   onControlsReady?: (controls: any) => void;
+  /** CAD ViewCube 기즈모 표시 여부 */
+  showViewCubeGizmo?: boolean;
 }
 
 /**
@@ -75,7 +77,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   cameraMode: cameraModeFromProps,
   zoomMultiplier,
   sceneRef,
-  onControlsReady
+  onControlsReady,
+  showViewCubeGizmo = true
 }) => {
   const CANVAS_DEBUG = false;
   const canvasLog = (...args: any[]) => {
@@ -1710,7 +1713,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         </Canvas>
 
         {/* CAD 스타일 ViewCube 기즈모 - 좌측 상단 HTML 오버레이 (3D 모드 + 표시설정 ON일 때만) */}
-        {canUsePlacementWallTools && viewMode === '3D' && showGizmo && <AxisArrowsGizmo />}
+        {showViewCubeGizmo && canUsePlacementWallTools && viewMode === '3D' && showGizmo && <AxisArrowsGizmo />}
       </div>
     </ErrorBoundary>
   );

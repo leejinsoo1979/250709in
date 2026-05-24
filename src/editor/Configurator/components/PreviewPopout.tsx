@@ -193,6 +193,7 @@ const PreviewPopout: React.FC = () => {
             isEmbedded={false}
             readOnly={true}
             hideEdges={localViewMode === '3D'}
+            showViewCubeGizmo={false}
           />
         ) : (
           <div className={styles.loading}>

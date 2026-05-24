@@ -444,6 +444,8 @@ describe('panelDetails regression baselines', () => {
     expect(doors.map((panel) => panel.name)).toEqual(['좌측 도어', '우측 도어'])
     expect(doors.map((panel) => panel.width)).toEqual([497, 497])
     expect(doors.map((panel) => panel.isLeftHinge)).toEqual([false, true])
+    expect(doors.map((panel) => panel.boringDepthPositions)).toEqual([[474.5], [22.5]])
+    expect(doors.map((panel) => panel.screwDepthPositions)).toEqual([[465], [32]])
     doors.forEach((panel) => {
       expect(panel.height).toBeGreaterThan(0)
     })

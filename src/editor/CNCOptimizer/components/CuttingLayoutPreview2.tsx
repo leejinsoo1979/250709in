@@ -7,6 +7,36 @@ import type { CutStep } from '@/types/cutlist';
 import type { PanelBoringData, BoringType } from '@/domain/boring/types';
 import styles from './CuttingLayoutPreview2.module.css';
 
+const DEBUG_CUTTING_LAYOUT = false;
+
+const debugCuttingLayoutLog = (...args: unknown[]) => {
+  if (DEBUG_CUTTING_LAYOUT) {
+    console.log(...args);
+  }
+};
+
+const formatPanelMm = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+};
+
+const roundPanelCoordMm = (value: number): number => Math.round(value * 10) / 10;
+
+const getBoringHitRadiusMm = (totalScale: number): number => {
+  const safeScale = Math.max(totalScale, 0.0001);
+  return Math.max(5, 14 / safeScale);
+};
+
+const isDrawerSidePanelName = (name?: string): boolean => {
+  const panelName = name || '';
+  return panelName.includes('서랍') &&
+    (panelName.includes('좌측판') ||
+      panelName.includes('우측판') ||
+      panelName.includes('좌측') ||
+      panelName.includes('우측') ||
+      panelName.includes('측판'));
+};
+
 interface CuttingLayoutPreview2Props {
   result?: OptimizedResult;
   highlightedPanelId?: string | null;
@@ -56,6 +86,218 @@ function resolveFurnitureSideDepthPosition(panel: any, depthPosMm: number): numb
   return isFurnitureRightSidePanel(panel)
     ? originalWidth - depthPosMm
     : depthPosMm;
+}
+
+function getBoringSheetCoords(
+  panel: any,
+  args: {
+    panelX: number;
+    panelY: number;
+    boringPosMm: number;
+    depthPosMm: number;
+    isDrawerSidePanel: boolean;
+    isDrawerFrontPanel: boolean;
+  }
+): { x: number; y: number } {
+  const { panelX, panelY, boringPosMm, depthPosMm, isDrawerSidePanel, isDrawerFrontPanel } = args;
+  const originalWidth = panel.width;
+  const originalHeight = panel.height;
+
+  if (isDrawerSidePanel || isDrawerFrontPanel) {
+    if (panel.rotated) {
+      return {
+        x: panelX + depthPosMm,
+        y: panelY + boringPosMm
+      };
+    }
+
+    return {
+      x: panelX + boringPosMm,
+      y: panelY + depthPosMm
+    };
+  }
+
+  const flippedBoringY = originalHeight - boringPosMm;
+  const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+
+  if (panel.rotated) {
+    const placedWidth = originalHeight;
+    const placedHeight = originalWidth;
+    const scaleX = placedWidth / originalWidth;
+    const scaleY = placedHeight / originalHeight;
+    return {
+      x: panelX + resolvedDepthPosMm * scaleX,
+      y: panelY + flippedBoringY * scaleY
+    };
+  }
+
+  return {
+    x: panelX + resolvedDepthPosMm,
+    y: panelY + flippedBoringY
+  };
+}
+
+function drawOutlinedText(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  rotateRad: number,
+  fontSize: number,
+  fillStyle: string
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(rotateRad);
+  ctx.font = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.lineWidth = Math.max(2, fontSize * 0.16);
+  ctx.strokeText(text, 0, 0);
+  ctx.fillStyle = fillStyle;
+  ctx.fillText(text, 0, 0);
+  ctx.restore();
+}
+
+function drawSelectedPanelDimensionGuides(
+  ctx: CanvasRenderingContext2D,
+  args: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    scalePx: number;
+    rotation: number;
+    themeColor: string;
+  }
+) {
+  const { x, y, width, height, scalePx, rotation, themeColor } = args;
+  const invScale = 1 / Math.max(scalePx, 0.0001);
+  const screenWidth = width * scalePx;
+  const screenHeight = height * scalePx;
+  const guideColor = themeColor ? `hsl(${themeColor})` : '#2563eb';
+  const lineWidth = Math.max(1.6 * invScale, 0.7);
+  const tickLength = Math.max(7 * invScale, 4);
+  const guideGap = Math.max(16 * invScale, 8);
+  const extensionPastGuide = Math.max(5 * invScale, 3);
+  const textGap = Math.max(12 * invScale, 7);
+  const fontSize = Math.max(11 * invScale, Math.min(18 * invScale, Math.min(width, height) * 0.25));
+
+  ctx.save();
+  ctx.strokeStyle = guideColor;
+  ctx.fillStyle = guideColor;
+  ctx.lineWidth = lineWidth;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  if (screenWidth >= 60) {
+    const lineY = y - guideGap;
+    const startX = x;
+    const endX = x + width;
+    ctx.beginPath();
+    ctx.moveTo(startX, y);
+    ctx.lineTo(startX, lineY - extensionPastGuide);
+    ctx.moveTo(endX, y);
+    ctx.lineTo(endX, lineY - extensionPastGuide);
+    ctx.moveTo(startX, lineY);
+    ctx.lineTo(endX, lineY);
+    ctx.moveTo(startX, lineY - tickLength / 2);
+    ctx.lineTo(startX, lineY + tickLength / 2);
+    ctx.moveTo(endX, lineY - tickLength / 2);
+    ctx.lineTo(endX, lineY + tickLength / 2);
+    ctx.stroke();
+
+    drawOutlinedText(
+      ctx,
+      formatPanelMm(width),
+      x + width / 2,
+      lineY - textGap,
+      rotation === -90 ? Math.PI : 0,
+      fontSize,
+      guideColor
+    );
+  }
+
+  if (screenHeight >= 60) {
+    const lineX = x - guideGap;
+    const startY = y;
+    const endY = y + height;
+    ctx.beginPath();
+    ctx.moveTo(x, startY);
+    ctx.lineTo(lineX - extensionPastGuide, startY);
+    ctx.moveTo(x, endY);
+    ctx.lineTo(lineX - extensionPastGuide, endY);
+    ctx.moveTo(lineX, startY);
+    ctx.lineTo(lineX, endY);
+    ctx.moveTo(lineX - tickLength / 2, startY);
+    ctx.lineTo(lineX + tickLength / 2, startY);
+    ctx.moveTo(lineX - tickLength / 2, endY);
+    ctx.lineTo(lineX + tickLength / 2, endY);
+    ctx.stroke();
+
+    drawOutlinedText(
+      ctx,
+      formatPanelMm(height),
+      lineX - textGap,
+      y + height / 2,
+      rotation === -90 ? Math.PI / 2 : -Math.PI / 2,
+      fontSize,
+      guideColor
+    );
+  }
+
+  ctx.restore();
+}
+
+function drawBoringCoordinateTag(
+  ctx: CanvasRenderingContext2D,
+  args: {
+    label: string;
+    x: number;
+    y: number;
+    panelX: number;
+    panelY: number;
+    panelWidth: number;
+    panelHeight: number;
+    scalePx: number;
+    rotation: number;
+    themeColor: string;
+    index: number;
+  }
+) {
+  const { label, x, y, panelX, panelY, panelWidth, panelHeight, scalePx, rotation, themeColor, index } = args;
+  const invScale = 1 / Math.max(scalePx, 0.0001);
+  const fontSize = Math.max(9 * invScale, 6);
+  const offsetX = Math.min((10 + (index % 2) * 8) * invScale, Math.max(4, panelWidth * 0.18));
+  const offsetY = -Math.min((10 + (index % 3) * 8) * invScale, Math.max(4, panelHeight * 0.18));
+  const guideColor = themeColor ? `hsl(${themeColor})` : '#2563eb';
+
+  ctx.save();
+  ctx.strokeStyle = guideColor;
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = Math.max(0.9 * invScale, 0.45);
+  ctx.setLineDash([4 * invScale, 3 * invScale]);
+  ctx.beginPath();
+  ctx.moveTo(panelX, y);
+  ctx.lineTo(x, y);
+  ctx.moveTo(x, panelY);
+  ctx.lineTo(x, y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.globalAlpha = 1;
+  ctx.restore();
+
+  drawOutlinedText(
+    ctx,
+    label,
+    x + offsetX,
+    y + offsetY,
+    rotation === -90 ? Math.PI : 0,
+    fontSize,
+    guideColor
+  );
 }
 
 const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
@@ -186,7 +428,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     // simulating이 false로 변경되면 중지
     if (!simulating) {
       if (simulationStartedRef.current) {
-        console.log('Stopping simulation');
+        debugCuttingLayoutLog('Stopping simulation');
         cancelSimRef.current.current = true;
         simulationStartedRef.current = false;
         setCutSequence([]);
@@ -208,7 +450,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const currentSimSpeed = simSpeedRef.current;
 
       if (!currentResult || currentSelectedPanelId) {
-        console.log('Cannot start simulation: no result or panel selected', {
+        debugCuttingLayoutLog('Cannot start simulation: no result or panel selected', {
           hasResult: !!currentResult,
           selectedPanelId: currentSelectedPanelId
         });
@@ -221,14 +463,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       if (currentAllCutSteps && currentAllCutSteps.length > 0) {
         const currentSheetNumber = (currentSheetInfo?.currentIndex ?? 0) + 1;
         cuts = currentAllCutSteps.filter(cut => cut.sheetNumber === currentSheetNumber);
-        console.log('Using allCutSteps:', cuts.length, 'cuts for sheet', currentSheetNumber, {
+        debugCuttingLayoutLog('Using allCutSteps:', cuts.length, 'cuts for sheet', currentSheetNumber, {
           optimizationType: currentSettings.optimizationType,
           firstCut: cuts[0] ? { axis: cuts[0].axis, label: cuts[0].label } : null
         });
       }
 
       if (cuts.length === 0 && currentResult.panels.length > 0) {
-        console.log('Generating cuts from result panels:', currentResult.panels.length);
+        debugCuttingLayoutLog('Generating cuts from result panels:', currentResult.panels.length);
 
         if (currentSettings.optimizationType === 'OPTIMAL_CNC') {
           // Nesting/Free cut: 패널별로 따내기 방식
@@ -274,7 +516,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       }
 
       if (cuts.length === 0) {
-        console.log('No cuts to simulate');
+        debugCuttingLayoutLog('No cuts to simulate');
         setSimulating(false);
         return;
       }
@@ -291,7 +533,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
 
-      console.log('Starting smooth simulation with', cuts.length, 'cuts');
+      debugCuttingLayoutLog('Starting smooth simulation with', cuts.length, 'cuts');
 
       // 톱날 속도: mm/s (속도 조절 가능)
       const sawSpeed = (currentSimSpeed || 1) * 2000; // 기본 2000mm/s, 속도 배율 적용
@@ -308,7 +550,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           selectCutIndex(cutIndex);
         },
         onDone: () => {
-          console.log('Simulation completed');
+          debugCuttingLayoutLog('Simulation completed');
           simulationStartedRef.current = false;
           // 재단선 유지 - 모든 재단을 완료 상태로 설정
           setCompletedCuts(cuts.map((_, idx) => idx));
@@ -562,13 +804,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     let visiblePanelCount = 0;
 
     // 디버그: 패널 및 재단 정보 로그
-    if (simulating && cutSequence.length > 0) {
-      console.log('📦 패널 정보:', result.panels.map(p => ({
+    if (DEBUG_CUTTING_LAYOUT && simulating && cutSequence.length > 0) {
+      debugCuttingLayoutLog('📦 패널 정보:', result.panels.map(p => ({
         id: p.id,
         name: p.name,
         x: p.x, y: p.y, w: p.width, h: p.height
       })));
-      console.log('✂️ 재단 정보:', cutSequence.map((c, i) => ({
+      debugCuttingLayoutLog('✂️ 재단 정보:', cutSequence.map((c, i) => ({
         idx: i,
         axis: c.axis,
         pos: c.pos,
@@ -578,17 +820,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     }
 
     // Draw panels (show progressively during simulation)
-    console.log('[CuttingLayoutPreview2] Drawing panels. Total:', result.panels.length);
+    if (DEBUG_CUTTING_LAYOUT) {
+      debugCuttingLayoutLog('[CuttingLayoutPreview2] Drawing panels. Total:', result.panels.length);
+    }
     // 디버그: 서랍 측판 데이터 확인
-    result.panels.forEach(p => {
-      if (p.name?.includes('서랍') && (p.name?.includes('좌측판') || p.name?.includes('우측판'))) {
-        console.log(`[CuttingLayoutPreview2 ENTRY] ${p.name}: boringDepthPositions=`, p.boringDepthPositions, 'groovePositions=', p.groovePositions);
-      }
-    });
+    if (DEBUG_CUTTING_LAYOUT) {
+      result.panels.forEach(p => {
+        if (p.name?.includes('서랍') && (p.name?.includes('좌측판') || p.name?.includes('우측판'))) {
+          debugCuttingLayoutLog(`[CuttingLayoutPreview2 ENTRY] ${p.name}: boringDepthPositions=`, p.boringDepthPositions, 'groovePositions=', p.groovePositions);
+        }
+      });
+    }
     result.panels.forEach((panel, panelIndex) => {
       // 보링 데이터 디버그
-      if (panelIndex === 0) {
-        console.log(`[CuttingLayoutPreview2] First panel "${panel.name}" boringPositions:`, panel.boringPositions);
+      if (DEBUG_CUTTING_LAYOUT && panelIndex === 0) {
+        debugCuttingLayoutLog(`[CuttingLayoutPreview2] First panel "${panel.name}" boringPositions:`, panel.boringPositions);
       }
       // During simulation, show panels after all surrounding cuts are completed
       let isPanelSeparated = false;
@@ -653,16 +899,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         isPanelSeparated = allCutsExist && completedCuts.includes(lastRequiredCutIdx);
 
         // 디버그: 각 패널의 분리 상태
-        console.log(`🔍 패널 ${panel.name || panel.id}:`, {
-          pos: { x: panel.x, y: panel.y, w: panel.width, h: panel.height },
-          needs: { top: needsTopCut, bottom: needsBottomCut, left: needsLeftCut, right: needsRightCut },
-          cutIdx: { top: topCutIdx, bottom: bottomCutIdx, left: leftCutIdx, right: rightCutIdx },
-          requiredCuts,
-          lastRequiredCutIdx,
-          allCutsExist,
-          completedCutsIncludes: lastRequiredCutIdx >= 0 ? completedCuts.includes(lastRequiredCutIdx) : false,
-          isPanelSeparated
-        });
+        if (DEBUG_CUTTING_LAYOUT) {
+          debugCuttingLayoutLog(`🔍 패널 ${panel.name || panel.id}:`, {
+            pos: { x: panel.x, y: panel.y, w: panel.width, h: panel.height },
+            needs: { top: needsTopCut, bottom: needsBottomCut, left: needsLeftCut, right: needsRightCut },
+            cutIdx: { top: topCutIdx, bottom: bottomCutIdx, left: leftCutIdx, right: rightCutIdx },
+            requiredCuts,
+            lastRequiredCutIdx,
+            allCutsExist,
+            completedCutsIncludes: lastRequiredCutIdx >= 0 ? completedCuts.includes(lastRequiredCutIdx) : false,
+            isPanelSeparated
+          });
+        }
 
         // 방금 분리되었는지 확인 (마지막 완료된 재단이 이 패널의 마지막 필요 재단인지)
         if (isPanelSeparated && completedCuts.length > 0) {
@@ -697,6 +945,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       const basePanelId = panel.id.replace(/-\d+$/, '');
       const isHighlighted = highlightedPanelId && (panel.id === highlightedPanelId || basePanelId === highlightedPanelId);
+      const shouldDimPanel = Boolean(highlightedPanelId && !isHighlighted);
       const isHovered = hoveredPanelId === panel.id || (hoveredPanelId && basePanelId === hoveredPanelId);
       const colors = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
 
@@ -728,27 +977,41 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.lineWidth = 1 / (baseScale * scale);
         ctx.strokeRect(x, y, width, height);
       }
+
+      if (isHighlighted) {
+        drawSelectedPanelDimensionGuides(ctx, {
+          x,
+          y,
+          width,
+          height,
+          scalePx: baseScale * scale,
+          rotation,
+          themeColor,
+        });
+      }
       
 
       // === 따내기(노치) 점선 렌더링 ===
       if (panel.cornerNotch) {
         const notch = panel.cornerNotch;
-        console.log(`[NOTCH DEBUG] ★★★ 상판 따내기: "${panel.name}"`, {
-          'panel.width': panel.width,
-          'panel.height': panel.height,
-          '(panel as any).length': (panel as any).length,
-          rotated: panel.rotated,
-          '화면width': width,
-          '화면height': height,
-          'notch.width': notch.width,
-          'notch.depth': notch.depth,
-          'notch.side': notch.side,
-          'nL=min(notch.width,화면width)': Math.min(notch.width, width),
-          'nW=min(notch.depth,화면height)': Math.min(notch.depth, height),
-        });
+        if (DEBUG_CUTTING_LAYOUT) {
+          debugCuttingLayoutLog(`[NOTCH DEBUG] ★★★ 상판 따내기: "${panel.name}"`, {
+            'panel.width': panel.width,
+            'panel.height': panel.height,
+            '(panel as any).length': (panel as any).length,
+            rotated: panel.rotated,
+            '화면width': width,
+            '화면height': height,
+            'notch.width': notch.width,
+            'notch.depth': notch.depth,
+            'notch.side': notch.side,
+            'nL=min(notch.width,화면width)': Math.min(notch.width, width),
+            'nW=min(notch.depth,화면height)': Math.min(notch.depth, height),
+          });
+        }
       }
-      if (panel.sideNotches) {
-        console.log(`[NOTCH DEBUG] 측판 따내기: "${panel.name}"`, panel.sideNotches);
+      if (DEBUG_CUTTING_LAYOUT && panel.sideNotches) {
+        debugCuttingLayoutLog(`[NOTCH DEBUG] 측판 따내기: "${panel.name}"`, panel.sideNotches);
       }
       if (panel.cornerNotch || panel.sideNotches) {
         ctx.save();
@@ -1012,7 +1275,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           
           // L방향 치수 (패널 중앙 상단) - 항상 panel.width 표시
           if (width > 50) {
-          const widthText = `${Math.round(panel.width)}`;
+          const widthText = formatPanelMm(panel.width);
           const textY = y + 35; // 패널 상단에서 35px 아래
 
           // 치수 텍스트
@@ -1031,7 +1294,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // W방향 치수 (패널 중앙 왼쪽) - 항상 panel.height 표시
         if (height > 50) {
-          const heightText = `${Math.round(panel.height)}`;
+          const heightText = formatPanelMm(panel.height);
           const textX = x + 35; // 패널 왼쪽에서 35px 오른쪽
           
           // 치수 텍스트
@@ -1060,7 +1323,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       // 패널에 boringPositions가 있으면 해당 측판에 선반핀 보링 표시
       // 도어 패널은 별도 렌더링 블록에서 처리 (힌지컵 35mm + 나사홀 8mm)
       const isDoorPanel = panel.isDoor === true || panel.name.includes('도어') || panel.name.includes('Door');
-      console.log(`[PANEL CHECK] ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, isDoor=${isDoorPanel}, boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions);
+      if (DEBUG_CUTTING_LAYOUT) {
+        debugCuttingLayoutLog(`[PANEL CHECK] ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, isDoor=${isDoorPanel}, boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions);
+      }
       if (showBorings && panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel) {
         ctx.save();
 
@@ -1076,7 +1341,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
         // 서랍 측판 vs 서랍 앞판 vs 가구 측판 구분
-        const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+        const isDrawerSidePanel = isDrawerSidePanelName(panel.name);
         const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
 
         let depthPositions: number[];
@@ -1088,15 +1353,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // panel.boringPositions: Y위치 (height=높이 기준, 상중하 3개)
           //
           // boringDepthPositions가 없으면 기본값 사용 (호환성)
-          console.log(`[BORING DEBUG] ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions);
+          if (DEBUG_CUTTING_LAYOUT) {
+            debugCuttingLayoutLog(`[BORING DEBUG] ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions);
+          }
           if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
             depthPositions = panel.boringDepthPositions;
-            console.log(`[BORING DEBUG] ${panel.name}: 사용 boringDepthPositions (2개)`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[BORING DEBUG] ${panel.name}: 사용 boringDepthPositions (2개)`);
+            }
           } else {
             // 기본값: 앞끝 7.5mm, 뒤끝 7.5mm (sideThickness=15mm 기준)
             const sideThickness = 15;
             depthPositions = [sideThickness / 2, originalWidth - sideThickness / 2];
-            console.log(`[BORING DEBUG] ${panel.name}: 사용 기본값 (2개)`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[BORING DEBUG] ${panel.name}: 사용 기본값 (2개)`);
+            }
           }
         } else if (isDrawerFrontPanel) {
           // ★★★ 서랍 앞판 마이다 보링 위치 - calculatePanelDetails에서 계산된 값 사용 ★★★
@@ -1104,15 +1375,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // panel.boringDepthPositions: X위치 (width 기준, 좌 50mm, 중앙, 우 50mm = 3개)
           // panel.boringPositions: Y위치 (height 기준, 상하 30mm = 2개)
           //
-          console.log(`[BORING DEBUG] 서랍 앞판 ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions);
+          if (DEBUG_CUTTING_LAYOUT) {
+            debugCuttingLayoutLog(`[BORING DEBUG] 서랍 앞판 ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions);
+          }
           if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
             depthPositions = panel.boringDepthPositions;
-            console.log(`[BORING DEBUG] ${panel.name}: 사용 boringDepthPositions (3개)`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[BORING DEBUG] ${panel.name}: 사용 boringDepthPositions (3개)`);
+            }
           } else {
             // 기본값: 좌 50mm, 중앙, 우 50mm
             const edgeOffset = 50;
             depthPositions = [edgeOffset, originalWidth / 2, originalWidth - edgeOffset];
-            console.log(`[BORING DEBUG] ${panel.name}: 사용 기본값 (3개)`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[BORING DEBUG] ${panel.name}: 사용 기본값 (3개)`);
+            }
           }
         } else {
           // 가구 측판: Y 위치별로 고정패널 3공/이동선반 2공을 구분한다.
@@ -1121,11 +1398,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             : [30, originalWidth / 2, Math.max(30, originalWidth - 30)];
         }
 
-        console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}`);
-        console.log(`[BORING] ${panel.name}: panel.width=${originalWidth}, panel.height=${originalHeight}`);
-        console.log(`[BORING] ${panel.name}: 시트 배치 size=(${placedWidth}x${placedHeight}), pos=(${x.toFixed(0)},${y.toFixed(0)})`);
-        console.log(`[BORING] ${panel.name}: boringPositions(Y/height)=[${panel.boringPositions.map(p=>p.toFixed(1)).join(',')}]`);
-        console.log(`[BORING] ${panel.name}: depthPositions(X/width)=[${depthPositions.map(d=>d.toFixed(1)).join(',')}]`, 'boringDepthGroups=', (panel as any).boringDepthGroups);
+        if (DEBUG_CUTTING_LAYOUT) {
+          debugCuttingLayoutLog(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}`);
+          debugCuttingLayoutLog(`[BORING] ${panel.name}: panel.width=${originalWidth}, panel.height=${originalHeight}`);
+          debugCuttingLayoutLog(`[BORING] ${panel.name}: 시트 배치 size=(${placedWidth}x${placedHeight}), pos=(${x.toFixed(0)},${y.toFixed(0)})`);
+          debugCuttingLayoutLog(`[BORING] ${panel.name}: boringPositions(Y/height)=[${panel.boringPositions.map(p=>p.toFixed(1)).join(',')}]`);
+          debugCuttingLayoutLog(`[BORING] ${panel.name}: depthPositions(X/width)=[${depthPositions.map(d=>d.toFixed(1)).join(',')}]`, 'boringDepthGroups=', (panel as any).boringDepthGroups);
+        }
 
         // 보링 색상 및 크기 (2D 도면과 동일)
         const boringColor = boringColors['shelf-pin'];
@@ -1135,6 +1414,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 각 보링 위치에 홀 그리기
         // 서랍 측판: boringPositions=Y위치(높이방향), depthPositions=X위치(좌우 양끝)
         // 가구 측판: boringPositions=Y위치, depthPositions=Y별 깊이방향 2개/3개
+        let boringLabelIndex = 0;
         panel.boringPositions.forEach((boringPosMm, yIdx) => {
           const depthPositionsForY = isDrawerSidePanel || isDrawerFrontPanel
             ? depthPositions
@@ -1176,40 +1456,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 가구 측판 (isDrawerSidePanel=false && isDrawerFrontPanel=false):
             // - rotated 여부에 따라 좌표 매핑
 
-            if (isDrawerSidePanel || isDrawerFrontPanel) {
-              // 서랍 측판/앞판:
-              // calculatePanelDetails 원본: width=깊이(453), height=높이(130)
-              // CNC optimizer 변환 후: panel.width=높이(130), panel.height=깊이(453)
-              // boringPositions = 원본 height(130) 기준 = CNC panel.width 방향
-              // depthPositions = 원본 width(453) 기준 = CNC panel.height 방향
-              if (panel.rotated) {
-                // rotated: displayed width=panel.height(453), height=panel.width(130)
-                boringX = x + depthPosMm;    // 깊이(453) → displayed width(453)
-                boringY = y + boringPosMm;   // 높이(130) → displayed height(130)
-              } else {
-                // 비회전: displayed width=panel.width(130), height=panel.height(453)
-                boringX = x + boringPosMm;   // 높이(130) → displayed width(130)
-                boringY = y + depthPosMm;    // 깊이(453) → displayed height(453)
-              }
-            } else if (panel.rotated) {
-              // 가구 측판 (rotated=true):
-              // Y좌표 뒤집기: 하단 기준 → 상단 기준
-              const flippedBoringY = originalHeight - boringPosMm;
-              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-              const scaleX = placedWidth / originalWidth;
-              const scaleY = placedHeight / originalHeight;
-              boringX = x + resolvedDepthPosMm * scaleX;
-              boringY = y + flippedBoringY * scaleY;
-              console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)}, resolved=${resolvedDepthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(resolvedDepthPosMm * scaleX).toFixed(1)}, flippedY=${flippedBoringY.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(flippedBoringY * scaleY).toFixed(1)}`);
-            } else {
-              // 가구 측판 (rotated=false):
-              // Y좌표 뒤집기: 하단 기준 → 상단 기준
-              const flippedBoringY = originalHeight - boringPosMm;
-              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-              boringX = x + resolvedDepthPosMm;
-              boringY = y + flippedBoringY;
-              console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)}, resolved=${resolvedDepthPosMm.toFixed(1)} → X, flippedY=${flippedBoringY.toFixed(1)} → Y`);
-            }
+            const coords = getBoringSheetCoords(panel, {
+              panelX: x,
+              panelY: y,
+              boringPosMm,
+              depthPosMm,
+              isDrawerSidePanel,
+              isDrawerFrontPanel
+            });
+            boringX = coords.x;
+            boringY = coords.y;
 
             // 호버/선택 상태 확인
             const isHovered = hoveredBoring &&
@@ -1324,6 +1580,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               ctx.fill();
               ctx.stroke();
             }
+
+            if (isHighlighted) {
+              drawBoringCoordinateTag(ctx, {
+                label: `${formatPanelMm(depthPosMm)}/${formatPanelMm(boringPosMm)}`,
+                x: boringX,
+                y: boringY,
+                panelX: x,
+                panelY: y,
+                panelWidth: width,
+                panelHeight: height,
+                scalePx: baseScale * scale,
+                rotation,
+                themeColor,
+                index: boringLabelIndex,
+              });
+              boringLabelIndex += 1;
+            }
           });
         });
 
@@ -1331,7 +1604,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       }
 
       // ★★★ 도어 패널 보링 표시 (힌지컵 Ø35 + 나사홀 Ø8) ★★★
-      if (showBorings && isDoorPanel && panel.boringPositions && panel.boringPositions.length > 0) {
+      const hasDoorBoringData =
+        (panel.boringPositions?.length ?? 0) > 0 ||
+        (panel.screwPositions?.length ?? 0) > 0 ||
+        (panel.boringDepthPositions?.length ?? 0) > 0 ||
+        (panel.screwDepthPositions?.length ?? 0) > 0;
+
+      if (showBorings && isDoorPanel && hasDoorBoringData) {
         ctx.save();
 
         const originalWidth = panel.width;
@@ -1339,14 +1618,47 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const placedWidth = panel.rotated ? originalHeight : originalWidth;
         const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
-        // 힌지컵 좌표 (boringPositions=Y, boringDepthPositions=X)
-        const cupYPositions = panel.boringPositions; // 힌지컵 Y좌표들
-        const cupXPositions = panel.boringDepthPositions || []; // 힌지컵 X좌표 (1개)
-
         // ★★★ 나사홀 좌표: screwPositions가 없으면 힌지컵 좌표에서 직접 계산 ★★★
         // INSERTA 힌지 스펙: screwRowDistance=9.5mm (컵 중심에서 나사열까지), screwHoleSpacing=45mm (중심에서 ±22.5mm)
         const SCREW_ROW_DISTANCE = 9.5; // 힌지컵 중심에서 나사열까지 거리 (도어 안쪽 방향)
         const SCREW_Y_OFFSET = (panel.screwHoleSpacing || 45) / 2;  // 나사홀 Y: 힌지컵 중심에서 ±22.5mm (A-type) 또는 ±24mm (B-type)
+
+        // 힌지컵 좌표 (boringPositions=Y, boringDepthPositions=X)
+        // 일부 패널은 피스 좌표만 넘어오므로, 피스 좌표에서 컵 중심을 복원한다.
+        const cupYPositions = panel.boringPositions?.length > 0
+          ? panel.boringPositions
+          : (() => {
+              const screwPositions = [...(panel.screwPositions || [])].sort((a, b) => a - b);
+              const centers: number[] = [];
+
+              for (let i = 0; i + 1 < screwPositions.length; i += 2) {
+                centers.push(roundPanelCoordMm((screwPositions[i] + screwPositions[i + 1]) / 2));
+              }
+
+              return Array.from(new Set(centers));
+            })();
+
+        const cupXPositions = panel.boringDepthPositions?.length > 0
+          ? panel.boringDepthPositions
+          : (() => {
+              const screwX = panel.screwDepthPositions?.[0];
+
+              if (typeof screwX === 'number') {
+                const restoredCupX = screwX < originalWidth / 2
+                  ? screwX - SCREW_ROW_DISTANCE
+                  : screwX + SCREW_ROW_DISTANCE;
+                const fallbackCupX = screwX < originalWidth / 2
+                  ? screwX + SCREW_ROW_DISTANCE
+                  : screwX - SCREW_ROW_DISTANCE;
+                const cupX = restoredCupX >= 0 && restoredCupX <= originalWidth
+                  ? restoredCupX
+                  : fallbackCupX;
+
+                return [roundPanelCoordMm(Math.max(0, Math.min(originalWidth, cupX)))];
+              }
+
+              return [panel.isLeftHinge ? originalWidth - 22.5 : 22.5];
+            })();
 
         let screwYPositions = panel.screwPositions || [];
         let screwXPositions = panel.screwDepthPositions || [];
@@ -1381,6 +1693,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         };
 
         // 힌지컵 렌더링 (Ø35mm 원)
+        let doorBoringLabelIndex = 0;
         cupXPositions.forEach((cupX) => {
           cupYPositions.forEach((cupY) => {
             const [bx, by] = toSheetCoords(cupX, cupY);
@@ -1405,6 +1718,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             ctx.moveTo(bx, by - crossSize);
             ctx.lineTo(bx, by + crossSize);
             ctx.stroke();
+
+            if (isHighlighted) {
+              drawBoringCoordinateTag(ctx, {
+                label: `${formatPanelMm(cupX)}/${formatPanelMm(cupY)}`,
+                x: bx,
+                y: by,
+                panelX: x,
+                panelY: y,
+                panelWidth: width,
+                panelHeight: height,
+                scalePx: baseScale * scale,
+                rotation,
+                themeColor,
+                index: doorBoringLabelIndex,
+              });
+              doorBoringLabelIndex += 1;
+            }
           });
         });
 
@@ -1432,6 +1762,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             ctx.moveTo(bx, by - cs);
             ctx.lineTo(bx, by + cs);
             ctx.stroke();
+
+            if (isHighlighted) {
+              drawBoringCoordinateTag(ctx, {
+                label: `${formatPanelMm(screwX)}/${formatPanelMm(screwY)}`,
+                x: bx,
+                y: by,
+                panelX: x,
+                panelY: y,
+                panelWidth: width,
+                panelHeight: height,
+                scalePx: baseScale * scale,
+                rotation,
+                themeColor,
+                index: doorBoringLabelIndex,
+              });
+              doorBoringLabelIndex += 1;
+            }
           });
         });
 
@@ -1464,6 +1811,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           }
         };
 
+        let bracketBoringLabelIndex = 0;
         panel.bracketBoringPositions.forEach((yPosMm: number) => {
           bracketXPositions.forEach((xPosMm: number) => {
             const [bx, by] = toBracketCoords(xPosMm, yPosMm);
@@ -1487,6 +1835,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             ctx.moveTo(bx, by - cs);
             ctx.lineTo(bx, by + cs);
             ctx.stroke();
+
+            if (isHighlighted) {
+              drawBoringCoordinateTag(ctx, {
+                label: `${formatPanelMm(xPosMm)}/${formatPanelMm(yPosMm)}`,
+                x: bx,
+                y: by,
+                panelX: x,
+                panelY: y,
+                panelWidth: width,
+                panelHeight: height,
+                scalePx: baseScale * scale,
+                rotation,
+                themeColor,
+                index: bracketBoringLabelIndex,
+              });
+              bracketBoringLabelIndex += 1;
+            }
           });
         });
 
@@ -1573,8 +1938,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       // panel.groovePositions가 있는 서랍 패널에 바닥판 홈 표시
       const isDrawerPanel = panel.name?.includes('서랍');
       const hasGroove = panel.groovePositions && panel.groovePositions.length > 0;
-      if (isDrawerPanel) {
-        console.log(`[GROOVE] ${panel.name}: hasGroove=${hasGroove}, groovePositions=`, panel.groovePositions);
+      if (DEBUG_CUTTING_LAYOUT && isDrawerPanel) {
+        debugCuttingLayoutLog(`[GROOVE] ${panel.name}: hasGroove=${hasGroove}, groovePositions=`, panel.groovePositions);
       }
       if (showGrooves && hasGroove && isDrawerPanel) {
         ctx.save();
@@ -1596,8 +1961,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           let gx: number, gy: number, gw: number, gh: number;
 
           // ★★★ 서랍 측판/앞판/뒷판 바닥판 홈 위치 ★★★
-          const isDrawerSidePanelForGroove = panel.name?.includes('서랍') &&
-            (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+          const isDrawerSidePanelForGroove = isDrawerSidePanelName(panel.name);
           const isDrawerFrontBackPanel = panel.name?.includes('서랍') &&
             (panel.name?.includes('앞판') || panel.name?.includes('뒷판'));
 
@@ -1608,7 +1972,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             gw = grooveH;
             gy = y;
             gh = height;
-            console.log(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            }
           } else if (isDrawerFrontBackPanel) {
             // ★★★ 서랍 앞판/뒷판 ★★★
             // 원본: width=앞판폭, height=서랍높이
@@ -1624,21 +1990,27 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             gw = grooveH; // 홈 너비 (5mm)
             gy = y; // 시트 Y 시작
             gh = height; // 홈 길이 (시트 세로 전체)
-            console.log(`[GROOVE DRAW] 서랍앞뒷판 ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, 시트배치 w=${width}, h=${height}, grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[GROOVE DRAW] 서랍앞뒷판 ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, 시트배치 w=${width}, h=${height}, grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            }
           } else if (panel.rotated) {
             // 기타 회전된 패널
             gx = x;
             gw = width;
             gy = y + grooveY;
             gh = grooveH;
-            console.log(`[GROOVE DRAW] rotated ${panel.name}: grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[GROOVE DRAW] rotated ${panel.name}: grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            }
           } else {
             // 기타 회전 안된 패널
             gx = x;
             gw = width;
             gy = y + grooveY;
             gh = grooveH;
-            console.log(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            if (DEBUG_CUTTING_LAYOUT) {
+              debugCuttingLayoutLog(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            }
           }
 
           // 홈 영역 채우기 (반투명)
@@ -1659,6 +2031,27 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
+      if (shouldDimPanel) {
+        ctx.save();
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.68)';
+        ctx.fillRect(x, y, width, height);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.lineWidth = 1 / (baseScale * scale);
+        ctx.strokeRect(x, y, width, height);
+        ctx.restore();
+      } else if (isHighlighted) {
+        ctx.save();
+        ctx.shadowColor = `hsl(${themeColor} / 0.28)`;
+        ctx.shadowBlur = 10 / (baseScale * scale);
+        ctx.strokeStyle = `hsl(${themeColor})`;
+        ctx.lineWidth = 4 / (baseScale * scale);
+        ctx.strokeRect(x, y, width, height);
+        ctx.restore();
+      }
+
       // Reset shadow and transparency effects
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
@@ -1666,8 +2059,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     });
 
     // Log visible panel count during simulation
-    if (simulating && currentCutIndex % 4 === 0) { // Log every 4 cuts
-      console.log(`Cut ${currentCutIndex}: ${visiblePanelCount}/${result.panels.length} panels visible`);
+    if (DEBUG_CUTTING_LAYOUT && simulating && currentCutIndex % 4 === 0) { // Log every 4 cuts
+      debugCuttingLayoutLog(`Cut ${currentCutIndex}: ${visiblePanelCount}/${result.panels.length} panels visible`);
     }
 
     // Draw cutting lines - 시뮬레이션 중이거나 완료 후에도 표시
@@ -1959,7 +2352,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     };
 
     if (simulating) {
-      console.log('Animation loop started');
+      debugCuttingLayoutLog('Animation loop started');
       animate();
     }
 
@@ -2147,7 +2540,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const sheetX = rotatedX / totalScale + result.stockPanel.width / 2;
     const sheetY = rotatedY / totalScale + result.stockPanel.height / 2;
 
-    const hoverRadius = 15 / totalScale; // 마우스 감지 반경 확대
+    const hoverRadius = getBoringHitRadiusMm(totalScale);
+    let nearestBoring: { panelId: string; xIndex: number; yIndex: number; dist: number } | null = null;
 
     for (const panel of result.panels) {
       if (!panel.boringPositions || panel.boringPositions.length === 0) continue;
@@ -2155,13 +2549,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const x = panel.x;
       const y = panel.y;
       const originalWidth = panel.width;
-      const originalHeight = panel.height;
-      const placedWidth = panel.rotated ? originalHeight : originalWidth;
-      const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
       // 서랍 측판 여부 확인 (그리기 로직과 동일하게)
-      const isDrawerSidePanel = panel.name?.includes('서랍') &&
-        (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+      const isDrawerSidePanel = isDrawerSidePanelName(panel.name);
+      const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
 
       let depthPositions: number[];
       if (isDrawerSidePanel && panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
@@ -2174,7 +2565,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
         const boringPosMm = panel.boringPositions[yIdx];
-        const depthPositionsForY = isDrawerSidePanel
+        const depthPositionsForY = isDrawerSidePanel || isDrawerFrontPanel
           ? depthPositions
           : getDepthPositionsForBoring(panel, boringPosMm, depthPositions);
 
@@ -2183,32 +2574,33 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
           // 서랍 측판 vs 가구 측판 (그리기 로직과 동일하게)
           let boringX: number, boringY: number;
-          if (isDrawerSidePanel) {
-            boringX = x + boringPosMm;
-            boringY = y + depthPosMm;
-          } else if (panel.rotated) {
-            // 가구 측판 (rotated)
-            const flippedBoringY = originalHeight - boringPosMm;
-            const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-            const scaleX = placedWidth / originalWidth;
-            const scaleY = placedHeight / originalHeight;
-            boringX = x + resolvedDepthPosMm * scaleX;
-            boringY = y + flippedBoringY * scaleY;
-          } else {
-            // 가구 측판 (not rotated)
-            const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-            boringX = x + resolvedDepthPosMm;
-            boringY = y + (originalHeight - boringPosMm);
-          }
+          const coords = getBoringSheetCoords(panel, {
+            panelX: x,
+            panelY: y,
+            boringPosMm,
+            depthPosMm,
+            isDrawerSidePanel,
+            isDrawerFrontPanel
+          });
+          boringX = coords.x;
+          boringY = coords.y;
 
           const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
 
-          if (dist <= hoverRadius) {
-            setHoveredBoring({ panelId: panel.id, xIndex: xIdx, yIndex: yIdx });
-            return;
+          if (dist <= hoverRadius && (!nearestBoring || dist < nearestBoring.dist)) {
+            nearestBoring = { panelId: panel.id, xIndex: xIdx, yIndex: yIdx, dist };
           }
         }
       }
+    }
+
+    if (nearestBoring) {
+      setHoveredBoring({
+        panelId: nearestBoring.panelId,
+        xIndex: nearestBoring.xIndex,
+        yIndex: nearestBoring.yIndex
+      });
+      return;
     }
 
     if (hoveredBoring) setHoveredBoring(null);
@@ -2334,7 +2726,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // ★★★ 보링 홀 클릭 감지 ★★★
     if (showBorings) {
-      const clickRadius = 15 / totalScale; // 클릭 감지 반경 확대
+      const clickRadius = getBoringHitRadiusMm(totalScale);
+      let nearestSelectedBoring: { dist: number; boring: NonNullable<typeof selectedBoring> } | null = null;
 
       for (const panel of result.panels) {
         if (!panel.boringPositions || panel.boringPositions.length === 0) continue;
@@ -2342,12 +2735,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const x = panel.x;
         const y = panel.y;
         const originalWidth = panel.width;
-        const originalHeight = panel.height;
-        const placedWidth = panel.rotated ? originalHeight : originalWidth;
-        const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
         // 서랍 측판 여부 확인
-        const isDrawerSidePanel = panel.name.includes('서랍') && panel.name.includes('측판');
+        const isDrawerSidePanel = isDrawerSidePanelName(panel.name);
+        const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
 
         // 보링 X 위치 계산 (깊이 방향)
         let depthPositions: number[];
@@ -2362,7 +2753,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 각 보링 위치 체크
         for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
           const boringPosMm = panel.boringPositions[yIdx];
-          const depthPositionsForY = isDrawerSidePanel
+          const depthPositionsForY = isDrawerSidePanel || isDrawerFrontPanel
             ? depthPositions
             : getDepthPositionsForBoring(panel, boringPosMm, depthPositions);
 
@@ -2371,46 +2762,47 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
             // 시트 좌표로 변환 - 서랍 측판 vs 가구 측판
             let boringX: number, boringY: number;
-            if (isDrawerSidePanel) {
-              boringX = x + boringPosMm;
-              boringY = y + depthPosMm;
-            } else if (panel.rotated) {
-              const flippedBoringY = originalHeight - boringPosMm;
-              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-              const scaleX = placedWidth / originalWidth;
-              const scaleY = placedHeight / originalHeight;
-              boringX = x + resolvedDepthPosMm * scaleX;
-              boringY = y + flippedBoringY * scaleY;
-            } else {
-              const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-              boringX = x + resolvedDepthPosMm;
-              boringY = y + (originalHeight - boringPosMm);
-            }
+            const coords = getBoringSheetCoords(panel, {
+              panelX: x,
+              panelY: y,
+              boringPosMm,
+              depthPosMm,
+              isDrawerSidePanel,
+              isDrawerFrontPanel
+            });
+            boringX = coords.x;
+            boringY = coords.y;
 
             // 클릭 위치와 보링 위치 간 거리 계산
             const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
 
-            if (dist <= clickRadius) {
-              // 보링 홀 클릭됨!
-              setSelectedBoring({
-                panelName: panel.name,
-                panelId: panel.id,
-                x: Math.round(depthPosMm),
-                y: Math.round(boringPosMm),
-                sheetX: boringX,
-                sheetY: boringY,
-                panelX: x,
-                panelY: y,
-                panelWidth: panel.rotated ? panel.height : panel.width,
-                panelHeight: panel.rotated ? panel.width : panel.height,
-                panelRotated: panel.rotated || false,
-                xIndex: xIdx + 1,
-                yIndex: yIdx + 1
-              });
-              return; // 보링 클릭 시 패널 클릭 이벤트 무시
+            if (dist <= clickRadius && (!nearestSelectedBoring || dist < nearestSelectedBoring.dist)) {
+              nearestSelectedBoring = {
+                dist,
+                boring: {
+                  panelName: panel.name,
+                  panelId: panel.id,
+                  x: roundPanelCoordMm(depthPosMm),
+                  y: roundPanelCoordMm(boringPosMm),
+                  sheetX: boringX,
+                  sheetY: boringY,
+                  panelX: x,
+                  panelY: y,
+                  panelWidth: panel.rotated ? panel.height : panel.width,
+                  panelHeight: panel.rotated ? panel.width : panel.height,
+                  panelRotated: panel.rotated || false,
+                  xIndex: xIdx + 1,
+                  yIndex: yIdx + 1
+                }
+              };
             }
           }
         }
+      }
+
+      if (nearestSelectedBoring) {
+        setSelectedBoring(nearestSelectedBoring.boring);
+        return; // 보링 클릭 시 패널 클릭 이벤트 무시
       }
 
       // 보링이 아닌 곳 클릭 시 선택 해제

@@ -1,5 +1,10 @@
 import { OptimizedResult } from '../types';
 
+const formatPanelMm = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+};
+
 function isFurnitureRightSidePanel(panel: any): boolean {
   const name = panel?.name || '';
   return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
@@ -401,7 +406,7 @@ export class SimpleDXFExporter {
         lines.push('40');
         lines.push('25'); // 텍스트 높이
         lines.push('1');
-        lines.push(String(Math.round(displayWidth)));
+        lines.push(formatPanelMm(displayWidth));
         lines.push('72');
         lines.push('1'); // Center horizontally
         lines.push('11');
@@ -427,7 +432,7 @@ export class SimpleDXFExporter {
         lines.push('40');
         lines.push('25'); // 텍스트 높이
         lines.push('1');
-        lines.push(String(Math.round(displayHeight)));
+        lines.push(formatPanelMm(displayHeight));
         lines.push('50');
         lines.push('90'); // 90도 회전
         lines.push('72');

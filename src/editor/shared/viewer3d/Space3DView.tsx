@@ -2040,7 +2040,7 @@ const PanelSimulationMovingPanels: React.FC = () => {
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick, islandViewSide } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick, islandViewSide, showViewCubeGizmo = true } = props;
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
@@ -3533,6 +3533,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 view2DDirection="front"
                 renderMode={effectiveRenderMode}
                 isSplitView={true}
+                showViewCubeGizmo={showViewCubeGizmo}
               >
                 <QuadrantContent
                   viewDirection="front"
@@ -3619,6 +3620,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 view2DDirection="top"
                 renderMode={effectiveRenderMode}
                 isSplitView={true}
+                showViewCubeGizmo={showViewCubeGizmo}
               >
                 <QuadrantContent
                   viewDirection="top"
@@ -3710,6 +3712,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   view2DDirection="left"
                   renderMode={effectiveRenderMode}
                   isSplitView={true}
+                  showViewCubeGizmo={showViewCubeGizmo}
                 >
                   <QuadrantContent
                     viewDirection="left"
@@ -3824,6 +3827,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   view2DDirection="right"
                   renderMode={effectiveRenderMode}
                   isSplitView={true}
+                  showViewCubeGizmo={showViewCubeGizmo}
                 >
                   <QuadrantContent
                     viewDirection="right"
@@ -3941,6 +3945,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             sceneRef={sceneRef}
             zoomMultiplier={embeddedZoomMultiplier ?? mobileViewerZoomMultiplier}
             onControlsReady={handleControlsReady}
+            showViewCubeGizmo={showViewCubeGizmo}
           >
             <React.Suspense fallback={null}>
               {/* 배경 클릭 감지용 평면 - selectedFurnitureId 해제 */}

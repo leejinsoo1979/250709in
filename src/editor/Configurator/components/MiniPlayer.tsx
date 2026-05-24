@@ -217,6 +217,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
               isEmbedded={true}
               readOnly={true}
               hideEdges={true}
+              showViewCubeGizmo={false}
             />
           </div>
         ) : (

@@ -559,6 +559,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
             view2DDirection="front"
             renderMode="solid"
             cameraMode="perspective"
+            showViewCubeGizmo={false}
           >
             <React.Suspense fallback={null}>
               {/* 조명 — Space3DViewerReadOnly와 동일 */}

@@ -2,6 +2,11 @@ import jsPDF from 'jspdf';
 import JSZip from 'jszip';
 import { OptimizedResult, Panel } from '../types';
 
+const formatPanelMm = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+};
+
 function isFurnitureRightSidePanel(panel: any): boolean {
   const name = panel?.name || '';
   return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
@@ -187,7 +192,7 @@ export class PDFExporter {
         // Panel dimensions (keep center display as is)
         this.pdf.setFontSize(7);
         this.pdf.setTextColor(100, 100, 100);
-        const dimText = `${Math.round(panel.width)} × ${Math.round(panel.height)}`;
+        const dimText = `${formatPanelMm(panel.width)} × ${formatPanelMm(panel.height)}`;
         const dimWidth = this.pdf.getTextWidth(dimText);
         this.pdf.text(
           dimText,
@@ -200,14 +205,14 @@ export class PDFExporter {
         
         // 화면에 그려진 실제 크기 계산
         // width와 height는 이미 위에서 계산된 화면에 표시되는 크기
-        const actualDisplayWidth = Math.round(width / scale);  // 스케일을 역산하여 실제 크기 계산
-        const actualDisplayHeight = Math.round(height / scale);
+        const actualDisplayWidth = width / scale;  // 스케일을 역산하여 실제 크기 계산
+        const actualDisplayHeight = height / scale;
         
         // L방향 치수 - 상단에 표시 (화면의 가로 치수)
         if (width > 10) {
           this.pdf.setFontSize(10);
           this.pdf.setTextColor(0, 0, 0);
-          const topText = String(actualDisplayWidth);
+          const topText = formatPanelMm(actualDisplayWidth);
           const topTextWidth = this.pdf.getTextWidth(topText);
           this.pdf.text(
             topText,
@@ -220,7 +225,7 @@ export class PDFExporter {
         if (height > 10) {
           this.pdf.setFontSize(10);
           this.pdf.setTextColor(0, 0, 0);
-          const leftText = String(actualDisplayHeight);
+          const leftText = formatPanelMm(actualDisplayHeight);
           
           // 패널 안쪽 좌측 중앙에 90도 회전하여 표시
           const textX = x + 7;
@@ -693,8 +698,8 @@ export class PDFExporter {
       const rowData = [
         data.count.toString(),
         cleanPanelName.length > 20 ? cleanPanelName.substring(0, 17) + '...' : cleanPanelName,
-        Math.round(data.width).toString(),
-        Math.round(data.height).toString(),
+        formatPanelMm(data.width),
+        formatPanelMm(data.height),
         data.material
       ];
       

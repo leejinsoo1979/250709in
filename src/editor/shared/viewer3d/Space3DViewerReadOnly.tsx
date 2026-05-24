@@ -136,6 +136,7 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           renderMode={renderMode}
           cameraMode={cameraMode}
           zoomMultiplier={cameraMode === 'orthographic' ? 0.65 : undefined}
+          showViewCubeGizmo={false}
         >
           <React.Suspense fallback={null}>
             {/* 헤드리스 export용 Scene 노출 */}

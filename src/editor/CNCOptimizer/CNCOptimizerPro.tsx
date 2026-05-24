@@ -40,6 +40,11 @@ import { OptimizedResult, PlacedPanel } from './types';
 // Styles
 import styles from './CNCOptimizerPro.module.css';
 
+const formatPanelMm = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+};
+
 function PageInner(){
   const navigate = useNavigate();
   const location = useLocation();
@@ -2060,7 +2065,7 @@ function PageInner(){
                                 >
                                   <span className={styles.panelName}>{panel.name || `Panel ${panel.id}`}</span>
                                   <span className={styles.panelSize}>
-                                    {Math.round(panel.width)} × {Math.round(panel.height)}
+                                    {formatPanelMm(panel.width)} × {formatPanelMm(panel.height)}
                                   </span>
                                 </div>
                               ))}

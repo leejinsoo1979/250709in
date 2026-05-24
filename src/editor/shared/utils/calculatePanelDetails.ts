@@ -1479,7 +1479,8 @@ export const calculatePanelDetails = (
       isLeftHinge: boolean,
       fixedHingeCount?: number,
       customPositionsMm?: number[],
-      shelfCollisionPositionsMm: DoorShelfCollisionRange[] = []
+      shelfCollisionPositionsMm: DoorShelfCollisionRange[] = [],
+      insideFaceHingeSide?: 'left' | 'right'
     ) => {
       const customHingePositions = normalizeDoorHingePositionsMm(customPositionsMm, doorH);
       const hingePositions = customHingePositions.length > 0
@@ -1491,14 +1492,16 @@ export const calculatePanelDetails = (
           shelfCollisionPositionsMm,
           doorH
         );
-      // 옵티마이저/MPR은 도어 안쪽면 기준이므로 정면 힌지 방향을 좌우 미러링한다.
-      const cupX = isLeftHinge
-        ? doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance
-        : DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
+      const resolvedInsideFaceHingeSide = insideFaceHingeSide ?? (isLeftHinge ? 'right' : 'left');
+      // 옵티마이저/MPR은 도어 안쪽면 기준이다.
+      // 우측 도어/우측 힌지 타공은 화면 왼쪽, 좌측 도어/좌측 힌지 타공은 화면 오른쪽에 온다.
+      const cupX = resolvedInsideFaceHingeSide === 'left'
+        ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
+        : doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
       // 나사홀은 안쪽면에서 힌지컵보다 도어 중심 방향으로 들어간다.
-      const screwX = isLeftHinge
-        ? cupX - DEFAULT_HINGE_SETTINGS.screwRowDistance
-        : cupX + DEFAULT_HINGE_SETTINGS.screwRowDistance;
+      const screwX = resolvedInsideFaceHingeSide === 'left'
+        ? cupX + DEFAULT_HINGE_SETTINGS.screwRowDistance
+        : cupX - DEFAULT_HINGE_SETTINGS.screwRowDistance;
       // 나사홀 Y 오프셋 (힌지컵 중심에서 상하)
       const screwHoleSpacing = hingeType === 'B' ? 48 : 45;
       const screwYOffset = screwHoleSpacing / 2; // A: 22.5mm, B: 24mm
@@ -1524,9 +1527,10 @@ export const calculatePanelDetails = (
       isLeftHinge: boolean,
       fixedHingeCount?: number,
       customPositionsMm?: number[],
-      shelfCollisionPositionsMm: DoorShelfCollisionRange[] = []
+      shelfCollisionPositionsMm: DoorShelfCollisionRange[] = [],
+      insideFaceHingeSide?: 'left' | 'right'
     ) => {
-      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm, shelfCollisionPositionsMm);
+      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm, shelfCollisionPositionsMm, insideFaceHingeSide);
       panels.door.push({
         name,
         width: widthMm,
@@ -1605,8 +1609,13 @@ export const calculatePanelDetails = (
         );
 
         const adjustedLeafWidth = getOuterAdjustedDoorWidth(leaf);
-        pushDoorPanel(`${prefix}하부 도어`, adjustedLeafWidth, lowerDoorH, isLeftHinge, undefined, resolvedLowerHinges);
-        pushDoorPanel(`${prefix}상부 도어`, adjustedLeafWidth, upperDoorH, isLeftHinge, undefined, resolvedUpperHinges);
+        const insideFaceHingeSide = leaf.name === 'right'
+          ? 'left'
+          : leaf.name === 'left'
+            ? 'right'
+            : undefined;
+        pushDoorPanel(`${prefix}하부 도어`, adjustedLeafWidth, lowerDoorH, isLeftHinge, undefined, resolvedLowerHinges, [], insideFaceHingeSide);
+        pushDoorPanel(`${prefix}상부 도어`, adjustedLeafWidth, upperDoorH, isLeftHinge, undefined, resolvedUpperHinges, [], insideFaceHingeSide);
       });
 
       bracketHingeYPositions = Array.from(new Set(bracketHingeYPositions)).sort((a, b) => a - b);
@@ -1622,7 +1631,12 @@ export const calculatePanelDetails = (
           : leaf.name === 'right'
             ? '우측 도어'
             : '도어';
-        pushDoorPanel(doorName, getOuterAdjustedDoorWidth(leaf), leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm, defaultDoorShelfCollisions);
+        const insideFaceHingeSide = leaf.name === 'right'
+          ? 'left'
+          : leaf.name === 'left'
+            ? 'right'
+            : undefined;
+        pushDoorPanel(doorName, getOuterAdjustedDoorWidth(leaf), leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm, defaultDoorShelfCollisions, insideFaceHingeSide);
       });
     }
 

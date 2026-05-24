@@ -1,5 +1,10 @@
 import { OptimizedResult } from '../types';
 
+const formatPanelMm = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
+};
+
 function isFurnitureRightSidePanel(panel: any): boolean {
   const name = panel?.name || '';
   return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
@@ -367,7 +372,8 @@ export class DXFExporter {
       );
       
       // Panel ID and dimensions - 원래 치수 표시 (L×W)
-      const panelText = panel.id ? `${panel.id}\n${Math.round(panel.width)}×${Math.round(panel.height)}` : `P${idx + 1}\n${Math.round(panel.width)}×${Math.round(panel.height)}`;
+      const panelDimensionText = `${formatPanelMm(panel.width)}×${formatPanelMm(panel.height)}`;
+      const panelText = panel.id ? `${panel.id}\n${panelDimensionText}` : `P${idx + 1}\n${panelDimensionText}`;
       this.addText(
         panelText.split('\n')[0], // ID
         offsetX + panel.x + displayWidth / 2,
@@ -378,7 +384,7 @@ export class DXFExporter {
       
       // Dimensions on separate line - 원래 치수 표시 (L×W)
       this.addText(
-        panelText.split('\n')[1] || `${Math.round(panel.width)}×${Math.round(panel.height)}`, // 원래 치수
+        panelText.split('\n')[1] || panelDimensionText, // 원래 치수
         offsetX + panel.x + displayWidth / 2,
         offsetY + panel.y + displayHeight / 2 - 10,
         Math.min(displayHeight / 12, 12),
