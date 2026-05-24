@@ -22,6 +22,7 @@ interface PanelDetail {
   hingeCount?: number
   bracketBoringPositions?: number[]
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>
+  groovePositions?: Array<{ y: number; height: number; depth: number }>
 }
 
 const getRequiredModule = (id: string, width: number, depth: number) => {
@@ -141,6 +142,8 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '서랍받침대').depth).toBe(269)
     expect(findPanel(panels, '서랍속장(좌)').width).toBe(233)
     expect(findPanel(panels, '서랍1 좌측판').width).toBe(276)
+    expect(findPanel(panels, '서랍1 좌측판').groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }])
+    expect(findPanel(panels, '서랍1 우측판').groovePositions).toEqual([{ y: 12, height: 10, depth: 7.5 }])
     expect(findPanel(panels, '서랍1 바닥').depth).toBe(275)
   })
 

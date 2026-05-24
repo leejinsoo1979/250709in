@@ -1487,6 +1487,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const drawerSideFrontZ = wingFrontFaceZ - maidaT;
                         const drawerBackZ = drawerSideFrontZ - drawerSideDepth;
                         const drawerSideCenterZ = (drawerSideFrontZ + drawerBackZ) / 2;
+                        const drawerBottomGroove = (face: 'left' | 'right') => [{
+                          face,
+                          fromY: mmToThreeUnits(12),
+                          height: bottomT + mmToThreeUnits(1),
+                          fromZ: 0,
+                          depth: drawerSideDepth,
+                          cutDepth: mmToThreeUnits(7.5),
+                        }];
 
                         return (
                           <>
@@ -1508,6 +1516,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                   panelGrainDirections={panelGrainDirections}
                                   furnitureId={placedFurnitureId}
                                   textureUrl={textureUrl}
+                                  faceGrooves={drawerBottomGroove('right')}
                                 />
                               );
                             })()}
@@ -1529,6 +1538,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                   panelGrainDirections={panelGrainDirections}
                                   furnitureId={placedFurnitureId}
                                   textureUrl={textureUrl}
+                                  faceGrooves={drawerBottomGroove('left')}
                                 />
                               );
                             })()}

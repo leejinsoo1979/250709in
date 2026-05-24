@@ -1226,6 +1226,9 @@ export const calculatePanelDetails = (
         : customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
       const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
       const drawerBackH = 155 - 18 - backPanelThickness;
+      const drawerGroovePositionY = 12;
+      const drawerGrooveHeight = backPanelThickness + 1;
+      const drawerSideGroove = [{ y: drawerGroovePositionY, height: drawerGrooveHeight, depth: 7.5 }];
 
       // 서랍 좌측판
       panels.lower.push({
@@ -1233,7 +1236,8 @@ export const calculatePanelDetails = (
         width: Math.round(drawerSideDepth),
         depth: 155,
         thickness: drawerSideThickness,
-        material: 'PB'
+        material: 'PB',
+        groovePositions: drawerSideGroove
       });
 
       // 서랍 우측판
@@ -1242,7 +1246,8 @@ export const calculatePanelDetails = (
         width: Math.round(drawerSideDepth),
         depth: 155,
         thickness: drawerSideThickness,
-        material: 'PB'
+        material: 'PB',
+        groovePositions: drawerSideGroove
       });
 
       // 서랍 앞판

@@ -384,6 +384,7 @@ export const calculatePanelDetails = (
         : customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
       const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
       const drawerBackH = 155 - 18 - backPanelThickness; // 측판높이 - 하단여유 - 바닥판두께
+      const drawerSideGroove = [{ y: 12, height: backPanelThickness + 1, depth: 7.5 }];
 
       // 서랍 좌측판
       panels.push({
@@ -395,7 +396,8 @@ export const calculatePanelDetails = (
         material: 'PB',
         color: 'MW',
         quantity: 1,
-        grain: 'VERTICAL'
+        grain: 'VERTICAL',
+        groovePositions: drawerSideGroove
       });
 
       // 서랍 우측판
@@ -408,7 +410,8 @@ export const calculatePanelDetails = (
         material: 'PB',
         color: 'MW',
         quantity: 1,
-        grain: 'VERTICAL'
+        grain: 'VERTICAL',
+        groovePositions: drawerSideGroove
       });
 
       // 서랍 앞판
