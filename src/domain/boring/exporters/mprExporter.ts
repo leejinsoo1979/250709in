@@ -145,6 +145,15 @@ function formatMprNumber(value: number): string {
   return Number.isInteger(value) ? `${value}` : value.toFixed(1);
 }
 
+function formatMprCoordinate(value: number): string {
+  if (Number.isInteger(value)) return `${value}`;
+  return value.toFixed(2).replace(/\.?0+$/, '');
+}
+
+function formatMprDecimal4(value: number): string {
+  return value.toFixed(4);
+}
+
 function isFixedPanelThroughBoring(boring: Boring): boolean {
   return boring.note === 'fixed-panel-through';
 }
@@ -207,15 +216,31 @@ function getHorizontalBoringAngle(boring: Boring): number {
 /**
  * <103 \BohrHoriz\ 수평/측면 보링 블록 생성
  */
-function generateBohrHoriz(boring: Boring): string {
+function generateBohrHoriz(boring: Boring, panel: PanelBoringData): string {
   const wi = boring.angle ?? getHorizontalBoringAngle(boring);
   const ti = boring.note === 'fixed-panel-side-bore' ? 30 : boring.depth;
   const du = boring.note === 'fixed-panel-side-bore' ? 5 : boring.diameter;
+  const za = panel.thickness / 2;
+
+  if (boring.note === 'fixed-panel-side-bore') {
+    const bm = boring.face === 'right' ? 'XM' : 'XP';
+    return `<103 \\BohrHoriz\\
+XA="${formatMprDecimal4(boring.x)}"
+YA="${formatMprDecimal4(boring.y)}"
+ZA="${formatMprDecimal4(za)}"
+TI="${formatMprDecimal4(ti)}"
+DU="${formatMprDecimal4(du)}"
+BM="${bm}"
+F_="STANDARD"
+AN="1"
+
+`;
+  }
 
   return `<103 \\BohrHoriz\\
 XA="${boring.x.toFixed(1)}"
 YA="${boring.y.toFixed(1)}"
-ZA="T/2"
+ZA="${formatMprCoordinate(za)}"
 TI="${formatMprNumber(ti)}"
 AB="32"
 BM="LS"
@@ -295,7 +320,7 @@ export function generateSinglePanelMPR(
     if (boring.face === 'top' || boring.face === 'bottom') {
       mpr += generateBohrVert(boring, panel);
     } else {
-      mpr += generateBohrHoriz(boring);
+      mpr += generateBohrHoriz(boring, panel);
     }
   });
 
