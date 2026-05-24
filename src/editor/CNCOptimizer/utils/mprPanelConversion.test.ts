@@ -4,12 +4,12 @@ import type { PlacedPanel } from '../types';
 import { convertPlacedPanelToMprBoringData } from './mprPanelConversion';
 
 describe('convertPlacedPanelToMprBoringData', () => {
-  it('restores horizontal panel coordinates so side bores are on left/right edges', () => {
+  it('keeps horizontal panel coordinates so side bores are on left/right edges', () => {
     const panel = {
       id: 'top-1',
       name: '상판',
-      width: 580,
-      height: 764,
+      width: 764,
+      height: 580,
       x: 0,
       y: 0,
       rotated: false,
@@ -38,16 +38,20 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const mpr = generateSinglePanelMPR(converted);
     expect(mpr).toContain('_BSX=764.0000');
     expect(mpr).toContain('_BSY=580.0000');
+    expect(mpr).toContain('BM="XP"');
+    expect(mpr).toContain('BM="XM"');
+    expect(mpr).toContain('WI="0.0000"');
+    expect(mpr).toContain('WI="180.0000"');
+    expect(mpr).toContain('XA="0.0000"');
     expect(mpr).toContain('XA="764.0000"');
-    expect(mpr).not.toContain('XA="580.0000"');
   });
 
   it('uses product coordinates when explicit side-bore positions exist even if the name is not recognized', () => {
     const panel = {
       id: 'unknown-fixed-1',
       name: '패널A',
-      width: 410,
-      height: 800,
+      width: 800,
+      height: 410,
       x: 0,
       y: 0,
       rotated: false,

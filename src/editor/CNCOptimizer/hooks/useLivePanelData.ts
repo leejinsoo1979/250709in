@@ -83,6 +83,11 @@ function getPanelReferenceDepth(panel: any): number {
   return Number(panel?.width ?? 0);
 }
 
+function isRodShelfPanelName(panelName?: string): boolean {
+  const name = panelName || '';
+  return name.includes('옷봉 선반') || name.includes('옷봉선반');
+}
+
 function isMainHorizontalPanel(panel: any): boolean {
   const name = panel?.name || '';
   if (!name) return false;
@@ -96,7 +101,7 @@ function isMainHorizontalPanel(panel: any): boolean {
     name.includes('상판') ||
     name.includes('천판') ||
     name.includes('고정선반') ||
-    name.includes('옷봉 선반')
+    isRodShelfPanelName(name)
   );
 }
 
@@ -113,6 +118,13 @@ function resolveFixedHorizontalSideBoringPositions(panelDepth: number): number[]
   return Array.from(new Set(positions)).sort((a, b) => a - b);
 }
 
+function getEffectiveLowerSectionTopOffsetMm(moduleId?: string, placedModule?: any): number {
+  if (moduleId?.includes('entryway-h')) return 85;
+
+  const offset = Number(placedModule?.lowerSectionTopOffset ?? 0);
+  return Number.isFinite(offset) ? Math.max(0, offset) : 0;
+}
+
 function matchesFixedHorizontalPanelDetail(panel: any, detail: ShelfBoringPositionDetail): boolean {
   if (!isFixedPanelBoringDetail(detail)) return false;
 
@@ -121,7 +133,12 @@ function matchesFixedHorizontalPanelDetail(panel: any, detail: ShelfBoringPositi
 
   if (name.includes('(하)바닥')) return detail.role === 'bottom-panel';
   if (name.includes('(상)상판')) return detail.role === 'top-panel';
-  if (name.includes('(하)상판') || name.includes('(상)바닥')) return detail.role === 'section-divider';
+  if (name.includes('(하)상판')) {
+    return detail.role === 'section-divider' && ((detail.roleIndex ?? 0) % 2 === 0);
+  }
+  if (name.includes('(상)바닥')) {
+    return detail.role === 'section-divider' && ((detail.roleIndex ?? 0) % 2 === 1);
+  }
 
   if ((name === '바닥' || name.endsWith('바닥') || name.includes('바닥판') || name.includes('지판')) && detail.role === 'bottom-panel') {
     return true;
@@ -131,7 +148,7 @@ function matchesFixedHorizontalPanelDetail(panel: any, detail: ShelfBoringPositi
     return true;
   }
 
-  if (name.includes('고정선반') || name.includes('옷봉 선반')) {
+  if (name.includes('고정선반') || isRodShelfPanelName(name)) {
     return detail.role === 'fixed-shelf';
   }
 
@@ -142,7 +159,7 @@ function resolveFixedHorizontalSideBoringPositionsFromSidePanel(
   panel: any,
   details: ShelfBoringPositionDetail[],
   getReferenceDepth: (detail: ShelfBoringPositionDetail) => number,
-  options: {
+  _options: {
     getSideDepth?: (detail: ShelfBoringPositionDetail) => number;
     getFrontInset?: (detail: ShelfBoringPositionDetail) => number;
   }
@@ -150,16 +167,14 @@ function resolveFixedHorizontalSideBoringPositionsFromSidePanel(
   if (!isMainHorizontalPanel(panel)) return undefined;
 
   const matchingDetails = details.filter(detail => matchesFixedHorizontalPanelDetail(panel, detail));
-  const groups = toBoringDepthGroups(matchingDetails, getReferenceDepth, y => y, options);
-  const positions = groups
-    ?.flatMap(group => group.depthPositions)
-    .filter(pos => Number.isFinite(pos));
+  const isRodShelfPanel = isRodShelfPanelName(panel?.name);
+  if (matchingDetails.length === 0 && !isRodShelfPanel) return undefined;
 
-  if (positions && positions.length > 0) {
-    return Array.from(new Set(positions.map(pos => Math.round(pos * 10) / 10))).sort((a, b) => a - b);
-  }
+  const referenceDepth = matchingDetails.length > 0
+    ? getReferenceDepth(matchingDetails[0])
+    : getPanelReferenceDepth(panel);
 
-  return resolveFixedHorizontalSideBoringPositions(panel.height || panel.depth || 0);
+  return resolveFixedHorizontalSideBoringPositions(referenceDepth);
 }
 
 function isMovableShelfPanel(panel: any): boolean {
@@ -176,7 +191,7 @@ function findPanelByName(panels: any[], predicate: (name: string) => boolean): a
 function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number) {
   const fixedPanels = modulePanels.filter(isMainHorizontalPanel);
   const shelfPanels = modulePanels.filter(isMovableShelfPanel);
-  const fixedShelfPanels = fixedPanels.filter(panel => (panel?.name || '').includes('옷봉 선반'));
+  const fixedShelfPanels = fixedPanels.filter(panel => (panel?.name || '').includes('고정선반') || isRodShelfPanelName(panel?.name));
   const bottomPanel = findPanelByName(fixedPanels, name => name.includes('(하)바닥'))
     ?? findPanelByName(fixedPanels, name => name === '바닥' || name.endsWith('바닥'))
     ?? fixedPanels[0];
@@ -190,6 +205,9 @@ function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number
   const sectionDividerPanels = splitSectionDividerPanels.length > 0
     ? splitSectionDividerPanels
     : fixedPanels.slice(1, -1);
+  const fixedPanelReferenceDepth = getPanelReferenceDepth(topPanel)
+    || getPanelReferenceDepth(bottomPanel)
+    || fallbackDepth;
 
   return (detail: ShelfBoringPositionDetail): number => {
     if (isShelfPinBoring(detail)) {
@@ -205,7 +223,11 @@ function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number
       return getPanelReferenceDepth(sectionDividerPanels[detail.roleIndex ?? 0]) || fallbackDepth;
     }
     if (detail.role === 'fixed-shelf') {
-      return getPanelReferenceDepth(fixedShelfPanels[detail.roleIndex ?? 0]) || fallbackDepth;
+      const fixedShelfPanel = fixedShelfPanels[detail.roleIndex ?? 0];
+      if (isRodShelfPanelName(fixedShelfPanel?.name)) {
+        return fixedPanelReferenceDepth;
+      }
+      return getPanelReferenceDepth(fixedShelfPanel) || fixedPanelReferenceDepth;
     }
 
     return fallbackDepth;
@@ -239,6 +261,114 @@ function createBoringFrontInsetResolver({
 
     return Math.max(0, lowerSectionTopOffsetMm || 0);
   };
+}
+
+function collectRodShelfBoringDetails({
+  sections,
+  totalHeightMm,
+  basicThicknessMm,
+  startRoleIndex,
+}: {
+  sections: any[];
+  totalHeightMm: number;
+  basicThicknessMm: number;
+  startRoleIndex: number;
+}): ShelfBoringPositionDetail[] {
+  if (!Array.isArray(sections) || sections.length === 0) return [];
+
+  const availableHeightMm = totalHeightMm - basicThicknessMm * 2;
+  let currentYFromBottom = basicThicknessMm;
+  let roleIndex = startRoleIndex;
+  const details: ShelfBoringPositionDetail[] = [];
+
+  const pushFixedCustomShelves = (elements: any[] | undefined, areaBottomY: number) => {
+    if (!Array.isArray(elements)) return;
+
+    elements.forEach(element => {
+      if (element?.type !== 'shelf' || (element.shelfMethod !== 'fixed' && !element.hasRod) || !Array.isArray(element.heights)) return;
+
+      element.heights.forEach((height: number) => {
+        const y = areaBottomY + Number(height);
+        if (!Number.isFinite(y) || y <= 0 || y >= totalHeightMm) return;
+
+        details.push({
+          y: Math.round(y * 1000) / 1000,
+          type: 'fixed-panel',
+          role: 'fixed-shelf',
+          roleIndex: roleIndex++,
+        });
+      });
+    });
+  };
+
+  const pushRodShelf = (elements: any[] | undefined, areaBottomY: number, areaHeightMm: number) => {
+    if (!Array.isArray(elements)) return;
+
+    elements.forEach(element => {
+      if (element?.type !== 'rod' || !element.withShelf) return;
+
+      const shelfGapMm = Number(element.shelfGap ?? 280);
+      const safeGapMm = Number.isFinite(shelfGapMm) ? Math.max(0, shelfGapMm) : 280;
+      const y = areaBottomY + areaHeightMm - safeGapMm;
+      if (!Number.isFinite(y) || y <= 0 || y >= totalHeightMm) return;
+
+      details.push({
+        y: Math.round(y * 1000) / 1000,
+        type: 'fixed-panel',
+        role: 'fixed-shelf',
+        roleIndex: roleIndex++,
+      });
+    });
+  };
+
+  sections.forEach(section => {
+    const sectionHeightMm = section?.heightType === 'percentage'
+      ? availableHeightMm * ((Number(section.height) || 0) / 100)
+      : Number(section?.height ?? 0);
+
+    if (!Number.isFinite(sectionHeightMm) || sectionHeightMm <= 0) return;
+
+    const pushElements = (elements: any[] | undefined, areaBottomY: number, areaHeightMm: number) => {
+      pushFixedCustomShelves(elements, areaBottomY);
+      pushRodShelf(elements, areaBottomY, areaHeightMm);
+    };
+
+    pushElements(section.elements, currentYFromBottom, sectionHeightMm);
+    pushElements(section.leftElements, currentYFromBottom, sectionHeightMm);
+    pushElements(section.centerElements, currentYFromBottom, sectionHeightMm);
+    pushElements(section.rightElements, currentYFromBottom, sectionHeightMm);
+    pushElements(section.horizontalSplit?.leftElements, currentYFromBottom, sectionHeightMm);
+    pushElements(section.horizontalSplit?.centerElements, currentYFromBottom, sectionHeightMm);
+    pushElements(section.horizontalSplit?.rightElements, currentYFromBottom, sectionHeightMm);
+
+    Object.values(section.areaSubSplits ?? {}).forEach((split: any) => {
+      if (!split?.enabled) return;
+
+      const lowerHeightMm = Math.max(0, Math.min(sectionHeightMm, Number(split.lowerHeight ?? 0)));
+      const upperHeightMm = Math.max(0, sectionHeightMm - lowerHeightMm);
+
+      pushElements(split.lowerElements, currentYFromBottom, lowerHeightMm);
+      pushElements(split.upperElements, currentYFromBottom + lowerHeightMm, upperHeightMm);
+    });
+
+    currentYFromBottom += sectionHeightMm;
+  });
+
+  return details;
+}
+
+function mergeBoringDetails(details: ShelfBoringPositionDetail[]): ShelfBoringPositionDetail[] {
+  const uniqueDetailsMap = new Map<number, ShelfBoringPositionDetail>();
+
+  details.forEach(detail => {
+    const key = Math.round(detail.y * 1000) / 1000;
+    const existing = uniqueDetailsMap.get(key);
+    if (!existing || (existing.type !== 'fixed-panel' && detail.type === 'fixed-panel')) {
+      uniqueDetailsMap.set(key, { ...detail, y: key });
+    }
+  });
+
+  return Array.from(uniqueDetailsMap.values()).sort((a, b) => a.y - b.y);
 }
 
 function toBoringDepthGroups(
@@ -297,10 +427,27 @@ function calculateModuleShelfBoringDetails({
       spacingMm: 32,
     },
   });
+  const rodShelfDetails = collectRodShelfBoringDetails({
+    sections: Array.isArray(placedModule?.customConfig?.sections) && placedModule.customConfig.sections.length > 0
+      ? placedModule.customConfig.sections
+      : sections,
+    totalHeightMm: furnitureHeight,
+    basicThicknessMm,
+    startRoleIndex: baseResult.details.filter(detail => detail.role === 'fixed-shelf').length,
+  });
+  const baseDetailsWithRodShelves = mergeBoringDetails([
+    ...baseResult.details,
+    ...rodShelfDetails,
+  ]);
+  const baseResultWithRodShelves = {
+    ...baseResult,
+    positions: baseDetailsWithRodShelves.map(detail => detail.y),
+    details: baseDetailsWithRodShelves,
+  };
 
   const moduleId = moduleData?.id || placedModule?.moduleId || '';
   if (!isDirectLowerDowelShelfModule(moduleId)) {
-    return baseResult;
+    return baseResultWithRodShelves;
   }
 
   const directShelfDetails = getDirectLowerDowelShelfBoringDetails({
@@ -314,14 +461,14 @@ function calculateModuleShelfBoringDetails({
       spacingMm: 32,
     },
   });
-  const fixedDetails = baseResult.details.filter(detail => (
+  const fixedDetails = baseResultWithRodShelves.details.filter(detail => (
     isFixedPanelBoringDetail(detail) &&
     (hasDirectLowerTopPanel(moduleId) || detail.role !== 'top-panel')
   ));
   const details = [...fixedDetails, ...directShelfDetails].sort((a, b) => a.y - b.y);
 
   return {
-    ...baseResult,
+    ...baseResultWithRodShelves,
     positions: details.map(detail => detail.y),
     details,
     shelves: directShelfDetails.map(detail => detail.y),
@@ -678,6 +825,10 @@ export function useLivePanelData() {
           placedModule,
           moduleWidthMm: width
         });
+        const effectiveLowerSectionTopOffsetMm = getEffectiveLowerSectionTopOffsetMm(
+          moduleData?.id || placedModule.moduleId,
+          placedModule
+        );
 
         const allPanelsList = calculatePanelDetailsShared(
           moduleData, width, depth, hasDoor, t, undefined,
@@ -734,7 +885,7 @@ export function useLivePanelData() {
           (placedModule as any).customSections,
           doorOuterOpenSides,
           undefined,
-          (placedModule as any).lowerSectionTopOffset
+          effectiveLowerSectionTopOffsetMm
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -813,7 +964,7 @@ export function useLivePanelData() {
         const resolveBoringFrontInset = createBoringFrontInsetResolver({
           moduleId: moduleData?.id || placedModule?.moduleId || '',
           basicThicknessMm,
-          lowerSectionTopOffsetMm: (placedModule as any).lowerSectionTopOffset ?? 0,
+          lowerSectionTopOffsetMm: effectiveLowerSectionTopOffsetMm,
           shelfFrontInsetMm,
         });
         const boringDepthGroupOptions = {
@@ -1565,6 +1716,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule,
         moduleWidthMm: width
       });
+      const effectiveLowerSectionTopOffsetMm2 = getEffectiveLowerSectionTopOffsetMm(
+        moduleData?.id || placedModule.moduleId,
+        placedModule
+      );
 
       const allPanelsList = calculatePanelDetailsShared(
         moduleData, width, depth, hasDoor, t, undefined,
@@ -1620,7 +1775,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         (placedModule as any).customSections,
         doorOuterOpenSides2,
         undefined,
-        (placedModule as any).lowerSectionTopOffset
+        effectiveLowerSectionTopOffsetMm2
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
@@ -1685,7 +1840,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const resolveBoringFrontInset = createBoringFrontInsetResolver({
         moduleId: moduleData?.id || placedModule?.moduleId || '',
         basicThicknessMm,
-        lowerSectionTopOffsetMm: (placedModule as any).lowerSectionTopOffset ?? 0,
+        lowerSectionTopOffsetMm: effectiveLowerSectionTopOffsetMm2,
         shelfFrontInsetMm,
       });
       const boringDepthGroupOptions = {

@@ -1842,9 +1842,18 @@ export const calculatePanelDetails = (
           switch (el.type) {
             case 'shelf': {
               const shelfCount = el.heights?.length || 0;
+              const isFixedShelf = (el as any).shelfMethod === 'fixed' || !!(el as any).hasRod;
+              const rodShelfIndex = (el as any).hasRod && shelfCount > 0
+                ? el.heights!.reduce((maxIndex: number, height: number, index: number) => (
+                  height > el.heights![maxIndex] ? index : maxIndex
+                ), 0)
+                : -1;
               for (let i = 0; i < shelfCount; i++) {
+                const shelfName = isFixedShelf
+                  ? (i === rodShelfIndex ? '옷봉 선반' : `고정선반 ${i + 1}`)
+                  : `선반 ${i + 1}`;
                 targetPanel.push({
-                  name: `${sectionPrefix}${areaPrefix}선반 ${i + 1}`,
+                  name: `${sectionPrefix}${areaPrefix}${shelfName}`,
                   width: horizontalW,
                   depth: customDepth - backReductionForCustomPanelsMm,
                   thickness: basicThicknessCC,
@@ -1932,7 +1941,7 @@ export const calculatePanelDetails = (
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}옷봉 선반`,
                   width: horizontalW,
-                  depth: customDepth - backReductionForCustomPanelsMm,
+                  depth: customDepth - backReductionForPanelsMm,
                   thickness: basicThicknessCC,
                   material: 'PB'
                 });

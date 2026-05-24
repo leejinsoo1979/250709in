@@ -15,37 +15,13 @@ export const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
     name.includes('바닥판') ||
     name.includes('지판') ||
     name.includes('고정선반') ||
-    name.includes('옷봉 선반')
+    name.includes('옷봉 선반') ||
+    name.includes('옷봉선반')
   );
 };
 
-export const resolveMprFixedPanelDepthPositions = (panelDepth: number): number[] => {
-  if (panelDepth <= 60) return [];
-  return [30, panelDepth / 2, Math.max(30, panelDepth - 30)];
-};
-
-function isMprHorizontalBodyPanel(panel: PlacedPanel): boolean {
-  return !panel.isDoor && (
-    Boolean(panel.sideBoringPositions?.length) ||
-    isMprFixedHorizontalPanel(panel.name)
-  );
-}
-
-/**
- * CNC optimizer panels are packed as W/L coordinates. For horizontal body panels
- * (top/bottom/fixed shelves), MPR needs product coordinates: X = left/right width,
- * Y = front/back depth. Otherwise side bores at x=0/x=max are exported on the
- * front/back edges.
- */
 function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } {
-  if (!isMprHorizontalBodyPanel(panel)) {
-    return { width: panel.width, height: panel.height };
-  }
-
-  return {
-    width: panel.height,
-    height: panel.width,
-  };
+  return { width: panel.width, height: panel.height };
 }
 
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
@@ -157,9 +133,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
   // 5) 천지판/고정선반 측면 피스 유도보링: Ø5mm, depth=30
   const sideBoreDepthPositions = panel.sideBoringPositions?.length
     ? panel.sideBoringPositions
-    : (!panel.isDoor && isMprFixedHorizontalPanel(panel.name)
-      ? resolveMprFixedPanelDepthPositions(mprSize.height)
-      : []);
+    : [];
   if (!panel.isDoor && sideBoreDepthPositions.length > 0) {
     const sideBoreDiameter = panel.sideBoringDiameter || 5;
     const sideBoreDepth = panel.sideBoringDepth || 30;

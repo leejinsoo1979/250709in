@@ -218,8 +218,8 @@ function getHorizontalBoringAngle(boring: Boring): number {
  */
 function generateBohrHoriz(boring: Boring, panel: PanelBoringData): string {
   const wi = boring.angle ?? getHorizontalBoringAngle(boring);
-  const ti = boring.note === 'fixed-panel-side-bore' ? 30 : boring.depth;
-  const du = boring.note === 'fixed-panel-side-bore' ? 5 : boring.diameter;
+  const ti = boring.depth;
+  const du = boring.diameter;
   const za = panel.thickness / 2;
 
   if (boring.note === 'fixed-panel-side-bore') {
@@ -233,6 +233,7 @@ DU="${formatMprDecimal4(du)}"
 BM="${bm}"
 F_="STANDARD"
 AN="1"
+WI="${formatMprDecimal4(wi)}"
 
 `;
   }

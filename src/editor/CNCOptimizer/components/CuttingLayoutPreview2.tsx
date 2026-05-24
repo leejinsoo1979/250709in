@@ -37,38 +37,12 @@ const isDrawerSidePanelName = (name?: string): boolean => {
       panelName.includes('측판'));
 };
 
-const isMprFixedHorizontalPanelName = (name?: string): boolean => {
-  const panelName = name || '';
-  if (!panelName) return false;
-  if (panelName.includes('서랍') || panelName.includes('인조대리석') || panelName.includes('전자렌지') || panelName.includes('트레이')) return false;
-  if (panelName.includes('걸레받이') || panelName.includes('몰딩') || panelName.includes('프레임') || panelName.includes('찬넬')) return false;
-
-  return (
-    panelName.includes('상판') ||
-    panelName.includes('천판') ||
-    panelName.includes('하판') ||
-    panelName.includes('바닥') ||
-    panelName.includes('바닥판') ||
-    panelName.includes('지판') ||
-    panelName.includes('고정선반') ||
-    panelName.includes('옷봉 선반')
-  );
-};
-
-const resolveMprSideBoringPositions = (panel: { name?: string; width: number; sideBoringPositions?: number[] }): number[] => {
+const resolveMprSideBoringPositions = (panel: { sideBoringPositions?: number[] }): number[] => {
   if (panel.sideBoringPositions?.length) {
     return Array.from(new Set(panel.sideBoringPositions.map(roundPanelCoordMm))).sort((a, b) => a - b);
   }
 
-  if (!isMprFixedHorizontalPanelName(panel.name) || panel.width <= 60) {
-    return [];
-  }
-
-  return Array.from(new Set(
-    [30, panel.width / 2, Math.max(30, panel.width - 30)]
-      .map(roundPanelCoordMm)
-      .filter(pos => pos >= 0 && pos <= panel.width)
-  )).sort((a, b) => a - b);
+  return [];
 };
 
 interface CuttingLayoutPreview2Props {
@@ -1616,44 +1590,55 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       }
 
       // ★★★ MPR 천판/지판 좌우 엣지 수평보링 표시 ★★★
-      // MPR 좌표계: X=좌우 폭, Y=전후 깊이. 옵티마이저 재단 좌표에서는 수평판이 W=깊이, L=폭으로 놓인다.
+      // 천/지판은 옵티마이저 배치에서 비회전 시 화면 위/아래 긴 변이 좌우 측판 접합면이다.
       const mprSideBoringPositions = resolveMprSideBoringPositions(panel);
       if (showBorings && !isDoorPanel && mprSideBoringPositions.length > 0) {
         ctx.save();
 
         const totalScale = baseScale * scale;
         const invScale = 1 / Math.max(totalScale, 0.0001);
-        const mprPanelWidth = panel.height;
-        const boreDepth = Math.max(6, Math.min(panel.sideBoringDepth || 30, (panel.rotated ? width : height) / 2));
-        const markerRadius = Math.max(2.4 * invScale, 1.6);
-        const crossSize = Math.max(3.5 * invScale, 2.2);
+        const mprPanelWidth = panel.width;
+        const boreDepthMm = panel.sideBoringDepth || 30;
+        const boreDiameterMm = panel.sideBoringDiameter || 5;
+        const panelThicknessMm = panel.thickness || 18;
+        const visibleBoreDepth = Math.min(boreDepthMm, panel.rotated ? width : height);
+        const halfBoreDiameter = boreDiameterMm / 2;
+        const crossSize = Math.max(halfBoreDiameter * 0.7, 1.8 * invScale);
 
-        ctx.strokeStyle = '#111827';
-        ctx.fillStyle = '#ffffff';
-        ctx.lineWidth = Math.max(1.4 * invScale, 0.8);
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(17, 24, 39, 0.38)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.24)';
+        ctx.lineWidth = Math.max(0.75 * invScale, 0.45);
+        ctx.lineCap = 'butt';
+        ctx.lineJoin = 'miter';
 
         let mprSideBoringLabelIndex = 0;
 
         mprSideBoringPositions.forEach((depthPosMm) => {
-          if (depthPosMm < 0 || depthPosMm > panel.width) return;
+          if (depthPosMm < 0 || depthPosMm > panel.height) return;
 
           const edgePoints = panel.rotated
             ? [
                 {
                   edgeX: x,
                   edgeY: y + depthPosMm,
-                  lineEndX: x + boreDepth,
+                  lineEndX: x + visibleBoreDepth,
                   lineEndY: y + depthPosMm,
-                  label: `0/${formatPanelMm(depthPosMm)}`,
+                  rectX: x,
+                  rectY: y + depthPosMm - halfBoreDiameter,
+                  rectW: visibleBoreDepth,
+                  rectH: boreDiameterMm,
+                  label: `0/${formatPanelMm(depthPosMm)} Ø${formatPanelMm(boreDiameterMm)} D${formatPanelMm(boreDepthMm)} T${formatPanelMm(panelThicknessMm)}`,
                 },
                 {
                   edgeX: x + width,
                   edgeY: y + depthPosMm,
-                  lineEndX: x + width - boreDepth,
+                  lineEndX: x + width - visibleBoreDepth,
                   lineEndY: y + depthPosMm,
-                  label: `${formatPanelMm(mprPanelWidth)}/${formatPanelMm(depthPosMm)}`,
+                  rectX: x + width - visibleBoreDepth,
+                  rectY: y + depthPosMm - halfBoreDiameter,
+                  rectW: visibleBoreDepth,
+                  rectH: boreDiameterMm,
+                  label: `${formatPanelMm(mprPanelWidth)}/${formatPanelMm(depthPosMm)} Ø${formatPanelMm(boreDiameterMm)} D${formatPanelMm(boreDepthMm)} T${formatPanelMm(panelThicknessMm)}`,
                 },
               ]
             : [
@@ -1661,29 +1646,40 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                   edgeX: x + depthPosMm,
                   edgeY: y,
                   lineEndX: x + depthPosMm,
-                  lineEndY: y + boreDepth,
-                  label: `0/${formatPanelMm(depthPosMm)}`,
+                  lineEndY: y + visibleBoreDepth,
+                  rectX: x + depthPosMm - halfBoreDiameter,
+                  rectY: y,
+                  rectW: boreDiameterMm,
+                  rectH: visibleBoreDepth,
+                  label: `0/${formatPanelMm(depthPosMm)} Ø${formatPanelMm(boreDiameterMm)} D${formatPanelMm(boreDepthMm)} T${formatPanelMm(panelThicknessMm)}`,
                 },
                 {
                   edgeX: x + depthPosMm,
                   edgeY: y + height,
                   lineEndX: x + depthPosMm,
-                  lineEndY: y + height - boreDepth,
-                  label: `${formatPanelMm(mprPanelWidth)}/${formatPanelMm(depthPosMm)}`,
+                  lineEndY: y + height - visibleBoreDepth,
+                  rectX: x + depthPosMm - halfBoreDiameter,
+                  rectY: y + height - visibleBoreDepth,
+                  rectW: boreDiameterMm,
+                  rectH: visibleBoreDepth,
+                  label: `${formatPanelMm(mprPanelWidth)}/${formatPanelMm(depthPosMm)} Ø${formatPanelMm(boreDiameterMm)} D${formatPanelMm(boreDepthMm)} T${formatPanelMm(panelThicknessMm)}`,
                 },
               ];
 
           edgePoints.forEach((point) => {
+            ctx.globalAlpha = 0.62;
+            ctx.beginPath();
+            ctx.rect(point.rectX, point.rectY, point.rectW, point.rectH);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.globalAlpha = 0.46;
             ctx.beginPath();
             ctx.moveTo(point.edgeX, point.edgeY);
             ctx.lineTo(point.lineEndX, point.lineEndY);
             ctx.stroke();
 
-            ctx.beginPath();
-            ctx.arc(point.edgeX, point.edgeY, markerRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-
+            ctx.globalAlpha = 0.4;
             ctx.beginPath();
             ctx.moveTo(point.edgeX - crossSize, point.edgeY);
             ctx.lineTo(point.edgeX + crossSize, point.edgeY);
