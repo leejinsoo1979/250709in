@@ -288,7 +288,17 @@ const Header: React.FC<HeaderProps> = ({
       let spaceConfig: any = { ...DEFAULT_SPACE_CONFIG };
       const defaults = await getSpaceConfigDefaults();
       console.log('🆕 [Configurator 자동 새 디자인] defaults:', defaults);
+      let topMoldingEnabledFromDefaults: boolean | undefined;
+      let topMoldingGapFromDefaults: number | undefined;
+      let topFrameSizeFromDefaults: number | undefined;
+      let topFrameOffsetFromDefaults: number | undefined;
       if (defaults) {
+        topMoldingEnabledFromDefaults = defaults.topMoldingEnabled;
+        topMoldingGapFromDefaults = defaults.topMoldingGap;
+        topFrameSizeFromDefaults = defaults.topMoldingEnabled === false
+          ? 0
+          : (defaults.topMoldingSize ?? defaults.frameTop);
+        topFrameOffsetFromDefaults = defaults.topMoldingOffset ?? defaults.frameTopOffset;
         spaceConfig = {
           ...spaceConfig,
           ...(defaults.width !== undefined && { width: defaults.width }),
@@ -299,7 +309,7 @@ const Header: React.FC<HeaderProps> = ({
           },
           frameSize: {
             ...spaceConfig.frameSize!,
-            top: defaults.topMoldingSize ?? defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
+            top: topFrameSizeFromDefaults ?? spaceConfig.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
             right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
             ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
@@ -379,7 +389,28 @@ const Header: React.FC<HeaderProps> = ({
 
       if (designFileId) {
         setSpaceInfo(spaceConfig);
-        const { error } = await updateDesignFile(designFileId, { spaceConfig });
+        const currentModules = useFurnitureStore.getState().placedModules;
+        const shouldSyncTopFrame = topMoldingEnabledFromDefaults !== undefined;
+        const syncedModules = shouldSyncTopFrame
+          ? currentModules.map(module => {
+              const isLowerModule = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('-lower-');
+              if (isLowerModule) return module;
+              return {
+                ...module,
+                hasTopFrame: topMoldingEnabledFromDefaults,
+                topFrameGap: topMoldingEnabledFromDefaults ? 0 : (topMoldingGapFromDefaults ?? module.topFrameGap ?? 0),
+                ...(topMoldingEnabledFromDefaults && topFrameSizeFromDefaults !== undefined ? { topFrameThickness: topFrameSizeFromDefaults } : {}),
+                ...(topMoldingEnabledFromDefaults && topFrameOffsetFromDefaults !== undefined ? { topFrameOffset: topFrameOffsetFromDefaults } : {}),
+              };
+            })
+          : currentModules;
+        if (shouldSyncTopFrame) {
+          setPlacedModules(syncedModules);
+        }
+        const { error } = await updateDesignFile(designFileId, {
+          spaceConfig,
+          ...(shouldSyncTopFrame ? { furniture: { placedModules: syncedModules } } : {}),
+        });
         if (error) {
           alert('디자인 저장에 실패했습니다: ' + error);
           return;
