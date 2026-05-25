@@ -2488,9 +2488,12 @@ export const calculatePanelDetails = (
     const drawerBackWidthMm = innerWidth - backSideGapMm * 2;
     const drawerDepthMm = 490;
 
-    // 마이다 높이 비례배분
-    const topExtMm = 30;
-    const bottomExtMm = 5;
+    const isTopDownTouch = isTDTouch2 || isTDTouch3;
+    const tdTouchStretcherH = stoneTopThickness === 10 ? 65 : stoneTopThickness === 30 ? 45 : 55;
+    const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
+    const defaultBottomExtMm = 5;
+    const topExtMm = isTopDownTouch ? (doorTopGap ?? defaultTopExtMm) : defaultTopExtMm;
+    const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
     const totalFrontMm = height + topExtMm + bottomExtMm;
     const gapMm = 3;
     const totalGaps = (maidaDrawerHeights.length - 1) * gapMm;
@@ -2499,16 +2502,23 @@ export const calculatePanelDetails = (
 
     // 도어올림 터치 2단(2A/2B): 하→상 [408, 409] 고정
     // 도어올림 터치 3단: 하→상 [360, 227, 227] 고정
-    // 상판내림 터치 2단: 하→상 [353, 354] 고정
-    // 상판내림 터치 3단: 하→상 [284, 210, 210] 고정
+    // 상판내림 터치는 도어갭 변화량을 마이다 제작 높이에 반영한다.
     const isDoorLift2Fixed = drawerHeights.length === 2 && (isTouch2A || isTouch2B);
     const isDoorLift3Fixed = drawerHeights.length === 3 && isTouch3;
     const isTopDown2Fixed = drawerHeights.length === 2 && isTDTouch2;
     const isTopDown3Fixed = drawerHeights.length === 3 && isTDTouch3;
     const fixedMaidaDoorLift2 = [408, 409];
     const fixedMaidaDoorLift3 = [360, 227, 227];
-    const fixedMaidaTopDown2 = [353, 354];
     const fixedMaidaTopDown3 = [185, 240, 240];
+    const topDown2UpperMaida = Math.floor(Math.max(0, totalFrontMm - gapMm) / 2);
+    const topDown2Maidas = [
+      Math.max(0, totalFrontMm - topDown2UpperMaida - gapMm),
+      topDown2UpperMaida,
+    ];
+    const topDown3Maidas = [
+      Math.max(0, totalFrontMm - fixedMaidaTopDown3.slice(1).reduce((sum, value) => sum + value, 0) - gapMm * 2),
+      ...fixedMaidaTopDown3.slice(1),
+    ];
 
     // 사용자가 가구 편집 팝업에서 지정한 customMaidaHeights 우선 사용
     const cmh = (customMaidaHeights && customMaidaHeights.length === drawerHeights.length
@@ -2527,9 +2537,9 @@ export const calculatePanelDetails = (
       } else if (isDoorLift3Fixed) {
         maidaH = fixedMaidaDoorLift3[di];
       } else if (isTopDown2Fixed) {
-        maidaH = fixedMaidaTopDown2[di];
+        maidaH = topDown2Maidas[di];
       } else if (isTopDown3Fixed) {
-        maidaH = fixedMaidaTopDown3[di];
+        maidaH = topDown3Maidas[di];
       } else {
         const maidaRef = maidaDrawerHeights[di] ?? dh;
         // 마이다 높이는 소수점 1자리 유지

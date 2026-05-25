@@ -55,6 +55,18 @@ const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
   return -80;
 };
 
+const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => {
+  if (!moduleId) return false;
+  return moduleId.includes('lower-half-cabinet')
+    || moduleId.includes('dual-lower-half-cabinet')
+    || moduleId.includes('lower-drawer-')
+    || moduleId.includes('dual-lower-drawer-')
+    || moduleId.includes('lower-sink-cabinet')
+    || moduleId.includes('dual-lower-sink-cabinet')
+    || moduleId.includes('lower-induction-cabinet')
+    || moduleId.includes('dual-lower-induction-cabinet');
+};
+
 const usesStableShelfSectionBoundary = (moduleId?: string): boolean => {
   return isPlainShoeShelfModuleId(moduleId) || isShelfSplitModuleId(moduleId);
 };
@@ -1592,11 +1604,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const isShelfSplitForDoorGaps = isShelfSplitModuleId(modId);
       const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
+      const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(modId);
       const isLowerCategory = moduleData?.category === 'lower';
       const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
         && spaceInfo.frameConfig?.top !== false;
-      const defaultTopGap = isDoorLift ? 30 : isTopDown ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness) : isLowerCategory ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
-      const defaultBottomGap = isTopDown ? 5 : isLowerCategory ? 0 : 25;
+      const defaultTopGap = isDoorLift
+        ? 30
+        : isTopDown
+          ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness)
+          : isBasicLowerDoorGap
+            ? -20
+            : isLowerCategory
+              ? 20
+              : (isFullSurroundForDoorDefaults ? -3 : 5);
+      const defaultBottomGap = isTopDown || isDoorLift || isBasicLowerDoorGap
+        ? 5
+        : isLowerCategory
+          ? 2
+          : 25;
       const rawTopGap = currentPlacedModule.doorTopGap;
       const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
@@ -3191,16 +3216,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const mId = mod.moduleId || '';
         const isDL = mId.includes('lower-door-lift-') && !mId.includes('-half-');
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
+        const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mId);
         const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
         const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
           && spaceInfo.frameConfig?.top !== false;
         if (mod.doorTopGap === undefined) {
-          updates.doorTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(mod.stoneTopThickness) : isLowerModule ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
+          updates.doorTopGap = isDL
+            ? 30
+            : isTD
+              ? getTopDownDoorTopGap(mod.stoneTopThickness)
+              : isBasicLowerDoorGap
+                ? -20
+                : isLowerModule
+                  ? 20
+                  : (isFullSurroundForDoorDefaults ? -3 : 5);
         } else if (isFullSurroundForDoorDefaults && mod.hasTopFrame !== false && mod.doorTopGap === 5 && !isDL && !isTD && !isLowerModule) {
           updates.doorTopGap = -3;
         }
         if (mod.doorBottomGap === undefined) {
-          updates.doorBottomGap = isTD ? 5 : isLowerModule ? 0 : 25;
+          updates.doorBottomGap = isTD || isDL || isBasicLowerDoorGap
+            ? 5
+            : isLowerModule
+              ? 2
+              : 25;
         }
       }
       updatePlacedModule(activePopup.id, updates);
@@ -4570,13 +4608,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 단, 도어올림장(lower-door-lift-*)은 서랍이어도 도어 갭 설정 표시 (사용자 예외 요청) */}
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
-            && !(typeof currentPlacedModule.moduleId === 'string' && (
-              // 서랍 모듈만 매칭 (반통 half / 2tier / 3tier 는 도어 모듈 → 제외)
-              // 도어올림장(lower-door-lift-*)은 서랍이어도 도어 갭 설정 노출 → 여기서 제외하지 않음
-              // 상판내림은 터치형(touch)만 서랍 → 그 외(half/2tier/3tier)는 도어 모듈
-              /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
-            ))
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
@@ -7374,6 +7405,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const mid = currentPlacedModule.moduleId || '';
                         const isDoorLift = mid.includes('lower-door-lift');
                         const isTopDown = mid.includes('lower-top-down');
+                        const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mid);
                         if (thickness === 0) {
                           updates.stoneTopFrontOffset = 0;
                           updates.stoneTopBackOffset = 0;
@@ -7416,6 +7448,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
                           }
+                          if (isBasicLowerDoorGap && !isDoorLift && !isTopDown) {
+                            const defaultGap = -20;
+                            updates.doorTopGap = defaultGap;
+                            setDoorTopGap(defaultGap);
+                            setDoorTopGapInput(String(defaultGap));
+                          }
                           // 상판내림: stoneThk별 도어 상단갭 (10→-90, 20→-80, 30→-70)
                           // cabH 변화량(±10) + 도어 상단갭 변화량(±10)으로 도어 H/위치 일정 유지
                           if (isTopDown) {
@@ -7449,6 +7487,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                           mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
                                           mid.includes('lower-drawer') || mid.includes('lower-sink') ||
                                           mid.includes('lower-induction');
+                          const isBulkDoorLift = mid.includes('lower-door-lift');
+                          const isBulkTopDown = mid.includes('lower-top-down');
+                          const isBulkBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mid);
                           if (!isLower) return;
                           const bulk: Record<string, unknown> = {
                             stoneTopMaterial: 'stone',
@@ -7466,6 +7507,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             // 처음 설치되는 하부장은 기본 앞 오프셋 23 적용
                             if ((m.stoneTopThickness || 0) === 0) {
                               bulk.stoneTopFrontOffset = 23;
+                            }
+                            if (isBulkBasicLowerDoorGap && !isBulkDoorLift && !isBulkTopDown) {
+                              bulk.doorTopGap = -20;
                             }
                           }
                           updatePlacedModule(m.id, bulk);

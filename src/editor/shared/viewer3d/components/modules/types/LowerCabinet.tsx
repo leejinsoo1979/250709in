@@ -944,10 +944,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const tdTouchStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
   const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
   const defaultBottomExtMm = 5;
-  // 상판내림 터치는 doorTopGap/doorBottomGap에 관계없이 항상 기본값 강제
-  // (마이다-상판 갭 20mm, 하단 5mm 보장)
   const topExtMm = isTopDownTouch
-    ? defaultTopExtMm
+    ? (doorTopGap ?? defaultTopExtMm)
     : (doorTopGap ?? defaultTopExtMm);
   const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
   const gapTopExt = topExtMm - defaultTopExtMm;
@@ -994,8 +992,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
           : isTopDown3Fixed
             ? [185, 240, 240]
             : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm));
-  // 마이다 영역은 도어갭과 분리. 도어갭은 도어 위치만 결정.
-  const maidaTotalFrontMm = moduleHeightMm + defaultTopExtMm + defaultBottomExtMm;
+  const maidaTotalFrontMm = isTopDownTouch
+    ? totalFrontMm
+    : moduleHeightMm + defaultTopExtMm + defaultBottomExtMm;
   const maidaHeightsMm = [...baseMaidaHeightsMm];
   // 도어올림 터치 2A/2B + 상판내림 터치 2단: 1단·2단 마이다 정수 균등 분배
   //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
@@ -1045,7 +1044,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     //      1단 마이다 윗변이 도어 상단을 따라 같이 올라가/내려가도록 함.
     const lastIdx = maidaHeightsMm.length - 1;
     const topShiftMm = isDoorLift3Fixed ? (topExtMm - defaultTopExtMm) : 0;
-    const topPositionMm = -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
+    const topPositionMm = isTopDownTouch
+      ? -bottomExtMm + maidaTotalFrontMm
+      : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
     let cursorTop = topPositionMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
     // 맨 위(lastIdx)부터 아래(1)까지 위치 고정

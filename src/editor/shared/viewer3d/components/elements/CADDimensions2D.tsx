@@ -1637,7 +1637,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const doorBounds = resolveDoorBounds(mod, modData, modCat);
-            let { doorBottomAbsMm, doorTopAbsMm, doorHeightMm } = doorBounds;
+            let { doorBottomAbsMm, doorTopAbsMm, doorHeightMm, cabinetTopAbsMm } = doorBounds;
 
             const isShelfSplitDoorSeg = typeof modData.id === 'string' &&
               (modData.id.includes('shelf-split') || modData.id.includes('pantry-cabinet-split'));
@@ -1720,9 +1720,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-frontplate-${moduleIndex}`,
                 isUpper: false
               });
-            } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperSideModule)) {
-              // 하부장/키큰장 공통: 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 거리 (항상 천장 기준)
-              // 상부장+하부장이 같이 보이는 측면뷰에서는 하부장 도어 치수가 상부장 영역까지 이어지면 안 된다.
+            } else if (modCat === 'lower' && _effStoneThk_l > 0) {
+              const countertopBottomGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
+              if (countertopBottomGapMm > 0) {
+                doorSegs.push({
+                  bottomY: mmToThreeUnits(doorTopAbsMm),
+                  topY: mmToThreeUnits(cabinetTopAbsMm),
+                  heightMm: countertopBottomGapMm,
+                  key: `door-countertop-bottom-gap-${moduleIndex}`,
+                  isUpper: false
+                });
+              }
+            } else if (modCat === 'full') {
+              // 키큰장: 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 거리.
+              // 하부장은 상판이 없으면 도어 사이즈만 표시하고, 상판이 있을 때만 위 분기에서 상판 하단 갭을 표시한다.
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
               if (!isLowerSpecial) {
                 const isDroppedZone = (mod as any).zone === 'dropped';
@@ -3010,7 +3021,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const doorBounds = resolveDoorBounds(mod, modData, modCat);
-            let { doorBottomAbsMm, doorTopAbsMm, doorHeightMm } = doorBounds;
+            let { doorBottomAbsMm, doorTopAbsMm, doorHeightMm, cabinetTopAbsMm } = doorBounds;
 
             const isShelfSplitDoorSegR = typeof modData.id === 'string' &&
               (modData.id.includes('shelf-split') || modData.id.includes('pantry-cabinet-split'));
@@ -3091,8 +3102,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-frontplate-${moduleIndex}`,
                 isUpper: false,
               });
-            } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperSideModule_r)) {
-              // 상부장+하부장이 같이 보이는 측면뷰에서는 하부장 도어 치수가 상부장 영역까지 이어지면 안 된다.
+            } else if (modCat === 'lower' && _effStT_r > 0) {
+              const countertopBottomGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
+              if (countertopBottomGapMm > 0) {
+                doorSegs_r.push({
+                  bottomY: mmToThreeUnits(doorTopAbsMm),
+                  topY: mmToThreeUnits(cabinetTopAbsMm),
+                  heightMm: countertopBottomGapMm,
+                  key: `door-countertop-bottom-gap-${moduleIndex}`,
+                  isUpper: false,
+                });
+              }
+            } else if (modCat === 'full') {
+              // 키큰장만 천장(또는 단내림)까지의 상단갭을 표시한다.
+              // 하부장은 상판 없을 때 도어 사이즈만, 상판 있을 때만 위 분기에서 상판 하단 갭을 표시한다.
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
               if (!isLowerSpecial) {
                 const isDroppedZone = (mod as any).zone === 'dropped';
