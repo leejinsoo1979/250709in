@@ -1389,6 +1389,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 상부장/하부장인지 확인
   const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
   const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet') || moduleData?.category === 'lower';
+  const floorFinishDoorBottomExtensionMm = !isUpperCabinet
+    && originalSpaceInfo.baseConfig?.type === 'floor'
+    && originalSpaceInfo.hasFloorFinish
+    ? (originalSpaceInfo.floorFinish?.height || 0)
+    : 0;
+  const doorBottomGapForGeometry = doorBottomGap + floorFinishDoorBottomExtensionMm;
 
   // 패널 두께 - spaceInfo에서 동적으로 가져오기
   const panelThickness = originalSpaceInfo.panelThickness ?? 18;
@@ -1434,15 +1440,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // cabH가 stoneThk별로 변해도 도어 상단~가구 상단 갭은 항상 80mm 일정
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
-      actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
+      actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap + floorFinishDoorBottomExtensionMm;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
-      actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
+      actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGapForGeometry;
     } else {
       // 기본 하부장: 상단갭/하단갭 양수 = 확장
       // 상단갭 0 + 하단갭 0 = 도어 == 캐비넷
       // 상단갭 양수 = 캐비넷 상단 위로 확장, 하단갭 양수 = 캐비넷 하단 아래로 확장
-      actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
+      actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGapForGeometry;
     }
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
@@ -1477,7 +1483,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 상단갭 = 몸통 상단에서 위로 확장, 하단갭 = 몸통 하단에서 아래로 확장
     // gap=0이면 도어 == 몸통
     doorTopLocal = cabinetTopLocal + doorTopGap;
-    doorBottomLocal = cabinetBottomLocal - doorBottomGap;
+    doorBottomLocal = cabinetBottomLocal - doorBottomGapForGeometry;
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
 
 // console.log('🚪📏 병합 모드 도어 높이 (천장/바닥 기준):', {
@@ -1494,11 +1500,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // });
   }
   
-  // 바닥마감재 높이 (키큰장 도어 Y 보정용, 상부장/하부장에서는 0)
-  const isFloorTypeForDoor = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
-  const floorFinishForDoorY = (isFloorTypeForDoor && originalSpaceInfo.hasFloorFinish)
-    ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
-
   // 도어 분절: 외부에서 forcedDoorHeightMm가 들어오면 강제 적용
   if (forcedDoorHeightMm !== undefined && forcedDoorHeightMm > 0) {
     actualDoorHeight = forcedDoorHeightMm;
@@ -1521,7 +1522,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const doorTopMm = lowerCabinetHeight / 2 + effectiveTopDownTopGap;
         return doorTopMm - actualDoorHeight / 2;
       }
-      return (doorTopGap - doorBottomGap) / 2;
+      return (doorTopGap - doorBottomGapForGeometry) / 2;
     }
 
     return (doorBottomLocal + doorTopLocal) / 2;
@@ -1530,7 +1531,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorTopWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm + actualDoorHeight / 2;
   const doorBottomWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm - actualDoorHeight / 2;
   const dimensionDoorTopGapMm = Math.max(0, Math.round(fullSpaceHeight - doorTopWorldMm));
-  const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm));
+  const bottomDimensionReferenceOffsetMm = floorFinishDoorBottomExtensionMm;
+  const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm - bottomDimensionReferenceOffsetMm));
   const splitDoorTopGapDimensionMm = splitDoorPanelName === '하부 도어'
     ? Math.max(0, Math.round(splitDoorTopGapMm ?? 0))
     : 0;

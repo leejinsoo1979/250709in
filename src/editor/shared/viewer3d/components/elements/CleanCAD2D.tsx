@@ -9121,10 +9121,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     }
                   } else {
                     // 키큰장
-                    const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
-                    const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
-                      ? (spaceInfo.floorFinish?.height || 0) : 0;
-                    doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
+                    // 가구는 마감재만큼 올라가지만 도어 하단 치수는 마감 바닥 기준으로 마감재 두께가 빠져야 한다.
+                    doorBottomAbsMm = bottomFrameHeight - doorBottomGapVal;
                     doorTopAbsMm = effectiveH - doorTopGapVal;
                     doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
                   }

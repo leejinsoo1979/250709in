@@ -425,8 +425,10 @@ const SimpleDashboard: React.FC = () => {
             },
             frameSize: {
               ...spaceConfig.frameSize!,
-              // 상단몰딩 size(topMoldingSize)가 있으면 우선 적용, 없으면 옛 frameTop 사용
-              top: defaults.topMoldingSize ?? defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
+              // 상단몰딩: 토글 OFF면 0, ON이면 topMoldingSize 또는 옛 frameTop
+              top: defaults.topMoldingEnabled === false
+                ? 0
+                : (defaults.topMoldingSize ?? defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30),
               left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
               right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
               ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
@@ -436,8 +438,10 @@ const SimpleDashboard: React.FC = () => {
             },
             baseConfig: {
               ...spaceConfig.baseConfig!,
-              // 걸레받이 size(baseboardSize)가 있으면 우선 적용, 없으면 옛 baseHeight 사용
-              height: defaults.baseboardSize ?? defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
+              // 걸레받이: 토글 OFF면 0, ON이면 baseboardSize 또는 옛 baseHeight
+              height: defaults.baseboardEnabled === false
+                ? 0
+                : (defaults.baseboardSize ?? defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65),
               ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
                 offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
               }),
