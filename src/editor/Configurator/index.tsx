@@ -5611,7 +5611,7 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 2) / 2);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
                       disabled={isDisabled}
@@ -5623,9 +5623,14 @@ const Configurator: React.FC = () => {
                       inputMode="decimal"
                       value={isDisabled ? 0 : curVal}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value);
+                        const raw = e.target.value;
+                        // 빈 값/소수점만 입력 중일 때는 저장 안 함 (예: "3." 입력 중)
+                        if (raw === '' || raw === '.' || raw.endsWith('.')) return;
+                        const val = parseFloat(raw);
                         if (!isNaN(val)) {
-                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                          // 즉시 0.5 단위로 반올림
+                          const snapped = Math.max(0, Math.min(5, Math.round(val * 2) / 2));
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: snapped } });
                         }
                       }}
                       onBlur={(e) => {
@@ -5638,7 +5643,7 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 2) / 2);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
                       disabled={isDisabled}
@@ -5664,7 +5669,7 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 2) / 2);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
                       disabled={isDisabled}
@@ -5676,9 +5681,12 @@ const Configurator: React.FC = () => {
                       inputMode="decimal"
                       value={isDisabled ? 0 : curVal}
                       onChange={(e) => {
-                        const val = parseFloat(e.target.value);
+                        const raw = e.target.value;
+                        if (raw === '' || raw === '.' || raw.endsWith('.')) return;
+                        const val = parseFloat(raw);
                         if (!isNaN(val)) {
-                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                          const snapped = Math.max(0, Math.min(5, Math.round(val * 2) / 2));
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: snapped } });
                         }
                       }}
                       onBlur={(e) => {
@@ -5691,7 +5699,7 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 2) / 2);
                         handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
                       }}
                       disabled={isDisabled}

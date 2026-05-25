@@ -293,13 +293,13 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
               {onCreateDesign && (
                 <button className={`${styles.createBtn} ${styles.createBtnPrimary}`} onClick={onCreateDesign}>
                   <Plus size={16} />
-                  <span>새 디자인</span>
+                  <span>가구만들기</span>
                 </button>
               )}
               {onCreateFolder && (
                 <button className={styles.createBtn} onClick={onCreateFolder}>
                   <FolderPlus size={16} />
-                  <span>새 폴더</span>
+                  <span>폴더생성</span>
                 </button>
               )}
             </>
@@ -535,13 +535,13 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
               {onCreateDesign && (
                 <button className={`${styles.mobileActionBtn} ${styles.mobileActionBtnPrimary}`} onClick={onCreateDesign}>
                   <Plus size={15} />
-                  <span>새 디자인</span>
+                  <span>가구만들기</span>
                 </button>
               )}
               {onCreateFolder && (
                 <button className={styles.mobileActionBtn} onClick={onCreateFolder}>
                   <FolderPlus size={15} />
-                  <span>새 폴더</span>
+                  <span>폴더생성</span>
                 </button>
               )}
             </>

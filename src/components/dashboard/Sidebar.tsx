@@ -53,7 +53,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onCreateProject, onInviteUser, onLogo
         
         <button className={styles.createProjectBtn} onClick={onCreateProject}>
           <span className={styles.btnIcon}>+</span>
-          새 프로젝트
+          프로젝트 생성
         </button>
         
         <button className={styles.inviteUserBtn} onClick={onInviteUser}>

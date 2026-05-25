@@ -200,7 +200,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
         <div className={styles.paneToolbar}>
           <button className={styles.paneCreateBtn} onClick={onCreateProject}>
             <Plus size={16} />
-            <span>새 프로젝트</span>
+            <span>프로젝트 생성</span>
           </button>
         </div>
       )}
