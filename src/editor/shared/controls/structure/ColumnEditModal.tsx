@@ -28,6 +28,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
 
   // 로컬 상태로 편집 중인 값들을 관리
   const [editValues, setEditValues] = useState<Partial<Column>>({});
+  const [sizeInputs, setSizeInputs] = useState({ width: '', depth: '', height: '' });
 
   // 모달이 열릴 때마다 현재 기둥 값으로 초기화 + 원본 저장
   useEffect(() => {
@@ -37,6 +38,11 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
         height: column.height,
         depth: column.depth,
         position: [...column.position]
+      });
+      setSizeInputs({
+        width: String(column.width ?? ''),
+        depth: String(column.depth ?? ''),
+        height: String(column.height ?? ''),
       });
       originalColumnRef.current = { ...column };
     }
@@ -178,6 +184,15 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     });
   };
 
+  const handleSizeInputChange = (field: 'width' | 'depth' | 'height', raw: string) => {
+    if (raw !== '' && raw !== '-' && !/^-?\d*\.?\d*$/.test(raw)) return;
+    setSizeInputs(prev => ({ ...prev, [field]: raw }));
+    const next = Number(raw);
+    if (raw !== '' && raw !== '-' && Number.isFinite(next)) {
+      handleInputChange(field, next);
+    }
+  };
+
 
   const handleDelete = () => {
     if (window.confirm(t('column.deleteConfirm'))) {
@@ -216,33 +231,33 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                 <label>{t('column.width')} (mm)</label>
                 <input
                   type="number"
-                  value={editValues.width || column.width}
-                  onChange={(e) => handleInputChange('width', Number(e.target.value))}
+                  value={sizeInputs.width}
+                  onChange={(e) => handleSizeInputChange('width', e.target.value)}
                   min="100"
                   max="1000"
-                  step="10"
+                  step="0.1"
                 />
               </div>
               <div className={styles.inputItem}>
                 <label>{t('column.depth')} (mm)</label>
                 <input
                   type="number"
-                  value={editValues.depth || column.depth}
-                  onChange={(e) => handleInputChange('depth', Number(e.target.value))}
+                  value={sizeInputs.depth}
+                  onChange={(e) => handleSizeInputChange('depth', e.target.value)}
                   min="100"
                   max="1500"
-                  step="10"
+                  step="0.1"
                 />
               </div>
               <div className={styles.inputItem}>
                 <label>{t('column.height')} (mm)</label>
                 <input
                   type="number"
-                  value={editValues.height || column.height}
-                  onChange={(e) => handleInputChange('height', Number(e.target.value))}
+                  value={sizeInputs.height}
+                  onChange={(e) => handleSizeInputChange('height', e.target.value)}
                   min="1000"
                   max="3000"
-                  step="10"
+                  step="0.1"
                 />
               </div>
             </div>

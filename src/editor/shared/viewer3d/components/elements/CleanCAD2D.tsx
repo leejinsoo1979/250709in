@@ -21,6 +21,11 @@ import { calcInsertFrameResizedPositionX, calcResizedPositionX, getColumnObstacl
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 
+const formatMmValue = (value: number): string => {
+  const rounded = Math.round(value * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+};
+
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
   showDimensions?: boolean;
@@ -101,6 +106,7 @@ const EditableLabel: React.FC<{
           <input
             ref={inputRef}
             type="number"
+            step="0.1"
             value={editingValue}
             onChange={(e) => setEditingValue(e.target.value)}
             onKeyDown={(e) => {
@@ -789,14 +795,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     setTimeout(() => {
       setEditingColumnId(columnId);
       setEditingSide(side);
-      setEditingValue(Math.round(currentValue).toString());
+      setEditingValue(formatMmValue(currentValue));
     }, 50);
   };
 
   const handleEditComplete = () => {
     if (!editingColumnId || !editingSide) return;
     
-    const value = parseInt(editingValue) || 0;
+    const value = Number.parseFloat(editingValue) || 0;
     const column = spaceInfo.columns?.find(col => col.id === editingColumnId);
     
     if (!column || readOnly || column.isLocked) return;
@@ -8055,7 +8061,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <input
                     ref={inputRef}
                     type="number"
-                    step="1"
+                    step="0.1"
                     value={editingValue}
                     onChange={(e) => setEditingValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleEditSubmit(); else if (e.key === 'Escape') handleEditCancel(); }}
@@ -8092,7 +8098,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     if (!readOnly && !isLockedColumn) handleColumnDistanceEdit(column.id, 'width', column.width);
                   }}
                 >
-                  {Math.round(column.width)}
+                  {formatMmValue(column.width)}
                 </div>
               </Html>
             )}
@@ -12091,7 +12097,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {Math.round(column.width)}
+                {formatMmValue(column.width)}
               </Text>
             </group>
           );

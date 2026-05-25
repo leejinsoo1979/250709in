@@ -11,9 +11,19 @@ interface ColumnPropertiesProps {
 const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { activePopup, closeAllPopups } = useUIStore();
+  const [sizeInputs, setSizeInputs] = React.useState({ width: '', depth: '', height: '' });
   
   const columns = spaceInfo.columns || [];
   const column = columns.find(col => col.id === columnId);
+
+  React.useEffect(() => {
+    if (!column) return;
+    setSizeInputs({
+      width: String(column.width ?? ''),
+      depth: String(column.depth ?? ''),
+      height: String(column.height ?? ''),
+    });
+  }, [column?.id, column?.width, column?.depth, column?.height]);
   
   if (!column) {
     return (
@@ -47,6 +57,14 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
   };
 
   const isLocked = column.isLocked ?? false;
+  const handleSizeInputChange = (field: 'width' | 'depth' | 'height', raw: string) => {
+    if (raw !== '' && raw !== '-' && !/^-?\d*\.?\d*$/.test(raw)) return;
+    setSizeInputs(prev => ({ ...prev, [field]: raw }));
+    const next = Number(raw);
+    if (raw !== '' && raw !== '-' && Number.isFinite(next)) {
+      handleColumnUpdate(column.id, { [field]: next });
+    }
+  };
 
   return (
     <div className={styles.columnProperties}>
@@ -65,8 +83,8 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <label>폭 (mm)</label>
             <input
               type="number"
-              value={column.width}
-              onChange={(e) => handleColumnUpdate(column.id, { width: Number(e.target.value) })}
+              value={sizeInputs.width}
+              onChange={(e) => handleSizeInputChange('width', e.target.value)}
               min="100"
               max="1000"
               step="0.1"
@@ -77,8 +95,8 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <label>깊이 (mm)</label>
             <input
               type="number"
-              value={column.depth}
-              onChange={(e) => handleColumnUpdate(column.id, { depth: Number(e.target.value) })}
+              value={sizeInputs.depth}
+              onChange={(e) => handleSizeInputChange('depth', e.target.value)}
               min="100"
               max="1500"
               step="0.1"
@@ -89,8 +107,8 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <label>높이 (mm)</label>
             <input
               type="number"
-              value={column.height}
-              onChange={(e) => handleColumnUpdate(column.id, { height: Number(e.target.value) })}
+              value={sizeInputs.height}
+              onChange={(e) => handleSizeInputChange('height', e.target.value)}
               min="1000"
               max="3000"
               step="0.1"
