@@ -7,6 +7,32 @@ import '@/styles/global.css'
 import './i18n' // i18n 초기화
 // import { disableAllConsole } from './utils/disableConsole'
 
+// 숫자 입력 필드는 클릭(focus) 즉시 전체 선택 → 한 번 클릭으로 바로 새 값 입력 가능
+const setupNumericInputAutoSelect = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const isNumericInput = (el: EventTarget | null): el is HTMLInputElement => {
+    if (!(el instanceof HTMLInputElement)) return false;
+    if (el.readOnly || el.disabled) return false;
+    if (el.type === 'number') return true;
+    // type=text인데 numeric 패턴/inputmode면 숫자 입력 input으로 간주
+    if (el.type === 'text') {
+      const inputMode = (el.getAttribute('inputmode') || '').toLowerCase();
+      if (inputMode === 'numeric' || inputMode === 'decimal') return true;
+      const val = el.value;
+      if (val !== '' && /^-?\d+(\.\d+)?$/.test(val)) return true;
+    }
+    return false;
+  };
+  document.addEventListener('focusin', (event) => {
+    const target = event.target;
+    if (!isNumericInput(target)) return;
+    // 다음 tick에 select (브라우저 기본 클릭 처리 후)
+    setTimeout(() => {
+      try { (target as HTMLInputElement).select(); } catch {}
+    }, 0);
+  });
+};
+
 const setupPlatformClass = () => {
   if (typeof window === 'undefined') return;
 
@@ -71,6 +97,7 @@ const setupStaleAssetReload = () => {
 
 setupPlatformClass();
 setupStaleAssetReload();
+setupNumericInputAutoSelect();
 
 // 개발 모드에서 유틸리티 스크립트 로드
 if (import.meta.env.DEV) {
