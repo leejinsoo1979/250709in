@@ -64,8 +64,8 @@ const NumberInput: React.FC<NumberInputProps> = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    // 숫자만 허용 (빈 문자열도 허용)
-    if (newValue === '' || /^\d+$/.test(newValue)) {
+    // 숫자 + 소수점 허용 (빈 문자열, "1.", "1.5" 등 중간 상태도 허용)
+    if (newValue === '' || /^\d*\.?\d*$/.test(newValue)) {
       setInputValue(newValue);
       onChange(newValue);
     }
@@ -84,8 +84,8 @@ const NumberInput: React.FC<NumberInputProps> = ({
   return (
     <input
       type="text"
-      inputMode="numeric"
-      pattern="[0-9]*"
+      inputMode="decimal"
+      pattern="[0-9.]*"
       value={inputValue}
       onChange={handleChange}
       onFocus={handleFocus}
