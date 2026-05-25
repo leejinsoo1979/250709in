@@ -5182,12 +5182,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const tdStretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
             const defTopExt = isTopDownAny ? -(tdStretcherH + 25) : 30;
             const defBottomExt = 5;
-            const topExt = isTopDownAny ? defTopExt : ((currentPlacedModule as any).doorTopGap ?? defTopExt);
+            const topExt = (currentPlacedModule as any).doorTopGap ?? defTopExt;
             const bottomExt = (currentPlacedModule as any).doorBottomGap ?? defBottomExt;
-            // 마이다 영역(default 기준) — 1·2단 위치 고정
-            const maidaTotalFront = moduleH + topExt + defBottomExt;
-            // 3단(맨 아래)은 도어 하단갭 늘면 추가 확장
-            const bottomGapExt = bottomExt - defBottomExt;
+            const maidaTotalFront = moduleH + topExt + bottomExt;
             const gapM = 3;
             const current = (currentPlacedModule.customMaidaHeights ?? []) as number[];
             // 디폴트 마이다 값 (위→아래 순서가 아니라 di=0(아래)→di=N(위) 순서)
@@ -5195,21 +5192,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               if (isInduction) return [Math.max(0, Math.round(maidaTotalFront))];
               if (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) {
                 const evenH = Math.floor(Math.max(0, maidaTotalFront - gapM) / 2);
-                return [evenH + bottomGapExt, evenH]; // [아래, 위]
+                return [evenH, evenH]; // [아래, 위]
               }
               if (isDoorLiftTouch3) {
                 const m2 = 227, m1 = 360; // 2단, 1단(위)
-                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM)) + bottomGapExt;
+                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
                 return [m0, m2, m1]; // [3단(아래), 2단, 1단(위)]
               }
               if (isTopDownTouch3) {
                 const m2 = 240, m1 = 240;
-                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM)) + bottomGapExt;
+                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
                 return [m0, m2, m1];
               }
               return [];
             })();
-            const totalLimit = maidaTotalFront + Math.max(0, bottomGapExt) + 100;
+            const totalLimit = maidaTotalFront + 100;
             const gapBetween = 3;
 
             const applyValue = (idx: number, num: number) => {
@@ -5217,8 +5214,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const next = [...(current.length === maidaCount ? current : defaultMaida.slice(0, maidaCount))];
               // 변경 전 base값
               const prevBase = next[idx];
-              // 3단(idx=0): 사용자가 보는 값은 base + bottomGapExt → 저장은 base값으로
-              const newBase = idx === 0 ? Math.max(0, num - bottomGapExt) : num;
+              const newBase = num;
               const delta = newBase - prevBase;
               next[idx] = newBase;
               // 변경된 마이다 윗변이 이동하면 그 위 마이다(idx+1)의 하단이 따라 이동 → 위 마이다 높이 -delta
@@ -5244,10 +5240,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               applyValue(idx, num);
             };
             const handleArrow = (idx: number, dir: 1 | -1) => {
-              // 3단(idx=0): 화면 표시값에 ±1
               const baseCur = current[idx] ?? defaultMaida[idx] ?? 0;
-              const displayedCur = idx === 0 ? baseCur + bottomGapExt : baseCur;
-              applyValue(idx, displayedCur + dir);
+              applyValue(idx, baseCur + dir);
             };
             const handleReset = () => {
               updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
@@ -5311,10 +5305,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const isBottomTier = di === 0;
                     let val: number | string = '';
                     if (isBottomTier) {
-                      // 자동 흡수: maidaTotalFront - (1단+2단) - 갭×2 + bottomGapExt
+                      // 자동 흡수: maidaTotalFront - (1단+2단) - 갭×2
                       const m1 = current[2] ?? defaultMaida[2] ?? 0;
                       const m2 = current[1] ?? defaultMaida[1] ?? 0;
-                      val = Math.max(0, Math.round(maidaTotalFront - m1 - m2 - 2 * gapM + bottomGapExt));
+                      val = Math.max(0, Math.round(maidaTotalFront - m1 - m2 - 2 * gapM));
                     } else {
                       val = current[di] ?? defaultMaida[di] ?? '';
                     }

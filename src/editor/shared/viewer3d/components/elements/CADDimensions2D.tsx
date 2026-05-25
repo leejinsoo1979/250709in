@@ -501,11 +501,11 @@ const computeLowerCabinetMaidaHeights = (
 
     // 상판내림 터치: 가로전대 높이 stoneThickness별로 다름 (10→65, 20→55, 30→45)
     // 마이다 최상단 = 캐비넷상단 - (stretcher + 25)  ← 실측 보정 +5
-    // doorTopGap/doorBottomGap 무시하고 항상 기본값 강제 (마이다-상판 갭 20mm 보장)
+    // doorTopGap/doorBottomGap 변경은 3D 렌더링과 동일하게 마이다 치수에도 반영한다.
     const tdTouchStretcherH = stoneTopThicknessMm === 10 ? 65 : stoneTopThicknessMm === 30 ? 45 : 55;
     const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
-    const topExtMm = isTopDownTouch ? defaultTopExtMm : doorTopGap;
+    const topExtMm = isTopDownTouch ? (doorTopGap ?? defaultTopExtMm) : doorTopGap;
     const bottomExtMm = doorBottomGap;
     const gapTopExt = topExtMm - defaultTopExtMm;
     const gapBottomExt = bottomExtMm - defaultBottomExtMm;
@@ -539,7 +539,7 @@ const computeLowerCabinetMaidaHeights = (
               ? [185, 240, 240]
               : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm));
     const maidaHeightsMm = [...baseMaidaHeightsMm];
-    if (maidaHeightsMm.length > 0) {
+    if (!isTopDownTouch && maidaHeightsMm.length > 0) {
       maidaHeightsMm[0] = Math.max(0, maidaHeightsMm[0] + gapBottomExt);
       const topIndex = maidaHeightsMm.length - 1;
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
