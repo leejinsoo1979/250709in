@@ -647,7 +647,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     .filter(isTopFrameCapablePlacedModule);
   const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
     && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
-  const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? 0;
+  // 기존 가구의 topFrameGap 우선, 없으면 공간설정의 frameSize.topGap fallback
+  const globalTopGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
+  const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? globalTopGap;
   // spaceInfo.frameSize.top === 0 이면 공간설정에서 상단몰딩 OFF로 저장된 것
   const topFrameDisabledByGlobal = (spaceInfo.frameSize?.top ?? 30) <= 0;
   const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff && !topFrameDisabledByGlobal;
