@@ -36,8 +36,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     ]);
 
     const mpr = generateSinglePanelMPR(converted);
-    expect(mpr).toContain('_BSX=764.0000');
-    expect(mpr).toContain('_BSY=580.0000');
+    expect(mpr).toContain('l="764.0000"');
+    expect(mpr).toContain('w="580.0000"');
     expect(mpr).toContain('BM="XP"');
     expect(mpr).toContain('BM="XM"');
     expect(mpr).toContain('WI="0.0000"');

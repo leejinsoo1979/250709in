@@ -28,13 +28,9 @@ const CONTOUR_CUT_DEPTH_MM = -2;
 function generateIMOSHeader(panel: PanelBoringData, version: string = '4.0 Alpha'): string {
   return `[H
 VERSION="${version}"
-UP="0"
-DW="0"
 OP="2"
 INCH="0"
-_BSX=${panel.width.toFixed(4)}
-_BSY=${panel.height.toFixed(4)}
-_BSZ=${panel.thickness.toFixed(4)}
+
 `;
 }
 
@@ -43,58 +39,20 @@ _BSZ=${panel.thickness.toFixed(4)}
  */
 function generateIMOSVariables(panel: PanelBoringData): string {
   return `[001
-L="${panel.width}"
-KM="길이 (X)"
-B="${panel.height}"
-KM="폭 (Y)"
-T="${panel.thickness}"
-KM="두께 (Z)"
-RL_VAR="L"
-KM=""
-RB_VAR="B"
-KM=""
-FNX_EXP="0"
-KM=""
-FNY_EXP="0"
-KM=""
-RNX_VAR="0"
-KM=""
-RNY_VAR="0"
-KM=""
-RNZ_VAR="0"
-KM=""
-bohrver="1"
-KM=""
-bohrhor="1"
-KM=""
-bohruni="1"
-KM=""
-bohren="1"
-KM=""
-fraesen="1"
-KM=""
-fsaegen="1"
-KM=""
-saegen="1"
-KM=""
-nuten="1"
-KM=""
-ktasche="1"
-KM=""
-rtasche="1"
-KM=""
-abblas="1"
-KM=""
-leimen="1"
-KM=""
-kappen="1"
-KM=""
-bfraesen="1"
-KM=""
-runden="1"
-KM=""
-ziehkl="1"
-KM=""
+l="${formatMprDecimal4(panel.width)}"
+KM="length"
+w="${formatMprDecimal4(panel.height)}"
+KM="width"
+t="${formatMprDecimal4(panel.thickness)}"
+KM="thickness"
+L="l"
+KM="length"
+B="w"
+KM="width"
+D="t"
+KM="thickness"
+
+
 `;
 }
 
@@ -104,17 +62,13 @@ KM=""
 function generateWerkstck(): string {
   return `
 <100 \\Werkstck\\
-LA="L"
-BR="B"
-DI="T"
-FNX="FNX_EXP"
-FNY="FNY_EXP"
-
-RL="RL_VAR"
-RB="RB_VAR"
-RNX="RNX_VAR"
-RNY="RNY_VAR"
-RNZ="RNZ_VAR"
+LA="l"
+BR="w"
+DI="t"
+AX="0.0000"
+AY="0.0000"
+FNX="0.0000"
+FNY="0.0000"
 
 `;
 }
@@ -167,39 +121,29 @@ function generateBohrVert(boring: Boring, panel: PanelBoringData): string {
   // 보링 타입별 기본값 설정
   let ti = boring.depth;        // 깊이
   let du = boring.diameter;      // 직경
-  let bm = 'LS';                // 보링 모드 (LS=단일)
   let wi = '';                  // 각도 (생략 가능)
 
   if (isFixedPanelThroughBoring(boring)) {
     ti = panel.thickness;
     du = 6;
-    bm = 'LSL';
   } else if (boring.type === 'hinge-screw') {
     ti = 3;
     du = 3;
   }
 
-  // 관통 보링 (depth >= thickness 또는 cam-bolt 등)
-  if (boring.type === 'cam-bolt' || ti >= panel.thickness) {
-    bm = 'LSL';  // 관통
-  }
-
   // 각도 설정
   if (boring.angle !== undefined) {
-    wi = `\nWI="${boring.angle}"`;
+    wi = `\nWI="${formatMprDecimal4(boring.angle)}"`;
   }
 
   return `<102 \\BohrVert\\
-XA="${boring.x.toFixed(1)}"
-YA="${boring.y.toFixed(1)}"
-ZA="T"
-TI="${formatMprNumber(ti)}"
-AB="32"
-BM="${bm}"
-DU="${formatMprNumber(du)}"
+XA="${formatMprDecimal4(boring.x)}"
+YA="${formatMprDecimal4(boring.y)}"
+TI="${formatMprDecimal4(ti)}"
+DU="${formatMprDecimal4(du)}"
+F_="STANDARD"
 AN="1"
-MI="0"${wi}
-??="bohrver=1  "
+${wi ? `${wi}\n` : ''}
 
 `;
 }
@@ -342,14 +286,21 @@ Y=${formatMprDecimal4(point.y)}
 Z=${formatMprDecimal4(z)}
 `).join('\n');
 
+  const startFields = name === 'NEST'
+    ? `X=${formatMprDecimal4(start.x)}
+Y=${formatMprDecimal4(start.y)}
+Z=${formatMprDecimal4(z)}
+KO=00`
+    : `KO=00
+X=${formatMprDecimal4(start.x)}
+Y=${formatMprDecimal4(start.y)}
+Z=${formatMprDecimal4(z)}`;
+
   return `
 ]${blockNumber}
 $E0
 KP${name ? ` ${name}` : ''}
-X=${formatMprDecimal4(start.x)}
-Y=${formatMprDecimal4(start.y)}
-Z=${formatMprDecimal4(z)}
-KO=00
+${startFields}
 
 ${lines}`;
 }
