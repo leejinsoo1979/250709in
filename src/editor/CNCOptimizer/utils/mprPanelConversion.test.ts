@@ -74,6 +74,37 @@ describe('convertPlacedPanelToMprBoringData', () => {
     }));
   });
 
+  it('exports the same side-bore format for single and dual horizontal panels', () => {
+    const createPanel = (id: string, width: number) => ({
+      id,
+      name: '(상)상판',
+      width,
+      height: 574,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'HORIZONTAL',
+      sideBoringPositions: [30, 287, 544],
+      sideBoringDiameter: 5,
+      sideBoringDepth: 30,
+    } as PlacedPanel);
+
+    const single = convertPlacedPanelToMprBoringData(createPanel('single-top', 543));
+    const dual = convertPlacedPanelToMprBoringData(createPanel('dual-top', 1123));
+    const singleSideBorings = single.borings.filter(boring => boring.note === 'fixed-panel-side-bore');
+    const dualSideBorings = dual.borings.filter(boring => boring.note === 'fixed-panel-side-bore');
+
+    expect(singleSideBorings).toHaveLength(6);
+    expect(dualSideBorings).toHaveLength(6);
+    expect(singleSideBorings.map(boring => ({ face: boring.face, y: boring.y, diameter: boring.diameter, depth: boring.depth }))).toEqual(
+      dualSideBorings.map(boring => ({ face: boring.face, y: boring.y, diameter: boring.diameter, depth: boring.depth }))
+    );
+    expect(singleSideBorings.map(boring => boring.y)).toEqual([30, 30, 287, 287, 544, 544]);
+  });
+
   it('exports drawer side bottom grooves as MPR pocket machining', () => {
     const panel = {
       id: 'drawer-side-left-1',

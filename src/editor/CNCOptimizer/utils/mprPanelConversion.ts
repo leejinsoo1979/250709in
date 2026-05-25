@@ -10,6 +10,7 @@ export const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
   return (
     name.includes('상판') ||
     name.includes('천판') ||
+    name.includes('천지판') ||
     name.includes('하판') ||
     name.includes('바닥') ||
     name.includes('바닥판') ||

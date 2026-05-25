@@ -1613,8 +1613,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         let mprSideBoringLabelIndex = 0;
 
+        const sideBoringAxisLength = panel.rotated ? height : width;
+
         mprSideBoringPositions.forEach((depthPosMm) => {
-          if (depthPosMm < 0 || depthPosMm > panel.height) return;
+          if (depthPosMm < 0 || depthPosMm > sideBoringAxisLength) return;
 
           const edgePoints = panel.rotated
             ? [

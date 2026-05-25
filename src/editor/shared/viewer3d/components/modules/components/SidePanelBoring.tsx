@@ -191,13 +191,20 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   const frontZ = depth / 2 - edgeOffset;
   const centerZ = 0;
   const backZ = -depth / 2 + edgeOffset;
+  const isFixedPanelDetail = (detail?: typeof boringDetails[number]) => (
+    detail?.type === 'fixed-panel' ||
+    detail?.role === 'bottom-panel' ||
+    detail?.role === 'top-panel' ||
+    detail?.role === 'section-divider' ||
+    detail?.role === 'fixed-shelf'
+  );
   const getHoleZPositions = (boringPosMm: number) => {
     const detail = boringDetails.find(item => Math.abs(item.y - boringPosMm) < 0.001);
     if (detail?.holeZPositions && detail.holeZPositions.length > 0) {
       return detail.holeZPositions;
     }
 
-    return detail?.type === 'fixed-panel'
+    return isFixedPanelDetail(detail)
       ? [frontZ, centerZ, backZ]
       : [frontZ, backZ];
   };

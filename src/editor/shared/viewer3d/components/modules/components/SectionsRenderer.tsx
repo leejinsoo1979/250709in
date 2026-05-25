@@ -1070,6 +1070,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const foundIndex = sectionRanges.findIndex(range => yMm >= range.start && yMm <= range.end);
       return foundIndex >= 0 ? foundIndex : 0;
     };
+    const isFixedPanelDetail = (detail: typeof result.details[number]) => (
+      detail.type === 'fixed-panel' ||
+      detail.role === 'bottom-panel' ||
+      detail.role === 'top-panel' ||
+      detail.role === 'section-divider' ||
+      detail.role === 'fixed-shelf'
+    );
     const buildHoleZPositions = (detail: typeof result.details[number]) => {
       const sectionIndex = detail.role === 'top-panel'
         ? Math.max(0, sections.length - 1)
@@ -1082,7 +1089,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const sectionDepth = getSectionDepth(sectionIndex);
       const directionOffset = getSectionDirectionOffset(sectionIndex);
 
-      if (detail.type === 'fixed-panel') {
+      if (isFixedPanelDetail(detail)) {
         // 천판/지판/섹션 구분판은 BaseFurnitureShell의 실제 수평 패널 렌더링 깊이와 동일해야 한다.
         const isLowerTopDivider = detail.role === 'section-divider' && (detail.roleIndex ?? 0) % 2 === 0;
         const isShelfSplitLowerTopDivider = isLowerTopDivider && !!furnitureId?.includes('shelf-split');

@@ -1479,8 +1479,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       ? resolveTopDownTopPanelFrontReductionMm(basicThicknessMm, stoneThickness)
       : 0;
     const mmToUnits = (mm: number) => mm * 0.01;
+    const isFixedPanelDetail = (detail: typeof boringDetails[number]) => (
+      detail.type === 'fixed-panel' ||
+      detail.role === 'bottom-panel' ||
+      detail.role === 'top-panel' ||
+      detail.role === 'section-divider' ||
+      detail.role === 'fixed-shelf'
+    );
     const buildHoleZPositions = (detail: typeof boringDetails[number]) => {
-      const frontReductionMm = detail.type !== 'fixed-panel'
+      const isFixedPanel = isFixedPanelDetail(detail);
+      const frontReductionMm = !isFixedPanel
         ? shelfFrontInsetMm
         : detail.role === 'top-panel'
           ? topPanelFrontReductionMm
@@ -1490,7 +1498,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       const panelFrontZ = panelCenterZ + mmToUnits(panelDepthMm) / 2;
       const panelBackZ = panelCenterZ - mmToUnits(panelDepthMm) / 2;
 
-      return detail.type === 'fixed-panel'
+      return isFixedPanel
         ? [panelFrontZ - mmToUnits(30), panelCenterZ, panelBackZ + mmToUnits(30)]
         : [panelFrontZ - mmToUnits(30), panelBackZ + mmToUnits(30)];
     };

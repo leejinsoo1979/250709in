@@ -91,9 +91,7 @@ function isRodShelfPanelName(panelName?: string): boolean {
   const name = panelName || '';
   const compactName = name.replace(/\s+/g, '');
   return compactName.includes('옷봉선반')
-    || (compactName.includes('옷봉') && compactName.includes('선반'))
-    || compactName.includes('(상)선반1')
-    || compactName.includes('상단선반1');
+    || (compactName.includes('옷봉') && compactName.includes('선반'));
 }
 
 function isMainHorizontalPanel(panel: any): boolean {
@@ -105,9 +103,11 @@ function isMainHorizontalPanel(panel: any): boolean {
   return (
     name.includes('바닥') ||
     name.includes('바닥판') ||
+    name.includes('하판') ||
     name.includes('지판') ||
     name.includes('상판') ||
     name.includes('천판') ||
+    name.includes('천지판') ||
     name.includes('고정선반') ||
     isRodShelfPanelName(name)
   );
@@ -148,7 +148,7 @@ function matchesFixedHorizontalPanelDetail(panel: any, detail: ShelfBoringPositi
     return detail.role === 'section-divider' && ((detail.roleIndex ?? 0) % 2 === 1);
   }
 
-  if ((name === '바닥' || name.endsWith('바닥') || name.includes('바닥판') || name.includes('지판')) && detail.role === 'bottom-panel') {
+  if ((name === '바닥' || name.endsWith('바닥') || name.includes('바닥판') || name.includes('하판') || name.includes('지판')) && detail.role === 'bottom-panel') {
     return true;
   }
 
@@ -208,7 +208,7 @@ function createReferenceDepthResolver(modulePanels: any[], fallbackDepth: number
     ?? findPanelByName(fixedPanels, name => name === '바닥' || name.endsWith('바닥'))
     ?? fixedPanels[0];
   const topPanel = findPanelByName(fixedPanels, name => name.includes('(상)상판'))
-    ?? findPanelByName(fixedPanels, name => name === '상판' || name.endsWith('상판') || name.endsWith('천판'))
+    ?? findPanelByName(fixedPanels, name => name === '상판' || name.endsWith('상판') || name.endsWith('천판') || name.includes('천판'))
     ?? fixedPanels[fixedPanels.length - 1];
   const splitSectionDividerPanels = [
     findPanelByName(fixedPanels, name => name.includes('(하)상판')),

@@ -572,7 +572,7 @@ function PageInner(){
   
   // Separate effect for live panels initialization - only when they change and user hasn't modified
   useEffect(() => {
-    if (userHasModifiedPanels) {
+    if (userHasModifiedPanels && livePanels.length === 0) {
       console.log('User has modified panels, skipping livePanels sync');
       return;
     }
@@ -604,6 +604,10 @@ function PageInner(){
     });
 
     if (livePanels.length > 0) {
+      if (userHasModifiedPanels) {
+        localStorage.removeItem('cnc_user_modified');
+        setUserHasModifiedPanels(false);
+      }
       console.log('✅ livePanels에서 패널 초기화 시작:', livePanels.length, '개');
       const cutlistPanels: Panel[] = livePanels.map(p => {
         // 재단방향(grain) 기반으로 Length/Width 결정
@@ -701,7 +705,7 @@ function PageInner(){
       prevLivePanelsKey.current = livePanelsKey;
       hasInitializedFromLive.current = true;
     }
-  }, [livePanels, userHasModifiedPanels, setPanels]);
+  }, [livePanels, userHasModifiedPanels, setPanels, setUserHasModifiedPanels]);
 
   // 제외 패널 ID → furnitureId::meshName 복합키 변환 (3D 뷰어 패널 숨김용)
   // store panels에 meshName이 없으면 livePanels에서 폴백 조회
@@ -1346,8 +1350,21 @@ function PageInner(){
   const prevStockRef = useRef<string>('');
   useEffect(() => {
     if (!hasAutoOptimized.current || panels.length === 0 || stock.length === 0) return;
-    // panels의 grain/width/length/material/thickness 변경 감지
-    const panelsSig = panels.map(p => `${p.id}:${p.grain}:${p.width}:${p.length}:${p.material}:${p.thickness}`).join('|');
+    // panels의 치수/재질뿐 아니라 보링 데이터 변경도 재최적화 대상이다.
+    const panelsSig = panels.map(p => [
+      p.id,
+      p.grain,
+      p.width,
+      p.length,
+      p.material,
+      p.thickness,
+      p.boringPositions?.join(',') || '',
+      p.boringDepthPositions?.join(',') || '',
+      p.boringDepthGroups?.map(group => `${group.y}:${group.depthPositions.join(',')}:${group.boringType || ''}`).join(';') || '',
+      p.sideBoringPositions?.join(',') || '',
+      p.sideBoringDiameter || '',
+      p.sideBoringDepth || '',
+    ].join(':')).join('|');
     const stockSig = stock.map(s => `${s.material}:${s.thickness}`).join('|');
     const panelsChanged = prevPanelsRef.current && prevPanelsRef.current !== panelsSig;
     const stockChanged = prevStockRef.current && prevStockRef.current !== stockSig;
