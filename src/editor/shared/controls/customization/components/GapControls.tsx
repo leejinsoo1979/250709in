@@ -20,6 +20,8 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   const [rightGap, setRightGap] = useState(spaceInfo?.gapConfig?.right ?? 1.5);
   const [middleGap, setMiddleGap] = useState(spaceInfo?.gapConfig?.middle ?? 1.5);
   const [middle2Gap, setMiddle2Gap] = useState(spaceInfo?.gapConfig?.middle2 ?? spaceInfo?.gapConfig?.middle ?? 1.5);
+  // input 입력 중 string 상태 (소수점 중간 입력 "1." 같은 상태 유지용)
+  const [inputDraft, setInputDraft] = useState<Partial<Record<'left' | 'right' | 'middle' | 'middle2', string>>>({});
 
   // 단내림/커튼박스 활성화 여부
   const hasDroppedCeiling = spaceInfo?.droppedCeiling?.enabled === true;
@@ -120,21 +122,29 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
   };
 
   const handleInputChange = (side: 'left' | 'right' | 'middle' | 'middle2', value: string) => {
-    const numValue = parseFloat(value) || 0;
-    if (side === 'left') setLeftGap(numValue);
-    else if (side === 'right') setRightGap(numValue);
-    else if (side === 'middle') setMiddleGap(numValue);
-    else setMiddle2Gap(numValue);
+    // 입력 중에는 string 그대로 유지 (소수점 중간 상태 "1." 보존)
+    setInputDraft(prev => ({ ...prev, [side]: value }));
   };
 
   const handleInputBlur = (side: 'left' | 'right' | 'middle' | 'middle2') => {
-    const value = side === 'left' ? leftGap : side === 'right' ? rightGap : side === 'middle' ? middleGap : middle2Gap;
-    const clampedValue = Math.max(0, Math.min(5, Math.round(value * 2) / 2));
+    const draftStr = inputDraft[side];
+    const parsed = draftStr !== undefined ? parseFloat(draftStr) : NaN;
+    const baseVal = !isNaN(parsed)
+      ? parsed
+      : (side === 'left' ? leftGap : side === 'right' ? rightGap : side === 'middle' ? middleGap : middle2Gap);
+    const clampedValue = Math.max(0, Math.min(5, Math.round(baseVal * 2) / 2));
 
     if (side === 'left') setLeftGap(clampedValue);
     else if (side === 'right') setRightGap(clampedValue);
     else if (side === 'middle') setMiddleGap(clampedValue);
     else setMiddle2Gap(clampedValue);
+
+    // draft 정리
+    setInputDraft(prev => {
+      const next = { ...prev };
+      delete next[side];
+      return next;
+    });
 
     updateGap(side, clampedValue);
   };
@@ -197,8 +207,9 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate, forceSho
                 }}
               >−</button>
               <input
-                type="number"
-                value={entry.value}
+                type="text"
+                inputMode="decimal"
+                value={inputDraft[entry.key] !== undefined ? inputDraft[entry.key]! : String(entry.value)}
                 onChange={(e) => handleInputChange(entry.key, e.target.value)}
                 onBlur={() => handleInputBlur(entry.key)}
                 onKeyDown={(e) => {
