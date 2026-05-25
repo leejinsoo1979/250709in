@@ -4538,7 +4538,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
             })();
-            // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 바닥 거리 = 걸레받이 높이
+            // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이 - 바닥마감재
             //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
             const topFrameMm = shelfSplitTopFrameMm !== null
               ? shelfSplitTopFrameMm
@@ -4549,7 +4549,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ? (currentPlacedModule.individualFloatHeight ?? 0)
               : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
             const ceilingToBodyTopMm = Math.max(0, topFrameMm);
-            const bodyBottomToFloorMm = Math.max(0, baseFrameMm);
+            const bodyBottomToFloorMm = Math.max(0, baseFrameMm - floorFinishH);
 
             // 천장/바닥 기준 표시값: 도어와 천장/바닥 사이의 실제 거리 (양수)
             //   - 천장 기준 = 천장~가구상단 - 몸통 기준 상단갭
