@@ -69,7 +69,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               onChange={(e) => handleColumnUpdate(column.id, { width: Number(e.target.value) })}
               min="100"
               max="1000"
-              step="10"
+              step="0.1"
               disabled={isLocked}
             />
           </div>
@@ -81,7 +81,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               onChange={(e) => handleColumnUpdate(column.id, { depth: Number(e.target.value) })}
               min="100"
               max="1500"
-              step="10"
+              step="0.1"
               disabled={isLocked}
             />
           </div>
@@ -93,7 +93,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               onChange={(e) => handleColumnUpdate(column.id, { height: Number(e.target.value) })}
               min="1000"
               max="3000"
-              step="10"
+              step="0.1"
               disabled={isLocked}
             />
           </div>

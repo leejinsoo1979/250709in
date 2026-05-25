@@ -108,15 +108,15 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                   max="5000"
                   step="100"
                   value={editedColumn.width}
-                  onChange={(e) => handleSizeChange('width', parseInt(e.target.value))}
+                  onChange={(e) => handleSizeChange('width', parseFloat(e.target.value))}
                 />
                 <input
                   type="number"
                   value={editedColumn.width}
-                  onChange={(e) => handleSizeChange('width', parseInt(e.target.value))}
+                  onChange={(e) => handleSizeChange('width', parseFloat(e.target.value))}
                   min="200"
                   max="5000"
-                  step="100"
+                  step="0.1"
                 />
               </div>
 
@@ -128,15 +128,15 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                   max="30000"
                   step="500"
                   value={editedColumn.height}
-                  onChange={(e) => handleSizeChange('height', parseInt(e.target.value))}
+                  onChange={(e) => handleSizeChange('height', parseFloat(e.target.value))}
                 />
                 <input
                   type="number"
                   value={editedColumn.height}
-                  onChange={(e) => handleSizeChange('height', parseInt(e.target.value))}
+                  onChange={(e) => handleSizeChange('height', parseFloat(e.target.value))}
                   min="1000"
                   max="30000"
-                  step="500"
+                  step="0.1"
                 />
               </div>
 
@@ -148,15 +148,15 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                   max="5000"
                   step="100"
                   value={editedColumn.depth}
-                  onChange={(e) => handleSizeChange('depth', parseInt(e.target.value))}
+                  onChange={(e) => handleSizeChange('depth', parseFloat(e.target.value))}
                 />
                 <input
                   type="number"
                   value={editedColumn.depth}
-                  onChange={(e) => handleSizeChange('depth', parseInt(e.target.value))}
+                  onChange={(e) => handleSizeChange('depth', parseFloat(e.target.value))}
                   min="200"
                   max="5000"
-                  step="100"
+                  step="0.1"
                 />
               </div>
             </div>
