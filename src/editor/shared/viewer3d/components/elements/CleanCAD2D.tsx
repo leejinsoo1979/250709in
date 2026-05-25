@@ -4691,11 +4691,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     points={createArrowHead([outerX, spaceTopY, spaceDimZ_L], [outerX, spaceTopY - 0.05, spaceDimZ_L])}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
-                  {/* 바닥마감재 구분 틱 & 치수 */}
+                  {/* 바닥마감재 구분 틱 & 치수 — 연장선이 가구 좌측까지 이어지도록 충분히 길게 */}
                   {hasFloorFinish && (
                     <>
                       <NativeLine name="dimension_line"
-                        points={[[outerX - mmToThreeUnits(30), floorFinishY, spaceDimZ_L], [outerX + mmToThreeUnits(30), floorFinishY, spaceDimZ_L]]}
+                        points={[[outerX - mmToThreeUnits(30), floorFinishY, spaceDimZ_L], [0, floorFinishY, spaceDimZ_L]]}
                         color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                       />
                       <Text renderOrder={100001} depthTest={false}
@@ -5649,11 +5649,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     points={createArrowHead([rightOuterX, spaceTopY, spaceDimZ_R], [rightOuterX, spaceTopY - 0.05, spaceDimZ_R])}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
-                  {/* 바닥마감재 구분 틱 & 치수 */}
+                  {/* 바닥마감재 구분 틱 & 치수 — 연장선이 가구 우측까지 이어지도록 충분히 길게 */}
                   {hasFloorFinishR && (
                     <>
                       <NativeLine name="dimension_line"
-                        points={[[rightOuterX - mmToThreeUnits(30), floorFinishYR, spaceDimZ_R], [rightOuterX + mmToThreeUnits(30), floorFinishYR, spaceDimZ_R]]}
+                        points={[[0, floorFinishYR, spaceDimZ_R], [rightOuterX + mmToThreeUnits(30), floorFinishYR, spaceDimZ_R]]}
                         color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                       />
                       <Text renderOrder={100001} depthTest={false}

@@ -97,6 +97,11 @@ type DoorGapField =
   | 'lowerDoorTopGap'
   | 'lowerDoorBottomGap';
 
+const getActiveFloorFinishHeight = (space: any): number => {
+  if (!space?.hasFloorFinish) return 0;
+  return Number(space.floorFinish?.height ?? space.floorFinishHeight ?? 0) || 0;
+};
+
 /** 도어 갭 개별 입력 — controlled input (store 값 변경 시 즉시 반영) */
 const DoorGapInput: React.FC<{
   moduleId: string;
@@ -795,9 +800,9 @@ const Configurator: React.FC = () => {
   const doorGapRefMode = useUIStore(s => s.doorGapDisplayMode);
   const setDoorGapRefMode = useUIStore(s => s.setDoorGapDisplayMode);
 
-  // 가구별 천장/바닥까지 거리 계산 (천장·바닥 기준 변환용)
+  // 가구별 천장/마감 바닥까지 거리 계산 (천장·바닥 기준 변환용)
   //   - topDistance: 가구 상단 ~ 천장 사이 거리 = 상단몰딩 두께(topFrameThickness)
-  //   - bottomDistance: 가구 하단 ~ 바닥 거리 = 걸레받이 높이(baseFrameHeight)
+  //   - bottomDistance: 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이(baseFrameHeight) - 바닥마감재
   //   ※ 가구 자체 높이는 공간 - 상단몰딩 - 걸레받이로 자동 계산되므로,
   //     "가구 상단~천장 거리"는 상단몰딩 두께와 정확히 같음.
   const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
@@ -811,7 +816,13 @@ const Configurator: React.FC = () => {
     const baseFrameMm = mod.hasBase === false
       ? (mod.individualFloatHeight ?? 0)
       : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-    return { topDistance: Math.max(0, topFrameMm), bottomDistance: Math.max(0, baseFrameMm) };
+    const floorFinishMm = spaceInfo.hasFloorFinish
+      ? (spaceInfo.floorFinish?.height ?? (spaceInfo as any).floorFinishHeight ?? 0)
+      : 0;
+    return {
+      topDistance: Math.max(0, topFrameMm),
+      bottomDistance: Math.max(0, baseFrameMm - floorFinishMm)
+    };
   }, [computeShelfSplitTopDistance, spaceInfo]);
 
   const computeSplitDoorRefDistances = useCallback((
@@ -2394,6 +2405,9 @@ const Configurator: React.FC = () => {
           if (defaults.doorGapMode) {
             useUIStore.getState().setDoorGapDisplayMode(defaults.doorGapMode);
           }
+          const defaultTopFrameSize = defaults.topMoldingEnabled === false
+            ? 0
+            : (defaults.topMoldingSize ?? defaults.frameTop ?? 30);
           defaultSpaceConfig = {
             ...defaultSpaceConfig,
             ...(defaults.width !== undefined && { width: defaults.width }),
@@ -2403,7 +2417,7 @@ const Configurator: React.FC = () => {
               right: defaults.gapRight ?? 1.5,
             },
             frameSize: {
-              top: defaults.topMoldingSize ?? defaults.frameTop ?? 30,
+              top: defaultTopFrameSize,
               left: defaults.frameLeft ?? 18,
               right: defaults.frameRight ?? 18,
               ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
@@ -2695,10 +2709,16 @@ const Configurator: React.FC = () => {
                 gap: userDefaults.baseboardGap ?? userDefaults.baseFrameGap,
               };
             }
-            if (typeof userDefaults.topMoldingSize === 'number' || typeof userDefaults.frameTop === 'number') {
+            if (
+              userDefaults.topMoldingEnabled === false ||
+              typeof userDefaults.topMoldingSize === 'number' ||
+              typeof userDefaults.frameTop === 'number'
+            ) {
               baseSpaceInfo.frameSize = {
                 ...(baseSpaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
-                top: userDefaults.topMoldingSize ?? userDefaults.frameTop,
+                top: userDefaults.topMoldingEnabled === false
+                  ? 0
+                  : (userDefaults.topMoldingSize ?? userDefaults.frameTop),
               };
             }
             if (typeof userDefaults.topMoldingOffset === 'number' || typeof userDefaults.frameTopOffset === 'number') {
@@ -6240,7 +6260,7 @@ const Configurator: React.FC = () => {
             <>
             {/* 상단몰딩 섹션 */}
             <div className={styles.configSection}>
-              <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상단몰딩</h3>
                 <label
@@ -6251,9 +6271,8 @@ const Configurator: React.FC = () => {
                   <span>전체</span>
                 </label>
                 <HelpBtn title="상단몰딩" text="가구 위쪽과 천장 사이의 마감 패널 높이입니다." />
-                <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
-              {!isFrameSectionCollapsed && (
+              {true && (
               <div className={styles.subSetting}>
                 {/* 상단몰딩 항목들 — 전체 모드 ON: 통합 행 1개 (토글 ON=size+옵셋, OFF=상단갭). 해제: 가구별 개별 행 */}
                 {allTopOnFree && topFreeMods.length > 0 ? (
@@ -6435,7 +6454,7 @@ const Configurator: React.FC = () => {
             {/* 걸레받이 섹션 — 별도 configSection */}
             {spaceInfo.baseConfig?.type !== 'stand' && (
             <div className={styles.configSection}>
-              <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+              <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>걸레받이</h3>
                 <label
@@ -6446,9 +6465,8 @@ const Configurator: React.FC = () => {
                   <span>전체</span>
                 </label>
                 <HelpBtn title="걸레받이" text="가구 아래쪽 받침대의 높이와 옵셋을 설정합니다." />
-                <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
-              {!isFrameSectionCollapsed && (
+              {true && (
               <div className={styles.subSetting}>
                 {/* 걸레받이 항목들 — 전체 모드 ON: 통합 행 1개 (토글 ON=size+옵셋, OFF=띄움). 해제: 가구별 개별 행 */}
                 {allBaseOnFree && baseFreeMods.length > 0 ? (
@@ -6900,13 +6918,12 @@ const Configurator: React.FC = () => {
 
             return (
               <div className={styles.configSection}>
-                <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>상,걸래받이</h3>
                   <HelpBtn title="상,걸래받이" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다." />
-                  <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
-                {!isFrameSectionCollapsed && (
+                {true && (
                   <div className={styles.subSetting}>
                     {/* 상단몰딩 병합 그룹 */}
                     {topGroups.map((group, gIdx) => {
@@ -6999,7 +7016,7 @@ const Configurator: React.FC = () => {
             <>
               {/* 상단몰딩 섹션 */}
               <div className={styles.configSection}>
-                <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>상단몰딩</h3>
                   <label
@@ -7010,9 +7027,8 @@ const Configurator: React.FC = () => {
                     <span>전체</span>
                   </label>
                   <HelpBtn title="상단몰딩" text="각 가구별 상단 몰딩을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
-                  <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
-                {!isFrameSectionCollapsed && (
+                {true && (
                   <div className={styles.subSetting}>
                     {allTopOn && topSortedMods.length > 0 ? (
                       // 전체 ON: 통합 행 1개만 표시 — OFF 시 상단갭 필드 표시
@@ -7134,7 +7150,7 @@ const Configurator: React.FC = () => {
               {/* 걸래받이 섹션 (stand 타입 제외) */}
               {spaceInfo.baseConfig?.type !== 'stand' && (
                 <div className={styles.configSection}>
-                  <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                  <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
                     <span className={styles.sectionDot}></span>
                     <h3 className={styles.sectionTitle}>걸래받이</h3>
                     <label
