@@ -17,11 +17,18 @@ import { resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabine
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
-// 상판 실효 두께 계산 — 하부장 상판설치는 인조대리석 선택값만 사용
-const getStoneTopThicknessMm = (mod: any): number => {
+// PET 실효 두께 매핑: 가구재 15→18, 15.5→18.5, 18→18, 18.5→18.5
+// (15mm 계열은 PB+PET 코팅 시 PET 도어/상판이 18mm 규격 적용)
+const getPetThicknessMm = (basicThicknessMm: number): number => {
+  if (basicThicknessMm === 15) return 18;
+  if (basicThicknessMm === 15.5) return 18.5;
+  return basicThicknessMm; // 18, 18.5는 그대로
+};
+// 상판 실효 두께 계산 — PET 재질이면 PET 매핑, 인조대리석이면 사용자 선택값
+const getStoneTopThicknessMm = (mod: any, basicThicknessMm: number = 18): number => {
   const t = mod?.stoneTopThickness || 0;
   if (t <= 0) return 0;
-  return t;
+  return (mod?.stoneTopMaterial === 'pet') ? getPetThicknessMm(basicThicknessMm) : t;
 };
 
 /** 연장선 + 양쪽 꼭지점 점 표시 */
@@ -740,8 +747,8 @@ interface CADDimensions2DProps {
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { showAlert } = useAlert();
-  // 상판 실효 두께 — 하부장 상판설치는 인조대리석 선택값만 사용
-  const _stoneTopThk = (mod: any) => getStoneTopThicknessMm(mod);
+  // 상판 실효 두께 — PET이면 도어 두께(spaceInfo.panelThickness, 기본 18), stone이면 사용자 선택값
+  const _stoneTopThk = (mod: any) => getStoneTopThicknessMm(mod, spaceInfo?.panelThickness || 18);
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
   const { view2DDirection, showDimensions: showDimensionsFromStore, view2DTheme, selectedSlotIndex, showFurniture, doorGapDisplayMode } = useUIStore();
   const { zones } = useDerivedSpaceStore();
@@ -965,37 +972,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       return spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
     }
     return spaceInfo.height;
-  };
-  const isViewingDroppedZoneDoorDimension = !!hasDroppedCeiling
-    && (isSelectedSlotInDroppedZone || visibleFurniture.some(module => (module as PlacedModule).zone === 'dropped'));
-
-  const resolveDoorDimensionZ = (
-    doorFrontZ: number,
-    dimOffsetMm: number,
-    extOffsetMm: number,
-    textOffsetMm = 60,
-    outsideStackOffsetMm = 0
-  ) => {
-    if (!isViewingDroppedZoneDoorDimension) {
-      const dimZ = doorFrontZ + mmToThreeUnits(dimOffsetMm);
-      return {
-        dimZ,
-        extZ: doorFrontZ + mmToThreeUnits(extOffsetMm),
-        textZ: dimZ + mmToThreeUnits(textOffsetMm),
-      };
-    }
-
-    const outsideSign = currentViewDirection === 'left' ? -1 : 1;
-    const outsideBaseZ = currentViewDirection === 'left'
-      ? -spaceDepth / 2 - leftDimOffset - mmToThreeUnits(80)
-      : spaceDepth / 2 + rightDimOffset + mmToThreeUnits(80);
-    const dimZ = outsideBaseZ + outsideSign * mmToThreeUnits(outsideStackOffsetMm);
-
-    return {
-      dimZ,
-      extZ: doorFrontZ + mmToThreeUnits(extOffsetMm),
-      textZ: dimZ + outsideSign * mmToThreeUnits(textOffsetMm),
-    };
   };
 
   const getModuleCabinetBottomAbsMm = (mod: PlacedModule, category: string) => {
@@ -1338,7 +1314,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               return Math.max(0, cabinetTopMm - cabinetBottomMm);
             })();
 
-            // 하부장 + 상판: 장 높이와 상판 두께를 분리하여 표시
+            // 하부장 + 상판: 장 높이와 상판 두께를 분리하여 표시 (PET=18.5, 인조대리석=선택값)
             const stoneThicknessL2 = _stoneTopThk(mod);
             const includeStoneInHeight = modCat_l2 === 'lower' && stoneThicknessL2 > 0;
 
@@ -1365,21 +1341,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               }
             }
 
-            // 섹션 분할이 아니면 장 높이 세그먼트 1개
-            // 하부장 + 상판: 상판 두께를 본체 H에 합산하여 외경 전체로 표시
+            // 섹션 분할이 아니면 장 높이 세그먼트 1개 (상판 제외 순수 캐비넷 높이)
             if (!didSplitSections) {
-              const segTopMm = includeStoneInHeight ? (cabinetTopMm + stoneThicknessL2) : cabinetTopMm;
-              const segHeightMm = includeStoneInHeight
-                ? Math.round(cabinetHeightForDimMm + stoneThicknessL2)
-                : Math.round(cabinetHeightForDimMm);
               segments_l2.push({
                 bottomY: mmToThreeUnits(cabinetBottomMm),
-                topY: mmToThreeUnits(segTopMm),
-                heightMm: segHeightMm,
+                topY: mmToThreeUnits(cabinetTopMm),
+                heightMm: Math.round(cabinetHeightForDimMm),
                 key: `furniture-${moduleIndex}`,
                 // 상부장이면 미드웨이 편집 시 참조할 id/현재높이 기록
                 upperModuleId: modCat_l2 === 'upper' ? mod.id : undefined,
                 currentHeightMm: modCat_l2 === 'upper' ? cabinetHeightForDimMm : undefined,
+              });
+            }
+
+            // 상판 두께 세그먼트 (분리 표시)
+            if (includeStoneInHeight) {
+              segments_l2.push({
+                bottomY: mmToThreeUnits(cabinetTopMm),
+                topY: mmToThreeUnits(cabinetTopMm + stoneThicknessL2),
+                heightMm: stoneThicknessL2,
+                key: `stone-top-${moduleIndex}`
               });
             }
 
@@ -1608,15 +1589,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             : defaultDoorFrontZ;
           // 도어 치수선: 신발장 측면뷰는 도어에 더 가깝게 배치
           const dimOffsetMm = hasShoeDoorDimensionModule ? 100 : 150;
-          const lowerDoorDim = resolveDoorDimensionZ(
-            lowerDoorFrontZ,
-            dimOffsetMm,
-            hasShoeDoorDimensionModule ? 20 : 30,
-            hasShoeDoorDimensionModule ? 45 : 60
-          );
-          const dimZ = lowerDoorDim.dimZ;
-          const dimExtZ = lowerDoorDim.extZ;
-          const dimTextZ = lowerDoorDim.textZ;
+          const dimZ = lowerDoorFrontZ + mmToThreeUnits(dimOffsetMm);
+          const dimExtZ = lowerDoorFrontZ + mmToThreeUnits(hasShoeDoorDimensionModule ? 20 : 30);
+          const dimTextZ = dimZ + mmToThreeUnits(hasShoeDoorDimensionModule ? 45 : 60);
           // 상부장 Z: 하부장 뒷면에 정렬 (하부장 뒷면 = fzOff_ud - furnitureDepth_ud/2 - doorThk_ud)
           // 상부장 깊이 (첫 번째 상부장 모듈 기준)
           const firstUpperMod = visibleFurniture.find(m => getModuleCategory(m as PlacedModule) === 'upper') as PlacedModule | undefined;
@@ -1625,10 +1600,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
           const upperFurnitureZ = fzOff_ud - furnitureDepth_ud / 2 - doorThk_ud + upperModDepth_ud / 2;
           const upperFrontZ = upperFurnitureZ + upperModDepth_ud / 2;
-          const upperDoorDim = resolveDoorDimensionZ(upperFrontZ, 200, 20, 60, 120);
-          const upperDimZ = upperDoorDim.dimZ;
-          const upperDimExtZ = upperDoorDim.extZ;
-          const upperDimTextZ = upperDoorDim.textZ;
+          const upperDimZ = upperFrontZ + mmToThreeUnits(200);
+          const upperDimExtZ = upperFrontZ + mmToThreeUnits(20);
           const hasUpperSideModule = visibleFurniture.some(module => {
             const mod = module as PlacedModule;
             return getModuleCategory(mod) === 'upper';
@@ -1739,7 +1712,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-topgap-${moduleIndex}`,
                 isUpper: false
               });
-              // 앞판 높이 = (캐비넷상단 - 앞판하단) + 상판 실효 두께
+              // 앞판 높이 = (캐비넷상단 - 앞판하단) + 상판 실효 두께 (PET=18.5 / 인조대리석=선택값)
               const frontPlateAreaMm = Math.round(cabinetTopAbs - gapTopAbs) + _effStoneThk_l;
               if (frontPlateAreaMm > 0) {
                 doorSegs.push({
@@ -1839,7 +1812,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, upperDimZ], [0, seg.topY, upperDimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, upperDimZ], [0.008, seg.bottomY, upperDimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, upperDimZ], [0.008, seg.topY, upperDimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimTextZ]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
@@ -2548,10 +2521,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const panelDepthU = mmToThreeUnits(panelDepthMm);
           const furnitureDepthU = mmToThreeUnits(600);
           const furnitureFrontZ = -panelDepthU / 2 + (panelDepthU - furnitureDepthU) / 2 + furnitureDepthU / 2;
-          const drawerDoorDim = resolveDoorDimensionZ(furnitureFrontZ, 150, 30, 60);
-          const doorDimZ = drawerDoorDim.dimZ;
-          const doorExtStartZ = drawerDoorDim.extZ;
-          const doorDimTextZ = drawerDoorDim.textZ;
+          const doorDimZ = furnitureFrontZ + mmToThreeUnits(150);
+          const doorExtStartZ = furnitureFrontZ + mmToThreeUnits(30);
+          const doorTextOffsetZ = mmToThreeUnits(60);
           const doorColor = doorDimensionColor;
 
           // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
@@ -2619,15 +2591,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal = modHeightMm - lastMaida.maidaTopMm;
                 if (topGapTotal > 0) {
-                  // 상판내림 + 상판: (마이다 상단 ~ ㄱ상판 하단=캐비넷 상단) 실제 갭 + ㄱ상판 앞부분(상판 두께)
+                  // 상판내림 + 상판: 20mm 갭 + 앞판 높이 (PET=18.5 / 인조대리석=선택값)
                   const _effStT_l3 = _stoneTopThk(mod);
                   if (isTD && _effStT_l3 > 0) {
-                    const doorGapMm = Math.max(0, Math.round(topGapTotal));
-                    if (doorGapMm > 0) {
-                      gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: doorGapMm });
+                    const doorGapMm = 20;
+                    if (doorGapMm < topGapTotal) {
+                      const frontPlateHeight = (topGapTotal - doorGapMm) + _effStT_l3;
+                      gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: lastMaida.maidaTopMm + doorGapMm, heightMm: doorGapMm });
+                      gaps.push({ bottomMm: lastMaida.maidaTopMm + doorGapMm, topMm: modHeightMm + _effStT_l3, heightMm: frontPlateHeight });
+                    } else {
+                      gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal) });
                     }
-                    // ㄱ상판 앞부분(수직): 캐비넷 상단 ~ 캐비넷 상단 + 상판 두께
-                    gaps.push({ bottomMm: modHeightMm, topMm: modHeightMm + _effStT_l3, heightMm: _effStT_l3 });
                   } else {
                     gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal) });
                   }
@@ -2643,7 +2617,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="drawer_height_dim" points={[[0, dBotY, doorDimZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, dBotY, doorDimZ], [0.008, dBotY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, dTopY, doorDimZ], [0.008, dTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text name="drawer_height_dim_text" position={[0, (dBotY + dTopY) / 2, doorDimTextZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text name="drawer_height_dim_text" position={[0, (dBotY + dTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {Number.isInteger(m.maidaHeightMm) ? m.maidaHeightMm.toString() : (Math.round(m.maidaHeightMm * 10) / 10).toString()}
                           </Text>
                           <ExtLine points={[[0, dTopY, doorExtStartZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="drawer_height_ext" />
@@ -2659,7 +2633,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="drawer_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, gBotY, doorDimZ], [0.008, gBotY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, gTopY, doorDimZ], [0.008, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text name="drawer_height_dim_text" position={[0, (gBotY + gTopY) / 2, doorDimTextZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text name="drawer_height_dim_text" position={[0, (gBotY + gTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
                           <ExtLine points={[[0, gTopY, doorExtStartZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="drawer_height_ext" />
@@ -2681,7 +2655,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       <NativeLine name="drawer_height_dim" points={[[0, bottomStartY, doorDimZ], [0, maidaBottomAbsY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                       <NativeLine name="drawer_height_dim" points={[[-0.008, bottomStartY, doorDimZ], [0.008, bottomStartY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                       <NativeLine name="drawer_height_dim" points={[[-0.008, maidaBottomAbsY, doorDimZ], [0.008, maidaBottomAbsY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text name="drawer_height_dim_text" position={[0, (bottomStartY + maidaBottomAbsY) / 2, doorDimTextZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text name="drawer_height_dim_text" position={[0, (bottomStartY + maidaBottomAbsY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                         {floorToMaidaDispMm}
                       </Text>
                     </group>
@@ -2857,16 +2831,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             }
 
             if (!didSplitSectionsRL2) {
-              // 하부장 + 상판: 상판 두께를 본체 H에 합산하여 외경 전체로 표시
-              const segTopMm = includeStoneInHeightRL2 ? (cabinetTopMm + stoneThicknessRL2) : cabinetTopMm;
-              const segHeightMm = includeStoneInHeightRL2
-                ? Math.round(cabinetHeightForDimMm + stoneThicknessRL2)
-                : Math.round(cabinetHeightForDimMm);
               segments_rl2.push({
                 bottomY: mmToThreeUnits(cabinetBottomMm),
-                topY: mmToThreeUnits(segTopMm),
-                heightMm: segHeightMm,
+                topY: mmToThreeUnits(cabinetTopMm),
+                heightMm: Math.round(cabinetHeightForDimMm),
                 key: `furniture-${moduleIndex}`
+              });
+            }
+
+            if (includeStoneInHeightRL2) {
+              segments_rl2.push({
+                bottomY: mmToThreeUnits(cabinetTopMm),
+                topY: mmToThreeUnits(cabinetTopMm + stoneThicknessRL2),
+                heightMm: stoneThicknessRL2,
+                key: `stone-top-${moduleIndex}`
               });
             }
 
@@ -2990,24 +2968,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ? (resolveShoeCabinetDoorFrontZ(visibleFurniture as PlacedModule[], panelDepthMm_rd) ?? defaultDoorFrontZ_rd)
             : defaultDoorFrontZ_rd;
           const dimOffsetMm_r = hasShoeDoorDimensionModule_r ? 100 : 150;
-          const lowerDoorDim_r = resolveDoorDimensionZ(
-            doorFrontZ_rd,
-            dimOffsetMm_r,
-            hasShoeDoorDimensionModule_r ? 20 : 30,
-            hasShoeDoorDimensionModule_r ? 45 : 60
-          );
-          const dimZ_r = lowerDoorDim_r.dimZ;
-          const dimExtZ_r = lowerDoorDim_r.extZ;
-          const dimTextZ_r = lowerDoorDim_r.textZ;
+          const dimZ_r = doorFrontZ_rd + mmToThreeUnits(dimOffsetMm_r);
+          const dimExtZ_r = doorFrontZ_rd + mmToThreeUnits(hasShoeDoorDimensionModule_r ? 20 : 30);
+          const dimTextZ_r = dimZ_r + mmToThreeUnits(hasShoeDoorDimensionModule_r ? 45 : 60);
           const firstUpperMod_r = visibleFurniture.find(m => getModuleCategory(m as PlacedModule) === 'upper') as PlacedModule | undefined;
           const upperModDepthMm_r = firstUpperMod_r?.upperSectionDepth || firstUpperMod_r?.customDepth || 300;
           const upperModDepth_r = mmToThreeUnits(upperModDepthMm_r);
           const upperFurnitureZ_r = fzOff_rd - furnitureDepth_rd / 2 - doorThk_rd + upperModDepth_r / 2;
           const upperFrontZ_r = upperFurnitureZ_r + upperModDepth_r / 2;
-          const upperDoorDim_r = resolveDoorDimensionZ(upperFrontZ_r, 200, 20, 60, 120);
-          const upperDimZ_r = upperDoorDim_r.dimZ;
-          const upperDimExtZ_r = upperDoorDim_r.extZ;
-          const upperDimTextZ_r = upperDoorDim_r.textZ;
+          const upperDimZ_r = upperFrontZ_r + mmToThreeUnits(200);
+          const upperDimExtZ_r = upperFrontZ_r + mmToThreeUnits(20);
           const hasUpperSideModule_r = visibleFurniture.some(module => {
             const mod = module as PlacedModule;
             return getModuleCategory(mod) === 'upper';
@@ -3099,29 +3069,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               isUpper: modCat === 'upper',
             });
 
-            // 상판내림 + 상판: 도어 상단 ~ ㄱ상판 하단 실제 갭(동적) + ㄱ상판 영역
-            //   ㄱ상판 하단 = 캐비넷 상단 (따낸 영역 천장의 가로면)
-            //   ㄱ상판 영역 높이 = 상판 실효 두께 (수직 앞부분)
+            // 상판내림 + 상판: 도어 상단 ~ 앞판 하단 20mm 갭 + 앞판 영역 (PET=18.5 / 인조대리석=선택값)
             const _effStT_r = _stoneTopThk(mod);
             if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effStT_r > 0) {
+              const doorGapMm = 20;
+              const gapTopAbs_r = doorTopAbsMm + doorGapMm;
+              doorSegs_r.push({
+                bottomY: mmToThreeUnits(doorTopAbsMm),
+                topY: mmToThreeUnits(gapTopAbs_r),
+                heightMm: doorGapMm,
+                key: `door-topgap-${moduleIndex}`,
+                isUpper: false,
+              });
+              // 앞판 높이 = (캐비넷상단 - 앞판하단) + 상판 실효 두께
+              // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용
               const cabinetH_r = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs_r = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs_r = cabinetBottomAbs_r + cabinetH_r;
-              const doorGapMm = Math.max(0, Math.round(cabinetTopAbs_r - doorTopAbsMm));
-              if (doorGapMm > 0) {
-                doorSegs_r.push({
-                  bottomY: mmToThreeUnits(doorTopAbsMm),
-                  topY: mmToThreeUnits(cabinetTopAbs_r),
-                  heightMm: doorGapMm,
-                  key: `door-topgap-${moduleIndex}`,
-                  isUpper: false,
-                });
-              }
-              // ㄱ상판 앞부분(수직): 캐비넷 상단 ~ 캐비넷 상단 + 상판 실효 두께
-              const frontPlateAreaMm_r = _effStT_r;
+              const frontPlateAreaMm_r = Math.round(cabinetTopAbs_r - gapTopAbs_r) + _effStT_r;
               if (frontPlateAreaMm_r > 0) {
                 doorSegs_r.push({
-                  bottomY: mmToThreeUnits(cabinetTopAbs_r),
+                  bottomY: mmToThreeUnits(gapTopAbs_r),
                   topY: mmToThreeUnits(cabinetTopAbs_r + _effStT_r),
                   heightMm: frontPlateAreaMm_r,
                   key: `door-frontplate-${moduleIndex}`,
@@ -3201,7 +3169,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, upperDimZ_r], [0, seg.topY, upperDimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, upperDimZ_r], [0.008, seg.bottomY, upperDimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, upperDimZ_r], [0.008, seg.topY, upperDimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimTextZ_r]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
@@ -3685,9 +3653,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const panelDepthU_door = mmToThreeUnits(panelDepthMm_door);
           const furnitureDepthU_door = mmToThreeUnits(600);
           const furnitureFrontZ_door = -panelDepthU_door / 2 + (panelDepthU_door - furnitureDepthU_door) / 2 + furnitureDepthU_door / 2;
-          const drawerDoorDim_r = resolveDoorDimensionZ(furnitureFrontZ_door, 200, 20, 60);
-          const doorDimZ_r = drawerDoorDim_r.dimZ;
-          const doorDimTextZ_r = drawerDoorDim_r.textZ;
+          const doorDimZ_r = furnitureFrontZ_door + mmToThreeUnits(200);
           const doorColor_r = doorDimensionColor;
 
           // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
@@ -3752,15 +3718,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida_r = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal_r = modHeightMm - lastMaida_r.maidaTopMm;
                 if (topGapTotal_r > 0) {
-                  // 상판내림 + 상판: (마이다 상단 ~ ㄱ상판 하단=캐비넷 상단) 실제 갭 + ㄱ상판 앞부분(상판 두께)
+                  // 상판내림 + 상판: 20mm 갭 + 앞판 높이 (PET=18.5 / 인조대리석=선택값)
                   const _effStT_r2 = _stoneTopThk(mod);
                   if (isTD_r && _effStT_r2 > 0) {
-                    const doorGapMm = Math.max(0, Math.round(topGapTotal_r));
-                    if (doorGapMm > 0) {
-                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: doorGapMm });
+                    const doorGapMm = 20;
+                    if (doorGapMm < topGapTotal_r) {
+                      const frontPlateHeight_r = (topGapTotal_r - doorGapMm) + _effStT_r2;
+                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: lastMaida_r.maidaTopMm + doorGapMm, heightMm: doorGapMm });
+                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm + doorGapMm, topMm: modHeightMm + _effStT_r2, heightMm: frontPlateHeight_r });
+                    } else {
+                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal_r) });
                     }
-                    // ㄱ상판 앞부분(수직): 캐비넷 상단 ~ 캐비넷 상단 + 상판 두께
-                    gaps_r.push({ bottomMm: modHeightMm, topMm: modHeightMm + _effStT_r2, heightMm: _effStT_r2 });
                   } else {
                     gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal_r) });
                   }
@@ -3776,11 +3744,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="drawer_height_dim" points={[[0, dBotY, doorDimZ_r], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, dBotY, doorDimZ_r], [0.008, dBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, dTopY, doorDimZ_r], [0.008, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text name="drawer_height_dim_text" position={[0, (dBotY + dTopY) / 2, doorDimTextZ_r]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                          <Text name="drawer_height_dim_text" position={[0, (dBotY + dTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                             {Number.isInteger(m.maidaHeightMm) ? m.maidaHeightMm.toString() : (Math.round(m.maidaHeightMm * 10) / 10).toString()}
                           </Text>
-                          <ExtLine points={[[0, dTopY, drawerDoorDim_r.extZ], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
-                          <ExtLine points={[[0, dBotY, drawerDoorDim_r.extZ], [0, dBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
+                          <ExtLine points={[[0, dTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
+                          <ExtLine points={[[0, dBotY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, dBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
                         </group>
                       );
                     })}
@@ -3792,11 +3760,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="drawer_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, gBotY, doorDimZ_r], [0.008, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="drawer_height_dim" points={[[-0.008, gTopY, doorDimZ_r], [0.008, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text name="drawer_height_dim_text" position={[0, (gBotY + gTopY) / 2, doorDimTextZ_r]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                          <Text name="drawer_height_dim_text" position={[0, (gBotY + gTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
-                          <ExtLine points={[[0, gTopY, drawerDoorDim_r.extZ], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
-                          <ExtLine points={[[0, gBotY, drawerDoorDim_r.extZ], [0, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
+                          <ExtLine points={[[0, gTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
+                          <ExtLine points={[[0, gBotY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="drawer_height_ext" />
                         </group>
                       );
                     })}
