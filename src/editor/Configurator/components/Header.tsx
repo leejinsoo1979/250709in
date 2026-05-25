@@ -15,7 +15,7 @@ import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG, normalizeSpaceInfoFrameSize } from '@/store/core/spaceConfigStore';
-import { createDesignFile } from '@/firebase/projects';
+import { createDesignFile, updateDesignFile } from '@/firebase/projects';
 import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -277,7 +277,7 @@ const Header: React.FC<HeaderProps> = ({
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
 
-  // 공간설정 기본값 저장 후 → 동일 프로젝트에 "새 디자인" 자동 생성하고 이동
+  // 공간설정 기본값 저장 후 → 현재 디자인이 있으면 덮어쓰기, 없을 때만 새 디자인 생성
   const handleAutoCreateDesignAfterDefaults = async () => {
     // 프로젝트 정보가 없으면 자동 생성 안 함 (사용자가 에디터에서 설정만 저장한 케이스)
     if (!projectId) {
@@ -371,11 +371,28 @@ const Header: React.FC<HeaderProps> = ({
           } : {}),
         };
       }
-      console.log('🆕 [Configurator 자동 새 디자인] 적용 spaceConfig:', {
+      console.log('🆕 [Configurator 공간 기본설정 적용] 적용 spaceConfig:', {
         baseConfigHeight: spaceConfig.baseConfig?.height,
         frameSizeTop: spaceConfig.frameSize?.top,
       });
       spaceConfig = normalizeSpaceInfoFrameSize(spaceConfig);
+
+      if (designFileId) {
+        setSpaceInfo(spaceConfig);
+        const { error } = await updateDesignFile(designFileId, { spaceConfig });
+        if (error) {
+          alert('디자인 저장에 실패했습니다: ' + error);
+          return;
+        }
+        const params = new URLSearchParams();
+        params.set('projectId', projectId);
+        params.set('designFileId', designFileId);
+        if (designFileName) params.set('designFileName', designFileName);
+        navigate(`/configurator?${params.toString()}`, { replace: true });
+        setTimeout(() => window.location.reload(), 50);
+        return;
+      }
+
       const designName = '새 디자인';
       const { id, error } = await createDesignFile({
         name: designName,
@@ -395,8 +412,8 @@ const Header: React.FC<HeaderProps> = ({
       // URL 변경 후 Configurator가 새 디자인을 로드하도록 강제 새로고침
       setTimeout(() => window.location.reload(), 50);
     } catch (e) {
-      console.error('자동 새 디자인 생성 실패:', e);
-      alert('새 디자인 생성 중 오류가 발생했습니다.');
+      console.error('공간 기본설정 적용 실패:', e);
+      alert('공간 기본설정 적용 중 오류가 발생했습니다.');
     }
   };
 
