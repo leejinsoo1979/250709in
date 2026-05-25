@@ -202,17 +202,33 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  // URL 쿼리 파라미터로 프로젝트 자동 선택 (에디터에서 프로젝트명 클릭 시)
+  // URL 쿼리 파라미터로 프로젝트/폴더 자동 선택 (에디터에서 대시보드 복귀 시)
   useEffect(() => {
     const targetProjectId = searchParams.get('projectId');
+    const targetFolderId = searchParams.get('folderId');
     if (!targetProjectId || data.projects.length === 0) return;
     const project = data.projects.find(p => p.id === targetProjectId);
     if (project) {
-      nav.navigateTo(targetProjectId, null, project.title || targetProjectId);
+      const projectFolders = data.folders[targetProjectId];
+      if (targetFolderId && !projectFolders) return;
+
+      const targetFolder = targetFolderId
+        ? projectFolders?.find(folder => folder.id === targetFolderId)
+        : null;
+      const targetLabel = targetFolderId
+        ? targetFolder?.name || targetFolderId
+        : project.title || targetProjectId;
+
+      nav.setActiveMenu(project.status === 'completed' ? 'completed' : 'in-progress');
+      nav.navigateTo(
+        targetProjectId,
+        targetFolderId || null,
+        targetLabel
+      );
       // 쿼리 파라미터 제거 (중복 실행 방지)
       setSearchParams({}, { replace: true });
     }
-  }, [searchParams, data.projects]);
+  }, [searchParams, data.projects, data.folders, nav.setActiveMenu, nav.navigateTo, setSearchParams]);
 
   // 대시보드 진입 시 store isDirty 초기화
   useEffect(() => {
@@ -652,6 +668,41 @@ const SimpleDashboard: React.FC = () => {
   const getSelectedExplorerItems = useCallback(() => {
     return data.currentItems.filter(item => actions.selectedItems.has(item.id));
   }, [data.currentItems, actions.selectedItems]);
+
+  const getContextProjectItems = useCallback((item: ExplorerItem) => {
+    if (item.type !== 'project') return [];
+    if (actions.selectedItems.size > 1 && actions.selectedItems.has(item.id)) {
+      return data.currentItems.filter(selectedItem =>
+        selectedItem.type === 'project' && actions.selectedItems.has(selectedItem.id)
+      );
+    }
+    return [item];
+  }, [actions.selectedItems, data.currentItems]);
+
+  const moveContextProjectsToStatus = useCallback(async (
+    item: ExplorerItem,
+    status: 'in_progress' | 'completed'
+  ) => {
+    const projectItems = getContextProjectItems(item);
+    if (projectItems.length === 0) return;
+
+    const results = await Promise.all(
+      projectItems.map(projectItem => updateProject(projectItem.id, { status } as any))
+    );
+    const error = results.find(result => result.error)?.error;
+    if (error) {
+      alert(error);
+      return;
+    }
+
+    const targetLabel = status === 'completed' ? '완료된 프로젝트' : '진행중 프로젝트';
+    alert(projectItems.length === 1
+      ? `"${projectItems[0].name}"이(가) ${targetLabel}로 이동되었습니다.`
+      : `${projectItems.length}개 프로젝트가 ${targetLabel}로 이동되었습니다.`
+    );
+    actions.clearSelection();
+    window.location.reload();
+  }, [actions, getContextProjectItems]);
 
   // --- 키보드 네비게이션 + 단축키 ---
   useEffect(() => {
@@ -1467,13 +1518,7 @@ const SimpleDashboard: React.FC = () => {
                 onClick={async () => {
                   const item = contextMenu.item;
                   setContextMenu(null);
-                  const result = await updateProject(item.id, { status: 'completed' } as any);
-                  if (result.error) {
-                    alert(result.error);
-                  } else {
-                    alert(`"${item.name}"이(가) 완료된 프로젝트로 이동되었습니다.`);
-                    window.location.reload();
-                  }
+                  await moveContextProjectsToStatus(item, 'completed');
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -1492,13 +1537,7 @@ const SimpleDashboard: React.FC = () => {
                 onClick={async () => {
                   const item = contextMenu.item;
                   setContextMenu(null);
-                  const result = await updateProject(item.id, { status: 'in_progress' } as any);
-                  if (result.error) {
-                    alert(result.error);
-                  } else {
-                    alert(`"${item.name}"이(가) 진행중 프로젝트로 이동되었습니다.`);
-                    window.location.reload();
-                  }
+                  await moveContextProjectsToStatus(item, 'in_progress');
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

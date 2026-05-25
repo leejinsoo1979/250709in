@@ -62,6 +62,7 @@ interface HeaderProps {
   folderName?: string; // 폴더명 추가
   designFileName?: string; // 디자인 파일명 추가
   projectId?: string | null; // 프로젝트 ID 추가
+  folderId?: string | null; // 폴더 ID 추가
   designFileId?: string | null; // 디자인 파일 ID 추가
   owner?: { userId: string; name: string; photoURL?: string } | null; // 프로젝트 소유자
   collaborators?: ProjectCollaborator[]; // 협업자 목록
@@ -160,6 +161,7 @@ const Header: React.FC<HeaderProps> = ({
   folderName,
   designFileName,
   projectId,
+  folderId,
   designFileId,
   owner,
   collaborators = [],
@@ -442,7 +444,11 @@ const Header: React.FC<HeaderProps> = ({
   // 대시보드 이동 (해당 프로젝트 위치)
   const navigateToDashboard = () => {
     if (projectId) {
-      navigate(`/dashboard?projectId=${projectId}`);
+      const params = new URLSearchParams({ projectId });
+      if (folderId) {
+        params.set('folderId', folderId);
+      }
+      navigate(`/dashboard?${params.toString()}`);
     } else {
       navigate('/dashboard');
     }

@@ -4208,7 +4208,14 @@ const Configurator: React.FC = () => {
     // Configurator가 최종 단계이므로 저장 후 대시보드로 이동
     if (window.confirm('현재 프로젝트를 저장하고 대시보드로 돌아가시겠습니까?')) {
       saveProject().then(() => {
-        navigate('/dashboard');
+        const params = new URLSearchParams();
+        if (currentProjectId) {
+          params.set('projectId', currentProjectId);
+        }
+        if (currentFolderId) {
+          params.set('folderId', currentFolderId);
+        }
+        navigate(params.toString() ? `/dashboard?${params.toString()}` : '/dashboard');
       });
     }
   };
@@ -4308,7 +4315,14 @@ const Configurator: React.FC = () => {
       }
     } else {
       // 마지막 탭 → 대시보드로 이동
-      navigate('/dashboard');
+      const params = new URLSearchParams();
+      if (currentProjectId) {
+        params.set('projectId', currentProjectId);
+      }
+      if (currentFolderId) {
+        params.set('folderId', currentFolderId);
+      }
+      navigate(params.toString() ? `/dashboard?${params.toString()}` : '/dashboard');
     }
   };
 
@@ -8038,6 +8052,7 @@ const Configurator: React.FC = () => {
         folderName={currentFolderName}
         designFileName={currentDesignFileName || urlDesignFileName}
         projectId={currentProjectId}
+        folderId={currentFolderId}
         designFileId={currentDesignFileId}
         owner={projectOwner}
         collaborators={collaborators}
