@@ -6095,122 +6095,121 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   >
                     <span style={knobStyle(topEnabled)} />
                   </button>
-                  {(
-                    <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>높이</span>
-                        <input type="text" inputMode="numeric"
-                          value={topEnabled ? (topSize || '') : '0'} placeholder="0"
-                          disabled={!topEnabled}
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, {
-                                ...getTopSizeSyncUpdates(next),
-                                ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
-                                ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
-                              });
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              const num = v === '' ? 0 : parseInt(v, 10);
-                              const next = Math.max(0, Math.min(9999, num));
-                              updatePlacedModule(mod.id, {
-                                ...getTopSizeSyncUpdates(next),
-                                ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
-                                ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
-                              });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, {
-                              ...getTopSizeSyncUpdates(clamped),
-                              ...getEndPanelGapSyncUpdates({ topFrameThickness: clamped }),
-                              ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
-                            });
-                          }}
-                          style={{ ...inputStyle, opacity: topEnabled ? 1 : 0.5, cursor: topEnabled ? 'text' : 'not-allowed' }}
-                        />
-                      </div>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>옵셋</span>
-                        <input type="text" inputMode="numeric"
-                          value={topEnabled ? (topOffset !== 0 ? topOffset : '') : '0'} placeholder="0"
-                          disabled={!topEnabled}
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(-200, Math.min(200, (topOffset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, { topFrameOffset: next });
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              updatePlacedModule(mod.id, { topFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, { topFrameOffset: clamped });
-                          }}
-                          style={{ ...inputStyle, opacity: topEnabled ? 1 : 0.5, cursor: topEnabled ? 'text' : 'not-allowed' }}
-                        />
-                      </div>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>갭</span>
-                        <input type="text" inputMode="numeric"
-                          value={topEnabled ? (topGap !== 0 ? topGap : '') : '0'} placeholder="0"
-                          disabled={!topEnabled}
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(0, Math.min(2000, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, {
-                                topFrameGap: next,
-                                ...getUpperShelfGapSyncUpdates({ topFrameGap: next }),
-                              });
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              const num = v === '' ? 0 : parseInt(v, 10);
-                              const next = Math.max(0, Math.min(2000, num));
-                              updatePlacedModule(mod.id, {
-                                topFrameGap: next,
-                                ...getUpperShelfGapSyncUpdates({ topFrameGap: next }),
-                              });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, {
-                              topFrameGap: clamped,
-                              ...getUpperShelfGapSyncUpdates({ topFrameGap: clamped }),
-                            });
-                          }}
-                          style={{ ...inputStyle, opacity: topEnabled ? 1 : 0.5, cursor: topEnabled ? 'text' : 'not-allowed' }}
-                        />
-                      </div>
-                    </div>
-                  )}
+	                  <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+	                    {topEnabled && (
+	                      <>
+	                        <div style={cellStyle}>
+	                          <span style={cellLabelStyle}>높이</span>
+	                          <input type="text" inputMode="numeric"
+	                            value={topSize || ''} placeholder="0"
+	                            onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+	                            onKeyDown={(e) => {
+	                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+	                                e.preventDefault();
+	                                const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+	                                updatePlacedModule(mod.id, {
+	                                  ...getTopSizeSyncUpdates(next),
+	                                  ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
+	                                  ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
+	                                });
+	                              } else if (e.key === 'Enter') {
+	                                (e.target as HTMLInputElement).blur();
+	                              }
+	                            }}
+	                            onChange={(e) => {
+	                              const v = e.target.value;
+	                              if (v === '' || /^\d+$/.test(v)) {
+	                                const num = v === '' ? 0 : parseInt(v, 10);
+	                                const next = Math.max(0, Math.min(9999, num));
+	                                updatePlacedModule(mod.id, {
+	                                  ...getTopSizeSyncUpdates(next),
+	                                  ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
+	                                  ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
+	                                });
+	                              }
+	                            }}
+	                            onBlur={(e) => {
+	                              setHighlightedFrame(null);
+	                              const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
+	                              updatePlacedModule(mod.id, {
+	                                ...getTopSizeSyncUpdates(clamped),
+	                                ...getEndPanelGapSyncUpdates({ topFrameThickness: clamped }),
+	                                ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
+	                              });
+	                            }}
+	                            style={inputStyle}
+	                          />
+	                        </div>
+	                        <div style={cellStyle}>
+	                          <span style={cellLabelStyle}>옵셋</span>
+	                          <input type="text" inputMode="numeric"
+	                            value={topOffset !== 0 ? topOffset : ''} placeholder="0"
+	                            onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+	                            onKeyDown={(e) => {
+	                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+	                                e.preventDefault();
+	                                const next = Math.max(-200, Math.min(200, (topOffset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+	                                updatePlacedModule(mod.id, { topFrameOffset: next });
+	                              } else if (e.key === 'Enter') {
+	                                (e.target as HTMLInputElement).blur();
+	                              }
+	                            }}
+	                            onChange={(e) => {
+	                              const v = e.target.value;
+	                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+	                                updatePlacedModule(mod.id, { topFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
+	                              }
+	                            }}
+	                            onBlur={(e) => {
+	                              setHighlightedFrame(null);
+	                              const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
+	                              updatePlacedModule(mod.id, { topFrameOffset: clamped });
+	                            }}
+	                            style={inputStyle}
+	                          />
+	                        </div>
+	                      </>
+	                    )}
+	                    <div style={cellStyle}>
+	                      <span style={cellLabelStyle}>{topEnabled ? '갭' : '상단갭'}</span>
+	                      <input type="text" inputMode="numeric"
+	                        value={topGap !== 0 ? topGap : ''} placeholder="0"
+	                        onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+	                        onKeyDown={(e) => {
+	                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+	                            e.preventDefault();
+	                            const next = Math.max(0, Math.min(2000, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+	                            updatePlacedModule(mod.id, {
+	                              topFrameGap: next,
+	                              ...getUpperShelfGapSyncUpdates({ topFrameGap: next }),
+	                            });
+	                          } else if (e.key === 'Enter') {
+	                            (e.target as HTMLInputElement).blur();
+	                          }
+	                        }}
+	                        onChange={(e) => {
+	                          const v = e.target.value;
+	                          if (v === '' || /^\d+$/.test(v)) {
+	                            const num = v === '' ? 0 : parseInt(v, 10);
+	                            const next = Math.max(0, Math.min(2000, num));
+	                            updatePlacedModule(mod.id, {
+	                              topFrameGap: next,
+	                              ...getUpperShelfGapSyncUpdates({ topFrameGap: next }),
+	                            });
+	                          }
+	                        }}
+	                        onBlur={(e) => {
+	                          setHighlightedFrame(null);
+	                          const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
+	                          updatePlacedModule(mod.id, {
+	                            topFrameGap: clamped,
+	                            ...getUpperShelfGapSyncUpdates({ topFrameGap: clamped }),
+	                          });
+	                        }}
+	                        style={inputStyle}
+	                      />
+	                    </div>
+	                  </div>
                 </div>
 
               </div>
