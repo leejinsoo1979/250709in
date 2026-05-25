@@ -45,14 +45,14 @@ function isInsertFrameVerticalPanel(panelName?: string): boolean {
   ));
 }
 
-function getShelfBoringDepthPositions(type: ShelfBoringPositionDetail['type'], panelDepth: number): number[] | undefined {
+function getBoringDepthPositions(detail: ShelfBoringPositionDetail, panelDepth: number): number[] | undefined {
   if (panelDepth <= 60) return undefined;
 
-  if (type === 'fixed-panel') {
+  if (isFixedPanelBoringDetail(detail)) {
     return [30, panelDepth / 2, panelDepth - 30];
   }
 
-  if (type === 'movable-shelf' || type === 'additional-dowel') {
+  if (detail.type === 'movable-shelf' || detail.type === 'additional-dowel') {
     return [30, panelDepth - 30];
   }
 
@@ -70,11 +70,15 @@ function isShelfPinBoring(detail: ShelfBoringPositionDetail): boolean {
 }
 
 function isFixedPanelBoringDetail(detail: ShelfBoringPositionDetail): boolean {
-  return detail.type === 'fixed-panel';
+  return detail.type === 'fixed-panel'
+    || detail.role === 'bottom-panel'
+    || detail.role === 'top-panel'
+    || detail.role === 'section-divider'
+    || detail.role === 'fixed-shelf';
 }
 
 function getBoringType(detail: ShelfBoringPositionDetail): 'fixed-panel' | 'movable-shelf' {
-  return detail.type === 'fixed-panel' ? 'fixed-panel' : 'movable-shelf';
+  return isFixedPanelBoringDetail(detail) ? 'fixed-panel' : 'movable-shelf';
 }
 
 function getPanelReferenceDepth(panel: any): number {
@@ -171,12 +175,16 @@ function resolveFixedHorizontalSideBoringPositionsFromSidePanel(
   if (!isMainHorizontalPanel(panel)) return undefined;
 
   const matchingDetails = details.filter(detail => matchesFixedHorizontalPanelDetail(panel, detail));
-  const isRodShelfPanel = isRodShelfPanelName(panel?.name);
-  if (matchingDetails.length === 0 && !isRodShelfPanel) return undefined;
+  const referenceDepthFallback = getPanelReferenceDepth(panel);
+  if (matchingDetails.length === 0) {
+    return referenceDepthFallback > 0
+      ? resolveFixedHorizontalSideBoringPositions(referenceDepthFallback)
+      : undefined;
+  }
 
   const referenceDepth = matchingDetails.length > 0
     ? getReferenceDepth(matchingDetails[0])
-    : getPanelReferenceDepth(panel);
+    : referenceDepthFallback;
 
   return resolveFixedHorizontalSideBoringPositions(referenceDepth);
 }
@@ -387,7 +395,7 @@ function toBoringDepthGroups(
   const groups = details
     .map(detail => {
       const panelDepth = getReferenceDepth(detail);
-      const localDepthPositions = getShelfBoringDepthPositions(detail.type, panelDepth);
+      const localDepthPositions = getBoringDepthPositions(detail, panelDepth);
       if (!localDepthPositions) return null;
 
       const sideDepth = options.getSideDepth?.(detail) ?? panelDepth;
