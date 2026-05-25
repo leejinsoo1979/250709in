@@ -39,6 +39,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   renderMode = 'solid',
   isHighlighted = false,
   isFloating = false,
+  baseHeight,
   frontZInset = 0,
   viewMode = '3D',
   view2DDirection,
@@ -78,8 +79,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
 
   // Store 값 우선, prop은 폴백
   const effectiveBaseDepth = storeBaseDepth;
-  // 개별 가구 baseFrameHeight > 글로벌 baseConfig.height > prop 폴백
-  const effectiveBaseHeight = individualBaseFrameHeight ?? storeBaseHeight;
+  // 개별 가구 baseFrameHeight > prop 지정값 > 글로벌 baseConfig.height
+  const effectiveBaseHeight = individualBaseFrameHeight ?? baseHeight ?? storeBaseHeight;
   const effectiveIsFloating = storeIsFloating || isFloating;
 
   const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';

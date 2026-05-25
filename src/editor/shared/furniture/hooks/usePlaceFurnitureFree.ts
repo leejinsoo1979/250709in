@@ -226,6 +226,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritBaseFrameOff = baseFrameCapableExistingModules.length > 0
     && baseFrameCapableExistingModules.every(module => module.hasBase === false);
   const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
+  const inheritedBaseFrameHeight = baseFrameCapableExistingModules.find(module => module.baseFrameHeight !== undefined)?.baseFrameHeight;
   const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
   // spaceInfo.baseConfig.height === 0 이면 공간설정에서 걸레받이 OFF로 저장됨
   const baseFrameDisabledByGlobal = (spaceInfo.baseConfig?.height ?? 65) <= 0;
@@ -233,6 +234,10 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     ? false
     : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
   const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
+  const isKitchenLowerModule = moduleData.category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
+  const initialBaseFrameHeight = shouldHaveBaseFrame
+    ? (inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60)))
+    : undefined;
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
     : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
@@ -255,6 +260,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     zone: effectiveZone,
     // ModuleData가 명시적으로 hasBase=false 라면 우선
     hasBase: shouldHaveBaseFrame,
+    ...(initialBaseFrameHeight !== undefined ? { baseFrameHeight: initialBaseFrameHeight } : {}),
     hasTopFrame: shouldHaveTopFrame,
     hasBottomFrame: shouldHaveBaseFrame,
     topFrameThickness,
@@ -311,7 +317,7 @@ export function calculateYPosition(
 
   const baseHeightMM = spaceInfo.baseConfig?.type === 'stand'
     ? 0
-    : (spaceInfo.baseConfig?.height || 65);
+    : (category === 'lower' ? 105 : (spaceInfo.baseConfig?.height || 65));
 
   if (category === 'upper') {
     // 상부장: 천장에서 아래로 배치

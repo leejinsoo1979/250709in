@@ -550,7 +550,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const baseConfig = spaceInfo.baseConfig;
       if (module.baseFrameHeight === undefined) {
         if (newCategory === 'lower' || isLowerById) {
-          module.baseFrameHeight = baseConfig?.height ?? 105;
+          module.baseFrameHeight = 105;
         } else if (newCategory === 'full') {
           module.baseFrameHeight = baseConfig?.height ?? 60;
         }
