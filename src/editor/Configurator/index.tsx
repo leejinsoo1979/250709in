@@ -2420,6 +2420,58 @@ const Configurator: React.FC = () => {
     }
   };
 
+  const saveWorkingDesignSnapshotInBackground = async (snapshot: WorkingDesignSnapshot) => {
+    if (isDemoMode || isReadOnly || !snapshot.projectId || !snapshot.designFileId) return;
+    if (!isFirebaseConfigured() || !user) return;
+
+    await waitForSaveIdle();
+    saveInProgressRef.current = true;
+
+    try {
+      const { updateDesignFile } = await import('@/firebase/projects');
+      const updatePayload = {
+        name: snapshot.designFileName || snapshot.basicInfo.title,
+        projectData: removeUndefinedValues(snapshot.basicInfo),
+        spaceConfig: removeUndefinedValues(stripSessionOnlyFields(snapshot.spaceInfo)),
+        furniture: {
+          placedModules: removeUndefinedValues(snapshot.placedModules)
+        }
+      };
+
+      const result = await updateDesignFile(snapshot.designFileId, updatePayload);
+      if (result.error) {
+        console.warn('탭 전환 백그라운드 저장 실패:', result.error);
+        return;
+      }
+
+      try {
+        await updateProject(snapshot.projectId, {
+          furniture: {
+            placedModules: removeUndefinedValues(snapshot.placedModules)
+          },
+          spaceConfig: removeUndefinedValues(stripSessionOnlyFields(snapshot.spaceInfo))
+        });
+      } catch (projectUpdateError) {
+        console.warn('탭 전환 백그라운드 프로젝트 업데이트 실패:', projectUpdateError);
+      }
+
+      const key = makeWorkingDesignKey(snapshot.projectId, snapshot.designFileId);
+      if (key) {
+        const latestSnapshot = workingDesignSnapshotsRef.current.get(key);
+        if (latestSnapshot === snapshot) {
+          workingDesignSnapshotsRef.current.set(key, {
+            ...snapshot,
+            projectDirty: false,
+            spaceDirty: false,
+            furnitureDirty: false,
+          });
+        }
+      }
+    } finally {
+      saveInProgressRef.current = false;
+    }
+  };
+
   const saveCurrentDesignBeforeNavigation = async () => {
     persistCurrentWorkingDesignSnapshot();
     await waitForSaveIdle();
@@ -4211,24 +4263,27 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
+  // 탭 전환 핸들러 (현재 디자인 스냅샷 고정 → 즉시 전환 → 원래 파일로 백그라운드 저장)
   const handleTabSwitch = async (tab: EditorTab) => {
     const navigationToken = ++tabNavigationTokenRef.current;
-    // ✅ 클릭 즉시 탭 활성 상태 반영 (사용자 피드백) — 저장/네트워크 응답을 기다리지 않음
-    useUIStore.getState().setActiveTab(tab.id);
-    if (!isReadOnly) {
-      // 자동 저장은 백그라운드에서 진행 (탭 전환 UX를 막지 않음)
-      saveCurrentDesignBeforeNavigation().catch((e) => {
-        console.warn('탭 전환 전 자동 저장 실패:', e);
+    const snapshotToSave = !isReadOnly ? persistCurrentWorkingDesignSnapshot() : null;
+
+    if (!isReadOnly && snapshotToSave) {
+      saveWorkingDesignSnapshotInBackground(snapshotToSave).catch((e) => {
+        console.warn('탭 전환 백그라운드 저장 실패:', e);
       });
     }
+
+    useUIStore.getState().setActiveTab(tab.id);
+
     if (navigationToken !== tabNavigationTokenRef.current) {
       return;
     }
-    if (isReadOnly) {
-      navigate(buildSharedViewerUrl(tab.projectId, tab.designFileId, tab.designFileName, shareScopeParam), { replace: true });
-    } else {
+
+    if (!isReadOnly) {
       navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
+    } else {
+      navigate(buildSharedViewerUrl(tab.projectId, tab.designFileId, tab.designFileName, shareScopeParam), { replace: true });
     }
   };
 

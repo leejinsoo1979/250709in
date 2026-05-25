@@ -1402,19 +1402,6 @@ export const useUIStore = create<UIState>()(
             }
             return { activeTabId: id };
           }
-          // 중복 체크: designFileId 기반 (같은 파일이 다른 projectId로 열릴 때 방지)
-          if (tab.designFileId) {
-            const existingByDesignFile = state.openTabs.find(t => t.designFileId === tab.designFileId);
-            if (existingByDesignFile) {
-              // 기존 탭 활성화 (이름 업데이트 포함)
-              return {
-                openTabs: state.openTabs.map(t => t.designFileId === tab.designFileId
-                  ? { ...t, designFileName: tab.designFileName, projectName: tab.projectName }
-                  : t),
-                activeTabId: existingByDesignFile.id,
-              };
-            }
-          }
           // 새 탭은 맨 앞(왼쪽)에 추가하고 활성화
           return {
             openTabs: [{ ...tab, id, addedAt: Date.now() }, ...state.openTabs],
