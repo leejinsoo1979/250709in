@@ -215,7 +215,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
     && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
   const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? 0;
-  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff;
+  // spaceInfo.frameSize.top === 0 이면 공간설정에서 상단몰딩 OFF로 저장됨
+  const topFrameDisabledByGlobal = (spaceInfo.frameSize?.top ?? 30) <= 0;
+  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff && !topFrameDisabledByGlobal;
   const baseFrameCapableExistingModules = existingModules
     .filter(module => module.isFreePlacement)
     .filter(isBaseFrameCapablePlacedModule);
@@ -223,9 +225,11 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     && baseFrameCapableExistingModules.every(module => module.hasBase === false);
   const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
   const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
+  // spaceInfo.baseConfig.height === 0 이면 공간설정에서 걸레받이 OFF로 저장됨
+  const baseFrameDisabledByGlobal = (spaceInfo.baseConfig?.height ?? 65) <= 0;
   const shouldHaveBaseFrame = moduleFlags.hasBase === false
     ? false
-    : moduleData.category !== 'upper' && !inheritBaseFrameOff;
+    : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
   const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0

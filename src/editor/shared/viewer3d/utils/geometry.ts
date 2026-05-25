@@ -417,9 +417,9 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
     return 0;
   }
   
-  // 받침대가 있는 경우에만 높이 반환
+  // 받침대가 있는 경우에만 높이 반환 (height === 0이면 토글 OFF — 0 그대로 반환)
   if (spaceInfo.baseConfig?.type === 'floor') {
-    const height = spaceInfo.baseConfig.height || 60;
+    const height = spaceInfo.baseConfig.height ?? 60;
     return height;
   }
   return 0;
@@ -434,6 +434,6 @@ export const calculateTopBottomFrameHeight = (spaceInfo: SpaceInfo) => {
     return SURROUND_FRAME_THICKNESS;
   }
   
-  // frameSize.top이 설정되어 있으면 그 값을 사용, 없거나 0이면 기본값 30mm
-  return spaceInfo.frameSize?.top || SURROUND_FRAME_THICKNESS;
+  // frameSize.top이 설정되어 있으면 그 값을 사용 (0이면 토글 OFF — 0 그대로 반환)
+  return spaceInfo.frameSize?.top ?? SURROUND_FRAME_THICKNESS;
 }; 
