@@ -15,7 +15,7 @@ import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG, normalizeSpaceInfoFrameSize } from '@/store/core/spaceConfigStore';
-import { createDesignFile, updateDesignFile } from '@/firebase/projects';
+import { updateDesignFile } from '@/firebase/projects';
 import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -277,10 +277,15 @@ const Header: React.FC<HeaderProps> = ({
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
 
-  // 공간설정 기본값 저장 후 → 현재 디자인이 있으면 덮어쓰기, 없을 때만 새 디자인 생성
+  // 공간설정 기본값 저장 후 → 현재 디자인이 있으면 덮어쓰기
   const handleAutoCreateDesignAfterDefaults = async () => {
-    // 프로젝트 정보가 없으면 자동 생성 안 함 (사용자가 에디터에서 설정만 저장한 케이스)
-    if (!projectId) {
+    const paramsFromUrl = new URLSearchParams(window.location.search);
+    const activeProjectId = projectId || paramsFromUrl.get('projectId') || paramsFromUrl.get('id') || paramsFromUrl.get('project');
+    const activeDesignFileId = designFileId || paramsFromUrl.get('designFileId');
+    const activeDesignFileName = designFileName || paramsFromUrl.get('designFileName') || paramsFromUrl.get('fileName');
+
+    // 프로젝트 정보가 없으면 자동 저장 안 함 (사용자가 에디터에서 설정만 저장한 케이스)
+    if (!activeProjectId) {
       console.log('공간설정 기본값 저장 완료 (자동 디자인 생성 스킵 — projectId 없음)');
       return;
     }
@@ -290,14 +295,16 @@ const Header: React.FC<HeaderProps> = ({
       console.log('🆕 [Configurator 자동 새 디자인] defaults:', defaults);
       let topMoldingEnabledFromDefaults: boolean | undefined;
       let topMoldingGapFromDefaults: number | undefined;
-      let topFrameSizeFromDefaults: number | undefined;
+      let topFrameRenderSizeFromDefaults: number | undefined;
+      let topFrameAbsorbSizeFromDefaults: number | undefined;
       let topFrameOffsetFromDefaults: number | undefined;
       if (defaults) {
         topMoldingEnabledFromDefaults = defaults.topMoldingEnabled;
-        topMoldingGapFromDefaults = defaults.topMoldingGap;
-        topFrameSizeFromDefaults = defaults.topMoldingEnabled === false
+        topMoldingGapFromDefaults = defaults.topMoldingGap ?? 0;
+        topFrameAbsorbSizeFromDefaults = defaults.topMoldingSize ?? defaults.frameTop ?? spaceInfo.frameSize?.top ?? DEFAULT_SPACE_CONFIG.frameSize?.top ?? 30;
+        topFrameRenderSizeFromDefaults = defaults.topMoldingEnabled === false
           ? 0
-          : (defaults.topMoldingSize ?? defaults.frameTop);
+          : topFrameAbsorbSizeFromDefaults;
         topFrameOffsetFromDefaults = defaults.topMoldingOffset ?? defaults.frameTopOffset;
         spaceConfig = {
           ...spaceConfig,
@@ -309,7 +316,7 @@ const Header: React.FC<HeaderProps> = ({
           },
           frameSize: {
             ...spaceConfig.frameSize!,
-            top: topFrameSizeFromDefaults ?? spaceConfig.frameSize?.top ?? 30,
+            top: topFrameRenderSizeFromDefaults ?? spaceConfig.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
             right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
             ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
@@ -387,7 +394,7 @@ const Header: React.FC<HeaderProps> = ({
       });
       spaceConfig = normalizeSpaceInfoFrameSize(spaceConfig);
 
-      if (designFileId) {
+      if (activeDesignFileId) {
         setSpaceInfo(spaceConfig);
         const currentModules = useFurnitureStore.getState().placedModules;
         const shouldSyncTopFrame = topMoldingEnabledFromDefaults !== undefined;
@@ -398,8 +405,8 @@ const Header: React.FC<HeaderProps> = ({
               return {
                 ...module,
                 hasTopFrame: topMoldingEnabledFromDefaults,
-                topFrameGap: topMoldingEnabledFromDefaults ? 0 : (topMoldingGapFromDefaults ?? module.topFrameGap ?? 0),
-                ...(topMoldingEnabledFromDefaults && topFrameSizeFromDefaults !== undefined ? { topFrameThickness: topFrameSizeFromDefaults } : {}),
+                topFrameGap: topMoldingEnabledFromDefaults ? 0 : topMoldingGapFromDefaults,
+                ...(topFrameAbsorbSizeFromDefaults !== undefined ? { topFrameThickness: topFrameAbsorbSizeFromDefaults } : {}),
                 ...(topMoldingEnabledFromDefaults && topFrameOffsetFromDefaults !== undefined ? { topFrameOffset: topFrameOffsetFromDefaults } : {}),
               };
             })
@@ -407,7 +414,7 @@ const Header: React.FC<HeaderProps> = ({
         if (shouldSyncTopFrame) {
           setPlacedModules(syncedModules);
         }
-        const { error } = await updateDesignFile(designFileId, {
+        const { error } = await updateDesignFile(activeDesignFileId, {
           spaceConfig,
           ...(shouldSyncTopFrame ? { furniture: { placedModules: syncedModules } } : {}),
         });
@@ -416,32 +423,16 @@ const Header: React.FC<HeaderProps> = ({
           return;
         }
         const params = new URLSearchParams();
-        params.set('projectId', projectId);
-        params.set('designFileId', designFileId);
-        if (designFileName) params.set('designFileName', designFileName);
+        params.set('projectId', activeProjectId);
+        params.set('designFileId', activeDesignFileId);
+        if (activeDesignFileName) params.set('designFileName', activeDesignFileName);
         navigate(`/configurator?${params.toString()}`, { replace: true });
         setTimeout(() => window.location.reload(), 50);
         return;
       }
 
-      const designName = '새 디자인';
-      const { id, error } = await createDesignFile({
-        name: designName,
-        projectId,
-        spaceConfig,
-        furniture: { placedModules: [] },
-      } as any);
-      if (error || !id) {
-        alert('디자인 생성에 실패했습니다: ' + (error ?? '알 수 없는 오류'));
-        return;
-      }
-      const params = new URLSearchParams();
-      params.set('projectId', projectId);
-      params.set('designFileId', id);
-      params.set('designFileName', encodeURIComponent(designName));
-      navigate(`/configurator?${params.toString()}`);
-      // URL 변경 후 Configurator가 새 디자인을 로드하도록 강제 새로고침
-      setTimeout(() => window.location.reload(), 50);
+      setSpaceInfo(spaceConfig);
+      console.log('공간설정 기본값 저장 완료 (자동 디자인 생성 스킵 — designFileId 없음)');
     } catch (e) {
       console.error('공간 기본설정 적용 실패:', e);
       alert('공간 기본설정 적용 중 오류가 발생했습니다.');
