@@ -20,7 +20,21 @@ export const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
   );
 };
 
+function isFurnitureSidePanel(panel: PlacedPanel): boolean {
+  const name = panel.name || '';
+  if (name.includes('서랍') || name.includes('도어') || name.includes('Door')) return false;
+  return name.includes('좌측판')
+    || name.includes('우측판')
+    || name.includes('좌측')
+    || name.includes('우측')
+    || name.includes('측판');
+}
+
 function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } {
+  if (isFurnitureSidePanel(panel)) {
+    return { width: panel.height, height: panel.width };
+  }
+
   if (!panel.isDoor && panel.sideBoringPositions?.length) {
     return { width: panel.height, height: panel.width };
   }
@@ -43,6 +57,10 @@ function resolveMprTopBoringX(panel: PlacedPanel, x: number): number {
   return Math.round(Math.max(0, Math.min(width, width - x)) * 10) / 10;
 }
 
+function resolveMprSidePanelDepthY(panel: PlacedPanel, depthPosition: number): number {
+  return resolveMprTopBoringX(panel, depthPosition);
+}
+
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
   const borings: Boring[] = [];
   let boringIdx = 0;
@@ -50,6 +68,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
   const panelThickness = panel.thickness || ((panel.material === 'PET') ? 18.5 : 18);
   const mprSize = getMprPanelSize(panel);
   const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
+  const isFurnitureSidePanelForMpr = isFurnitureSidePanel(panel);
 
   // 1) 측판 보링
   // - 고정선반/천지판 결합: Ø6 관통
@@ -76,13 +95,14 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
         || (!group?.boringType && !isDrawerPanel && xPositionsForY.length >= 3);
 
       xPositionsForY.forEach((xPos: number) => {
-        const mprX = resolveMprTopBoringX(panel, xPos);
+        const mprX = isFurnitureSidePanelForMpr ? yPos : resolveMprTopBoringX(panel, xPos);
+        const mprY = isFurnitureSidePanelForMpr ? resolveMprSidePanelDepthY(panel, xPos) : yPos;
         borings.push({
           id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
           type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
           face: 'top',
           x: mprX,
-          y: yPos,
+          y: mprY,
           diameter: isDrawerSidePanel ? 3 : (isFixedPanelBoring ? 6 : 5),
           depth: isDrawerSidePanel ? panelThickness : (isFixedPanelBoring ? panelThickness : 12),
           note: isDrawerSidePanel
@@ -140,8 +160,8 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
           id: `bracket-${boringIdx++}`,
           type: 'hinge-screw',
           face: 'top',
-          x: xPos,
-          y: yPos,
+          x: isFurnitureSidePanelForMpr ? yPos : xPos,
+          y: isFurnitureSidePanelForMpr ? xPos : yPos,
           diameter: 3,
           depth: 3,
           note: 'door-fixing-screw',

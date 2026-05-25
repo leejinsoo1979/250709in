@@ -104,7 +104,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('TI="7.5"');
   });
 
-  it('exports side notch pocket and visible MPR contour at the same coordinates', () => {
+  it('exports side notch as sample-style contour milling', () => {
     const panel = {
       id: 'right-side-with-notch-1',
       name: '(하)우측',
@@ -123,19 +123,21 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const mpr = generateSinglePanelMPR(converted);
 
-    expect(mpr).toContain('KP SIDE_NOTCH_1');
-    expect(mpr).toContain('X=340.0000');
-    expect(mpr).toContain('Y=780.0000');
-    expect(mpr).toContain('X=380.0000');
-    expect(mpr).toContain('Y=860.0000');
-    expect(mpr).toContain('<105 \\Ktasche\\');
-    expect(mpr).toContain('XA="340.0"');
-    expect(mpr).toContain('YA="780.0"');
-    expect(mpr).toContain('LA="40"');
-    expect(mpr).toContain('BR="80"');
+    expect(converted.width).toBe(860);
+    expect(converted.height).toBe(380);
+    expect(mpr).toContain(']3');
+    expect(mpr).toContain('X=860.0000');
+    expect(mpr).toContain('Y=40.0000');
+    expect(mpr).toContain('X=780.0000');
+    expect(mpr).toContain('Y=0.0000');
+    expect(mpr).toContain('<105 \\Konturfraesen\\');
+    expect(mpr).toContain('EA="3:0"');
+    expect(mpr).toContain('EE="3:2"');
+    expect(mpr).toContain('ZA="-2.0000"');
+    expect(mpr).not.toContain('측판 따내기');
   });
 
-  it('exports furniture side back-panel groove as visible contour and pocket machining', () => {
+  it('exports furniture side back-panel groove as sample-style Nuten machining', () => {
     const panel = {
       id: 'left-side-with-back-groove-1',
       name: '(하)좌측',
@@ -153,17 +155,20 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const mpr = generateSinglePanelMPR(converted);
 
-    expect(mpr).toContain('KP BACK_PANEL_GROOVE');
-    expect(mpr).toContain('X=354.0000');
-    expect(mpr).toContain('X=364.0000');
-    expect(mpr).toContain('Y=0.0000');
-    expect(mpr).toContain('Y=860.0000');
-    expect(mpr).toContain('KM="백패널 홈: 10 x 860, 뒤기준 16"');
-    expect(mpr).toContain('XA="354.0"');
-    expect(mpr).toContain('YA="0.0"');
-    expect(mpr).toContain('LA="10"');
-    expect(mpr).toContain('BR="860"');
-    expect(mpr).toContain('TI="7.5"');
+    expect(converted.width).toBe(860);
+    expect(converted.height).toBe(380);
+    expect(mpr).toContain(']2');
+    expect(mpr).toContain('X=0.0000');
+    expect(mpr).toContain('Y=360.0000');
+    expect(mpr).toContain('X=860.0000');
+    expect(mpr).toContain('<109 \\Nuten\\');
+    expect(mpr).toContain('XA="-1.0000"');
+    expect(mpr).toContain('YA="361.5000"');
+    expect(mpr).toContain('XE="861.0000"');
+    expect(mpr).toContain('YE="361.5000"');
+    expect(mpr).toContain('NB="3.0000"');
+    expect(mpr).toContain('TI="7.5000"');
+    expect(mpr).not.toContain('백패널 홈');
   });
 
   it('does not export back-panel grooves on bottom panels', () => {
@@ -186,7 +191,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const mpr = generateSinglePanelMPR(converted);
 
     expect(converted.panelType).toBe('bottom');
-    expect(mpr).not.toContain('BACK_PANEL_GROOVE');
+    expect(mpr).not.toContain('<109 \\Nuten\\');
     expect(mpr).not.toContain('백패널 홈');
     expect(mpr).not.toContain('<105 \\Ktasche\\');
   });
@@ -214,13 +219,15 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const fixedBorings = converted.borings.filter(boring => boring.note === 'fixed-panel-through');
 
+    expect(converted.width).toBe(860);
+    expect(converted.height).toBe(380);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 350, y: 9.3 },
-      { x: 200, y: 9.3 },
-      { x: 50, y: 9.3 },
-      { x: 291.5, y: 850.8 },
-      { x: 171, y: 850.8 },
-      { x: 50.5, y: 850.8 },
+      { x: 9.3, y: 350 },
+      { x: 9.3, y: 200 },
+      { x: 9.3, y: 50 },
+      { x: 850.8, y: 291.5 },
+      { x: 850.8, y: 171 },
+      { x: 850.8, y: 50.5 },
     ]);
   });
 

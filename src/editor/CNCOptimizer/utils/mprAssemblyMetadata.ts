@@ -30,9 +30,10 @@ interface ModuleGeometry {
   rotationDeg: number;
 }
 
-const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 16;
-const BACK_PANEL_GROOVE_WIDTH_MM = 10;
+const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 17;
+const BACK_PANEL_GROOVE_WIDTH_MM = 3;
 const BACK_PANEL_GROOVE_CUT_DEPTH_MM = 7.5;
+const CONTOUR_CUT_DEPTH_MM = -2;
 
 function roundMm(value: number): number {
   return Math.round(value * 10) / 10;
@@ -148,9 +149,9 @@ function buildModuleGeometries(placedModules: PlacedModule[], spaceInfo: any): M
 function getPanelAxes(role: string): { xAxis: Vec3; yAxis: Vec3; zAxis: Vec3 } {
   switch (role) {
     case 'left_side':
-      return { xAxis: [0, 1, 0], yAxis: [0, 0, 1], zAxis: [1, 0, 0] };
+      return { xAxis: [0, 0, 1], yAxis: [0, 1, 0], zAxis: [1, 0, 0] };
     case 'right_side':
-      return { xAxis: [0, 1, 0], yAxis: [0, 0, 1], zAxis: [-1, 0, 0] };
+      return { xAxis: [0, 0, 1], yAxis: [0, 1, 0], zAxis: [-1, 0, 0] };
     case 'back_panel':
       return { xAxis: [1, 0, 0], yAxis: [0, 0, 1], zAxis: [0, -1, 0] };
     case 'door':
@@ -294,48 +295,57 @@ function buildBoringOperations(panel: PanelBoringData, axes: { xAxis: Vec3; yAxi
 
 function buildPocketOperations(panel: PanelBoringData, role: string) {
   const operations: any[] = [];
-
-  (panel.sideNotches || []).forEach((notch, index) => {
-    const width = Math.max(0, Math.min(notch.z, panel.width));
-    const height = Math.max(0, Math.min(notch.y, panel.height));
-    const startX = role === 'right_side' ? Math.max(0, panel.width - width) : 0;
-    const startY = Math.max(0, Math.min(notch.fromBottom, panel.height - height));
-    operations.push({
-      id: `side-notch-${index + 1}`,
-      operationType: 'through_cut',
-      mprCommand: 'Ktasche',
-      mpr: { XA: startX, YA: startY, ZA: 'T', LA: width, BR: height, TI: 'T' },
-      through: true,
-      depth: panel.thickness,
-    });
-  });
-
   const isFurnitureSide = role === 'left_side' || role === 'right_side';
   const name = panel.panelName || '';
   const hasBackPanelGroove = isFurnitureSide
     && !name.includes('서랍')
     && !name.includes('도어')
-    && (name.includes('좌측') || name.includes('우측') || name.includes('측판'));
-  if (hasBackPanelGroove && panel.width > BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM) {
-    const startX = role === 'left_side'
-      ? panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM
-      : BACK_PANEL_GROOVE_REAR_OFFSET_MM;
+    && (name.includes('좌측') || name.includes('우측') || name.includes('측판'))
+    && panel.height > BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM;
+
+  if (hasBackPanelGroove) {
+    const y = panel.height - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
+    const centerY = y + BACK_PANEL_GROOVE_WIDTH_MM / 2;
     operations.push({
       id: 'back-panel-groove',
       operationType: 'groove',
-      mprCommand: 'Ktasche',
+      mprCommand: 'Nuten',
       mpr: {
-        XA: roundMm(startX),
-        YA: 0,
-        ZA: 'T',
-        LA: BACK_PANEL_GROOVE_WIDTH_MM,
-        BR: panel.height,
+        XA: -1,
+        YA: roundMm(centerY),
+        XE: roundMm(panel.width + 1),
+        YE: roundMm(centerY),
+        NB: BACK_PANEL_GROOVE_WIDTH_MM,
         TI: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
       },
       through: false,
       depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
     });
   }
+
+  (panel.sideNotches || []).forEach((notch, index) => {
+    const width = Math.max(0, Math.min(notch.y, panel.width));
+    const height = Math.max(0, Math.min(notch.z, panel.height));
+    const startX = Math.max(0, Math.min(notch.fromBottom, panel.width - width));
+    const startY = 0;
+    const blockNumber = hasBackPanelGroove ? index + 3 : index + 2;
+    operations.push({
+      id: `side-notch-${index + 1}`,
+      operationType: 'through_cut',
+      mprCommand: 'Konturfraesen',
+      mpr: {
+        EA: `${blockNumber}:0`,
+        EE: `${blockNumber}:${Math.abs(startX + width - panel.width) < 0.001 || startX <= 0.001 ? 2 : 3}`,
+        ZA: CONTOUR_CUT_DEPTH_MM,
+        startX,
+        startY,
+        width,
+        height,
+      },
+      through: true,
+      depth: panel.thickness,
+    });
+  });
 
   (panel.groovePositions || []).forEach((groove, index) => {
     const height = Math.max(0, Math.min(groove.height, panel.height - groove.y));

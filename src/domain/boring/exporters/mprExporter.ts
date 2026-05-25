@@ -13,9 +13,10 @@ import type {
 import { DEFAULT_MPR_EXPORT_SETTINGS } from '../constants';
 import { encodeCp949 } from './cp949Encoder';
 
-const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 16;
-const BACK_PANEL_GROOVE_WIDTH_MM = 10;
+const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 17;
+const BACK_PANEL_GROOVE_WIDTH_MM = 3;
 const BACK_PANEL_GROOVE_CUT_DEPTH_MM = 7.5;
+const CONTOUR_CUT_DEPTH_MM = -2;
 
 // ============================================
 // imos MPR 블록 생성
@@ -289,42 +290,47 @@ function resolveSideNotchRect(
   panel: PanelBoringData,
   notch: { y: number; z: number; fromBottom: number }
 ): SideNotchRect | null {
-  const notchHeight = Math.max(0, Math.min(notch.y, panel.height));
-  const notchDepth = Math.max(0, Math.min(notch.z, panel.width));
-  if (notchHeight <= 0 || notchDepth <= 0) return null;
+  // MPR 측판 좌표계는 X=패널 높이, Y=깊이다.
+  // sideNotches: y=따내기 높이(X방향), z=따내기 깊이(Y방향), fromBottom=X 시작점.
+  const notchLength = Math.max(0, Math.min(notch.y, panel.width));
+  const notchDepth = Math.max(0, Math.min(notch.z, panel.height));
+  if (notchLength <= 0 || notchDepth <= 0) return null;
 
-  const isRight = isRightSidePanel(panel);
-  const startX = isRight ? Math.max(0, panel.width - notchDepth) : 0;
-  const startY = Math.max(0, Math.min(notch.fromBottom, panel.height - notchHeight));
-
-  return {
-    startX,
-    startY,
-    width: notchDepth,
-    height: notchHeight,
-  };
-}
-
-function resolveBackPanelGrooveRect(panel: PanelBoringData): SideNotchRect | null {
-  if (!isFurnitureSidePanelForBackPanelGroove(panel)) return null;
-  if (panel.width <= BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM || panel.height <= 0) return null;
-
-  const startX = isLeftSidePanel(panel)
-    ? panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM
-    : BACK_PANEL_GROOVE_REAR_OFFSET_MM;
+  const startX = Math.max(0, Math.min(notch.fromBottom, panel.width - notchLength));
 
   return {
     startX,
     startY: 0,
+    width: notchLength,
+    height: notchDepth,
+  };
+}
+
+interface BackPanelGrooveLine {
+  y: number;
+  centerY: number;
+  width: number;
+  depth: number;
+}
+
+function resolveBackPanelGrooveLine(panel: PanelBoringData): BackPanelGrooveLine | null {
+  if (!isFurnitureSidePanelForBackPanelGroove(panel)) return null;
+  if (panel.height <= BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM || panel.width <= 0) return null;
+  const y = panel.height - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
+
+  return {
+    y,
+    centerY: y + BACK_PANEL_GROOVE_WIDTH_MM / 2,
     width: BACK_PANEL_GROOVE_WIDTH_MM,
-    height: panel.height,
+    depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
   };
 }
 
 function generateContourBlock(
   blockNumber: number,
   name: string,
-  points: Array<{ x: number; y: number }>
+  points: Array<{ x: number; y: number }>,
+  z: number = 0
 ): string {
   if (points.length < 2) return '';
 
@@ -333,25 +339,66 @@ function generateContourBlock(
 KL
 X=${formatMprDecimal4(point.x)}
 Y=${formatMprDecimal4(point.y)}
-Z=0.0000
+Z=${formatMprDecimal4(z)}
 `).join('\n');
 
   return `
 ]${blockNumber}
 $E0
-KP ${name}
+KP${name ? ` ${name}` : ''}
 X=${formatMprDecimal4(start.x)}
 Y=${formatMprDecimal4(start.y)}
-Z=0.0000
+Z=${formatMprDecimal4(z)}
 KO=00
 
 ${lines}`;
 }
 
+function getBackPanelGrooveBlockNumber(panel: PanelBoringData): number | null {
+  return resolveBackPanelGrooveLine(panel) ? 2 : null;
+}
+
+function getSideNotchBlockNumber(panel: PanelBoringData, index: number): number {
+  return (getBackPanelGrooveBlockNumber(panel) ? 3 : 2) + index;
+}
+
+function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z: number; fromBottom: number }): Array<{ x: number; y: number }> {
+  const rect = resolveSideNotchRect(panel, notch);
+  if (!rect) return [];
+
+  const endX = rect.startX + rect.width;
+  const endY = rect.startY + rect.height;
+  const onTopEdge = Math.abs(endX - panel.width) < 0.001;
+  const onBottomEdge = rect.startX <= 0.001;
+
+  if (onTopEdge) {
+    return [
+      { x: endX, y: endY },
+      { x: rect.startX, y: endY },
+      { x: rect.startX, y: rect.startY },
+    ];
+  }
+
+  if (onBottomEdge) {
+    return [
+      { x: rect.startX, y: rect.startY },
+      { x: rect.startX, y: endY },
+      { x: endX, y: endY },
+    ];
+  }
+
+  return [
+    { x: rect.startX, y: rect.startY },
+    { x: rect.startX, y: endY },
+    { x: endX, y: endY },
+    { x: endX, y: rect.startY },
+  ];
+}
+
 function generatePanelDisplayGeometry(panel: PanelBoringData): string {
   const sideNotches = panel.sideNotches ?? [];
-  const backPanelGrooveRect = resolveBackPanelGrooveRect(panel);
-  if (sideNotches.length === 0 && !backPanelGrooveRect) return '';
+  const backPanelGrooveLine = resolveBackPanelGrooveLine(panel);
+  if (sideNotches.length === 0 && !backPanelGrooveLine) return '';
 
   let geometry = generateContourBlock(1, 'NEST', [
     { x: 0, y: 0 },
@@ -361,35 +408,35 @@ function generatePanelDisplayGeometry(panel: PanelBoringData): string {
     { x: 0, y: 0 },
   ]);
 
-  sideNotches.forEach((notch, index) => {
-    const rect = resolveSideNotchRect(panel, notch);
-    if (!rect) return;
-
-    const endX = rect.startX + rect.width;
-    const endY = rect.startY + rect.height;
-    geometry += generateContourBlock(index + 2, `SIDE_NOTCH_${index + 1}`, [
-      { x: rect.startX, y: rect.startY },
-      { x: endX, y: rect.startY },
-      { x: endX, y: endY },
-      { x: rect.startX, y: endY },
-      { x: rect.startX, y: rect.startY },
-    ]);
-  });
-
-  if (backPanelGrooveRect) {
-    const blockNumber = sideNotches.length + 2;
-    const endX = backPanelGrooveRect.startX + backPanelGrooveRect.width;
-    const endY = backPanelGrooveRect.startY + backPanelGrooveRect.height;
-    geometry += generateContourBlock(blockNumber, 'BACK_PANEL_GROOVE', [
-      { x: backPanelGrooveRect.startX, y: backPanelGrooveRect.startY },
-      { x: endX, y: backPanelGrooveRect.startY },
-      { x: endX, y: endY },
-      { x: backPanelGrooveRect.startX, y: endY },
-      { x: backPanelGrooveRect.startX, y: backPanelGrooveRect.startY },
-    ]);
+  if (backPanelGrooveLine) {
+    geometry += generateContourBlock(2, '', [
+      { x: 0, y: backPanelGrooveLine.y },
+      { x: panel.width, y: backPanelGrooveLine.y },
+    ], CONTOUR_CUT_DEPTH_MM);
   }
 
+  sideNotches.forEach((notch, index) => {
+    const points = getSideNotchContourPoints(panel, notch);
+    if (points.length < 2) return;
+    geometry += generateContourBlock(getSideNotchBlockNumber(panel, index), '', points, CONTOUR_CUT_DEPTH_MM);
+  });
+
   return geometry;
+}
+
+function generateContourMilling(blockNumber: number, endIndex: number): string {
+  return `<105 \\Konturfraesen\\
+EA="${blockNumber}:0"
+EE="${blockNumber}:${endIndex}"
+TNO="-1"
+F_="STANDARD"
+RK="WRKR"
+MDA="TAN"
+MDE="TAN_AB"
+AB="0"
+ZA="${formatMprDecimal4(CONTOUR_CUT_DEPTH_MM)}"
+
+`;
 }
 
 function generateSideNotchPocket(
@@ -397,41 +444,36 @@ function generateSideNotchPocket(
   notch: { y: number; z: number; fromBottom: number },
   index: number
 ): string {
-  const rect = resolveSideNotchRect(panel, notch);
-  if (!rect) return '';
+  const points = getSideNotchContourPoints(panel, notch);
+  if (points.length < 2) return '';
+  return generateContourMilling(getSideNotchBlockNumber(panel, index), points.length - 1);
+}
 
-  return `<105 \\Ktasche\\
-KM="측판 따내기 ${index + 1}: ${formatMprNumber(rect.width)} x ${formatMprNumber(rect.height)}, 바닥기준 ${formatMprNumber(notch.fromBottom)}"
-XA="${rect.startX.toFixed(1)}"
-YA="${rect.startY.toFixed(1)}"
-ZA="T"
-LA="${formatMprNumber(rect.width)}"
-BR="${formatMprNumber(rect.height)}"
-TI="T"
-AN="1"
-MI="0"
-??="ktasche=1  "
+function generateBackPanelGroovePocket(panel: PanelBoringData): string {
+  const groove = resolveBackPanelGrooveLine(panel);
+  if (!groove) return '';
+
+  return `<109 \\Nuten\\
+XA="${formatMprDecimal4(-1)}"
+YA="${formatMprDecimal4(groove.centerY)}"
+XE="${formatMprDecimal4(panel.width + 1)}"
+YE="${formatMprDecimal4(groove.centerY)}"
+AN="0"
+NB="${formatMprDecimal4(groove.width)}"
+RK="NOWRK"
+EM="MOD0"
+TI="${formatMprDecimal4(groove.depth)}"
+XY="50.0000"
+F_="STANDARD"
+KO="00"
 
 `;
 }
 
-function generateBackPanelGroovePocket(panel: PanelBoringData): string {
-  const rect = resolveBackPanelGrooveRect(panel);
-  if (!rect) return '';
-
-  return `<105 \\Ktasche\\
-KM="백패널 홈: ${formatMprNumber(rect.width)} x ${formatMprNumber(rect.height)}, 뒤기준 ${formatMprNumber(BACK_PANEL_GROOVE_REAR_OFFSET_MM)}"
-XA="${rect.startX.toFixed(1)}"
-YA="${rect.startY.toFixed(1)}"
-ZA="T"
-LA="${formatMprNumber(rect.width)}"
-BR="${formatMprNumber(rect.height)}"
-TI="${formatMprNumber(BACK_PANEL_GROOVE_CUT_DEPTH_MM)}"
-AN="1"
-MI="0"
-??="ktasche=1  "
-
-`;
+function generateBackPanelGrooveContourMilling(panel: PanelBoringData): string {
+  const blockNumber = getBackPanelGrooveBlockNumber(panel);
+  if (!blockNumber) return '';
+  return generateContourMilling(blockNumber, 1);
 }
 
 function generateDrawerBottomGroovePocket(
@@ -488,6 +530,13 @@ export function generateSinglePanelMPR(
   // <101 주석
   mpr += generateKommentar(panel, projectName);
 
+  // 샘플 MPR 기준: 윤곽/따내기 경로 가공(Konturfraesen)을 보링보다 먼저 출력
+  mpr += generateBackPanelGrooveContourMilling(panel);
+
+  panel.sideNotches?.forEach((notch, index) => {
+    mpr += generateSideNotchPocket(panel, notch, index);
+  });
+
   // <102 보링들
   panel.borings.forEach((boring) => {
     if (boring.face === 'top' || boring.face === 'bottom') {
@@ -495,10 +544,6 @@ export function generateSinglePanelMPR(
     } else {
       mpr += generateBohrHoriz(boring, panel);
     }
-  });
-
-  panel.sideNotches?.forEach((notch, index) => {
-    mpr += generateSideNotchPocket(panel, notch, index);
   });
 
   mpr += generateBackPanelGroovePocket(panel);
