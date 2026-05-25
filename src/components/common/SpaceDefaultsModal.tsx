@@ -402,7 +402,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             )}
           </div>
 
-          {/* 도어 셋팅 */}
+          {/* 도어 셋팅 — 몸통 기준 고정 */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
@@ -413,27 +413,14 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
                   style={{ accentColor: 'var(--theme-primary)' }}
                 />
                 도어 셋팅
+                <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--theme-text-muted)' }}>(몸통기준)</span>
               </label>
             </div>
             {values.doorSettingEnabled && (
-              <>
-                <Toggle
-                  options={[{ id: 'body', label: '몸통' }, { id: 'cf', label: '천장·바닥' }]}
-                  selected={values.doorGapMode}
-                  onChange={(id) => set('doorGapMode', id as any)}
-                />
-                {values.doorGapMode === 'body' ? (
-                  <div className={styles.row}>
-                    <NumberInput label="상단갭" value={values.doorTopGap} onChange={h('doorTopGap')} min={0} max={200} step={1} />
-                    <NumberInput label="하단갭" value={values.doorBottomGap} onChange={h('doorBottomGap')} min={0} max={200} step={1} />
-                  </div>
-                ) : (
-                  <div className={styles.row}>
-                    <NumberInput label="상단갭" value={values.doorTopGapCf} onChange={h('doorTopGapCf')} min={0} max={500} step={1} />
-                    <NumberInput label="하단갭" value={values.doorBottomGapCf} onChange={h('doorBottomGapCf')} min={0} max={500} step={1} />
-                  </div>
-                )}
-              </>
+              <div className={styles.row}>
+                <NumberInput label="상단갭" value={values.doorTopGap} onChange={h('doorTopGap')} min={0} max={200} step={1} />
+                <NumberInput label="하단갭" value={values.doorBottomGap} onChange={h('doorBottomGap')} min={0} max={200} step={1} />
+              </div>
             )}
           </div>
 
