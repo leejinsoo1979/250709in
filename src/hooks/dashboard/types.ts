@@ -40,16 +40,17 @@ export interface DragState {
   draggedItem: {
     id: string;
     name: string;
-    type: 'design' | 'file';
-    projectId: string;
+    type: 'project' | 'design' | 'file';
+    projectId?: string;
   } | null;
   draggedItems: {
     id: string;
     name: string;
-    type: 'design' | 'file';
-    projectId: string;
+    type: 'project' | 'design' | 'file';
+    projectId?: string;
   }[];
   dragOverFolder: string | null;
+  dragOverMenu: QuickAccessMenu | null;
 }
 
 // 클립보드 상태
@@ -164,6 +165,8 @@ export interface UseExplorerActionsReturn {
     onDragStart: (e: React.DragEvent, item: DragState['draggedItem']) => void;
     onDragOver: (e: React.DragEvent, folderId: string) => void;
     onDrop: (e: React.DragEvent, targetFolderId: string) => void;
+    onMenuDragOver: (e: React.DragEvent, menu: QuickAccessMenu) => void;
+    onMenuDrop: (e: React.DragEvent, menu: QuickAccessMenu) => void;
     onDragEnd: () => void;
   };
 }

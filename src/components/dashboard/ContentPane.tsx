@@ -193,11 +193,15 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   const getDragProps = (item: ExplorerItem) => {
     const isFolder = item.type === 'folder';
     const isDesign = item.type === 'design';
+    const isProject = item.type === 'project';
+    const isDraggable = isDesign || isProject;
     return {
-      draggable: isDesign,
+      draggable: isDraggable,
       onDragStart: (e: React.DragEvent) => {
         if (isDesign && item.projectId) {
           dragHandlers.onDragStart(e, { id: item.id, name: item.name, type: 'design' as const, projectId: item.projectId });
+        } else if (isProject) {
+          dragHandlers.onDragStart(e, { id: item.id, name: item.name, type: 'project' as const, projectId: item.id });
         }
       },
       // 폴더: 드롭 대상 — onDragOver에서 preventDefault 필수

@@ -20,6 +20,7 @@ export function useExplorerActions(
     draggedItem: null,
     draggedItems: [],
     dragOverFolder: null,
+    dragOverMenu: null,
   });
   const dragStateRef = useRef<DragState>(dragState);
   dragStateRef.current = dragState;
@@ -428,8 +429,14 @@ export function useExplorerActions(
     let draggedItems: DragState['draggedItems'] = [item];
     if (selectedItems.size > 1 && selectedItems.has(item.id)) {
       draggedItems = data.currentItems
-        .filter(ci => selectedItems.has(ci.id) && ci.type === 'design' && ci.projectId)
-        .map(ci => ({ id: ci.id, name: ci.name, type: 'design' as const, projectId: ci.projectId! }));
+        .filter(ci => selectedItems.has(ci.id) && ci.type === item.type)
+        .map(ci => ({
+          id: ci.id,
+          name: ci.name,
+          type: ci.type as 'project' | 'design',
+          projectId: ci.type === 'project' ? ci.id : ci.projectId,
+        }))
+        .filter(ci => ci.type === 'project' || Boolean(ci.projectId));
     }
 
     setDragState({
@@ -437,6 +444,7 @@ export function useExplorerActions(
       draggedItem: item,
       draggedItems,
       dragOverFolder: null,
+      dragOverMenu: null,
     });
 
     e.dataTransfer.effectAllowed = 'move';
@@ -457,7 +465,7 @@ export function useExplorerActions(
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     if (folderId) console.log('[DragOver] folder:', folderId);
-    setDragState(prev => prev.dragOverFolder === folderId ? prev : { ...prev, dragOverFolder: folderId || null });
+    setDragState(prev => prev.dragOverFolder === folderId ? prev : { ...prev, dragOverFolder: folderId || null, dragOverMenu: null });
   }, []);
 
   const onDrop = useCallback(async (e: React.DragEvent, targetFolderId: string) => {
@@ -482,11 +490,13 @@ export function useExplorerActions(
       } catch { /* ignore */ }
     }
     if (itemsToDrop.length === 0) return;
+    const designItemsToDrop = itemsToDrop.filter(item => item.type === 'design' && item.projectId);
+    if (designItemsToDrop.length === 0) return;
 
     const projectFolders = data.folders[nav.currentProjectId] || [];
 
     // 기존 폴더에서 중복 제거 후 대상 폴더에 추가
-    const dropIds = new Set(itemsToDrop.map(i => i.id));
+    const dropIds = new Set(designItemsToDrop.map(i => i.id));
     const cleaned = projectFolders.map(folder => ({
       ...folder,
       children: (folder.children || []).filter(c => !dropIds.has(c.id)),
@@ -496,7 +506,7 @@ export function useExplorerActions(
       if (folder.id === targetFolderId) {
         return {
           ...folder,
-          children: [...(folder.children || []), ...itemsToDrop],
+          children: [...(folder.children || []), ...designItemsToDrop],
         };
       }
       return folder;
@@ -506,19 +516,69 @@ export function useExplorerActions(
 
     // 디자인 파일의 folderId를 Firebase에도 업데이트
     await Promise.all(
-      itemsToDrop
-        .filter(item => item.type === 'design')
-        .map(item => updateDesignFile(item.id, { folderId: targetFolderId || null }))
+      designItemsToDrop.map(item => updateDesignFile(item.id, { folderId: targetFolderId || null }))
     );
 
     await data.refreshFolders(nav.currentProjectId);
     await data.refreshDesignFiles(nav.currentProjectId);
 
-    setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null });
+    setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null, dragOverMenu: null });
   }, [nav.currentProjectId, data]);
 
+  const onMenuDragOver = useCallback((e: React.DragEvent, menu: DragState['dragOverMenu']) => {
+    const currentDrag = dragStateRef.current;
+    const items = currentDrag.draggedItems.length > 0
+      ? currentDrag.draggedItems
+      : (currentDrag.draggedItem ? [currentDrag.draggedItem] : []);
+    const hasProjects = items.some(item => item.type === 'project');
+    const canDropProjectMenu = menu === 'in-progress' || menu === 'completed' || menu === 'trash';
+
+    if (!hasProjects || !canDropProjectMenu) return;
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragState(prev => prev.dragOverMenu === menu ? prev : { ...prev, dragOverMenu: menu, dragOverFolder: null });
+  }, []);
+
+  const onMenuDrop = useCallback(async (e: React.DragEvent, menu: DragState['dragOverMenu']) => {
+    e.preventDefault();
+    if (!menu) return;
+
+    const currentDrag = dragStateRef.current;
+    let itemsToDrop = currentDrag.draggedItems.length > 0
+      ? [...currentDrag.draggedItems]
+      : (currentDrag.draggedItem ? [currentDrag.draggedItem] : []);
+
+    if (itemsToDrop.length === 0) {
+      try {
+        const raw = e.dataTransfer.getData('text/plain');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) itemsToDrop = parsed;
+        }
+      } catch { /* ignore */ }
+    }
+
+    const projectsToMove = itemsToDrop.filter(item => item.type === 'project');
+    if (projectsToMove.length === 0) return;
+
+    if (menu === 'completed') {
+      await Promise.all(projectsToMove.map(item => updateProject(item.id, { status: 'completed' } as any)));
+    } else if (menu === 'in-progress') {
+      await Promise.all(projectsToMove.map(item => updateProject(item.id, { status: 'in_progress' } as any)));
+    } else if (menu === 'trash') {
+      await Promise.all(projectsToMove.map(item => softDeleteProject(item.id)));
+    } else {
+      return;
+    }
+
+    await data.refreshProjects();
+    clearSelection();
+    setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null, dragOverMenu: null });
+  }, [data, clearSelection]);
+
   const onDragEnd = useCallback(() => {
-    setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null });
+    setDragState({ isDragging: false, draggedItem: null, draggedItems: [], dragOverFolder: null, dragOverMenu: null });
   }, []);
 
   return {
@@ -539,6 +599,6 @@ export function useExplorerActions(
     cutItems,
     pasteItems,
     duplicateItems,
-    dragHandlers: { onDragStart, onDragOver, onDrop, onDragEnd },
+    dragHandlers: { onDragStart, onDragOver, onDrop, onMenuDragOver, onMenuDrop, onDragEnd },
   };
 }

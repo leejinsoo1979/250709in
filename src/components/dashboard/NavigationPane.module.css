@@ -102,6 +102,13 @@
   color: var(--theme-text);
 }
 
+.menuItemDragOver {
+  background: color-mix(in srgb, var(--theme-primary) 14%, transparent);
+  color: var(--theme-text);
+  outline: 1px solid color-mix(in srgb, var(--theme-primary) 50%, transparent);
+  outline-offset: -1px;
+}
+
 .menuItemActive {
   background: var(--theme-primary);
   color: white;

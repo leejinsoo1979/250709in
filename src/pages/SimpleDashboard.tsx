@@ -440,6 +440,9 @@ const SimpleDashboard: React.FC = () => {
               ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
                 offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
               }),
+              ...((defaults.baseboardGap !== undefined || defaults.baseFrameGap !== undefined) && {
+                gap: defaults.baseboardGap ?? defaults.baseFrameGap
+              }),
             },
             ...(defaults.placementType ? {
               layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
@@ -792,6 +795,8 @@ const SimpleDashboard: React.FC = () => {
                   }}
                   onCreateProject={nav.activeMenu === 'trash' ? undefined : handleCreateProject}
                   onItemContextMenu={handleItemContextMenu}
+                  dragState={actions.dragState}
+                  dragHandlers={actions.dragHandlers}
                   menuCounts={{
                     'in-progress': data.projects.filter(p => !p.isDeleted && (!p.status || p.status === 'in_progress')).length,
                     'completed': data.projects.filter(p => !p.isDeleted && p.status === 'completed').length,

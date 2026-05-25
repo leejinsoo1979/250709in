@@ -17,11 +17,20 @@ interface FurniturePresetButtonsProps {
 
 export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ placedModule, moduleCategory }) => {
   const furniturePresets = useUIStore(state => state.furniturePresets);
+  const selectedFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
   const setFurniturePreset = useUIStore(state => state.setFurniturePreset);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
+  const placedModules = useFurnitureStore(state => state.placedModules);
 
   const category = getFurniturePresetCategory(placedModule, moduleCategory);
   const preset = category ? furniturePresets[category] : undefined;
+  const selectedTargetModules = selectedFurnitureIds.length > 1 && selectedFurnitureIds.includes(placedModule.id)
+    ? placedModules.filter(module => (
+        selectedFurnitureIds.includes(module.id) &&
+        !module.isLocked &&
+        getFurniturePresetCategory(module) === category
+      ))
+    : [placedModule];
 
   // 현재 가구에 적용 가능한 그룹만 노출 (의미 없는 도어/EP/마이다 등은 숨김)
   const applicableGroups = getApplicableFurniturePresetGroups(preset?.props, placedModule, category);
@@ -45,9 +54,16 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
 
   const handleInjectConfirm = () => {
     if (!preset) return;
-    const updates = buildFurniturePresetUpdates(preset.props, selectedGroups, placedModule);
-    if (Object.keys(updates).length > 0) {
-      updatePlacedModule(placedModule.id, updates as any);
+    let appliedCount = 0;
+    selectedTargetModules.forEach(targetModule => {
+      const updates = buildFurniturePresetUpdates(preset.props, selectedGroups, targetModule);
+      if (Object.keys(updates).length > 0) {
+        updatePlacedModule(targetModule.id, updates as any);
+        appliedCount += 1;
+      }
+    });
+    if (appliedCount > 1) {
+      alert(`선택한 ${appliedCount}개 가구에 속성을 이식했습니다.`);
     }
     setShowInjectModal(false);
   };
@@ -126,6 +142,12 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
             <div style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)', marginBottom: '18px', lineHeight: 1.5 }}>
               적용할 그룹을 선택하세요. 가구 폭/위치는 항상 제외됩니다.<br />
               현재 가구에 의미 없는 그룹은 자동으로 숨김 처리됩니다.
+              {selectedTargetModules.length > 1 && (
+                <>
+                  <br />
+                  현재 선택된 같은 카테고리 가구 {selectedTargetModules.length}개에 함께 적용됩니다.
+                </>
+              )}
             </div>
             {applicableGroups.length === 0 ? (
               <div style={{ padding: '20px', fontSize: '13px', color: 'var(--theme-text-tertiary)', textAlign: 'center', background: 'var(--theme-bg-secondary, #f5f5f5)', borderRadius: '6px', marginBottom: '18px' }}>

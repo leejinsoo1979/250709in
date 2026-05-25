@@ -1057,46 +1057,66 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV') {
         const furnitureState = useFurnitureStore.getState();
         const uiState = useUIStore.getState();
-        const selectedFurnitureId = uiState.selectedFurnitureId
-          || furnitureState.selectedFurnitureId
-          || furnitureState.selectedPlacedModuleId;
+        const selectedFurnitureIds = (uiState.selectedFurnitureIds || []).length > 0
+          ? uiState.selectedFurnitureIds
+          : [
+              uiState.selectedFurnitureId
+                || furnitureState.selectedFurnitureId
+                || furnitureState.selectedPlacedModuleId,
+            ].filter((id): id is string => Boolean(id));
 
-        if (!selectedFurnitureId) {
+        if (selectedFurnitureIds.length === 0) {
           console.log('📋 속성 이식 실패: 선택된 가구가 없습니다');
           return;
         }
 
-        const targetFurniture = furnitureState.placedModules.find(m => m.id === selectedFurnitureId);
-        if (!targetFurniture) {
+        const targetFurnitureList = furnitureState.placedModules.filter(m => selectedFurnitureIds.includes(m.id));
+        if (targetFurnitureList.length === 0) {
           console.log('📋 속성 이식 실패: 대상 가구를 찾을 수 없습니다');
-          return;
-        }
-
-        if (targetFurniture.isLocked) {
-          console.log('🔒 잠긴 가구에는 속성을 이식할 수 없습니다');
           return;
         }
 
         e.preventDefault();
         e.stopPropagation();
 
-        const category = getFurniturePresetCategory(targetFurniture);
-        const preset = category ? uiState.furniturePresets[category] : undefined;
-        if (!category || !preset) {
-          console.log('📋 속성 이식 실패: 저장된 속성이 없습니다');
-          return;
-        }
+        let appliedCount = 0;
+        let skippedLockedCount = 0;
+        let skippedNoPresetCount = 0;
 
-        const applicableGroups = getApplicableFurniturePresetGroups(preset.props, targetFurniture, category);
-        const selectedGroups = applicableGroups.map(g => g.id);
-        const updates = buildFurniturePresetUpdates(preset.props, selectedGroups, targetFurniture);
-        if (Object.keys(updates).length === 0) {
-          console.log('📋 속성 이식 실패: 적용할 속성이 없습니다');
-          return;
-        }
+        targetFurnitureList.forEach(targetFurniture => {
+          if (targetFurniture.isLocked) {
+            skippedLockedCount += 1;
+            return;
+          }
 
-        furnitureState.updatePlacedModule(targetFurniture.id, updates as any);
-        console.log(`📋 ${getFurniturePresetCategoryLabel(category)} 속성 이식됨 (키보드):`, targetFurniture.id);
+          const category = getFurniturePresetCategory(targetFurniture);
+          const preset = category ? uiState.furniturePresets[category] : undefined;
+          if (!category || !preset) {
+            skippedNoPresetCount += 1;
+            return;
+          }
+
+          const applicableGroups = getApplicableFurniturePresetGroups(preset.props, targetFurniture, category);
+          const selectedGroups = applicableGroups.map(g => g.id);
+          const updates = buildFurniturePresetUpdates(preset.props, selectedGroups, targetFurniture);
+          if (Object.keys(updates).length === 0) return;
+
+          furnitureState.updatePlacedModule(targetFurniture.id, updates as any);
+          appliedCount += 1;
+          console.log(`📋 ${getFurniturePresetCategoryLabel(category)} 속성 이식됨 (키보드):`, targetFurniture.id);
+        });
+
+        if (appliedCount === 0) {
+          console.log('📋 속성 이식 실패: 적용할 속성이 없습니다', {
+            skippedLockedCount,
+            skippedNoPresetCount,
+          });
+        } else {
+          console.log(`📋 선택 가구 ${appliedCount}개에 속성 이식 완료`, {
+            skippedLockedCount,
+            skippedNoPresetCount,
+          });
+        }
       }
     };
 

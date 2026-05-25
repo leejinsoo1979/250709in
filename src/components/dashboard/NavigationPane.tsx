@@ -8,7 +8,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { loadFolderData, getDesignFiles } from '@/firebase/projects';
 import type { ProjectSummary } from '@/firebase/types';
 import type { FolderData } from '@/firebase/projects';
-import type { QuickAccessMenu, ExplorerItem } from '@/hooks/dashboard/types';
+import type { QuickAccessMenu, ExplorerItem, DragState } from '@/hooks/dashboard/types';
 import styles from './NavigationPane.module.css';
 
 interface NavigationPaneProps {
@@ -26,6 +26,12 @@ interface NavigationPaneProps {
   showProjectTree?: boolean;
   autoExpandProjectId?: string | null;
   onGoHome?: () => void;
+  dragState?: DragState;
+  dragHandlers?: {
+    onMenuDragOver: (e: React.DragEvent, menu: QuickAccessMenu) => void;
+    onMenuDrop: (e: React.DragEvent, menu: QuickAccessMenu) => void;
+    onDragEnd: () => void;
+  };
 }
 
 const NavigationPane: React.FC<NavigationPaneProps> = ({
@@ -43,6 +49,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   showProjectTree = false,
   autoExpandProjectId,
   onGoHome,
+  dragState,
+  dragHandlers,
 }) => {
   const { user } = useAuth();
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(() => {
@@ -217,7 +225,10 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                 key={item.key}
                 className={`${styles.menuItem} ${
                   activeMenu === item.key && !currentProjectId ? styles.menuItemActive : ''
-                }`}
+                } ${dragState?.dragOverMenu === item.key ? styles.menuItemDragOver : ''}`}
+                onDragOver={dragHandlers ? (e) => dragHandlers.onMenuDragOver(e, item.key) : undefined}
+                onDrop={dragHandlers ? (e) => dragHandlers.onMenuDrop(e, item.key) : undefined}
+                onDragEnd={dragHandlers?.onDragEnd}
                 onClick={() => {
                   onMenuChange(item.key);
                   onNavigate(null, null, item.label);
