@@ -81,15 +81,23 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           },
           frameSize: {
             ...current.frameSize!,
-            top: defaults.frameTop ?? current.frameSize?.top ?? 30,
+            top: defaults.topMoldingSize ?? defaults.frameTop ?? current.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? current.frameSize?.left ?? 18,
             right: defaults.frameRight ?? current.frameSize?.right ?? 18,
-            ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
+            ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
+              topOffset: defaults.topMoldingOffset ?? defaults.frameTopOffset
+            }),
+            ...(defaults.topMoldingGap !== undefined && { topGap: defaults.topMoldingGap }),
           },
           baseConfig: {
             ...current.baseConfig!,
-            height: defaults.baseHeight ?? current.baseConfig?.height ?? 60,
-            ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
+            height: defaults.baseboardSize ?? defaults.baseHeight ?? current.baseConfig?.height ?? 60,
+            ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
+              offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
+            }),
+            ...((defaults.baseboardGap !== undefined || defaults.baseFrameGap !== undefined) && {
+              gap: defaults.baseboardGap ?? defaults.baseFrameGap
+            }),
           },
           ...(defaults.placementType ? {
             layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
@@ -97,6 +105,8 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,
           furnitureDepthDefaults: defaults.furnitureDepthDefaults ?? current.furnitureDepthDefaults,
+          ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
+          ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
           // 프레임 설정 (surroundMode)
           ...(defaults.surroundMode ? {
             surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,

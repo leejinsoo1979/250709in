@@ -432,6 +432,7 @@ const SimpleDashboard: React.FC = () => {
               ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
                 topOffset: defaults.topMoldingOffset ?? defaults.frameTopOffset
               }),
+              ...(defaults.topMoldingGap !== undefined && { topGap: defaults.topMoldingGap }),
             },
             baseConfig: {
               ...spaceConfig.baseConfig!,
@@ -450,6 +451,8 @@ const SimpleDashboard: React.FC = () => {
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
             ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
+            ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
+            ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'

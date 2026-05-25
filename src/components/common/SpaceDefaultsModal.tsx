@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSpaceConfigDefaults, updateSpaceConfigDefaults, SpaceConfigDefaults } from '@/firebase/userProfiles';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import commonStyles from '@/editor/shared/controls/styles/common.module.css';
 import styles from './SpaceDefaultsModal.module.css';
 
@@ -20,6 +21,7 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   frameRight: 18,
   baseHeight: 60,
   baseFrameOffset: 0,
+  baseFrameGap: 0,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
   furnitureDepthDefaults: {
@@ -199,15 +201,33 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       frameTopOffset: values.topMoldingOffset,
       baseHeight: values.baseboardEnabled ? values.baseboardSize : 0,
       baseFrameOffset: values.baseboardOffset,
+      baseFrameGap: values.baseboardGap,
     };
     const { error } = await updateSpaceConfigDefaults(synced);
     setSaving(false);
     if (error) {
       setMessage({ text: error, type: 'error' });
     } else {
-      useSpaceConfigStore.getState().setSpaceInfo({
+      const spaceState = useSpaceConfigStore.getState();
+      spaceState.setSpaceInfo({
+        frameSize: {
+          ...spaceState.spaceInfo.frameSize,
+          top: synced.frameTop,
+          topOffset: synced.frameTopOffset,
+          topGap: synced.topMoldingGap,
+        },
+        baseConfig: {
+          ...spaceState.spaceInfo.baseConfig,
+          type: synced.baseHeight > 0 ? 'floor' : spaceState.spaceInfo.baseConfig?.type ?? 'floor',
+          height: synced.baseHeight,
+          offset: synced.baseFrameOffset,
+          gap: synced.baseFrameGap,
+        },
+        doorTopGap: synced.doorTopGap,
+        doorBottomGap: synced.doorBottomGap,
         furnitureDepthDefaults: values.furnitureDepthDefaults,
       });
+      useUIStore.getState().setDoorGapDisplayMode(synced.doorGapMode);
       const cb = onSaved;
       onClose();
       if (cb) cb();
@@ -341,11 +361,15 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
                 상단몰딩
               </label>
             </div>
-            {values.topMoldingEnabled && (
+            {values.topMoldingEnabled ? (
               <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
                 <NumberInput label="size" value={values.topMoldingSize} onChange={h('topMoldingSize')} min={0} max={200} step={1} />
                 <NumberInput label="옵셋" value={values.topMoldingOffset} onChange={h('topMoldingOffset')} min={-200} max={200} step={1} />
                 <NumberInput label="갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={200} step={1} />
+              </div>
+            ) : (
+              <div className={styles.row}>
+                <NumberInput label="상단갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={2000} step={1} />
               </div>
             )}
           </div>
@@ -363,11 +387,15 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
                 걸래받이
               </label>
             </div>
-            {values.baseboardEnabled && (
+            {values.baseboardEnabled ? (
               <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
                 <NumberInput label="size" value={values.baseboardSize} onChange={h('baseboardSize')} min={0} max={300} step={1} />
                 <NumberInput label="옵셋" value={values.baseboardOffset} onChange={h('baseboardOffset')} min={-200} max={200} step={1} />
                 <NumberInput label="갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={200} step={1} />
+              </div>
+            ) : (
+              <div className={styles.row}>
+                <NumberInput label="하단갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={2000} step={1} />
               </div>
             )}
           </div>

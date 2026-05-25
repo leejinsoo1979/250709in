@@ -299,15 +299,23 @@ const Header: React.FC<HeaderProps> = ({
           },
           frameSize: {
             ...spaceConfig.frameSize!,
-            top: defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
+            top: defaults.topMoldingSize ?? defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
             right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
-            ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
+            ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
+              topOffset: defaults.topMoldingOffset ?? defaults.frameTopOffset
+            }),
+            ...(defaults.topMoldingGap !== undefined && { topGap: defaults.topMoldingGap }),
           },
           baseConfig: {
             ...spaceConfig.baseConfig!,
-            height: defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
-            ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
+            height: defaults.baseboardSize ?? defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
+            ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
+              offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
+            }),
+            ...((defaults.baseboardGap !== undefined || defaults.baseFrameGap !== undefined) && {
+              gap: defaults.baseboardGap ?? defaults.baseFrameGap
+            }),
           },
           ...(defaults.placementType ? {
             layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
@@ -315,6 +323,8 @@ const Header: React.FC<HeaderProps> = ({
           ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
           ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
           ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
+          ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
+          ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
           ...(defaults.surroundMode ? {
             surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
             frameConfig: defaults.surroundMode === 'full-surround'

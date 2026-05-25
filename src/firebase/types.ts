@@ -217,6 +217,7 @@ export interface UserProfile {
     frameRight?: number;
     baseHeight?: number;
     baseFrameOffset?: number;
+    baseFrameGap?: number;
     furnitureSingleWidth?: number;
     furnitureDualWidth?: number;
     furnitureDepthDefaults?: FurnitureDepthDefaults;

@@ -426,20 +426,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
       const isTopDown = module.moduleId?.includes('lower-top-down-');
+      const userDoorTopGap = typeof spaceInfo.doorTopGap === 'number' ? spaceInfo.doorTopGap : undefined;
+      const userDoorBottomGap = typeof spaceInfo.doorBottomGap === 'number' ? spaceInfo.doorBottomGap : undefined;
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
-          module.doorBottomGap = 28;
+          module.doorBottomGap = userDoorBottomGap ?? 28;
         } else if (isBasicLowerCabinet || isDoorLift || isTopDown) {
           // 기본하부장/서랍장/도어올림/상판내림: 하단 5mm 확장
-          module.doorBottomGap = 5;
+          module.doorBottomGap = userDoorBottomGap ?? 5;
         } else if (newCategory === 'lower') {
           // 기타 하부장: 캐비넷 하단에서 2mm 아래로 확장
-          module.doorBottomGap = 2;
+          module.doorBottomGap = userDoorBottomGap ?? 2;
         } else {
           const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-          module.doorBottomGap = isFloatPlacement ? floatHeight : 25;
+          module.doorBottomGap = userDoorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
         }
       }
 
@@ -447,21 +449,32 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (module.doorTopGap === undefined) {
         if (isTopDown) {
           // 상판내림: 상단 -80mm
-          module.doorTopGap = -80;
+          module.doorTopGap = userDoorTopGap ?? -80;
         } else if (isDoorLift) {
           // 도어올림: 상단 30mm (마이다가 위로 올라감)
-          module.doorTopGap = 30;
+          module.doorTopGap = userDoorTopGap ?? 30;
         } else if (isBasicLowerCabinet) {
           // 기본하부장 반통/한통/서랍장: 상단 -20mm (도어가 캐비넷보다 20mm 짧음)
-          module.doorTopGap = -20;
+          module.doorTopGap = userDoorTopGap ?? -20;
         } else if (newCategory === 'lower') {
           // 기타 하부장: 캐비넷 상단에서 20mm 내려옴
-          module.doorTopGap = 20;
+          module.doorTopGap = userDoorTopGap ?? 20;
         } else {
           const isFullSurround = spaceInfo.surroundType === 'surround'
             && spaceInfo.frameConfig?.top !== false;
-          module.doorTopGap = isFullSurround ? -3 : 5;
+          module.doorTopGap = userDoorTopGap ?? (isFullSurround ? -3 : 5);
         }
+      }
+
+      const hasTopByDefault = newCategory === 'upper' || newCategory === 'full';
+      if (hasTopByDefault && module.topFrameOffset === undefined && typeof spaceInfo.frameSize?.topOffset === 'number') {
+        module.topFrameOffset = spaceInfo.frameSize.topOffset;
+      }
+      if (hasTopByDefault && module.topFrameGap === undefined && typeof spaceInfo.frameSize?.topGap === 'number') {
+        module.topFrameGap = Math.max(0, spaceInfo.frameSize.topGap);
+      }
+      if (hasTopByDefault && module.hasTopFrame === undefined && (spaceInfo.frameSize?.top ?? 0) <= 0) {
+        module.hasTopFrame = false;
       }
 
       // 상부장 상판 따내기 기본값: 없음 (필요시 수동 설정)
@@ -519,14 +532,25 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
-      // 걸래받이 기본값: 하부장 105mm, 키큰장은 사용자 받침대 높이(spaceInfo.baseConfig.height) 사용
+      // 걸래받이 기본값: 공간 기본설정 값을 우선 적용하고, 없을 때만 기존 하부장/키큰장 기본값 사용
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
+      const hasBaseByDefault = newCategory === 'lower' || newCategory === 'full' || isLowerById;
+      const baseConfig = spaceInfo.baseConfig;
       if (module.baseFrameHeight === undefined) {
         if (newCategory === 'lower' || isLowerById) {
-          module.baseFrameHeight = 105;
+          module.baseFrameHeight = baseConfig?.height ?? 105;
         } else if (newCategory === 'full') {
-          module.baseFrameHeight = spaceInfo.baseConfig?.height ?? 60;
+          module.baseFrameHeight = baseConfig?.height ?? 60;
         }
+      }
+      if (hasBaseByDefault && module.baseFrameOffset === undefined && typeof baseConfig?.offset === 'number') {
+        module.baseFrameOffset = baseConfig.offset;
+      }
+      if (hasBaseByDefault && module.baseFrameGap === undefined && typeof baseConfig?.gap === 'number') {
+        module.baseFrameGap = Math.max(0, baseConfig.gap);
+      }
+      if (hasBaseByDefault && module.hasBase === undefined && (baseConfig?.height ?? 0) <= 0) {
+        module.hasBase = false;
       }
 
 

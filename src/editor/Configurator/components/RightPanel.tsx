@@ -929,7 +929,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
     let cancelled = false;
     getSpaceConfigDefaults().then((d) => {
       if (cancelled || !d) return;
-      setUserDefaults({ frameTop: d.frameTop, baseHeight: d.baseHeight });
+      setUserDefaults({
+        frameTop: d.topMoldingSize ?? d.frameTop,
+        baseHeight: d.baseboardSize ?? d.baseHeight
+      });
     }).catch(() => { /* noop */ });
     return () => { cancelled = true; };
   }, []);

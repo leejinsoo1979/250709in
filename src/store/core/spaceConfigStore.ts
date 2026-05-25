@@ -15,6 +15,7 @@ export interface FrameSize {
   right: number;
   top: number;
   topOffset?: number; // 자유배치 상단몰딩 옵셋 (mm, 천장에서 아래로)
+  topGap?: number; // 상단몰딩 천장 갭 (mm)
 }
 
 export type FurnitureDepthDefaultKey =
@@ -45,7 +46,8 @@ export const normalizeSpaceInfoFrameSize = <T extends Partial<SpaceInfo>>(spaceI
     left: rawFrame?.left ?? 0,
     right: rawFrame?.right ?? 0,
     top: rawFrame?.top ?? rawFrame?.upper ?? 0,
-    ...(rawFrame?.topOffset !== undefined ? { topOffset: rawFrame.topOffset } : {})
+    ...(rawFrame?.topOffset !== undefined ? { topOffset: rawFrame.topOffset } : {}),
+    ...(rawFrame?.topGap !== undefined ? { topGap: rawFrame.topGap } : {})
   };
 
   if (spaceInfo.surroundType === 'no-surround') {
@@ -101,6 +103,8 @@ export interface BaseConfig {
   type: 'floor' | 'stand';
   height: number;
   depth?: number; // 받침대 깊이 (0~300mm, 기본값 0)
+  offset?: number; // 걸레받이 앞뒤 옵셋 (mm, 양수=뒤쪽/안쪽)
+  gap?: number; // 걸레받이 하단 갭 (mm)
   placementType?: 'ground' | 'float'; // 받침대 없음일 때 배치 방식
   floatHeight?: number; // 띄워서 배치 시 띄우는 높이
 }

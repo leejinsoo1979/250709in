@@ -2391,6 +2391,9 @@ const Configurator: React.FC = () => {
       try {
         const defaults = await getSpaceConfigDefaults();
         if (defaults) {
+          if (defaults.doorGapMode) {
+            useUIStore.getState().setDoorGapDisplayMode(defaults.doorGapMode);
+          }
           defaultSpaceConfig = {
             ...defaultSpaceConfig,
             ...(defaults.width !== undefined && { width: defaults.width }),
@@ -2400,17 +2403,25 @@ const Configurator: React.FC = () => {
               right: defaults.gapRight ?? 1.5,
             },
             frameSize: {
-              top: defaults.frameTop ?? 30,
+              top: defaults.topMoldingSize ?? defaults.frameTop ?? 30,
               left: defaults.frameLeft ?? 18,
               right: defaults.frameRight ?? 18,
-              ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
+              ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
+                topOffset: defaults.topMoldingOffset ?? defaults.frameTopOffset
+              }),
+              ...(defaults.topMoldingGap !== undefined && { topGap: defaults.topMoldingGap }),
             },
             baseConfig: {
               type: 'floor' as const,
               placementType: 'ground' as const,
               ...defaultSpaceConfig.baseConfig,
-              height: defaults.baseHeight ?? 60,
-              ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
+              height: defaults.baseboardSize ?? defaults.baseHeight ?? 60,
+              ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
+                offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
+              }),
+              ...((defaults.baseboardGap !== undefined || defaults.baseFrameGap !== undefined) && {
+                gap: defaults.baseboardGap ?? defaults.baseFrameGap
+              }),
             },
             ...(defaults.placementType ? {
               layoutMode: defaults.placementType === 'free' ? 'free-placement' as const : 'equal-division' as const,
@@ -2418,6 +2429,8 @@ const Configurator: React.FC = () => {
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
             ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
+            ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
+            ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'
@@ -2664,17 +2677,47 @@ const Configurator: React.FC = () => {
           const userDefaults = await getSpaceConfigDefaults();
           const baseSpaceInfo: any = stripSessionOnlyFields(spaceInfo);
           if (userDefaults) {
-            if (typeof userDefaults.baseHeight === 'number') {
+            if (typeof userDefaults.baseboardSize === 'number' || typeof userDefaults.baseHeight === 'number') {
               baseSpaceInfo.baseConfig = {
                 ...(baseSpaceInfo.baseConfig || { type: 'floor', placementType: 'ground' }),
-                height: userDefaults.baseHeight,
+                height: userDefaults.baseboardSize ?? userDefaults.baseHeight,
               };
             }
-            if (typeof userDefaults.frameTop === 'number') {
+            if (typeof userDefaults.baseboardOffset === 'number' || typeof userDefaults.baseFrameOffset === 'number') {
+              baseSpaceInfo.baseConfig = {
+                ...(baseSpaceInfo.baseConfig || { type: 'floor', placementType: 'ground' }),
+                offset: userDefaults.baseboardOffset ?? userDefaults.baseFrameOffset,
+              };
+            }
+            if (typeof userDefaults.baseboardGap === 'number' || typeof userDefaults.baseFrameGap === 'number') {
+              baseSpaceInfo.baseConfig = {
+                ...(baseSpaceInfo.baseConfig || { type: 'floor', placementType: 'ground' }),
+                gap: userDefaults.baseboardGap ?? userDefaults.baseFrameGap,
+              };
+            }
+            if (typeof userDefaults.topMoldingSize === 'number' || typeof userDefaults.frameTop === 'number') {
               baseSpaceInfo.frameSize = {
                 ...(baseSpaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
-                top: userDefaults.frameTop,
+                top: userDefaults.topMoldingSize ?? userDefaults.frameTop,
               };
+            }
+            if (typeof userDefaults.topMoldingOffset === 'number' || typeof userDefaults.frameTopOffset === 'number') {
+              baseSpaceInfo.frameSize = {
+                ...(baseSpaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                topOffset: userDefaults.topMoldingOffset ?? userDefaults.frameTopOffset,
+              };
+            }
+            if (typeof userDefaults.topMoldingGap === 'number') {
+              baseSpaceInfo.frameSize = {
+                ...(baseSpaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                topGap: userDefaults.topMoldingGap,
+              };
+            }
+            if (typeof userDefaults.doorTopGap === 'number') {
+              baseSpaceInfo.doorTopGap = userDefaults.doorTopGap;
+            }
+            if (typeof userDefaults.doorBottomGap === 'number') {
+              baseSpaceInfo.doorBottomGap = userDefaults.doorBottomGap;
             }
             if (userDefaults.furnitureDepthDefaults) {
               baseSpaceInfo.furnitureDepthDefaults = userDefaults.furnitureDepthDefaults;
