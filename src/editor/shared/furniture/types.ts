@@ -129,9 +129,9 @@ export interface PlacedModule {
   adjustedPosition?: { x: number; y: number; z: number }; // 기둥 침범으로 조정된 위치
   hingePosition?: 'left' | 'right'; // 힌지 위치 (기본값: 'right')
   hingeType?: 'A' | 'B'; // 경첩 타입 (A: 45mm, B: 48mm, 기본값: 'A')
-  hingePositionsMm?: number[]; // 도어 하단 기준 경첩컵 중심 Y 위치(mm)
-  upperDoorHingePositionsMm?: number[]; // 도어분절 상부 도어 하단 기준 경첩컵 중심 Y 위치(mm)
-  lowerDoorHingePositionsMm?: number[]; // 도어분절 하부 도어 하단 기준 경첩컵 중심 Y 위치(mm)
+  hingePositionsMm?: number[]; // 몸통/측판 하단 기준 경첩 중심 Y 위치(mm)
+  upperDoorHingePositionsMm?: number[]; // 도어분절 상부 경첩 중심 Y 위치(mm, 몸통/측판 하단 기준)
+  lowerDoorHingePositionsMm?: number[]; // 도어분절 하부 경첩 중심 Y 위치(mm, 몸통/측판 하단 기준)
   isSplit?: boolean; // 기둥 C 분할 배치 여부
   
   // 자유배치 모드 속성

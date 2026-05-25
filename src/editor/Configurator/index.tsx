@@ -140,7 +140,7 @@ const DoorGapInput: React.FC<{
       const raw = parseFloat(localVal);
       if (!isNaN(raw)) {
         // 천장/바닥 기준 입력을 몸통 기준 저장값으로 되돌린다.
-        const clamped = Math.max(0, isCfTopInset ? raw : Math.min(refDistanceMm, raw));
+        const clamped = Math.max(0, raw);
         toCommit = String(Math.round(isCfTopInset ? clamped - refDistanceMm : refDistanceMm - clamped));
       }
     }
@@ -718,6 +718,60 @@ const Configurator: React.FC = () => {
       .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
     return Math.max(0, Math.round(effectiveHeight - sectionTop));
   }, [spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.type, spaceInfo.height]);
+  const getTopFrameSizeUpdates = useCallback((mod: any, nextSize: number, effectiveHeight = spaceInfo.height) => {
+    const clampedSize = Math.max(0, nextSize);
+    const moduleId = mod?.moduleId || '';
+    const sections = Array.isArray(mod?.customSections) ? mod.customSections : [];
+    if (!moduleId.includes('shelf-split') || sections.length < 2) {
+      return { topFrameThickness: clampedSize };
+    }
+
+    const baseDistance = mod.hasBase === false
+      ? (mod.individualFloatHeight ?? 0)
+      : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+    const lowerH = Number(sections[0]?.height) || 0;
+    const nextUpperH = Math.max(100, effectiveHeight - baseDistance - clampedSize - lowerH);
+    const nextSections = sections.map((section: any, index: number) => (
+      index === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
+    ));
+
+    return {
+      topFrameThickness: clampedSize,
+      customSections: nextSections,
+      upperDoorHingePositionsMm: undefined,
+    };
+  }, [spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.type, spaceInfo.height]);
+  const getBaseFrameSizeUpdates = useCallback((mod: any, nextSize: number) => {
+    const clampedSize = Math.max(0, nextSize);
+    const currentBase = mod?.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+    const baseDelta = currentBase - clampedSize;
+    const moduleId = mod?.moduleId || '';
+    const sections = Array.isArray(mod?.customSections) ? mod.customSections : [];
+
+    if (moduleId.includes('shelf-split') && sections.length >= 2) {
+      const lowerH = Number(sections[0]?.height) || 0;
+      const currentUpperH = Number(sections[1]?.height) || 0;
+      const availableAfterBaseAndLower = Math.max(0, (spaceInfo.height ?? 0) - clampedSize - lowerH);
+      const nextUpperH = Math.min(
+        availableAfterBaseAndLower,
+        Math.max(100, currentUpperH + baseDelta)
+      );
+      const nextTopFrameH = Math.max(0, Math.round(availableAfterBaseAndLower - nextUpperH));
+      const nextSections = sections.map((section: any, index: number) => (
+        index === 1
+          ? { ...section, height: nextUpperH, heightType: 'absolute' }
+          : section
+      ));
+      return {
+        baseFrameHeight: clampedSize,
+        topFrameThickness: nextTopFrameH,
+        customSections: nextSections,
+        upperDoorHingePositionsMm: undefined,
+      };
+    }
+
+    return { baseFrameHeight: clampedSize };
+  }, [spaceInfo]);
   // 키큰장 / 상하부장 분리
   const fullDoorIndices = useMemo(() => doorNumberMap
     .map((info, i) => ({ info, i }))
@@ -729,12 +783,16 @@ const Configurator: React.FC = () => {
       if (isDoorSplitSettingModule(mod)) {
         const isPantrySplit = (mod.moduleId || '').includes('pantry-cabinet-split');
         const lowerTopDefault = isPantrySplit ? -2 : -40;
-        const upperBottomDefault = isPantrySplit ? 1 : -20;
+        const upperBottomDefault = isPantrySplit ? -1 : 20;
         const lowerTopValue = typeof mod.lowerDoorTopGap === 'number'
           ? (mod.lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? lowerTopDefault : mod.lowerDoorTopGap)
           : lowerTopDefault;
         const upperBottomValue = typeof mod.upperDoorBottomGap === 'number'
-          ? (mod.upperDoorBottomGap === 20 && !isPantrySplit ? upperBottomDefault : mod.upperDoorBottomGap)
+          ? (
+            (!isPantrySplit && mod.upperDoorBottomGap === -20)
+              ? upperBottomDefault
+              : (isPantrySplit && mod.upperDoorBottomGap === 1 ? upperBottomDefault : mod.upperDoorBottomGap)
+          )
           : upperBottomDefault;
         return [
           {
@@ -947,14 +1005,28 @@ const Configurator: React.FC = () => {
   // (placedModules deps 제거 — 사용자가 옵셋 0 등으로 변경 시 자동 23으로 되돌리는 문제 방지)
   useEffect(() => {
     if (isLoadingProjectRef.current) return;
-    const isSurround = spaceInfo.surroundType === 'surround';
-    const isFullSurroundDoorDefault = isSurround && spaceInfo.frameConfig?.top !== false;
-    placedModules.forEach(m => {
-      const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
-      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
-      if (isFullSurroundDoorDefault && m.hasDoor && !isLower && m.hasTopFrame !== false && (m.doorTopGap === undefined || m.doorTopGap === 5)) {
-        updatePlacedModule(m.id, { doorTopGap: -3 });
-      }
+	    const isSurround = spaceInfo.surroundType === 'surround';
+	    const isFullSurroundDoorDefault = isSurround && spaceInfo.frameConfig?.top !== false;
+	    placedModules.forEach(m => {
+	      const isShelfSplit = m.moduleId?.includes('shelf-split');
+	      const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+	      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
+	      if (isShelfSplit && m.hasDoor) {
+	        const targetTopGap = isFullSurroundDoorDefault && m.hasTopFrame !== false ? -3 : 5;
+	        const updates: any = {};
+	        if (m.doorTopGap === undefined) {
+	          updates.doorTopGap = targetTopGap;
+	        }
+	        if ((m as any).upperDoorTopGap === undefined) {
+	          updates.upperDoorTopGap = targetTopGap;
+	        }
+	        if (Object.keys(updates).length > 0) {
+	          updatePlacedModule(m.id, updates);
+	        }
+	      }
+	      if (!isShelfSplit && isFullSurroundDoorDefault && m.hasDoor && !isLower && m.hasTopFrame !== false && (m.doorTopGap === undefined || m.doorTopGap === 5)) {
+	        updatePlacedModule(m.id, { doorTopGap: -3 });
+	      }
       if (!isUpper) return;
       // 옵셋이 명시적으로 설정 안 된 경우(undefined)에만 기본값 적용
       if (isSurround) {
@@ -4625,7 +4697,7 @@ const Configurator: React.FC = () => {
               {entries.map((entry) => {
                 const { topDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
                 const referenceMode = entry.splitPart === 'upper'
-                  ? (doorGapRefMode === 'cf' ? 'cfTopInset' : 'body')
+                  ? doorGapRefMode
                   : (entry.splitPart ? 'body' : doorGapRefMode);
                 return <DoorGapInput key={`top-${entry.key}-${doorGapRefMode}`} moduleId={entry.mod.id} field={entry.topField}
                   storeValue={entry.topValue}
@@ -6427,7 +6499,7 @@ const Configurator: React.FC = () => {
                           topFrameGap: getFreeTopOffGap(m),
                           doorTopGap: -5
                         }))}
-                        onSizeChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: Math.max(0, v) }))}
+                        onSizeChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)))}
                         onOffsetChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
                         onGapChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
                         highlightKey="top-all-free"
@@ -6540,18 +6612,8 @@ const Configurator: React.FC = () => {
                     onSizeChange={(v) => {
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-                      const shelfSplitSections = Array.isArray((mod as any).customSections) ? (mod as any).customSections : [];
-                      if ((mod.moduleId || '').includes('shelf-split') && shelfSplitSections.length >= 2) {
-                        const lowerH = Number(shelfSplitSections[0]?.height) || 0;
-                        const nextUpperH = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - Math.max(0, v) - lowerH);
-                        const nextSections = shelfSplitSections.map((section: any, idx: number) => (
-                          idx === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
-                        ));
-                        updatePlacedModule(mod.id, {
-                          customSections: nextSections,
-                          topFrameThickness: Math.max(0, v),
-                          upperDoorHingePositionsMm: undefined
-                        });
+                      if ((mod.moduleId || '').includes('shelf-split')) {
+                        updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v, effectiveSpaceHeight));
                         return;
                       }
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
@@ -6599,7 +6661,7 @@ const Configurator: React.FC = () => {
                         offset={firstBase.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
                         gap={(firstBase as any).baseFrameGap ?? 0}
                         onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: false, individualFloatHeight: 0, doorBottomGap: -5 }))}
-                        onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: Math.max(0, v) }))}
+                        onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)))}
                         onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
                         onGapChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
                         highlightKey="base-all-free"
@@ -6663,17 +6725,17 @@ const Configurator: React.FC = () => {
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                             <input
                               type="text" inputMode="numeric"
-                              value={(spaceInfo.baseConfig?.height || 65) || ''} placeholder="0"
+                              value={(mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height || 65)) || ''} placeholder="0"
                               onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = spaceInfo.baseConfig?.height || 60;
-                                  setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 60 }), height: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) } });
+                                  const cur = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height || 60);
+                                  updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1)))));
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 60 }), height: v === '' ? 0 : parseInt(v, 10) } }); }}
-                              onBlur={(e) => { setHighlightedFrame(null); setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 60 }), height: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) } }); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, v === '' ? 0 : parseInt(v, 10))); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)))); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -7065,11 +7127,11 @@ const Configurator: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = mod.baseFrameHeight ?? bfDefault;
-                            updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                            updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1)))));
                           }
                         }}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) }); }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, num > bfMax ? bfMax : num)); } }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)))); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -7365,7 +7427,7 @@ const Configurator: React.FC = () => {
                             }));
                           },
                           (v) => {
-                            topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }));
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)));
                           },
                           (v) => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
@@ -7449,7 +7511,7 @@ const Configurator: React.FC = () => {
                               doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
                             });
                           },
-                          (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
+                          (v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v)),
                           (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                           `top-${mod.id}`,
                           mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? mod.topFrameGap ?? 0) : 0,
@@ -7499,7 +7561,7 @@ const Configurator: React.FC = () => {
                                 }));
                               },
                               (v) => {
-                                baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
+                                baseSortedMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
                               },
                               (v) => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));

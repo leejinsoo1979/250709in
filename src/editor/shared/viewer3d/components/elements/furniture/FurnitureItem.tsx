@@ -3034,6 +3034,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const usesUnifiedSectionDepthDirection = lowerSectionDir === upperSectionDir
     && Math.abs(effectiveLowerSectionDepth - actualDepthMm) < 0.5
     && Math.abs(effectiveUpperSectionDepth - actualDepthMm) < 0.5;
+  const usesUnifiedShoeDepthDirection = lowerSectionDir === upperSectionDir
+    && Math.abs(effectiveLowerSectionDepth - effectiveUpperSectionDepth) < 0.5;
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
@@ -3051,7 +3053,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else if (isShoeCabinet) {
     // 신발장: 기본은 뒷벽 기준, 앞고정 선택 시 앞면 기준으로 깊이를 줄인다.
     // 도어 안쪽 밀림은 각 도어 렌더러의 로컬 Z에서 처리하고, 본체 기준은 임의로 띄우지 않는다.
-    furnitureZ = usesUnifiedSectionDepthDirection && lowerSectionDir === 'back'
+    furnitureZ = usesUnifiedShoeDepthDirection && lowerSectionDir === 'back'
       ? furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset
       : furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
   } else {

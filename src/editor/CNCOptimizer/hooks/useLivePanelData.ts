@@ -86,7 +86,10 @@ function getPanelReferenceDepth(panel: any): number {
 function isRodShelfPanelName(panelName?: string): boolean {
   const name = panelName || '';
   const compactName = name.replace(/\s+/g, '');
-  return compactName.includes('옷봉선반') || compactName.includes('(상)선반1');
+  return compactName.includes('옷봉선반')
+    || (compactName.includes('옷봉') && compactName.includes('선반'))
+    || compactName.includes('(상)선반1')
+    || compactName.includes('상단선반1');
 }
 
 function isMainHorizontalPanel(panel: any): boolean {
@@ -181,7 +184,7 @@ function resolveFixedHorizontalSideBoringPositionsFromSidePanel(
 function isMovableShelfPanel(panel: any): boolean {
   const name = panel?.name || '';
   if (!name.includes('선반')) return false;
-  if (name.includes('옷봉') || name.includes('유리') || name.includes('금속')) return false;
+  if (isRodShelfPanelName(name) || name.includes('유리') || name.includes('금속')) return false;
   return true;
 }
 

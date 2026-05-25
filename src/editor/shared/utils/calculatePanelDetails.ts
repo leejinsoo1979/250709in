@@ -375,7 +375,17 @@ export const calculatePanelDetails = (
         const usesExplicitSectionHeights = Array.isArray(customSectionsOverride)
           && customSectionsOverride.length === sections.length;
         if (usesExplicitSectionHeights) {
-          sectionHeightMm = section.height || 0;
+          const shouldShrinkExplicitTopSection = moduleData.id.includes('shelf-split')
+            && sections.length >= 2
+            && sectionIndex === sections.length - 1;
+          if (shouldShrinkExplicitTopSection) {
+            const previousSectionsHeight = sections
+              .filter((_, idx) => idx < sectionIndex)
+              .reduce((sum, s) => sum + (s.height || 0), 0);
+            sectionHeightMm = Math.min(section.height || 0, Math.max(0, height - previousSectionsHeight));
+          } else {
+            sectionHeightMm = section.height || 0;
+          }
         } else if (sections.length >= 2) {
           // 다중 섹션: 마지막 섹션이 나머지 높이를 흡수
           const isLastSection = sectionIndex === sections.length - 1;
@@ -1063,7 +1073,7 @@ export const calculatePanelDetails = (
                                 moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf')) && sectionIndex === 0;
         if (section.shelfPositions && section.shelfPositions.length > 0 && !is2HangingLower) {
           targetPanel.push({
-            name: `${sectionPrefix}선반 1`,
+            name: '옷봉선반',
             width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
             depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
             thickness: basicThickness,
@@ -1286,7 +1296,7 @@ export const calculatePanelDetails = (
       explicitInsetMm: moduleData.modelConfig?.shelfFrontInsetMm
     });
     panels.upper.push({
-      name: '(상)선반 1',
+      name: '옷봉선반',
       width: innerWidth - sidePanelGap,
       depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm,
       thickness: basicThickness,
@@ -1359,7 +1369,7 @@ export const calculatePanelDetails = (
       if (section.type === 'hanging') {
         if (section.shelfPositions && section.shelfPositions.length > 0) {
           rTargetPanel.push({
-            name: `${rSectionPrefix}선반 1`,
+            name: '옷봉선반',
             width: rightHorizontalPanelWidth,
             depth: customDepth - backReductionForPanelsMm - shelfFrontInsetMm,
             thickness: basicThickness,
@@ -1475,7 +1485,7 @@ export const calculatePanelDetails = (
       doorHeightMm: doorH,
       doorBottomOnSideMm,
       shelfCollisionRangesOnSideMm: shelfRangesFromBottom,
-      customDoorPositionsMm: customPositionsMm,
+      customSidePositionsMm: customPositionsMm,
       defaultDoorPositionsMm: defaultPositionsMm ?? (fixedHingeCount
         ? calculateFixedHingePositions(doorH, fixedHingeCount)
         : calculateHingePositions(doorH)),
@@ -1595,20 +1605,24 @@ export const calculatePanelDetails = (
         ? Math.min(height, lowerSectionTopMm + customUpperSectionHeightMm)
         : height;
       const defaultLowerDoorTopGapMm = isPantryDoorSplitModule ? -2 : -40;
-      const defaultUpperDoorBottomGapMm = isPantryDoorSplitModule ? 1 : -20;
+      const defaultUpperDoorBottomGapMm = isPantryDoorSplitModule ? -1 : 20;
       const effectiveLowerDoorTopGapMm = typeof splitDoorGaps?.lowerDoorTopGap === 'number'
         ? (splitDoorGaps.lowerDoorTopGap === (isPantryDoorSplitModule ? 2 : 40) ? defaultLowerDoorTopGapMm : splitDoorGaps.lowerDoorTopGap)
         : defaultLowerDoorTopGapMm;
       const effectiveUpperDoorBottomGapMm = typeof splitDoorGaps?.upperDoorBottomGap === 'number'
-        ? (splitDoorGaps.upperDoorBottomGap === 20 && !isPantryDoorSplitModule ? defaultUpperDoorBottomGapMm : splitDoorGaps.upperDoorBottomGap)
+        ? (
+          (!isPantryDoorSplitModule && splitDoorGaps.upperDoorBottomGap === -20)
+            ? defaultUpperDoorBottomGapMm
+            : (isPantryDoorSplitModule && splitDoorGaps.upperDoorBottomGap === 1 ? defaultUpperDoorBottomGapMm : splitDoorGaps.upperDoorBottomGap)
+        )
         : defaultUpperDoorBottomGapMm;
       const effectiveLowerDoorBottomGapMm = splitDoorGaps?.lowerDoorBottomGap ?? 0;
       const effectiveUpperDoorTopGapMm = splitDoorGaps?.upperDoorTopGap ?? doorTopGap ?? 0;
       const lowerDoorTopMm = lowerSectionTopMm + effectiveLowerDoorTopGapMm;
-      const upperDoorBottomMm = lowerSectionTopMm + effectiveUpperDoorBottomGapMm;
-      const lowerDoorBottomMm = effectiveLowerDoorBottomGapMm;
+      const upperDoorBottomMm = lowerSectionTopMm - effectiveUpperDoorBottomGapMm;
+      const lowerDoorBottomMm = -effectiveLowerDoorBottomGapMm;
       const lowerDoorH = lowerDoorTopMm - lowerDoorBottomMm;
-      const upperDoorH = upperSectionTopMm - effectiveUpperDoorTopGapMm - upperDoorBottomMm;
+      const upperDoorH = upperSectionTopMm + effectiveUpperDoorTopGapMm - upperDoorBottomMm;
 
       bracketHingeYPositions = [];
 
@@ -1852,7 +1866,7 @@ export const calculatePanelDetails = (
                 : -1;
               for (let i = 0; i < shelfCount; i++) {
                 const shelfName = isFixedShelf
-                  ? (i === rodShelfIndex ? '옷봉 선반' : `고정선반 ${i + 1}`)
+                  ? (i === rodShelfIndex ? '옷봉선반' : `고정선반 ${i + 1}`)
                   : `선반 ${i + 1}`;
                 targetPanel.push({
                   name: `${sectionPrefix}${areaPrefix}${shelfName}`,
@@ -1941,7 +1955,7 @@ export const calculatePanelDetails = (
               // 옷봉 + 고정선반
               if ((el as any).withShelf) {
                 targetPanel.push({
-                  name: `${sectionPrefix}${areaPrefix}옷봉 선반`,
+                  name: `${sectionPrefix}${areaPrefix}옷봉선반`,
                   width: horizontalW,
                   depth: customDepth - backReductionForPanelsMm,
                   thickness: basicThicknessCC,

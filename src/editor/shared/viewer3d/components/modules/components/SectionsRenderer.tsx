@@ -1169,7 +1169,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const upperSectionTopMm = Math.min(heightMm, lowerSectionHeightMm + upperSectionHeightMm);
       const isPantrySplit = moduleId.includes('pantry-cabinet-split');
       const defaultLowerDoorTopGapMm = isPantrySplit ? -2 : -40;
-      const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : -20;
+      const defaultUpperDoorBottomGapMm = isPantrySplit ? -1 : 20;
       const rawLowerDoorTopGapMm = (currentPlacedModule as any).lowerDoorTopGap;
       const rawUpperDoorBottomGapMm = (currentPlacedModule as any).upperDoorBottomGap;
       const lowerDoorTopGapMm = typeof rawLowerDoorTopGapMm === 'number'
@@ -1177,14 +1177,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         : defaultLowerDoorTopGapMm;
       const lowerDoorBottomGapMm = (currentPlacedModule as any).lowerDoorBottomGap ?? 0;
       const upperDoorBottomGapMm = typeof rawUpperDoorBottomGapMm === 'number'
-        ? (rawUpperDoorBottomGapMm === 20 && !isPantrySplit ? defaultUpperDoorBottomGapMm : rawUpperDoorBottomGapMm)
+        ? (
+          (!isPantrySplit && rawUpperDoorBottomGapMm === -20)
+            ? defaultUpperDoorBottomGapMm
+            : (isPantrySplit && rawUpperDoorBottomGapMm === 1 ? defaultUpperDoorBottomGapMm : rawUpperDoorBottomGapMm)
+        )
         : defaultUpperDoorBottomGapMm;
       const upperDoorTopGapMm = (currentPlacedModule as any).upperDoorTopGap ?? doorTopGap ?? 0;
       const lowerDoorTopMm = lowerSectionHeightMm + lowerDoorTopGapMm;
-      const lowerDoorBottomMm = lowerDoorBottomGapMm;
+      const lowerDoorBottomMm = -lowerDoorBottomGapMm;
       const lowerDoorHeightMm = Math.max(1, lowerDoorTopMm - lowerDoorBottomMm);
-      const upperDoorBottomMm = lowerSectionHeightMm + upperDoorBottomGapMm;
-      const upperDoorHeightMm = Math.max(1, upperSectionTopMm - upperDoorTopGapMm - upperDoorBottomMm);
+      const upperDoorBottomMm = lowerSectionHeightMm - upperDoorBottomGapMm;
+      const upperDoorHeightMm = Math.max(1, upperSectionTopMm + upperDoorTopGapMm - upperDoorBottomMm);
       const shelfCollisionRanges = allBoringResult.details
         .filter(detail => detail.role === 'movable-shelf')
         .map(detail => ({
@@ -1195,7 +1199,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         doorHeightMm: lowerDoorHeightMm,
         doorBottomOnSideMm: lowerDoorBottomMm,
         shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-        customDoorPositionsMm: currentPlacedModule.lowerDoorHingePositionsMm,
+        customSidePositionsMm: currentPlacedModule.lowerDoorHingePositionsMm,
         defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
           doorHeightMm: lowerDoorHeightMm,
           doorBottomOnSideMm: lowerDoorBottomMm,
@@ -1209,7 +1213,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         doorHeightMm: upperDoorHeightMm,
         doorBottomOnSideMm: upperDoorBottomMm,
         shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-        customDoorPositionsMm: currentPlacedModule.upperDoorHingePositionsMm,
+        customSidePositionsMm: currentPlacedModule.upperDoorHingePositionsMm,
         defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
           doorHeightMm: upperDoorHeightMm,
           doorBottomOnSideMm: upperDoorBottomMm,
@@ -1298,7 +1302,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       doorHeightMm: doorGeometry.leafHeightMm,
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-      customDoorPositionsMm: currentPlacedModule.hingePositionsMm,
+      customSidePositionsMm: currentPlacedModule.hingePositionsMm,
       defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
         doorHeightMm: doorGeometry.leafHeightMm,
       }),

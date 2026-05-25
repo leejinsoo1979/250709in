@@ -266,7 +266,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     && !moduleIdForAbsorb.includes('-2drawer-shelf-')
     && !moduleIdForAbsorb.includes('shelf-split');
   const isShelfSplitModule = moduleIdForAbsorb.includes('shelf-split');
-  const shouldStabilizeShelfBoundary = isPlainShelfModule || isShelfSplitModule;
+  const isHangingWardrobeModule = moduleIdForAbsorb.includes('hanging');
+  const shouldStabilizeShelfBoundary = isPlainShelfModule || isShelfSplitModule || isHangingWardrobeModule;
   const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
     ? (spaceInfo?.baseConfig?.height ?? 60)
     : 0;
@@ -287,7 +288,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       shelfFloatAbsorbedMm = globalFloatMm;
     }
   }
-  if (isShelfSplitModule && hasBase !== false && typeof baseFrameHeight === 'number') {
+  if ((isShelfSplitModule || isHangingWardrobeModule) && hasBase !== false && typeof baseFrameHeight === 'number') {
     shelfBaseFrameDeltaMm = baseFrameHeight - globalBaseMm;
   }
 
@@ -1819,15 +1820,26 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               ? Math.min(cabinetH, lowerSectionTopMm + customUpperSecH)
               : cabinetH;
             const defaultLowerDoorTopGapMm = isPantrySplit ? -2 : -40;
-            const defaultUpperDoorBottomGapMm = isPantrySplit ? 1 : -20;
+            const defaultUpperDoorBottomGapMm = isPantrySplit ? -1 : 20;
             const effectiveLowerDoorTopGapMm = typeof lowerDoorTopGap === 'number'
               ? (lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? defaultLowerDoorTopGapMm : lowerDoorTopGap)
               : defaultLowerDoorTopGapMm;
-            const effectiveUpperDoorBottomGapMm = typeof upperDoorBottomGap === 'number'
-              ? (upperDoorBottomGap === 20 && !isPantrySplit ? defaultUpperDoorBottomGapMm : upperDoorBottomGap)
-              : defaultUpperDoorBottomGapMm;
-            const effectiveLowerDoorBottomGapMm = lowerDoorBottomGap ?? 0;
-            const effectiveUpperDoorTopGapMm = upperDoorTopGap ?? doorTopGap ?? 0;
+	            const effectiveUpperDoorBottomGapMm = typeof upperDoorBottomGap === 'number'
+	              ? (
+	                (!isPantrySplit && upperDoorBottomGap === -20)
+	                  ? defaultUpperDoorBottomGapMm
+	                  : (isPantrySplit && upperDoorBottomGap === 1 ? defaultUpperDoorBottomGapMm : upperDoorBottomGap)
+	              )
+	              : defaultUpperDoorBottomGapMm;
+	            const effectiveLowerDoorBottomGapMm = lowerDoorBottomGap ?? 0;
+	            const shelfSplitDefaultUpperDoorTopGapMm = !isPantrySplit
+	              ? (spaceInfo?.surroundType === 'surround' && spaceInfo?.frameConfig?.top !== false && hasTopFrame !== false ? -3 : 5)
+	              : 0;
+	            const effectiveUpperDoorTopGapMm = typeof upperDoorTopGap === 'number'
+	              ? upperDoorTopGap
+	              : !isPantrySplit && (doorTopGap === undefined || doorTopGap === 0 || doorTopGap === 5 || doorTopGap === -3)
+	                ? shelfSplitDefaultUpperDoorTopGapMm
+	                : (doorTopGap ?? 0);
             // 명시 사양 (사용자):
             //   - shelf-split: 하부도어 상단 = 860-40, 상부도어 하단 = 860-20
             //   - pantry-cabinet-split: 갭 3mm 비대칭 분할
@@ -1835,14 +1847,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             //       · 상부도어 하단 = 하부섹션 상단(=상부섹션 하단) + 1mm (위로 1)
             //       · 총 갭 = 1 + 2 = 3mm
             const lowerDoorTopMm = lowerSectionTopMm + effectiveLowerDoorTopGapMm;
-            const upperDoorBottomMm = lowerSectionTopMm + effectiveUpperDoorBottomGapMm;
-            const lowerDoorBottomMm = effectiveLowerDoorBottomGapMm;
-            const upperGapTop = effectiveUpperDoorTopGapMm; // 상부섹션 천판에서 아래로 이격
+            const upperDoorBottomMm = lowerSectionTopMm - effectiveUpperDoorBottomGapMm;
+            const lowerDoorBottomMm = -effectiveLowerDoorBottomGapMm;
+            const upperGapTop = effectiveUpperDoorTopGapMm; // 몸통 기준: +값이면 상부도어 상단이 위로 확장
             const lowerDoorH = lowerDoorTopMm - lowerDoorBottomMm;
             const lowerDoorCenterFromBottom = (lowerDoorTopMm + lowerDoorBottomMm) / 2;
             const lowerDoorY = lowerDoorCenterFromBottom - cabinetH / 2;
-            // 상부도어 H = (상부섹션 상단 - 상단갭) - 상부도어 하단
-            const upperDoorTopMm = upperSectionTopMm - upperGapTop;
+            // 상부도어 H = (상부섹션 상단 + 상단 확장값) - 상부도어 하단
+            const upperDoorTopMm = upperSectionTopMm + upperGapTop;
             const upperDoorH = upperDoorTopMm - upperDoorBottomMm;
             // 상부도어 중심(바닥기준) = (상부도어 하단 + 상부도어 상단) / 2
             const upperDoorCenterFromBottom = (upperDoorBottomMm + upperDoorTopMm) / 2;

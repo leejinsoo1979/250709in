@@ -570,7 +570,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              panelName="(상)선반 1"
+              panelName="옷봉선반"
             />
             
             {/* 안전선반 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}

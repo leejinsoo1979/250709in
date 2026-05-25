@@ -17,7 +17,13 @@ import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
-import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
+import {
+  normalizeDoorHingePositionsMm,
+  resolveDefaultDoorHingePositionsMm,
+  resolveDoorVerticalGeometry,
+  type DoorCabinetCategory,
+  type DoorHingeMode
+} from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
@@ -992,10 +998,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>('0');
 
   // 분할 모드용 섹션별 이격거리
-  const [upperDoorTopGap, setUpperDoorTopGap] = useState<number>(0); // 상부: 천장에서 아래로
-  const [upperDoorBottomGap, setUpperDoorBottomGap] = useState<number>(0); // 상부: 중간판에서 위로
+  const [upperDoorTopGap, setUpperDoorTopGap] = useState<number>(0); // 상부: 몸통 기준 +값이면 위로 확장
+  const [upperDoorBottomGap, setUpperDoorBottomGap] = useState<number>(0); // 상부: 몸통 기준 +값이면 아래로 확장
   const [lowerDoorTopGap, setLowerDoorTopGap] = useState<number>(0); // 하부: 중간판에서 아래로
-  const [lowerDoorBottomGap, setLowerDoorBottomGap] = useState<number>(0); // 하부: 바닥에서 위로
+  const [lowerDoorBottomGap, setLowerDoorBottomGap] = useState<number>(0); // 하부: 몸통 기준 +값이면 아래로 확장
   const [upperDoorTopGapInput, setUpperDoorTopGapInput] = useState<string>('0');
   const [upperDoorBottomGapInput, setUpperDoorBottomGapInput] = useState<string>('0');
   const [lowerDoorTopGapInput, setLowerDoorTopGapInput] = useState<string>('0');
@@ -1576,6 +1582,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 상단갭 = 몸통 상단에서 위로, 하단갭 = 몸통 하단에서 아래로
       // 기본값 0 = 도어 == 몸통. 도어올림/상판내림은 모듈별 기본값 사용
       const modId = currentPlacedModule.moduleId || '';
+      const isShelfSplitForDoorGaps = isShelfSplitModuleId(modId);
       const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
       const isLowerCategory = moduleData?.category === 'lower';
@@ -1584,7 +1591,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : isLowerCategory ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
       const defaultBottomGap = isTopDown ? 5 : isLowerCategory ? 0 : 25;
       const rawTopGap = currentPlacedModule.doorTopGap;
-      const initialTopGap = isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
+      const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
         : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
@@ -2964,6 +2971,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     field: HingePositionsField,
     currentPositions: number[],
     doorHeightMm: number,
+    doorBottomOnSideMm: number,
     segmentIndex: number,
     valueMm: number,
     editBasis?: { topDistancesMm: number[]; doorHeightMm: number }
@@ -2996,13 +3004,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const nextBottomPositions = nextTopDistances.map(topDistanceMm =>
       topToBottomHingePositionMm(topDistanceMm, doorHeight)
     );
-    updateHingePositions(field, nextBottomPositions, doorHeight);
+    updateHingePositions(field, nextBottomPositions, doorHeight, doorBottomOnSideMm);
   };
 
-  const updateHingePositions = (field: HingePositionsField, positions: number[], doorHeightMm: number) => {
+  const updateHingePositions = (
+    field: HingePositionsField,
+    positions: number[],
+    doorHeightMm: number,
+    doorBottomOnSideMm: number
+  ) => {
     if (!currentPlacedModule?.id) return;
     const normalized = normalizeDoorHingePositionsMm(positions, doorHeightMm);
-    updatePlacedModule(currentPlacedModule.id, { [field]: normalized } as any);
+    const sidePositions = normalized.map(positionMm =>
+      Math.round((doorBottomOnSideMm + positionMm) * 1000) / 1000
+    );
+    updatePlacedModule(currentPlacedModule.id, { [field]: sidePositions } as any);
   };
 
   const handleHingePositionEditModeChange = (checked: boolean) => {
@@ -3021,6 +3037,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     value: string,
     currentPositions: number[],
     doorHeightMm: number,
+    doorBottomOnSideMm: number,
     draftKey: string
   ) => {
     if (value === '' || value === '-' || !/^-?\d+$/.test(value)) {
@@ -3031,7 +3048,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     setHingePositionDrafts((prev) => ({ ...prev, [draftKey]: String(topDistanceMm) }));
     const next = [...currentPositions];
     next[index] = topToBottomHingePositionMm(topDistanceMm, doorHeightMm);
-    updateHingePositions(field, next, doorHeightMm);
+    updateHingePositions(field, next, doorHeightMm, doorBottomOnSideMm);
   };
 
   const handleHingeGapValueChange = (
@@ -3040,6 +3057,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     value: string,
     currentPositions: number[],
     doorHeightMm: number,
+    doorBottomOnSideMm: number,
     draftKey: string
   ) => {
     setHingeGapDrafts((prev) => ({ ...prev, [draftKey]: value }));
@@ -3047,7 +3065,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       return;
     }
     const gapMm = clampHingePositionMm(parseInt(value, 10), doorHeightMm);
-    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, gapMm, hingeGapEditBases[draftKey]);
+    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, doorBottomOnSideMm, segmentIndex, gapMm, hingeGapEditBases[draftKey]);
   };
 
   const handleHingeGapKeyDown = (
@@ -3057,6 +3075,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     inputValue: string,
     currentPositions: number[],
     doorHeightMm: number,
+    doorBottomOnSideMm: number,
     draftKey: string
   ) => {
     event.stopPropagation();
@@ -3082,7 +3101,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const delta = event.key === 'ArrowUp' ? step : -step;
     const nextGap = clampHingePositionMm((Number.isFinite(parsed) ? parsed : fallback) + delta, doorHeightMm);
     setHingeGapDrafts((prev) => ({ ...prev, [draftKey]: String(nextGap) }));
-    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, nextGap, hingeGapEditBases[draftKey]);
+    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, doorBottomOnSideMm, segmentIndex, nextGap, hingeGapEditBases[draftKey]);
   };
 
   const handleHingePositionKeyDown = (
@@ -3092,6 +3111,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     inputValue: string,
     currentPositions: number[],
     doorHeightMm: number,
+    doorBottomOnSideMm: number,
     draftKey: string
   ) => {
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
@@ -3105,13 +3125,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const next = [...currentPositions];
     next[index] = topToBottomHingePositionMm(nextTopDistanceMm, doorHeightMm);
     clearHingePositionDraft(draftKey);
-    updateHingePositions(field, next, doorHeightMm);
+    updateHingePositions(field, next, doorHeightMm, doorBottomOnSideMm);
   };
 
   const handleAddHingePosition = (
     field: HingePositionsField,
     currentPositions: number[],
-    doorHeightMm: number
+    doorHeightMm: number,
+    doorBottomOnSideMm: number
   ) => {
     const sortedPositions = normalizeDoorHingePositionsMm(currentPositions, doorHeightMm);
     let nextPosition = Math.round(doorHeightMm / 2);
@@ -3134,17 +3155,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       nextPosition = Math.round((sortedPositions[largestGapIndex] + sortedPositions[largestGapIndex + 1]) / 2);
     }
 
-    updateHingePositions(field, [...currentPositions, nextPosition], doorHeightMm);
+    updateHingePositions(field, [...currentPositions, nextPosition], doorHeightMm, doorBottomOnSideMm);
   };
 
   const handleRemoveHingePosition = (
     field: HingePositionsField,
     index: number,
     currentPositions: number[],
-    doorHeightMm: number
+    doorHeightMm: number,
+    doorBottomOnSideMm: number
   ) => {
     if (currentPositions.length <= 1) return;
-    updateHingePositions(field, currentPositions.filter((_, itemIndex) => itemIndex !== index), doorHeightMm);
+    updateHingePositions(field, currentPositions.filter((_, itemIndex) => itemIndex !== index), doorHeightMm, doorBottomOnSideMm);
   };
 
   const handleDoorChange = (doorEnabled: boolean) => {
@@ -4579,27 +4601,118 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 천장/바닥 기준 표시값: 도어와 천장/바닥 사이의 실제 거리 (양수)
             //   - 천장 기준 = 천장~가구상단 - 몸통 기준 상단갭
             //   - 바닥 기준 = 가구하단~바닥 - 몸통 기준 하단갭
-            const cfTopValue = String(Math.round(
-              isShelfSplitDoorModule
-                ? ceilingToBodyTopMm + (parseFloat(doorTopGapInput) || 0)
-                : ceilingToBodyTopMm - (parseFloat(doorTopGapInput) || 0)
-            ));
-            const cfBotValue = String(Math.round(bodyBottomToFloorMm - (parseFloat(doorBottomGapInput) || 0)));
+            const topBodyGapInput = isShelfSplitDoorModule ? upperDoorTopGapInput : doorTopGapInput;
+            const bottomBodyGapInput = isShelfSplitDoorModule ? lowerDoorBottomGapInput : doorBottomGapInput;
+            const cfTopValue = String(Math.round(ceilingToBodyTopMm - (parseFloat(topBodyGapInput) || 0)));
+            const cfBotValue = String(Math.round(bodyBottomToFloorMm - (parseFloat(bottomBodyGapInput) || 0)));
+            const handleDisplayedTopGapChange = (value: string) => {
+              if (!isShelfSplitDoorModule) {
+                handleDoorTopGapChange(value);
+                return;
+              }
+              setUpperDoorTopGapInput(value);
+              const numValue = parseInt(value);
+              if (!isNaN(numValue) && currentPlacedModule) {
+                setUpperDoorTopGap(numValue);
+                updatePlacedModule(currentPlacedModule.id, {
+                  upperDoorTopGap: numValue,
+                  doorTopGap: numValue,
+                });
+              }
+            };
+            const handleDisplayedTopGapBlur = () => {
+              if (!isShelfSplitDoorModule) {
+                handleDoorTopGapBlur();
+                return;
+              }
+              const value = parseInt(upperDoorTopGapInput);
+              if (!isNaN(value) && currentPlacedModule) {
+                setUpperDoorTopGap(value);
+                updatePlacedModule(currentPlacedModule.id, {
+                  upperDoorTopGap: value,
+                  doorTopGap: value,
+                });
+              } else {
+                setUpperDoorTopGapInput(upperDoorTopGap.toString());
+              }
+            };
+            const handleDisplayedTopGapKeyDown = (e: React.KeyboardEvent) => {
+              if (!isShelfSplitDoorModule) {
+                handleDoorTopGapKeyDown(e);
+                return;
+              }
+              if (e.key === 'Enter') {
+                handleDisplayedTopGapBlur();
+                (e.target as HTMLInputElement).blur();
+                return;
+              }
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const currentValue = parseInt(upperDoorTopGapInput) || 0;
+                handleDisplayedTopGapChange(String(currentValue + (e.key === 'ArrowUp' ? 1 : -1)));
+              }
+            };
+            const handleDisplayedBottomGapChange = (value: string) => {
+              if (!isShelfSplitDoorModule) {
+                handleDoorBottomGapChange(value);
+                return;
+              }
+              setLowerDoorBottomGapInput(value);
+              const numValue = parseInt(value);
+              if (!isNaN(numValue) && currentPlacedModule) {
+                setLowerDoorBottomGap(numValue);
+                updatePlacedModule(currentPlacedModule.id, {
+                  lowerDoorBottomGap: numValue,
+                  doorBottomGap: numValue,
+                });
+              }
+            };
+            const handleDisplayedBottomGapBlur = () => {
+              if (!isShelfSplitDoorModule) {
+                handleDoorBottomGapBlur();
+                return;
+              }
+              const value = parseInt(lowerDoorBottomGapInput);
+              if (!isNaN(value) && currentPlacedModule) {
+                setLowerDoorBottomGap(value);
+                updatePlacedModule(currentPlacedModule.id, {
+                  lowerDoorBottomGap: value,
+                  doorBottomGap: value,
+                });
+              } else {
+                setLowerDoorBottomGapInput(lowerDoorBottomGap.toString());
+              }
+            };
+            const handleDisplayedBottomGapKeyDown = (e: React.KeyboardEvent) => {
+              if (!isShelfSplitDoorModule) {
+                handleDoorBottomGapKeyDown(e);
+                return;
+              }
+              if (e.key === 'Enter') {
+                handleDisplayedBottomGapBlur();
+                (e.target as HTMLInputElement).blur();
+                return;
+              }
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const currentValue = parseInt(lowerDoorBottomGapInput) || 0;
+                handleDisplayedBottomGapChange(String(currentValue + (e.key === 'ArrowUp' ? 1 : -1)));
+              }
+            };
 
-            // 천장/바닥 기준 입력 → 몸통 기준으로 변환 (0~최대거리로 클램프, 뚫고 나가지 못함)
+            // 천장/바닥 기준 입력 → 몸통 기준으로 변환.
+            // 기준 거리보다 큰 값은 몸통 기준 음수로 저장되어 도어가 안쪽으로 줄어든다.
             const onTopCfChange = (v: string) => {
               const raw = parseFloat(v);
               if (isNaN(raw)) return;
-              const num = Math.max(0, isShelfSplitDoorModule ? raw : Math.min(ceilingToBodyTopMm, raw));
-              handleDoorTopGapChange(String(Math.round(
-                isShelfSplitDoorModule ? num - ceilingToBodyTopMm : ceilingToBodyTopMm - num
-              )));
+              const num = Math.max(0, raw);
+              handleDisplayedTopGapChange(String(Math.round(ceilingToBodyTopMm - num)));
             };
             const onBotCfChange = (v: string) => {
               const raw = parseFloat(v);
               if (isNaN(raw)) return;
-              const num = Math.max(0, Math.min(bodyBottomToFloorMm, raw));
-              handleDoorBottomGapChange(String(Math.round(bodyBottomToFloorMm - num)));
+              const num = Math.max(0, raw);
+              handleDisplayedBottomGapChange(String(Math.round(bodyBottomToFloorMm - num)));
             };
 
             return (
@@ -4625,10 +4738,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={doorTopGapInput}
-                      onChange={(e) => handleDoorTopGapChange(e.target.value)}
-                      onBlur={handleDoorTopGapBlur}
-                      onKeyDown={handleDoorTopGapKeyDown}
+                      value={topBodyGapInput}
+                      onChange={(e) => handleDisplayedTopGapChange(e.target.value)}
+                      onBlur={handleDisplayedTopGapBlur}
+                      onKeyDown={handleDisplayedTopGapKeyDown}
                       className={styles.depthInput}
                       style={{ textAlign: 'center', fontSize: '13px' }}
                     />
@@ -4653,10 +4766,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={doorBottomGapInput}
-                      onChange={(e) => handleDoorBottomGapChange(e.target.value)}
-                      onBlur={handleDoorBottomGapBlur}
-                      onKeyDown={handleDoorBottomGapKeyDown}
+                      value={bottomBodyGapInput}
+                      onChange={(e) => handleDisplayedBottomGapChange(e.target.value)}
+                      onBlur={handleDisplayedBottomGapBlur}
+                      onKeyDown={handleDisplayedBottomGapKeyDown}
                       className={styles.depthInput}
                       style={{ textAlign: 'center', fontSize: '13px' }}
                     />
@@ -4782,12 +4895,68 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const isUpperModule = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
               const isLowerModule = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet');
               const isPantrySplit = currentPlacedModule.moduleId?.includes('pantry-cabinet-split');
+              const moduleBodyHeightMm = Math.round(adjustedFreeHeight ?? placedBodyHeight ?? moduleData?.dimensions.height ?? 0);
+              const doorWidthMm = Math.round(doorOriginalWidth ?? customWidth ?? moduleData?.dimensions.width ?? 0);
+              const defaultDoorBottomOnSideMm = !isSplitDoor && moduleData
+                ? resolveDoorVerticalGeometry({
+                  moduleId: moduleData.id,
+                  cabinetCategory: (moduleData.category || 'generic') as DoorCabinetCategory,
+                  doorWidthMm,
+                  cabinetHeightMm: moduleBodyHeightMm,
+                  doorTopGapMm: currentPlacedModule.doorTopGap,
+                  doorBottomGapMm: currentPlacedModule.doorBottomGap,
+                  isDualSlot: currentPlacedModule.isDualSlot,
+                  hingeSide: currentPlacedModule.hingePosition ?? 'right',
+                  cabinetBottomMm: 0
+                }).bottomMm
+                : 0;
+              const splitDoorBottomsMm = (() => {
+                if (!isSplitDoor) {
+                  return {
+                    lower: 0,
+                    upper: 0
+                  };
+                }
+
+                const sections = Array.isArray(currentPlacedModule.customSections)
+                  ? currentPlacedModule.customSections
+                  : ((moduleData?.modelConfig as any)?.sections || []);
+                const lowerSection = sections[0];
+                const lowerSectionTopMm = lowerSection?.heightType === 'absolute'
+                  ? Number(lowerSection.height || 0)
+                  : Number.isFinite(Number(lowerSection?.height || lowerSection?.heightRatio))
+                    ? moduleBodyHeightMm * (Number(lowerSection.height || lowerSection.heightRatio) / 100)
+                    : isPantrySplit
+                      ? 1825
+                      : 860;
+                const defaultUpperDoorBottomGapMm = isPantrySplit ? -1 : 20;
+                const rawUpperDoorBottomGapMm = currentPlacedModule.upperDoorBottomGap;
+                const upperDoorBottomGapMm = typeof rawUpperDoorBottomGapMm === 'number'
+                  ? (
+                    (!isPantrySplit && rawUpperDoorBottomGapMm === -20)
+                      ? defaultUpperDoorBottomGapMm
+                      : (isPantrySplit && rawUpperDoorBottomGapMm === 1 ? defaultUpperDoorBottomGapMm : rawUpperDoorBottomGapMm)
+                  )
+                  : defaultUpperDoorBottomGapMm;
+                return {
+                  lower: -(currentPlacedModule.lowerDoorBottomGap ?? 0),
+                  upper: lowerSectionTopMm - upperDoorBottomGapMm
+                };
+              })();
               const buildPositions = (
                 field: HingePositionsField,
                 doorHeightMm: number,
-                hingeMode: DoorHingeMode
+                hingeMode: DoorHingeMode,
+                doorBottomOnSideMm: number
               ) => {
-                const saved = normalizeDoorHingePositionsMm((currentPlacedModule as any)[field], doorHeightMm);
+                const savedSidePositions = ((currentPlacedModule as any)[field] || [])
+                  .filter((position: number) => Number.isFinite(position))
+                  .map((position: number) => Math.round(position * 1000) / 1000)
+                  .sort((a: number, b: number) => a - b);
+                const saved = normalizeDoorHingePositionsMm(
+                  savedSidePositions.map((position: number) => position - doorBottomOnSideMm),
+                  doorHeightMm
+                );
                 return saved.length > 0
                   ? saved
                   : resolveDefaultDoorHingePositionsMm({
@@ -4803,12 +4972,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     label: '하부 도어 경첩',
                     field: 'lowerDoorHingePositionsMm' as HingePositionsField,
                     doorHeightMm: Math.round(lowerDoorPanel.height),
+                    doorBottomOnSideMm: splitDoorBottomsMm.lower,
                     hingeMode: (isPantrySplit ? 'lower4' : 'auto') as DoorHingeMode
                   },
                   {
                     label: '상부 도어 경첩',
                     field: 'upperDoorHingePositionsMm' as HingePositionsField,
                     doorHeightMm: Math.round(upperDoorPanel.height),
+                    doorBottomOnSideMm: splitDoorBottomsMm.upper,
                     hingeMode: (isPantrySplit ? 'upper2' : 'auto') as DoorHingeMode
                   }
                 ]
@@ -4817,6 +4988,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     label: '도어 경첩',
                     field: 'hingePositionsMm' as HingePositionsField,
                     doorHeightMm: Math.round(defaultDoorPanel.height),
+                    doorBottomOnSideMm: defaultDoorBottomOnSideMm,
                     hingeMode: 'auto' as DoorHingeMode
                   }]
                   : [];
@@ -4837,7 +5009,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </label>
                   </div>
                   {isHingePositionEditMode && groups.map((group) => {
-                    const positions = buildPositions(group.field, group.doorHeightMm, group.hingeMode);
+                    const positions = buildPositions(group.field, group.doorHeightMm, group.hingeMode, group.doorBottomOnSideMm);
                     const displayPositions = positions
                       .map((positionMm, sourceIndex) => ({
                         positionMm,
@@ -4852,7 +5024,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', fontWeight: 600 }}>{group.label}</span>
                           <button
                             type="button"
-                            onClick={() => handleAddHingePosition(group.field, positions, group.doorHeightMm)}
+                            onClick={() => handleAddHingePosition(group.field, positions, group.doorHeightMm, group.doorBottomOnSideMm)}
                             style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
                           >
                             추가
@@ -4872,8 +5044,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   min={1}
                                   max={Math.max(1, group.doorHeightMm - 1)}
                                   value={inputValue}
-                                  onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, group.doorHeightMm, draftKey)}
-                                  onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, group.doorHeightMm, draftKey)}
+                                  onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
+                                  onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
                                   onBlur={() => clearHingeGapDraft(draftKey)}
                                   onFocus={(e) => {
                                     setHingeGapEditBases((prev) => ({
@@ -4900,7 +5072,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 key={`${group.field}-delete-${sourceIndex}`}
                                 type="button"
                                 disabled={positions.length <= 1}
-                                onClick={() => handleRemoveHingePosition(group.field, sourceIndex, positions, group.doorHeightMm)}
+                                onClick={() => handleRemoveHingePosition(group.field, sourceIndex, positions, group.doorHeightMm, group.doorBottomOnSideMm)}
                                 style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: positions.length <= 1 ? 'var(--theme-text-tertiary)' : 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: positions.length <= 1 ? 'not-allowed' : 'pointer' }}
                               >
                                 {displayIndex + 1}번 삭제
@@ -6159,17 +6331,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   topFrameThickness: nextTopFrameH,
                   customSections: nextSections,
                   upperDoorHingePositionsMm: undefined,
-                };
-              }
-
-              if (moduleData?.category === 'full') {
-                const currentBodyHeight = mod.freeHeight
-                  ?? mod.customHeight
-                  ?? moduleData?.dimensions?.height
-                  ?? 0;
-                return {
-                  baseFrameHeight: clampedSize,
-                  freeHeight: Math.max(100, currentBodyHeight + baseDelta),
                 };
               }
 

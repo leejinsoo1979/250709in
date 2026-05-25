@@ -553,7 +553,7 @@ describe('panelDetails regression baselines', () => {
     expect(doors[0].height).toBeGreaterThan(0)
   })
 
-  it('사용자 경첩 위치는 싱글 도어 패널 보링에 그대로 반영된다', () => {
+  it('사용자 경첩 위치는 몸통 기준으로 저장되고 도어 보링에 매칭된다', () => {
     const panels = calculatePanels('lower-half-cabinet-500', 500, 650, {
       hasDoor: true,
       hingePosition: 'right',
@@ -566,12 +566,27 @@ describe('panelDetails regression baselines', () => {
     expect(door.hingeCount).toBe(2)
   })
 
-  it('도어분절 팬트리장은 하부/상부 도어별 사용자 경첩 위치를 따로 반영한다', () => {
+  it('상부장 사용자 경첩 위치는 도어 돌출값을 빼서 도어 보링에 매칭된다', () => {
+    const panels = calculatePanels('upper-cabinet-2tier-500', 500, 300, {
+      hasDoor: true,
+      hingePosition: 'left',
+      backPanelThicknessMm: 9,
+      freeHeight: 1000,
+      customHingePositionsMm: [92, 885]
+    })
+    const door = findPanel(panels, '도어')
+    const leftSide = findPanel(panels, '좌측판')
+
+    expect(door.boringPositions).toEqual([120, 913])
+    expect(leftSide.bracketBoringPositions).toEqual([92, 885])
+  })
+
+  it('도어분절 팬트리장은 하부/상부 도어별 몸통 기준 사용자 경첩 위치를 따로 반영한다', () => {
     const panels = calculatePanels('single-pantry-cabinet-split-600', 600, 600, {
       hasDoor: true,
       backPanelThicknessMm: 9,
       customLowerDoorHingePositionsMm: [120, 640, 1260, 1700],
-      customUpperDoorHingePositionsMm: [90, 220]
+      customUpperDoorHingePositionsMm: [1916, 2046]
     })
     const lowerDoor = findPanel(panels, '하부 도어')
     const upperDoor = findPanel(panels, '상부 도어')
@@ -592,7 +607,7 @@ describe('panelDetails regression baselines', () => {
         { type: 'shelf', height: 700, heightType: 'absolute', count: 1 }
       ],
       customLowerDoorHingePositionsMm: [120, 640, 1260, 1600],
-      customUpperDoorHingePositionsMm: [90, 220]
+      customUpperDoorHingePositionsMm: [1791, 1921]
     })
     const lowerDoor = findPanel(panels, '하부 도어')
     const upperDoor = findPanel(panels, '상부 도어')

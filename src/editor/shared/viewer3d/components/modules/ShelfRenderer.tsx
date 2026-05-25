@@ -175,6 +175,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     return null;
   }
 
+  const getShelfPanelName = (index: number) => {
+    if (sectionType === 'hanging') return '옷봉선반';
+    return sectionName ? `${sectionName}선반 ${index}` : `선반 ${index}`;
+  };
+
   // 절대 위치 모드: 마감 패널 또는 절대 위치 지정
   if (isTopFinishPanel && shelfCount === 1) {
 // console.log('🔥 isTopFinishPanel 상판 렌더링:', { furnitureId, sectionType, innerHeight, yOffset });
@@ -192,7 +197,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       ? -innerHeight / 2 + basicThickness / 2  // 상부 섹션: 섹션 하단에 바닥판
       : innerHeight / 2 - basicThickness / 2;  // 하부/단일 섹션: 섹션 상단에 상판
 
-    const panelName = sectionName ? `${sectionName}선반 1` : `선반 1`;
+    const panelName = getShelfPanelName(1);
     const topFinishMat = getPanelMaterial(panelName);
     return (
       <group position={[0, yOffset, 0]}>
@@ -243,7 +248,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             ? basicThickness/2 + zOffset - mmToThreeUnits(5) // 뒤로 5mm 이동 (백패널에 붙임)
             : basicThickness/2 + zOffset - frontInset / 2; // 앞면 들여쓰기
 
-          const panelName = sectionName ? `${sectionName}선반 ${shelfRenderIndex}` : `선반 ${shelfRenderIndex}`;
+          const panelName = getShelfPanelName(shelfRenderIndex);
           const shelfMat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
@@ -273,7 +278,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       {Array.from({ length: shelfCount }, (_, i) => {
         // 섹션 내에서의 상대적 Y 위치 계산
         const relativeYPosition = (-innerHeight / 2) + shelfSpacing * (i + 1);
-        const panelName = sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`;
+        const panelName = getShelfPanelName(i + 1);
         const shelfMat = getPanelMaterial(panelName);
         return (
           <BoxWithEdges

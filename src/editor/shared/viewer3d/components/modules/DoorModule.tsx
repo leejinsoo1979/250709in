@@ -1717,10 +1717,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     : splitDoorPanelName === '하부 도어'
       ? (lowerDoorHingePositionsMm ?? storePlacedModule?.lowerDoorHingePositionsMm)
       : (hingePositionsMm ?? storePlacedModule?.hingePositionsMm);
-  const customHingePositionsMm = normalizeDoorHingePositionsMm(
-    customHingePositionSource,
-    actualDoorHeight
-  );
+  const customHingePositionsMm = (customHingePositionSource || [])
+    .filter(position => Number.isFinite(position))
+    .map(position => Math.round(position * 1000) / 1000)
+    .sort((a, b) => a - b);
   const hasCustomHingePositions = customHingePositionsMm.length > 0;
   const shelfCollisionRangesMm = useMemo(() => {
     const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
@@ -1830,7 +1830,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorHeightMm: actualDoorHeight,
     doorBottomOnSideMm,
     shelfCollisionRangesOnSideMm: shelfCollisionRangesMm,
-    customDoorPositionsMm: hasCustomHingePositions ? customHingePositionsMm : undefined,
+    customSidePositionsMm: hasCustomHingePositions ? customHingePositionsMm : undefined,
     defaultDoorPositionsMm: defaultHingePositionsMm,
     preserveEdgePositionsMm: true
   }).doorPositionsMm;
@@ -1929,9 +1929,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const nextBottomPositions = nextTopDistances.map(topDistanceMm =>
       Math.max(1, Math.min(doorHeightMm - 1, Math.round(doorHeightMm - topDistanceMm)))
     );
+    const nextSidePositions = nextBottomPositions.map(positionMm =>
+      Math.round((doorBottomOnSideMm + positionMm) * 1000) / 1000
+    );
 
     updatePlacedModule(furnitureId, {
-      [hingePositionsField]: normalizeDoorHingePositionsMm(nextBottomPositions, doorHeightMm)
+      [hingePositionsField]: nextSidePositions
     } as any);
   };
 
@@ -2630,7 +2633,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   {renderHingeMarkers(
                     -leftDoorWidthUnits / 2 + mmToThreeUnits(24),
                     9.5,
-                    customHingePositionsMm,
+                    effectiveHingePositionsMm,
                     'left-custom-hinge'
                   )}
                 </>
@@ -3046,7 +3049,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   {renderHingeMarkers(
                     rightDoorWidthUnits / 2 - mmToThreeUnits(24),
                     -9.5,
-                    customHingePositionsMm,
+                    effectiveHingePositionsMm,
                     'right-custom-hinge'
                   )}
                 </>
@@ -3647,7 +3650,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ? -doorWidthUnits / 2 + mmToThreeUnits(24)
                     : doorWidthUnits / 2 - mmToThreeUnits(24),
                   adjustedHingePosition === 'left' ? 9.5 : -9.5,
-                  customHingePositionsMm,
+                  effectiveHingePositionsMm,
                   'single-custom-hinge'
                 )}
               </>

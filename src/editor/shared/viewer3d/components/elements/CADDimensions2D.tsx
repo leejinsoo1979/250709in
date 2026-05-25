@@ -358,16 +358,6 @@ const computeSectionHeightsInfo = (
     !moduleId.includes('shelf-split');
   const isShelfSplit = moduleId.includes('shelf-split');
   if (spaceInfo && (isPlainShelf || isShelfSplit) && rawSections.length === 2) {
-    if (isShelfSplit && Array.isArray((module as any).customSections)) {
-      return {
-        sections: rawSections,
-        heightsMm: [
-          Math.max(0, Math.round(rawSections[0]?.height ?? 0)),
-          Math.max(0, Math.round(rawSections[1]?.height ?? 0)),
-        ],
-        basicThicknessMm
-      };
-    }
     const rawLower = rawSections[0];
     const lowerOrig = rawLower.heightType === 'percentage'
       ? Math.round(internalHeightMm * ((rawLower.height ?? 0) / 100))
@@ -1101,21 +1091,31 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       ? Math.min(bounds.cabinetHeightMm, sectionInfo.heightsMm[0] + sectionInfo.heightsMm[1])
       : bounds.cabinetHeightMm;
     const defaultLowerTopGap = isPantrySplit ? -2 : -40;
-    const defaultUpperBottomGap = isPantrySplit ? 1 : -20;
+    const defaultUpperBottomGap = isPantrySplit ? -1 : 20;
     const lowerTopGap = typeof (mod as any).lowerDoorTopGap === 'number'
       ? ((mod as any).lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? defaultLowerTopGap : (mod as any).lowerDoorTopGap)
       : defaultLowerTopGap;
-    const upperBottomGap = typeof (mod as any).upperDoorBottomGap === 'number'
-      ? ((mod as any).upperDoorBottomGap === 20 && !isPantrySplit ? defaultUpperBottomGap : (mod as any).upperDoorBottomGap)
-      : defaultUpperBottomGap;
-    const lowerBottomGap = (mod as any).lowerDoorBottomGap ?? 0;
-    const upperTopGap = (mod as any).upperDoorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+	    const upperBottomGap = typeof (mod as any).upperDoorBottomGap === 'number'
+	      ? (
+	        (!isPantrySplit && (mod as any).upperDoorBottomGap === -20)
+	          ? defaultUpperBottomGap
+	          : (isPantrySplit && (mod as any).upperDoorBottomGap === 1 ? defaultUpperBottomGap : (mod as any).upperDoorBottomGap)
+	      )
+	      : defaultUpperBottomGap;
+	    const lowerBottomGap = (mod as any).lowerDoorBottomGap ?? 0;
+	    const shelfSplitDefaultUpperTopGap = !isPantrySplit
+	      ? (spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false && (mod as any).hasTopFrame !== false ? -3 : 5)
+	      : 0;
+	    const upperTopGap = typeof (mod as any).upperDoorTopGap === 'number'
+	      ? (mod as any).upperDoorTopGap
+	      : !isPantrySplit && (mod.doorTopGap === undefined || mod.doorTopGap === 0 || mod.doorTopGap === 5 || mod.doorTopGap === -3)
+	        ? shelfSplitDefaultUpperTopGap
+	        : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
     const lowerDoorTopFromBottom = lowerSectionTopMm + lowerTopGap;
-    const upperDoorBottomFromBottom = lowerSectionTopMm + upperBottomGap;
-    const lowerDoorBottomAbs = bounds.cabinetBottomAbsMm + lowerBottomGap;
+    const lowerDoorBottomAbs = bounds.cabinetBottomAbsMm - lowerBottomGap;
     const lowerDoorTopAbs = bounds.cabinetBottomAbsMm + lowerDoorTopFromBottom;
-    const upperDoorBottomAbs = bounds.cabinetBottomAbsMm + upperDoorBottomFromBottom;
-    const upperDoorTopAbs = bounds.cabinetBottomAbsMm + upperSectionTopMm - upperTopGap;
+    const upperDoorBottomAbs = bounds.cabinetBottomAbsMm + lowerSectionTopMm - upperBottomGap;
+    const upperDoorTopAbs = bounds.cabinetBottomAbsMm + upperSectionTopMm + upperTopGap;
     const splitGapHeightMm = Math.max(0, upperDoorBottomAbs - lowerDoorTopAbs);
     const ceilingAbsMm = getEffectiveDoorSpaceHeightMm(mod);
     const topGapHeightMm = Math.max(0, ceilingAbsMm - upperDoorTopAbs);

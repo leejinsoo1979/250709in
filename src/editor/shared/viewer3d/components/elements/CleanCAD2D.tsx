@@ -4558,12 +4558,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ...rawHeights.slice(1),
                 ];
               } else if ((leftIsPlainShelf || leftIsShelfSplit) && rawHeights.length >= 2) {
-                if (leftIsShelfSplit && Array.isArray((leftViewMod as any)?.customSections)) {
-                  sectionHeights = [
-                    Math.max(0, Math.round(rawHeights[0] || 0)),
-                    Math.max(0, Math.round(rawHeights[1] || 0)),
-                  ];
-                } else {
                 // 하부 경계는 바닥 기준 1060mm 유지:
                 // 걸레받이 OFF면 하부에 base를 더하고, 띄움은 하부에서 뺀다.
                 const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
@@ -4593,7 +4587,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     ? Math.min(remainingUpperH, Math.max(0, Math.round(rawHeights[1] || 0)))
                     : remainingUpperH,
                 ];
-                }
               } else {
                 const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
                 sectionHeights = [
@@ -7271,13 +7264,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const heightSourceSections = effectiveSections.length > 0 ? effectiveSections : originalSections;
         let getEffectiveSectionHeight: (_sec: any, idx: number) => number;
         if (usesStableShelfBoundary && heightSourceSections.length >= 2) {
-          if (isShelfSplitEff && Array.isArray((module as any).customSections)) {
-            getEffectiveSectionHeight = (_sec: any, idx: number) => {
-              if (idx === 0) return Math.max(0, Math.round(heightSourceSections[0]?.height || 0));
-              if (idx === 1) return Math.max(0, Math.round(heightSourceSections[1]?.height || 0));
-              return heightSourceSections[idx]?.height || 0;
-            };
-          } else {
           // 선반장/도어분절 현관장 분배:
           // lowerNew = lowerOrig + baseAbsorbed - floatAbsorbed - baseFrameDelta
           const lowerOrig = heightSourceSections[0].height || 0;
@@ -7308,7 +7294,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (idx === 1) return newUpperH;
             return heightSourceSections[idx]?.height || 0;
           };
-          }
         } else {
           const absorbIdx = isEntrywayEff ? 0 : heightSourceSections.length - 1;
           const fixedSumOuter = heightSourceSections.reduce((s: number, sec: any, i: number) =>
@@ -8365,12 +8350,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 return [Math.max(0, sectionBasisH - fixedSum), ...rawHeights.slice(1)];
               }
               if (isPlainShelf || isShelfSplit) {
-                if (isShelfSplit && Array.isArray((viewMod as any).customSections)) {
-                  return [
-                    Math.max(0, Math.round(rawHeights[0] || 0)),
-                    Math.max(0, Math.round(rawHeights[1] || 0)),
-                  ];
-                }
                 const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
                   ? (spaceInfo.baseConfig?.height ?? 60)
                   : 0;
@@ -9000,23 +8979,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       : (typeof customLowerH === 'number' && customLowerH > 0)
                         ? customLowerH : defaultLowerSecTopMm;
                     const defaultLowerDoorTopGapVal = isPantrySplitDim ? -2 : -40;
-                    const defaultUpperDoorBottomGapVal = isPantrySplitDim ? 1 : -20;
+                    const defaultUpperDoorBottomGapVal = isPantrySplitDim ? -1 : 20;
                     const lowerDoorTopGapVal = typeof (doorModule as any).lowerDoorTopGap === 'number'
                       ? ((doorModule as any).lowerDoorTopGap === (isPantrySplitDim ? 2 : 40) ? defaultLowerDoorTopGapVal : (doorModule as any).lowerDoorTopGap)
                       : defaultLowerDoorTopGapVal;
-                    const upperDoorBottomGapVal = typeof (doorModule as any).upperDoorBottomGap === 'number'
-                      ? ((doorModule as any).upperDoorBottomGap === 20 && !isPantrySplitDim ? defaultUpperDoorBottomGapVal : (doorModule as any).upperDoorBottomGap)
-                      : defaultUpperDoorBottomGapVal;
-                    const lowerDoorBottomGapVal = (doorModule as any).lowerDoorBottomGap ?? 0;
-                    const upperDoorTopGapVal = (doorModule as any).upperDoorTopGap ?? doorTopGapVal;
+	                    const upperDoorBottomGapVal = typeof (doorModule as any).upperDoorBottomGap === 'number'
+	                      ? (
+	                        (!isPantrySplitDim && (doorModule as any).upperDoorBottomGap === -20)
+	                          ? defaultUpperDoorBottomGapVal
+	                          : (isPantrySplitDim && (doorModule as any).upperDoorBottomGap === 1 ? defaultUpperDoorBottomGapVal : (doorModule as any).upperDoorBottomGap)
+	                      )
+	                      : defaultUpperDoorBottomGapVal;
+	                    const lowerDoorBottomGapVal = (doorModule as any).lowerDoorBottomGap ?? 0;
+	                    const shelfSplitDefaultUpperTopGap = !isPantrySplitDim
+	                      ? (spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false && (doorModule as any).hasTopFrame !== false ? -3 : 5)
+	                      : 0;
+	                    const upperDoorTopGapVal = typeof (doorModule as any).upperDoorTopGap === 'number'
+	                      ? (doorModule as any).upperDoorTopGap
+	                      : !isPantrySplitDim && (doorTopGapVal === undefined || doorTopGapVal === 0 || doorTopGapVal === 5 || doorTopGapVal === -3)
+	                        ? shelfSplitDefaultUpperTopGap
+	                        : doorTopGapVal;
                     const lowerDoorTopFromBottom = lowerSecTopMm + lowerDoorTopGapVal;
-                    const upperDoorBottomFromBottom = lowerSecTopMm + upperDoorBottomGapVal;
-                    const lowerDoorBottomAbs = cabinetBottomAbsS + (lowerDoorBottomGapVal || 0);
+                    const lowerDoorBottomAbs = cabinetBottomAbsS - (lowerDoorBottomGapVal || 0);
                     const lowerDoorTopAbs = cabinetBottomAbsS + lowerDoorTopFromBottom;
                     const lowerDoorH = lowerDoorTopAbs - lowerDoorBottomAbs;
-                    // 상부도어: 하단 = lowerSecTop ± (현관장 -20 / 팬트리 +1.5)
-                    const upperDoorBottomAbs = cabinetBottomAbsS + upperDoorBottomFromBottom;
-                    const upperDoorTopAbs = cabinetTopAbsS - (upperDoorTopGapVal || 0);
+                    // 몸통 기준 +값이면 상부도어 하단은 아래로 확장된다.
+                    const upperDoorBottomAbs = cabinetBottomAbsS + lowerSecTopMm - upperDoorBottomGapVal;
+                    const upperDoorTopAbs = cabinetTopAbsS + (upperDoorTopGapVal || 0);
                     const upperDoorH = upperDoorTopAbs - upperDoorBottomAbs;
 
                     const lowerBY = mmToThreeUnits(lowerDoorBottomAbs);
@@ -9861,12 +9850,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 return [Math.max(0, sectionBasisH - fixedSum), ...rawHeights.slice(1)];
               }
               if (isPlainShelf || isShelfSplit) {
-                if (isShelfSplit && Array.isArray((viewMod as any).customSections)) {
-                  return [
-                    Math.max(0, Math.round(rawHeights[0] || 0)),
-                    Math.max(0, Math.round(rawHeights[1] || 0)),
-                  ];
-                }
                 const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
                   ? (spaceInfo.baseConfig?.height ?? 60)
                   : 0;

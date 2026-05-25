@@ -138,6 +138,7 @@ export const useBaseFurniture = (
       !mid.includes('shelf-split')
     );
     const isShelfSplit = !!mid && mid.includes('shelf-split');
+    const isHangingWardrobe = !!mid && mid.includes('hanging');
 
     // absolute 섹션들의 합 = 원래 dimensions.height (FurnitureItem 변경 전)
     const originalSectionsTotal = sections.reduce((sum: number, s: SectionConfig) => {
@@ -153,11 +154,14 @@ export const useBaseFurniture = (
     // 흡수 섹션 결정:
     // - 하부 흡수(현관장 H/일반 선반장): 첫 섹션(하부)이 높이 변화 흡수, 받침대 기준 유지
     // - 그 외(일반 가구, 4drawer/2drawer 선반장): 마지막 섹션(상부)이 흡수
+    // - 의류장 걸레받이 변화는 하부 기준 변화이므로 첫 섹션이 흡수
     const isLowerAbsorbShoeCabinetHeight = !!mid && (
       mid.includes('-entryway-') ||
       // -shelf- 인데 4drawer/2drawer 가 아닌 일반 선반장만 하부 흡수
       (mid.includes('-shelf-') && !mid.includes('-4drawer-shelf-') && !mid.includes('-2drawer-shelf-'))
     );
+    const shouldAbsorbBaseChangeInLowerSection = isHangingWardrobe
+      && (shelfBaseAbsorbedMm > 0 || shelfBaseFrameDeltaMm !== 0 || shelfFloatAbsorbedMm > 0);
 
     // 선반장(single-shelf/dual-shelf) + 2섹션: 경계는 바닥 기준 1060mm로 고정된다.
     // 도어분절 현관장(shelf-split)도 목찬넬/도어 분절 기준선이 하부 경계를 따라야 한다.
@@ -166,15 +170,6 @@ export const useBaseFurniture = (
     // 상부는 남은 높이를 흡수한다. 상단몰딩 변화는 상부 섹션만 흡수한다.
     if ((isPlainShelf || isShelfSplit) && sections.length === 2) {
       const basicThicknessMm = sourceModelConfig.basicThickness || 18;
-      if (isShelfSplit && !!customSections) {
-        return {
-          ...sourceModelConfig,
-          sections: [
-            { ...sections[0], height: Math.max(0, Math.round(sections[0].height || 0)) },
-            { ...sections[1], height: Math.max(0, Math.round(sections[1].height || 0)) },
-          ],
-        };
-      }
       const lowerOrig = sections[0].height;
       const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm - shelfBaseFrameDeltaMm));
       const remainingUpperH = Math.max(0, Math.round(renderHeightMm - newLowerH));
@@ -225,7 +220,7 @@ export const useBaseFurniture = (
     }
 
     // 흡수 섹션 인덱스: 하부 흡수 신발장이면 0(하부), 그 외엔 마지막(상부)
-    const absorbingIdx = isLowerAbsorbShoeCabinetHeight ? 0 : sections.length - 1;
+    const absorbingIdx = (isLowerAbsorbShoeCabinetHeight || shouldAbsorbBaseChangeInLowerSection) ? 0 : sections.length - 1;
     const fixedSum = sections.reduce((sum: number, s: SectionConfig, i: number) =>
       i === absorbingIdx ? sum : sum + s.height, 0);
     const absorbingSection = sections[absorbingIdx];

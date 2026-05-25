@@ -10,6 +10,7 @@ import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/i
 import { useTranslation } from '@/i18n/useTranslation';
 import PreviewViewer from './PreviewViewer';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
+import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { useAuth } from '@/auth/AuthProvider';
 import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 
@@ -1448,6 +1449,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const slotMods = placedModules.filter(m => !m.isSurroundPanel);
               if (slotMods.length === 0) return null;
               const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
+              const isInsertFrameSlot = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
+              const topSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'lower');
+              const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
               const toAlpha = (n: number) => String.fromCharCode(64 + n);
               const globalTop = spaceInfo.frameSize?.top ?? userDefaults.frameTop ?? 30;
               const globalBase = spaceInfo.baseConfig?.height ?? userDefaults.baseHeight ?? 65;
@@ -1478,24 +1482,25 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
-                const topGroups = computeFrameMergeGroups(slotMods, 'top');
-                const baseGroups = computeFrameMergeGroups(slotMods, 'base');
-                const allTopOnMerge = slotMods.length > 0 && slotMods.every(m => m.hasTopFrame !== false);
-                const allBaseOnMerge = slotMods.length > 0 && slotMods.every(m => m.hasBase !== false);
+                const topGroups = computeFrameMergeGroups(topSortedMods, 'top');
+                const baseGroups = computeFrameMergeGroups(baseSortedMods, 'base');
+                const allTopOnMerge = topFrameAllMode;
+                const allBaseOnMerge = baseFrameAllMode;
                 const toggleAllTopMerge = () => {
-                  const newVal = !allTopOnMerge;
-                  slotMods.forEach(m => updatePlacedModule(m.id, {
-                    hasTopFrame: newVal,
-                    topFrameGap: newVal ? 0 : getTopOffGapDisplay(m),
-                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                  const next = !topFrameAllMode;
+                  setTopFrameAllMode(next);
+                  topSortedMods.forEach(m => updatePlacedModule(m.id, {
+                    hasTopFrame: true,
+                    topFrameGap: 0,
+                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
                   }));
                 };
                 const toggleAllBaseMerge = () => {
-                  const newVal = !allBaseOnMerge;
-                  slotMods.forEach(m => updatePlacedModule(m.id, {
-                    hasBase: newVal,
-                    doorBottomGap: newVal ? 25 : -5,
-                    ...(newVal ? {} : { individualFloatHeight: 0 }),
+                  const next = !baseFrameAllMode;
+                  setBaseFrameAllMode(next);
+                  baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+                    hasBase: true,
+                    doorBottomGap: 25,
                   }));
                 };
 
@@ -1514,45 +1519,70 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         </label>
                       }
                     >
-                      {topGroups.map((group, gIdx) => {
-                        const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
-                        const firstMod = groupMods[0];
-                        const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
-                        const hlKey = `merged-top-${gIdx}`;
-                        return (
-                          <MergedFrameRow key={hlKey}
-                            label={group.label}
-                            enabled={allEnabled}
-                            widthMM={group.totalWidthMm}
-                            heightMM={getTopSizeDisplay(firstMod)}
-                            offset={getTopOffsetDisplay(firstMod)}
-                            gap={getTopGapDisplay(firstMod)}
-                            userBaseHeightDefault={userDefaults.frameTop}
-                            onToggle={() => {
-                              const newVal = !allEnabled;
-                              group.moduleIds.forEach(id => {
-                                const target = slotMods.find(m => m.id === id);
-                                updatePlacedModule(id, {
+                      {allTopOnMerge ? topGroups.map((group, gIdx) => {
+                          const groupMods = group.moduleIds.map(id => topSortedMods.find(m => m.id === id)!).filter(Boolean);
+                          const firstMod = groupMods[0];
+                          const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
+                          const hlKey = `merged-top-${gIdx}`;
+                          return (
+                            <MergedFrameRow key={hlKey}
+                              label={group.label}
+                              enabled={allEnabled}
+                              widthMM={group.totalWidthMm}
+                              heightMM={getTopSizeDisplay(firstMod)}
+                              offset={getTopOffsetDisplay(firstMod)}
+                              gap={getTopGapDisplay(firstMod)}
+                              userBaseHeightDefault={userDefaults.frameTop}
+                              onToggle={() => {
+                                const newVal = !allEnabled;
+                                group.moduleIds.forEach(id => {
+                                  const target = topSortedMods.find(m => m.id === id);
+                                  updatePlacedModule(id, {
+                                    hasTopFrame: newVal,
+                                    topFrameGap: newVal ? 0 : getTopOffGapDisplay(target),
+                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+                                  });
+                                });
+                              }}
+                              onHeightChange={(v) => {
+                                group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
+                              }}
+                              onOffsetChange={(v) => {
+                                group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
+                              }}
+                              onGapChange={(v) => {
+                                group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameGap: Math.max(0, v) }));
+                              }}
+                              hlKey={hlKey}
+                              setHighlightedFrame={setHighlightedFrame}
+                            />
+                          );
+                        }) : topSortedMods.map((mod, idx) => {
+                          const modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
+                          return (
+                            <FrameRow key={`top-${mod.id}`}
+                              label={`${toAlpha(idx + 1)}(상)`}
+                              enabled={mod.hasTopFrame !== false}
+                              widthMM={modWidthMM}
+                              sizeMM={getTopSizeDisplay(mod)}
+                              offset={getTopOffsetDisplay(mod)}
+                              gap={getTopGapDisplay(mod)}
+                              onToggle={() => {
+                                const newVal = !(mod.hasTopFrame !== false);
+                                updatePlacedModule(mod.id, {
                                   hasTopFrame: newVal,
-                                  topFrameGap: newVal ? 0 : getTopOffGapDisplay(target),
+                                  topFrameGap: newVal ? 0 : getTopOffGapDisplay(mod),
                                   doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
                                 });
-                              });
-                            }}
-                            onHeightChange={(v) => {
-                              group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
-                            }}
-                            onOffsetChange={(v) => {
-                              group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
-                            }}
-                            onGapChange={(v) => {
-                              group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameGap: Math.max(0, v) }));
-                            }}
-                            hlKey={hlKey}
-                            setHighlightedFrame={setHighlightedFrame}
-                          />
-                        );
-                      })}
+                              }}
+                              onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: v })}
+                              onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                              onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
+                              hlKey={`top-${mod.id}`}
+                              setHighlightedFrame={setHighlightedFrame}
+                            />
+                          );
+                        })}
                     </FormControl>
                     {/* 걸래받이 섹션 (stand 타입 제외) */}
                     {spaceInfo.baseConfig?.type !== 'stand' && (
@@ -1568,44 +1598,71 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           </label>
                         }
                       >
-                        {baseGroups.map((group, gIdx) => {
-                          const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
-                          const firstMod = groupMods[0];
-                          const allEnabled = groupMods.every(m => m.hasBase !== false);
-                          const hlKey = `merged-base-${gIdx}`;
-                          const isLowerGroup = firstMod?.moduleId?.startsWith('lower-') || firstMod?.moduleId?.includes('-lower-');
-                          return (
-                            <MergedFrameRow key={hlKey}
-                              label={group.label}
-                              enabled={allEnabled}
-                              widthMM={group.totalWidthMm}
-                              heightMM={firstMod?.baseFrameHeight ?? globalBase}
-                              offset={firstMod?.baseFrameOffset ?? 0}
-                              gap={(firstMod as any)?.baseFrameGap ?? 0}
-                              userBaseHeightDefault={userDefaults.baseHeight}
-                              onToggle={() => {
-                                const newVal = !allEnabled;
-                                group.moduleIds.forEach(id => updatePlacedModule(id, {
-                                  hasBase: newVal,
-                                  doorBottomGap: newVal ? 25 : -5,
-                                  ...(newVal ? {} : { individualFloatHeight: 0 }),
-                                }));
-                              }}
-                              onHeightChange={(v) => {
-                                group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
-                              }}
-                              onOffsetChange={(v) => {
-                                group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
-                              }}
-                              onGapChange={(v) => {
-                                group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameGap: Math.max(0, v) } as any));
-                              }}
-                              hlKey={hlKey}
-                              setHighlightedFrame={setHighlightedFrame}
-                              isLowerCategory={!!isLowerGroup}
-                            />
-                          );
-                        })}
+                        {allBaseOnMerge ? baseGroups.map((group, gIdx) => {
+                            const groupMods = group.moduleIds.map(id => baseSortedMods.find(m => m.id === id)!).filter(Boolean);
+                            const firstMod = groupMods[0];
+                            const allEnabled = groupMods.every(m => m.hasBase !== false);
+                            const hlKey = `merged-base-${gIdx}`;
+                            const isLowerGroup = firstMod?.moduleId?.startsWith('lower-') || firstMod?.moduleId?.includes('-lower-');
+                            return (
+                              <MergedFrameRow key={hlKey}
+                                label={group.label}
+                                enabled={allEnabled}
+                                widthMM={group.totalWidthMm}
+                                heightMM={firstMod?.baseFrameHeight ?? globalBase}
+                                offset={firstMod?.baseFrameOffset ?? 0}
+                                gap={(firstMod as any)?.baseFrameGap ?? 0}
+                                userBaseHeightDefault={userDefaults.baseHeight}
+                                onToggle={() => {
+                                  const newVal = !allEnabled;
+                                  group.moduleIds.forEach(id => updatePlacedModule(id, {
+                                    hasBase: newVal,
+                                    doorBottomGap: newVal ? 25 : -5,
+                                    ...(newVal ? {} : { individualFloatHeight: 0 }),
+                                  }));
+                                }}
+                                onHeightChange={(v) => {
+                                  group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
+                                }}
+                                onOffsetChange={(v) => {
+                                  group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
+                                }}
+                                onGapChange={(v) => {
+                                  group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameGap: Math.max(0, v) } as any));
+                                }}
+                                hlKey={hlKey}
+                                setHighlightedFrame={setHighlightedFrame}
+                                isLowerCategory={!!isLowerGroup}
+                              />
+                            );
+                          }) : baseSortedMods.map((mod, idx) => {
+                            const baseEnabled = mod.hasBase !== false;
+                            const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
+                            const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+                            const bfMin = isLowerMod ? 60 : 40;
+                            const bfMax = isLowerMod ? 150 : 100;
+                            const bfDefault = isLowerMod ? 105 : (userDefaults.baseHeight ?? 60);
+                            return (
+                              <FrameRow key={`base-${mod.id}`}
+                                label={`${toAlpha(idx + 1)}(하)`}
+                                enabled={baseEnabled}
+                                widthMM={baseModWidthMM}
+                                sizeMM={mod.baseFrameHeight ?? bfDefault}
+                                offset={mod.baseFrameOffset ?? (isLowerMod ? 65 : 0)}
+                                gap={(mod as any).baseFrameGap ?? 0}
+                                onToggle={() => updatePlacedModule(mod.id, {
+                                  hasBase: !baseEnabled,
+                                  doorBottomGap: !baseEnabled ? 25 : -5,
+                                  ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
+                                })}
+                                onSizeChange={(v) => updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, v)) })}
+                                onOffsetChange={(v) => updatePlacedModule(mod.id, { baseFrameOffset: v })}
+                                onGapChange={(v) => updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, v) } as any)}
+                                hlKey={`base-${mod.id}`}
+                                setHighlightedFrame={setHighlightedFrame}
+                              />
+                            );
+                          })}
                       </FormControl>
                     )}
                   </>
@@ -1618,25 +1675,25 @@ const RightPanel: React.FC<RightPanelProps> = ({
               // 통합 모드: '전체' 체크박스로 제어 (개별 hasTopFrame 값은 유지)
               const allTopOn = topFrameAllMode;
               const allBaseOn = baseFrameAllMode;
-              const toggleAllTop = () => {
-                const next = !topFrameAllMode;
-                setTopFrameAllMode(next);
-                // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
-                sorted.forEach(m => updatePlacedModule(m.id, {
-                  hasTopFrame: true,
-                  topFrameGap: 0,
-                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
-                }));
-              };
+	              const toggleAllTop = () => {
+	                const next = !topFrameAllMode;
+	                setTopFrameAllMode(next);
+	                // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
+	                topSortedMods.forEach(m => updatePlacedModule(m.id, {
+	                  hasTopFrame: true,
+	                  topFrameGap: 0,
+	                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
+	                }));
+	              };
               const toggleAllBase = () => {
-                const next = !baseFrameAllMode;
-                setBaseFrameAllMode(next);
-                // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
-              sorted.forEach(m => updatePlacedModule(m.id, {
-                hasBase: true,
-                doorBottomGap: 25,
-              }));
-              };
+	                const next = !baseFrameAllMode;
+	                setBaseFrameAllMode(next);
+	                // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
+	                baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+	                  hasBase: true,
+	                  doorBottomGap: 25,
+	                }));
+	              };
               return (
                 <>
                   {/* 상단몰딩 섹션 */}
@@ -1652,12 +1709,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       </label>
                     }
                   >
-                  {allTopOn && sorted.length > 0 ? (
+                  {allTopOn && topSortedMods.length > 0 ? (
                     // 전체 ON: 통합 행 1개만 표시 (토글로 일괄 ON/OFF)
                     (() => {
-                      const first = sorted[0];
-                      const totalWidthMM = sorted.reduce((sum, m) => sum + (m.isDualSlot ? slotColWidth * 2 : slotColWidth), 0);
-                      const unifiedEnabled = sorted.every(m => m.hasTopFrame !== false);
+                      const first = topSortedMods[0];
+                      const totalWidthMM = topSortedMods.reduce((sum, m) => sum + (m.isDualSlot ? slotColWidth * 2 : slotColWidth), 0);
+                      const unifiedEnabled = topSortedMods.every(m => m.hasTopFrame !== false);
                       return (
                         <FrameRow key="top-all"
                           label="전체"
@@ -1668,22 +1725,22 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           gap={getTopGapDisplay(first)}
                           onToggle={() => {
                             const newVal = !unifiedEnabled;
-                            sorted.forEach(m => updatePlacedModule(m.id, {
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, {
                               hasTopFrame: newVal,
                               topFrameGap: newVal ? 0 : getTopOffGapDisplay(m),
                               doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
                             }));
                           }}
-                          onSizeChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
-                          onOffsetChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
-                          onGapChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
+                          onSizeChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
+                          onOffsetChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
+                          onGapChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
                           hlKey="top-all"
                           setHighlightedFrame={setHighlightedFrame}
                         />
                       );
                     })()
                   ) : (
-                    sorted.map((mod) => {
+                    topSortedMods.map((mod) => {
                       topNum++;
                       const modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
                       return (
@@ -1728,10 +1785,40 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       </label>
                     }
                   >
-                  {sorted.map((mod) => {
-                    baseNum++;
-                    const baseEnabled = mod.hasBase !== false;
-                    const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
+	                  {allBaseOn && baseSortedMods.length > 0 ? (
+	                    (() => {
+	                      const first = baseSortedMods[0];
+	                      const totalWidthMM = baseSortedMods.reduce((sum, m) => sum + (m.isDualSlot ? slotColWidth * 2 : slotColWidth), 0);
+	                      const unifiedEnabled = baseSortedMods.every(m => m.hasBase !== false);
+	                      const isLowerFirst = first.moduleId?.startsWith('lower-') || first.moduleId?.includes('-lower-');
+	                      return (
+	                        <FrameRow key="base-all"
+	                          label="전체"
+	                          enabled={unifiedEnabled}
+	                          widthMM={Math.round(totalWidthMM * 10) / 10}
+	                          sizeMM={first.baseFrameHeight ?? globalBase}
+	                          offset={first.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
+	                          gap={(first as any).baseFrameGap ?? 0}
+	                          onToggle={() => {
+	                            const newVal = !unifiedEnabled;
+	                            baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+	                              hasBase: newVal,
+	                              doorBottomGap: newVal ? 25 : -5,
+	                              ...(newVal ? {} : { individualFloatHeight: 0 }),
+	                            }));
+	                          }}
+	                          onSizeChange={(v) => baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }))}
+	                          onOffsetChange={(v) => baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
+	                          onGapChange={(v) => baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
+	                          hlKey="base-all"
+	                          setHighlightedFrame={setHighlightedFrame}
+	                        />
+	                      );
+	                    })()
+	                  ) : baseSortedMods.map((mod) => {
+	                    baseNum++;
+	                    const baseEnabled = mod.hasBase !== false;
+	                    const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
                     const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
                     const bfMin = isLowerMod ? 60 : 40;
                     const bfMax = isLowerMod ? 150 : 100;
@@ -1794,9 +1881,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             />
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+	                      </div>
+	                    );
+	                  })}
                   </FormControl>
                   )}
                 </>

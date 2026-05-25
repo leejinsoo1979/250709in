@@ -141,7 +141,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
       doorHeightMm: doorGeometry.leafHeightMm,
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-      customDoorPositionsMm: placedModule.hingePositionsMm,
+      customSidePositionsMm: placedModule.hingePositionsMm,
       defaultDoorPositionsMm: defaultPositions,
       preserveEdgePositionsMm: true
     });
