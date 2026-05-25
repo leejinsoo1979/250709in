@@ -1390,23 +1390,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
 
-  // 상판 재질 종류 (stone=인조대리석 / pet=도어재질 동일)
-  const stoneTopKind = useFurnitureStore(state => {
-    if (!placedFurnitureId) return 'stone';
-    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
-    return (pm?.stoneTopMaterial as 'stone' | 'pet' | undefined) || 'stone';
-  });
-  // 상판 두께 — PET 재질이면 가구재 기반 PET 매핑(15→18, 15.5→18.5, 18→18, 18.5→18.5)
-  const basicThk_mm = spaceInfo?.panelThickness || 18;
-  const petMappedThk = basicThk_mm === 15 ? 18 : basicThk_mm === 15.5 ? 18.5 : basicThk_mm;
+  // 상판 두께 — 하부장 상판설치는 인조대리석만 지원
   const stoneThickness = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
-    const mat = (pm?.stoneTopMaterial as 'stone' | 'pet' | undefined) || 'stone';
-    const userThk = pm?.stoneTopThickness || 0;
-    // PET: 두께 0이면 상판 없음, 그 외는 PET 매핑 두께
-    if (mat === 'pet') return userThk > 0 ? petMappedThk : 0;
-    return userThk;
+    return pm?.stoneTopThickness || 0;
   });
 
   const lowerCabinetSideBoringResult = useMemo(() => {
@@ -1498,9 +1486,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       const panelFrontZ = panelCenterZ + mmToUnits(panelDepthMm) / 2;
       const panelBackZ = panelCenterZ - mmToUnits(panelDepthMm) / 2;
 
-      return isFixedPanel
-        ? [panelFrontZ - mmToUnits(30), panelCenterZ, panelBackZ + mmToUnits(30)]
-        : [panelFrontZ - mmToUnits(30), panelBackZ + mmToUnits(30)];
+      // 상판내림 top-panel: 가로전대 따내기로 인해 패널 깊이가 줄어 중앙 점이 끝 점과 겹침
+      // → top-panel은 항상 [front, back] 2점만 사용 (중앙 제거)
+      if (isFixedPanel && detail.role !== 'top-panel') {
+        return [panelFrontZ - mmToUnits(30), panelCenterZ, panelBackZ + mmToUnits(30)];
+      }
+      return [panelFrontZ - mmToUnits(30), panelBackZ + mmToUnits(30)];
     };
     const details = boringDetails.map(detail => ({
       ...detail,
@@ -1660,15 +1651,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, outerExtendLeft, outerExtendRight, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
-  // 상판 재질 — PET이면 도어 재질 동일, stone이면 countertop(루나쉐도우 기본)
+  // 상판 재질 — countertop(루나쉐도우 기본)
   const LUNA_SHADOW_TEXTURE = '/materials/countertop/luna_shadow_hanwha.png';
-  const isPetTop = stoneTopKind === 'pet';
-  const countertopTextureUrl = isPetTop
-    ? (spaceInfo?.materialConfig?.doorTexture ?? spaceInfo?.materialConfig?.interiorTexture ?? null)
-    : (spaceInfo?.materialConfig?.countertopTexture ?? LUNA_SHADOW_TEXTURE);
-  const countertopColorVal = isPetTop
-    ? (spaceInfo?.materialConfig?.doorColor || spaceInfo?.materialConfig?.interiorColor || '#FFFFFF')
-    : (spaceInfo?.materialConfig?.countertopColor || '#FFFFFF');
+  const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture ?? LUNA_SHADOW_TEXTURE;
+  const countertopColorVal = spaceInfo?.materialConfig?.countertopColor || '#FFFFFF';
   const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
   const stoneTopMaterial = useMemo(() => {
@@ -1679,7 +1665,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     });
     stoneTopMatRef.current = mat;
     return mat;
-  }, [!!stoneTopData, isPetTop]);
+  }, [!!stoneTopData]);
 
   // countertop 색상 변경 반영
   useEffect(() => {
