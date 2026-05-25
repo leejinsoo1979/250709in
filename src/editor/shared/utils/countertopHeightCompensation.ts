@@ -9,13 +9,6 @@ export const resolveCountertopThicknessMm = (module: any, spaceInfo: any): numbe
   const userThickness = module?.stoneTopThickness || 0;
   if (userThickness <= 0) return 0;
 
-  if (module?.stoneTopMaterial === 'pet') {
-    const panelThickness = spaceInfo?.panelThickness || 18;
-    if (panelThickness === 15) return 18;
-    if (panelThickness === 15.5) return 18.5;
-    return panelThickness;
-  }
-
   return userThickness;
 };
 

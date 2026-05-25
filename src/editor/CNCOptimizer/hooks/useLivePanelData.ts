@@ -14,6 +14,7 @@ import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetySh
 import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
+import { resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import {
   getDirectLowerDowelShelfBoringDetails,
   hasDirectLowerTopPanel,
@@ -27,6 +28,12 @@ import {
 function toMeshName(cncName: string): string {
   return toViewerPanelName(cncName);
 }
+
+const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+  if (stoneTopThickness === 10) return -90;
+  if (stoneTopThickness === 30) return -70;
+  return -80;
+};
 
 /**
  * 패널 이름에서 기본 결방향(grain) 결정
@@ -251,15 +258,24 @@ function createBoringFrontInsetResolver({
   basicThicknessMm,
   lowerSectionTopOffsetMm,
   shelfFrontInsetMm,
+  stoneTopThicknessMm,
 }: {
   moduleId: string;
   basicThicknessMm: number;
   lowerSectionTopOffsetMm: number;
   shelfFrontInsetMm: number;
+  stoneTopThicknessMm?: number;
 }) {
   return (detail: ShelfBoringPositionDetail): number => {
     if (isShelfPinBoring(detail)) {
       return shelfFrontInsetMm;
+    }
+
+    if (detail.role === 'top-panel' && (
+      moduleId.includes('lower-top-down-') ||
+      moduleId.includes('dual-lower-top-down-')
+    )) {
+      return resolveTopDownTopPanelFrontReductionMm(basicThicknessMm, stoneTopThicknessMm);
     }
 
     const isLowerTopDivider = detail.role === 'section-divider' && (detail.roleIndex ?? 0) % 2 === 0;
@@ -783,14 +799,14 @@ export function useLivePanelData() {
         const moduleHingePosition = (placedModule as any).hingePosition || 'right';
         const moduleHingeType = (placedModule as any).hingeType || 'A';
         // doorTopGap/doorBottomGap: 모듈별 기본값 적용 (PlacedModulePropertiesPanel과 동일)
-        // 도어올림=30, 상판내림=-80, 일반하부장=-20, 키큰장=5 (하부장 0은 이전 버그값 → 기본값 복원)
+        // 도어올림=30, 상판내림=두께별(10T=-90/20T=-80/30T=-70), 일반하부장=-20, 키큰장=5
         const rawDoorTopGap = (placedModule as any).doorTopGap;
         const rawDoorBottomGap = (placedModule as any).doorBottomGap;
         const modId = placedModule.moduleId || '';
         const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
         const isDoorLiftMod = modId.includes('lower-door-lift-') && !modId.includes('-half-');
         const isTopDownMod = modId.includes('lower-top-down-') && !modId.includes('-half-');
-        const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? -80 : isLowerMod ? -20 : 5;
+        const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? getTopDownDoorTopGap((placedModule as any).stoneTopThickness) : isLowerMod ? -20 : 5;
         const moduleDoorTopGap = (rawDoorTopGap === undefined || (isLowerMod && rawDoorTopGap === 0)) ? defaultTopGap : rawDoorTopGap;
         const moduleDoorBottomGap = (rawDoorBottomGap === undefined || (isLowerMod && rawDoorBottomGap === 0)) ? (isLowerMod ? 5 : 25) : rawDoorBottomGap;
 
@@ -986,6 +1002,7 @@ export function useLivePanelData() {
           basicThicknessMm,
           lowerSectionTopOffsetMm: effectiveLowerSectionTopOffsetMm,
           shelfFrontInsetMm,
+          stoneTopThicknessMm: placedModule.stoneTopThickness,
         });
         const boringDepthGroupOptions = {
           getSideDepth: () => depth,
@@ -1429,8 +1446,9 @@ export function useLivePanelData() {
               const refModuleData = getModuleById(refModuleId);
               const refHeight = refMod.freeHeight || refMod.customHeight || refModuleData?.dimensions.height || 785;
               const rawTopGap = (refMod as any).doorTopGap ?? spaceInfo.doorTopGap;
-              const effectiveDoorTopGap = (rawTopGap === undefined || rawTopGap === 0) ? -80 : rawTopGap;
-              const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
+              const defaultDoorTopGap = getTopDownDoorTopGap(refMod.stoneTopThickness);
+              const effectiveDoorTopGap = (rawTopGap === undefined || rawTopGap === 0) ? defaultDoorTopGap : rawTopGap;
+              const topFrontMm = 705 + (effectiveDoorTopGap - defaultDoorTopGap);
               const frontPlateHeight = Math.max(0, refHeight - topFrontMm - 20) + (refMod.stoneTopThickness || 12);
               allPanels.push({
                 id: `merged_stone_front_${gIdx}`,
@@ -1682,7 +1700,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
       const isDoorLiftMod = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDownMod = modId.includes('lower-top-down-') && !modId.includes('-half-');
-      const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? -80 : isLowerMod ? -20 : 5;
+      const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? getTopDownDoorTopGap((placedModule as any).stoneTopThickness) : isLowerMod ? -20 : 5;
       const moduleDoorTopGap = (rawDoorTopGap === undefined || (isLowerMod && rawDoorTopGap === 0)) ? defaultTopGap : rawDoorTopGap;
       const moduleDoorBottomGap = (rawDoorBottomGap === undefined || (isLowerMod && rawDoorBottomGap === 0)) ? (isLowerMod ? 5 : 25) : rawDoorBottomGap;
 
@@ -1862,6 +1880,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         basicThicknessMm,
         lowerSectionTopOffsetMm: effectiveLowerSectionTopOffsetMm2,
         shelfFrontInsetMm,
+        stoneTopThicknessMm: placedModule.stoneTopThickness,
       });
       const boringDepthGroupOptions = {
         getSideDepth: () => depth,

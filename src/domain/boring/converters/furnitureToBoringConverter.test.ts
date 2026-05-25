@@ -47,4 +47,45 @@ describe('convertFurnitureToBoring', () => {
       .map(boring => boring.y);
     expect(camHousingY).toEqual([37, 259, 37, 259]);
   });
+
+  it('does not add side hinge borings for lower drawer-front modules', () => {
+    const placedModule = {
+      id: 'lower-drawer-1',
+      moduleId: 'lower-drawer-3tier-600',
+      position: { x: 0, y: 0, z: 0 },
+      rotation: 0,
+      hasDoor: true,
+      hingePosition: 'right',
+    } as PlacedModule;
+
+    const moduleData = {
+      id: 'lower-drawer-3tier-600',
+      name: '하부 서랍 3단',
+      category: 'lower',
+      dimensions: {
+        width: 600,
+        height: 900,
+        depth: 580,
+      },
+      color: '#ffffff',
+      modelConfig: {
+        sections: [
+          { type: 'drawer', height: 100, heightType: 'percentage', count: 3 },
+        ],
+      },
+    } as ModuleData;
+
+    const result = convertFurnitureToBoring({
+      placedModule,
+      moduleData,
+      panelThickness: 18,
+    });
+
+    const sideBorings = result.panels
+      .filter(panel => panel.panelType === 'side-left' || panel.panelType === 'side-right')
+      .flatMap(panel => panel.borings);
+
+    expect(sideBorings.some(boring => boring.type === 'hinge-screw')).toBe(false);
+    expect(sideBorings.some(boring => boring.id.startsWith('cam-bolt-top'))).toBe(false);
+  });
 });

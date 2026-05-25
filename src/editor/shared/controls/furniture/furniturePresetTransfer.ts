@@ -101,7 +101,7 @@ export const FURNITURE_PRESET_FIELD_GROUPS: FurniturePresetGroup[] = [
   },
   {
     id: 'topNotch',
-    label: '상판 따내기 / 상판설치 (인조대리석/PET)',
+    label: '상판 따내기 / 상판설치 (인조대리석)',
     fields: [
       'topPanelNotchSize', 'topPanelNotchSide',
       'stoneTopMaterial', 'stoneTopThickness',

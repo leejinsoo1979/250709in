@@ -32,7 +32,8 @@ const usesDrawerFrontInsteadOfHingedDoor = (moduleId?: string) => {
     || moduleId.includes('lower-top-down-3tier')
     || moduleId.includes('lower-top-down-touch-')
     || moduleId.includes('lower-induction-cabinet')
-    || moduleId.includes('dual-lower-induction-cabinet');
+    || moduleId.includes('dual-lower-induction-cabinet')
+    || moduleId.includes('lower-touch-drawer-');
 };
 
 interface SidePanelBoringProps {

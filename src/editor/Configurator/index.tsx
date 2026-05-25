@@ -97,6 +97,12 @@ type DoorGapField =
   | 'lowerDoorTopGap'
   | 'lowerDoorBottomGap';
 
+const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+  if (stoneTopThickness === 10) return -90;
+  if (stoneTopThickness === 30) return -70;
+  return -80;
+};
+
 const getActiveFloorFinishHeight = (space: any): number => {
   if (!space?.hasFloorFinish) return 0;
   return Number(space.floorFinish?.height ?? space.floorFinishHeight ?? 0) || 0;
@@ -944,12 +950,12 @@ const Configurator: React.FC = () => {
     const initMods = useFurnitureStore.getState().placedModules.map(m => {
       if (!m.hasDoor) return m;
       if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
-      // 모듈별 기본값: 도어올림=30, 상판내림=-80, 일반하부장=-20, 그 외=spaceInfo
+      // 모듈별 기본값: 도어올림=30, 상판내림=두께별(10T=-90/20T=-80/30T=-70), 일반하부장=-20, 그 외=spaceInfo
       const mid = m.moduleId || '';
       const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
       const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
       const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
-      const defaultTop = isDL ? 30 : isTD ? -80 : isLower ? -20 : topGap;
+      const defaultTop = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness) : isLower ? -20 : topGap;
       const defaultBot = isLower ? 5 : botGap;
       return { ...m, doorTopGap: m.doorTopGap ?? defaultTop, doorBottomGap: m.doorBottomGap ?? defaultBot };
     });
@@ -972,7 +978,7 @@ const Configurator: React.FC = () => {
       // 모듈별 올바른 기본값
       const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
       const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
-      const correctTopGap = isDL ? 30 : isTD ? -80 : -20;
+      const correctTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness) : -20;
       // undefined만 기본값으로 보정한다. 0/양수/음수는 사용자가 직접 입력한 유효한 도어 갭이다.
       const badTopValues = [undefined];
       const badBotValues = [undefined];

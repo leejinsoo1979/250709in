@@ -25,6 +25,32 @@ import {
 } from '@/editor/shared/utils/doorGeometryCalculator';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 
+const usesDrawerFrontInsteadOfHingedDoor = (moduleId?: string) => {
+  if (!moduleId) return false;
+
+  return moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-2tier')
+    || moduleId.includes('lower-door-lift-3tier')
+    || moduleId.includes('lower-door-lift-touch-')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('lower-induction-cabinet')
+    || moduleId.includes('dual-lower-induction-cabinet')
+    || moduleId.includes('lower-touch-drawer-');
+};
+
+const hasRenderedTopPanel = (moduleId?: string, category?: string) => {
+  if (!moduleId) return true;
+
+  const isLowerModule = category === 'lower'
+    || moduleId.includes('lower-')
+    || moduleId.includes('dual-lower-');
+  if (!isLowerModule) return true;
+
+  return moduleId.includes('lower-door-lift-') || moduleId.includes('lower-top-down-');
+};
+
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
   // 설정 데이터
@@ -155,6 +181,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     : undefined;
   const moduleIdForBoringOwner = currentPlacedModule?.moduleId || furnitureId || '';
   const isLowerDowelBoringOwnedByLowerCabinet = isDirectLowerDowelShelfModule(moduleIdForBoringOwner);
+  const isTopDownBoringOwnedByLowerCabinet = moduleIdForBoringOwner.includes('lower-top-down-')
+    || moduleIdForBoringOwner.includes('dual-lower-top-down-');
+  const shouldRenderTopPanelBoring = hasRenderedTopPanel(moduleIdForBoringOwner, category);
 
   // Hover 상태 관리 (섹션별)
   const [hoveredSectionIndex, setHoveredSectionIndex] = useState<number | null>(null);
@@ -1151,14 +1180,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     details?: Array<{ yMm: number; zPositions: number[] }>;
   } => {
     if (!currentPlacedModule?.hasDoor) return { positions: [] };
-    if (isDummyModuleId(currentPlacedModule.moduleId || furnitureId)) return { positions: [] };
+    const moduleId = currentPlacedModule.moduleId || furnitureId || '';
+    if (isDummyModuleId(moduleId)) return { positions: [] };
+    if (usesDrawerFrontInsteadOfHingedDoor(moduleId)) return { positions: [] };
 
     const unitPerMm = mmToThreeUnits(1);
     if (!unitPerMm) return { positions: [] };
 
     const heightMm = height / unitPerMm;
     const basicThicknessMm = basicThickness / unitPerMm;
-    const moduleId = currentPlacedModule.moduleId || furnitureId || '';
     const cabinetCategory = (category || currentPlacedModule.moduleData?.category || 'generic') as DoorCabinetCategory;
     const doorWidthMm = (innerWidth + basicThickness * 2) / unitPerMm;
     const isDoorSplitModule = moduleId.includes('shelf-split') || moduleId.includes('pantry-cabinet-split');
@@ -1345,9 +1375,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const hingeBracketPositions = hingeBracketResult.positions;
   const hingeBracketDetails = hingeBracketResult.details;
 
-  const sideBoringDetails = isLowerDowelBoringOwnedByLowerCabinet
+  const sideBoringDetails = isTopDownBoringOwnedByLowerCabinet
+    ? []
+    : isLowerDowelBoringOwnedByLowerCabinet
     ? allBoringResult.details.filter(detail => detail.role === 'additional-dowel')
-    : allBoringResult.details;
+    : allBoringResult.details.filter(detail => (
+      shouldRenderTopPanelBoring || detail.role !== 'top-panel'
+    ));
   const sideBoringPositions = sideBoringDetails.map(detail => detail.y);
   const sideHingeBracketPositions = isLowerDowelBoringOwnedByLowerCabinet
     ? []

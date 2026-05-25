@@ -13,22 +13,21 @@ import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
+import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
-// PET 실효 두께 매핑: 가구재 15→18, 15.5→18.5, 18→18, 18.5→18.5
-// (15mm 계열은 PB+PET 코팅 시 PET 도어/상판이 18mm 규격 적용)
-const getPetThicknessMm = (basicThicknessMm: number): number => {
-  if (basicThicknessMm === 15) return 18;
-  if (basicThicknessMm === 15.5) return 18.5;
-  return basicThicknessMm; // 18, 18.5는 그대로
-};
-// 상판 실효 두께 계산 — PET 재질이면 PET 매핑, 인조대리석이면 사용자 선택값
-const getStoneTopThicknessMm = (mod: any, basicThicknessMm: number = 18): number => {
+// 상판 실효 두께 계산 — 하부장 상판설치는 인조대리석 선택값만 사용
+const getStoneTopThicknessMm = (mod: any): number => {
   const t = mod?.stoneTopThickness || 0;
   if (t <= 0) return 0;
-  return (mod?.stoneTopMaterial === 'pet') ? getPetThicknessMm(basicThicknessMm) : t;
+  return t;
+};
+
+const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+  if (stoneTopThickness === 10) return -90;
+  if (stoneTopThickness === 30) return -70;
+  return -80;
 };
 
 /** 연장선 + 양쪽 꼭지점 점 표시 */
@@ -747,8 +746,8 @@ interface CADDimensions2DProps {
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { showAlert } = useAlert();
-  // 상판 실효 두께 — PET이면 도어 두께(spaceInfo.panelThickness, 기본 18), stone이면 사용자 선택값
-  const _stoneTopThk = (mod: any) => getStoneTopThicknessMm(mod, spaceInfo?.panelThickness || 18);
+  // 상판 실효 두께 — 하부장 상판설치는 인조대리석 선택값만 사용
+  const _stoneTopThk = (mod: any) => getStoneTopThicknessMm(mod);
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
   const { view2DDirection, showDimensions: showDimensionsFromStore, view2DTheme, selectedSlotIndex, showFurniture, doorGapDisplayMode } = useUIStore();
   const { zones } = useDerivedSpaceStore();
@@ -1042,7 +1041,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     if (category === 'lower') {
       const isTopDown = modData.id?.includes('lower-top-down-');
       if (isTopDown) {
-        const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
+        const effectiveTopDownTopGap = mod.doorTopGap ?? getTopDownDoorTopGap(mod.stoneTopThickness);
         const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
         const doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
         const doorTopAbsMm = cabinetBottomAbs + cabinetH + effectiveTopDownTopGap;
@@ -1314,7 +1313,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               return Math.max(0, cabinetTopMm - cabinetBottomMm);
             })();
 
-            // 하부장 + 상판: 장 높이와 상판 두께를 분리하여 표시 (PET=18.5, 인조대리석=선택값)
+            // 하부장 + 상판: 장 높이와 상판 두께를 분리하여 표시
             const stoneThicknessL2 = _stoneTopThk(mod);
             const includeStoneInHeight = modCat_l2 === 'lower' && stoneThicknessL2 > 0;
 
@@ -1701,28 +1700,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs = cabinetBottomAbs + cabinetH;
-              // 도어 상단 ~ 인조대리석 앞판 하단 = 20mm 갭
-              const doorGapMm = 20;
               const gapBottomAbs = doorTopAbsMm; // 도어 상단
-              const gapTopAbs = gapBottomAbs + doorGapMm; // 앞판 하단
-              doorSegs.push({
-                bottomY: mmToThreeUnits(gapBottomAbs),
-                topY: mmToThreeUnits(gapTopAbs),
-                heightMm: doorGapMm,
-                key: `door-topgap-${moduleIndex}`,
-                isUpper: false
-              });
-              // 앞판 높이 = (캐비넷상단 - 앞판하단) + 상판 실효 두께 (PET=18.5 / 인조대리석=선택값)
-              const frontPlateAreaMm = Math.round(cabinetTopAbs - gapTopAbs) + _effStoneThk_l;
-              if (frontPlateAreaMm > 0) {
+              const frontPlateTopAbs = cabinetTopAbs + _effStoneThk_l;
+              const frontPlateBottomAbs = frontPlateTopAbs - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
+              const doorGapMm = Math.round(frontPlateBottomAbs - gapBottomAbs);
+              if (doorGapMm > 0) {
                 doorSegs.push({
-                  bottomY: mmToThreeUnits(gapTopAbs),
-                  topY: mmToThreeUnits(cabinetTopAbs + _effStoneThk_l),
-                  heightMm: frontPlateAreaMm,
-                  key: `door-frontplate-${moduleIndex}`,
+                  bottomY: mmToThreeUnits(gapBottomAbs),
+                  topY: mmToThreeUnits(frontPlateBottomAbs),
+                  heightMm: doorGapMm,
+                  key: `door-topgap-${moduleIndex}`,
                   isUpper: false
                 });
               }
+              doorSegs.push({
+                bottomY: mmToThreeUnits(frontPlateBottomAbs),
+                topY: mmToThreeUnits(frontPlateTopAbs),
+                heightMm: TOP_DOWN_STONE_FRONT_HEIGHT_MM,
+                key: `door-frontplate-${moduleIndex}`,
+                isUpper: false
+              });
             } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperSideModule)) {
               // 하부장/키큰장 공통: 도어 상단갭 = 천장(또는 단내림) ~ 도어 상단 거리 (항상 천장 기준)
               // 상부장+하부장이 같이 보이는 측면뷰에서는 하부장 도어 치수가 상부장 영역까지 이어지면 안 된다.
@@ -1952,8 +1949,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selectedBaseFrameMm = selModCatCombined === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
             ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
             : 0;
+          const selectedStoneTopMm = selModCatCombined === 'lower' ? _stoneTopThk(selectedMod) : 0;
           const selectedDimensionHeightMm = selModCatCombined === 'lower'
-            ? selectedBaseFrameMm + selFurnitureHeightMm
+            ? selectedBaseFrameMm + selFurnitureHeightMm + selectedStoneTopMm
             : selFurnitureHeightMm;
           const dimensionBottomMm = selModCatCombined === 'upper'
             ? (isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
@@ -2562,7 +2560,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               // 모듈별 기본 doorTopGap (computeLowerCabinetMaidaHeights 내부 defaultDTG와 일치해야 함)
               const isDL = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
-              const modDefaultTopGap = isDL ? 30 : isTD ? -80 : -20;
+              const modDefaultTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(mod.stoneTopThickness) : -20;
               const effectiveTopGap = isTD && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
                 ? modDefaultTopGap
                 : (mod.doorTopGap ?? modDefaultTopGap);
@@ -2591,17 +2589,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal = modHeightMm - lastMaida.maidaTopMm;
                 if (topGapTotal > 0) {
-                  // 상판내림 + 상판: 20mm 갭 + 앞판 높이 (PET=18.5 / 인조대리석=선택값)
                   const _effStT_l3 = _stoneTopThk(mod);
                   if (isTD && _effStT_l3 > 0) {
-                    const doorGapMm = 20;
-                    if (doorGapMm < topGapTotal) {
-                      const frontPlateHeight = (topGapTotal - doorGapMm) + _effStT_l3;
-                      gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: lastMaida.maidaTopMm + doorGapMm, heightMm: doorGapMm });
-                      gaps.push({ bottomMm: lastMaida.maidaTopMm + doorGapMm, topMm: modHeightMm + _effStT_l3, heightMm: frontPlateHeight });
-                    } else {
-                      gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal) });
+                    const frontPlateTopMm = modHeightMm + _effStT_l3;
+                    const frontPlateBottomMm = frontPlateTopMm - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
+                    const doorGapMm = Math.round(frontPlateBottomMm - lastMaida.maidaTopMm);
+                    if (doorGapMm > 0) {
+                      gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: frontPlateBottomMm, heightMm: doorGapMm });
                     }
+                    gaps.push({ bottomMm: frontPlateBottomMm, topMm: frontPlateTopMm, heightMm: TOP_DOWN_STONE_FRONT_HEIGHT_MM });
                   } else {
                     gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal) });
                   }
@@ -3069,33 +3065,32 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               isUpper: modCat === 'upper',
             });
 
-            // 상판내림 + 상판: 도어 상단 ~ 앞판 하단 20mm 갭 + 앞판 영역 (PET=18.5 / 인조대리석=선택값)
+            // 상판내림 + 상판: 도어 상단 ~ 앞판 하단 갭 + 80mm 앞판 영역
             const _effStT_r = _stoneTopThk(mod);
             if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effStT_r > 0) {
-              const doorGapMm = 20;
-              const gapTopAbs_r = doorTopAbsMm + doorGapMm;
-              doorSegs_r.push({
-                bottomY: mmToThreeUnits(doorTopAbsMm),
-                topY: mmToThreeUnits(gapTopAbs_r),
-                heightMm: doorGapMm,
-                key: `door-topgap-${moduleIndex}`,
-                isUpper: false,
-              });
-              // 앞판 높이 = (캐비넷상단 - 앞판하단) + 상판 실효 두께
               // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용
               const cabinetH_r = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs_r = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs_r = cabinetBottomAbs_r + cabinetH_r;
-              const frontPlateAreaMm_r = Math.round(cabinetTopAbs_r - gapTopAbs_r) + _effStT_r;
-              if (frontPlateAreaMm_r > 0) {
+              const frontPlateTopAbs_r = cabinetTopAbs_r + _effStT_r;
+              const frontPlateBottomAbs_r = frontPlateTopAbs_r - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
+              const doorGapMm = Math.round(frontPlateBottomAbs_r - doorTopAbsMm);
+              if (doorGapMm > 0) {
                 doorSegs_r.push({
-                  bottomY: mmToThreeUnits(gapTopAbs_r),
-                  topY: mmToThreeUnits(cabinetTopAbs_r + _effStT_r),
-                  heightMm: frontPlateAreaMm_r,
-                  key: `door-frontplate-${moduleIndex}`,
+                  bottomY: mmToThreeUnits(doorTopAbsMm),
+                  topY: mmToThreeUnits(frontPlateBottomAbs_r),
+                  heightMm: doorGapMm,
+                  key: `door-topgap-${moduleIndex}`,
                   isUpper: false,
                 });
               }
+              doorSegs_r.push({
+                bottomY: mmToThreeUnits(frontPlateBottomAbs_r),
+                topY: mmToThreeUnits(frontPlateTopAbs_r),
+                heightMm: TOP_DOWN_STONE_FRONT_HEIGHT_MM,
+                key: `door-frontplate-${moduleIndex}`,
+                isUpper: false,
+              });
             } else if (modCat !== 'upper' && !(modCat === 'lower' && hasUpperSideModule_r)) {
               // 상부장+하부장이 같이 보이는 측면뷰에서는 하부장 도어 치수가 상부장 영역까지 이어지면 안 된다.
               const isLowerSpecial = modData.id?.includes('lower-top-down-') || modData.id?.includes('lower-door-lift-');
@@ -3297,8 +3292,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selectedBaseFrameMm_r = selModCatCombined_r === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
             ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
             : 0;
+          const selectedStoneTopMm_r = selModCatCombined_r === 'lower' ? _stoneTopThk(selectedMod) : 0;
           const selectedDimensionHeightMm_r = selModCatCombined_r === 'lower'
-            ? selectedBaseFrameMm_r + selFurnitureHeightMm_r
+            ? selectedBaseFrameMm_r + selFurnitureHeightMm_r + selectedStoneTopMm_r
             : selFurnitureHeightMm_r;
           const dimensionBottomMm_r = selModCatCombined_r === 'upper'
             ? (isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
@@ -3688,7 +3684,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
               const isDL_r = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD_r = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
-              const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? -80 : -20;
+              const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? getTopDownDoorTopGap(mod.stoneTopThickness) : -20;
               const effectiveTopGap_r = isTD_r && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
                 ? modDefaultTopGap_r
                 : (mod.doorTopGap ?? modDefaultTopGap_r);
@@ -3718,17 +3714,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida_r = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal_r = modHeightMm - lastMaida_r.maidaTopMm;
                 if (topGapTotal_r > 0) {
-                  // 상판내림 + 상판: 20mm 갭 + 앞판 높이 (PET=18.5 / 인조대리석=선택값)
                   const _effStT_r2 = _stoneTopThk(mod);
                   if (isTD_r && _effStT_r2 > 0) {
-                    const doorGapMm = 20;
-                    if (doorGapMm < topGapTotal_r) {
-                      const frontPlateHeight_r = (topGapTotal_r - doorGapMm) + _effStT_r2;
-                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: lastMaida_r.maidaTopMm + doorGapMm, heightMm: doorGapMm });
-                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm + doorGapMm, topMm: modHeightMm + _effStT_r2, heightMm: frontPlateHeight_r });
-                    } else {
-                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal_r) });
+                    const frontPlateTopMm_r = modHeightMm + _effStT_r2;
+                    const frontPlateBottomMm_r = frontPlateTopMm_r - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
+                    const doorGapMm = Math.round(frontPlateBottomMm_r - lastMaida_r.maidaTopMm);
+                    if (doorGapMm > 0) {
+                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: frontPlateBottomMm_r, heightMm: doorGapMm });
                     }
+                    gaps_r.push({ bottomMm: frontPlateBottomMm_r, topMm: frontPlateTopMm_r, heightMm: TOP_DOWN_STONE_FRONT_HEIGHT_MM });
                   } else {
                     gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal_r) });
                   }

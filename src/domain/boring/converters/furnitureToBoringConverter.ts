@@ -172,6 +172,21 @@ function resolveTopPanelDepthForBoring(
   return Math.max(1, depth - topOffsetMm - placedTopOffsetMm);
 }
 
+function usesDrawerFrontInsteadOfHingedDoor(moduleId?: string) {
+  if (!moduleId) return false;
+
+  return moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-2tier')
+    || moduleId.includes('lower-door-lift-3tier')
+    || moduleId.includes('lower-door-lift-touch-')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('lower-induction-cabinet')
+    || moduleId.includes('dual-lower-induction-cabinet')
+    || moduleId.includes('lower-touch-drawer-');
+}
+
 /**
  * 도어 개수 결정 (가구 너비 기준)
  */
@@ -210,14 +225,11 @@ export function convertFurnitureToBoring(
   // 가구 ID 및 이름
   const furnitureId = placedModule.id;
   const furnitureName = moduleData.name;
-  // 서랍 전용 모듈(외부서랍, 인덕션, 터치서랍 등)은 도어가 아닌 마이다 앞판이므로 측판 힌지 보링 제외
+  // 서랍/마이다 전면 계열은 도어가 아니므로 측판 힌지 보링 제외
   const moduleIdForHinge = placedModule.moduleId || moduleData.id || '';
-  const isDrawerOnlyModule = moduleIdForHinge.includes('lower-drawer-') ||
-    moduleIdForHinge.includes('lower-induction-') ||
-    moduleIdForHinge.includes('lower-touch-drawer-');
   const hasHingedDoor = (placedModule.hasDoor ?? false)
     && !isDummyModuleId(moduleIdForHinge)
-    && !isDrawerOnlyModule;
+    && !usesDrawerFrontInsteadOfHingedDoor(moduleIdForHinge);
 
   // 가구 타입별 처리
   switch (cabinetType) {

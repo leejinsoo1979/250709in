@@ -259,8 +259,8 @@ export interface PlacedModule {
   topPanelNotchSide?: 'left' | 'right';       // 따내기 위치 (기본: right)
 
   // 상판설치 (하부장 전용)
-  stoneTopMaterial?: 'stone' | 'pet';           // 상판 재질 (stone=인조대리석, pet=PET/도어재질 동일, 기본: stone)
-  stoneTopThickness?: 0 | 10 | 20 | 30;       // 인조대리석 두께 (0=없음, 기본: 0) - PET 선택 시 무시되고 18.5mm 사용
+  stoneTopMaterial?: 'stone';                    // 상판 재질 (인조대리석, 기본: stone)
+  stoneTopThickness?: 0 | 10 | 20 | 30;       // 인조대리석 두께 (0=없음, 기본: 0)
   stoneTopFrontOffset?: number;                 // 앞 오프셋 (mm, 기본: 0)
   stoneTopBackOffset?: number;                  // 뒤 오프셋 (mm, 기본: 0)
   stoneTopLeftOffset?: number;                  // 좌 오프셋 (mm, 기본: 0)

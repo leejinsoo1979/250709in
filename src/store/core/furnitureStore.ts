@@ -11,6 +11,12 @@ import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitur
 const isCornerCabinetModuleId = (moduleId?: string): boolean =>
   !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
 
+const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+  if (stoneTopThickness === 10) return -90;
+  if (stoneTopThickness === 30) return -70;
+  return -80;
+};
+
 const getRequiredCornerStartSlot = (
   moduleId: string,
   span: number,
@@ -449,8 +455,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 도어 상단 이격거리 초기화 (카테고리별 기본값)
       if (module.doorTopGap === undefined) {
         if (isTopDown) {
-          // 상판내림: 상단 -80mm
-          module.doorTopGap = userDoorTopGap ?? -80;
+          // 상판내림: 10T=-90, 20T=-80, 30T=-70
+          module.doorTopGap = userDoorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness);
         } else if (isDoorLift) {
           // 도어올림: 상단 30mm (마이다가 위로 올라감)
           module.doorTopGap = userDoorTopGap ?? 30;
@@ -525,7 +531,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const isTopDownNew = module.moduleId?.includes('lower-top-down-');
           const sThk = module.stoneTopThickness || 0;
           if (isTopDownNew && sThk > 0) {
-            const expectedGap = sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
+            const expectedGap = getTopDownDoorTopGap(sThk);
             module.doorTopGap = expectedGap;
             // cabH: 805 - sThk 기준 (반통/한통/2단/3단 공통)
             const expectedCabH = 805 - sThk;
@@ -1093,7 +1099,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,
-            ...(needsTopFix ? { doorTopGap: -80 } : {}),
+            ...(needsTopFix ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness) } : {}),
             ...(needsBottomFix ? { doorBottomGap: 5 } : {})
           };
         }
@@ -1177,9 +1183,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
 	      const isDoorLift = module.moduleId?.includes('lower-door-lift-');
 	      const isTopDown = module.moduleId?.includes('lower-top-down-');
-	      const isShelfSplit = module.moduleId?.includes('shelf-split');
+      const isShelfSplit = module.moduleId?.includes('shelf-split');
       if (isTopDown) {
-        topGap = -80;   // 상판내림: 상단 -80mm
+        topGap = getTopDownDoorTopGap(module.stoneTopThickness);   // 상판내림: 10T=-90, 20T=-80, 30T=-70
         bottomGap = 5;  // 상판내림: 하단 5mm
       } else if (isDoorLift) {
         topGap = 30;    // 도어올림: 상단 30mm
@@ -1536,7 +1542,7 @@ useFurnitureStore.subscribe((state) => {
       const fixTop = m.doorTopGap === undefined;
       const fixBot = m.doorBottomGap === undefined;
       if (!fixTop && !fixBot) return m;
-      return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+      return { ...m, ...(fixTop ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
     return m;
   });
@@ -1574,7 +1580,7 @@ useFurnitureStore.subscribe((state) => {
         const fixBot = m.doorBottomGap === undefined;
         if (!fixTop && !fixBot) return m;
         changed = true;
-        return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+        return { ...m, ...(fixTop ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
       }
       return m;
     });
