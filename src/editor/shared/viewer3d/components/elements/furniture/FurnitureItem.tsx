@@ -3029,6 +3029,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   };
   const effectiveLowerSectionDepth = resolveSectionDepthForRender(placedModule.lowerSectionDepth);
   const effectiveUpperSectionDepth = resolveSectionDepthForRender(placedModule.upperSectionDepth);
+  const lowerSectionDir = placedModule.lowerSectionDepthDirection || 'front';
+  const upperSectionDir = placedModule.upperSectionDepthDirection || 'front';
+  const usesUnifiedSectionDepthDirection = lowerSectionDir === upperSectionDir
+    && Math.abs(effectiveLowerSectionDepth - actualDepthMm) < 0.5
+    && Math.abs(effectiveUpperSectionDepth - actualDepthMm) < 0.5;
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
@@ -3052,7 +3057,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
     // 뒤고정(lowerSectionDepthDirection='front'): 뒷면 고정, 깊이 감소 시 앞면이 뒤로 이동
     // → 중심 Z를 감소량만큼 뒤로 이동
-    if ((placedModule.lowerSectionDepthDirection || 'front') === 'front') {
+    if (usesUnifiedSectionDepthDirection && lowerSectionDir === 'front') {
       const baseDepthMm = actualModuleData?.dimensions.depth || actualDepthMm;
       const depthDiffMm = baseDepthMm - actualDepthMm;
       if (depthDiffMm !== 0) {

@@ -802,7 +802,7 @@ const Configurator: React.FC = () => {
 
   // 가구별 천장/마감 바닥까지 거리 계산 (천장·바닥 기준 변환용)
   //   - topDistance: 가구 상단 ~ 천장 사이 거리 = 상단몰딩 두께(topFrameThickness)
-  //   - bottomDistance: 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이(baseFrameHeight) - 바닥마감재
+  //   - bottomDistance: 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이(baseFrameHeight)
   //   ※ 가구 자체 높이는 공간 - 상단몰딩 - 걸레받이로 자동 계산되므로,
   //     "가구 상단~천장 거리"는 상단몰딩 두께와 정확히 같음.
   const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
@@ -816,12 +816,9 @@ const Configurator: React.FC = () => {
     const baseFrameMm = mod.hasBase === false
       ? (mod.individualFloatHeight ?? 0)
       : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-    const floorFinishMm = spaceInfo.hasFloorFinish
-      ? (spaceInfo.floorFinish?.height ?? (spaceInfo as any).floorFinishHeight ?? 0)
-      : 0;
     return {
       topDistance: Math.max(0, topFrameMm),
-      bottomDistance: Math.max(0, baseFrameMm - floorFinishMm)
+      bottomDistance: Math.max(0, baseFrameMm)
     };
   }, [computeShelfSplitTopDistance, spaceInfo]);
 
@@ -6250,24 +6247,29 @@ const Configurator: React.FC = () => {
                         handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: nextEnabled ? (globalTopEmpty || 30) : 0 } });
                       }} className={`${styles.miniToggle} ${topEnabledEmpty ? styles.miniToggleActive : ''}`} />
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>size</span>
-                          <input type="text" inputMode="numeric" value={topEnabledEmpty ? (globalTopEmpty || '') : '0'} disabled={!topEnabledEmpty}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } }); }}
-                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>옵셋</span>
-                          <input type="text" inputMode="numeric" value={topEnabledEmpty ? (globalTopOffsetEmpty || '') : '0'} disabled={!topEnabledEmpty}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
-                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>갭</span>
-                          <input type="text" inputMode="numeric" value={topEnabledEmpty ? (globalTopGapEmpty || '') : '0'} disabled={!topEnabledEmpty}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
-                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
-                        </div>
+                        {topEnabledEmpty ? (
+                          <>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>size</span>
+                              <input type="text" inputMode="numeric" value={globalTopEmpty || ''}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } }); }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>옵셋</span>
+                              <input type="text" inputMode="numeric" value={globalTopOffsetEmpty || ''}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                            </div>
+                          </>
+                        ) : (
+                          <div style={numCellStyle}>
+                            <span style={numLabelStyle}>상단갭</span>
+                            <input type="text" inputMode="numeric" value={globalTopGapEmpty || ''}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
+                              style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -6293,24 +6295,35 @@ const Configurator: React.FC = () => {
                         handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: nextEnabled ? (globalBaseEmpty || 65) : 0 } });
                       }} className={`${styles.miniToggle} ${baseEnabledEmpty ? styles.miniToggleActive : ''}`} />
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>size</span>
-                          <input type="text" inputMode="numeric" value={baseEnabledEmpty ? (globalBaseEmpty || '') : '0'} disabled={!baseEnabledEmpty}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v === '' ? 0 : parseInt(v, 10) } }); }}
-                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>옵셋</span>
-                          <input type="text" inputMode="numeric" value={baseEnabledEmpty ? (globalBaseOffsetEmpty || '') : '0'} disabled={!baseEnabledEmpty}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
-                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>갭</span>
-                          <input type="text" inputMode="numeric" value={baseEnabledEmpty ? (globalBaseGapEmpty || '') : '0'} disabled={!baseEnabledEmpty}
-                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
-                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
-                        </div>
+                        {baseEnabledEmpty ? (
+                          <>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>size</span>
+                              <input type="text" inputMode="numeric" value={globalBaseEmpty || ''}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v === '' ? 0 : parseInt(v, 10) } }); }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>옵셋</span>
+                              <input type="text" inputMode="numeric" value={globalBaseOffsetEmpty || ''}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>갭</span>
+                              <input type="text" inputMode="numeric" value={globalBaseGapEmpty || ''}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                            </div>
+                          </>
+                        ) : (
+                          <div style={numCellStyle}>
+                            <span style={numLabelStyle}>하단갭</span>
+                            <input type="text" inputMode="numeric" value={globalBaseGapEmpty || ''}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
+                              style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -6770,51 +6783,53 @@ const Configurator: React.FC = () => {
                         className={`${styles.miniToggle} ${topEnabledEmpty ? styles.miniToggleActive : ''}`}
                       />
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>size</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={topEnabledEmpty ? (globalTopEmpty || '') : '0'}
-                            disabled={!topEnabledEmpty}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } });
-                              }
-                            }}
-                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }}
-                          />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>옵셋</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={topEnabledEmpty ? (globalTopOffsetEmpty || '') : '0'}
-                            disabled={!topEnabledEmpty}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any });
-                              }
-                            }}
-                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }}
-                          />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>갭</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={topEnabledEmpty ? (globalTopGapEmpty || '') : '0'}
-                            disabled={!topEnabledEmpty}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any });
-                              }
-                            }}
-                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }}
-                          />
-                        </div>
+                        {topEnabledEmpty ? (
+                          <>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>size</span>
+                              <input
+                                type="text" inputMode="numeric"
+                                value={globalTopEmpty || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || /^\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } });
+                                  }
+                                }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>옵셋</span>
+                              <input
+                                type="text" inputMode="numeric"
+                                value={globalTopOffsetEmpty || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any });
+                                  }
+                                }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div style={numCellStyle}>
+                            <span style={numLabelStyle}>상단갭</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={globalTopGapEmpty || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any });
+                                }
+                              }}
+                              style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -6851,51 +6866,67 @@ const Configurator: React.FC = () => {
                         className={`${styles.miniToggle} ${baseEnabledEmpty ? styles.miniToggleActive : ''}`}
                       />
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>size</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={baseEnabledEmpty ? (globalBaseEmpty || '') : '0'}
-                            disabled={!baseEnabledEmpty}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v === '' ? 0 : parseInt(v, 10) } });
-                              }
-                            }}
-                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }}
-                          />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>옵셋</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={baseEnabledEmpty ? (globalBaseOffsetEmpty || '') : '0'}
-                            disabled={!baseEnabledEmpty}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any });
-                              }
-                            }}
-                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }}
-                          />
-                        </div>
-                        <div style={numCellStyle}>
-                          <span style={numLabelStyle}>갭</span>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={baseEnabledEmpty ? (globalBaseGapEmpty || '') : '0'}
-                            disabled={!baseEnabledEmpty}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any });
-                              }
-                            }}
-                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }}
-                          />
-                        </div>
+                        {baseEnabledEmpty ? (
+                          <>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>size</span>
+                              <input
+                                type="text" inputMode="numeric"
+                                value={globalBaseEmpty || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || /^\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v === '' ? 0 : parseInt(v, 10) } });
+                                  }
+                                }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>옵셋</span>
+                              <input
+                                type="text" inputMode="numeric"
+                                value={globalBaseOffsetEmpty || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any });
+                                  }
+                                }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>갭</span>
+                              <input
+                                type="text" inputMode="numeric"
+                                value={globalBaseGapEmpty || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || /^\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any });
+                                  }
+                                }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          <div style={numCellStyle}>
+                            <span style={numLabelStyle}>하단갭</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={globalBaseGapEmpty || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any });
+                                }
+                              }}
+                              style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

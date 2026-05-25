@@ -211,23 +211,31 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       setMessage({ text: error, type: 'error' });
     } else {
       const spaceState = useSpaceConfigStore.getState();
+      const curFrameSize = spaceState.spaceInfo.frameSize ?? { top: 30, left: 18, right: 18 };
+      const curBaseConfig = spaceState.spaceInfo.baseConfig ?? { type: 'floor', height: 65 };
       spaceState.setSpaceInfo({
         frameSize: {
-          ...spaceState.spaceInfo.frameSize,
+          ...curFrameSize,
           top: synced.frameTop,
           topOffset: synced.frameTopOffset,
-          topGap: synced.topMoldingGap,
-        },
+          topGap: synced.topMoldingGap ?? 0,
+        } as any,
         baseConfig: {
-          ...spaceState.spaceInfo.baseConfig,
-          type: synced.baseHeight > 0 ? 'floor' : spaceState.spaceInfo.baseConfig?.type ?? 'floor',
+          ...curBaseConfig,
+          type: synced.baseHeight > 0 ? 'floor' : curBaseConfig?.type ?? 'floor',
           height: synced.baseHeight,
           offset: synced.baseFrameOffset,
-          gap: synced.baseFrameGap,
-        },
+          gap: synced.baseFrameGap ?? 0,
+        } as any,
         doorTopGap: synced.doorTopGap,
         doorBottomGap: synced.doorBottomGap,
         furnitureDepthDefaults: values.furnitureDepthDefaults,
+      });
+      console.log('[SpaceDefaultsModal] saved & applied:', {
+        topMoldingEnabled: values.topMoldingEnabled,
+        topMoldingGap: values.topMoldingGap,
+        frameTop: synced.frameTop,
+        frameSize_topGap: synced.topMoldingGap,
       });
       useUIStore.getState().setDoorGapDisplayMode(synced.doorGapMode);
       const cb = onSaved;

@@ -1389,12 +1389,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 상부장/하부장인지 확인
   const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
   const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet') || moduleData?.category === 'lower';
-  const floorFinishDoorBottomExtensionMm = !isUpperCabinet
+  const floorFinishDoorBottomReferenceMm = !isUpperCabinet
     && originalSpaceInfo.baseConfig?.type === 'floor'
     && originalSpaceInfo.hasFloorFinish
     ? (originalSpaceInfo.floorFinish?.height || 0)
     : 0;
-  const doorBottomGapForGeometry = doorBottomGap + floorFinishDoorBottomExtensionMm;
+  const doorBottomGapForGeometry = doorBottomGap;
 
   // 패널 두께 - spaceInfo에서 동적으로 가져오기
   const panelThickness = originalSpaceInfo.panelThickness ?? 18;
@@ -1440,7 +1440,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // cabH가 stoneThk별로 변해도 도어 상단~가구 상단 갭은 항상 80mm 일정
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
-      actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap + floorFinishDoorBottomExtensionMm;
+      actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
       actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGapForGeometry;
@@ -1531,7 +1531,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorTopWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm + actualDoorHeight / 2;
   const doorBottomWorldMm = parentGroupYMm + doorCenterLocalForDimensionMm - actualDoorHeight / 2;
   const dimensionDoorTopGapMm = Math.max(0, Math.round(fullSpaceHeight - doorTopWorldMm));
-  const bottomDimensionReferenceOffsetMm = floorFinishDoorBottomExtensionMm;
+  const bottomDimensionReferenceOffsetMm = floorFinishDoorBottomReferenceMm;
   const dimensionDoorBottomGapMm = Math.max(0, Math.round(doorBottomWorldMm - bottomDimensionReferenceOffsetMm));
   const splitDoorTopGapDimensionMm = splitDoorPanelName === '하부 도어'
     ? Math.max(0, Math.round(splitDoorTopGapMm ?? 0))

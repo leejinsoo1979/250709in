@@ -973,10 +973,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floorFinishY = isFloating ? 0 : mmToThreeUnits(floorFinishHeightMm);
   const furnitureBaseY = (isFloating ? floatHeight : baseFrameHeight) + floorFinishY;
-  const doorBottomFinishExtensionMm = (!isFloating && spaceInfo.baseConfig?.type === 'floor' && floorFinishHeightMm > 0)
-    ? floorFinishHeightMm
-    : 0;
-
   const getEffectiveDoorSpaceHeightMm = (mod: PlacedModule) => {
     if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled && mod.zone === 'dropped') {
       return spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
@@ -1009,9 +1005,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const effectiveH = getEffectiveDoorSpaceHeightMm(mod);
     const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
     const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
-    const effectiveDoorBottomGapVal = category === 'upper'
-      ? doorBottomGapVal
-      : doorBottomGapVal + doorBottomFinishExtensionMm;
+    const effectiveDoorBottomGapVal = doorBottomGapVal;
 
     if (category === 'upper') {
       const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 600;
@@ -1058,7 +1052,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       const isTopDown = modData.id?.includes('lower-top-down-');
       if (isTopDown) {
         const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
-        const effectiveTopDownBottomGap = (mod.doorBottomGap ?? 5) + doorBottomFinishExtensionMm;
+        const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
         const doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
         const doorTopAbsMm = cabinetBottomAbs + cabinetH + effectiveTopDownTopGap;
         return {

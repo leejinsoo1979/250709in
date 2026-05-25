@@ -4563,7 +4563,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
             })();
-            // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이 - 바닥마감재
+            // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이
             //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
             const topFrameMm = shelfSplitTopFrameMm !== null
               ? shelfSplitTopFrameMm
@@ -4574,7 +4574,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ? (currentPlacedModule.individualFloatHeight ?? 0)
               : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
             const ceilingToBodyTopMm = Math.max(0, topFrameMm);
-            const bodyBottomToFloorMm = Math.max(0, baseFrameMm - floorFinishH);
+            const bodyBottomToFloorMm = Math.max(0, baseFrameMm);
 
             // 천장/바닥 기준 표시값: 도어와 천장/바닥 사이의 실제 거리 (양수)
             //   - 천장 기준 = 천장~가구상단 - 몸통 기준 상단갭
@@ -5474,11 +5474,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       {(() => {
                         // 표준 가구에서 마지막 섹션(상부=가변)만 편집 가능
                         const isLastSection = sIdx === sectionCount - 1;
+                        const isFreePlacementStandard = !isCustom && !!currentPlacedModule.isFreePlacement && sectionCount >= 2;
                         const isStdEditable = !isCustom && isLastSection && sectionCount >= 2;
                         const isPantryOrPullOut = isPullOutOrPantry;
                         const canEdit = isPlainShoeShelfForSections
                           ? sectionCount === 2
-                          : (isCustom || isStdEditable || (isPantryOrPullOut && sectionCount >= 2));
+                          : (isCustom || isFreePlacementStandard || isStdEditable || (isPantryOrPullOut && sectionCount >= 2));
                         return (
                       <div style={{ flex: 1, minWidth: '70px' }}>
                         <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
@@ -5547,6 +5548,46 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setSectionHeightInputs({});
                               } else if (isCustom) {
                                 handleSectionHeightBlur(sIdx);
+                              } else if (isFreePlacementStandard && mcSections) {
+                                // 자유배치 표준 가구: 선택 섹션 높이를 고정하고, 나머지 섹션 치수는 유지한 채 전체 H를 재계산한다.
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const renderedHeights = mcSections.map((section: any, idx: number) => {
+                                  if (idx === sIdx) return inputVal;
+                                  if (plainShoeShelfSectionHeights) return plainShoeShelfSectionHeights[idx] ?? 0;
+                                  if (idx === mcSections.length - 1) {
+                                    const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
+                                      if ((s.heightType || 'percentage') === 'absolute') return acc + (s.height || 0);
+                                      const ratio = (s.height || s.heightRatio || 50) / 100;
+                                      return acc + Math.round(sectionBasisH * ratio);
+                                    }, 0);
+                                    return Math.max(0, sectionBasisH - fixedSum);
+                                  }
+                                  if ((section.heightType || 'percentage') === 'absolute') return section.height || 0;
+                                  return Math.round(sectionBasisH * ((section.height || section.heightRatio || 50) / 100));
+                                });
+                                const nextTotalH = renderedHeights.reduce((sum: number, h: number) => sum + h, 0);
+                                const clampedH = Math.max(300, Math.min(3000, Math.round(nextTotalH)));
+                                const basicThickness = moduleData?.modelConfig?.basicThickness || 18;
+                                const nextSections = mcSections.map((section: any, idx: number) => {
+                                  if (idx !== sIdx || idx === mcSections.length - 1) return section;
+                                  const updated: any = { ...section, height: inputVal, heightType: 'absolute' };
+                                  if ((section.type === 'shelf' || section.type === 'open') && (section.count > 0 || (Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0))) {
+                                    const shelfCount = section.count || (section.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                updatePlacedModule(currentPlacedModule.id, {
+                                  freeHeight: clampedH,
+                                  customSections: nextSections,
+                                } as any);
+                                setFreeHeightInput(clampedH.toString());
+                                setSectionHeightInputs({});
                               } else if (isPantryOrPullOut && mcSections) {
                                 // 팬트리장/인출장: 전체 몸통 H 고정, 변경한 섹션의 반대쪽 섹션이 흡수한다.
                                 const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
