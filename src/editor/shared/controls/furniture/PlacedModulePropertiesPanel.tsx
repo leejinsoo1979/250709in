@@ -3743,7 +3743,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>몸통치수</h5>
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-start', marginTop: '2px' }}>
                 {/* 너비 — 슬롯배치/자유배치 모두 편집 가능 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
@@ -6134,6 +6134,47 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 upperDoorHingePositionsMm: undefined,
               };
             };
+            const getBaseSizeSyncUpdates = (nextSize: number) => {
+              const clampedSize = Math.max(0, nextSize);
+              const currentBase = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+              const baseDelta = currentBase - clampedSize;
+              const sections = Array.isArray((mod as any).customSections) ? (mod as any).customSections : [];
+
+              if (isShelfSplitModuleId(mod?.moduleId) && sections.length >= 2) {
+                const lowerH = Number(sections[0]?.height) || 0;
+                const currentUpperH = Number(sections[1]?.height) || 0;
+                const availableAfterBaseAndLower = Math.max(0, (spaceInfo.height ?? 0) - clampedSize - lowerH);
+                const nextUpperH = Math.min(
+                  availableAfterBaseAndLower,
+                  Math.max(100, currentUpperH + baseDelta)
+                );
+                const nextTopFrameH = Math.max(0, Math.round(availableAfterBaseAndLower - nextUpperH));
+                const nextSections = sections.map((section: any, index: number) => (
+                  index === 1
+                    ? { ...section, height: nextUpperH, heightType: 'absolute' }
+                    : section
+                ));
+                return {
+                  baseFrameHeight: clampedSize,
+                  topFrameThickness: nextTopFrameH,
+                  customSections: nextSections,
+                  upperDoorHingePositionsMm: undefined,
+                };
+              }
+
+              if (moduleData?.category === 'full') {
+                const currentBodyHeight = mod.freeHeight
+                  ?? mod.customHeight
+                  ?? moduleData?.dimensions?.height
+                  ?? 0;
+                return {
+                  baseFrameHeight: clampedSize,
+                  freeHeight: Math.max(100, currentBodyHeight + baseDelta),
+                };
+              }
+
+              return { baseFrameHeight: clampedSize };
+            };
 
             return (
               <>
@@ -6319,9 +6360,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const cur = mod.baseFrameHeight ?? bfDefault;
                                 const next = Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(mod.id, {
-                                  baseFrameHeight: next,
                                   ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+                                  ...getBaseSizeSyncUpdates(next),
                                 });
                               } else if (e.key === 'Enter') {
                                 (e.target as HTMLInputElement).blur();
@@ -6333,9 +6374,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const num = v === '' ? 0 : parseInt(v, 10);
                                 const next = num > bfMax ? bfMax : num;
                                 updatePlacedModule(mod.id, {
-                                  baseFrameHeight: next,
                                   ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+                                  ...getBaseSizeSyncUpdates(next),
                                 });
                               }
                             }}
@@ -6343,9 +6384,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               setHighlightedFrame(null);
                               const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault));
                               updatePlacedModule(mod.id, {
-                                baseFrameHeight: next,
                                 ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                 ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+                                ...getBaseSizeSyncUpdates(next),
                               });
                             }}
                             style={inputStyle}
