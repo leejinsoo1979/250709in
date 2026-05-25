@@ -6213,8 +6213,111 @@ const Configurator: React.FC = () => {
         {/* 상,걸래받이 섹션 — 가구별 좌→우 순서 (서라운드 무관하게 항상 표시) */}
         {isFreeMode && (() => {
           const freeMods = placedModules.filter(m => m.isFreePlacement);
-          if (freeMods.length === 0) return null;
           if (spaceInfo.isIsland) return null;
+          // 자유배치 가구 0개일 때: 슬롯배치와 동일하게 spaceInfo 글로벌 값 기반 섹션 표시
+          if (freeMods.length === 0) {
+            const globalTopEmpty = spaceInfo.frameSize?.top ?? 30;
+            const globalTopOffsetEmpty = (spaceInfo.frameSize as any)?.topOffset ?? 0;
+            const globalTopGapEmpty = (spaceInfo.frameSize as any)?.topGap ?? 0;
+            const globalBaseEmpty = spaceInfo.baseConfig?.height ?? 65;
+            const globalBaseOffsetEmpty = (spaceInfo.baseConfig as any)?.offset ?? 0;
+            const globalBaseGapEmpty = (spaceInfo.baseConfig as any)?.gap ?? 0;
+            const topEnabledEmpty = globalTopEmpty > 0;
+            const baseEnabledEmpty = globalBaseEmpty > 0;
+            const numCellStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' };
+            const numInputStyle: React.CSSProperties = { width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent' };
+            const numLabelStyle: React.CSSProperties = { fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 };
+            return (
+              <>
+                <div className={styles.configSection}>
+                  <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
+                    <span className={styles.sectionDot}></span>
+                    <h3 className={styles.sectionTitle}>상단몰딩</h3>
+                    <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}>
+                      <input type="checkbox" checked={topEnabledEmpty} onChange={(e) => {
+                        const enabled = e.target.checked;
+                        handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: enabled ? (globalTopEmpty || 30) : 0 } });
+                      }} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                      <span>전체</span>
+                    </label>
+                    <HelpBtn title="상단몰딩" text="가구 위쪽과 천장 사이의 마감 패널 높이입니다." />
+                  </div>
+                  <div className={styles.subSetting}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                      <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
+                      <button onClick={() => {
+                        const nextEnabled = !topEnabledEmpty;
+                        handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: nextEnabled ? (globalTopEmpty || 30) : 0 } });
+                      }} className={`${styles.miniToggle} ${topEnabledEmpty ? styles.miniToggleActive : ''}`} />
+                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                        <div style={numCellStyle}>
+                          <span style={numLabelStyle}>size</span>
+                          <input type="text" inputMode="numeric" value={topEnabledEmpty ? (globalTopEmpty || '') : '0'} disabled={!topEnabledEmpty}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } }); }}
+                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
+                        </div>
+                        <div style={numCellStyle}>
+                          <span style={numLabelStyle}>옵셋</span>
+                          <input type="text" inputMode="numeric" value={topEnabledEmpty ? (globalTopOffsetEmpty || '') : '0'} disabled={!topEnabledEmpty}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
+                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
+                        </div>
+                        <div style={numCellStyle}>
+                          <span style={numLabelStyle}>갭</span>
+                          <input type="text" inputMode="numeric" value={topEnabledEmpty ? (globalTopGapEmpty || '') : '0'} disabled={!topEnabledEmpty}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
+                            style={{ ...numInputStyle, color: topEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.configSection}>
+                  <div className={styles.sectionHeader} style={{ userSelect: 'none' }}>
+                    <span className={styles.sectionDot}></span>
+                    <h3 className={styles.sectionTitle}>걸레받이</h3>
+                    <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}>
+                      <input type="checkbox" checked={baseEnabledEmpty} onChange={(e) => {
+                        const enabled = e.target.checked;
+                        handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: enabled ? (globalBaseEmpty || 65) : 0 } });
+                      }} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                      <span>전체</span>
+                    </label>
+                    <HelpBtn title="걸레받이" text="가구 아래쪽 받침대의 높이와 옵셋을 설정합니다." />
+                  </div>
+                  <div className={styles.subSetting}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                      <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
+                      <button onClick={() => {
+                        const nextEnabled = !baseEnabledEmpty;
+                        handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: nextEnabled ? (globalBaseEmpty || 65) : 0 } });
+                      }} className={`${styles.miniToggle} ${baseEnabledEmpty ? styles.miniToggleActive : ''}`} />
+                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                        <div style={numCellStyle}>
+                          <span style={numLabelStyle}>size</span>
+                          <input type="text" inputMode="numeric" value={baseEnabledEmpty ? (globalBaseEmpty || '') : '0'} disabled={!baseEnabledEmpty}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v === '' ? 0 : parseInt(v, 10) } }); }}
+                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
+                        </div>
+                        <div style={numCellStyle}>
+                          <span style={numLabelStyle}>옵셋</span>
+                          <input type="text" inputMode="numeric" value={baseEnabledEmpty ? (globalBaseOffsetEmpty || '') : '0'} disabled={!baseEnabledEmpty}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
+                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
+                        </div>
+                        <div style={numCellStyle}>
+                          <span style={numLabelStyle}>갭</span>
+                          <input type="text" inputMode="numeric" value={baseEnabledEmpty ? (globalBaseGapEmpty || '') : '0'} disabled={!baseEnabledEmpty}
+                            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
+                            style={{ ...numInputStyle, color: baseEnabledEmpty ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          }
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
 

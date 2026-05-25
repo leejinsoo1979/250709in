@@ -4245,6 +4245,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const minDepth = isLowerDrawer ? 400 : 100;
                         if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
                           applyBodyDepthChange(val, true);
+                          // 깊이 변경 시 상/하부 섹션 direction도 현재 선택된 방향으로 통일
+                          applyLowerCabinetDepthDirection(lowerDepthDirection);
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
@@ -4300,6 +4302,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       style={{ fontSize: '12px' }}
                     />
                     <span className={styles.unit}>mm</span>
+                  </div>
+                  {/* 뒤고정/앞고정 토글 — 깊이 변경 시 상/하부 섹션 direction 동기화 */}
+                  <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                    <button
+                      type="button"
+                      style={{
+                        flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: lowerDepthDirection === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                        color: lowerDepthDirection === 'front' ? '#fff' : 'var(--theme-text-secondary)',
+                        fontSize: '10px', cursor: 'pointer',
+                      }}
+                      onClick={() => applyLowerCabinetDepthDirection('front')}
+                    >뒤고정</button>
+                    <button
+                      type="button"
+                      style={{
+                        flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: lowerDepthDirection === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                        color: lowerDepthDirection === 'back' ? '#fff' : 'var(--theme-text-secondary)',
+                        fontSize: '10px', cursor: 'pointer',
+                      }}
+                      onClick={() => applyLowerCabinetDepthDirection('back')}
+                    >앞고정</button>
                   </div>
                 </div>
               </div>
