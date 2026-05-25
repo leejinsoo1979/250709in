@@ -52,11 +52,13 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   baseboardSize: 60,
   baseboardOffset: 0,
   baseboardGap: 0,
-  // 도어 셋팅
+  // 도어 셋팅 — 몸통 기준 / 천장·바닥 기준 별도 저장
   doorSettingEnabled: true,
   doorGapMode: 'body',
-  doorTopGap: 5,
-  doorBottomGap: 25,
+  doorTopGap: 5,            // 몸통 기준 상단갭
+  doorBottomGap: 25,        // 몸통 기준 하단갭
+  doorTopGapCf: 70,         // 천장·바닥 기준 상단갭
+  doorBottomGapCf: 100,     // 천장·바닥 기준 하단갭
 };
 
 const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; label: string }[] = [
@@ -420,10 +422,17 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
                   selected={values.doorGapMode}
                   onChange={(id) => set('doorGapMode', id as any)}
                 />
-                <div className={styles.row}>
-                  <NumberInput label="상단갭" value={values.doorTopGap} onChange={h('doorTopGap')} min={0} max={100} step={1} />
-                  <NumberInput label="하단갭" value={values.doorBottomGap} onChange={h('doorBottomGap')} min={0} max={100} step={1} />
-                </div>
+                {values.doorGapMode === 'body' ? (
+                  <div className={styles.row}>
+                    <NumberInput label="상단갭" value={values.doorTopGap} onChange={h('doorTopGap')} min={0} max={200} step={1} />
+                    <NumberInput label="하단갭" value={values.doorBottomGap} onChange={h('doorBottomGap')} min={0} max={200} step={1} />
+                  </div>
+                ) : (
+                  <div className={styles.row}>
+                    <NumberInput label="상단갭" value={values.doorTopGapCf} onChange={h('doorTopGapCf')} min={0} max={500} step={1} />
+                    <NumberInput label="하단갭" value={values.doorBottomGapCf} onChange={h('doorBottomGapCf')} min={0} max={500} step={1} />
+                  </div>
+                )}
               </>
             )}
           </div>

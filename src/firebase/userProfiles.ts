@@ -769,8 +769,10 @@ export type SpaceConfigDefaults = {
   // 도어 셋팅
   doorSettingEnabled?: boolean;
   doorGapMode?: 'body' | 'cf';
-  doorTopGap?: number;
-  doorBottomGap?: number;
+  doorTopGap?: number;       // 몸통 기준 상단갭
+  doorBottomGap?: number;    // 몸통 기준 하단갭
+  doorTopGapCf?: number;     // 천장·바닥 기준 상단갭
+  doorBottomGapCf?: number;  // 천장·바닥 기준 하단갭
 };
 
 // 공간설정 기본값 조회
