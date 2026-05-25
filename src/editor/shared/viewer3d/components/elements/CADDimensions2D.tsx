@@ -112,7 +112,8 @@ const resolveShoeCabinetDoorFrontZ = (
     ? 380
     : rawDepthMm;
   const depth = mmToThreeUnits(actualDepthMm);
-  const furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
+  const backWallGapZ = mmToThreeUnits((shoeModule as any).backWallGap ?? 0);
+  const furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + backWallGapZ + depth / 2;
 
   return furnitureZ + depth / 2 + doorThickness;
 };
@@ -2124,8 +2125,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ? (module.customDepth || 380)
             : depthModuleData.dimensions.depth;
           const baseModuleDepth = mmToThreeUnits(baseModuleDepthMm);
-          const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2;
-          const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2;
+          const moduleBackWallGapZ = mmToThreeUnits((module as any).backWallGap ?? 0);
+          const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2 + moduleBackWallGapZ;
+          const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2 + moduleBackWallGapZ;
 
           // 상부섹션/단일 섹션 Z
           const upperDir = (mod.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
@@ -3403,8 +3405,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ? (module.customDepth || 380)
             : moduleData.dimensions.depth;
           const baseModuleDepth_d2 = mmToThreeUnits(baseModuleDepthMm_d2);
-          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2;
-          const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2;
+          const moduleBackWallGapZ_d2 = mmToThreeUnits((module as any).backWallGap ?? 0);
+          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
+          const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
           // 상부 방향 오프셋
           const upperDir_d2 = (module.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
           const upperDiff_d2 = baseModuleDepth_d2 - moduleDepth;
