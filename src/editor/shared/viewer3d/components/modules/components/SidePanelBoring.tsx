@@ -7,6 +7,7 @@ import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateS
 import {
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
+  resolveSideAnchoredDoorHingePositionsMm,
   resolveSidePanelMatchedHingePositions,
   type DoorCabinetCategory
 } from '@/editor/shared/utils/doorGeometryCalculator';
@@ -128,8 +129,14 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
       hingeSide: placedModule.hingePosition ?? 'right',
       cabinetBottomMm: 0,
     });
-    const defaultPositions = resolveDefaultDoorHingePositionsMm({
+    const defaultPositions = resolveSideAnchoredDoorHingePositionsMm({
       doorHeightMm: doorGeometry.leafHeightMm,
+      doorBottomOnSideMm: doorGeometry.bottomMm,
+      defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
+        doorHeightMm: doorGeometry.leafHeightMm,
+      }),
+      firstSidePositionMm: 120,
+      lastSidePositionMm: heightMm - 120,
     });
     const shelfCollisionRanges = boringDetails
       .filter(detail => detail.role === 'movable-shelf')

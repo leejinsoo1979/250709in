@@ -21,6 +21,7 @@ import {
   normalizeDoorHingePositionsMm,
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
+  resolveSideAnchoredDoorHingePositionsMm,
   type DoorCabinetCategory,
   type DoorHingeMode
 } from '@/editor/shared/utils/doorGeometryCalculator';
@@ -4914,7 +4915,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 if (!isSplitDoor) {
                   return {
                     lower: 0,
-                    upper: 0
+                    upper: 0,
+                    lowerFirst: 120,
+                    lowerLast: moduleBodyHeightMm - 120,
+                    upperFirst: 120,
+                    upperLast: moduleBodyHeightMm - 120
                   };
                 }
 
@@ -4940,7 +4945,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   : defaultUpperDoorBottomGapMm;
                 return {
                   lower: -(currentPlacedModule.lowerDoorBottomGap ?? 0),
-                  upper: lowerSectionTopMm - upperDoorBottomGapMm
+                  upper: lowerSectionTopMm - upperDoorBottomGapMm,
+                  lowerFirst: 120,
+                  lowerLast: lowerSectionTopMm - 120,
+                  upperFirst: lowerSectionTopMm + 120,
+                  upperLast: moduleBodyHeightMm - 120
                 };
               })();
               const buildPositions = (
@@ -4957,13 +4966,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   savedSidePositions.map((position: number) => position - doorBottomOnSideMm),
                   doorHeightMm
                 );
-                return saved.length > 0
-                  ? saved
-                  : resolveDefaultDoorHingePositionsMm({
+                if (saved.length > 0) {
+                  return saved;
+                }
+
+                const firstSidePositionMm = field === 'lowerDoorHingePositionsMm'
+                  ? splitDoorBottomsMm.lowerFirst
+                  : field === 'upperDoorHingePositionsMm'
+                    ? splitDoorBottomsMm.upperFirst
+                    : 120;
+                const lastSidePositionMm = field === 'lowerDoorHingePositionsMm'
+                  ? splitDoorBottomsMm.lowerLast
+                  : field === 'upperDoorHingePositionsMm'
+                    ? splitDoorBottomsMm.upperLast
+                    : moduleBodyHeightMm - 120;
+                return resolveSideAnchoredDoorHingePositionsMm({
                     doorHeightMm,
-                    isUpperCabinet: !isSplitDoor && isUpperModule,
-                    isLowerCabinet: !isSplitDoor && isLowerModule,
-                    hingeMode
+                    doorBottomOnSideMm,
+                    defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
+                      doorHeightMm,
+                      isUpperCabinet: !isSplitDoor && isUpperModule,
+                      isLowerCabinet: !isSplitDoor && isLowerModule,
+                      hingeMode
+                    }),
+                    firstSidePositionMm,
+                    lastSidePositionMm
                   });
               };
               const groups = isSplitDoor

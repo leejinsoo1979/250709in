@@ -1774,6 +1774,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     (effectiveInternalHeight || moduleData?.dimensions?.height || 0) / 2 -
     actualDoorHeight / 2;
   const defaultHingePositionsMm = (() => {
+    const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
     const defaultPositions = resolveDefaultDoorHingePositionsMm({
       doorHeightMm: actualDoorHeight,
       isUpperCabinet,
@@ -1781,10 +1782,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       hingeMode
     });
     if (splitDoorPanelName !== '상부 도어' && splitDoorPanelName !== '하부 도어') {
-      return defaultPositions;
+      return resolveSideAnchoredDoorHingePositionsMm({
+        doorHeightMm: actualDoorHeight,
+        doorBottomOnSideMm,
+        defaultDoorPositionsMm: defaultPositions,
+        firstSidePositionMm: 120,
+        lastSidePositionMm: cabinetHeightMm - 120,
+      });
     }
 
-    const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
     const sections = (
       storePlacedModule?.customSections ||
       (moduleData?.modelConfig as any)?.sections ||

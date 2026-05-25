@@ -1303,8 +1303,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
       customSidePositionsMm: currentPlacedModule.hingePositionsMm,
-      defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
+      defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
         doorHeightMm: doorGeometry.leafHeightMm,
+        doorBottomOnSideMm: doorGeometry.bottomMm,
+        defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({
+          doorHeightMm: doorGeometry.leafHeightMm,
+        }),
+        firstSidePositionMm: 120,
+        lastSidePositionMm: heightMm - 120,
       }),
       preserveEdgePositionsMm: true
     });

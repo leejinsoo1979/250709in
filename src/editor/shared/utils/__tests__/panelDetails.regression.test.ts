@@ -295,8 +295,8 @@ describe('panelDetails regression baselines', () => {
     const leftSide = findPanel(panels, '좌측판')
 
     expect(door.height).toBe(1033)
-    expect(door.boringPositions).toEqual([120, 469, 913])
-    expect(leftSide.bracketBoringPositions).toEqual([92, 441, 885])
+    expect(door.boringPositions).toEqual([148, 469, 908])
+    expect(leftSide.bracketBoringPositions).toEqual([120, 441, 880])
     expect(491 - leftSide.bracketBoringPositions![1]).toBe(50)
   })
 

@@ -1697,7 +1697,15 @@ export const calculatePanelDetails = (
         const resolved = resolveMatchedHingePositions(
           doorVerticalGeometry.bottomMm,
           leaf.heightMm,
-          customHingePositionsMm
+          customHingePositionsMm,
+          undefined,
+          resolveSideAnchoredDoorHingePositionsMm({
+            doorHeightMm: leaf.heightMm,
+            doorBottomOnSideMm: doorVerticalGeometry.bottomMm,
+            defaultDoorPositionsMm: calculateHingePositions(leaf.heightMm),
+            firstSidePositionMm: DEFAULT_HINGE_SETTINGS.topBottomMargin,
+            lastSidePositionMm: height - DEFAULT_HINGE_SETTINGS.topBottomMargin,
+          })
         );
         bracketSidePositions.push(...resolved.sidePositionsMm);
         pushDoorPanel(doorName, getOuterAdjustedDoorWidth(leaf), leaf.heightMm, isLeftHinge, undefined, resolved.doorPositionsMm, insideFaceHingeSide);
