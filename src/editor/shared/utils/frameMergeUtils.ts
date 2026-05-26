@@ -10,7 +10,7 @@
  */
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
-import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
 
 export interface FrameMergeGroup {
   moduleIds: string[];   // 이 그룹에 속한 모듈 ID들
@@ -239,7 +239,7 @@ function isLowerCabinetModule(mod: PlacedModule): boolean {
 }
 
 function getTopEndPanelSettings(mod: PlacedModule) {
-  const frontGapMm = mod.topEndPanelOffset ?? 0;
+  const frontGapMm = resolveTopEndPanelFrontOffsetMm(mod.moduleId, mod.doorTopGap, mod.topEndPanelOffset);
   const backGapMm = mod.topEndPanelBackOffset ?? 0;
   const depthMm = Math.max(0, (mod.customDepth ?? mod.freeDepth ?? 600) + frontGapMm + backGapMm);
   const thicknessMm = resolvePetPanelThicknessMm(mod.endPanelThickness);

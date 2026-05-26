@@ -27,7 +27,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
-import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -1664,7 +1664,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
   const topEndPanelData = useMemo(() => {
     if (placedModuleForCorner?.hasTopEndPanel !== true) return null;
-    const frontOffset = ((placedModuleForCorner as any).topEndPanelOffset ?? 0) * 0.01;
+    const frontOffset = resolveTopEndPanelFrontOffsetMm(
+      placedModuleForCorner.moduleId,
+      placedModuleForCorner.doorTopGap,
+      (placedModuleForCorner as any).topEndPanelOffset
+    ) * 0.01;
     const backOffset = ((placedModuleForCorner as any).topEndPanelBackOffset ?? 0) * 0.01;
     const thickness = resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness) * 0.01;
     const sideEpThickness = thickness;

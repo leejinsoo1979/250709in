@@ -31,7 +31,13 @@ import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import { FurniturePresetButtons } from './FurniturePresetButtons';
 import { useAlert } from '@/contexts/AlertContext';
 import styles from './PlacedModulePropertiesPanel.module.css';
-import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import {
+  PET_PANEL_THICKNESS_MM,
+  TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM,
+  isBasicLowerTopEndPanelDoorGapModuleId,
+  resolvePetPanelThicknessMm,
+  resolveTopEndPanelFrontOffsetMm
+} from '@/editor/shared/utils/panelThickness';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
 const getImagePath = (filename: string) => {
@@ -56,16 +62,10 @@ const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
   return -80;
 };
 
+const BASIC_LOWER_DOOR_TOP_GAP_DEFAULT = -20;
+
 const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => {
-  if (!moduleId) return false;
-  return moduleId.includes('lower-half-cabinet')
-    || moduleId.includes('dual-lower-half-cabinet')
-    || moduleId.includes('lower-drawer-')
-    || moduleId.includes('dual-lower-drawer-')
-    || moduleId.includes('lower-sink-cabinet')
-    || moduleId.includes('dual-lower-sink-cabinet')
-    || moduleId.includes('lower-induction-cabinet')
-    || moduleId.includes('dual-lower-induction-cabinet');
+  return isBasicLowerTopEndPanelDoorGapModuleId(moduleId);
 };
 
 const usesStableShelfSectionBoundary = (moduleId?: string): boolean => {
@@ -1611,10 +1611,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         && spaceInfo.frameConfig?.top !== false;
       const defaultTopGap = isDoorLift
         ? 30
-        : isTopDown
-          ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness)
+          : isTopDown
+            ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness)
           : isBasicLowerDoorGap
-            ? -20
+            ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
             : isLowerCategory
               ? 20
               : (isFullSurroundForDoorDefaults ? -3 : 5);
@@ -1626,7 +1626,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const rawTopGap = currentPlacedModule.doorTopGap;
       const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
-        : (rawTopGap ?? defaultTopGap);
+        : (isBasicLowerDoorGap && rawTopGap === 20)
+          ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
+          : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
       const initialBottomGap = rawBotGap ?? defaultBottomGap;
       // State 업데이트
@@ -1661,6 +1663,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         if (defaultFO > 0) {
           updatePlacedModule(currentPlacedModule.id, { stoneTopFrontOffset: defaultFO });
         }
+      }
+
+      if (
+        currentPlacedModule.hasTopEndPanel === true
+        && isBasicLowerDoorGap
+        && (currentPlacedModule as any).topEndPanelOffset !== (initialTopGap > 0 ? 0 : TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM)
+      ) {
+        updatePlacedModule(currentPlacedModule.id, {
+          topEndPanelOffset: initialTopGap > 0 ? 0 : TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM
+        } as any);
       }
 
       // 분할 모드용 섹션별 이격거리 초기화
@@ -2439,6 +2451,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   };
 
   // 도어 갭 입력 핸들러
+  const getBasicLowerDoorTopGapUpdates = (nextDoorTopGap: number) => {
+    if (!currentPlacedModule) return {};
+    const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(currentPlacedModule.moduleId);
+    if (!isBasicLowerDoorGap || currentPlacedModule.hasTopEndPanel !== true) {
+      return {};
+    }
+    return { topEndPanelOffset: nextDoorTopGap > 0 ? 0 : TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM };
+  };
+
   const handleDoorTopGapChange = (value: string) => {
     // 백스페이스 포함 모든 입력 허용
     setDoorTopGapInput(value);
@@ -2447,7 +2468,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const numValue = parseInt(value);
     if (!isNaN(numValue) && currentPlacedModule) {
       setDoorTopGap(numValue);
-      updatePlacedModule(currentPlacedModule.id, { doorTopGap: numValue });
+      updatePlacedModule(currentPlacedModule.id, {
+        doorTopGap: numValue,
+        ...getBasicLowerDoorTopGapUpdates(numValue),
+      });
     }
   };
 
@@ -2467,7 +2491,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const value = parseInt(doorTopGapInput);
     if (!isNaN(value) && currentPlacedModule) {
       setDoorTopGap(value);
-      updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
+      updatePlacedModule(currentPlacedModule.id, {
+        doorTopGap: value,
+        ...getBasicLowerDoorTopGapUpdates(value),
+      });
     } else {
       // 유효하지 않은 값이면 이전 값으로 복원
       setDoorTopGapInput(doorTopGap.toString());
@@ -2490,7 +2517,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const value = parseInt(doorTopGapInput);
       if (!isNaN(value) && currentPlacedModule) {
         setDoorTopGap(value);
-        updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
+        updatePlacedModule(currentPlacedModule.id, {
+          doorTopGap: value,
+          ...getBasicLowerDoorTopGapUpdates(value),
+        });
       }
       (e.target as HTMLInputElement).blur();
     } else if (e.key === 'ArrowUp') {
@@ -2500,7 +2530,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorTopGapInput(newValue.toString());
       setDoorTopGap(newValue);
       if (currentPlacedModule) {
-        updatePlacedModule(currentPlacedModule.id, { doorTopGap: newValue });
+        updatePlacedModule(currentPlacedModule.id, {
+          doorTopGap: newValue,
+          ...getBasicLowerDoorTopGapUpdates(newValue),
+        });
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -2509,7 +2542,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorTopGapInput(newValue.toString());
       setDoorTopGap(newValue);
       if (currentPlacedModule) {
-        updatePlacedModule(currentPlacedModule.id, { doorTopGap: newValue });
+        updatePlacedModule(currentPlacedModule.id, {
+          doorTopGap: newValue,
+          ...getBasicLowerDoorTopGapUpdates(newValue),
+        });
       }
     }
   };
@@ -3227,10 +3263,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : isTD
               ? getTopDownDoorTopGap(mod.stoneTopThickness)
               : isBasicLowerDoorGap
-                ? -20
+                ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
                 : isLowerModule
                   ? 20
                   : (isFullSurroundForDoorDefaults ? -3 : 5);
+        } else if (isBasicLowerDoorGap && mod.doorTopGap === 20) {
+          updates.doorTopGap = BASIC_LOWER_DOOR_TOP_GAP_DEFAULT;
         } else if (isFullSurroundForDoorDefaults && mod.hasTopFrame !== false && mod.doorTopGap === 5 && !isDL && !isTD && !isLowerModule) {
           updates.doorTopGap = -3;
         }
@@ -6880,10 +6918,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       checked={currentPlacedModule.hasTopEndPanel === true}
                       onChange={() => {
                         const turning = currentPlacedModule.hasTopEndPanel !== true;
+                        const initialTopEndPanelOffset = resolveTopEndPanelFrontOffsetMm(
+                          currentPlacedModule.moduleId,
+                          currentPlacedModule.doorTopGap,
+                          (currentPlacedModule as any).topEndPanelOffset
+                        );
                         updatePlacedModule(currentPlacedModule.id, {
                           hasTopEndPanel: turning,
                           ...(turning ? {
-                            topEndPanelOffset: (currentPlacedModule as any).topEndPanelOffset ?? 0,
+                            topEndPanelOffset: initialTopEndPanelOffset,
                             topEndPanelBackOffset: (currentPlacedModule as any).topEndPanelBackOffset ?? 0,
                           } : {})
                         } as any);
@@ -7302,7 +7345,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={(epInputs as any).topFront ?? String((currentPlacedModule as any).topEndPanelOffset ?? 0)}
+                            value={(epInputs as any).topFront ?? String(resolveTopEndPanelFrontOffsetMm(
+                              currentPlacedModule.moduleId,
+                              currentPlacedModule.doorTopGap,
+                              (currentPlacedModule as any).topEndPanelOffset
+                            ))}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
@@ -7323,7 +7370,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = (currentPlacedModule as any).topEndPanelOffset ?? 0;
+                                const cur = resolveTopEndPanelFrontOffsetMm(
+                                  currentPlacedModule.moduleId,
+                                  currentPlacedModule.doorTopGap,
+                                  (currentPlacedModule as any).topEndPanelOffset
+                                );
                                 const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: next } as any);
                                 setEpInputs(s => ({ ...s, topFront: undefined } as any));

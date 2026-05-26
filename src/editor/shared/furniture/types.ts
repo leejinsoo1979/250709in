@@ -181,7 +181,7 @@ export interface PlacedModule {
   bottomEndPanelOffset?: number; // 상부장 하부 EP 전면갭 (mm)
   bottomEndPanelBackOffset?: number; // 상부장 하부 EP 후면갭 (mm, 음수=몸통 안쪽으로 줄임)
   hasTopEndPanel?: boolean;      // 하부장 상부 EP 표시 여부
-  topEndPanelOffset?: number;    // 하부장 상부 EP 전면 옵셋 (mm, 양수=확장, 음수=축소)
+  topEndPanelOffset?: number;    // 하부장 상부 EP 전면 옵셋 (mm, 기본 20, 양수=확장, 음수=축소)
   topEndPanelBackOffset?: number; // 하부장 상부 EP 후면 옵셋 (mm, 양수=확장, 음수=축소)
 
   // 슬롯 모드 사용자 지정 너비
