@@ -543,7 +543,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 좌측 도어`,
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        thickness: 18,  // 도어는 PET 항상 18mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1,
@@ -554,7 +554,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 우측 도어`,
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        thickness: 18,  // 도어는 PET 항상 18mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1,
@@ -566,7 +566,7 @@ export const calculatePanelDetails = (
         name: `${moduleData.name} - 도어`,
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
-        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        thickness: 18,  // 도어는 PET 항상 18mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
         quantity: 1,
@@ -576,7 +576,7 @@ export const calculatePanelDetails = (
   }
 
   // === 프레임 패널 (상단몰딩 / 걸래받이) ===
-  const FRAME_THICKNESS = 18.5; // 프레임(PET 재질) 항상 18.5mm
+  const FRAME_THICKNESS = 18; // 프레임(PET 재질) 항상 18mm
 
   if (topFrameHeightMm && topFrameHeightMm > 0) {
     panels.push({

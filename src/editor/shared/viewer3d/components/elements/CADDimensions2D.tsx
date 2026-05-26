@@ -1731,16 +1731,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               isUpper: modCat === 'upper'
             });
 
-            // 하부장: 도어 상단갭 (도어 상단 ~ 가구 상단) + 하단갭 (바닥 ~ 도어 하단)
-            // lower-top-down: 도어 상단 ~ 인조대리석 앞판 하단 갭(20mm) 표시
+            // 하부장: 상판/상부 EP가 있으면 도어 상단 ~ 상부 마감 하단 갭 표시
+            // lower-top-down: 도어 상단 ~ 상부 마감 앞판 하단 갭 표시
             // lower-door-lift는 도어가 가구 위로 올라가므로 좌측 2단에서 표시 (여기서 제외)
-            const _effStoneThk_l = _stoneTopThk(mod);
-            if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effStoneThk_l > 0) {
+            const _effTopFinishThk_l = getLowerTopFinishThicknessForModule(mod);
+            if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effTopFinishThk_l > 0) {
               const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs = cabinetBottomAbs + cabinetH;
               const gapBottomAbs = doorTopAbsMm; // 도어 상단
-              const frontPlateTopAbs = cabinetTopAbs + _effStoneThk_l;
+              const frontPlateTopAbs = cabinetTopAbs + _effTopFinishThk_l;
               const frontPlateBottomAbs = frontPlateTopAbs - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
               const doorGapMm = Math.round(frontPlateBottomAbs - gapBottomAbs);
               if (doorGapMm > 0) {
@@ -1759,7 +1759,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-frontplate-${moduleIndex}`,
                 isUpper: false
               });
-            } else if (modCat === 'lower' && _effStoneThk_l > 0) {
+            } else if (modCat === 'lower' && _effTopFinishThk_l > 0) {
               const countertopBottomGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
               if (countertopBottomGapMm > 0) {
                 doorSegs.push({
@@ -1999,9 +1999,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selectedBaseFrameMm = selModCatCombined === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
             ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
             : 0;
-          const selectedStoneTopMm = selModCatCombined === 'lower' ? _stoneTopThk(selectedMod) : 0;
+          const selectedTopFinishMm = selModCatCombined === 'lower'
+            ? getLowerTopFinishThicknessForModule(selectedMod)
+            : 0;
           const selectedDimensionHeightMm = selModCatCombined === 'lower'
-            ? selectedBaseFrameMm + selFurnitureHeightMm + selectedStoneTopMm
+            ? selectedBaseFrameMm + selFurnitureHeightMm + selectedTopFinishMm
             : selFurnitureHeightMm;
           const dimensionBottomMm = selModCatCombined === 'upper'
             ? (isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)
@@ -3141,14 +3143,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               isUpper: modCat === 'upper',
             });
 
-            // 상판내림 + 상판: 도어 상단 ~ 앞판 하단 갭 + 80mm 앞판 영역
-            const _effStT_r = _stoneTopThk(mod);
-            if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effStT_r > 0) {
+            // 상판내림 + 상판/상부 EP: 도어 상단 ~ 앞판 하단 갭 + 80mm 앞판 영역
+            const _effTopFinishThk_r = getLowerTopFinishThicknessForModule(mod);
+            if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effTopFinishThk_r > 0) {
               // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용
               const cabinetH_r = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs_r = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs_r = cabinetBottomAbs_r + cabinetH_r;
-              const frontPlateTopAbs_r = cabinetTopAbs_r + _effStT_r;
+              const frontPlateTopAbs_r = cabinetTopAbs_r + _effTopFinishThk_r;
               const frontPlateBottomAbs_r = frontPlateTopAbs_r - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
               const doorGapMm = Math.round(frontPlateBottomAbs_r - doorTopAbsMm);
               if (doorGapMm > 0) {
@@ -3167,7 +3169,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-frontplate-${moduleIndex}`,
                 isUpper: false,
               });
-            } else if (modCat === 'lower' && _effStT_r > 0) {
+            } else if (modCat === 'lower' && _effTopFinishThk_r > 0) {
               const countertopBottomGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
               if (countertopBottomGapMm > 0) {
                 doorSegs_r.push({
@@ -3380,9 +3382,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selectedBaseFrameMm_r = selModCatCombined_r === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
             ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
             : 0;
-          const selectedStoneTopMm_r = selModCatCombined_r === 'lower' ? _stoneTopThk(selectedMod) : 0;
+          const selectedTopFinishMm_r = selModCatCombined_r === 'lower'
+            ? getLowerTopFinishThicknessForModule(selectedMod)
+            : 0;
           const selectedDimensionHeightMm_r = selModCatCombined_r === 'lower'
-            ? selectedBaseFrameMm_r + selFurnitureHeightMm_r + selectedStoneTopMm_r
+            ? selectedBaseFrameMm_r + selFurnitureHeightMm_r + selectedTopFinishMm_r
             : selFurnitureHeightMm_r;
           const dimensionBottomMm_r = selModCatCombined_r === 'upper'
             ? (isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height)

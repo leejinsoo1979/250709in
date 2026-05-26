@@ -104,9 +104,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     };
   }, [endPanelMaterial]);
   
-  // L자 분절 여부: 사용자가 EP 두께값을 기본 보드 두께(18mm)보다 크게 늘렸을 때만 적용
-  //   기본값(18 또는 18.5)에서는 분절 없이 단일 보드로 렌더링
-  const isCFrame = endPanelThicknessMm > 18.5;
+  // L자 분절 여부: 사용자가 EP 두께값을 기본 PET 보드 두께(18mm)보다 크게 늘렸을 때만 적용
+  const isCFrame = endPanelThicknessMm > 18;
 
   if (!isCFrame) {
     // 기존: 단일 보드

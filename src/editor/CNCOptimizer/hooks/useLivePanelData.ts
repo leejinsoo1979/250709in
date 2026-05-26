@@ -8,7 +8,7 @@ import type { BoringDepthGroup, Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
-import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
+import { computeFrameMergeGroups, computeStoneTopMergeGroups, computeTopEndPanelMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
@@ -20,6 +20,7 @@ import {
   hasDirectLowerTopPanel,
   isDirectLowerDowelShelfModule,
 } from '@/editor/shared/utils/lowerCabinetDowelShelves';
+import { PET_PANEL_THICKNESS_MM } from '@/editor/shared/utils/panelThickness';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -50,6 +51,14 @@ function isInsertFrameVerticalPanel(panelName?: string): boolean {
     panelName.includes('키큰장찬넬 좌EP') ||
     panelName.includes('키큰장찬넬 우EP')
   ));
+}
+
+function normalizePetPanelThickness<T extends { material?: string; thickness?: number }>(panel: T): T {
+  if (panel.material !== 'PET') return panel;
+  return {
+    ...panel,
+    thickness: PET_PANEL_THICKNESS_MM,
+  };
 }
 
 function getBoringDepthPositions(detail: ShelfBoringPositionDetail, panelDepth: number): number[] | undefined {
@@ -1206,8 +1215,8 @@ export function useLivePanelData() {
       const surroundH = spaceH - floorFinishForSurround - floatH;
 
       const userPT = spaceInfo.panelThickness ?? 18;
-      const surroundThickness = (userPT === 18.5 || userPT === 15.5) ? 18.5 : 18;
-      const surroundMaterial = surroundThickness === 18.5 ? 'PET' : 'PB';
+      const surroundThickness = (userPT === 18.5 || userPT === 15.5) ? PET_PANEL_THICKNESS_MM : 18;
+      const surroundMaterial = (userPT === 18.5 || userPT === 15.5) ? 'PET' : 'PB';
 
       if (spaceInfo.freeSurround) {
         // 자유배치 서라운드
@@ -1316,6 +1325,28 @@ export function useLivePanelData() {
       console.log('========================================');
       console.log('All panels:', allPanels);
 
+      // 하부장 상부 EP는 대리석 상판처럼 상단에 올라가지만, 생산 데이터는 프레임처럼 연속 구간 병합으로 산출한다.
+      const topEndPanelGroups = computeTopEndPanelMergeGroups(placedModules, 2420);
+      topEndPanelGroups.forEach((group, gIdx) => {
+        const refMod = placedModules.find(m => m.id === group.moduleIds[0]);
+        if (!refMod) return;
+        const materialThickness = group.thicknessMm;
+        allPanels.push({
+          id: `merged_top_ep_${gIdx}`,
+          name: `${group.label} 상부 EP`,
+          width: Math.round(group.totalWidthMm * 10) / 10,
+          height: Math.round(group.depthMm * 10) / 10,
+          thickness: materialThickness,
+          material: 'PET',
+          color: refMod.color || placedModules[0]?.color || 'MW',
+          quantity: 1,
+          grain: 'H' as any,
+          meshName: 'top-end-panel',
+          furnitureId: refMod.id,
+          sourceFurnitureIds: group.moduleIds,
+        });
+      });
+
       // ★ 프레임 병합 처리: frameMergeEnabled=true일 때 개별 상부/걸래받이을 병합
       // 병합 조건: 프레임 높이(Y축)·두께(Z축)가 동일하고 합산 너비(X축) ≤ 2420mm
       if (spaceInfo.frameMergeEnabled && placedModules.length > 1) {
@@ -1349,7 +1380,7 @@ export function useLivePanelData() {
               name: `${group.label} 상단몰딩`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
-              thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 18.5 : 18, // 프레임: 사용자 설정 따름
+              thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? PET_PANEL_THICKNESS_MM : 18,
               material: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 'PET' : 'PB',
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
@@ -1368,7 +1399,7 @@ export function useLivePanelData() {
               name: `${group.label} 걸래받이`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
-              thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 18.5 : 18, // 프레임: 사용자 설정 따름
+              thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? PET_PANEL_THICKNESS_MM : 18,
               material: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 'PET' : 'PB',
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
@@ -1545,7 +1576,7 @@ export function useLivePanelData() {
         }
       }
 
-      setPanels(allPanels.filter(panel => !isStonePanel(panel)));
+      setPanels(allPanels.filter(panel => !isStonePanel(panel)).map(normalizePetPanelThickness));
       } catch (error) {
         console.error('❌ extractPanels error:', error);
         console.error('❌ Stack:', error instanceof Error ? error.stack : '');
@@ -2086,8 +2117,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
     const surroundH2 = spaceH2 - floorFinishForSurround2 - floatH2;
     const userPT2 = spaceInfo.panelThickness ?? 18;
-    const surroundThickness2 = (userPT2 === 18.5 || userPT2 === 15.5) ? 18.5 : 18;
-    const surroundMaterial2 = surroundThickness2 === 18.5 ? 'PET' : 'PB';
+    const surroundThickness2 = (userPT2 === 18.5 || userPT2 === 15.5) ? PET_PANEL_THICKNESS_MM : 18;
+    const surroundMaterial2 = (userPT2 === 18.5 || userPT2 === 15.5) ? 'PET' : 'PB';
 
     if (spaceInfo.freeSurround) {
       surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2, spaceInfo.panelThickness ?? 18);
@@ -2166,6 +2197,6 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       });
     }
 
-    callback(allPanels.filter(panel => !isStonePanel(panel)));
+    callback(allPanels.filter(panel => !isStonePanel(panel)).map(normalizePetPanelThickness));
   }, [placedModules, spaceInfo, callback]);
 }

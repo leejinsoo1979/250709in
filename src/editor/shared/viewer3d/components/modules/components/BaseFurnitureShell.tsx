@@ -16,7 +16,7 @@ import { VentilationCap } from './VentilationCap';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
-import { resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -2762,8 +2762,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const FROM_SIDE_BOTTOM_MM = 200; // 측판 하단에서 200mm 위
                 const NOTCH_FRAME_DEPTH_MM = 40; // 목찬넬 수평 프레임 깊이
                 // 유리장 목찬넬 L자 전체 높이 = 60mm (수평 두께 + 수직 높이)
-                // 수직 높이 = 60 - basicThickness(18) = 42mm
-                const NOTCH_FRAME_VERT_H_MM = 60 - (basicThickness / 0.01);
+                // 수직 높이 = 60 - PET 두께(18) = 42mm
+                const notchFrameThickness = mmToThreeUnits(PET_PANEL_THICKNESS_MM);
+                const NOTCH_FRAME_VERT_H_MM = 60 - PET_PANEL_THICKNESS_MM;
 
                 // 목찬넬·전대 앞면은 측판 앞면에서 추가로 18mm 안쪽
                 const sideFrontZ = depth / 2 - mmToThreeUnits(40) - mmToThreeUnits(18);
@@ -2774,27 +2775,27 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const refY = sideBottomY + mmToThreeUnits(FROM_SIDE_BOTTOM_MM);
 
                 // 목찬넬 수평: 측판 앞면에서 안쪽으로 40mm 영역 (가구 앞이 아닌 측판 앞 기준)
-                const horzY = refY + basicThickness / 2;
+                const horzY = refY + notchFrameThickness / 2;
                 const horzZ = sideFrontZ - mmToThreeUnits(NOTCH_FRAME_DEPTH_MM) / 2;
                 // 목찬넬 수직: 수평 끝(뒤쪽)에 붙어 위로 올라가는 세로판
                 const vertHm = mmToThreeUnits(NOTCH_FRAME_VERT_H_MM);
-                const vertY = refY + basicThickness + vertHm / 2;
-                const vertZ = sideFrontZ - mmToThreeUnits(NOTCH_FRAME_DEPTH_MM) + basicThickness / 2;
+                const vertY = refY + notchFrameThickness + vertHm / 2;
+                const vertZ = sideFrontZ - mmToThreeUnits(NOTCH_FRAME_DEPTH_MM) + notchFrameThickness / 2;
 
                 // L자 목찬넬 전체 높이 = 수평 두께 + 수직 높이
-                const woodChannelTotalH = basicThickness + vertHm;
+                const woodChannelTotalH = notchFrameThickness + vertHm;
 
                 // 전대: 목찬넬 뒤에 붙음. 높이 = L자 전체 높이.
                 const apronW = innerWidth - sideW * 2;
                 const apronH = woodChannelTotalH;
-                const apronZ = vertZ - basicThickness;
+                const apronZ = vertZ - notchFrameThickness;
                 const apronY = refY + apronH / 2;
 
                 return (
                   <>
                     <BoxWithEdges
                       key={`glass-woodch-horz-${getPanelMaterial('목찬넬프레임수평(1)').uuid}`}
-                      args={[apronW, basicThickness, mmToThreeUnits(NOTCH_FRAME_DEPTH_MM)]}
+                      args={[apronW, notchFrameThickness, mmToThreeUnits(NOTCH_FRAME_DEPTH_MM)]}
                       position={[0, horzY, horzZ]}
                       material={getPanelMaterial('목찬넬프레임수평(1)')}
                       renderMode={renderMode}
@@ -2807,7 +2808,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     />
                     <BoxWithEdges
                       key={`glass-woodch-vert-${getPanelMaterial('목찬넬프레임수직(1)').uuid}`}
-                      args={[apronW, vertHm, basicThickness]}
+                      args={[apronW, vertHm, notchFrameThickness]}
                       position={[0, vertY, vertZ]}
                       material={getPanelMaterial('목찬넬프레임수직(1)')}
                       renderMode={renderMode}

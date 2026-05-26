@@ -208,10 +208,10 @@ const getPanelSimulationSettings = (): SimulationSettings => {
 };
 
 const getPanelSimulationStock = (panels: SimulationCutPanel[]): SimulationStockSheet[] => {
-  const isPET = panels.some(p => [18.5, 15.5].includes(p.thickness));
+  const isPET = panels.some(p => p.material === 'PET' || [18.5, 15.5].includes(p.thickness));
   const stock: SimulationStockSheet[] = isPET ? [
     { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
-    { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+    { label: 'PET_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PET' },
     { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
     { label: 'MDF_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'MDF' },
     { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
@@ -220,7 +220,7 @@ const getPanelSimulationStock = (panels: SimulationCutPanel[]): SimulationStockS
     { label: 'MDF_3T_2440x1220', width: 1220, length: 2440, thickness: 3, quantity: 999, material: 'MDF' },
   ] : [
     { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
-    { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+    { label: 'PET_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PET' },
     { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
     { label: 'MDF_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'MDF' },
     { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
@@ -273,7 +273,7 @@ const toSimulationCutPanel = (panel: OptimizerPanel): SimulationCutPanel => {
     label: panel.name || `Panel_${panel.id}`,
     width,
     length,
-    thickness: panel.thickness || (isStoneTop ? panel.thickness || 18 : material === 'PET' ? 18.5 : 18),
+    thickness: panel.thickness || (isStoneTop ? panel.thickness || 18 : 18),
     quantity: panel.quantity || 1,
     material,
     grain: isBackPanel ? 'H' : isStoneTop ? 'NONE' : panel.grain === 'NONE' ? 'NONE' : 'H',

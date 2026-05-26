@@ -177,6 +177,12 @@ export interface PlacedModule {
   endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤, 기본: 'floor')
   endPanelTopOffset?: number;    // EP 몸통 상단 옵셋 (mm, 상단몰딩 ON 기본=몰딩높이, OFF=0)
   endPanelBottomOffset?: number; // EP 몸통 하단 옵셋 (mm, 걸레받이 ON 기본=걸레받이높이, OFF=0)
+  hasBottomEndPanel?: boolean;   // 상부장 하부 EP 표시 여부
+  bottomEndPanelOffset?: number; // 상부장 하부 EP 전면갭 (mm)
+  bottomEndPanelBackOffset?: number; // 상부장 하부 EP 후면갭 (mm, 음수=몸통 안쪽으로 줄임)
+  hasTopEndPanel?: boolean;      // 하부장 상부 EP 표시 여부
+  topEndPanelOffset?: number;    // 하부장 상부 EP 전면 옵셋 (mm, 양수=확장, 음수=축소)
+  topEndPanelBackOffset?: number; // 하부장 상부 EP 후면 옵셋 (mm, 양수=확장, 음수=축소)
 
   // 슬롯 모드 사용자 지정 너비
   slotCustomWidth?: number; // 슬롯모드에서 사용자 지정 가구 너비 (mm)

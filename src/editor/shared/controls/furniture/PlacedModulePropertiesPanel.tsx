@@ -31,6 +31,7 @@ import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import { FurniturePresetButtons } from './FurniturePresetButtons';
 import { useAlert } from '@/contexts/AlertContext';
 import styles from './PlacedModulePropertiesPanel.module.css';
+import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
 const getImagePath = (filename: string) => {
@@ -237,8 +238,8 @@ const calculateRenderedSurroundPanelsForModule = (
 
   const frameSize = spaceInfo.frameSize;
   const userPanelThickness = spaceInfo.panelThickness ?? 18;
-  const surroundThickness = (userPanelThickness === 18.5 || userPanelThickness === 15.5) ? 18.5 : 18;
-  const surroundMaterial = surroundThickness === 18.5 ? 'PET' : 'PB';
+  const surroundThickness = (userPanelThickness === 18.5 || userPanelThickness === 15.5) ? PET_PANEL_THICKNESS_MM : 18;
+  const surroundMaterial = (userPanelThickness === 18.5 || userPanelThickness === 15.5) ? 'PET' : 'PB';
   const sideDepthMm = 40;
   const panels: any[] = [];
 
@@ -734,14 +735,14 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
         name: '좌측 도어',
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET'
       });
       panels.door.push({
         name: '우측 도어',
         width: doorWidth,
         height: height - doorGap * 2,
-        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET'
       });
     } else {
@@ -749,7 +750,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
         name: '도어',
         width: customWidth - doorGap * 2,
         height: height - doorGap * 2,
-        thickness: 18.5,  // 도어는 PET 항상 18.5mm
+        thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET'
       });
     }
@@ -2063,7 +2064,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const clamped = Math.max(widthMin, Math.min(widthMax, num));
       updatePlacedModule(currentPlacedModule.id, {
         surroundPanelWidth: clamped,
-        ...(isTopPanel ? { freeHeight: 18.5 } : { freeWidth: 18.5 }), // 서라운드(PET) 항상 18.5mm
+        ...(isTopPanel ? { freeHeight: PET_PANEL_THICKNESS_MM } : { freeWidth: PET_PANEL_THICKNESS_MM }),
       });
     };
 
@@ -4933,6 +4934,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const isUpperModule = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
               const isLowerModule = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet');
               const isPantrySplit = currentPlacedModule.moduleId?.includes('pantry-cabinet-split');
+              const lowerTopHingeInsetMm = currentPlacedModule.moduleId?.includes('shelf-split') ? 140 : 120;
               const moduleBodyHeightMm = Math.round(adjustedFreeHeight ?? placedBodyHeight ?? moduleData?.dimensions.height ?? 0);
               const doorWidthMm = Math.round(doorOriginalWidth ?? customWidth ?? moduleData?.dimensions.width ?? 0);
               const defaultDoorBottomOnSideMm = !isSplitDoor && moduleData
@@ -4984,7 +4986,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   lower: -(currentPlacedModule.lowerDoorBottomGap ?? 0),
                   upper: lowerSectionTopMm - upperDoorBottomGapMm,
                   lowerFirst: 120,
-                  lowerLast: lowerSectionTopMm - 120,
+                  lowerLast: lowerSectionTopMm - lowerTopHingeInsetMm,
                   upperFirst: lowerSectionTopMm + 120,
                   upperLast: moduleBodyHeightMm - 120
                 };
@@ -6870,8 +6872,28 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     하부 EP
                   </label>
                 )}
+                {/* 상부 EP — 하부장 전용 (가구 위쪽 마감판) */}
+                {moduleData.category === 'lower' && (
+                  <label className={styles.epCheckboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={currentPlacedModule.hasTopEndPanel === true}
+                      onChange={() => {
+                        const turning = currentPlacedModule.hasTopEndPanel !== true;
+                        updatePlacedModule(currentPlacedModule.id, {
+                          hasTopEndPanel: turning,
+                          ...(turning ? {
+                            topEndPanelOffset: (currentPlacedModule as any).topEndPanelOffset ?? 0,
+                            topEndPanelBackOffset: (currentPlacedModule as any).topEndPanelBackOffset ?? 0,
+                          } : {})
+                        } as any);
+                      }}
+                    />
+                    상부 EP
+                  </label>
+                )}
               </div>
-              {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel || (moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false)) && (
+              {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel || (moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false) || (moduleData.category === 'lower' && currentPlacedModule.hasTopEndPanel === true)) && (
                 <>
                   {/* EP 높이 모드 — 키큰장(full)만 표시 (하부장/상부장은 카테고리별 자동 결정) */}
                   {/* 상단/하단 갭 — 좌/우 EP 전용 (하부 EP는 전면갭/후면갭 사용) */}
@@ -6952,16 +6974,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               onFocus={() => { epThicknessFocusedRef.current = true; }}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (v === '' || /^\d+$/.test(v)) {
+                                if (v === '' || /^\d*\.?\d*$/.test(v)) {
                                   setEpThicknessInput(v);
                                 }
                               }}
                               onBlur={() => {
                                 epThicknessFocusedRef.current = false;
-                                const val = parseInt(epThicknessInput, 10);
+                                const val = parseFloat(epThicknessInput);
                                 if (!isNaN(val) && val >= 10) {
-                                  setEpThicknessInput(val.toString());
-                                  updatePlacedModule(currentPlacedModule.id, { endPanelThickness: val });
+                                  const normalized = resolvePetPanelThicknessMm(val);
+                                  setEpThicknessInput(normalized.toString());
+                                  updatePlacedModule(currentPlacedModule.id, { endPanelThickness: normalized });
                                 } else {
                                   const fallback = currentPlacedModule.endPanelThickness ?? 18;
                                   setEpThicknessInput(fallback.toString());
@@ -6972,8 +6995,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   (e.target as HTMLInputElement).blur();
                                 } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = parseInt(epThicknessInput, 10) || (currentPlacedModule.endPanelThickness ?? 18);
-                                  const next = Math.max(10, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                  const cur = parseFloat(epThicknessInput) || (currentPlacedModule.endPanelThickness ?? 18);
+                                  const next = resolvePetPanelThicknessMm(Math.max(10, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                   setEpThicknessInput(next.toString());
                                   updatePlacedModule(currentPlacedModule.id, { endPanelThickness: next });
                                 }
@@ -7189,7 +7212,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  {/* 하부 EP(상부장 하부 마감판) 전면갭/후면갭 — 상부장 전용. 기본 전면 0 / 후면 35mm */}
+                  {/* 하부 EP(상부장 하부 마감판) 전면갭/후면갭 — 상부장 전용. 기본 전면 0 / 후면 -35mm */}
                   {moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false && (
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
@@ -7236,13 +7259,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={(epInputs as any).bottomBack ?? String((currentPlacedModule as any).bottomEndPanelBackOffset ?? 35)}
+                            value={(epInputs as any).bottomBack ?? String(-Math.abs((currentPlacedModule as any).bottomEndPanelBackOffset ?? -35))}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, bottomBack: v } as any));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
+                                  const num = -Math.abs(Math.max(-580, Math.min(200, parseInt(v, 10))));
                                   updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: num } as any);
                                 }
                               }
@@ -7250,17 +7273,98 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onBlur={() => {
                               const v = (epInputs as any).bottomBack;
                               if (v === '' || v === '-') {
-                                updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: 35 } as any);
+                                updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: -35 } as any);
                               }
                               setEpInputs(s => ({ ...s, bottomBack: undefined } as any));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = (currentPlacedModule as any).bottomEndPanelBackOffset ?? 35;
+                                const cur = -Math.abs((currentPlacedModule as any).bottomEndPanelBackOffset ?? -35);
                                 const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: next } as any);
                                 setEpInputs(s => ({ ...s, bottomBack: undefined } as any));
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* 상부 EP(하부장 상부 마감판) 전면/후면 옵셋 — 하부장 전용. +확장 / -축소, 후면 기본 0mm */}
+                  {moduleData.category === 'lower' && currentPlacedModule.hasTopEndPanel === true && (
+                    <div className={styles.epRow}>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>전면옵셋</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={(epInputs as any).topFront ?? String((currentPlacedModule as any).topEndPanelOffset ?? 0)}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                setEpInputs(s => ({ ...s, topFront: v } as any));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: num } as any);
+                                }
+                              }
+                            }}
+                            onBlur={() => {
+                              const v = (epInputs as any).topFront;
+                              if (v === '' || v === '-') {
+                                updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: 0 } as any);
+                              }
+                              setEpInputs(s => ({ ...s, topFront: undefined } as any));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = (currentPlacedModule as any).topEndPanelOffset ?? 0;
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: next } as any);
+                                setEpInputs(s => ({ ...s, topFront: undefined } as any));
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>후면옵셋</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={(epInputs as any).topBack ?? String((currentPlacedModule as any).topEndPanelBackOffset ?? 0)}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                setEpInputs(s => ({ ...s, topBack: v } as any));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { topEndPanelBackOffset: num } as any);
+                                }
+                              }
+                            }}
+                            onBlur={() => {
+                              const v = (epInputs as any).topBack;
+                              if (v === '' || v === '-') {
+                                updatePlacedModule(currentPlacedModule.id, { topEndPanelBackOffset: 0 } as any);
+                              }
+                              setEpInputs(s => ({ ...s, topBack: undefined } as any));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = (currentPlacedModule as any).topEndPanelBackOffset ?? 0;
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { topEndPanelBackOffset: next } as any);
+                                setEpInputs(s => ({ ...s, topBack: undefined } as any));
                               }
                             }}
                             className={styles.epInput}

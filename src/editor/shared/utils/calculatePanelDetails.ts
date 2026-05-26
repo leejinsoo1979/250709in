@@ -16,7 +16,7 @@ import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resol
 import { getDirectLowerDowelShelfPositionsMm, isDirectLowerDowelShelfModule } from './lowerCabinetDowelShelves';
 import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
-import { resolveNominalBackPanelOffsetThicknessMm } from './panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm } from './panelThickness';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -95,7 +95,7 @@ export const calculatePanelDetails = (
     const insertOuterWidthMm = (typeof customWidth === 'number' && customWidth > 0)
       ? customWidth
       : (moduleData.dimensions.width || 136);
-    const insertEpThicknessMm = 18;
+    const insertEpThicknessMm = PET_PANEL_THICKNESS_MM;
     const insertEpDepthMm = 40; // 58 - 18
     const insertFrontFrameThicknessMm = 18;
     const insertHeightMm = (typeof spaceHeight === 'number' && spaceHeight > 0)
@@ -131,17 +131,17 @@ export const calculatePanelDetails = (
     });
     insertResult.push({
       name: '키큰장찬넬 좌EP',
-      width: insertEpThicknessMm,
+      width: insertEpDepthMm,
       height: insertEpHeightMm,
-      thickness: insertEpDepthMm,
+      thickness: insertEpThicknessMm,
       material: 'PET',
       quantity: 1,
     });
     insertResult.push({
       name: '키큰장찬넬 우EP',
-      width: insertEpThicknessMm,
+      width: insertEpDepthMm,
       height: insertEpHeightMm,
-      thickness: insertEpDepthMm,
+      thickness: insertEpThicknessMm,
       material: 'PET',
       quantity: 1,
     });
@@ -187,7 +187,7 @@ export const calculatePanelDetails = (
 
   // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
   const doorWidth = originalWidth || customWidth;
-  const doorPanelCutThickness = 18.5;
+  const doorPanelCutThickness = PET_PANEL_THICKNESS_MM;
   const doorPanelCutMaterial = 'PET';
   
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
@@ -202,7 +202,7 @@ export const calculatePanelDetails = (
     : rawBackPanelThickness === 3.5
       ? 3
       : rawBackPanelThickness;
-  const drawerHandleThickness = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
+  const drawerHandleThickness = PET_PANEL_THICKNESS_MM; // 마이다는 PET 노출 패널이므로 18T 고정
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
@@ -1564,7 +1564,7 @@ export const calculatePanelDetails = (
         name,
         width: widthMm,
         height: heightMm,
-        thickness: 18.5,  // PET 재질 항상 18.5mm
+        thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET',
         boringPositions: doorBoring.boringPositions,
         boringDepthPositions: doorBoring.boringDepthPositions,
@@ -1633,6 +1633,9 @@ export const calculatePanelDetails = (
           : leaf.name === 'right'
             ? '우측 '
             : '';
+        const lowerTopHingeInsetMm = moduleData.id.includes('shelf-split')
+          ? DEFAULT_HINGE_SETTINGS.topBottomMargin + 20
+          : DEFAULT_HINGE_SETTINGS.topBottomMargin;
 
         const resolvedLower = resolveMatchedHingePositions(
           lowerDoorBottomMm,
@@ -1644,7 +1647,7 @@ export const calculatePanelDetails = (
             doorBottomOnSideMm: lowerDoorBottomMm,
             defaultDoorPositionsMm: calculateHingePositions(lowerDoorH),
             firstSidePositionMm: DEFAULT_HINGE_SETTINGS.topBottomMargin,
-            lastSidePositionMm: lowerSectionTopMm - DEFAULT_HINGE_SETTINGS.topBottomMargin,
+            lastSidePositionMm: lowerSectionTopMm - lowerTopHingeInsetMm,
           })
         );
         const resolvedUpper = resolveMatchedHingePositions(
@@ -1831,7 +1834,7 @@ export const calculatePanelDetails = (
   // === 커스텀 가구 내부 패널 (칸막이, 선반, 서랍) ===
   if (customConfig && customConfig.sections) {
     const basicThicknessCC = customConfig.panelThickness || basicThickness;
-    const drawerHandleThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
+    const drawerHandleThicknessCC = PET_PANEL_THICKNESS_MM;
     const drawerSideThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerBottomThicknessCC = backPanelThickness; // MDF 재질, 백패널과 동일
     const backReductionForCustomPanelsMm = backPanelThickness + resolveNominalBackPanelOffsetThicknessMm(basicThicknessCC) - 1;
@@ -1913,7 +1916,7 @@ export const calculatePanelDetails = (
                   width: drawerMaidaWidth,
                   height: maidaHeight,
                   thickness: drawerHandleThicknessCC,
-                  material: 'PB'
+                  material: 'PET'
                 });
                 // 서랍 앞판
                 targetPanel.push({
@@ -2234,10 +2237,10 @@ export const calculatePanelDetails = (
   }
 
   // 엔드패널(EP) — 좌/우 독립
-  const epT = 18.5; // EP(엔드패널)는 PET 재질 항상 18.5mm
-  const epThicknessMm = endPanelThickness || 18; // 사용자 설정 EP 두께
+  const epT = PET_PANEL_THICKNESS_MM;
+  const epThicknessMm = resolvePetPanelThicknessMm(endPanelThickness); // 사용자 설정 EP 두께(18.5 legacy는 18로 정규화)
   const isEpCFrame = epThicknessMm > 18; // >18mm이면 ㄷ자 프레임
-  const epConnectorWidth = epThicknessMm - 18.5; // 전면/후면 연결판 폭 = EP두께 - 외판두께
+  const epConnectorWidth = epThicknessMm - PET_PANEL_THICKNESS_MM; // 전면/후면 연결판 폭 = EP두께 - 외판두께
   // 사용자가 명시한 값(0 포함, undefined가 아니면)을 우선 사용. undefined일 때만 default.
   const effectiveEndPanelTopOffsetMm = hasTopFrame === false
     ? 0
@@ -2452,7 +2455,7 @@ export const calculatePanelDetails = (
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
       extDrawerPanels.push(
-        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: 18.5, material: 'PET' },
+        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
       );
     }
   }
@@ -2550,7 +2553,7 @@ export const calculatePanelDetails = (
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'PB' },
         { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
-        { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: 18.5, material: 'PET' },
+        { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
       );
     });
   }
@@ -2611,14 +2614,14 @@ export const calculatePanelDetails = (
       name: '인덕션 1단서랍(마이다)',
       width: maidaWidthMm,
       height: 340 + inductionGapBottomExt,
-      thickness: 18.5,
+      thickness: PET_PANEL_THICKNESS_MM,
       material: 'PET',
     });
     extDrawerPanels.push({
       name: '인덕션 2단서랍(마이다)',
       width: maidaWidthMm,
       height: inductionMaida2HeightMm,
-      thickness: 18.5,
+      thickness: PET_PANEL_THICKNESS_MM,
       material: 'PET',
     });
   }
@@ -2681,7 +2684,7 @@ export const calculatePanelDetails = (
         name: `목찬넬프레임수평(${ni + 1})`,
         width: lFrameWidth,
         height: 40,
-        thickness: 18.5,
+        thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET',
         quantity: 1,
       });
@@ -2689,8 +2692,8 @@ export const calculatePanelDetails = (
       panels.frame.push({
         name: `목찬넬프레임수직(${ni + 1})`,
         width: lFrameVerticalWidth,
-        height: notch.height - 18.5,
-        thickness: 18.5,
+        height: notch.height - PET_PANEL_THICKNESS_MM,
+        thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET',
         quantity: 1,
       });
@@ -2805,13 +2808,13 @@ export const calculatePanelDetails = (
       name: '하부마감판',
       width: customWidth,
       depth: customDepth - 35,
-      thickness: 18.5, // PET 재질 항상 18.5mm
+      thickness: PET_PANEL_THICKNESS_MM,
       material: 'PET',
     });
   }
 
   // === 프레임 패널 (상단몰딩 / 걸래받이) ===
-  const PET_THICKNESS = 18.5; // PET 재질 항상 18.5mm
+  const PET_THICKNESS = PET_PANEL_THICKNESS_MM;
 
   // 상단몰딩 — 하부장(lower-*)에는 없음. 상부장/키큰장은 실제 렌더링과 동일하게 포함
   if (!isLowerCabinetModule && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
@@ -2931,9 +2934,9 @@ const SURROUND_SIDE_DEPTH = 40; // L자형 측면 패널 깊이 (mm)
 export const calculateSurroundPanels = (
   freeSurround: FreeSurroundConfig | undefined,
   surroundHeightMm: number, // 서라운드 높이 (mm) = 공간높이 - 바닥마감재 - 띄움높이
-  _panelThicknessMm?: number // deprecated: PET는 항상 18.5mm
+  _panelThicknessMm?: number // deprecated: PET는 항상 18mm
 ): any[] => {
-  const SURROUND_PANEL_THICKNESS = 18.5; // 서라운드(PET 재질) 항상 18.5mm
+  const SURROUND_PANEL_THICKNESS = PET_PANEL_THICKNESS_MM;
   if (!freeSurround) return [];
 
   const result: any[] = [];

@@ -23,6 +23,7 @@ import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 import { FaRegObjectGroup } from 'react-icons/fa';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
+import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 // 엔드패널 슬롯 계산 기준 두께
 const END_PANEL_THICKNESS = 18; // mm
@@ -1906,9 +1907,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 표준 모듈: EP 물리적 두께(18.5mm)만큼 가구 본체 너비 축소
+  // 표준 모듈: EP 물리적 두께(PET 18mm)만큼 가구 본체 너비 축소
   if (!placedModule.customConfig) {
-    const epThk = placedModule.endPanelThickness || END_PANEL_RENDER_THICKNESS;
+    const epThk = resolvePetPanelThicknessMm(placedModule.endPanelThickness) || END_PANEL_RENDER_THICKNESS;
     if (placedModule.hasLeftEndPanel) furnitureWidthMm -= epThk;
     if (placedModule.hasRightEndPanel) furnitureWidthMm -= epThk;
   }
@@ -2608,7 +2609,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     doorWidthExpansion = 0;
     if (!placedModule.isFreePlacement && !placedModule.customConfig) {
       // 슬롯 모드: 본체가 epOffsetX만큼 이동하므로 도어를 역방향으로 되돌림
-      const epThkDoor = mmToThreeUnits(placedModule.endPanelThickness || 18.5);
+      const epThkDoor = mmToThreeUnits(resolvePetPanelThicknessMm(placedModule.endPanelThickness));
       const leftEpDoor = placedModule.hasLeftEndPanel ? epThkDoor : 0;
       const rightEpDoor = placedModule.hasRightEndPanel ? epThkDoor : 0;
       doorXOffset = -(leftEpDoor - rightEpDoor) / 2; // epOffsetX의 역방향
@@ -4525,7 +4526,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 && isSameHeightAdjacent(m)
               );
 
-              const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
+              const epThicknessMm = resolvePetPanelThicknessMm(placedModule.endPanelThickness);
               const epW = mmToThreeUnits(epThicknessMm);
               // EP 깊이: endPanelDepth(사용자 명시) 우선, 없으면 customDepth/actualDepthMm/dimensions.depth 순
               const epTemplateDepth = actualModuleData?.dimensions?.depth || 600;
@@ -4915,7 +4916,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   position={[0, 0, 0]}
                   spaceInfo={zoneSpaceInfo}
                   renderMode={effectiveRenderMode}
-                  endPanelThicknessMm={placedModule.endPanelThickness || 18.5}
+                  endPanelThicknessMm={resolvePetPanelThicknessMm(placedModule.endPanelThickness)}
                   side={panel.side as 'left' | 'right'}
                   adjacentFurniture={(() => {
                     // EP 방향 슬롯에 인접 가구가 있으면 측판 불필요

@@ -10,6 +10,7 @@
  */
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 export interface FrameMergeGroup {
   moduleIds: string[];   // 이 그룹에 속한 모듈 ID들
@@ -18,17 +19,31 @@ export interface FrameMergeGroup {
   frameHeight: number;   // 이 그룹의 프레임 높이 (frameHeight 미지정 시 0)
 }
 
+export interface TopEndPanelMergeGroup extends FrameMergeGroup {
+  depthMm: number;
+  thicknessMm: number;
+  frontGapMm: number;
+  backGapMm: number;
+}
+
 /**
  * 모듈의 EP 보정된 너비를 계산 (Room.tsx의 세그먼트 생성 로직과 동일)
  */
 function getEpCorrectedWidth(mod: PlacedModule): number {
   const bounds = getModuleBoundsX(mod);
   let widthMm = bounds.right - bounds.left;
-  const epThk = mod.endPanelThickness || 18.5;
+  const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
   if (mod.hasLeftEndPanel) widthMm -= epThk;
   if (mod.hasRightEndPanel) widthMm -= epThk;
   // 부동소수점 오차 제거 — 소수점 한 자리로 반올림
   return Math.round(widthMm * 10) / 10;
+}
+
+function getTopEndPanelWidth(mod: PlacedModule): number {
+  const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
+  const leftCoverMm = mod.hasLeftEndPanel ? epThk : 0;
+  const rightCoverMm = mod.hasRightEndPanel ? epThk : 0;
+  return Math.round((getEpCorrectedWidth(mod) + leftCoverMm + rightCoverMm) * 10) / 10;
 }
 
 /**
@@ -216,4 +231,93 @@ export function computeStoneTopMergeGroups(
 
   // 그룹에 2개 이상의 모듈이 포함된 것만 반환 (1개짜리는 병합 불필요)
   return groups.filter(g => g.moduleIds.length > 1);
+}
+
+function isLowerCabinetModule(mod: PlacedModule): boolean {
+  const id = mod.moduleId || '';
+  return id.startsWith('lower-') || id.includes('dual-lower-');
+}
+
+function getTopEndPanelSettings(mod: PlacedModule) {
+  const frontGapMm = mod.topEndPanelOffset ?? 0;
+  const backGapMm = mod.topEndPanelBackOffset ?? 0;
+  const depthMm = Math.max(0, (mod.customDepth ?? mod.freeDepth ?? 600) + frontGapMm + backGapMm);
+  const thicknessMm = resolvePetPanelThicknessMm(mod.endPanelThickness);
+  return { frontGapMm, backGapMm, depthMm, thicknessMm };
+}
+
+/**
+ * 하부장 상부 EP 병합 그룹 계산
+ * - 대리석 상판처럼 하부장 상단에 올라가지만, 생산 데이터는 걸레받이/상단몰딩처럼 병합한다.
+ * - 전면/후면 옵셋, 두께, 깊이, 위치가 같은 연속 하부장만 같은 그룹으로 묶는다.
+ */
+export function computeTopEndPanelMergeGroups(
+  modules: PlacedModule[],
+  maxWidthMm: number = 2420
+): TopEndPanelMergeGroup[] {
+  const eligibleModules = modules
+    .filter(mod => isLowerCabinetModule(mod) && mod.hasTopEndPanel === true)
+    .sort((a, b) => a.position.x - b.position.x);
+
+  if (eligibleModules.length === 0) return [];
+
+  const alphaMap = new Map<string, string>();
+  eligibleModules.forEach((mod, idx) => {
+    alphaMap.set(mod.id, String.fromCharCode(65 + idx));
+  });
+
+  const groups: TopEndPanelMergeGroup[] = [];
+  let currentGroup: PlacedModule[] = [];
+  let currentSum = 0;
+
+  const buildTopEpGroup = (mods: PlacedModule[], totalWidthMm: number): TopEndPanelMergeGroup => {
+    const base = buildGroup(mods, totalWidthMm, 0, alphaMap, '상부EP');
+    const settings = getTopEndPanelSettings(mods[0]);
+    return {
+      ...base,
+      ...settings,
+    };
+  };
+
+  for (const mod of eligibleModules) {
+    const widthMm = getTopEndPanelWidth(mod);
+
+    if (currentGroup.length === 0) {
+      currentGroup.push(mod);
+      currentSum = widthMm;
+      continue;
+    }
+
+    const prevMod = currentGroup[currentGroup.length - 1];
+    const prevSettings = getTopEndPanelSettings(prevMod);
+    const settings = getTopEndPanelSettings(mod);
+    const prevBounds = getModuleBoundsX(prevMod);
+    const currBounds = getModuleBoundsX(mod);
+
+    const sameSettings =
+      Math.abs(prevSettings.thicknessMm - settings.thicknessMm) < 0.1 &&
+      Math.abs(prevSettings.frontGapMm - settings.frontGapMm) < 0.1 &&
+      Math.abs(prevSettings.backGapMm - settings.backGapMm) < 0.1 &&
+      Math.abs(prevSettings.depthMm - settings.depthMm) < 0.1;
+    const samePosition =
+      Math.abs(prevMod.position.y - mod.position.y) < 0.1 &&
+      Math.abs(prevMod.position.z - mod.position.z) < 0.1;
+    const isAdjacent = Math.abs(currBounds.left - prevBounds.right) < 1.0;
+    const fitsWidth = currentSum + widthMm <= maxWidthMm;
+
+    if (sameSettings && samePosition && isAdjacent && fitsWidth) {
+      currentGroup.push(mod);
+      currentSum += widthMm;
+    } else {
+      groups.push(buildTopEpGroup(currentGroup, currentSum));
+      currentGroup = [mod];
+      currentSum = widthMm;
+    }
+  }
+
+  if (currentGroup.length > 0) {
+    groups.push(buildTopEpGroup(currentGroup, currentSum));
+  }
+
+  return groups;
 }

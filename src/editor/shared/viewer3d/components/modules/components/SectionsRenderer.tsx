@@ -1205,6 +1205,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         : Math.max(0, heightMm - lowerSectionHeightMm);
       const upperSectionTopMm = Math.min(heightMm, lowerSectionHeightMm + upperSectionHeightMm);
       const isPantrySplit = moduleId.includes('pantry-cabinet-split');
+      const lowerTopHingeInsetMm = moduleId.includes('shelf-split') ? 140 : 120;
       const defaultLowerDoorTopGapMm = isPantrySplit ? -2 : -40;
       const defaultUpperDoorBottomGapMm = isPantrySplit ? -1 : 20;
       const rawLowerDoorTopGapMm = (currentPlacedModule as any).lowerDoorTopGap;
@@ -1242,7 +1243,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           doorBottomOnSideMm: lowerDoorBottomMm,
           defaultDoorPositionsMm: resolveDefaultDoorHingePositionsMm({ doorHeightMm: lowerDoorHeightMm }),
           firstSidePositionMm: 120,
-          lastSidePositionMm: lowerSectionHeightMm - 120,
+          lastSidePositionMm: lowerSectionHeightMm - lowerTopHingeInsetMm,
         }),
         preserveEdgePositionsMm: true
       });

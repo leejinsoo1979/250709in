@@ -468,7 +468,7 @@ function PageInner(){
             label: p.name || `Panel_${p.id}`,
             width: width,   // 백패널: X축 가로 / 일반: 짧은 쪽
             length: length, // 백패널: Y축 높이 / 일반: 긴 쪽
-            thickness: p.thickness || (isStoneTop ? p.thickness : (material === 'PET' ? 18.5 : 18)),
+            thickness: p.thickness || (isStoneTop ? p.thickness : 18),
             quantity: p.quantity || 1,
             material: material,
             grain: grain,
@@ -528,12 +528,12 @@ function PageInner(){
   // Stock 초기화: livePanels 기반으로 PET 코팅 여부 판단하여 적절한 stock 설정
   useEffect(() => {
     // livePanels에서 실제 사용되는 두께/재질 조합을 기반으로 stock 생성
-    const isPET = livePanels.some(p => p.thickness === 18.5 || p.thickness === 15.5);
+    const isPET = livePanels.some(p => p.material === 'PET' || p.thickness === 18.5 || p.thickness === 15.5);
 
     const defaultStock: StockSheet[] = isPET ? [
       // PET 코팅 원자재 (+0.5mm)
       { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
-      { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+      { label: 'PET_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PET' },
       { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
       { label: 'MDF_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'MDF' },
       { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
@@ -543,7 +543,7 @@ function PageInner(){
     ] : [
       // 일반 원자재
       { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
-      { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+      { label: 'PET_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PET' },
       { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
       { label: 'MDF_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'MDF' },
       { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
@@ -669,7 +669,7 @@ function PageInner(){
           label: p.name || `Panel_${p.id}`,
           width: width,
           length: length,
-          thickness: p.thickness || (isStoneTop ? p.thickness : (material === 'PET' ? 18.5 : 18)),
+          thickness: p.thickness || (isStoneTop ? p.thickness : 18),
           quantity: p.quantity || 1,
           material: material,
           grain: grain,
@@ -910,7 +910,7 @@ function PageInner(){
           // 재질 구분 없이 두께만 고려: THICKNESS_18.5
           thickness = parseFloat(key.split('_')[1]) || 18;
         } else {
-          // 재질+두께: PET_18.5
+          // 재질+두께: PET_18
           const parts = key.split('_');
           material = parts[0];
           thickness = parseFloat(parts[1]) || 18;

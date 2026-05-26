@@ -411,7 +411,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const [infoTexts, setInfoTexts] = useState<{ [key: string]: string }>({
     title: title || 'Untitled Project',
     size: `W${spaceInfo?.width || 0} × D${spaceInfo?.depth || 0} × H${spaceInfo?.height || 0}`,
-    door: materialConfig?.door?.name || '18.5T_PET',
+    door: materialConfig?.door?.name || '18T_PET',
     body: materialConfig?.body?.name || '18.5T_LPM',
     notes: ''
   });

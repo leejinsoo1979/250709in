@@ -277,8 +277,8 @@ describe('panelDetails regression baselines', () => {
       expect(panel.boringPositions).toBeUndefined()
       expect(panel.boringDepthPositions).toBeUndefined()
     })
-    expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
-    expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
+    expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18, material: 'PET' })
+    expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18, material: 'PET' })
     expect(findPanel(panels, '백패널').height).toBe(510)
     expect(panels.some(panel => panel.name?.includes('보강대'))).toBe(false)
   })
@@ -332,7 +332,7 @@ describe('panelDetails regression baselines', () => {
     expect(doorNames).toEqual(['하부 도어', '상부 도어'])
   })
 
-  it('도어분절 현관장 도어 보링은 측판 섹션 기준 120mm 기본 공식을 따른다', () => {
+  it('도어분절 현관장 하부 상단 도어 보링은 목찬넬 80mm 기준 140mm를 따른다', () => {
     const panels = calculatePanels('single-shelf-split-500', 500, 380, {
       hasDoor: true,
       backPanelThicknessMm: 9
@@ -341,8 +341,8 @@ describe('panelDetails regression baselines', () => {
     const upperDoor = findPanel(panels, '상부 도어')
 
     expect(lowerDoor.height).toBe(820)
-    expect(lowerDoor.boringPositions).toEqual([120, 740])
-    expect(lowerDoor.screwPositions).toEqual([97.5, 142.5, 717.5, 762.5])
+    expect(lowerDoor.boringPositions).toEqual([120, 720])
+    expect(lowerDoor.screwPositions).toEqual([97.5, 142.5, 697.5, 742.5])
     expect(lowerDoor.hingeCount).toBe(2)
     expect(upperDoor.height).toBe(1560)
     expect(upperDoor.boringPositions).toEqual([140, 790, 1440])
@@ -350,7 +350,7 @@ describe('panelDetails regression baselines', () => {
     expect(upperDoor.hingeCount).toBe(3)
   })
 
-  it('듀얼 도어분절 현관장 도어 보링도 좌우 도어별 섹션 기준 120mm 기본 공식을 따른다', () => {
+  it('듀얼 도어분절 현관장 하부 상단 도어 보링도 목찬넬 80mm 기준 140mm를 따른다', () => {
     const panels = calculatePanels('dual-shelf-split-1000', 1000, 380, {
       hasDoor: true,
       backPanelThicknessMm: 9
@@ -365,7 +365,7 @@ describe('panelDetails regression baselines', () => {
     ])
     doors.filter(panel => panel.name?.includes('하부')).forEach(panel => {
       expect(panel.height).toBe(820)
-      expect(panel.boringPositions).toEqual([120, 740])
+      expect(panel.boringPositions).toEqual([120, 720])
       expect(panel.hingeCount).toBe(2)
     })
     doors.filter(panel => panel.name?.includes('상부')).forEach(panel => {
@@ -381,8 +381,8 @@ describe('panelDetails regression baselines', () => {
       backPanelThicknessMm: 9
     })
 
-    expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
-    expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18.5, material: 'PET' })
+    expect(findPanel(panels, '목찬넬프레임수평(1)')).toMatchObject({ thickness: 18, material: 'PET' })
+    expect(findPanel(panels, '목찬넬프레임수직(1)')).toMatchObject({ thickness: 18, material: 'PET' })
     expect(findPanel(panels, '전대')).toBeDefined()
     expect(findPanel(panels, '(하)상판').depth).toBe(296)
     expect(findPanel(panels, '(하)좌측').sideNotches).toEqual([{ y: 80, z: 40, fromBottom: 780 }])

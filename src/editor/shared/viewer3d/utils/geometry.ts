@@ -45,10 +45,10 @@ export const SURROUND_FRAME_THICKNESS = 30;
 export const END_PANEL_THICKNESS = 18;
 
 /**
- * 엔드 패널 물리적 렌더링 두께 (18.5mm, PET 재질)
+ * 엔드 패널 물리적 렌더링 두께 (18mm, PET 재질)
  * 3D 렌더링, CNC 패널 두께에 사용
  */
-export const END_PANEL_RENDER_THICKNESS = 18.5;
+export const END_PANEL_RENDER_THICKNESS = 18;
 
 /**
  * EP 렌더링 보정값 (0.5mm)

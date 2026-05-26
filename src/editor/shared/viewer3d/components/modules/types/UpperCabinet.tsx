@@ -185,11 +185,12 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               const hasBottomEP = (selfMod as any)?.hasBottomEndPanel !== false;
               if (!hasBottomEP) return null;
               // 사용자 입력 갭 (전면갭=앞에서 들이기, 후면갭=뒤에서 들이기, mm)
-              // 기본값: 전면 0mm, 후면 35mm (사용자가 입력 안 하면 후면 35mm 적용)
+              // 후면갭은 UI 기준 음수(-35)가 몸통 안쪽으로 들어오는 값이다.
               const FRONT_GAP_DEFAULT_MM = 0;
-              const BACK_GAP_DEFAULT_MM = 35;
+              const BACK_GAP_DEFAULT_MM = -35;
               const frontGapMm = (selfMod as any)?.bottomEndPanelOffset ?? FRONT_GAP_DEFAULT_MM;
               const backGapMm = (selfMod as any)?.bottomEndPanelBackOffset ?? BACK_GAP_DEFAULT_MM;
+              const backInsetMm = Math.abs(backGapMm);
               const leftExtMm = outerExtendLeftUpper;
               const rightExtMm = outerExtendRightUpper;
               const leftExt = leftExtMm * 0.01;
@@ -197,7 +198,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               const extendedWidth = baseFurniture.width + leftExt + rightExt;
               const xOffset = (rightExt - leftExt) / 2;
               const frontGap = frontGapMm * 0.01;
-              const backGap = backGapMm * 0.01;
+              const backGap = backInsetMm * 0.01;
               const panelFrontZ = baseFurniture.depth / 2 - frontGap;
               const panelBackZ = -baseFurniture.depth / 2 + backGap;
               const panelDepth = panelFrontZ - panelBackZ;

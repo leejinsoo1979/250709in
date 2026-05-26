@@ -7,6 +7,7 @@
 
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 /** 걸래받이 스트립 그룹 */
 export interface BaseStripGroup {
@@ -51,7 +52,7 @@ export function getBaseFrameBoundsX(module: PlacedModule): { left: number; right
   const hasRight = module.hasRightEndPanel;
   const bottomGapIsZero = (module as any).endPanelBottomOffset === 0;
   if ((hasLeft || hasRight) && !bottomGapIsZero) {
-    const epThk = module.endPanelThickness || 18.5;
+    const epThk = resolvePetPanelThicknessMm(module.endPanelThickness);
     const leftEpMM = hasLeft ? epThk : 0;
     const rightEpMM = hasRight ? epThk : 0;
     // 본체가 EP 두께만큼 줄어들고, 비대칭이면 중심이 이동

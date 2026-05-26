@@ -66,7 +66,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
   const borings: Boring[] = [];
   let boringIdx = 0;
 
-  const panelThickness = panel.thickness || ((panel.material === 'PET') ? 18.5 : 18);
+  const panelThickness = panel.thickness || ((panel.material === 'PET') ? 18 : 18);
   const mprSize = getMprPanelSize(panel);
   const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
   const isFurnitureSidePanelForMpr = isFurnitureSidePanel(panel);
