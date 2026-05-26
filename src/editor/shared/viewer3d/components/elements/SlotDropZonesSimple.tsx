@@ -3413,8 +3413,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         );
       })}
 
-      {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 (2D 좌측/우측뷰에서는 숨김) */}
-      {!isSidePlacementView && showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+      {/* 바닥 슬롯 시각화 - 3D에서는 벽 인디케이터만 사용하고, 2D 정면 계열에서만 유지 */}
+      {viewMode !== '3D' && !isSidePlacementView && showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         // 단내림 활성화 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
         const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
