@@ -549,6 +549,7 @@ const Configurator: React.FC = () => {
   const isDemoMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/demo');
   // 데모 모드에서는 user를 null로 취급 (계정 정보 표시 차단)
   const user = isDemoMode ? null : authUser;
+  const canShowSpaceDepthControl = user?.email?.trim().toLowerCase() === 'sbbc212@gmail.com';
 
   // URL 파라미터 미리 추출
   const modeParam = searchParams.get('mode');
@@ -4812,14 +4813,14 @@ const Configurator: React.FC = () => {
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>{spaceInfo.isIsland ? '가구 사이즈' : '공간 설정'}</h3>
             {!spaceInfo.isIsland && (
-              <HelpBtn title="공간 설정" text="가구가 설치될 공간의 전체 너비(W), 깊이(D), 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈와 3D 공간 깊이가 자동 계산됩니다." />
+              <HelpBtn title="공간 설정" text={canShowSpaceDepthControl ? '가구가 설치될 공간의 전체 너비(W), 깊이(D), 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈와 3D 공간 깊이가 자동 계산됩니다.' : '가구가 설치될 공간의 전체 너비(W), 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 이 값에 따라 슬롯 너비, 가구 높이와 프레임 사이즈가 자동 계산됩니다.'} />
             )}
           </div>
 
           {spaceInfo.isIsland ? (
             // 아일랜드: W / D / H 직접 입력 (mm)
             <div style={{ display: 'flex', gap: '8px' }}>
-              {(['width', 'depth', 'height'] as const).map((dim) => {
+              {(['width', 'depth', 'height'] as const).filter((dim) => dim !== 'depth' || canShowSpaceDepthControl).map((dim) => {
                 const label = dim === 'width' ? 'W' : dim === 'depth' ? 'D' : 'H';
                 const min = 300;
                 const max = dim === 'width' ? 6000 : dim === 'depth' ? 2000 : 2750;
@@ -4856,16 +4857,18 @@ const Configurator: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>D</span>
-                <div style={{ flex: 1 }}>
-                  <DepthControl
-                    spaceInfo={spaceInfo}
-                    onUpdate={handleSpaceInfoUpdate}
-                    hideUnit
-                  />
+              {canShowSpaceDepthControl && (
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>D</span>
+                  <div style={{ flex: 1 }}>
+                    <DepthControl
+                      spaceInfo={spaceInfo}
+                      onUpdate={handleSpaceInfoUpdate}
+                      hideUnit
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>

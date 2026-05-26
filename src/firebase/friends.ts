@@ -19,7 +19,8 @@ import {
   Timestamp,
   type Unsubscribe,
 } from 'firebase/firestore';
-import { db } from './config';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from './config';
 
 export type FriendRequestStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
 
@@ -58,12 +59,44 @@ export interface ConversationRecord {
   peerPhotoURL?: string;
 }
 
+export type MessageAttachmentKind = 'image' | 'file';
+
+export interface MessageAttachment {
+  kind: MessageAttachmentKind;
+  url: string;
+  name?: string;
+  size?: number;
+  mimeType?: string;
+}
+
 export interface MessageRecord {
   id: string;
   senderId: string;
   text: string;
   createdAt?: Date | null;
   readBy?: string[];
+  attachments?: MessageAttachment[];
+}
+
+/** 메시지 첨부 파일 업로드 (Firebase Storage → MessageAttachment 반환) */
+export async function uploadMessageAttachment(
+  convId: string,
+  senderId: string,
+  file: File,
+): Promise<MessageAttachment> {
+  const safeName = file.name.replace(/[^\w.\-가-힣]/g, '_');
+  const path = `chat-attachments/${convId}/${Date.now()}_${senderId}_${safeName}`;
+  const sref = storageRef(storage, path);
+  await uploadBytes(sref, file, { contentType: file.type || 'application/octet-stream' });
+  const url = await getDownloadURL(sref);
+  const isImage = (file.type || '').startsWith('image/');
+  return {
+    kind: isImage ? 'image' : 'file',
+    url,
+    name: file.name,
+    size: file.size,
+    mimeType: file.type || undefined,
+  };
 }
 
 const tsToDate = (v: unknown): Date | null => {
@@ -262,25 +295,38 @@ export async function ensureConversation(myUid: string, peerUid: string): Promis
 }
 
 /** 메시지 전송 */
-export async function sendMessage(convId: string, senderId: string, text: string): Promise<void> {
-  const trimmed = text.trim();
-  if (!trimmed) return;
+export async function sendMessage(
+  convId: string,
+  senderId: string,
+  text: string,
+  attachments?: MessageAttachment[],
+): Promise<void> {
+  const trimmed = (text || '').trim();
+  const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
+  if (!trimmed && !hasAttachments) return;
   const convRef = doc(db, 'conversations', convId);
   const convSnap = await getDoc(convRef);
   if (!convSnap.exists()) throw new Error('대화방이 없습니다.');
   const conv = convSnap.data() as any;
   const peerUid = (conv.members as string[]).find((u) => u !== senderId);
-  await addDoc(collection(convRef, 'messages'), {
+  const messagePayload: Record<string, unknown> = {
     senderId,
     text: trimmed,
     createdAt: serverTimestamp(),
     readBy: [senderId],
-  });
+  };
+  if (hasAttachments) {
+    messagePayload.attachments = attachments;
+  }
+  await addDoc(collection(convRef, 'messages'), messagePayload);
   const unread = { ...(conv.unread || {}) };
   unread[senderId] = 0;
   if (peerUid) unread[peerUid] = (unread[peerUid] || 0) + 1;
+  const lastMessagePreview = trimmed || (hasAttachments
+    ? (attachments![0].kind === 'image' ? '🖼 이미지' : `📎 ${attachments![0].name || '파일'}`)
+    : '');
   await updateDoc(convRef, {
-    lastMessage: trimmed,
+    lastMessage: lastMessagePreview,
     lastMessageAt: serverTimestamp(),
     lastSenderId: senderId,
     unread,
@@ -328,6 +374,7 @@ export function subscribeMessages(convId: string, cb: (list: MessageRecord[]) =>
         text: data.text,
         createdAt: tsToDate(data.createdAt),
         readBy: data.readBy || [],
+        attachments: Array.isArray(data.attachments) ? data.attachments : undefined,
       };
     });
     cb(list);
