@@ -35,6 +35,7 @@ import {
   HiOutlineArrowLeft,
   HiOutlineDocumentText,
   HiOutlinePaperAirplane,
+  HiOutlineClock,
 } from 'react-icons/hi';
 
 type LeftTab = 'chats' | 'contacts' | 'profile' | 'settings';
@@ -516,73 +517,25 @@ export default function Messages() {
                 messages.map((m, idx) => {
                   const mine = m.senderId === user.uid;
                   const prevSameSender = idx > 0 && messages[idx - 1].senderId === m.senderId;
+                  const nextSameSender = idx < messages.length - 1 && messages[idx + 1].senderId === m.senderId;
+                  const isLastInGroup = !nextSameSender;
+                  const senderLabel = mine
+                    ? (user.displayName || user.email || '나')
+                    : (activeConv.peerName || activeConv.peerEmail || '상대');
                   return (
-                    <div
+                    <ChatviaBubble
                       key={m.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: mine ? 'flex-end' : 'flex-start',
-                        marginBottom: prevSameSender ? 4 : 12,
-                        gap: 8,
-                        alignItems: 'flex-end',
-                      }}
-                    >
-                      {!mine && !prevSameSender && (
-                        <InitialAvatar
-                          name={activeConv.peerName}
-                          email={activeConv.peerEmail}
-                          photoURL={activeConv.peerPhotoURL}
-                          size={32}
-                        />
-                      )}
-                      {!mine && prevSameSender && <div style={{ width: 32, flexShrink: 0 }} />}
-                      <div style={{ maxWidth: '60%', display: 'flex', flexDirection: 'column', alignItems: mine ? 'flex-end' : 'flex-start' }}>
-                        {m.attachments && m.attachments.length > 0 && (
-                          <div
-                            style={{
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: 6,
-                              marginBottom: m.text ? 6 : 0,
-                            }}
-                          >
-                            {m.attachments.map((att, i) => (
-                              <AttachmentBubble
-                                key={i}
-                                attachment={att}
-                                mine={mine}
-                                C={C}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        {m.text && (
-                          <div
-                            style={{
-                              padding: '10px 14px',
-                              borderRadius: 8,
-                              background: mine ? C.bubbleOutgoingBg : C.bubbleIncomingBg,
-                              color: mine ? C.bubbleOutgoingText : C.text,
-                              fontSize: 14,
-                              wordBreak: 'break-word',
-                              whiteSpace: 'pre-wrap',
-                              boxShadow: mine ? 'none' : '0 1px 2px rgba(0,0,0,0.05)',
-                            }}
-                          >
-                            {m.text}
-                          </div>
-                        )}
-                        <div
-                          style={{
-                            fontSize: 10,
-                            color: C.textSecondary,
-                            marginTop: 4,
-                          }}
-                        >
-                          {m.createdAt ? formatTime(m.createdAt) : ''}
-                        </div>
-                      </div>
-                    </div>
+                      message={m}
+                      mine={mine}
+                      C={C}
+                      showAvatar={!mine && isLastInGroup}
+                      showSenderName={isLastInGroup}
+                      senderLabel={senderLabel}
+                      peerName={activeConv.peerName}
+                      peerEmail={activeConv.peerEmail}
+                      peerPhotoURL={activeConv.peerPhotoURL}
+                      compact={prevSameSender}
+                    />
                   );
                 })
               )}
@@ -810,6 +763,146 @@ function iconBtnStyle(C: any, active?: boolean): React.CSSProperties {
     justifyContent: 'center',
     flexShrink: 0,
   };
+}
+
+function ChatviaBubble({
+  message,
+  mine,
+  C,
+  showAvatar,
+  showSenderName,
+  senderLabel,
+  peerName,
+  peerEmail,
+  peerPhotoURL,
+  compact,
+}: {
+  message: MessageRecord;
+  mine: boolean;
+  C: any;
+  showAvatar: boolean;
+  showSenderName: boolean;
+  senderLabel: string;
+  peerName?: string;
+  peerEmail?: string;
+  peerPhotoURL?: string;
+  compact: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: mine ? 'flex-end' : 'flex-start',
+        marginBottom: compact ? 4 : 16,
+        gap: 12,
+        alignItems: 'flex-end',
+      }}
+    >
+      {!mine && (
+        <div style={{ width: 40, flexShrink: 0 }}>
+          {showAvatar && (
+            <InitialAvatar name={peerName} email={peerEmail} photoURL={peerPhotoURL} size={40} />
+          )}
+        </div>
+      )}
+      <div
+        style={{
+          maxWidth: '65%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: mine ? 'flex-end' : 'flex-start',
+        }}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+      >
+        {/* 첨부 */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              marginBottom: message.text ? 6 : 0,
+            }}
+          >
+            {message.attachments.map((att, i) => (
+              <AttachmentBubble key={i} attachment={att} mine={mine} C={C} />
+            ))}
+          </div>
+        )}
+        {/* 텍스트 말풍선 */}
+        {message.text && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              flexDirection: mine ? 'row-reverse' : 'row',
+            }}
+          >
+            <div
+              style={{
+                padding: '14px 18px',
+                borderRadius: 12,
+                background: C.bubbleOutgoingBg,
+                color: '#ffffff',
+                fontSize: 14,
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
+                minWidth: 120,
+                position: 'relative',
+              }}
+            >
+              <div style={{ marginBottom: 8 }}>{message.text}</div>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 11,
+                  color: 'rgba(255,255,255,0.7)',
+                  justifyContent: 'flex-end',
+                }}
+              >
+                <HiOutlineClock size={12} />
+                {message.createdAt ? formatTime(message.createdAt) : ''}
+              </div>
+            </div>
+            {/* 더보기 메뉴 (호버 시 표시) */}
+            <button
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: C.textSecondary,
+                cursor: 'pointer',
+                padding: 4,
+                opacity: hover ? 1 : 0,
+                transition: 'opacity 0.15s',
+              }}
+              title="더보기"
+            >
+              <HiOutlineDotsVertical size={16} />
+            </button>
+          </div>
+        )}
+        {/* 발신자 이름 (인커밍 그룹 마지막에만, 아바타 옆) */}
+        {!mine && showSenderName && (
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: C.text,
+              marginTop: 8,
+              marginLeft: 4,
+            }}
+          >
+            {senderLabel}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function AttachmentBubble({
