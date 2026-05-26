@@ -61,6 +61,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     hoverBg: getThemeColorFromCSS('--theme-primary-light', '#d1fae5'),   // 테마 호버 배경색
     textSecondary: getThemeColorFromCSS('--theme-text-secondary', '#6b7280') // 보조 텍스트
   };
+  const columnDimensionColor = '#ff3333';
   
   // 통일된 입력 필드 스타일
   const inputStyle = {
@@ -603,11 +604,11 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 className="column-distance-input"
                 style={{
                   background: '#ffffff',
-                  border: '2px solid #10b981',
+                  border: `2px solid ${columnDimensionColor}`,
                   borderRadius: '8px',
                   padding: '12px 16px',
                   minWidth: '140px',
-                  boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                  boxShadow: '0 4px 20px rgba(255,51,51,0.25)',
                   fontSize: '14px',
                   fontFamily: 'system-ui, -apple-system, sans-serif',
                   color: '#000000'
@@ -616,7 +617,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 onMouseDown={(e) => e.stopPropagation()}
               >
                 <div style={{
-                  color: '#10b981',
+                  color: columnDimensionColor,
                   fontSize: '12px',
                   marginBottom: '8px',
                   fontWeight: '600'
@@ -783,7 +784,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   onClick={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
                   onMouseDown={(e) => e.stopPropagation()}
-                  style={inputStyle}
+                  style={{ ...inputStyle, border: `2px solid ${columnDimensionColor}` }}
                   onBlur={() => handleEditComplete()}
                   autoFocus
 	                  min="1"
@@ -831,7 +832,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               <Text
                 position={[0, 0, 0.2]}
                 fontSize={0.5}
-                color="#000000"
+                color={columnDimensionColor}
                 anchorX="center"
                 anchorY="middle"
                 outlineWidth={0}
@@ -861,7 +862,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         <group position={[currentColumn.position[0], columnHeightM + 2.0, currentColumn.position[2]]}>
           <Text
             fontSize={0.5}
-            color="#000000"
+            color={columnDimensionColor}
             anchorX="center"
             anchorY="middle"
             rotation={[0, 0, 0]}

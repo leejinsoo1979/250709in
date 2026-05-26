@@ -769,6 +769,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const dimensionColor = currentViewDirection === '3D' ? '#333333' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 3D: 진한 회색으로 명확하게
   const textColor = currentViewDirection === '3D' ? '#222222' : (view2DTheme === 'dark' ? '#ffffff' : '#000000');  // 3D: 더 진한 색으로 가독성 향상
+  const columnDimensionColor = '#ff3333';
   const guideColor = currentViewDirection === '3D' ? '#888888' : (view2DTheme === 'dark' ? '#cccccc' : '#000000');  // 2D: 라이트-검정, 다크-밝은회색
   const subGuideColor = currentViewDirection === '3D' ? '#bbbbbb' : (view2DTheme === 'dark' ? '#888888' : '#000000');  // 2D: 라이트-검정, 다크-중간회색
   const gridColor = currentViewDirection === '3D' 
@@ -8013,7 +8014,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           <group key={`column-dim-${column.id}`}>
             <NativeLine name="dimension_line"
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
-              color={dimensionColor}
+              color={columnDimensionColor}
               lineWidth={0.6}
               renderOrder={1000000}
               depthTest={false}
@@ -8021,7 +8022,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             <NativeLine name="dimension_line"
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
+              color={columnDimensionColor}
               lineWidth={0.6}
               renderOrder={1000000}
               depthTest={false}
@@ -8029,7 +8030,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             <NativeLine name="dimension_line"
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
-              color={dimensionColor}
+              color={columnDimensionColor}
               lineWidth={0.6}
               renderOrder={1000000}
               depthTest={false}
@@ -8071,7 +8072,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     padding: '2px 6px',
                     fontSize: '12px',
                     fontWeight: 'bold',
-                    color: isLockedColumn ? '#ff3333' : textColor,
+                    color: columnDimensionColor,
                     cursor: readOnly || isLockedColumn ? 'default' : 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
@@ -8090,7 +8091,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             <NativeLine name="dimension_line"
               points={[[leftX, columnTopY, 0.001], [leftX, dimY + tickHalf, 0.001]]}
-              color={dimensionColor}
+              color={columnDimensionColor}
               lineWidth={0.3}
               renderOrder={1000000}
               depthTest={false}
@@ -8099,7 +8100,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
             <NativeLine name="dimension_line"
               points={[[rightX, columnTopY, 0.001], [rightX, dimY + tickHalf, 0.001]]}
-              color={dimensionColor}
+              color={columnDimensionColor}
               lineWidth={0.3}
               renderOrder={1000000}
               depthTest={false}
