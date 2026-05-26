@@ -7334,32 +7334,50 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       checked={currentPlacedModule.hasTopEndPanel === true}
                       onChange={() => {
                         const turning = currentPlacedModule.hasTopEndPanel !== true;
-                        const initialTopEndPanelOffset = resolveTopEndPanelFrontOffsetMm(
-                          currentPlacedModule.moduleId,
-                          currentPlacedModule.doorTopGap,
-                          (currentPlacedModule as any).topEndPanelOffset
-                        );
-                        const isTopDown = (currentPlacedModule.moduleId || '').includes('lower-top-down-');
-                        const currentTopDownDefaultGap = getTopDownDoorTopGap(
-                          currentPlacedModule.stoneTopThickness,
-                          currentPlacedModule.hasTopEndPanel === true
-                        );
-                        const nextTopDownDefaultGap = getTopDownDoorTopGap(
-                          currentPlacedModule.stoneTopThickness,
-                          turning
-                        );
-                        updatePlacedModule(currentPlacedModule.id, {
-                          hasTopEndPanel: turning,
-                          ...(turning ? {
-                            topEndPanelOffset: initialTopEndPanelOffset,
-                            topEndPanelBackOffset: (currentPlacedModule as any).topEndPanelBackOffset ?? 0,
-                            ...getDoorLiftTopEndPanelOffsetUpdates(initialTopEndPanelOffset),
-                          } : {}),
-                          ...(isTopDown && (
-                            currentPlacedModule.doorTopGap === undefined
-                            || currentPlacedModule.doorTopGap === currentTopDownDefaultGap
-                          ) ? { doorTopGap: nextTopDownDefaultGap } : {})
-                        } as any);
+                        const applyTopEndPanelToggle = () => {
+                          const initialTopEndPanelOffset = resolveTopEndPanelFrontOffsetMm(
+                            currentPlacedModule.moduleId,
+                            currentPlacedModule.doorTopGap,
+                            (currentPlacedModule as any).topEndPanelOffset
+                          );
+                          const isTopDown = (currentPlacedModule.moduleId || '').includes('lower-top-down-');
+                          const currentTopDownDefaultGap = getTopDownDoorTopGap(
+                            currentPlacedModule.stoneTopThickness,
+                            currentPlacedModule.hasTopEndPanel === true
+                          );
+                          const nextTopDownDefaultGap = getTopDownDoorTopGap(
+                            currentPlacedModule.stoneTopThickness,
+                            turning
+                          );
+                          updatePlacedModule(currentPlacedModule.id, {
+                            hasTopEndPanel: turning,
+                            ...(turning ? {
+                              stoneTopThickness: 0,
+                              stoneTopFrontOffset: 0,
+                              stoneTopBackOffset: 0,
+                              stoneTopLeftOffset: 0,
+                              stoneTopRightOffset: 0,
+                              stoneTopBackLip: 0,
+                              stoneTopBackLipThickness: 0,
+                              topEndPanelOffset: initialTopEndPanelOffset,
+                              topEndPanelBackOffset: (currentPlacedModule as any).topEndPanelBackOffset ?? 0,
+                              ...getDoorLiftTopEndPanelOffsetUpdates(initialTopEndPanelOffset),
+                            } : {}),
+                            ...(isTopDown && (
+                              currentPlacedModule.doorTopGap === undefined
+                              || currentPlacedModule.doorTopGap === currentTopDownDefaultGap
+                            ) ? { doorTopGap: nextTopDownDefaultGap } : {})
+                          } as any);
+                        };
+                        if (turning && (currentPlacedModule.stoneTopThickness || 0) > 0) {
+                          showAlert('상판을 상부 EP로 교체하시겠습니까?', {
+                            title: '상판 교체',
+                            showCancel: true,
+                            onConfirm: applyTopEndPanelToggle,
+                          });
+                        } else {
+                          applyTopEndPanelToggle();
+                        }
                       }}
                     />
                     상부 EP
