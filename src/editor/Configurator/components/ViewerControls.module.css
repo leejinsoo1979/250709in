@@ -202,6 +202,42 @@
   border: 1.5px solid var(--theme-primary);
 }
 
+.guideCreateButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--theme-border, #d7dce3);
+  border-radius: 8px;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.guideCreateButton svg {
+  flex-shrink: 0;
+}
+
+.guideCreateButton:hover {
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.guideCreateButton:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: -2px;
+}
+
+.guideCreateButton:active {
+  transform: scale(0.97);
+}
+
 /* Icon + text variant */
 .segmentIconText {
   gap: 4px;
