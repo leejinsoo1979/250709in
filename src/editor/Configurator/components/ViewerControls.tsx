@@ -317,20 +317,31 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           });
           if (hasUpperOrLower) return null;
           return (
-            <div className={styles.segmentedControl}>
+            <>
               <button
-                className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
-                onClick={() => { if (equalDistribution) toggleEqualDistribution(); }}
+                type="button"
+                className={styles.guideCreateButton}
+                onClick={() => window.dispatchEvent(new CustomEvent('free-placement-guide:create'))}
+                title="자유배치 가이드 생성"
               >
-                자유
+                <Grid3X3 size={13} />
+                <span>가이드 생성</span>
               </button>
-              <button
-                className={`${styles.segmentButton} ${styles.segmentAccent} ${equalDistribution ? styles.segmentAccentActive : ''}`}
-                onClick={() => { if (!equalDistribution) toggleEqualDistribution(); }}
-              >
-                균등
-              </button>
-            </div>
+              <div className={styles.segmentedControl}>
+                <button
+                  className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
+                  onClick={() => { if (equalDistribution) toggleEqualDistribution(); }}
+                >
+                  자유
+                </button>
+                <button
+                  className={`${styles.segmentButton} ${styles.segmentAccent} ${equalDistribution ? styles.segmentAccentActive : ''}`}
+                  onClick={() => { if (!equalDistribution) toggleEqualDistribution(); }}
+                >
+                  균등
+                </button>
+              </div>
+            </>
           );
         })()}
 
