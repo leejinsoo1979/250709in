@@ -250,25 +250,27 @@ export default function Messages() {
           padding: '20px 0',
         }}
       >
-        {/* 상단 로고 (보라색 둥근 사각형) */}
+        {/* 상단 로고 (테마색 원 + 흰색 점 3개) */}
         <button
           onClick={() => navigate('/dashboard')}
           title="대시보드"
           style={{
             width: 46,
             height: 46,
-            borderRadius: 8,
+            borderRadius: '50%',
             background: C.accent,
             border: 'none',
-            color: '#fff',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            gap: 4,
             marginBottom: 32,
           }}
         >
-          <HiChat size={22} />
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ffffff' }} />
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ffffff' }} />
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ffffff' }} />
         </button>
 
         {/* 중앙 네비 메뉴 */}
