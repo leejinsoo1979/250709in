@@ -11,6 +11,7 @@ import {
   setDoc,
   deleteDoc,
   updateDoc,
+  deleteField,
   serverTimestamp,
   orderBy,
   onSnapshot,
@@ -52,6 +53,7 @@ export interface ConversationRecord {
   lastMessageAt?: Date | null;
   lastSenderId?: string;
   unread?: Record<string, number>;
+  hiddenFor?: Record<string, boolean>;
   // 표시용 (조회 후 채움)
   peerUid?: string;
   peerName?: string;
@@ -276,7 +278,7 @@ export async function removeFriend(myUid: string, friendUid: string): Promise<vo
   ]);
 }
 
-/** 대화방 보장 (없으면 생성) */
+/** 대화방 보장 (없으면 생성, 있으면 본인 hidden 상태 해제) */
 export async function ensureConversation(myUid: string, peerUid: string): Promise<string> {
   const convId = conversationIdFor(myUid, peerUid);
   const ref = doc(db, 'conversations', convId);
@@ -288,8 +290,17 @@ export async function ensureConversation(myUid: string, peerUid: string): Promis
       lastMessageAt: serverTimestamp(),
       lastSenderId: '',
       unread: { [myUid]: 0, [peerUid]: 0 },
+      hiddenFor: {},
       createdAt: serverTimestamp(),
     });
+  } else {
+    // 기존 대화방: 내가 나가있던 상태라면 다시 보이게 복구
+    const data = snap.data() as any;
+    if (data?.hiddenFor?.[myUid]) {
+      await updateDoc(ref, {
+        [`hiddenFor.${myUid}`]: false,
+      });
+    }
   }
   return convId;
 }
@@ -325,12 +336,17 @@ export async function sendMessage(
   const lastMessagePreview = trimmed || (hasAttachments
     ? (attachments![0].kind === 'image' ? '🖼 이미지' : `📎 ${attachments![0].name || '파일'}`)
     : '');
-  await updateDoc(convRef, {
+  const updates: Record<string, unknown> = {
     lastMessage: lastMessagePreview,
     lastMessageAt: serverTimestamp(),
     lastSenderId: senderId,
     unread,
-  });
+    [`hiddenFor.${senderId}`]: deleteField(),
+  };
+  if (peerUid) {
+    updates[`hiddenFor.${peerUid}`] = deleteField();
+  }
+  await updateDoc(convRef, updates);
   // 수신자에게 알림 생성 (종 아이콘에 표시)
   if (peerUid) {
     try {
@@ -388,10 +404,12 @@ export function subscribeMyConversations(myUid: string, cb: (list: ConversationR
     where('members', 'array-contains', myUid)
   );
   return onSnapshot(q, async (snap) => {
-    const conversations: ConversationRecord[] = await Promise.all(
+    const conversations = await Promise.all(
       snap.docs.map(async (d) => {
         const data = d.data() as any;
         const members: string[] = data.members || [];
+        const hiddenFor = data.hiddenFor || {};
+        if (hiddenFor[myUid]) return null;
         const peerUid = members.find((u) => u !== myUid) || '';
         let peerName = '';
         let peerEmail = '';
@@ -414,6 +432,7 @@ export function subscribeMyConversations(myUid: string, cb: (list: ConversationR
           lastMessageAt: tsToDate(data.lastMessageAt),
           lastSenderId: data.lastSenderId,
           unread: data.unread || {},
+          hiddenFor,
           peerUid,
           peerName,
           peerEmail,
@@ -421,12 +440,13 @@ export function subscribeMyConversations(myUid: string, cb: (list: ConversationR
         };
       })
     );
-    conversations.sort((a, b) => {
+    const visibleConversations = conversations.filter((item): item is ConversationRecord => item !== null);
+    visibleConversations.sort((a, b) => {
       const ta = a.lastMessageAt?.getTime() || 0;
       const tb = b.lastMessageAt?.getTime() || 0;
       return tb - ta;
     });
-    cb(conversations);
+    cb(visibleConversations);
   });
 }
 
@@ -440,4 +460,15 @@ export async function markConversationRead(convId: string, myUid: string): Promi
   if (unread[myUid] === 0) return;
   unread[myUid] = 0;
   await updateDoc(ref, { unread });
+}
+
+/** 채팅방 나가기: 내 대화 목록에서 숨김 */
+export async function leaveConversation(convId: string, myUid: string): Promise<void> {
+  const ref = doc(db, 'conversations', convId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+  await updateDoc(ref, {
+    [`hiddenFor.${myUid}`]: true,
+    [`unread.${myUid}`]: 0,
+  });
 }

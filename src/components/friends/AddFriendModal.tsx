@@ -159,7 +159,7 @@ const input: React.CSSProperties = {
   flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 14, outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
-  padding: '10px 16px', background: '#3b82f6', color: '#fff', border: 'none',
+  padding: '10px 16px', background: 'var(--theme-primary, #7269ef)', color: '#fff', border: 'none',
   borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
 };
 const btnSecondary: React.CSSProperties = {
@@ -174,7 +174,7 @@ const resultCard: React.CSSProperties = {
   border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, marginTop: 8, background: '#f9fafb',
 };
 const avatar: React.CSSProperties = {
-  width: 44, height: 44, borderRadius: '50%', background: '#3b82f6', color: '#fff',
+  width: 44, height: 44, borderRadius: '50%', background: 'var(--theme-primary, #7269ef)', color: '#fff',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18,
   overflow: 'hidden', flexShrink: 0,
 };

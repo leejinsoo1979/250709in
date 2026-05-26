@@ -13,14 +13,19 @@ import { useTheme } from '@/contexts/ThemeContext';
 import {
   subscribeMyConversations,
   subscribeMessages,
+  subscribeFriends,
   sendMessage,
   markConversationRead,
+  ensureConversation,
+  leaveConversation,
   uploadMessageAttachment,
   type ConversationRecord,
+  type FriendRecord,
   type MessageRecord,
   type MessageAttachment,
 } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import AddFriendModal from '@/components/friends/AddFriendModal';
 import EmojiPicker, { EmojiClickData, Theme as EmojiTheme } from 'emoji-picker-react';
 import {
   HiOutlineChat,
@@ -40,8 +45,16 @@ import {
   HiOutlineMoon,
   HiOutlineUsers,
   HiOutlineUserAdd,
+  HiOutlineLogout,
   HiChat,
+  HiOutlineDesktopComputer,
 } from 'react-icons/hi';
+import {
+  subscribeActiveLiveSessionsForConv,
+  type LiveSessionRecord,
+} from '@/firebase/liveSessions';
+import { useScreenShareBroadcast } from '@/hooks/useScreenShareBroadcast';
+import LiveSessionPanel from './messages/LiveSessionPanel';
 
 type LeftTab = 'chats' | 'contacts' | 'profile' | 'settings' | 'groups';
 
@@ -120,20 +133,47 @@ export default function Messages() {
 
   const [conversations, setConversations] = useState<ConversationRecord[]>([]);
   const [messages, setMessages] = useState<MessageRecord[]>([]);
+  const [friends, setFriends] = useState<FriendRecord[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [leftTab, setLeftTab] = useState<LeftTab>('chats');
   const [searchQuery, setSearchQuery] = useState('');
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [leavingConvId, setLeavingConvId] = useState<string | null>(null);
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  const [startingFriendUid, setStartingFriendUid] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // 라이브 시연 — 활성 세션 구독
+  const [activeLiveSessions, setActiveLiveSessions] = useState<LiveSessionRecord[]>([]);
+  useEffect(() => {
+    if (!activeConvId) {
+      setActiveLiveSessions([]);
+      return;
+    }
+    return subscribeActiveLiveSessionsForConv(activeConvId, setActiveLiveSessions);
+  }, [activeConvId]);
+
+  // 라이브 시연 — 시연자 훅 (활성 대화방 + 본인 정보)
+  const broadcast = useScreenShareBroadcast({
+    convId: activeConvId || '',
+    broadcasterUid: user?.uid || '',
+    broadcasterName: user?.displayName || user?.email || '',
+  });
+  const canBroadcast = Boolean(activeConvId && user?.uid);
+
   useEffect(() => {
     if (!user?.uid) return;
     return subscribeMyConversations(user.uid, setConversations);
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    return subscribeFriends(user.uid, setFriends);
   }, [user?.uid]);
 
   useEffect(() => {
@@ -165,6 +205,15 @@ export default function Messages() {
       (c.peerName || '').toLowerCase().includes(q) ||
       (c.peerEmail || '').toLowerCase().includes(q) ||
       (c.lastMessage || '').toLowerCase().includes(q)
+    );
+  });
+
+  const filteredFriends = friends.filter((f) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (f.name || '').toLowerCase().includes(q) ||
+      (f.email || '').toLowerCase().includes(q)
     );
   });
 
@@ -201,6 +250,49 @@ export default function Messages() {
   const handleEmojiClick = (data: EmojiClickData) => {
     setText((prev) => prev + data.emoji);
     setEmojiOpen(false);
+  };
+
+  const handleLeaveConversation = async () => {
+    if (!activeConvId || !user?.uid || leavingConvId) return;
+    const ok = window.confirm('이 채팅방에서 나가시겠습니까? 대화 목록에서 사라집니다.');
+    if (!ok) return;
+    setLeavingConvId(activeConvId);
+    try {
+      await leaveConversation(activeConvId, user.uid);
+      setMessages([]);
+      setPendingFiles([]);
+      navigate('/dashboard/messages');
+    } catch (err: any) {
+      console.error('[채팅방 나가기 실패]', err);
+      alert(`채팅방 나가기 실패: ${err?.code || ''} ${err?.message || ''}`);
+    } finally {
+      setLeavingConvId(null);
+    }
+  };
+
+  const handleStartFriendConversation = async (friendUid: string) => {
+    console.log('[채팅 시작 클릭]', { myUid: user?.uid, friendUid, startingFriendUid });
+    if (!user?.uid) {
+      alert('로그인 정보가 없습니다.');
+      return;
+    }
+    if (startingFriendUid) {
+      console.log('[이미 진행 중]', startingFriendUid);
+      return;
+    }
+    setStartingFriendUid(friendUid);
+    try {
+      console.log('[ensureConversation 호출]', user.uid, friendUid);
+      const convId = await ensureConversation(user.uid, friendUid);
+      console.log('[ensureConversation 성공]', convId);
+      setLeftTab('chats');
+      navigate(`/dashboard/messages/${convId}`);
+    } catch (err: any) {
+      console.error('[대화 시작 실패]', err);
+      alert(`대화 시작 실패: ${err?.code || ''} ${err?.message || ''}`);
+    } finally {
+      setStartingFriendUid(null);
+    }
   };
 
   // Chatvia 스타일 톤
@@ -367,6 +459,31 @@ export default function Messages() {
             {leftTab === 'chats' ? '채팅' : leftTab === 'contacts' ? '연락처' : leftTab === 'profile' ? '내 정보' : leftTab === 'groups' ? '그룹' : '설정'}
           </h2>
         </div>
+        {leftTab === 'contacts' && (
+          <div style={{ padding: '0 24px 12px' }}>
+            <button
+              onClick={() => setShowAddFriend(true)}
+              style={{
+                width: '100%',
+                border: 'none',
+                background: C.accent,
+                color: '#ffffff',
+                borderRadius: 6,
+                padding: '10px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <HiOutlineUserAdd size={16} />
+              친구 추가
+            </button>
+          </div>
+        )}
         <div style={{ padding: '0 24px 16px' }}>
           <div
             style={{
@@ -381,7 +498,7 @@ export default function Messages() {
             <HiOutlineSearch size={16} color={C.textSecondary} />
             <input
               type="text"
-              placeholder="대화 검색..."
+              placeholder={leftTab === 'contacts' ? '친구 검색...' : '대화 검색...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
@@ -396,9 +513,112 @@ export default function Messages() {
           </div>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 16px' }}>
-          {filteredConversations.length === 0 ? (
+          {leftTab === 'contacts' ? (
+            filteredFriends.length === 0 ? (
+              <div style={{ padding: '40px 16px', textAlign: 'center', color: C.textSecondary, fontSize: 13 }}>
+                <div style={{ marginBottom: 12 }}>
+                  {searchQuery ? '검색 결과 없음' : '친구가 없습니다.'}
+                </div>
+                {!searchQuery && (
+                  <button
+                    onClick={() => setShowAddFriend(true)}
+                    style={{
+                      border: 'none',
+                      background: C.leftNavActiveBg,
+                      color: C.accent,
+                      borderRadius: 6,
+                      padding: '8px 12px',
+                      fontSize: 13,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    친구 추가
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredFriends.map((f) => (
+                <div
+                  key={f.uid}
+                  style={{
+                    padding: '14px 12px',
+                    borderRadius: 6,
+                    display: 'flex',
+                    gap: 12,
+                    alignItems: 'center',
+                    marginBottom: 4,
+                  }}
+                >
+                  <InitialAvatar name={f.name} email={f.email} photoURL={f.photoURL} size={40} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: 600,
+                        fontSize: 14,
+                        color: C.text,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {f.name || f.email || '(이름 없음)'}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: C.textSecondary,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {f.email || ''}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleStartFriendConversation(f.uid)}
+                    disabled={startingFriendUid === f.uid}
+                    style={{
+                      border: 'none',
+                      background: C.leftNavActiveBg,
+                      color: C.accent,
+                      borderRadius: 6,
+                      padding: '7px 10px',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      cursor: startingFriendUid === f.uid ? 'not-allowed' : 'pointer',
+                      opacity: startingFriendUid === f.uid ? 0.55 : 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    채팅
+                  </button>
+                </div>
+              ))
+            )
+          ) : filteredConversations.length === 0 ? (
             <div style={{ padding: '40px 16px', textAlign: 'center', color: C.textSecondary, fontSize: 13 }}>
-              {searchQuery ? '검색 결과 없음' : '대화가 없습니다.\n친구 페이지에서 메시지를 시작하세요.'}
+              <div style={{ marginBottom: 12 }}>
+                {searchQuery ? '검색 결과 없음' : '대화가 없습니다.'}
+              </div>
+              {!searchQuery && (
+                <button
+                  onClick={() => setLeftTab('contacts')}
+                  style={{
+                    border: 'none',
+                    background: C.leftNavActiveBg,
+                    color: C.accent,
+                    borderRadius: 6,
+                    padding: '8px 12px',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  친구에서 시작
+                </button>
+              )}
             </div>
           ) : (
             filteredConversations.map((c) => {
@@ -500,6 +720,30 @@ export default function Messages() {
             })
           )}
         </div>
+        <div style={{ padding: '12px 24px 20px', borderTop: `1px solid ${C.sidebarBorder}` }}>
+          <button
+            onClick={() => navigate('/dashboard')}
+            title="대시보드"
+            style={{
+              width: '100%',
+              border: 'none',
+              background: C.leftNavActiveBg,
+              color: C.accent,
+              borderRadius: 6,
+              padding: '10px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            <HiOutlineArrowLeft size={16} />
+            대시보드
+          </button>
+        </div>
       </div>
 
       {/* ===== 우측 채팅 영역 ===== */}
@@ -548,6 +792,28 @@ export default function Messages() {
                 </div>
               </div>
               <button
+                onClick={handleLeaveConversation}
+                disabled={leavingConvId === activeConv.id}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: C.accent,
+                  cursor: leavingConvId === activeConv.id ? 'not-allowed' : 'pointer',
+                  padding: '6px 8px',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  opacity: leavingConvId === activeConv.id ? 0.55 : 1,
+                }}
+                title="채팅방 나가기"
+              >
+                <HiOutlineLogout size={18} />
+                나가기
+              </button>
+              <button
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -560,6 +826,25 @@ export default function Messages() {
                 <HiOutlineDotsVertical size={20} />
               </button>
             </div>
+
+            {/* 라이브 시연 패널 (활성 세션이 있을 때) */}
+            {activeLiveSessions.map((session) => (
+              <LiveSessionPanel
+                key={session.id}
+                session={session}
+                myUid={user.uid}
+                broadcasterPreviewStream={
+                  session.broadcasterUid === user.uid ? broadcast.previewStream : null
+                }
+                broadcasterViewerCount={
+                  session.broadcasterUid === user.uid ? broadcast.viewerCount : 0
+                }
+                onStopBroadcast={
+                  session.broadcasterUid === user.uid ? broadcast.stop : undefined
+                }
+                C={C}
+              />
+            ))}
 
             {/* 메시지 영역 */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
@@ -715,6 +1000,22 @@ export default function Messages() {
               >
                 <HiOutlinePaperClip size={20} />
               </button>
+              <button
+                onClick={() => {
+                  if (broadcast.isLive) {
+                    broadcast.stop();
+                  } else {
+                    broadcast.start();
+                  }
+                }}
+                title={broadcast.isLive ? '라이브 시연 종료' : '라이브 시연 시작 (화면 공유)'}
+                style={{
+                  ...iconBtnStyle(C, broadcast.isLive),
+                  color: broadcast.isLive ? '#ff3d60' : C.textSecondary,
+                }}
+              >
+                <HiOutlineDesktopComputer size={20} />
+              </button>
               <input
                 type="text"
                 value={text}
@@ -763,6 +1064,8 @@ export default function Messages() {
           </>
         )}
       </div>
+
+      {showAddFriend && <AddFriendModal onClose={() => setShowAddFriend(false)} />}
     </div>
   );
 }

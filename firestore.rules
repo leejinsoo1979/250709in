@@ -501,6 +501,64 @@ service cloud.firestore {
       }
     }
 
+    // 라이브 화면공유 세션 (live-sessions)
+    // - id: ${convId}_${broadcasterUid}_${epochMs}
+    // - members: 부모 대화방(conversations/{convId})의 members 중 한 명이면 접근 가능
+    // - viewers/{viewerUid}: 본인 문서만 생성/삭제 가능, 시연자도 읽기 가능
+    // - viewers/{viewerUid}/signals/{signalId}: 시연자 또는 해당 viewer 본인이 읽기/쓰기 가능
+    function isLiveSessionMember(convId) {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/conversations/$(convId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.members;
+    }
+    match /live-sessions/{sessionId} {
+      // 생성: 시연자 본인 + 부모 대화방 member
+      allow create: if isSignedIn() &&
+                    request.resource.data.broadcasterUid == request.auth.uid &&
+                    isLiveSessionMember(request.resource.data.convId);
+      // 읽기/목록: 부모 대화방 member (members 컬렉션 쿼리 시 where convId in [...] 사용)
+      allow read: if isSignedIn() && (
+        resource.data.broadcasterUid == request.auth.uid ||
+        isLiveSessionMember(resource.data.convId)
+      );
+      allow list: if isSignedIn();
+      // 수정: 시연자만 (status, endedAt 등)
+      allow update: if isSignedIn() && resource.data.broadcasterUid == request.auth.uid;
+      // 삭제: 시연자 또는 관리자
+      allow delete: if isSignedIn() && (
+        resource.data.broadcasterUid == request.auth.uid || isAdmin()
+      );
+
+      // 시청자 등록
+      match /viewers/{viewerUid} {
+        // 본인이 자기 viewer 문서 생성/삭제
+        allow create: if isSignedIn() && viewerUid == request.auth.uid;
+        allow delete: if isSignedIn() && viewerUid == request.auth.uid;
+        // 시연자 + 자기 자신 읽기 가능
+        allow read, list: if isSignedIn() && (
+          viewerUid == request.auth.uid ||
+          get(/databases/$(database)/documents/live-sessions/$(sessionId)).data.broadcasterUid == request.auth.uid
+        );
+
+        // signaling 메시지
+        match /signals/{signalId} {
+          // 시연자 또는 해당 viewer 본인이 읽기/쓰기 가능
+          allow read, list: if isSignedIn() && (
+            viewerUid == request.auth.uid ||
+            get(/databases/$(database)/documents/live-sessions/$(sessionId)).data.broadcasterUid == request.auth.uid
+          );
+          allow create: if isSignedIn() && (
+            viewerUid == request.auth.uid ||
+            get(/databases/$(database)/documents/live-sessions/$(sessionId)).data.broadcasterUid == request.auth.uid
+          ) && request.resource.data.fromUid == request.auth.uid;
+          allow delete: if isSignedIn() && (
+            viewerUid == request.auth.uid ||
+            get(/databases/$(database)/documents/live-sessions/$(sessionId)).data.broadcasterUid == request.auth.uid
+          );
+        }
+      }
+    }
+
     // 이메일 인증 코드 (emailVerificationCodes)
     // - 비로그인 사용자도 회원가입 전에 인증해야 하므로 익명 접근 허용
     // - 보안은 서버(API)의 rate limit + 코드 만료(10분) + 시도 횟수(5회) 제한으로 보장
