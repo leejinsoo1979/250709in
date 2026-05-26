@@ -358,8 +358,6 @@ export default function Messages() {
                     borderRadius: 6,
                     cursor: 'pointer',
                     background: isActive ? C.convItemActiveBg : 'transparent',
-                    borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
-                    paddingLeft: 9,
                     display: 'flex',
                     gap: 12,
                     alignItems: 'center',
