@@ -13,8 +13,10 @@ import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/auth/AuthProvider';
 import { viewCubeRequest } from '@/editor/shared/viewer3d/components/base/components/AxisArrowsGizmo';
+import { getFreePlacementGuideBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { isSuperAdmin } from '@/firebase/admins';
 
-const ALLOWED_EMAIL = 'sbbc212@gmail.com';
+const GUIDE_BUTTON_EMAIL = 'sbbc212@gmail.com';
 
 export type ViewMode = '2D' | '3D';
 export type ViewDirection = 'front' | 'top' | 'left' | 'right' | 'all';
@@ -79,8 +81,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall } = useUIStore();
   const { user } = useAuth();
-  const isAllowedUser = user?.email === ALLOWED_EMAIL;
-  const { spaceInfo } = useSpaceConfigStore();
+  const isAllowedUser = isSuperAdmin(user?.email);
+  const canCreateFreePlacementGuide = user?.email?.toLowerCase().trim() === GUIDE_BUTTON_EMAIL;
+  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
@@ -110,6 +113,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileOptions, setShowMobileOptions] = useState(false);
   const [showDoorGuide, setShowDoorGuide] = useState(false);
+  const [showGuideDialog, setShowGuideDialog] = useState(false);
+  const [guideSlotCount, setGuideSlotCount] = useState(() => String(spaceInfo?.freePlacementGuides?.length || 4));
 
   // 모든 슬롯이 채워지면 안내 표시, 빈 슬롯 생기면 숨김
   useEffect(() => {
@@ -174,6 +179,42 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const handleViewDirectionChange = (direction: ViewDirection) => {
     setView2DDirection(direction);
     onViewDirectionChange(direction);
+  };
+
+  const openGuideDialog = () => {
+    setGuideSlotCount(String(spaceInfo?.freePlacementGuides?.length || 4));
+    setShowGuideDialog(true);
+  };
+
+  const handleGuideButtonClick = () => {
+    if (spaceInfo?.freePlacementGuideEditing) {
+      setSpaceInfo({ freePlacementGuideEditing: false });
+      return;
+    }
+
+    openGuideDialog();
+  };
+
+  const createFreePlacementGuides = () => {
+    const count = Math.max(1, Math.min(30, Math.floor(Number(guideSlotCount) || 1)));
+    const totalWidth = spaceInfo?.width || 0;
+    const bounds = spaceInfo ? getFreePlacementGuideBoundsX(spaceInfo) : { startX: -totalWidth / 2, endX: totalWidth / 2 };
+    const guideStartX = bounds.startX + totalWidth / 2;
+    const guideWidth = Math.max(0, bounds.endX - bounds.startX);
+    const slotWidth = guideWidth > 0 ? guideWidth / count : 0;
+    setSpaceInfo({
+      freePlacementGuides: Array.from({ length: count }, (_, index) => ({
+        id: `free-guide-${index + 1}`,
+        index,
+        x: guideStartX + slotWidth * index,
+        width: slotWidth,
+        guideZone: 'full',
+        confirmed: false
+      })),
+      freePlacementGuideEditing: true
+    });
+    setGuideSlotCount(String(count));
+    setShowGuideDialog(false);
   };
 
   // ── Mobile UI ──
@@ -318,15 +359,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           if (hasUpperOrLower) return null;
           return (
             <>
-              <button
-                type="button"
-                className={styles.guideCreateButton}
-                onClick={() => window.dispatchEvent(new CustomEvent('free-placement-guide:create'))}
-                title="자유배치 가이드 생성"
-              >
-                <Grid3X3 size={13} />
-                <span>가이드 생성</span>
-              </button>
+              {canCreateFreePlacementGuide && (
+                <button
+                  type="button"
+                  className={`${styles.guideCreateButton} ${spaceInfo.freePlacementGuideEditing ? styles.guideCreateButtonActive : ''}`}
+                  onClick={handleGuideButtonClick}
+                  title={spaceInfo.freePlacementGuideEditing ? '슬롯확정' : '자유배치 가이드 생성'}
+                >
+                  <Grid3X3 size={13} />
+                  <span>{spaceInfo.freePlacementGuideEditing ? '슬롯확정' : '가이드 생성'}</span>
+                </button>
+              )}
               <div className={styles.segmentedControl}>
                 <button
                   className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
@@ -480,6 +523,56 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {showQRGenerator && (
         <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />
+      )}
+
+      {showGuideDialog && (
+        <div className={styles.guideDialogBackdrop} onMouseDown={() => setShowGuideDialog(false)}>
+          <div className={styles.guideDialog} onMouseDown={(event) => event.stopPropagation()}>
+            <div className={styles.guideDialogHeader}>
+              <div>
+                <div className={styles.guideDialogTitle}>가이드 생성</div>
+                <div className={styles.guideDialogSubtitle}>자유배치 와리를 몇 개 슬롯으로 나눌지 입력하세요.</div>
+              </div>
+              <button
+                type="button"
+                className={styles.guideDialogClose}
+                onClick={() => setShowGuideDialog(false)}
+                aria-label="닫기"
+              >
+                ×
+              </button>
+            </div>
+
+            <label className={styles.guideDialogField}>
+              <span>슬롯 개수</span>
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={guideSlotCount}
+                onChange={(event) => setGuideSlotCount(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') createFreePlacementGuides();
+                  if (event.key === 'Escape') setShowGuideDialog(false);
+                }}
+                autoFocus
+              />
+            </label>
+
+            <div className={styles.guideDialogMeta}>
+              좌우 이격을 제외한 배치 가능 폭 기준으로 우선 균등 가이드를 생성합니다.
+            </div>
+
+            <div className={styles.guideDialogActions}>
+              <button type="button" className={styles.guideDialogSecondary} onClick={() => setShowGuideDialog(false)}>
+                취소
+              </button>
+              <button type="button" className={styles.guideDialogPrimary} onClick={createFreePlacementGuides}>
+                생성
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

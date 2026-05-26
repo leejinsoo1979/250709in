@@ -448,10 +448,14 @@ function placeSurroundPanel(
 function placeDualBuiltInFridgeFree(params: PlaceFurnitureFreeParams): PlaceFurnitureFreeResult {
   const { xPositionMM, spaceInfo } = params;
 
-  const LEFT_W = 582;
-  const INSERT_W = 136;
-  const RIGHT_W = 582;
-  const TOTAL_W = LEFT_W + INSERT_W + RIGHT_W; // 1300
+  const BASE_LEFT_W = 582;
+  const BASE_INSERT_W = 136;
+  const BASE_RIGHT_W = 582;
+  const BASE_TOTAL_W = BASE_LEFT_W + BASE_INSERT_W + BASE_RIGHT_W; // 1300
+  const TOTAL_W = Math.max(1, params.dimensions.width || BASE_TOTAL_W);
+  const LEFT_W = Math.max(1, Math.round((TOTAL_W * BASE_LEFT_W / BASE_TOTAL_W) * 10) / 10);
+  const INSERT_W = Math.max(1, Math.round((TOTAL_W * BASE_INSERT_W / BASE_TOTAL_W) * 10) / 10);
+  const RIGHT_W = Math.max(1, Math.round((TOTAL_W - LEFT_W - INSERT_W) * 10) / 10);
 
   // 빌트인 냉장고장/인서트 프레임의 실제 모듈 dimensions를 모듈 데이터에서 직접 가져옴
   // _tempSlotWidths로 원하는 너비 모듈을 동적 생성하도록 spaceInfo를 임시 수정
@@ -472,7 +476,7 @@ function placeDualBuiltInFridgeFree(params: PlaceFurnitureFreeParams): PlaceFurn
   const fridgeDims = { width: LEFT_W, height: fridgeModuleData.dimensions.height, depth: fridgeModuleData.dimensions.depth };
   const insertDims = { width: INSERT_W, height: insertModuleData.dimensions.height, depth: insertModuleData.dimensions.depth };
 
-  // 듀얼 세트 중심을 1300mm 너비로 공간에 클램프 (좌우 가장자리 자동 조정)
+  // 듀얼 세트 중심을 현재 배치 폭으로 공간에 클램프 (가이드 슬롯에서는 슬롯 1칸 폭)
   const clampedSetCenter = clampToSpaceBoundsX(xPositionMM, TOTAL_W, spaceInfo);
   const setLeftEdge = clampedSetCenter - TOTAL_W / 2;
   const leftCenterX = setLeftEdge + LEFT_W / 2;

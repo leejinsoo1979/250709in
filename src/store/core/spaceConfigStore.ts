@@ -141,6 +141,16 @@ export const DEFAULT_DROPPED_CEILING_VALUES = {
   POSITION: 'right' as const
 };
 
+export interface FreePlacementGuideSlot {
+  id: string;
+  index: number;
+  x: number;      // 전체 공간 좌측 기준 시작 X(mm)
+  width: number;  // 슬롯 폭(mm)
+  guideZone?: 'full' | 'upper' | 'lower'; // 자유배치 가이드 상/하/전체 영역
+  guideGroupId?: string; // 분할 슬롯이 속한 원본 슬롯 그룹
+  confirmed?: boolean; // true면 폭 확정, false/undefined면 편집 중
+}
+
 // 공간 정보 타입
 export interface SpaceInfo {
   width: number;
@@ -223,6 +233,10 @@ export interface SpaceInfo {
   // 자유배치 가구 기본 너비 (mm)
   furnitureSingleWidth?: number;  // 싱글 가구 기본 너비 (기본 500)
   furnitureDualWidth?: number;    // 듀얼 가구 기본 너비 (기본 1000)
+  // 자유배치 와리 가이드 슬롯
+  freePlacementGuides?: FreePlacementGuideSlot[];
+  // 자유배치 와리 가이드 편집 중 여부. true면 + 핫스팟 숨김, 폭 편집만 표시
+  freePlacementGuideEditing?: boolean;
   // 카테고리별 가구 기본 깊이 (mm)
   furnitureDepthDefaults?: FurnitureDepthDefaults;
 

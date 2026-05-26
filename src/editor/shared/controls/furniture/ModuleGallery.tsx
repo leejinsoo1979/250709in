@@ -8,7 +8,7 @@ import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
-import { getInternalSpaceBoundsX, getModuleBoundsX, getColumnObstacleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { getInternalSpaceBoundsX, getModuleBoundsX, getColumnObstacleBoundsX, findAvailableFreeGuideSlot } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -649,6 +649,54 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           return;
         }
 
+        const isGuideSlotPlacementMode = !spaceInfo.freePlacementGuideEditing
+          && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+        if (isGuideSlotPlacementMode) {
+          const targetSlot = findAvailableFreeGuideSlot(
+            spaceInfo.freePlacementGuides,
+            placedModules,
+            spaceInfo,
+            (moduleData.category || 'full') as 'full' | 'upper' | 'lower',
+            getColumnObstacleBoundsX(spaceInfo.columns || [])
+          );
+          if (!targetSlot) {
+            showAlert('배치할 빈 슬롯이 없습니다', { title: '배치 불가' });
+            return;
+          }
+
+          const slotDimensions = {
+            ...module.dimensions,
+            width: targetSlot.width
+          };
+          const slotModuleData = {
+            ...moduleData,
+            dimensions: {
+              ...moduleData.dimensions,
+              width: targetSlot.width
+            }
+          };
+          const targetX = targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2;
+          const result = placeFurnitureFree({
+            moduleId: module.id,
+            xPositionMM: targetX,
+            spaceInfo,
+            dimensions: slotDimensions,
+            existingModules: placedModules,
+            moduleData: slotModuleData,
+          });
+
+          if (result.success && result.module) {
+            addModule(result.module);
+            if (result.additionalModules && result.additionalModules.length > 0) {
+              result.additionalModules.forEach(m => addModule(m));
+            }
+            useFurnitureStore.getState().setSelectedPlacedModuleId(result.module.id);
+          } else {
+            console.warn('❌ [가이드 슬롯 더블클릭] 배치 실패:', result.error);
+          }
+          return;
+        }
+
         // 이전 배치 치수 적용 (lastCustomDimensions) — 단, 너비는 모듈 기본값 우선
         // (lastDims는 이전에 자동 축소된 값일 수 있어 그대로 쓰면 공간 낭비)
         const stdKey = getStandardDimensionKey(module.id);
@@ -1270,6 +1318,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 유효성 검사 (간단 버전)
   const isModuleValid = (module: ModuleData): boolean => {
+    const isGuideSlotPlacementMode = spaceInfo.layoutMode === 'free-placement'
+      && !spaceInfo.freePlacementGuideEditing
+      && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+    if (isGuideSlotPlacementMode) {
+      return module.dimensions.height <= zoneInternalSpace.height
+        && module.dimensions.depth <= zoneInternalSpace.depth;
+    }
+
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 

@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Column } from '@/types/space';
 import ColumnThumbnail from './ColumnThumbnail';
 import { useTranslation } from '@/i18n/useTranslation';
-import { getInternalSpaceBoundsX, getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { findAvailableFreeGuideSlot, getInternalSpaceBoundsX, getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ColumnControl.module.css';
 
 interface ColumnControlProps {
@@ -42,16 +42,37 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     const furnitureBackZ = furnitureZOffset - furnitureDepthM / 2 - doorThicknessM;
     const centerZ = furnitureBackZ + (columnData.depth * 0.01) / 2;
 
-    const columnWidthMm = columnData.width;
-    // 더블클릭 배치: 항상 내부공간 맨 왼쪽 벽에 붙여서 배치
-    const centerX = (() => {
-      const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-      const halfWidth = (columnWidthMm * 0.01) / 2;
-      const minX = startX * 0.01 + halfWidth;
-      const maxX = endX * 0.01 - halfWidth;
-      if (minX > maxX) return (minX + maxX) / 2;
-      return minX;
-    })();
+    const isGuideSlotPlacementMode = spaceInfo.layoutMode === 'free-placement'
+      && !spaceInfo.freePlacementGuideEditing
+      && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+    const columnOccupiedBounds = columns.map((column) => {
+      const centerXmm = column.position[0] * 100;
+      const halfWidth = column.width / 2;
+      return {
+        left: centerXmm - halfWidth,
+        right: centerXmm + halfWidth,
+        category: 'full' as const
+      };
+    });
+    const targetSlot = isGuideSlotPlacementMode
+      ? findAvailableFreeGuideSlot(spaceInfo.freePlacementGuides, placedModules, spaceInfo, 'full', columnOccupiedBounds)
+      : null;
+    if (isGuideSlotPlacementMode && !targetSlot) {
+      console.warn('기둥 배치 실패: 배치할 빈 가이드 슬롯이 없습니다');
+      return;
+    }
+
+    const columnWidthMm = targetSlot ? targetSlot.width : columnData.width;
+    const centerX = targetSlot
+      ? (targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
+      : (() => {
+          const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+          const halfWidth = (columnWidthMm * 0.01) / 2;
+          const minX = startX * 0.01 + halfWidth;
+          const maxX = endX * 0.01 - halfWidth;
+          if (minX > maxX) return (minX + maxX) / 2;
+          return minX;
+        })();
 
     const newColumn: Column = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

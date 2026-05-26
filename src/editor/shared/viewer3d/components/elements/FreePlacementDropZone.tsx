@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, type FreePlacementGuideSlot } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { getModuleById } from '@/data/modules';
@@ -82,6 +82,7 @@ const FreePlacementDropZone: React.FC = () => {
   const [isColliding, setIsColliding] = useState(false);
   const [isSnapped, setIsSnapped] = useState(false);
   const [hoverZoneWidth, setHoverZoneWidth] = useState<number | null>(null);
+  const [guideHoverSlot, setGuideHoverSlot] = useState<FreePlacementGuideSlot | null>(null);
   const planeRef = useRef<THREE.Mesh>(null);
 
   // 배치된 가구 이동 상태
@@ -96,6 +97,9 @@ const FreePlacementDropZone: React.FC = () => {
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+  const isGuideSlotPlacementMode = isFreePlacement
+    && !spaceInfo.freePlacementGuideEditing
+    && (spaceInfo.freePlacementGuides?.length || 0) > 0;
 
   // 테마 색상 (Three.js용 hex)
   const themeColorMap: Record<string, string> = {
@@ -536,9 +540,12 @@ const FreePlacementDropZone: React.FC = () => {
   // 구간 최적화 적용된 치수 (고스트/배치/충돌에 사용)
   const effectiveDimensions = useMemo(() => {
     if (!activeDimensions) return null;
+    if (!spaceInfo.freePlacementGuideEditing && guideHoverSlot) {
+      return { ...activeDimensions, width: guideHoverSlot.width };
+    }
     if (hoverZoneWidth === null) return activeDimensions;
     return { ...activeDimensions, width: hoverZoneWidth };
-  }, [activeDimensions, hoverZoneWidth]);
+  }, [activeDimensions, hoverZoneWidth, guideHoverSlot, spaceInfo.freePlacementGuideEditing]);
 
   // 활성 카테고리
   const activeCategory = useMemo(() => {
@@ -795,22 +802,47 @@ const FreePlacementDropZone: React.FC = () => {
   // R3F onPointerMove - 고스트가 마우스를 따라다님
   const handlePointerMove = useCallback(
     (e: any) => {
+      if (isGuideSlotPlacementMode) return;
       if (!activeDimensions) return;
       e.stopPropagation();
       const xMm = e.point.x * 100;
       updateHoverState(xMm, activeDimensions.width, activeCategory);
     },
-    [activeDimensions, activeCategory, updateHoverState]
+    [activeDimensions, activeCategory, updateHoverState, isGuideSlotPlacementMode]
   );
 
   const handlePointerLeave = useCallback(() => {
+    if (guideHoverSlot) return;
     setHoverXmm(null);
     setIsColliding(false);
-  }, []);
+  }, [guideHoverSlot]);
+
+  useEffect(() => {
+    if (!isFreePlacement || !selectedFurnitureId || spaceInfo.freePlacementGuideEditing || guideHoverSlot) return;
+
+    const firstGuideSlot = spaceInfo.freePlacementGuides?.[0];
+    if (!firstGuideSlot) return;
+
+    setGuideHoverSlot(firstGuideSlot);
+    setHoverZoneWidth(null);
+    setHoverXmm(firstGuideSlot.x + firstGuideSlot.width / 2 - (spaceInfo.width || 0) / 2);
+    setIsColliding(false);
+  }, [
+    isFreePlacement,
+    selectedFurnitureId,
+    spaceInfo.freePlacementGuideEditing,
+    spaceInfo.freePlacementGuides,
+    spaceInfo.width,
+    guideHoverSlot
+  ]);
 
   // R3F onClick - 클릭하면 즉시 배치, 배치 모드가 아니면 선택 해제
   const handleClick = useCallback(
     (e: any) => {
+      if (isGuideSlotPlacementMode) {
+        e.stopPropagation();
+        return;
+      }
       // HTML 버튼(좌/우 이동 화살표 등)이 이미 클릭을 처리한 경우 선택 해제하지 않음
       if ((window as any).__r3fClickHandled) {
         e.stopPropagation();
@@ -861,8 +893,75 @@ const FreePlacementDropZone: React.FC = () => {
         }
       }
     },
-    [activeModuleId, activeModuleData, effectiveDimensions, hoverXmm, isColliding, isSnapped, executePlacement]
+    [activeModuleId, activeModuleData, effectiveDimensions, hoverXmm, isColliding, isSnapped, executePlacement, isGuideSlotPlacementMode]
   );
+
+  useEffect(() => {
+    if (!isFreePlacement) return;
+
+    const setSlotPreview = (slot: FreePlacementGuideSlot | null) => {
+      setGuideHoverSlot(slot);
+      if (!slot) {
+        setHoverXmm(null);
+        setIsColliding(false);
+        return;
+      }
+
+      const centerXmm = slot.x + slot.width / 2 - (spaceInfo.width || 0) / 2;
+      setHoverZoneWidth(null);
+      setHoverXmm(centerXmm);
+      setIsColliding(false);
+    };
+
+    const handleGuideSlotHover = (event: Event) => {
+      const slot = (event as CustomEvent<FreePlacementGuideSlot>).detail;
+      if (!selectedFurnitureId || spaceInfo.freePlacementGuideEditing) return;
+      setSlotPreview(slot);
+    };
+
+    const handleGuideSlotLeave = () => {
+      if (spaceInfo.freePlacementGuideEditing) return;
+      setSlotPreview(null);
+    };
+
+    const handleGuideSlotClick = (event: Event) => {
+      const slot = (event as CustomEvent<FreePlacementGuideSlot>).detail;
+      if (!selectedFurnitureId || !activeModuleData || !activeDimensions || spaceInfo.freePlacementGuideEditing) return;
+
+      const centerXmm = slot.x + slot.width / 2 - (spaceInfo.width || 0) / 2;
+      const slotDimensions = { ...activeDimensions, width: slot.width };
+      const slotModuleData = {
+        ...activeModuleData,
+        dimensions: {
+          ...activeModuleData.dimensions,
+          width: slot.width
+        }
+      };
+      const placedId = executePlacement(selectedFurnitureId, centerXmm, slotDimensions, slotModuleData, false);
+      if (!placedId) return;
+
+      useFurnitureStore.getState().setFurniturePlacementMode(false);
+      useFurnitureStore.getState().setSelectedFurnitureId(null);
+      setSlotPreview(null);
+    };
+
+    window.addEventListener('free-placement-guide:slot-hover', handleGuideSlotHover);
+    window.addEventListener('free-placement-guide:slot-leave', handleGuideSlotLeave);
+    window.addEventListener('free-placement-guide:slot-click', handleGuideSlotClick);
+    return () => {
+      window.removeEventListener('free-placement-guide:slot-hover', handleGuideSlotHover);
+      window.removeEventListener('free-placement-guide:slot-leave', handleGuideSlotLeave);
+      window.removeEventListener('free-placement-guide:slot-click', handleGuideSlotClick);
+    };
+  }, [
+    isFreePlacement,
+    selectedFurnitureId,
+    activeModuleData,
+    activeDimensions,
+    executePlacement,
+    spaceInfo.freePlacementGuideEditing,
+    spaceInfo.width
+  ]);
 
   // 단내림 구간 감지 → 고스트 높이 조정
   const ghostDroppedZone = useMemo(() => {
@@ -992,8 +1091,18 @@ const FreePlacementDropZone: React.FC = () => {
       modData = activeModuleData;
     }
     // 편집 중 선반제거 토글 상태 실시간 반영
-    return withUpperSafetyShelfRemoved(modData, editingRemoveUpperSafetyShelf);
-  }, [activeModuleId, internalSpace, spaceInfo, activeModuleData, editingRemoveUpperSafetyShelf]);
+    const safeModuleData = withUpperSafetyShelfRemoved(modData, editingRemoveUpperSafetyShelf);
+    if (!spaceInfo.freePlacementGuideEditing && guideHoverSlot) {
+      return {
+        ...safeModuleData,
+        dimensions: {
+          ...safeModuleData.dimensions,
+          width: guideHoverSlot.width
+        }
+      };
+    }
+    return safeModuleData;
+  }, [activeModuleId, internalSpace, spaceInfo, activeModuleData, editingRemoveUpperSafetyShelf, guideHoverSlot]);
 
   // 고스트 Z 위치 계산 (SlotDropZonesSimple과 동일한 로직)
   const ghostZPosition = useMemo(() => {

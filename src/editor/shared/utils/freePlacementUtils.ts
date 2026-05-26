@@ -1,5 +1,5 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, type FreePlacementGuideSlot } from '@/store/core/spaceConfigStore';
 import { Column } from '@/types/space';
 import { SpaceCalculator } from './indexing';
 import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
@@ -109,6 +109,22 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
 }
 
 /**
+ * 자유배치 가이드 전용 X 범위.
+ * 가이드 와리는 사용자가 입력한 좌우 이격값만 공간 폭에서 제외한 폭을 기준으로 한다.
+ */
+export function getFreePlacementGuideBoundsX(spaceInfo: SpaceInfo): { startX: number; endX: number } {
+  const totalWidth = spaceInfo.width || 2400;
+  const halfW = totalWidth / 2;
+  const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
+  const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+
+  return {
+    startX: -halfW + leftGap,
+    endX: halfW - rightGap
+  };
+}
+
+/**
  * PlacedModule의 X 범위 반환 (mm 단위)
  */
 export function getModuleBoundsX(module: PlacedModule): FurnitureBoundsX {
@@ -139,6 +155,55 @@ export function getModuleCategory(module: PlacedModule): 'full' | 'upper' | 'low
   if (id.startsWith('upper-') || id.includes('-upper-')) return 'upper';
   if (id.startsWith('lower-') || id.includes('-lower-')) return 'lower';
   return 'full';
+}
+
+/**
+ * 자유배치 가이드 슬롯 중 아직 점유되지 않은 슬롯을 좌측부터 찾는다.
+ * upper/lower는 기존 자유배치 규칙처럼 같은 X 슬롯에 서로 공존할 수 있다.
+ */
+export function findAvailableFreeGuideSlot(
+  slots: FreePlacementGuideSlot[] | undefined,
+  placedModules: PlacedModule[],
+  spaceInfo: SpaceInfo,
+  category: 'full' | 'upper' | 'lower',
+  extraOccupiedBounds: FurnitureBoundsX[] = []
+): FreePlacementGuideSlot | null {
+  if (!slots || slots.length === 0) return null;
+
+  const spaceWidth = spaceInfo.width || 0;
+  const guideSlots = slots.map(slot => ({ ...slot, guideZone: slot.guideZone || 'full' as const }));
+  const hasUpperSlots = guideSlots.some(slot => slot.guideZone === 'upper');
+  const hasLowerSlots = guideSlots.some(slot => slot.guideZone === 'lower');
+  const sortedSlots = guideSlots
+    .filter(slot => {
+      if (category === 'upper') return hasUpperSlots ? slot.guideZone === 'upper' : slot.guideZone === 'full';
+      if (category === 'lower') return hasLowerSlots ? slot.guideZone === 'lower' : slot.guideZone === 'full';
+      return slot.guideZone === 'full';
+    })
+    .sort((a, b) => a.x - b.x);
+  const existingBounds = placedModules
+    .filter(module => module.isFreePlacement && !module.isSurroundPanel)
+    .map(getModuleBoundsX)
+    .concat(extraOccupiedBounds);
+
+  for (const slot of sortedSlots) {
+    const slotLeft = slot.x - spaceWidth / 2;
+    const slotRight = slot.x + slot.width - spaceWidth / 2;
+    const isOccupied = existingBounds.some(bounds => {
+      const overlaps = bounds.left < slotRight - 0.5 && bounds.right > slotLeft + 0.5;
+      if (!overlaps) return false;
+
+      const canCoexist =
+        (category === 'upper' && bounds.category === 'lower') ||
+        (category === 'lower' && bounds.category === 'upper');
+
+      return !canCoexist;
+    });
+
+    if (!isOccupied) return slot;
+  }
+
+  return null;
 }
 
 /**

@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
-import { getInternalSpaceBoundsX, getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { getInternalSpaceBoundsX, getModuleBoundsX, findAvailableFreeGuideSlot, getColumnObstacleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, CUSTOMIZABLE_DEFAULTS } from './CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
@@ -21,6 +21,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
+  const { spaceInfo } = useSpaceConfigStore();
   const { openFurniturePopup, setIsSlotDragging } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -29,8 +30,13 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 모듈 유효성 검사
   const validation = validateModuleForInternalSpace(module, internalSpace);
-  const isValid = validation.isValid;
-  const needsWarning = validation.needsWarning || false;
+  const isGuideSlotPlacementMode = spaceInfo.layoutMode === 'free-placement'
+    && !spaceInfo.freePlacementGuideEditing
+    && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+  const isValid = isGuideSlotPlacementMode
+    ? module.dimensions.height <= internalSpace.height && module.dimensions.depth <= internalSpace.depth
+    : validation.isValid;
+  const needsWarning = isGuideSlotPlacementMode ? false : (validation.needsWarning || false);
   const isDynamic = module.isDynamic;
 
   // 도어 버튼 클릭 핸들러
@@ -124,6 +130,54 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
           }
         : moduleData.dimensions;
       moduleData = { ...moduleData, dimensions: dims };
+    }
+
+    const isGuideSlotPlacementMode = !spaceInfo.freePlacementGuideEditing
+      && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+    if (isGuideSlotPlacementMode) {
+      const targetSlot = findAvailableFreeGuideSlot(
+        spaceInfo.freePlacementGuides,
+        placedModules,
+        spaceInfo,
+        (moduleData.category || 'full') as 'full' | 'upper' | 'lower',
+        getColumnObstacleBoundsX(spaceInfo.columns || [])
+      );
+      if (!targetSlot) {
+        console.warn('❌ [가이드 슬롯 자동배치] 배치할 빈 슬롯이 없습니다');
+        return;
+      }
+
+      const slotDims = { ...dims, width: targetSlot.width };
+      const slotModuleData = {
+        ...moduleData,
+        dimensions: {
+          ...moduleData.dimensions,
+          width: targetSlot.width
+        }
+      };
+      const targetX = targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2;
+      const pendingPlacement = useMyCabinetStore.getState().pendingPlacement;
+      const result = placeFurnitureFree({
+        moduleId: module.id,
+        xPositionMM: targetX,
+        spaceInfo,
+        dimensions: slotDims,
+        existingModules: placedModules,
+        moduleData: slotModuleData,
+        pendingPlacement,
+      });
+
+      if (result.success && result.module) {
+        furnitureStore.addModule(result.module);
+        if (result.additionalModules && result.additionalModules.length > 0) {
+          result.additionalModules.forEach(m => furnitureStore.addModule(m));
+        }
+        furnitureStore.setFurniturePlacementMode(false);
+        furnitureStore.setSelectedFurnitureId(null);
+      } else {
+        console.warn('❌ [가이드 슬롯 자동배치] 배치 실패:', result.error);
+      }
+      return;
     }
 
     const furnitureWidth = dims.width;

@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Html } from '@react-three/drei';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, type FreePlacementGuideSlot } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
@@ -9,10 +9,245 @@ import { useUIStore } from '@/store/uiStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import type { ModuleData } from '@/data/modules/shelving';
+import { NativeLine } from './NativeLine';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { getFreePlacementGuideBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface SlotPlacementIndicatorsProps {
   onSlotClick: (slotIndex: number, zone?: 'normal' | 'dropped') => void;
 }
+
+interface FreeGuideSlotWidthInputProps {
+  slot: FreePlacementGuideSlot;
+  onCommit: (slotId: string, widthValue: number) => void;
+  onEdit: (slotId: string) => void;
+  onAdd: (slotId: string) => void;
+  onRemove: (slotId: string) => void;
+  onSplit: (slotId: string) => void;
+  canRemove: boolean;
+  canSplit: boolean;
+}
+
+const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({ slot, onCommit, onEdit, onAdd, onRemove, onSplit, canRemove, canSplit }) => {
+  const [value, setValue] = useState(String(Math.round(slot.width)));
+
+  useEffect(() => {
+    setValue(String(Math.round(slot.width)));
+  }, [slot.width]);
+
+  const commit = () => {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      onCommit(slot.id, parsed);
+    } else {
+      setValue(String(Math.round(slot.width)));
+    }
+  };
+
+  if (slot.confirmed) {
+    return (
+      <div
+        style={{
+          display: 'grid',
+          justifyItems: 'center',
+          gap: '3px'
+        }}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '22px',
+            padding: '0 8px',
+            borderRadius: '6px',
+            border: '1px solid color-mix(in srgb, var(--theme-primary) 36%, transparent)',
+            background: 'color-mix(in srgb, var(--theme-primary) 16%, var(--theme-background) 84%)',
+            color: 'var(--theme-text)',
+            boxShadow: '0 1px 4px rgba(15, 23, 42, 0.14)',
+            fontSize: '11px',
+            fontWeight: 800,
+            whiteSpace: 'nowrap',
+            fontVariantNumeric: 'tabular-nums'
+          }}
+        >
+          {Math.round(slot.width)}mm
+        </div>
+        <button
+          type="button"
+          onClick={() => onEdit(slot.id)}
+          style={{
+            height: '20px',
+            minWidth: '42px',
+            padding: '0 8px',
+            borderRadius: '6px',
+            border: '1px solid color-mix(in srgb, var(--theme-primary) 42%, transparent)',
+            background: 'var(--theme-background)',
+            color: 'var(--theme-primary)',
+            fontSize: '10px',
+            fontWeight: 800,
+            lineHeight: '1',
+            boxShadow: '0 1px 4px rgba(15, 23, 42, 0.12)',
+            cursor: 'pointer'
+          }}
+        >
+          수정
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        justifyItems: 'center',
+        gap: '3px'
+      }}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <label
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2px',
+          height: '22px',
+          padding: '0 7px',
+          borderRadius: '6px',
+          border: '1px solid color-mix(in srgb, var(--theme-primary) 36%, transparent)',
+          background: 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-background) 88%)',
+          color: 'var(--theme-text)',
+          boxShadow: '0 1px 4px rgba(15, 23, 42, 0.14)',
+          fontSize: '11px',
+          fontWeight: 700,
+          whiteSpace: 'nowrap'
+        }}
+      >
+        <input
+          type="text"
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => setValue(e.target.value.replace(/[^\d.]/g, ''))}
+          onFocus={(e) => e.currentTarget.select()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              commit();
+              e.currentTarget.blur();
+            }
+            if (e.key === 'Escape') {
+              setValue(String(Math.round(slot.width)));
+              e.currentTarget.blur();
+            }
+          }}
+          style={{
+            width: `${Math.max(34, Math.min(62, value.length * 8 + 10))}px`,
+            height: '18px',
+            padding: 0,
+            border: 'none',
+            background: 'transparent',
+            color: 'var(--theme-text)',
+            fontSize: '11px',
+            fontWeight: 800,
+            textAlign: 'right',
+            outline: 'none',
+            fontVariantNumeric: 'tabular-nums'
+          }}
+        />
+        <span style={{ color: 'var(--theme-text-muted)', fontSize: '10px', fontWeight: 700 }}>mm</span>
+      </label>
+      <button
+        type="button"
+        onClick={commit}
+        style={{
+          height: '20px',
+          minWidth: '42px',
+          padding: '0 8px',
+          borderRadius: '6px',
+          border: '1px solid var(--theme-primary)',
+          background: 'var(--theme-primary)',
+          color: '#fff',
+          fontSize: '10px',
+          fontWeight: 800,
+          lineHeight: '1',
+          boxShadow: '0 2px 6px color-mix(in srgb, var(--theme-primary) 24%, transparent)',
+          cursor: 'pointer'
+        }}
+      >
+        확인
+      </button>
+      <div
+        style={{
+          display: 'flex',
+          gap: '4px'
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => onAdd(slot.id)}
+          style={{
+            height: '20px',
+            minWidth: '38px',
+            padding: '0 7px',
+            borderRadius: '6px',
+            border: '1px solid color-mix(in srgb, var(--theme-primary) 45%, transparent)',
+            background: 'color-mix(in srgb, var(--theme-primary) 10%, var(--theme-background) 90%)',
+            color: 'var(--theme-primary)',
+            fontSize: '10px',
+            fontWeight: 800,
+            lineHeight: '1',
+            cursor: 'pointer'
+          }}
+        >
+          추가
+        </button>
+        <button
+          type="button"
+          onClick={() => onRemove(slot.id)}
+          disabled={!canRemove}
+          style={{
+            height: '20px',
+            minWidth: '38px',
+            padding: '0 7px',
+            borderRadius: '6px',
+            border: '1px solid color-mix(in srgb, var(--theme-text-muted) 34%, transparent)',
+            background: 'var(--theme-background)',
+            color: canRemove ? 'var(--theme-text-secondary)' : 'var(--theme-text-muted)',
+            fontSize: '10px',
+            fontWeight: 800,
+            lineHeight: '1',
+            opacity: canRemove ? 1 : 0.45,
+            cursor: canRemove ? 'pointer' : 'not-allowed'
+          }}
+        >
+          제거
+        </button>
+      </div>
+      {canSplit && (
+        <button
+          type="button"
+          onClick={() => onSplit(slot.id)}
+          style={{
+            height: '20px',
+            minWidth: '80px',
+            padding: '0 7px',
+            borderRadius: '6px',
+            border: '1px solid color-mix(in srgb, var(--theme-primary) 38%, transparent)',
+            background: 'var(--theme-background)',
+            color: 'var(--theme-primary)',
+            fontSize: '10px',
+            fontWeight: 800,
+            lineHeight: '1',
+            cursor: 'pointer'
+          }}
+        >
+          분할
+        </button>
+      )}
+    </div>
+  );
+};
 
 /**
  * 슬롯에 + 아이콘을 표시하는 컴포넌트
@@ -20,10 +255,11 @@ interface SlotPlacementIndicatorsProps {
  * - 듀얼 가구: 연속된 두 빈 슬롯의 중심에 + 표시
  */
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
-  const { spaceInfo } = useSpaceConfigStore();
+  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
-  const { view2DTheme, viewMode, activePlacementWall } = useUIStore();
+  const { view2DTheme, viewMode, activePlacementWall, view2DDirection } = useUIStore();
   const { pendingPlacement } = useMyCabinetStore();
+  const { colors } = useThemeColors();
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
@@ -244,7 +480,608 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     return slots;
   }, [selectedModuleData, isDualFurniture, indexing, placedModules, spaceInfo]);
 
-  if (!selectedFurnitureId || !selectedModuleData || isFreePlacement) {
+  const isSameGuideLine = (
+    slot: FreePlacementGuideSlot,
+    targetZone: 'full' | 'upper' | 'lower',
+    targetGroupId?: string
+  ) => (
+    (slot.guideZone || 'full') === targetZone
+    && (targetZone !== 'full' || (slot.guideGroupId || '') === (targetGroupId || ''))
+  );
+
+  const updateFreeGuideSlotWidth = (slotId: string, widthValue: number) => {
+    const sourceSlots = spaceInfo.freePlacementGuides || [];
+    if (sourceSlots.length === 0) return;
+
+    const bounds = getFreePlacementGuideBoundsX(spaceInfo);
+    const totalGuideWidth = Math.max(0, bounds.endX - bounds.startX);
+    const minSlotWidth = 1;
+    const targetSlot = sourceSlots.find((slot) => slot.id === slotId);
+    if (!targetSlot) return;
+    const targetZone = targetSlot.guideZone || 'full';
+    const targetGroupId = targetZone === 'full' ? targetSlot.guideGroupId : undefined;
+    const groupSlots = sourceSlots.filter((slot) => slot.guideGroupId === targetGroupId && slot.width > 0);
+    const groupBounds = targetGroupId
+      ? {
+          startX: Math.min(...groupSlots.map((slot) => slot.x)),
+          endX: Math.max(...groupSlots.map((slot) => slot.x + slot.width))
+        }
+      : {
+          startX: bounds.startX + (spaceInfo.width || 0) / 2,
+          endX: bounds.endX + (spaceInfo.width || 0) / 2
+        };
+    const targetZoneSlots = sourceSlots.filter((slot) => isSameGuideLine(slot, targetZone, targetGroupId));
+
+    const otherConfirmedWidth = targetZoneSlots
+      .filter((slot) => slot.id !== slotId && slot.confirmed)
+      .reduce((sum, slot) => sum + slot.width, 0);
+    const unconfirmedCountAfterCommit = targetZoneSlots.filter((slot) => slot.id !== slotId && !slot.confirmed).length;
+    const groupWidth = Math.max(0, groupBounds.endX - groupBounds.startX);
+    const maxTargetWidth = Math.max(minSlotWidth, groupWidth - otherConfirmedWidth - (unconfirmedCountAfterCommit * minSlotWidth));
+    const confirmedTargetWidth = Math.min(Math.max(minSlotWidth, widthValue), maxTargetWidth);
+
+    const slotsWithTargetConfirmed = targetZoneSlots.map((slot) => (
+      slot.id === slotId
+        ? { ...slot, width: confirmedTargetWidth, confirmed: true }
+        : slot
+    ));
+    const confirmedWidth = slotsWithTargetConfirmed
+      .filter((slot) => slot.confirmed)
+      .reduce((sum, slot) => sum + slot.width, 0);
+    const unconfirmedSlots = slotsWithTargetConfirmed.filter((slot) => !slot.confirmed);
+    const redistributedWidth = unconfirmedSlots.length > 0
+      ? Math.max(minSlotWidth, (groupWidth - confirmedWidth) / unconfirmedSlots.length)
+      : 0;
+
+    let cursorX = groupBounds.startX;
+    const nextZoneSlots = slotsWithTargetConfirmed.map((slot, index) => {
+      const width = slot.confirmed ? slot.width : redistributedWidth;
+      const nextSlot = { ...slot, index, x: cursorX, width };
+      cursorX += width;
+      return nextSlot;
+    });
+
+    const nextSlots = sourceSlots
+      .filter((slot) => !isSameGuideLine(slot, targetZone, targetGroupId))
+      .concat(nextZoneSlots)
+      .sort((a, b) => {
+        const zoneOrder = { full: 0, upper: 1, lower: 2 };
+        return zoneOrder[a.guideZone || 'full'] - zoneOrder[b.guideZone || 'full'] || a.index - b.index;
+      });
+
+    setSpaceInfo({ freePlacementGuides: nextSlots });
+  };
+
+  const normalizeFreeGuideSlots = (sourceSlots: FreePlacementGuideSlot[], guideZone?: 'full' | 'upper' | 'lower', guideGroupId?: string): FreePlacementGuideSlot[] => {
+    if (sourceSlots.length === 0) return [];
+
+    const targetZone = guideZone || sourceSlots[0]?.guideZone || 'full';
+    const targetSeedSlot = sourceSlots.find((slot) => (slot.guideZone || 'full') === targetZone);
+    const targetGroupId = targetZone === 'full' ? (guideGroupId ?? targetSeedSlot?.guideGroupId) : undefined;
+    const targetZoneSlots = sourceSlots.filter((slot) => isSameGuideLine(slot, targetZone, targetGroupId));
+    const otherSlots = sourceSlots.filter((slot) => !isSameGuideLine(slot, targetZone, targetGroupId));
+    const bounds = getFreePlacementGuideBoundsX(spaceInfo);
+    const groupSlots = sourceSlots.filter((slot) => slot.guideGroupId === targetGroupId && slot.width > 0);
+    const groupBounds = targetGroupId
+      ? {
+          startX: Math.min(...groupSlots.map((slot) => slot.x)),
+          endX: Math.max(...groupSlots.map((slot) => slot.x + slot.width))
+        }
+      : {
+          startX: bounds.startX + (spaceInfo.width || 0) / 2,
+          endX: bounds.endX + (spaceInfo.width || 0) / 2
+        };
+    const totalGuideWidth = Math.max(0, groupBounds.endX - groupBounds.startX);
+    const minSlotWidth = 1;
+    const sortedSlots = [...targetZoneSlots].sort((a, b) => a.index - b.index);
+    const unconfirmedCount = sortedSlots.filter((slot) => !slot.confirmed).length;
+    const confirmedWidth = sortedSlots
+      .filter((slot) => slot.confirmed)
+      .reduce((sum, slot) => sum + slot.width, 0);
+    const maxConfirmedWidth = Math.max(0, totalGuideWidth - (unconfirmedCount * minSlotWidth));
+    const confirmedScale = confirmedWidth > maxConfirmedWidth && confirmedWidth > 0
+      ? maxConfirmedWidth / confirmedWidth
+      : 1;
+    const scaledConfirmedWidth = sortedSlots
+      .filter((slot) => slot.confirmed)
+      .reduce((sum, slot) => sum + (slot.width * confirmedScale), 0);
+    const redistributedWidth = unconfirmedCount > 0
+      ? Math.max(minSlotWidth, (totalGuideWidth - scaledConfirmedWidth) / unconfirmedCount)
+      : 0;
+
+    let cursorX = groupBounds.startX;
+
+    const normalizedSlots = sortedSlots.map((slot, index) => {
+      const width = slot.confirmed
+        ? Math.max(minSlotWidth, slot.width * confirmedScale)
+        : redistributedWidth;
+      const nextSlot = {
+        ...slot,
+        index,
+        x: cursorX,
+        width,
+        guideZone: targetZone,
+        guideGroupId: targetGroupId
+      };
+      cursorX += width;
+      return nextSlot;
+    });
+
+    return otherSlots
+      .concat(normalizedSlots)
+      .sort((a, b) => {
+        const zoneOrder = { full: 0, upper: 1, lower: 2 };
+        return zoneOrder[a.guideZone || 'full'] - zoneOrder[b.guideZone || 'full'] || a.index - b.index;
+      });
+  };
+
+  const addFreeGuideSlot = (slotId: string) => {
+    const sourceSlots = spaceInfo.freePlacementGuides || [];
+    if (sourceSlots.length >= 30) return;
+    const targetSlot = sourceSlots.find((slot) => slot.id === slotId);
+    if (!targetSlot) return;
+    const targetZone = targetSlot?.guideZone || 'full';
+    const targetGroupId = targetZone === 'full' ? targetSlot?.guideGroupId : undefined;
+    const targetZoneSlots = sourceSlots
+      .filter((slot) => isSameGuideLine(slot, targetZone, targetGroupId))
+      .sort((a, b) => a.x - b.x);
+    if (targetZoneSlots.length === 0) return;
+    const guideBounds = getFreePlacementGuideBoundsX(spaceInfo);
+    const groupStartX = targetZone === 'full'
+      ? Math.min(...targetZoneSlots.map((slot) => slot.x))
+      : guideBounds.startX + (spaceInfo.width || 0) / 2;
+    const groupEndX = targetZone === 'full'
+      ? Math.max(...targetZoneSlots.map((slot) => slot.x + slot.width))
+      : guideBounds.endX + (spaceInfo.width || 0) / 2;
+    const groupWidth = Math.max(0, groupEndX - groupStartX);
+    const nextCount = targetZoneSlots.length + 1;
+    const nextWidth = groupWidth / nextCount;
+
+    const nextSlot: FreePlacementGuideSlot = {
+      id: `free-guide-${Date.now()}`,
+      index: nextCount - 1,
+      x: groupStartX + nextWidth * (nextCount - 1),
+      width: nextWidth,
+      guideZone: targetZone,
+      guideGroupId: targetZone === 'full' ? targetGroupId : undefined,
+      confirmed: false
+    };
+    const nextTargetSlots = [...targetZoneSlots, nextSlot].map((slot, index) => ({
+      ...slot,
+      index,
+      x: groupStartX + nextWidth * index,
+      width: nextWidth,
+      guideGroupId: targetZone === 'full' ? targetGroupId : undefined,
+      confirmed: false
+    }));
+    const otherSlots = sourceSlots.filter((slot) => !isSameGuideLine(slot, targetZone, targetGroupId));
+
+    setSpaceInfo({
+      freePlacementGuides: otherSlots
+        .concat(nextTargetSlots)
+        .sort((a, b) => {
+          const zoneOrder = { full: 0, upper: 1, lower: 2 };
+          return zoneOrder[a.guideZone || 'full'] - zoneOrder[b.guideZone || 'full'] || a.index - b.index;
+        })
+    });
+  };
+
+  const removeFreeGuideSlot = (slotId: string) => {
+    const sourceSlots = spaceInfo.freePlacementGuides || [];
+    const targetSlot = sourceSlots.find((slot) => slot.id === slotId);
+    const targetZone = targetSlot?.guideZone || 'full';
+    const targetGroupId = targetZone === 'full' ? targetSlot?.guideGroupId : undefined;
+    const targetZoneSlots = sourceSlots
+      .filter((slot) => isSameGuideLine(slot, targetZone, targetGroupId))
+      .sort((a, b) => a.x - b.x);
+    if (targetZoneSlots.length <= 1) return;
+    const guideBounds = getFreePlacementGuideBoundsX(spaceInfo);
+    const groupStartX = targetZone === 'full'
+      ? Math.min(...targetZoneSlots.map((slot) => slot.x))
+      : guideBounds.startX + (spaceInfo.width || 0) / 2;
+    const groupEndX = targetZone === 'full'
+      ? Math.max(...targetZoneSlots.map((slot) => slot.x + slot.width))
+      : guideBounds.endX + (spaceInfo.width || 0) / 2;
+    const groupWidth = Math.max(0, groupEndX - groupStartX);
+    const remainingTargetSlots = targetZoneSlots.filter((slot) => slot.id !== slotId);
+    const nextWidth = groupWidth / remainingTargetSlots.length;
+    const nextTargetSlots = remainingTargetSlots.map((slot, index) => ({
+      ...slot,
+      index,
+      x: groupStartX + nextWidth * index,
+      width: nextWidth,
+      guideGroupId: targetZone === 'full' ? targetGroupId : undefined,
+      confirmed: false
+    }));
+    const otherSlots = sourceSlots.filter((slot) => !isSameGuideLine(slot, targetZone, targetGroupId));
+
+    setSpaceInfo({
+      freePlacementGuides: otherSlots
+        .concat(nextTargetSlots)
+        .sort((a, b) => {
+          const zoneOrder = { full: 0, upper: 1, lower: 2 };
+          return zoneOrder[a.guideZone || 'full'] - zoneOrder[b.guideZone || 'full'] || a.index - b.index;
+        })
+    });
+  };
+
+  const splitFreeGuideSlot = (slotId: string) => {
+    const sourceSlots = spaceInfo.freePlacementGuides || [];
+    const targetSlot = sourceSlots.find((slot) => slot.id === slotId);
+    if (!targetSlot || (targetSlot.guideZone || 'full') !== 'full') return;
+    const guideGroupId = targetSlot.guideGroupId || targetSlot.id;
+
+    const baseSlot = {
+      index: 0,
+      x: targetSlot.x,
+      width: targetSlot.width,
+      confirmed: targetSlot.confirmed,
+      guideGroupId
+    };
+    const upperSlot: FreePlacementGuideSlot = {
+      ...baseSlot,
+      id: `${targetSlot.id}-upper-${Date.now()}`,
+      guideZone: 'upper'
+    };
+    const lowerSlot: FreePlacementGuideSlot = {
+      ...baseSlot,
+      id: `${targetSlot.id}-lower-${Date.now()}`,
+      guideZone: 'lower'
+    };
+    const nextSlots = sourceSlots
+      .filter((slot) => slot.id !== slotId)
+      .concat([upperSlot, lowerSlot]);
+
+    setSpaceInfo({
+      freePlacementGuides: nextSlots
+    });
+  };
+
+  const editFreeGuideSlotWidth = (slotId: string) => {
+    setSpaceInfo({
+      freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((slot) => (
+        slot.id === slotId ? { ...slot, confirmed: false } : slot
+      ))
+    });
+  };
+
+  if (isFreePlacement) {
+    const guideSlots = (spaceInfo.freePlacementGuides || []).map((slot) => ({
+      ...slot,
+      guideZone: slot.guideZone || 'full' as const
+    }));
+    if (guideSlots.length === 0 || (viewMode === '2D' && view2DDirection !== 'front')) {
+      return null;
+    }
+
+    const fullHeight = spaceInfo.height * 0.01;
+    const splitY = fullHeight * 0.5;
+    const hasSplitSlots = guideSlots.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower');
+    const getSlotYRange = (slot: FreePlacementGuideSlot): [number, number] => {
+      const zone = slot.guideZone || 'full';
+      if (zone === 'upper') return [splitY, fullHeight];
+      if (zone === 'lower') return [0, splitY];
+      return [0, fullHeight];
+    };
+    const getSlotControlY = (slot: FreePlacementGuideSlot) => {
+      const [startY, endY] = getSlotYRange(slot);
+      return (startY + endY) / 2;
+    };
+    const getSlotLabelY = (slot: FreePlacementGuideSlot) => {
+      const zone = slot.guideZone || 'full';
+      if (zone === 'upper' && hasSplitSlots) return splitY + 0.74;
+      if (zone === 'lower' && hasSplitSlots) return splitY - 0.74;
+      return fullHeight + 0.28;
+    };
+    const guideZ = 0.006;
+    const guideColor = colors.primary || '#3b82f6';
+    const isGuideEditing = spaceInfo.freePlacementGuideEditing === true;
+    const guideBounds = getFreePlacementGuideBoundsX(spaceInfo);
+    const guideEndX = guideBounds.endX + spaceInfo.width / 2;
+    const lastSlotEndX = Math.max(...guideSlots.map((slot) => slot.x + slot.width));
+    const remainingFreeWidth = Math.max(0, guideEndX - lastSlotEndX);
+    const remainingFreeLabelX = lastSlotEndX + remainingFreeWidth / 2;
+    const unconfirmedSummaryKeys = Array.from(new Set(
+      guideSlots
+        .filter((slot) => !slot.confirmed)
+        .map((slot) => {
+          const zone = slot.guideZone || 'full';
+          return `${zone}:${zone === 'full' ? (slot.guideGroupId || '') : ''}`;
+        })
+    ));
+    const unconfirmedSummaries = unconfirmedSummaryKeys.map((key) => {
+      const [zone, groupId] = key.split(':') as ['full' | 'upper' | 'lower', string];
+      const slotsForZone = guideSlots.filter((slot) => (
+        isSameGuideLine(slot, zone, groupId || undefined)
+        && !slot.confirmed
+      ));
+      const totalWidth = slotsForZone.reduce((sum, slot) => sum + slot.width, 0);
+      const labelX = slotsForZone.length > 0
+        ? (
+          Math.min(...slotsForZone.map((slot) => slot.x))
+          + Math.max(...slotsForZone.map((slot) => slot.x + slot.width))
+        ) / 2
+        : 0;
+
+      return {
+        zone,
+        groupId,
+        totalWidth,
+        labelX,
+        labelY: zone === 'upper' && hasSplitSlots
+          ? splitY + 0.74
+          : zone === 'lower' && hasSplitSlots
+            ? splitY - 0.74
+            : fullHeight + 0.28
+      };
+    });
+    const canUseGuideSlot = (slot: FreePlacementGuideSlot) => {
+      const zone = slot.guideZone || 'full';
+      if (zone === 'full') return true;
+      return selectedModuleData?.category === zone;
+    };
+
+    return (
+      <>
+        {guideSlots.flatMap((slot) => {
+          const [startY, endY] = getSlotYRange(slot);
+          const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
+          const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+
+          return [
+            <NativeLine
+              key={`free-guide-boundary-left-${slot.id}`}
+              name="free-placement-guide-line"
+              points={[
+                [leftX, startY, guideZ],
+                [leftX, endY, guideZ]
+              ]}
+              color={guideColor}
+              lineWidth={1.2}
+              dashed
+              dashSize={0.08}
+              gapSize={0.05}
+              opacity={0.42}
+              transparent
+              depthTest={false}
+              depthWrite={false}
+              renderOrder={100000}
+            />,
+            <NativeLine
+              key={`free-guide-boundary-right-${slot.id}`}
+              name="free-placement-guide-line"
+              points={[
+                [rightX, startY, guideZ],
+                [rightX, endY, guideZ]
+              ]}
+              color={guideColor}
+              lineWidth={1.2}
+              dashed
+              dashSize={0.08}
+              gapSize={0.05}
+              opacity={0.42}
+              transparent
+              depthTest={false}
+              depthWrite={false}
+              renderOrder={100000}
+            />
+          ];
+        })}
+
+        {hasSplitSlots && (
+          <NativeLine
+            key="free-guide-split-line"
+            name="free-placement-guide-split-line"
+            points={[
+              [(guideBounds.startX) * 0.01, splitY, guideZ],
+              [(guideBounds.endX) * 0.01, splitY, guideZ]
+            ]}
+            color={guideColor}
+            lineWidth={1.2}
+            dashed
+            dashSize={0.08}
+            gapSize={0.05}
+            opacity={0.32}
+            transparent
+            depthTest={false}
+            depthWrite={false}
+            renderOrder={100000}
+          />
+        )}
+
+        {guideSlots.map((slot) => {
+          if (!slot.confirmed) return null;
+
+          const centerX = (slot.x + slot.width / 2 - spaceInfo.width / 2) * 0.01;
+
+          return (
+            <Html
+              key={`free-guide-top-width-${slot.id}`}
+              position={[centerX, getSlotLabelY(slot), 0]}
+              center
+              style={{
+                pointerEvents: 'none',
+                userSelect: 'none',
+                background: 'transparent'
+              }}
+            >
+              <div
+                style={{
+                  color: 'var(--theme-text)',
+                  fontSize: '11px',
+                  fontWeight: 900,
+                  lineHeight: '1',
+                  fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap',
+                  textShadow: '0 1px 2px var(--theme-background), 0 -1px 2px var(--theme-background)'
+                }}
+              >
+                {Math.round(slot.width)}
+              </div>
+            </Html>
+          );
+        })}
+
+        {unconfirmedSummaries.map((summary) => summary.totalWidth > 0 && (
+          <Html
+            key={`free-guide-unconfirmed-${summary.zone}`}
+            position={[(summary.labelX - spaceInfo.width / 2) * 0.01, summary.labelY, 0]}
+            center
+            style={{
+              pointerEvents: 'none',
+              userSelect: 'none',
+              background: 'transparent'
+            }}
+          >
+            <div
+              style={{
+                height: '20px',
+                padding: '0 7px',
+                borderRadius: '6px',
+                border: '1px solid rgba(148, 163, 184, 0.45)',
+                background: 'color-mix(in srgb, var(--theme-background) 86%, #64748b 14%)',
+                color: 'var(--theme-text-muted)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.12)',
+                fontSize: '10px',
+                fontWeight: 800,
+                lineHeight: '18px',
+                fontVariantNumeric: 'tabular-nums',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {Math.round(summary.totalWidth)}
+            </div>
+          </Html>
+        ))}
+
+        {!hasSplitSlots && remainingFreeWidth > 0.5 && (
+          <Html
+            position={[(remainingFreeLabelX - spaceInfo.width / 2) * 0.01, fullHeight + 0.28, 0]}
+            center
+            style={{
+              pointerEvents: 'none',
+              userSelect: 'none',
+              background: 'transparent'
+            }}
+          >
+            <div
+              style={{
+                height: '20px',
+                padding: '0 7px',
+                borderRadius: '6px',
+                border: '1px solid rgba(148, 163, 184, 0.45)',
+                background: 'color-mix(in srgb, var(--theme-background) 86%, #64748b 14%)',
+                color: 'var(--theme-text-muted)',
+                boxShadow: '0 1px 4px rgba(15, 23, 42, 0.12)',
+                fontSize: '10px',
+                fontWeight: 800,
+                lineHeight: '18px',
+                fontVariantNumeric: 'tabular-nums',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {Math.round(remainingFreeWidth)}
+            </div>
+          </Html>
+        )}
+
+        {guideSlots.map((slot) => {
+          const centerX = (slot.x + slot.width / 2 - spaceInfo.width / 2) * 0.01;
+          const canPlaceInSlot = canUseGuideSlot(slot);
+          const slotZone = slot.guideZone || 'full';
+          const sameZoneSlotCount = guideSlots.filter((item) => (
+            isSameGuideLine(item, slotZone, slotZone === 'full' ? slot.guideGroupId : undefined)
+          )).length;
+
+          return (
+            <Html
+              key={slot.id}
+              position={[centerX, getSlotControlY(slot), 0]}
+              center
+              style={{
+                pointerEvents: 'none',
+                userSelect: 'none',
+                background: 'transparent'
+              }}
+            >
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  (window as any).__r3fClickHandled = true;
+                  if (!isGuideEditing && canPlaceInSlot) {
+                    window.dispatchEvent(new CustomEvent('free-placement-guide:slot-click', { detail: slot }));
+                  }
+                }}
+                onPointerEnter={() => {
+                  if (!isGuideEditing && canPlaceInSlot) {
+                    window.dispatchEvent(new CustomEvent('free-placement-guide:slot-hover', { detail: slot }));
+                  }
+                }}
+                onPointerLeave={() => {
+                  if (!isGuideEditing) {
+                    window.dispatchEvent(new CustomEvent('free-placement-guide:slot-leave', { detail: slot }));
+                  }
+                }}
+                style={{
+                  display: 'grid',
+                  justifyItems: 'center',
+                  gap: '4px',
+                  pointerEvents: 'auto'
+                }}
+              >
+                {!isGuideEditing && canPlaceInSlot && (
+                  <button
+                    type="button"
+                    style={{
+                      width: '27px',
+                      height: '27px',
+                      borderRadius: '50%',
+                      background: 'var(--theme-primary)',
+                      border: '1.5px solid rgba(255, 255, 255, 0.92)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      boxShadow: '0 3px 10px rgba(15, 23, 42, 0.22)',
+                      transition: 'all 0.2s ease',
+                      fontSize: '20px',
+                      color: 'white',
+                      fontWeight: 700,
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.35)',
+                      lineHeight: '1',
+                      padding: 0
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'scale(1.08)';
+                      e.currentTarget.style.boxShadow = '0 5px 14px rgba(15, 23, 42, 0.28)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'scale(1)';
+                      e.currentTarget.style.boxShadow = '0 3px 10px rgba(15, 23, 42, 0.22)';
+                    }}
+                  >
+                    +
+                  </button>
+                )}
+                <FreeGuideSlotWidthInput
+                  slot={slot}
+                  onCommit={updateFreeGuideSlotWidth}
+                  onEdit={editFreeGuideSlotWidth}
+                  onAdd={addFreeGuideSlot}
+                  onRemove={removeFreeGuideSlot}
+                  onSplit={splitFreeGuideSlot}
+                  canRemove={sameZoneSlotCount > 1}
+                  canSplit={(slot.guideZone || 'full') === 'full'}
+                />
+              </div>
+            </Html>
+          );
+        })}
+      </>
+    );
+  }
+
+  if (!selectedFurnitureId || !selectedModuleData) {
 // console.log('🔵 SlotPlacementIndicators - 렌더링 안함:', { selectedFurnitureId, selectedModuleData: !!selectedModuleData });
     return null;
   }
