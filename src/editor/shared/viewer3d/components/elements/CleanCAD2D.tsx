@@ -8821,39 +8821,130 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
-                {!isTopFrameOff && topFrameDimensionHeight > 0 && (
-                <group>
-                  <Line
-                    points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
-                    color={topSegmentColor}
-                    lineWidth={0.6}
-                  />
-                  <Line
-                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.015, rightDimensionZ])}
-                    color={topSegmentColor}
-                    lineWidth={0.6}
-                  />
-                  <Line
-                    points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.015, rightDimensionZ])}
-                    color={topSegmentColor}
-                    lineWidth={0.6}
-                  />
-                  <Text
-                  renderOrder={100001}
-                  depthTest={false}
-                    position={[0, (cabinetAreaTopY + topFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-                  >
-                    {topFrameDimensionValue || topFrameDimensionHeight}
-                  </Text>
-                </group>
-                )}
+                {!isTopFrameOff && topFrameDimensionHeight > 0 && (() => {
+                  // EP 모드: ㄱ자 EP 전면 세로(=80) + 도어 상단~EP 안쪽 갭 두 개로 분리 표시
+                  // 인조대리석 모드 등 EP 미설치: 기존대로 한 줄(상단몰딩 높이) 표시
+                  const epRefMod = topFrameRefMod ?? viewMod;
+                  const epEnabled = epRefMod?.hasTopEndPanel === true;
+                  const epFrontHeightMm = 80;
+                  const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
+                  const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
+
+                  if (!isEpSplit) {
+                    return (
+                      <group>
+                        <Line
+                          points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
+                          color={topSegmentColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.015, rightDimensionZ])}
+                          color={topSegmentColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.015, rightDimensionZ])}
+                          color={topSegmentColor}
+                          lineWidth={0.6}
+                        />
+                        <Text
+                          renderOrder={100001}
+                          depthTest={false}
+                          position={[0, (cabinetAreaTopY + topFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                          fontSize={baseFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
+                          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                        >
+                          {totalMm}
+                        </Text>
+                      </group>
+                    );
+                  }
+
+                  // EP 분리 표시: 80(전면) + 갭(나머지)
+                  const epSplitY = cabinetAreaTopY + mmToThreeUnits(epFrontHeightMm);
+                  const gapMm = Math.max(0, Math.round(totalMm - epFrontHeightMm));
+                  return (
+                    <group>
+                      {/* (a) ㄱ자 전면 80 — 측판 상단 ~ EP 안쪽 바닥 */}
+                      <Line
+                        points={[[0, cabinetAreaTopY, rightDimensionZ], [0, epSplitY, rightDimensionZ]]}
+                        color={topSegmentColor}
+                        lineWidth={0.6}
+                      />
+                      <Line
+                        points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.015, rightDimensionZ])}
+                        color={topSegmentColor}
+                        lineWidth={0.6}
+                      />
+                      <Line
+                        points={createArrowHead([0, epSplitY, rightDimensionZ], [0, epSplitY - 0.015, rightDimensionZ])}
+                        color={topSegmentColor}
+                        lineWidth={0.6}
+                      />
+                      <Text
+                        renderOrder={100001}
+                        depthTest={false}
+                        position={[0, (cabinetAreaTopY + epSplitY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                        fontSize={baseFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                      >
+                        {epFrontHeightMm}
+                      </Text>
+
+                      {/* (b) 도어 상단 ~ EP 안쪽 갭 */}
+                      {gapMm > 0 && (
+                        <>
+                          <Line
+                            points={[[0, epSplitY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                          <Line
+                            points={createArrowHead([0, epSplitY, rightDimensionZ], [0, epSplitY + 0.015, rightDimensionZ])}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                          <Line
+                            points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.015, rightDimensionZ])}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                          <Text
+                            renderOrder={100001}
+                            depthTest={false}
+                            position={[0, (epSplitY + topFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                            fontSize={baseFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                          >
+                            {gapMm}
+                          </Text>
+                          {/* 분리선 (EP 안쪽 바닥 위치 가이드) */}
+                          <Line
+                            points={[[0, epSplitY, upperGuideFrontZ], [0, epSplitY, rightDimensionZ - mmToThreeUnits(20)]]}
+                            color={topSegmentColor}
+                            lineWidth={0.3}
+                          />
+                        </>
+                      )}
+                    </group>
+                  );
+                })()}
 
                 {/* 5. 상단 몰딩 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (
@@ -10361,39 +10452,127 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
-                {!isTopFrameOff && topFrameDimensionHeight > 0 && (
-                <group>
-                  <Line
-                    points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
-                    color={topSegmentColor}
-                    lineWidth={0.6}
-                  />
-                  <Line
-                    points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.015, leftDimensionZ])}
-                    color={topSegmentColor}
-                    lineWidth={0.6}
-                  />
-                  <Line
-                    points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.015, leftDimensionZ])}
-                    color={topSegmentColor}
-                    lineWidth={0.6}
-                  />
-                  <Text
-                  renderOrder={100001}
-                  depthTest={false}
-                    position={[spaceWidth, (cabinetAreaTopY + topFrameLineTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[0, 0, 0]}
-                  >
-                    {topFrameDimensionValue || topFrameDimensionHeight}
-                </Text>
-              </group>
-                )}
+                {!isTopFrameOff && topFrameDimensionHeight > 0 && (() => {
+                  // EP 모드: ㄱ자 EP 전면 세로(=80) + 도어 상단~EP 안쪽 갭 두 개로 분리 표시
+                  const epRefMod = topFrameRefMod ?? viewMod;
+                  const epEnabled = epRefMod?.hasTopEndPanel === true;
+                  const epFrontHeightMm = 80;
+                  const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
+                  const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
+
+                  if (!isEpSplit) {
+                    return (
+                      <group>
+                        <Line
+                          points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
+                          color={topSegmentColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.015, leftDimensionZ])}
+                          color={topSegmentColor}
+                          lineWidth={0.6}
+                        />
+                        <Line
+                          points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.015, leftDimensionZ])}
+                          color={topSegmentColor}
+                          lineWidth={0.6}
+                        />
+                        <Text
+                          renderOrder={100001}
+                          depthTest={false}
+                          position={[spaceWidth, (cabinetAreaTopY + topFrameLineTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                          fontSize={baseFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          outlineWidth={textOutlineWidth}
+                          outlineColor={textOutlineColor}
+                          rotation={[0, 0, 0]}
+                        >
+                          {totalMm}
+                        </Text>
+                      </group>
+                    );
+                  }
+
+                  const epSplitY = cabinetAreaTopY + mmToThreeUnits(epFrontHeightMm);
+                  const gapMm = Math.max(0, Math.round(totalMm - epFrontHeightMm));
+                  return (
+                    <group>
+                      {/* (a) ㄱ자 전면 80 — 측판 상단 ~ EP 안쪽 바닥 */}
+                      <Line
+                        points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, epSplitY, leftDimensionZ]]}
+                        color={topSegmentColor}
+                        lineWidth={0.6}
+                      />
+                      <Line
+                        points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.015, leftDimensionZ])}
+                        color={topSegmentColor}
+                        lineWidth={0.6}
+                      />
+                      <Line
+                        points={createArrowHead([spaceWidth, epSplitY, leftDimensionZ], [spaceWidth, epSplitY - 0.015, leftDimensionZ])}
+                        color={topSegmentColor}
+                        lineWidth={0.6}
+                      />
+                      <Text
+                        renderOrder={100001}
+                        depthTest={false}
+                        position={[spaceWidth, (cabinetAreaTopY + epSplitY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                        fontSize={baseFontSize}
+                        color={textColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        outlineWidth={textOutlineWidth}
+                        outlineColor={textOutlineColor}
+                        rotation={[0, 0, 0]}
+                      >
+                        {epFrontHeightMm}
+                      </Text>
+
+                      {/* (b) 도어 상단 ~ EP 안쪽 갭 */}
+                      {gapMm > 0 && (
+                        <>
+                          <Line
+                            points={[[spaceWidth, epSplitY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                          <Line
+                            points={createArrowHead([spaceWidth, epSplitY, leftDimensionZ], [spaceWidth, epSplitY + 0.015, leftDimensionZ])}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                          <Line
+                            points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.015, leftDimensionZ])}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                          <Text
+                            renderOrder={100001}
+                            depthTest={false}
+                            position={[spaceWidth, (epSplitY + topFrameLineTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                            fontSize={baseFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, 0, 0]}
+                          >
+                            {gapMm}
+                          </Text>
+                          <Line
+                            points={[[spaceWidth, epSplitY, upperGuideFrontZ], [spaceWidth, epSplitY, leftDimensionZ + mmToThreeUnits(20)]]}
+                            color={topSegmentColor}
+                            lineWidth={0.3}
+                          />
+                        </>
+                      )}
+                    </group>
+                  );
+                })()}
 
                 {/* 5. 상단 몰딩 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (

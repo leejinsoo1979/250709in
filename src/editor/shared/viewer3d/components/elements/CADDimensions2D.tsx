@@ -1869,16 +1869,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 하부장/키큰장 도어 하단갭: 바닥(마감재 있으면 마감재 상단) ~ 도어 하단 */}
               {(() => {
                 if (allLowerDoorSegs.length === 0) return null;
-                const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
                 const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
-                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
+                const shouldUseClearanceForBottomGap = (isFloating || modHasBaseOff) && baseFrameHeightMm > 0;
+                const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
+                const bottomGuideTopY = shouldUseClearanceForBottomGap
+                  ? Math.max(lowestBottomY, bottomStartY + mmToThreeUnits(baseFrameHeightMm))
+                  : lowestBottomY;
+                const bottomGapMm = Math.round((bottomGuideTopY - bottomStartY) / 0.01);
                 if (bottomGapMm <= 0) return null;
                 return (
                   <group key="r-door-bottomgap">
                     <ExtLine points={[[0, bottomStartY, dimExtZ], [0, bottomStartY, dimZ]]} color={doorDimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, bottomGuideTopY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimTextZ]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                    <Text position={[0, (bottomStartY + bottomGuideTopY) / 2, dimTextZ]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
                     </Text>
                   </group>
@@ -2633,16 +2637,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? modDefaultTopGap
                 : (mod.doorTopGap ?? modDefaultTopGap);
               const effectiveBotGap = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
+              const topFinishThicknessForMaida = isTD
+                ? getLowerTopFinishThicknessForModule(mod as PlacedModule)
+                : getStoneTopThicknessMm(mod);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, topFinishThicknessForMaida, (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
-                const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
+                const gaps: { bottomMm: number; topMm: number; heightMm: number; absCoord?: boolean }[] = [];
                 // 하단 갭: 캐비넷 바닥 ~ 마이다 하단 (캐비넷 내부 기준, maidaBottomMm > 0일 때만)
                 const firstMaida = lowerMaidas[0];
                 const floorToMaidaBottomMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
+                const useFloorBottomGapForMaida = (isFloating || modHasBaseOff) && baseFrameHeightMm > 0;
                 if (firstMaida.maidaBottomMm > 0) {
-                  gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
+                  if (useFloorBottomGapForMaida) {
+                    const floorGapMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
+                    gaps.push({ bottomMm: 0, topMm: floorGapMm, heightMm: Math.round(floorGapMm), absCoord: true });
+                  } else {
+                    gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
+                  }
                 }
                 // maidaBottomMm < 0인 경우 (인덕션장): 바닥~마이다하단 치수는 마이다 그룹 밖에서 별도 렌더링
                 // 마이다 사이 갭
@@ -2657,9 +2670,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal = modHeightMm - lastMaida.maidaTopMm;
                 if (topGapTotal > 0) {
-                  const _effStT_l3 = _stoneTopThk(mod);
-                  if (isTD && _effStT_l3 > 0) {
-                    const frontPlateTopMm = modHeightMm + _effStT_l3;
+                  const topFinishThicknessForTopDown = isTD ? topFinishThicknessForMaida : _stoneTopThk(mod);
+                  if (isTD && topFinishThicknessForTopDown > 0) {
+                    const frontPlateTopMm = modHeightMm + topFinishThicknessForTopDown;
                     const frontPlateBottomMm = frontPlateTopMm - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
                     const doorGapMm = Math.round(frontPlateBottomMm - lastMaida.maidaTopMm);
                     if (doorGapMm > 0) {
@@ -2690,8 +2703,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps.map((gap, gi) => {
-                      const gBotY = cabinetBottomY + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = cabinetBottomY + mmToThreeUnits(gap.topMm);
+                      const floorBaselineY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
+                      const gBotY = gap.absCoord ? floorBaselineY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = gap.absCoord ? floorBaselineY + mmToThreeUnits(gap.topMm) : cabinetBottomY + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="drawer_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
@@ -2711,8 +2725,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 // 바닥 ~ 마이다 하단 치수 (마이다 그룹과 별도로 하단 영역에 표시)
                 if (firstMaida.maidaBottomMm < 0 && Math.abs(floorToMaidaBottomMm) >= 1) {
                   const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
-                  const maidaBottomAbsY = floorFinishY + mmToThreeUnits(floorToMaidaBottomMm);
-                  const floorToMaidaDispMm = Math.round(floorToMaidaBottomMm);
+                  const bottomClearanceMm = useFloorBottomGapForMaida
+                    ? Math.max(baseFrameHeightMm, floorToMaidaBottomMm)
+                    : floorToMaidaBottomMm;
+                  const maidaBottomAbsY = bottomStartY + mmToThreeUnits(bottomClearanceMm);
+                  const floorToMaidaDispMm = Math.round(bottomClearanceMm);
                   elements.push(
                     <group key={`maida-floor-gap-${modIdx}`}>
                       <ExtLine points={[[0, bottomStartY, doorExtStartZ], [0, bottomStartY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="drawer_height_ext" />
@@ -3263,16 +3280,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               ))}
               {(() => {
                 if (allLowerDoorSegs_r.length === 0) return null;
-                const lowestBottomY = Math.min(...allLowerDoorSegs_r.map(s => s.bottomY));
                 const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
-                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
+                const shouldUseClearanceForBottomGap = (isFloating || modHasBaseOff) && baseFrameHeightMm > 0;
+                const lowestBottomY = Math.min(...allLowerDoorSegs_r.map(s => s.bottomY));
+                const bottomGuideTopY = shouldUseClearanceForBottomGap
+                  ? Math.max(lowestBottomY, bottomStartY + mmToThreeUnits(baseFrameHeightMm))
+                  : lowestBottomY;
+                const bottomGapMm = Math.round((bottomGuideTopY - bottomStartY) / 0.01);
                 if (bottomGapMm <= 0) return null;
                 return (
                   <group key="r-door-bottomgap">
                     <ExtLine points={[[0, bottomStartY, dimExtZ_r], [0, bottomStartY, dimZ_r]]} color={doorDimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ_r], [0, lowestBottomY, dimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ_r], [0, bottomGuideTopY, dimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ_r], [0.008, bottomStartY, dimZ_r]]} color={doorDimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimTextZ_r]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                    <Text position={[0, (bottomStartY + bottomGuideTopY) / 2, dimTextZ_r]} fontSize={largeFontSize} color={doorDimensionColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
                     </Text>
                   </group>
@@ -3858,7 +3879,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? modDefaultTopGap_r
                 : (mod.doorTopGap ?? modDefaultTopGap_r);
               const effectiveBotGap_r = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
+              const topFinishThicknessForMaida_r = isTD_r
+                ? getLowerTopFinishThicknessForModule(mod as PlacedModule)
+                : getStoneTopThicknessMm(mod);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, topFinishThicknessForMaida_r, (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 
@@ -3866,10 +3890,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 // 하단 갭: 바닥~마이다 하단 거리
                 const firstMaida_r = lowerMaidas[0];
                 const floorToMaidaBottomMm_r = baseFrameHeightMm + firstMaida_r.maidaBottomMm;
+                const useFloorBottomGapForMaida_r = (isFloating || modHasBaseOff) && baseFrameHeightMm > 0;
                 if (firstMaida_r.maidaBottomMm > 0) {
-                  gaps_r.push({ bottomMm: 0, topMm: firstMaida_r.maidaBottomMm, heightMm: Math.round(firstMaida_r.maidaBottomMm) });
+                  if (useFloorBottomGapForMaida_r) {
+                    const floorGapMm_r = baseFrameHeightMm + firstMaida_r.maidaBottomMm;
+                    gaps_r.push({ bottomMm: 0, topMm: floorGapMm_r, heightMm: Math.round(floorGapMm_r), absCoord: true });
+                  } else {
+                    gaps_r.push({ bottomMm: 0, topMm: firstMaida_r.maidaBottomMm, heightMm: Math.round(firstMaida_r.maidaBottomMm) });
+                  }
                 } else if (firstMaida_r.maidaBottomMm < 0 && Math.abs(floorToMaidaBottomMm_r) >= 1) {
-                  gaps_r.push({ bottomMm: 0, topMm: floorToMaidaBottomMm_r, heightMm: Math.round(floorToMaidaBottomMm_r), absCoord: true });
+                  const bottomClearanceMm_r = useFloorBottomGapForMaida_r
+                    ? Math.max(baseFrameHeightMm, floorToMaidaBottomMm_r)
+                    : floorToMaidaBottomMm_r;
+                  gaps_r.push({ bottomMm: 0, topMm: bottomClearanceMm_r, heightMm: Math.round(bottomClearanceMm_r), absCoord: true });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
@@ -3883,9 +3916,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida_r = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal_r = modHeightMm - lastMaida_r.maidaTopMm;
                 if (topGapTotal_r > 0) {
-                  const _effStT_r2 = _stoneTopThk(mod);
-                  if (isTD_r && _effStT_r2 > 0) {
-                    const frontPlateTopMm_r = modHeightMm + _effStT_r2;
+                  const topFinishThicknessForTopDown_r = isTD_r ? topFinishThicknessForMaida_r : _stoneTopThk(mod);
+                  if (isTD_r && topFinishThicknessForTopDown_r > 0) {
+                    const frontPlateTopMm_r = modHeightMm + topFinishThicknessForTopDown_r;
                     const frontPlateBottomMm_r = frontPlateTopMm_r - TOP_DOWN_STONE_FRONT_HEIGHT_MM;
                     const doorGapMm = Math.round(frontPlateBottomMm_r - lastMaida_r.maidaTopMm);
                     if (doorGapMm > 0) {
@@ -3916,8 +3949,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps_r.map((gap, gi) => {
-                      const gBotY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY_r + mmToThreeUnits(gap.topMm);
+                      const floorBaselineY_r = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
+                      const gBotY = gap.absCoord ? floorBaselineY_r + mmToThreeUnits(gap.bottomMm) : cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = gap.absCoord ? floorBaselineY_r + mmToThreeUnits(gap.topMm) : cabinetBottomY_r + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`r-door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="drawer_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
