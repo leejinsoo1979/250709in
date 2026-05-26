@@ -1269,6 +1269,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
+  const shouldUseProvidedLowerDoorWidth = moduleData?.category === 'lower'
+    && !!storePlacedModule
+    && (storePlacedModule.hasLeftEndPanel || storePlacedModule.hasRightEndPanel)
+    && typeof originalSlotWidth === 'number'
+    && originalSlotWidth > 0;
+  if (shouldUseProvidedLowerDoorWidth) {
+    actualDoorWidth = originalSlotWidth;
+  }
+
   // === Insert 프레임 인접 시 도어 24.5mm 확장 ===
   // Insert 프레임(외경 136) 인접 도어 확장량
   // 도어는 doorGap=3 (가구 슬롯 너비에서 3mm 차감, 양쪽 1.5mm씩 안쪽 갭)

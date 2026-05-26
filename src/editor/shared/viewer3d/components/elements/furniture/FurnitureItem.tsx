@@ -2479,9 +2479,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥 침범 시 도어는 원래 슬롯 너비를 유지해야 함 (커버도어)
     // 키큰장에 엔드패널이 있을 때도 도어는 원래 슬롯 너비를 유지해야 함
     const widthDifference = Math.abs(originalSlotWidthMm - furnitureWidthMm);
-    if (widthDifference > 20 && !isEditMode && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
-      // 기둥이 없고 엔드패널도 없는 경우:
-      // furnitureWidthMm(customWidth 기반)이 실제 가구 크기이므로 도어를 가구에 맞춤
+    const hasFrontOffsetEndPanel = (placedModule.hasLeftEndPanel && (placedModule.leftEndPanelOffset ?? 0) > 0)
+      || (placedModule.hasRightEndPanel && (placedModule.rightEndPanelOffset ?? 0) > 0);
+    const shouldFitLowerDoorWithManualEndPanel = actualModuleData?.category === 'lower'
+      && hasFrontOffsetEndPanel;
+    const hasManualEndPanel = placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel;
+    if (widthDifference > 20 && (!hasManualEndPanel || shouldFitLowerDoorWithManualEndPanel) && (!isEditMode || shouldFitLowerDoorWithManualEndPanel) && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
+      // 기둥 커버도어가 아니면 furnitureWidthMm(customWidth/EP 반영)이 실제 가구 크기이므로 도어를 가구에 맞춤
       originalSlotWidthMm = furnitureWidthMm;
     }
   }

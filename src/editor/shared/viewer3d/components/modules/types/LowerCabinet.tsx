@@ -2652,22 +2652,31 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const notchFromBottomMm = isInductionForNotch
           ? (cabinetHeightMmLocal - notchHeightMm)
           : ((moduleData.dimensions.height || 785) - notchHeightMm);
-        const fullFrameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
+        const frameBaseWidthMm = adjustedWidth || moduleData.dimensions.width;
+        const epTrimMm = resolvePetPanelThicknessMm((placedModuleForCorner as any)?.endPanelThickness);
+        const leftFrontOffset = Number((placedModuleForCorner as any)?.leftEndPanelOffset ?? 0);
+        const rightFrontOffset = Number((placedModuleForCorner as any)?.rightEndPanelOffset ?? 0);
+        const leftFrameTrimMm = placedModuleForCorner?.hasLeftEndPanel && leftFrontOffset > 0 ? epTrimMm : 0;
+        const rightFrameTrimMm = placedModuleForCorner?.hasRightEndPanel && rightFrontOffset > 0 ? epTrimMm : 0;
+        const trimmedFrameWidthMm = Math.max(0, frameBaseWidthMm - leftFrameTrimMm - rightFrameTrimMm);
+        const frameTrimX = mmToThreeUnits((leftFrameTrimMm - rightFrameTrimMm) / 2);
+        const fullFrameWidth = mmToThreeUnits(frameBaseWidthMm);
+        const frontFrameWidth = mmToThreeUnits(trimmedFrameWidthMm);
         const isRightCornerCabinet = moduleData.id.includes('right-corner');
         const rightCornerHorzReach = mmToThreeUnits(isRightCornerCabinet ? 58 : 0);
         const rightCornerVertReach = mmToThreeUnits(isRightCornerCabinet ? 45 : 0);
         const horzFrameWidth = isRightCornerCabinet
           ? fullFrameWidth / 2 + rightCornerHorzReach
-          : fullFrameWidth;
+          : frontFrameWidth;
         const horzFrameX = isRightCornerCabinet
           ? (-fullFrameWidth / 2 + rightCornerHorzReach) / 2
-          : 0;
+          : frameTrimX;
         const vertFrameWidth = isRightCornerCabinet
           ? fullFrameWidth / 2 + rightCornerVertReach
-          : fullFrameWidth;
+          : frontFrameWidth;
         const vertFrameX = isRightCornerCabinet
           ? (-fullFrameWidth / 2 + rightCornerVertReach) / 2
-          : 0;
+          : frameTrimX;
         const petThickness = mmToThreeUnits(PET_PANEL_THICKNESS_MM);
         const verticalHMm = notchHeightMm - PET_PANEL_THICKNESS_MM;
         const cabinetBottomY = -cabinetHeight / 2;
@@ -2839,7 +2848,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 thickness={t}
                 depth={topEndPanelData.depth}
                 position={[topEndPanelData.xOffset, hPosY, topEndPanelData.zOffset]}
-                material={baseFurniture.material}
+                material={lFrameDoorMaterial}
                 renderMode={renderMode}
                 panelName="상부 EP 상판"
                 furnitureId={placedFurnitureId}
@@ -2849,7 +2858,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 height={frontPlateH}
                 thickness={t}
                 position={[topEndPanelData.xOffset, vPosY, vPosZ]}
-                material={baseFurniture.material}
+                material={lFrameDoorMaterial}
                 renderMode={renderMode}
                 panelName="상부 EP 앞판"
                 furnitureId={placedFurnitureId}
@@ -2864,7 +2873,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               cabinetYPosition + adjustedHeight / 2 + topEndPanelData.thickness / 2,
               topEndPanelData.zOffset
             ]}
-            material={baseFurniture.material}
+            material={lFrameDoorMaterial}
             renderMode={renderMode}
             panelName="상부 EP"
             furnitureId={placedFurnitureId}

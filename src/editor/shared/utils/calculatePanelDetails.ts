@@ -79,7 +79,9 @@ export const calculatePanelDetails = (
   },
   lowerSectionTopOffsetMm: number = 0,
   maidaWidthAdjustEnabled: boolean = false,
-  maidaWidthAdjustMm: number = -1.5
+  maidaWidthAdjustMm: number = -1.5,
+  leftEndPanelFrontOffsetMm: number = 0,
+  rightEndPanelFrontOffsetMm: number = 0
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -2686,12 +2688,16 @@ export const calculatePanelDetails = (
 
     lowerNotches.forEach((notch, ni) => {
       if (notch.height <= 0) return;
+      const frontEpTrimMm = resolvePetPanelThicknessMm(endPanelThickness);
+      const leftFrameTrimMm = hasLeftEndPanel && leftEndPanelFrontOffsetMm > 0 ? frontEpTrimMm : 0;
+      const rightFrameTrimMm = hasRightEndPanel && rightEndPanelFrontOffsetMm > 0 ? frontEpTrimMm : 0;
+      const frontFrameWidthMm = Math.max(0, customWidth - leftFrameTrimMm - rightFrameTrimMm);
       const lFrameWidth = moduleData.id.includes('right-corner')
         ? customWidth / 2 + 58
-        : customWidth;
+        : frontFrameWidthMm;
       const lFrameVerticalWidth = moduleData.id.includes('right-corner')
         ? customWidth / 2 + 45
-        : customWidth;
+        : frontFrameWidthMm;
       // 수평판: 깊이 40mm
       panels.frame.push({
         name: `목찬넬프레임수평(${ni + 1})`,
