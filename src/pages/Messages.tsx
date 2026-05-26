@@ -36,9 +36,14 @@ import {
   HiOutlineDocumentText,
   HiOutlinePaperAirplane,
   HiOutlineClock,
+  HiOutlineSun,
+  HiOutlineMoon,
+  HiOutlineUsers,
+  HiOutlineUserAdd,
+  HiChat,
 } from 'react-icons/hi';
 
-type LeftTab = 'chats' | 'contacts' | 'profile' | 'settings';
+type LeftTab = 'chats' | 'contacts' | 'profile' | 'settings' | 'groups';
 
 function formatTime(d: Date): string {
   const today = new Date();
@@ -109,7 +114,7 @@ function InitialAvatar({
 
 export default function Messages() {
   const { user, loading: authLoading } = useAuth();
-  const { theme } = useTheme();
+  const { theme, toggleMode } = useTheme();
   const navigate = useNavigate();
   const { convId: activeConvId } = useParams<{ convId?: string }>();
 
@@ -233,7 +238,7 @@ export default function Messages() {
         overflow: 'hidden',
       }}
     >
-      {/* ===== 좌측 네비 컬럼 ===== */}
+      {/* ===== 좌측 네비 컬럼 (Chatvia 스타일) ===== */}
       <div
         style={{
           width: 75,
@@ -242,48 +247,76 @@ export default function Messages() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          padding: '24px 0',
+          padding: '20px 0',
         }}
       >
-        <div style={{ marginBottom: 32 }}>
-          <InitialAvatar name={user.displayName || user.email || '?'} photoURL={user.photoURL || undefined} size={36} />
-        </div>
-        <NavButton
-          icon={<HiOutlineChat size={22} />}
-          active={leftTab === 'chats'}
-          onClick={() => setLeftTab('chats')}
-          color={leftTab === 'chats' ? C.leftNavTextActive : C.leftNavText}
-          activeBg={C.leftNavActiveBg}
-        />
-        <NavButton
-          icon={<HiOutlineUserGroup size={22} />}
-          active={leftTab === 'contacts'}
-          onClick={() => setLeftTab('contacts')}
-          color={leftTab === 'contacts' ? C.leftNavTextActive : C.leftNavText}
-          activeBg={C.leftNavActiveBg}
-        />
-        <NavButton
-          icon={<HiOutlineUser size={22} />}
-          active={leftTab === 'profile'}
-          onClick={() => setLeftTab('profile')}
-          color={leftTab === 'profile' ? C.leftNavTextActive : C.leftNavText}
-          activeBg={C.leftNavActiveBg}
-        />
-        <div style={{ flex: 1 }} />
-        <NavButton
-          icon={<HiOutlineCog size={22} />}
-          active={leftTab === 'settings'}
-          onClick={() => setLeftTab('settings')}
-          color={leftTab === 'settings' ? C.leftNavTextActive : C.leftNavText}
-          activeBg={C.leftNavActiveBg}
-        />
+        {/* 상단 로고 (보라색 둥근 사각형) */}
         <button
           onClick={() => navigate('/dashboard')}
           title="대시보드"
           style={{
-            marginTop: 12,
-            width: 50,
-            height: 50,
+            width: 46,
+            height: 46,
+            borderRadius: 8,
+            background: C.accent,
+            border: 'none',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 32,
+          }}
+        >
+          <HiChat size={22} />
+        </button>
+
+        {/* 중앙 네비 메뉴 */}
+        <ChatviaNavBtn
+          icon={<HiOutlineUser size={22} />}
+          active={leftTab === 'profile'}
+          onClick={() => setLeftTab('profile')}
+          C={C}
+          title="프로필"
+        />
+        <ChatviaNavBtn
+          icon={<HiOutlineChat size={22} />}
+          active={leftTab === 'chats'}
+          onClick={() => setLeftTab('chats')}
+          C={C}
+          title="채팅"
+        />
+        <ChatviaNavBtn
+          icon={<HiOutlineUsers size={22} />}
+          active={leftTab === 'groups'}
+          onClick={() => setLeftTab('groups')}
+          C={C}
+          title="그룹"
+        />
+        <ChatviaNavBtn
+          icon={<HiOutlineUserAdd size={22} />}
+          active={leftTab === 'contacts'}
+          onClick={() => setLeftTab('contacts')}
+          C={C}
+          title="연락처"
+        />
+        <ChatviaNavBtn
+          icon={<HiOutlineCog size={22} />}
+          active={leftTab === 'settings'}
+          onClick={() => setLeftTab('settings')}
+          C={C}
+          title="설정"
+        />
+
+        <div style={{ flex: 1 }} />
+
+        {/* 하단 라이트/다크 토글 */}
+        <button
+          onClick={toggleMode}
+          title={isDark ? '라이트 모드' : '다크 모드'}
+          style={{
+            width: 46,
+            height: 46,
             borderRadius: 8,
             background: 'transparent',
             border: 'none',
@@ -292,9 +325,28 @@ export default function Messages() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            marginBottom: 12,
           }}
         >
-          <HiOutlineArrowLeft size={22} />
+          {isDark ? <HiOutlineSun size={22} /> : <HiOutlineMoon size={22} />}
+        </button>
+
+        {/* 최하단 사용자 아바타 */}
+        <button
+          onClick={() => setLeftTab('profile')}
+          title="내 프로필"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <InitialAvatar
+            name={user.displayName || user.email || '?'}
+            photoURL={user.photoURL || undefined}
+            size={36}
+          />
         </button>
       </div>
 
@@ -310,7 +362,7 @@ export default function Messages() {
       >
         <div style={{ padding: '24px 24px 12px' }}>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>
-            {leftTab === 'chats' ? '채팅' : leftTab === 'contacts' ? '연락처' : leftTab === 'profile' ? '내 정보' : '설정'}
+            {leftTab === 'chats' ? '채팅' : leftTab === 'contacts' ? '연락처' : leftTab === 'profile' ? '내 정보' : leftTab === 'groups' ? '그룹' : '설정'}
           </h2>
         </div>
         <div style={{ padding: '0 24px 16px' }}>
@@ -713,30 +765,31 @@ export default function Messages() {
   );
 }
 
-function NavButton({
+function ChatviaNavBtn({
   icon,
   active,
   onClick,
-  color,
-  activeBg,
+  C,
+  title,
 }: {
   icon: React.ReactNode;
   active: boolean;
   onClick: () => void;
-  color: string;
-  activeBg: string;
+  C: any;
+  title?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
       style={{
-        width: 50,
-        height: 50,
-        marginBottom: 8,
+        width: 46,
+        height: 46,
+        marginBottom: 12,
         borderRadius: 8,
-        background: active ? activeBg : 'transparent',
+        background: active ? C.leftNavActiveBg : 'transparent',
         border: 'none',
-        color,
+        color: active ? C.leftNavTextActive : C.leftNavText,
         cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
