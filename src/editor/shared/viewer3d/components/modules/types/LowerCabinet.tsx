@@ -27,7 +27,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
-import { resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -505,7 +505,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const maidaWidthMm = widthMm - 3;
   const maidaWidth = mmToThreeUnits(maidaWidthMm);
   const maidaThickness = basicThickness;
-  const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2);
+  const MAIDA_BACK_GAP_MM = 2;
+  const maidaZ = furnitureDepth / 2 + mmToThreeUnits(MAIDA_BACK_GAP_MM) + maidaThickness / 2;
 
   const defaultDTG = -20;
   const defaultDBG = 5;
@@ -927,7 +928,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const maidaWidth = mmToThreeUnits(maidaWidthMm);
   const maidaThickness = basicThickness;
   const moduleDepthMm = furnitureDepth / 0.01;
-  const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2);
+  const MAIDA_BACK_GAP_MM = 2;
+  const maidaZ = furnitureDepth / 2 + mmToThreeUnits(MAIDA_BACK_GAP_MM) + maidaThickness / 2;
 
   // 마이다 비례: 2B는 2A와 동일하게 [228, 228] 사용 (서랍 본체 높이만 다름)
   const drawerHeights = isTouch2A ? [228, 228]
@@ -1397,9 +1399,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return (pm?.stoneTopMaterial as 'stone' | 'pet' | undefined) || 'stone';
   });
-  // 상판 두께 — PET 재질이면 가구재 기반 PET 매핑(15→18, 15.5→18.5, 18→18, 18.5→18.5)
-  const basicThk_mm = spaceInfo?.panelThickness || 18;
-  const petMappedThk = basicThk_mm === 15 ? 18 : basicThk_mm === 15.5 ? 18.5 : basicThk_mm;
+  // 상판 두께 — PET 재질이면 가구재 선택과 무관하게 18T 고정
+  const petMappedThk = PET_PANEL_THICKNESS_MM;
   const stoneThickness = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
@@ -1660,6 +1661,36 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       backLipFillHeight: stoneBackLipFillHeightOff * 0.01, // mm → m
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, outerExtendLeft, outerExtendRight, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+
+  const topEndPanelData = useMemo(() => {
+    if (placedModuleForCorner?.hasTopEndPanel !== true) return null;
+    const frontOffset = ((placedModuleForCorner as any).topEndPanelOffset ?? 0) * 0.01;
+    const backOffset = ((placedModuleForCorner as any).topEndPanelBackOffset ?? 0) * 0.01;
+    const thickness = resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness) * 0.01;
+    const sideEpThickness = thickness;
+    const leftCover = placedModuleForCorner.hasLeftEndPanel ? sideEpThickness : 0;
+    const rightCover = placedModuleForCorner.hasRightEndPanel ? sideEpThickness : 0;
+    const panelFrontZ = baseFurniture.depth / 2 + frontOffset;
+    const panelBackZ = -baseFurniture.depth / 2 - backOffset;
+    const depth = Math.max(0.01, panelFrontZ - panelBackZ);
+    return {
+      thickness,
+      width: (adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width) + leftCover + rightCover,
+      depth,
+      xOffset: (rightCover - leftCover) / 2,
+      zOffset: (panelFrontZ + panelBackZ) / 2,
+    };
+  }, [
+    placedModuleForCorner?.hasTopEndPanel,
+    placedModuleForCorner?.hasLeftEndPanel,
+    placedModuleForCorner?.hasRightEndPanel,
+    (placedModuleForCorner as any)?.topEndPanelOffset,
+    (placedModuleForCorner as any)?.topEndPanelBackOffset,
+    (placedModuleForCorner as any)?.endPanelThickness,
+    adjustedWidth,
+    baseFurniture.width,
+    baseFurniture.depth
+  ]);
 
   // 상판 재질 — PET이면 도어 재질 동일, stone이면 countertop(루나쉐도우 기본)
   const LUNA_SHADOW_TEXTURE = '/materials/countertop/luna_shadow_hanwha.png';
@@ -2465,19 +2496,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 상판내림 반통/한통/터치: 노치 = 가로전대 바로 아래 (stoneThk별 stretcher 반영, 통일)
         const notchFromBottomLocal = cabinetHmmHere - (topDownStretcherHeightMm + notchHeightLocal);
         const notch = { fromBottom: notchFromBottomLocal, height: notchHeightLocal };
-        const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
-        const verticalHMm = notch.height - basicThicknessMm;
+        const petThickness = mmToThreeUnits(PET_PANEL_THICKNESS_MM);
+        const verticalHMm = notch.height - PET_PANEL_THICKNESS_MM;
         const cabinetBottomY = -adjustedHeight / 2;
-        const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + baseFurniture.basicThickness / 2;
+        const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + petThickness / 2;
         const horzZ = baseFurniture.depth / 2 - mmToThreeUnits(40) / 2;
-        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + baseFurniture.basicThickness + mmToThreeUnits(verticalHMm) / 2;
-        const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + baseFurniture.basicThickness / 2;
+        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + petThickness + mmToThreeUnits(verticalHMm) / 2;
+        const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + petThickness / 2;
 
         return (
           <group position={[0, 0, 0]}>
             <BoxWithEdges
-              args={[frameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
+              args={[frameWidth, petThickness, mmToThreeUnits(40)]}
               position={[0, horzY, horzZ]}
               material={lFrameDoorMaterial}
               renderMode={renderMode}
@@ -2487,7 +2518,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
             />
             <BoxWithEdges
-              args={[frameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
+              args={[frameWidth, mmToThreeUnits(verticalHMm), petThickness]}
               position={[0, vertY, vertZ]}
               material={lFrameDoorMaterial}
               renderMode={renderMode}
@@ -2511,7 +2542,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const notchFromBottomMm = isInductionForNotch
           ? (cabinetHeightMmLocal - notchHeightMm)
           : ((moduleData.dimensions.height || 785) - notchHeightMm);
-        const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const fullFrameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
         const isRightCornerCabinet = moduleData.id.includes('right-corner');
         const rightCornerHorzReach = mmToThreeUnits(isRightCornerCabinet ? 58 : 0);
@@ -2528,17 +2558,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const vertFrameX = isRightCornerCabinet
           ? (-fullFrameWidth / 2 + rightCornerVertReach) / 2
           : 0;
-        const verticalHMm = notchHeightMm - basicThicknessMm;
+        const petThickness = mmToThreeUnits(PET_PANEL_THICKNESS_MM);
+        const verticalHMm = notchHeightMm - PET_PANEL_THICKNESS_MM;
         const cabinetBottomY = -cabinetHeight / 2;
-        const horzY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
+        const horzY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + petThickness / 2;
         const horzZ = baseFurniture.depth / 2 - mmToThreeUnits(40) / 2;
-        const vertY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + baseFurniture.basicThickness + mmToThreeUnits(verticalHMm) / 2;
-        const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + baseFurniture.basicThickness / 2;
+        const vertY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + petThickness + mmToThreeUnits(verticalHMm) / 2;
+        const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + petThickness / 2;
 
         return (
           <group position={[0, cabinetYPosition, 0]}>
             <BoxWithEdges
-              args={[horzFrameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
+              args={[horzFrameWidth, petThickness, mmToThreeUnits(40)]}
               position={[horzFrameX, horzY, horzZ]}
               material={lFrameDoorMaterial}
               renderMode={renderMode}
@@ -2548,7 +2579,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
             />
             <BoxWithEdges
-              args={[vertFrameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
+              args={[vertFrameWidth, mmToThreeUnits(verticalHMm), petThickness]}
               position={[vertFrameX, vertY, vertZ]}
               material={lFrameDoorMaterial}
               renderMode={renderMode}
@@ -2674,6 +2705,22 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           parentGroupY={parentGroupY}
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
+        />
+      )}
+
+      {/* 하부장 상부 EP — 대리석 상판과 같은 방식으로 몸통 상단에 올라감 */}
+      {!hideAccessories && showFurniture && topEndPanelData && !(viewMode === '2D' && view2DDirection === 'top') && (
+        <BoxWithEdges
+          args={[topEndPanelData.width, topEndPanelData.thickness, topEndPanelData.depth]}
+          position={[
+            topEndPanelData.xOffset,
+            cabinetYPosition + adjustedHeight / 2 + topEndPanelData.thickness / 2,
+            topEndPanelData.zOffset
+          ]}
+          material={baseFurniture.material}
+          renderMode={renderMode}
+          panelName="상부 EP"
+          furnitureId={placedFurnitureId}
         />
       )}
 

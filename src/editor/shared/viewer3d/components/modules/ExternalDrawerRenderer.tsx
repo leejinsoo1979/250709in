@@ -12,6 +12,7 @@ import MaidaWidthDimension from './components/MaidaWidthDimension';
 import MaidaHeightDimension, { MaidaHeightDimensionSegment } from './components/MaidaHeightDimension';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { PET_PANEL_THICKNESS_MM } from '@/editor/shared/utils/panelThickness';
 
 /**
  * 외부서랍 렌더러 (하부 서랍장 전용)
@@ -525,7 +526,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const BOTTOM_GAP = mmToThreeUnits(15);
 
   const maidaWidth = mmToThreeUnits(moduleWidth - 3);
-  const maidaZ = (mmToThreeUnits(moduleDepthMm) + mmToThreeUnits(28)) / 2;
+  const MAIDA_BACK_GAP_MM = 2;
+  const maidaZ = depth / 2 + mmToThreeUnits(MAIDA_BACK_GAP_MM) + HANDLE_PLATE_THICKNESS / 2;
 
   const leftSideX = -innerWidth / 2 + SIDE_GAP + EXT_SIDE_T / 2;
   const rightSideX = innerWidth / 2 - SIDE_GAP - EXT_SIDE_T / 2;
@@ -726,17 +728,18 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         if (notch.height <= 0) return null;
         const frameWidth = mmToThreeUnits(moduleWidth); // 캐비넷 전체 폭
         const notchHMm = notch.height;
-        const verticalHMm = notchHMm - basicThicknessMm; // 수직판 높이 = 따내기높이 - 수평판두께
+        const petThickness = mmToThreeUnits(PET_PANEL_THICKNESS_MM);
+        const verticalHMm = notchHMm - PET_PANEL_THICKNESS_MM; // 수직판 높이 = 따내기높이 - 수평판두께
 
         // 수평판: 따내기 바닥에 위치, 깊이 40mm
-        const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness / 2;
+        const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + petThickness / 2;
         const horzZ = depth / 2 - mmToThreeUnits(40) / 2;
-        const horzArgs: [number, number, number] = [frameWidth, basicThickness, mmToThreeUnits(40)];
+        const horzArgs: [number, number, number] = [frameWidth, petThickness, mmToThreeUnits(40)];
 
         // 수직판: 수평판 위에 올라감, 안쪽(따내기 뒤쪽 면)에 붙음
-        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness + mmToThreeUnits(verticalHMm) / 2;
-        const vertZ = depth / 2 - mmToThreeUnits(40) + basicThickness / 2;
-        const vertArgs: [number, number, number] = [frameWidth, mmToThreeUnits(verticalHMm), basicThickness];
+        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + petThickness + mmToThreeUnits(verticalHMm) / 2;
+        const vertZ = depth / 2 - mmToThreeUnits(40) + petThickness / 2;
+        const vertArgs: [number, number, number] = [frameWidth, mmToThreeUnits(verticalHMm), petThickness];
 
         const horzName = sectionName ? `${sectionName}목찬넬프레임수평(${ni + 1})` : `목찬넬프레임수평(${ni + 1})`;
         const vertName = sectionName ? `${sectionName}목찬넬프레임수직(${ni + 1})` : `목찬넬프레임수직(${ni + 1})`;

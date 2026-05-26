@@ -40,6 +40,7 @@ import {
 } from '../../utils/panelSimulationMotion';
 import { removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 import { ROOM_BACK_MESH_GAP_MM, ROOM_MESH_BACK_SHIFT_MM } from '../../utils/sideWallPlacement';
+import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -74,7 +75,7 @@ const MIN_SIMULATION_BOX_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
 
 const END_PANEL_THICKNESS = 18; // 슬롯/프레임 계산 기준
-const endPanelRenderThickness = 18.5; // 물리적 렌더링 두께 (PET)
+const endPanelRenderThickness = PET_PANEL_THICKNESS_MM; // 물리적 렌더링 두께 (PET)
 
 const getPanelSimulationSlot = (key: string) => {
   const existing = panelSimulationSlots.get(key);
@@ -5103,8 +5104,8 @@ const Room: React.FC<RoomProps> = ({
           const minLeftMM = hasFreeMods ? Math.min(...allModuleBounds.map(b => b.left)) : 0;
           const maxRightMM = hasFreeMods ? Math.max(...allModuleBounds.map(b => b.right)) : 0;
 
-          // 도어기준 시: 앞면 = 도어 앞면 (실측 diff = 23mm)
-          const DOOR_FRONT_OFFSET_MM = 23;
+          // 도어기준 시: 앞면 = 도어 앞면 (몸통 앞면 + 뒷면 갭 2mm + 도어 18T)
+          const DOOR_FRONT_OFFSET_MM = 20;
           // 서라운드와 상걸래받이 각각 독립적으로 도어기준 적용
           const surroundDoorOffset = spaceInfo.surroundOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
@@ -5260,7 +5261,7 @@ const Room: React.FC<RoomProps> = ({
                     // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
                     const modTopOffsetMM = mod.topFrameOffset ?? 0;
                     const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
-                    const DOOR_THICKNESS_MM = 18.5; // PET 재질
+                    const DOOR_THICKNESS_MM = PET_PANEL_THICKNESS_MM;
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
@@ -5326,7 +5327,7 @@ const Room: React.FC<RoomProps> = ({
                   const args: [number, number, number] = [
                     mmToThreeUnits(seg.widthMm),
                     seg.height,
-                    mmToThreeUnits(endPanelRenderThickness) // 도어(18.5mm)와 동일한 PET 두께
+                    mmToThreeUnits(endPanelRenderThickness)
                   ];
                   const pos: [number, number, number] = [
                     mmToThreeUnits(seg.centerXmm),
@@ -5915,7 +5916,7 @@ const Room: React.FC<RoomProps> = ({
                 const dcWidthMM = spaceInfo.droppedCeiling!.width || 150;
                 const dcDropH = spaceInfo.droppedCeiling!.dropHeight || 100;
                 const dcTotalH = heightMm + dcDropH; // 커튼박스 전체 높이(mm)
-                const panelThickMM = 18.5; // PET 재질
+                const panelThickMM = PET_PANEL_THICKNESS_MM;
 
                 const panelH = mmToThreeUnits(dcTotalH);
                 const panelCenterY = panelH / 2; // 바닥(0)부터 커튼박스 천장까지
@@ -5977,7 +5978,7 @@ const Room: React.FC<RoomProps> = ({
           {isCurtainBoxSlot && spaceInfo.curtainBox?.enabled && (() => {
             const cbPos = spaceInfo.curtainBox!.position || 'right';
             const cbWidthMM = spaceInfo.curtainBox!.width || 150;
-            const panelThickMM = endPanelRenderThickness; // 18.5mm (PET 재질 물리적 두께)
+            const panelThickMM = endPanelRenderThickness;
 
             // CB 프레임 높이: 커튼박스 천장(height + cbDropH)까지
             const cbDropH = spaceInfo.curtainBox!.dropHeight || 60;
@@ -6155,7 +6156,7 @@ const Room: React.FC<RoomProps> = ({
                     modWidthMM = adjW;
                     if (adjPosX != null) modCenterXmm = adjPosX * 100;
                   }
-                  const epThk = mod.endPanelThickness || 18.5;
+                  const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
                   const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   // EP 상단 갭이 0이면 상단몰딩이 EP 자리까지 X 확장 → 축소 안 함
@@ -6252,7 +6253,7 @@ const Room: React.FC<RoomProps> = ({
                     const args: [number, number, number] = [
                       mmToThreeUnits(seg.widthMm),
                       seg.height,
-                      mmToThreeUnits(endPanelRenderThickness) // 도어(18.5mm)와 동일한 PET 두께
+                      mmToThreeUnits(endPanelRenderThickness)
                     ];
                     const pos: [number, number, number] = [
                       mmToThreeUnits(seg.centerXmm),
@@ -7650,7 +7651,7 @@ const Room: React.FC<RoomProps> = ({
                         modWidthMM = adjW;
                         if (adjPosX != null) modCenterXmm = adjPosX * 100;
                       }
-                      const epThk = mod.endPanelThickness || 18.5;
+                      const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
                       // EP 하단 갭이 0이면 걸레받이가 EP 자리까지 X 확장 → 축소 안 함
                       const epBottomGapMm = (mod as any).endPanelBottomOffset;
                       const bottomGapIsZero = epBottomGapMm === 0;

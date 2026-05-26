@@ -33,6 +33,7 @@ import {
   applyDefaultImageTextureSettings,
 } from '@/editor/shared/utils/materialConstants';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
+import { PET_PANEL_THICKNESS_MM } from '@/editor/shared/utils/panelThickness';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -1440,7 +1441,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     //   걸레받이 = moduleD_mm/2 - END/2 - 20 - (baseConfig.depth ?? 0) - baseDepthOffset
     const END_PANEL_THK_MM = 18;
     const NO_SURROUND_OFFSET_MM = 20;
-    const DOOR_FRONT_OFFSET_MM = 23;
+    const DOOR_FRONT_OFFSET_MM = 20;
     const moduleD_mm = 58; // insert-frame baseFurniture.depth = 58mm
     const isFullSurroundIF = spaceInfo.surroundType === 'surround';
     const isFloatPlacementIF = spaceInfo.baseConfig?.type === 'stand'
@@ -1636,10 +1637,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               860;
             // 노치 상단 = 하부섹션 상단(=측판 (하) 상단), 노치 하단 = 그 - 80mm
             const notchFromBottomMm = lowerSectionHmm - notchHeightMm;
-            const basicThicknessMm = baseFurniture.basicThickness / 0.01;
+            const petThickness = mmToUnits(PET_PANEL_THICKNESS_MM);
             // 목찬넬 폭: 측판 따내기(z=40mm, 깊이방향) 안쪽으로 측판 두께만큼 좌·우 양옆 확장 → 끼워짐
             const frameWidth = baseFurniture.innerWidth + 2 * baseFurniture.basicThickness;
-            const verticalHMm = notchHeightMm - basicThicknessMm;
+            const verticalHMm = notchHeightMm - PET_PANEL_THICKNESS_MM;
             const cabinetBottomY = -baseFurniture.height / 2;
             const lowerSectionDepthForSplit = typeof baseFurniture.lowerSectionDepthMm === 'number' && baseFurniture.lowerSectionDepthMm > 0
               ? baseFurniture.mmToThreeUnits(baseFurniture.lowerSectionDepthMm)
@@ -1651,16 +1652,16 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               : (lowerDirForSplit === 'back' ? lowerDepthDiffForSplit / 2 : -lowerDepthDiffForSplit / 2);
             const lowerSectionFrontZ = lowerSectionZOffsetForSplit + lowerSectionDepthForSplit / 2;
             const lowerSectionBackZ = lowerSectionZOffsetForSplit - lowerSectionDepthForSplit / 2;
-            const horzY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
+            const horzY = cabinetBottomY + mmToUnits(notchFromBottomMm) + petThickness / 2;
             const horzZ = lowerSectionFrontZ - mmToUnits(40) / 2;
-            const vertY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness + mmToUnits(verticalHMm) / 2;
+            const vertY = cabinetBottomY + mmToUnits(notchFromBottomMm) + petThickness + mmToUnits(verticalHMm) / 2;
             // 수직부재 뒷면 = 측판 따내기 안쪽 면 (= depth/2 - 40), 수직 중심 = 뒷면 + basicThickness/2
             // → 수직부재는 수평부재 뒷쪽 끝부분 18mm 영역에 위치 (다른 상판내림 모듈과 동일 패턴)
-            const vertZ = lowerSectionFrontZ - mmToUnits(40) + baseFurniture.basicThickness / 2;
+            const vertZ = lowerSectionFrontZ - mmToUnits(40) + petThickness / 2;
             return (
               <>
                 <BoxWithEdges
-                  args={[frameWidth, baseFurniture.basicThickness, mmToUnits(40)]}
+                  args={[frameWidth, petThickness, mmToUnits(40)]}
                   position={[0, horzY, horzZ]}
                   material={baseFurniture.material}
                   renderMode={renderMode || useSpace3DView().renderMode}
@@ -1672,7 +1673,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   textureUrl={baseFurniture.textureUrl}
                 />
                 <BoxWithEdges
-                  args={[frameWidth, mmToUnits(verticalHMm), baseFurniture.basicThickness]}
+                  args={[frameWidth, mmToUnits(verticalHMm), petThickness]}
                   position={[0, vertY, vertZ]}
                   material={baseFurniture.material}
                   renderMode={renderMode || useSpace3DView().renderMode}

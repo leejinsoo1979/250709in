@@ -6,7 +6,7 @@ import NativeLine from '../../elements/NativeLine';
  * 마이다(서랍 도어면) 하단 폭 치수 — 공통 컴포넌트
  *
  * 서랍장/인덕션장/터치장이 동일 형태로 사용.
- * - 3D 모드: 모듈 앞면 + 15mm 앞에 표시
+ * - 3D 모드: 모듈 앞면 + 12mm 앞에 표시
  * - 2D 정면뷰: 마이다 앞면 + 10mm 앞에 표시
  *
  * 좌표계 기준
@@ -51,7 +51,7 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
   const extensionLineStart = mmToThreeUnits(60);
   const extensionLineLength = mmToThreeUnits(100);
   const tickSize = 0.008;
-  const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
+  const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 11 + 1) : maidaZ + mmToThreeUnits(10);
   // 도어와 동일하게 dimensionColor 사용 (3D에서도 검정 강제하지 않음)
   const hoverColor = '#0b3d91';
   const dimColor = isHovered ? hoverColor : dimensionColor;

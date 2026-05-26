@@ -40,6 +40,7 @@ import {
   resolvePanelSimulationTarget
 } from '../../utils/panelSimulationMotion';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
+import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
@@ -895,7 +896,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // (도어는 원래 freeWidth 크기 그대로, 가구 중심에 위치해야 함)
   let freeEpReverseX = 0;
   if (isFree && storePlacedModule && !storePlacedModule.customConfig) {
-    const epThk = (storePlacedModule.endPanelThickness || 18.5) * 0.01; // mm → Three.js
+    const epThk = resolvePetPanelThicknessMm(storePlacedModule.endPanelThickness) * 0.01; // mm → Three.js
     const leftEp = storePlacedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = storePlacedModule.hasRightEndPanel ? epThk : 0;
     freeEpReverseX = -(leftEp - rightEp) / 2; // 부모 offset의 반대
@@ -1383,8 +1384,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  // 도어 두께 = 가구재 두께 (spaceInfo.panelThickness, 기본 18mm)
-  const doorThickness = currentSpaceInfo?.panelThickness || 18;
+  // 도어는 PET 노출 패널이므로 가구재 18.5T 선택과 무관하게 18T 고정
+  const doorThickness = PET_PANEL_THICKNESS_MM;
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 도어 확장 설정 (변수화) ===
@@ -1818,6 +1819,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const upperSectionTopMm = upperSectionHeightMm > 0
       ? Math.min(cabinetHeightMm, lowerSectionTopMm + upperSectionHeightMm)
       : cabinetHeightMm;
+    const lowerTopHingeInsetMm = moduleIdentifier.includes('shelf-split') ? 140 : 120;
 
     if (splitDoorPanelName === '하부 도어') {
       return resolveSideAnchoredDoorHingePositionsMm({
@@ -1825,7 +1827,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         doorBottomOnSideMm,
         defaultDoorPositionsMm: defaultPositions,
         firstSidePositionMm: 120,
-        lastSidePositionMm: lowerSectionTopMm - 120,
+        lastSidePositionMm: lowerSectionTopMm - lowerTopHingeInsetMm,
       });
     }
 
@@ -2167,10 +2169,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isNoSurroundNoWallRight = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.right;
   const endPanelThickness = currentSpaceInfo?.panelThickness || 18; // 엔드패널 두께 = 가구재 두께
 
-  // 도어 Z 위치: doorDepth/2로 사용되므로 offset을 2배로 설정해야 함
-  // 목표: 가구 앞면에서 5mm 떨어지고 + 도어 두께 절반(9mm) = 14mm
-  // 계산: doorDepth/2 = (moduleDepth + offset)/2, offset=28 → 실제 14mm
-  const baseDepthOffset = mmToThreeUnits(28);
+  // 도어 Z 위치: 몸통 앞면과 도어 뒷면 사이 갭을 기준으로 계산
+  const DOOR_BACK_GAP_MM = 2;
+  const baseDepthOffset = mmToThreeUnits((DOOR_BACK_GAP_MM + doorThickness / 2) * 2);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset;
 
   // 힌지 위치 오프셋(9mm) 상수 정의
@@ -2440,7 +2441,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let leftEpTrimShift = 0;
     let rightEpTrimShift = 0;
     if (storePlacedModule) {
-      const epThickMm = storePlacedModule.endPanelThickness || 18;
+      const epThickMm = resolvePetPanelThicknessMm(storePlacedModule.endPanelThickness);
       // 앞 옵셋 > 0 이면 EP가 앞으로 돌출 → 도어 트림 필요
       const leftFrontOffset = storePlacedModule.leftEndPanelOffset ?? 0;
       const rightFrontOffset = storePlacedModule.rightEndPanelOffset ?? 0;

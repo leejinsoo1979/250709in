@@ -20,10 +20,23 @@ import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey 
 import { calcInsertFrameResizedPositionX, calcResizedPositionX, getColumnObstacleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
+import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 
 const formatMmValue = (value: number): string => {
   const rounded = Math.round(value * 10) / 10;
   return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+};
+
+const resolveTopEndPanelThicknessMm = (module: any): number => {
+  if (module?.hasTopEndPanel !== true) return 0;
+  return resolvePetPanelThicknessMm(module?.endPanelThickness);
+};
+
+const resolveLowerTopFinishThicknessMm = (module: any, spaceInfo: any): number => {
+  return Math.max(
+    resolveCountertopThicknessMm(module, spaceInfo),
+    resolveTopEndPanelThicknessMm(module)
+  );
 };
 
 interface CleanCAD2DProps {
@@ -1133,6 +1146,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       ),
       depthMm,
     };
+  };
+
+  const resolveInstalledFrontExtensionZ = (module: any) => {
+    return module?.hasDoor === true ? mmToThreeUnits(20) : 0;
   };
   
   // 발통 심볼을 그리는 헬퍼 함수
@@ -8272,6 +8289,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? (findSideCompanion('upper') ?? viewMod)
               : viewMod;
             const bottomFrameRefCategory = getSideCategory(bottomFrameRefMod);
+            const lowerTopFinishRefMod = bottomFrameRefCategory === 'lower'
+              ? bottomFrameRefMod
+              : findSideCompanion('lower');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
             const isTopFrameOff = topFrameRefMod?.hasTopFrame === false;
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
@@ -8307,8 +8327,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : Math.max(0, Math.round((shelfSplitDynamicTopFrame ?? (hasUpperTopFrameRef ? rawTopFrame : topFrameHeight)) ?? 0));
             const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
             const topSegmentColor = frameDimensionColor;
-            const countertopThicknessMm = bottomFrameRefCategory === 'lower'
-              ? resolveCountertopThicknessMm(bottomFrameRefMod, spaceInfo)
+            const topFinishThicknessMm = lowerTopFinishRefMod
+              ? resolveLowerTopFinishThicknessMm(lowerTopFinishRefMod, spaceInfo)
               : 0;
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
@@ -8453,8 +8473,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? tallestModuleBottomY
               : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
-            const countertopBottomY = furnitureTopY;
-            const countertopTopY = countertopBottomY + mmToThreeUnits(countertopThicknessMm);
+            const topFinishBottomY = furnitureTopY;
+            const topFinishTopY = topFinishBottomY + mmToThreeUnits(topFinishThicknessMm);
+            const furnitureMeasuredStartY = topFinishThicknessMm > 0 ? bottomY : furnitureStartY;
+            const furnitureMeasuredTopY = topFinishThicknessMm > 0 ? topFinishTopY : furnitureTopY;
+            const furnitureMeasuredHeightValue = Math.round(threeUnitsToMm(furnitureMeasuredTopY - furnitureMeasuredStartY));
+            const furnitureMeasuredTextY = furnitureMeasuredStartY + (furnitureMeasuredTopY - furnitureMeasuredStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
             const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
@@ -8548,24 +8572,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {isFloating && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ]]}
+                    points={[[0, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + mmToThreeUnits(maxLowerCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + (mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))) / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8574,7 +8598,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {maxLowerCabinetHeightMm}
+                    {Math.round(threeUnitsToMm(mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))))}
                   </Text>
                 </group>
                 )}
@@ -8583,24 +8607,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {!isFloating && !hasSideSectionSplit && (
                 <group>
                   <Line
-                    points={[[0, furnitureStartY, rightDimensionZ], [0, furnitureTopY, rightDimensionZ]]}
+                    points={[[0, furnitureMeasuredStartY, rightDimensionZ], [0, furnitureMeasuredTopY, rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, furnitureStartY, rightDimensionZ], [0, furnitureStartY + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, furnitureMeasuredStartY, rightDimensionZ], [0, furnitureMeasuredStartY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, furnitureTopY, rightDimensionZ], [0, furnitureTopY - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, furnitureMeasuredTopY, rightDimensionZ], [0, furnitureMeasuredTopY - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, furnitureTextY, rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, furnitureMeasuredTextY, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8609,33 +8633,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {furnitureHeightValue}
+                    {furnitureMeasuredHeightValue}
                   </Text>
                 </group>
                 )}
 
-                {/* 하부장 상판 두께 */}
-                {countertopThicknessMm > 0 && (
+                {/* 하부장 상판/상부 EP 두께 */}
+                {topFinishThicknessMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, countertopBottomY, rightDimensionZ], [0, countertopTopY, rightDimensionZ]]}
+                    points={[[0, topFinishBottomY, rightDimensionZ], [0, topFinishTopY, rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, countertopBottomY, rightDimensionZ], [0, countertopBottomY + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, topFinishBottomY, rightDimensionZ], [0, topFinishBottomY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, countertopTopY, rightDimensionZ], [0, countertopTopY - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, topFinishTopY, rightDimensionZ], [0, topFinishTopY - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, (countertopBottomY + countertopTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, (topFinishBottomY + topFinishTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8644,7 +8668,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {countertopThicknessMm}
+                    {topFinishThicknessMm}
                   </Text>
                 </group>
                 )}
@@ -9774,6 +9798,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? (findSideCompanion('upper') ?? viewMod)
               : viewMod;
             const bottomFrameRefCategory = getSideCategory(bottomFrameRefMod);
+            const lowerTopFinishRefMod = bottomFrameRefCategory === 'lower'
+              ? bottomFrameRefMod
+              : findSideCompanion('lower');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
             const isTopFrameOff = topFrameRefMod?.hasTopFrame === false;
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
@@ -9808,8 +9835,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : Math.max(0, Math.round((shelfSplitDynamicTopFrame ?? (hasUpperTopFrameRef ? rawTopFrame : topFrameHeight)) ?? 0));
             const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
             const topSegmentColor = frameDimensionColor;
-            const countertopThicknessMm = bottomFrameRefCategory === 'lower'
-              ? resolveCountertopThicknessMm(bottomFrameRefMod, spaceInfo)
+            const topFinishThicknessMm = lowerTopFinishRefMod
+              ? resolveLowerTopFinishThicknessMm(lowerTopFinishRefMod, spaceInfo)
               : 0;
             // console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
@@ -9954,8 +9981,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? tallestModuleBottomY
               : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
-            const countertopBottomY = furnitureTopY;
-            const countertopTopY = countertopBottomY + mmToThreeUnits(countertopThicknessMm);
+            const topFinishBottomY = furnitureTopY;
+            const topFinishTopY = topFinishBottomY + mmToThreeUnits(topFinishThicknessMm);
+            const furnitureMeasuredStartY = topFinishThicknessMm > 0 ? bottomY : furnitureStartY;
+            const furnitureMeasuredTopY = topFinishThicknessMm > 0 ? topFinishTopY : furnitureTopY;
+            const furnitureMeasuredHeightValue = Math.round(threeUnitsToMm(furnitureMeasuredTopY - furnitureMeasuredStartY));
+            const furnitureMeasuredTextY = furnitureMeasuredStartY + (furnitureMeasuredTopY - furnitureMeasuredStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
             const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
@@ -10057,24 +10088,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {isFloating && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ]]}
+                    points={[[spaceWidth, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + mmToThreeUnits(maxLowerCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + (mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))) / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10083,7 +10114,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {maxLowerCabinetHeightMm}
+                    {Math.round(threeUnitsToMm(mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))))}
                   </Text>
                 </group>
                 )}
@@ -10092,24 +10123,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {!isFloating && !hasSideSectionSplit && (
                 <group>
                   <Line
-                    points={[[spaceWidth, furnitureStartY, leftDimensionZ], [spaceWidth, furnitureTopY, leftDimensionZ]]}
+                    points={[[spaceWidth, furnitureMeasuredStartY, leftDimensionZ], [spaceWidth, furnitureMeasuredTopY, leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, furnitureStartY, leftDimensionZ], [spaceWidth, furnitureStartY + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, furnitureMeasuredStartY, leftDimensionZ], [spaceWidth, furnitureMeasuredStartY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, furnitureTopY, leftDimensionZ], [spaceWidth, furnitureTopY - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, furnitureMeasuredTopY, leftDimensionZ], [spaceWidth, furnitureMeasuredTopY - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, furnitureTextY, leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, furnitureMeasuredTextY, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10118,33 +10149,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {furnitureHeightValue}
+                    {furnitureMeasuredHeightValue}
                   </Text>
                 </group>
                 )}
 
-                {/* 하부장 상판 두께 */}
-                {countertopThicknessMm > 0 && (
+                {/* 하부장 상판/상부 EP 두께 */}
+                {topFinishThicknessMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, countertopBottomY, leftDimensionZ], [spaceWidth, countertopTopY, leftDimensionZ]]}
+                    points={[[spaceWidth, topFinishBottomY, leftDimensionZ], [spaceWidth, topFinishTopY, leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, countertopBottomY, leftDimensionZ], [spaceWidth, countertopBottomY + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, topFinishBottomY, leftDimensionZ], [spaceWidth, topFinishBottomY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, countertopTopY, leftDimensionZ], [spaceWidth, countertopTopY - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, topFinishTopY, leftDimensionZ], [spaceWidth, topFinishTopY - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, (countertopBottomY + countertopTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, (topFinishBottomY + topFinishTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10153,7 +10184,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {countertopThicknessMm}
+                    {topFinishThicknessMm}
                   </Text>
                 </group>
                 )}
@@ -11274,6 +11305,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           if (isStylerModule) {
             const actualDepthMm = module.customDepth || module.upperSectionDepth || moduleData.dimensions.depth;
+            const frontExtensionZ = resolveInstalledFrontExtensionZ(module);
             const leftDepthMm = actualDepthMm;
             const rightDepthMm = 660;
             const leftDepth = mmToThreeUnits(leftDepthMm);
@@ -11283,8 +11315,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const depthOffset = (leftDepth - rightDepth) / 2;
             const rightFurnitureZ = baseFurnitureZOffset + furnitureDepth/2 - doorThickness - rightDepth/2 + depthOffset;
             const furnitureBackZ = Math.min(leftFurnitureZ - leftDepth/2, rightFurnitureZ - rightDepth/2);
-            const furnitureFrontZ = Math.max(leftFurnitureZ + leftDepth/2, rightFurnitureZ + rightDepth/2);
-            const depthKey = Math.round(actualDepthMm);
+            const furnitureFrontZ = Math.max(leftFurnitureZ + leftDepth/2, rightFurnitureZ + rightDepth/2) + frontExtensionZ;
+            const depthKey = Math.round((furnitureFrontZ - furnitureBackZ) / 0.01);
             const existing = depthGroups.get(depthKey);
             if (existing) {
               existing.backZ = Math.min(existing.backZ, furnitureBackZ);
@@ -11311,11 +11343,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             if (isShoeCabinet2) {
               // 신발장(선반장): FurnitureItem.tsx처럼 customDepth를 최우선으로 사용 (단일 깊이)
+              const frontExtensionZ = resolveInstalledFrontExtensionZ(module);
               const depthMm = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
               const depth = mmToThreeUnits(depthMm);
               const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZ2;
-              const frontZ = backZ + depth;
-              const key = Math.round(depthMm);
+              const frontZ = backZ + depth + frontExtensionZ;
+              const key = Math.round((frontZ - backZ) / 0.01);
               const existing = depthGroups.get(key);
               if (existing) {
                 existing.backZ = Math.min(existing.backZ, backZ);
@@ -11337,8 +11370,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 moduleBackWallGapZ2
               );
               const lowerBackZ = lowerSpan.backZ;
-              const lowerFrontZ = lowerSpan.frontZ;
-              const lowerKey = Math.round(lowerDepthMm);
+              const lowerFrontZ = lowerSpan.frontZ + resolveInstalledFrontExtensionZ(module);
+              const lowerKey = Math.round((lowerFrontZ - lowerBackZ) / 0.01);
               const existingLower = depthGroups.get(lowerKey);
               if (existingLower) {
                 existingLower.backZ = Math.min(existingLower.backZ, lowerBackZ);
@@ -11351,8 +11384,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
               const upperDepth = mmToThreeUnits(upperDepthMm);
               const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZ2;
-              const upperFrontZ = upperBackZ + upperDepth;
-              const upperKey = Math.round(upperDepthMm);
+              const upperFrontZ = upperBackZ + upperDepth + resolveInstalledFrontExtensionZ(module);
+              const upperKey = Math.round((upperFrontZ - upperBackZ) / 0.01);
               if (upperKey !== lowerKey) {
                 const existingUpper = depthGroups.get(upperKey);
                 if (existingUpper) {
@@ -11382,16 +11415,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const moduleBackWallGapMmX = (module as any).backWallGap ?? 0;
             const moduleBackWallGapZX = moduleBackWallGapMmX > 0 ? mmToThreeUnits(moduleBackWallGapMmX) : 0;
             const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
+            const frontExtensionZ = resolveInstalledFrontExtensionZ(module);
             let furnitureBackZ: number;
             let furnitureFrontZ: number;
             if (isUpperCat) {
               // 상부장: 공간 뒷면 정렬
               furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZX;
-              furnitureFrontZ = furnitureBackZ + depth;
+              furnitureFrontZ = furnitureBackZ + depth + frontExtensionZ;
             } else if (isShoeCabinet) {
               // 신발장: FurnitureItem.tsx와 동일하게 뒷벽 기준에 붙인다.
               furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZX;
-              furnitureFrontZ = furnitureBackZ + depth;
+              furnitureFrontZ = furnitureBackZ + depth + frontExtensionZ;
             } else if (moduleData.category === 'lower' || module.moduleId?.includes('lower-cabinet')) {
               const span = resolveDepthSpanZ(
                 actualDepthMm,
@@ -11403,13 +11437,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 moduleBackWallGapZX
               );
               furnitureBackZ = span.backZ;
-              furnitureFrontZ = span.frontZ;
+              furnitureFrontZ = span.frontZ + frontExtensionZ;
             } else {
               // 하부장 외 키큰장/의류장 단일 깊이는 기존 앞면 정렬 유지
               furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZX;
-              furnitureFrontZ = furnitureBackZ + depth;
+              furnitureFrontZ = furnitureBackZ + depth + frontExtensionZ;
             }
-            const depthKey = Math.round(actualDepthMm);
+            const depthKey = Math.round((furnitureFrontZ - furnitureBackZ) / 0.01);
             const existing = depthGroups.get(depthKey);
             if (existing) {
               existing.backZ = Math.min(existing.backZ, furnitureBackZ);
@@ -11525,14 +11559,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             if (isStylerModule) {
               const actualDepthMm = module.customDepth || module.upperSectionDepth || moduleData.dimensions.depth;
+              const frontExtensionZ = resolveInstalledFrontExtensionZ(module);
               const rightDepthMm = 660;
               const rightDepth = mmToThreeUnits(rightDepthMm);
               const baseFurnitureZOffset = furnitureZOffset;
               const stylerZOffset = baseFurnitureZOffset + (furnitureDepth - rightDepth) / 2;
               const stylerZ = stylerZOffset + rightDepth/2 - doorThickness - rightDepth/2;
               const furnitureBackZ = stylerZ - rightDepth/2;
-              const furnitureFrontZ = stylerZ + rightDepth/2;
-              const depthKey = Math.round(actualDepthMm);
+              const furnitureFrontZ = stylerZ + rightDepth/2 + frontExtensionZ;
+              const depthKey = Math.round((furnitureFrontZ - furnitureBackZ) / 0.01);
               const existing = depthGroups.get(depthKey);
               if (existing) {
                 existing.backZ = Math.min(existing.backZ, furnitureBackZ);
@@ -11554,11 +11589,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               if (isShoeCabinet2) {
                 // 신발장: customDepth 최우선(FurnitureItem.tsx와 동일)
+                const frontExtensionZ = resolveInstalledFrontExtensionZ(module);
                 const depthMm = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
                 const depth = mmToThreeUnits(depthMm);
                 const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZR;
-                const frontZ = backZ + depth;
-                const key = Math.round(depthMm);
+                const frontZ = backZ + depth + frontExtensionZ;
+                const key = Math.round((frontZ - backZ) / 0.01);
                 const existing = depthGroups.get(key);
                 if (existing) {
                   existing.backZ = Math.min(existing.backZ, backZ);
@@ -11580,8 +11616,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   moduleBackWallGapZR
                 );
                 const lowerBackZ = lowerSpan.backZ;
-                const lowerFrontZ = lowerSpan.frontZ;
-                const lowerKey = Math.round(lowerDepthMm);
+                const lowerFrontZ = lowerSpan.frontZ + resolveInstalledFrontExtensionZ(module);
+                const lowerKey = Math.round((lowerFrontZ - lowerBackZ) / 0.01);
                 const existingLower = depthGroups.get(lowerKey);
                 if (existingLower) {
                   existingLower.backZ = Math.min(existingLower.backZ, lowerBackZ);
@@ -11594,8 +11630,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
                 const upperDepth = mmToThreeUnits(upperDepthMm);
                 const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZR;
-                const upperFrontZ = upperBackZ + upperDepth;
-                const upperKey = Math.round(upperDepthMm);
+                const upperFrontZ = upperBackZ + upperDepth + resolveInstalledFrontExtensionZ(module);
+                const upperKey = Math.round((upperFrontZ - upperBackZ) / 0.01);
                 if (upperKey !== lowerKey) {
                   const existingUpper = depthGroups.get(upperKey);
                   if (existingUpper) {
@@ -11619,6 +11655,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moduleBackWallGapMmRX = (module as any).backWallGap ?? 0;
               const moduleBackWallGapZRX = moduleBackWallGapMmRX > 0 ? mmToThreeUnits(moduleBackWallGapMmRX) : 0;
               const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
+              const frontExtensionZ = resolveInstalledFrontExtensionZ(module);
               const mid = module.moduleId || '';
               const isShoeCabinet = (mid.includes('-entryway-') || mid.includes('-shelf-') ||
                                     mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-'));
@@ -11626,11 +11663,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               let furnitureFrontZ: number;
               if (isUpperCat) {
                 furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZRX;
-                furnitureFrontZ = furnitureBackZ + depth;
+                furnitureFrontZ = furnitureBackZ + depth + frontExtensionZ;
               } else if (isShoeCabinet) {
                 // 신발장: FurnitureItem.tsx와 동일하게 뒷벽 기준에 붙인다.
                 furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZRX;
-                furnitureFrontZ = furnitureBackZ + depth;
+                furnitureFrontZ = furnitureBackZ + depth + frontExtensionZ;
               } else if (moduleData.category === 'lower' || module.moduleId?.includes('lower-cabinet')) {
                 const span = resolveDepthSpanZ(
                   actualDepthMm,
@@ -11642,12 +11679,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   moduleBackWallGapZRX
                 );
                 furnitureBackZ = span.backZ;
-                furnitureFrontZ = span.frontZ;
+                furnitureFrontZ = span.frontZ + frontExtensionZ;
               } else {
                 furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZRX;
-                furnitureFrontZ = furnitureBackZ + depth;
+                furnitureFrontZ = furnitureBackZ + depth + frontExtensionZ;
               }
-              const depthKey = Math.round(actualDepthMm);
+              const depthKey = Math.round((furnitureFrontZ - furnitureBackZ) / 0.01);
               const existing = depthGroups.get(depthKey);
               if (existing) {
                 existing.backZ = Math.min(existing.backZ, furnitureBackZ);
@@ -12285,7 +12322,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const panelDepthMm = spaceInfo.depth || 600;
           const furnitureDepthMm = Math.min(panelDepthMm, 600);
           const stylerDepthMm = 660; // 스타일러장 깊이
-          const doorThicknessMm = 18.5;
+          const doorThicknessMm = 18;
           
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
