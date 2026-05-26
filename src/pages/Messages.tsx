@@ -204,6 +204,9 @@ export default function Messages() {
     leftNavText: isDark ? '#a6b0cf' : '#7a7f9a',
     leftNavTextActive: 'var(--theme-primary, #7269ef)',
     leftNavActiveBg: isDark ? '#36404a' : 'rgba(114,105,239,0.18)',
+    // 대화 목록 아이템 활성 배경 — 좀더 은은한 톤
+    convItemActiveBg: isDark ? '#2e3648' : 'rgba(114,105,239,0.06)',
+    convItemHoverBg: isDark ? '#2a3243' : 'rgba(0,0,0,0.03)',
     sidebarBg: isDark ? '#262e3f' : '#ffffff',
     sidebarBorder: isDark ? '#36404a' : '#e6ebf5',
     chatBg: isDark ? '#36404a' : '#f5f7fb',
@@ -354,7 +357,9 @@ export default function Messages() {
                     padding: '14px 12px',
                     borderRadius: 6,
                     cursor: 'pointer',
-                    background: isActive ? C.leftNavActiveBg : 'transparent',
+                    background: isActive ? C.convItemActiveBg : 'transparent',
+                    borderLeft: isActive ? `3px solid ${C.accent}` : '3px solid transparent',
+                    paddingLeft: 9,
                     display: 'flex',
                     gap: 12,
                     alignItems: 'center',
@@ -362,7 +367,7 @@ export default function Messages() {
                     transition: 'background 0.15s',
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.background = isDark ? '#2e3648' : 'rgba(114,105,239,0.08)';
+                    if (!isActive) e.currentTarget.style.background = C.convItemHoverBg;
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) e.currentTarget.style.background = 'transparent';
