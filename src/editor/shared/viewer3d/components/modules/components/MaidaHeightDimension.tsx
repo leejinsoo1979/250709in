@@ -13,6 +13,7 @@ interface MaidaHeightDimensionSegment {
 interface MaidaHeightDimensionProps {
   segments: MaidaHeightDimensionSegment[];
   maidaWidth: number;
+  maidaXOffset?: number;
   moduleDepthMm: number;
   maidaZ: number;
   viewMode: '3D' | '2D';
@@ -53,6 +54,7 @@ const OverlayLine: React.FC<{
 const MaidaHeightDimension: React.FC<MaidaHeightDimensionProps> = ({
   segments,
   maidaWidth,
+  maidaXOffset = 0,
   moduleDepthMm,
   maidaZ,
   viewMode,
@@ -73,7 +75,7 @@ const MaidaHeightDimension: React.FC<MaidaHeightDimensionProps> = ({
   const direction = side === 'left' ? -1 : 1;
   const tickSize = 0.008;
   const zPos = viewMode === '3D' ? mmToThreeUnits(moduleDepthMm / 2 + 11 + 1) : maidaZ + mmToThreeUnits(10);
-  const edgeX = direction * maidaWidth / 2;
+  const edgeX = maidaXOffset + direction * maidaWidth / 2;
   const lineX = edgeX + direction * mmToThreeUnits(160);
   const textX = lineX + direction * mmToThreeUnits(60);
   const hoverColor = '#0b3d91';

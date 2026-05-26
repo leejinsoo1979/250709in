@@ -28,6 +28,7 @@ import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resol
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
+import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -416,6 +417,8 @@ interface InductionDrawerAnimatedProps {
   doorBottomGap?: number;
   floorY?: number;
   maidaDimensionSide?: 'left' | 'right' | null;
+  maidaFrontWidthMm?: number;
+  maidaXOffset?: number;
 }
 
 const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
@@ -435,6 +438,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   doorBottomGap,
   floorY,
   maidaDimensionSide = null,
+  maidaFrontWidthMm,
+  maidaXOffset = 0,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -502,7 +507,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
 
   // 마이다 관련 계산
   const moduleDepthMm = furnitureDepth / 0.01;
-  const maidaWidthMm = widthMm - 3;
+  const maidaWidthMm = Math.max(0, (maidaFrontWidthMm ?? widthMm) - 3);
   const maidaWidth = mmToThreeUnits(maidaWidthMm);
   const maidaThickness = basicThickness;
   const MAIDA_BACK_GAP_MM = 2;
@@ -611,9 +616,9 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
     const hw = maidaWidth / 2;
     const hh = mmToThreeUnits(maidaH) / 2;
     const frontZPos = maidaZ + maidaThickness / 2 + 0.002;
-    const leftTop: [number, number, number] = [0 - hw, maidaCY + hh, frontZPos];
-    const centerBottom: [number, number, number] = [0, maidaCY - hh, frontZPos];
-    const rightTop: [number, number, number] = [0 + hw, maidaCY + hh, frontZPos];
+    const leftTop: [number, number, number] = [maidaXOffset - hw, maidaCY + hh, frontZPos];
+    const centerBottom: [number, number, number] = [maidaXOffset, maidaCY - hh, frontZPos];
+    const rightTop: [number, number, number] = [maidaXOffset + hw, maidaCY + hh, frontZPos];
     return (
       <>
         {makeDashedLine(leftTop, centerBottom, `ind-maida-v1-${idx}`)}
@@ -698,9 +703,9 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
       {hasDoor && (
         <animated.group position-z={spring.z}>
           {/* 1단 서랍 마이다 */}
-          <BoxWithEdges
+            <BoxWithEdges
             args={[maidaWidth, mmToThreeUnits(maida1HeightMm), maidaThickness]}
-            position={[0, maida1CenterY, maidaZ]}
+            position={[maidaXOffset, maida1CenterY, maidaZ]}
             material={doorMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -710,7 +715,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
           {/* 1단 마이다 2D 오버레이 */}
           {showMaidaOverlay && (
-            <mesh position={[0, maida1CenterY, maidaZ + maidaThickness / 2 + 0.001]} renderOrder={9999}>
+            <mesh position={[maidaXOffset, maida1CenterY, maidaZ + maidaThickness / 2 + 0.001]} renderOrder={9999}>
               <planeGeometry args={[maidaWidth, mmToThreeUnits(maida1HeightMm)]} />
               <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
             </mesh>
@@ -721,7 +726,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           {/* 2단 서랍 마이다 */}
           <BoxWithEdges
             args={[maidaWidth, mmToThreeUnits(maida2HeightMm), maidaThickness]}
-            position={[0, maida2CenterY, maidaZ]}
+            position={[maidaXOffset, maida2CenterY, maidaZ]}
             material={doorMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -731,7 +736,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
           {/* 2단 마이다 2D 오버레이 */}
           {showMaidaOverlay && (
-            <mesh position={[0, maida2CenterY, maidaZ + maidaThickness / 2 + 0.001]} renderOrder={9999}>
+            <mesh position={[maidaXOffset, maida2CenterY, maidaZ + maidaThickness / 2 + 0.001]} renderOrder={9999}>
               <planeGeometry args={[maidaWidth, mmToThreeUnits(maida2HeightMm)]} />
               <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
             </mesh>
@@ -743,7 +748,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
 
       {/* 마이다 하단 폭 치수 (1단 마이다 기준) — 서랍 애니메이션 밖에서 고정, 공통 컴포넌트 사용 */}
       {hasDoor && showDimensions && (
-        <group position={[0, maida1CenterY - mmToThreeUnits(maida1HeightMm) / 2, 0]}>
+        <group position={[maidaXOffset, maida1CenterY - mmToThreeUnits(maida1HeightMm) / 2, 0]}>
           <MaidaWidthDimension
             maidaWidthMm={maidaWidthMm}
             maidaWidth={maidaWidth}
@@ -760,6 +765,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
         <MaidaHeightDimension
           segments={maidaHeightSegments}
           maidaWidth={maidaWidth}
+          maidaXOffset={maidaXOffset}
           moduleDepthMm={moduleDepthMm}
           maidaZ={maidaZ}
           viewMode={viewMode as '3D' | '2D'}
@@ -799,6 +805,8 @@ interface TouchDrawerAnimatedProps {
   stoneThickness?: number;
   floorY?: number;
   maidaDimensionSide?: 'left' | 'right' | null;
+  maidaFrontWidthMm?: number;
+  maidaXOffset?: number;
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -821,6 +829,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   stoneThickness = 20,
   floorY,
   maidaDimensionSide = null,
+  maidaFrontWidthMm,
+  maidaXOffset = 0,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -924,7 +934,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
 
   // === 마이다 기하 ===
   const moduleWidthMm = adjustedWidth || 0;
-  const maidaWidthMm = moduleWidthMm - 3;
+  const maidaWidthMm = Math.max(0, (maidaFrontWidthMm ?? moduleWidthMm) - 3);
   const maidaWidth = mmToThreeUnits(maidaWidthMm);
   const maidaThickness = basicThickness;
   const moduleDepthMm = furnitureDepth / 0.01;
@@ -1196,7 +1206,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
           <BoxWithEdges
             key={`touch-maida-${i}`}
             args={[maidaWidth, mmToThreeUnits(m.height), maidaThickness]}
-            position={[0, m.centerY, maidaZ]}
+            position={[maidaXOffset, m.centerY, maidaZ]}
             material={doorMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -1212,7 +1222,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     {hasDoor && maidas.length > 0 && showDimensions && (() => {
       const m = maidas[0]; // 1단 서랍
       return (
-        <group position={[0, m.centerY - mmToThreeUnits(m.height) / 2, 0]}>
+        <group position={[maidaXOffset, m.centerY - mmToThreeUnits(m.height) / 2, 0]}>
           <MaidaWidthDimension
             maidaWidthMm={maidaWidthMm}
             maidaWidth={maidaWidth}
@@ -1230,6 +1240,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       <MaidaHeightDimension
         segments={maidaHeightSegments}
         maidaWidth={maidaWidth}
+        maidaXOffset={maidaXOffset}
         moduleDepthMm={moduleDepthMm}
         maidaZ={maidaZ}
         viewMode={viewMode as '3D' | '2D'}
@@ -1410,6 +1421,99 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (mat === 'pet') return userThk > 0 ? petMappedThk : 0;
     return userThk;
   });
+
+  const maidaFrontWidthMm = useMemo(() => {
+    let frontWidth = typeof doorWidth === 'number' && doorWidth > 0
+      ? doorWidth
+      : typeof originalSlotWidth === 'number' && originalSlotWidth > 0
+        ? originalSlotWidth
+        : typeof adjustedWidth === 'number' && adjustedWidth > 0
+          ? adjustedWidth
+          : moduleData?.dimensions?.width ?? 0;
+
+    const openOuterSides = spaceInfo
+      ? resolveDoorOuterOpenSides({
+        spaceInfo,
+        placedModule: placedModuleForCorner,
+        moduleWidthMm: frontWidth,
+        slotCenterX
+      })
+      : { left: false, right: false };
+    frontWidth += (openOuterSides.left ? 1.5 : 0) + (openOuterSides.right ? 1.5 : 0);
+
+    if (placedModuleForCorner) {
+      const epTrimMm = resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness);
+      const leftFrontOffset = Number((placedModuleForCorner as any).leftEndPanelOffset ?? 0);
+      const rightFrontOffset = Number((placedModuleForCorner as any).rightEndPanelOffset ?? 0);
+
+      if (placedModuleForCorner.hasLeftEndPanel && leftFrontOffset > 0) {
+        frontWidth -= epTrimMm;
+      }
+      if (placedModuleForCorner.hasRightEndPanel && rightFrontOffset > 0) {
+        frontWidth -= epTrimMm;
+      }
+    }
+
+    const maidaAdjustEnabled = !!(placedModuleForCorner as any)?.maidaWidthAdjustEnabled;
+    const maidaAdjustMm = (placedModuleForCorner as any)?.maidaWidthAdjustMm ?? -1.5;
+    return Math.max(0, maidaAdjustEnabled ? frontWidth + maidaAdjustMm + 3 : frontWidth);
+  }, [
+    adjustedWidth,
+    doorWidth,
+    moduleData?.dimensions?.width,
+    originalSlotWidth,
+    placedModuleForCorner,
+    slotCenterX,
+    spaceInfo
+  ]);
+
+  const maidaXOffset = useMemo(() => {
+    let offset = slotCenterX ?? 0;
+    const frontWidth = typeof doorWidth === 'number' && doorWidth > 0
+      ? doorWidth
+      : typeof originalSlotWidth === 'number' && originalSlotWidth > 0
+        ? originalSlotWidth
+        : typeof adjustedWidth === 'number' && adjustedWidth > 0
+          ? adjustedWidth
+          : moduleData?.dimensions?.width ?? 0;
+    const openOuterSides = spaceInfo
+      ? resolveDoorOuterOpenSides({
+        spaceInfo,
+        placedModule: placedModuleForCorner,
+        moduleWidthMm: frontWidth,
+        slotCenterX
+      })
+      : { left: false, right: false };
+    const outerLeftGapCompensationMm = openOuterSides.left ? 1.5 : 0;
+    const outerRightGapCompensationMm = openOuterSides.right ? 1.5 : 0;
+    offset += ((outerRightGapCompensationMm - outerLeftGapCompensationMm) / 2) * 0.01;
+
+    const isFree = spaceInfo?.layoutMode === 'free-placement' || placedModuleForCorner?.isFreePlacement === true;
+    if (isFree && placedModuleForCorner && !placedModuleForCorner.customConfig) {
+      const epThk = resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness) * 0.01;
+      const leftEp = placedModuleForCorner.hasLeftEndPanel ? epThk : 0;
+      const rightEp = placedModuleForCorner.hasRightEndPanel ? epThk : 0;
+      offset += -(leftEp - rightEp) / 2;
+    }
+    if (placedModuleForCorner) {
+      const epTrim = resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness) * 0.01;
+      const leftFrontOffset = Number((placedModuleForCorner as any).leftEndPanelOffset ?? 0);
+      const rightFrontOffset = Number((placedModuleForCorner as any).rightEndPanelOffset ?? 0);
+      const leftTrim = placedModuleForCorner.hasLeftEndPanel && leftFrontOffset > 0 ? epTrim : 0;
+      const rightTrim = placedModuleForCorner.hasRightEndPanel && rightFrontOffset > 0 ? epTrim : 0;
+      offset += (leftTrim - rightTrim) / 2;
+    }
+    return offset;
+  }, [
+    adjustedWidth,
+    doorWidth,
+    moduleData?.dimensions?.width,
+    originalSlotWidth,
+    placedModuleForCorner,
+    slotCenterX,
+    spaceInfo,
+    spaceInfo?.layoutMode
+  ]);
 
   const lowerCabinetSideBoringResult = useMemo(() => {
     const moduleId = moduleData.id;
@@ -2483,6 +2587,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               defaultDoorBottomGap={defaultDrawerBottomGap}
               floorY={lowerCabinetFloorY - cabinetYPosition}
               maidaDimensionSide={maidaDimensionSide}
+              maidaFrontWidthMm={maidaFrontWidthMm}
+              maidaXOffset={maidaXOffset}
             />
           </group>
         );
@@ -2654,6 +2760,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           doorBottomGap={doorBottomGap}
           floorY={lowerCabinetFloorY - cabinetYPosition}
           maidaDimensionSide={maidaDimensionSide}
+          maidaFrontWidthMm={maidaFrontWidthMm}
+          maidaXOffset={maidaXOffset}
         />
       )}
 
@@ -2680,6 +2788,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           stoneThickness={stoneThickness}
           floorY={lowerCabinetFloorY - cabinetYPosition}
           maidaDimensionSide={maidaDimensionSide}
+          maidaFrontWidthMm={maidaFrontWidthMm}
+          maidaXOffset={maidaXOffset}
         />
       )}
 

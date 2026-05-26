@@ -42,6 +42,7 @@ export const FURNITURE_PRESET_FIELD_GROUPS: FurniturePresetGroup[] = [
     id: 'drawer',
     label: '마이다 / 서랍 (개별 높이, 레그라 종류)',
     fields: [
+      'maidaWidthAdjustEnabled', 'maidaWidthAdjustMm',
       'customMaidaHeights',
       'legraDrawerTypes',
       'glassDrawerOffsetMm',

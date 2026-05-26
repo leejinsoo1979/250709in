@@ -17,11 +17,20 @@ export const isBasicLowerTopEndPanelDoorGapModuleId = (moduleId?: string): boole
     || moduleId.includes('dual-lower-induction-cabinet')
 }
 
+export const isDoorLiftTopEndPanelModuleId = (moduleId?: string): boolean => {
+  return !!moduleId?.includes('lower-door-lift-')
+}
+
 export const resolveTopEndPanelFrontOffsetMm = (
   moduleId?: string,
   doorTopGap?: number | null,
   topEndPanelOffset?: number | null
 ): number => {
+  if (isDoorLiftTopEndPanelModuleId(moduleId)) {
+    return typeof topEndPanelOffset === 'number' && Number.isFinite(topEndPanelOffset)
+      ? topEndPanelOffset
+      : 0
+  }
   if (isBasicLowerTopEndPanelDoorGapModuleId(moduleId) && typeof doorTopGap === 'number') {
     return doorTopGap > 0 ? 0 : TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM
   }

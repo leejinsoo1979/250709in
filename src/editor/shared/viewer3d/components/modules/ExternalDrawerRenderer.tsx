@@ -82,6 +82,7 @@ interface SingleDrawerProps {
   defaultDoorBottomGap?: number;
   isTopDrawer?: boolean;
   isBottomDrawer?: boolean;
+  maidaXOffset?: number;
 }
 
 const SingleDrawer: React.FC<SingleDrawerProps> = ({
@@ -104,6 +105,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   defaultDoorBottomGap = 5,
   isTopDrawer = false,
   isBottomDrawer = false,
+  maidaXOffset = 0,
 }) => {
   // Z축 슬라이드 애니메이션
   const spring = useSpring({
@@ -133,6 +135,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const sideCenterY = sideBottomY + sideHeight / 2;
 
   const cX = 0;
+  const maidaCenterX = cX + maidaXOffset;
 
   const bottomThk = bpThk;
   const bottomThkMm = bottomThk / 0.01;
@@ -255,7 +258,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
           <group>
             <BoxWithEdges
               args={[maidaWidth, maidaHeight, handlePlateThickness]}
-              position={[cX, maidaCenterY, maidaZ]}
+              position={[maidaCenterX, maidaCenterY, maidaZ]}
               material={doorMaterial}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -266,7 +269,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
             />
             {/* 2D: 마이다 반투명 overlay */}
             {showMaidaOverlay && (
-              <mesh position={[cX, maidaCenterY, maidaZ + handlePlateThickness / 2 + 0.001]} renderOrder={9999}>
+              <mesh position={[maidaCenterX, maidaCenterY, maidaZ + handlePlateThickness / 2 + 0.001]} renderOrder={9999}>
                 <planeGeometry args={[maidaWidth, maidaHeight]} />
                 <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
               </mesh>
@@ -310,9 +313,9 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
                 return segments;
               };
               // V자: 좌상 → 중앙하, 중앙하 → 우상
-              const leftTop: [number, number, number] = [cX - hw, maidaCenterY + hh, frontZ];
-              const centerBottom: [number, number, number] = [cX, maidaCenterY - hh, frontZ];
-              const rightTop: [number, number, number] = [cX + hw, maidaCenterY + hh, frontZ];
+              const leftTop: [number, number, number] = [maidaCenterX - hw, maidaCenterY + hh, frontZ];
+              const centerBottom: [number, number, number] = [maidaCenterX, maidaCenterY - hh, frontZ];
+              const rightTop: [number, number, number] = [maidaCenterX + hw, maidaCenterY + hh, frontZ];
               return (
                 <>
                   {makeDashedLine(leftTop, centerBottom, `ext-maida-v1-${i}`)}
@@ -358,6 +361,8 @@ interface ExternalDrawerRendererProps {
   defaultDoorBottomGap?: number; // 모듈 타입별 기본 doorBottomGap (delta 계산 기준)
   floorY?: number; // 현재 그룹 좌표계에서 실제 바닥 Y
   maidaDimensionSide?: 'left' | 'right' | null;
+  maidaFrontWidthMm?: number;
+  maidaXOffset?: number;
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -391,6 +396,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   defaultDoorBottomGap = 5,
   floorY,
   maidaDimensionSide = null,
+  maidaFrontWidthMm,
+  maidaXOffset = 0,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -525,7 +532,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const SIDE_GAP = mmToThreeUnits(6);
   const BOTTOM_GAP = mmToThreeUnits(15);
 
-  const maidaWidth = mmToThreeUnits(moduleWidth - 3);
+  const maidaWidthMm = Math.max(0, (maidaFrontWidthMm ?? moduleWidth) - 3);
+  const maidaWidth = mmToThreeUnits(maidaWidthMm);
   const MAIDA_BACK_GAP_MM = 2;
   const maidaZ = depth / 2 + mmToThreeUnits(MAIDA_BACK_GAP_MM) + HANDLE_PLATE_THICKNESS / 2;
 
@@ -687,6 +695,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           backPanelThickness={backPanelThickness}
           maidaWidth={maidaWidth}
           maidaZ={maidaZ}
+          maidaXOffset={maidaXOffset}
           material={material}
           doorMaterial={doorMaterial}
           renderMode={renderMode}
@@ -713,6 +722,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         <MaidaHeightDimension
           segments={maidaHeightSegments}
           maidaWidth={maidaWidth}
+          maidaXOffset={maidaXOffset}
           moduleDepthMm={moduleDepthMm}
           maidaZ={maidaZ}
           viewMode={viewMode as '3D' | '2D'}
@@ -778,9 +788,9 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const maidaBottomMm0 = zone0.notchBelowTop != null ? (zone0.notchBelowTop - 5) : -5;
         const maidaBottomY = cabinetBottomY + mmToThreeUnits(maidaBottomMm0);
         return (
-          <group position={[0, maidaBottomY, 0]}>
+        <group position={[maidaXOffset, maidaBottomY, 0]}>
             <MaidaWidthDimension
-              maidaWidthMm={moduleWidth - 3}
+              maidaWidthMm={maidaWidthMm}
               maidaWidth={maidaWidth}
               moduleDepthMm={moduleDepthMm}
               maidaZ={maidaZ}

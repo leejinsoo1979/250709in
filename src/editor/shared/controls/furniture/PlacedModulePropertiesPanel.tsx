@@ -35,6 +35,7 @@ import {
   PET_PANEL_THICKNESS_MM,
   TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM,
   isBasicLowerTopEndPanelDoorGapModuleId,
+  isDoorLiftTopEndPanelModuleId,
   resolvePetPanelThicknessMm,
   resolveTopEndPanelFrontOffsetMm
 } from '@/editor/shared/utils/panelThickness';
@@ -63,6 +64,8 @@ const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
 };
 
 const BASIC_LOWER_DOOR_TOP_GAP_DEFAULT = -20;
+const DOOR_LIFT_DOOR_TOP_GAP_DEFAULT = 40;
+const DOOR_LIFT_TOP_EP_COLLISION_GAP = -3;
 
 const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => {
   return isBasicLowerTopEndPanelDoorGapModuleId(moduleId);
@@ -227,6 +230,226 @@ const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurro
   }
 
   return { sideHeightMm: spaceInfo.height, frontHeightMm: spaceInfo.height };
+};
+
+const isLowerDrawerMaidaModuleId = (moduleId?: string): boolean => {
+  if (!moduleId) return false;
+  return moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-2tier')
+    || moduleId.includes('lower-door-lift-3tier')
+    || moduleId.includes('lower-door-lift-touch-')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('lower-induction-cabinet')
+    || moduleId.includes('dual-lower-induction-cabinet');
+};
+
+const formatMaidaTierLabel = (displayIndex: number, total: number): string => {
+  if (total <= 1) return '마이다';
+  if (total === 2) return displayIndex === 0 ? '1단(위)' : '2단(아래)';
+  return displayIndex === 0 ? '1단(위)' : displayIndex === total - 1 ? `${total}단(아래)` : `${displayIndex + 1}단(중간)`;
+};
+
+const resolveMaidaDisplayWidthMm = (
+  module: any,
+  moduleData: any,
+  bodyWidthMm: number,
+  outerOpenSides: { left: boolean; right: boolean } = { left: false, right: false }
+): number => {
+  let frontWidth = bodyWidthMm || module?.slotCustomWidth || module?.customWidth || module?.adjustedWidth || moduleData?.dimensions?.width || 0;
+  frontWidth += (outerOpenSides.left ? 1.5 : 0) + (outerOpenSides.right ? 1.5 : 0);
+
+  if (module) {
+    const epTrimMm = resolvePetPanelThicknessMm(module.endPanelThickness);
+    const leftFrontOffset = Number(module.leftEndPanelOffset ?? 0);
+    const rightFrontOffset = Number(module.rightEndPanelOffset ?? 0);
+
+    if (module.hasLeftEndPanel && leftFrontOffset > 0) frontWidth -= epTrimMm;
+    if (module.hasRightEndPanel && rightFrontOffset > 0) frontWidth -= epTrimMm;
+  }
+
+  const adjustEnabled = !!module?.maidaWidthAdjustEnabled;
+  const adjustMm = module?.maidaWidthAdjustMm ?? -1.5;
+  return Math.max(0, Math.round(adjustEnabled ? frontWidth + adjustMm : frontWidth - 3));
+};
+
+const resolveExternalMaidaHeightsMm = (
+  moduleId: string,
+  bodyHeightMm: number,
+  moduleData: any,
+  stoneThickness: number,
+  doorTopGap?: number,
+  doorBottomGap?: number
+): number[] => {
+  const is3Tier = moduleId.includes('lower-drawer-3tier');
+  const is2Tier = moduleId.includes('lower-drawer-2tier');
+  const isDoorLift3Tier = moduleId.includes('lower-door-lift-3tier');
+  const isDoorLift2Tier = moduleId.includes('lower-door-lift-2tier');
+  const isTopDown3Tier = moduleId.includes('lower-top-down-3tier');
+  const isTopDown2Tier = moduleId.includes('lower-top-down-2tier');
+  if (!(is3Tier || is2Tier || isDoorLift3Tier || isDoorLift2Tier || isTopDown3Tier || isTopDown2Tier)) return [];
+
+  const currentCabinetHmm = Math.round(bodyHeightMm);
+  const topDownDefaultTopGap = stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
+  const defaultTopGap = (isTopDown2Tier || isTopDown3Tier) ? topDownDefaultTopGap : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
+  const defaultBottomGap = 5;
+  const effectiveTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
+    ? defaultTopGap
+    : (doorTopGap ?? defaultTopGap);
+  const effectiveBottomGap = doorBottomGap ?? defaultBottomGap;
+
+  const drawer2TierFromBottom = ((moduleData?.dimensions?.height ?? 785) - 125) / 2;
+  const doorLift2TierNotch = Math.max(0, Math.round((currentCabinetHmm - 75) / 2));
+  const doorLift2TierMaidaH = Math.max(0, doorLift2TierNotch + 45);
+  const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
+  const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
+  const drawer3TierDelta = currentCabinetHmm - 785;
+  const topDownStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
+  const td3StretcherDelta = topDownStretcherH - 55;
+  const notchFromBottoms = is3Tier
+    ? [295 + drawer3TierDelta, 510 + drawer3TierDelta]
+    : isDoorLift3Tier ? [315, doorLift3TierNotch2]
+    : isDoorLift2Tier ? [doorLift2TierNotch]
+    : isTopDown3Tier ? [225 + drawer3TierDelta - td3StretcherDelta, 445 + drawer3TierDelta - td3StretcherDelta, 665 + drawer3TierDelta - td3StretcherDelta]
+    : isTopDown2Tier ? [Math.round((currentCabinetHmm + stoneThickness - 20 - 185) / 2), currentCabinetHmm - (topDownStretcherH + 65)]
+    : [drawer2TierFromBottom];
+  const notchHeights = notchFromBottoms.map(() => 65);
+  const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
+  const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
+  const fixedMaidaHeights = isDoorLift2Tier
+    ? [doorLift2TierMaidaH, doorLift2TierMaidaH]
+    : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined;
+
+  const basicThicknessMm = moduleData?.modelConfig?.basicThickness ?? 18;
+  const sidePanelHeightMm = currentCabinetHmm;
+  const upperNotchH = 60;
+  const upperNotchFromBottom = sidePanelHeightMm - upperNotchH;
+  const sortedNotches = notchFromBottoms
+    .map((fromBottom, idx) => ({ fromBottom, height: notchHeights[idx] || 65 }))
+    .sort((a, b) => a.fromBottom - b.fromBottom);
+  const allNotches = hideTopNotch ? [...sortedNotches] : [...sortedNotches, { fromBottom: upperNotchFromBottom, height: upperNotchH }];
+  const zones: { notchAboveBottom: number; notchBelowTop: number | null }[] = [];
+  let cursor = 0;
+
+  allNotches.forEach((notch, idx) => {
+    if (notch.fromBottom > cursor) {
+      zones.push({
+        notchAboveBottom: notch.fromBottom,
+        notchBelowTop: idx > 0 ? (allNotches[idx - 1].fromBottom + allNotches[idx - 1].height) : null,
+      });
+    }
+    cursor = notch.fromBottom + notch.height;
+  });
+
+  if (hideTopNotch && cursor < sidePanelHeightMm && zones.length < drawerCount) {
+    const lastNotch = allNotches[allNotches.length - 1];
+    zones.push({
+      notchAboveBottom: sidePanelHeightMm - basicThicknessMm,
+      notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
+    });
+  }
+
+  return zones.slice(0, drawerCount).map((zone, idx) => {
+    const isTopDrawer = idx === drawerCount - 1;
+    const isBottomDrawer = idx === 0;
+    const maidaTopMm = zone.notchAboveBottom + 40;
+    const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+    const gapTopExt = isTopDrawer ? (effectiveTopGap - defaultTopGap) : 0;
+    const gapBottomExt = isBottomDrawer ? (effectiveBottomGap - defaultBottomGap) : 0;
+    const defaultHeight = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
+    const fixedHeight = fixedMaidaHeights?.[idx];
+    return Math.max(0, Math.round(fixedHeight != null ? fixedHeight + gapTopExt + gapBottomExt : defaultHeight));
+  });
+};
+
+const resolveTouchMaidaHeightsMm = (
+  module: any,
+  moduleId: string,
+  bodyHeightMm: number,
+  stoneThickness: number
+): number[] => {
+  const isTouch2A = moduleId.includes('lower-door-lift-touch-2tier-a');
+  const isTouch2B = moduleId.includes('lower-door-lift-touch-2tier-b');
+  const isTouch3 = moduleId.includes('lower-door-lift-touch-3tier');
+  const isTopDownTouch2 = moduleId.includes('lower-top-down-touch-2tier');
+  const isTopDownTouch3 = moduleId.includes('lower-top-down-touch-3tier');
+  const isTopDownTouch = isTopDownTouch2 || isTopDownTouch3;
+  if (!(isTouch2A || isTouch2B || isTouch3 || isTopDownTouch2 || isTopDownTouch3)) return [];
+
+  const drawerHeights = isTouch3 ? [228, 117, 117]
+    : isTopDownTouch3 ? [164, 164, 164]
+    : [228, 228];
+  const drawerCount = drawerHeights.length;
+  const customMaida = Array.isArray(module?.customMaidaHeights) && module.customMaidaHeights.length === drawerCount
+    ? [...module.customMaidaHeights]
+    : undefined;
+  const tdStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
+  const defaultTopExt = isTopDownTouch ? -(tdStretcherH + 25) : 30;
+  const defaultBottomExt = 5;
+  const topExt = module?.doorTopGap ?? defaultTopExt;
+  const bottomExt = module?.doorBottomGap ?? defaultBottomExt;
+  const gapMm = 3;
+  const totalFrontMm = bodyHeightMm + topExt + bottomExt;
+  const maidaTotalFront = isTopDownTouch ? totalFrontMm : bodyHeightMm + defaultTopExt + defaultBottomExt;
+  let heights = customMaida
+    ? customMaida
+    : (isTouch3
+      ? [360, 227, 227]
+      : isTopDownTouch3 ? [185, 240, 240] : [0, 0]);
+
+  if (!customMaida && drawerCount === 2) {
+    const evenH = Math.floor(Math.max(0, maidaTotalFront - gapMm) / 2);
+    heights = [evenH, evenH];
+  }
+  if (!customMaida && isTouch3) {
+    const remaining = Math.max(0, maidaTotalFront - 360 - gapMm * 2);
+    const evenH = Math.floor(remaining / 2);
+    heights = [360, evenH, evenH];
+  }
+  if (!customMaida && isTopDownTouch3) {
+    const upperBundle = heights.slice(1).reduce((sum, h) => sum + h, 0) + (heights.length - 1) * gapMm;
+    heights[0] = Math.max(0, maidaTotalFront - upperBundle);
+  }
+
+  if (isTouch3) {
+    const topDelta = topExt - defaultTopExt;
+    heights[2] = Math.max(0, heights[2] + topDelta);
+  }
+  if ((isTopDownTouch || isTouch2A || isTouch2B || isTouch3) && heights.length >= 2) {
+    const topShift = isTouch3 ? (topExt - defaultTopExt) : 0;
+    const topPosition = isTopDownTouch
+      ? -bottomExt + maidaTotalFront
+      : -defaultBottomExt + maidaTotalFront + topShift;
+    let cursorTop = topPosition;
+    const positioned = new Array(heights.length).fill(0);
+    for (let i = heights.length - 1; i >= 1; i--) {
+      const h = heights[i];
+      positioned[i] = h;
+      cursorTop = cursorTop - h - gapMm;
+    }
+    positioned[0] = Math.max(0, cursorTop - (-bottomExt));
+    heights = positioned;
+  }
+
+  return heights.map(h => Math.max(0, Math.round(h)));
+};
+
+const resolveInductionMaidaHeightsMm = (
+  module: any,
+  bodyHeightMm: number
+): number[] => {
+  const defaultTopGap = -20;
+  const defaultBottomGap = 5;
+  const gapTopExt = (module?.doorTopGap ?? defaultTopGap) - defaultTopGap;
+  const gapBottomExt = (module?.doorBottomGap ?? defaultBottomGap) - defaultBottomGap;
+  const gapMm = 3;
+  const maida2Height = Math.max(0, 427 + gapTopExt);
+  const maida2Top = bodyHeightMm - 20 + gapTopExt;
+  const maida2Bottom = maida2Top - maida2Height;
+  const maida1Top = maida2Bottom - gapMm;
+  const maida1Bottom = -5 - gapBottomExt;
+  return [Math.max(0, Math.round(maida1Top - maida1Bottom)), Math.round(maida2Height)];
 };
 
 const calculateRenderedSurroundPanelsForModule = (
@@ -1603,16 +1826,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 기본값 0 = 도어 == 몸통. 도어올림/상판내림은 모듈별 기본값 사용
       const modId = currentPlacedModule.moduleId || '';
       const isShelfSplitForDoorGaps = isShelfSplitModuleId(modId);
-      const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
+      const isDoorLift = isDoorLiftTopEndPanelModuleId(modId);
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
       const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(modId);
       const isLowerCategory = moduleData?.category === 'lower';
       const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
         && spaceInfo.frameConfig?.top !== false;
       const defaultTopGap = isDoorLift
-        ? 30
-          : isTopDown
-            ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness)
+        ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
+        : isTopDown
+          ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness)
           : isBasicLowerDoorGap
             ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
             : isLowerCategory
@@ -1628,6 +1851,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? -3
         : (isBasicLowerDoorGap && rawTopGap === 20)
           ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
+          : (isDoorLift && (rawTopGap === 20 || rawTopGap === 30))
+            ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
           : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
       const initialBottomGap = rawBotGap ?? defaultBottomGap;
@@ -1985,9 +2210,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         lowerDoorTopGap: currentPlacedModule?.lowerDoorTopGap,
         lowerDoorBottomGap: currentPlacedModule?.lowerDoorBottomGap
       },
-      currentPlacedModule?.lowerSectionTopOffset
+      currentPlacedModule?.lowerSectionTopOffset,
+      !!(currentPlacedModule as any)?.maidaWidthAdjustEnabled,
+      (currentPlacedModule as any)?.maidaWidthAdjustMm ?? -1.5
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -2458,6 +2685,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       return {};
     }
     return { topEndPanelOffset: nextDoorTopGap > 0 ? 0 : TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM };
+  };
+
+  const getDoorLiftTopEndPanelOffsetUpdates = (nextTopEndPanelOffset: number) => {
+    if (!currentPlacedModule) return {};
+    if (!isDoorLiftTopEndPanelModuleId(currentPlacedModule.moduleId)) return {};
+    return {
+      doorTopGap: nextTopEndPanelOffset > 0
+        ? DOOR_LIFT_TOP_EP_COLLISION_GAP
+        : DOOR_LIFT_DOOR_TOP_GAP_DEFAULT,
+    };
   };
 
   const handleDoorTopGapChange = (value: string) => {
@@ -3251,7 +3488,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const updates: Record<string, unknown> = { hasDoor: doorEnabled };
       if (doorEnabled && mod) {
         const mId = mod.moduleId || '';
-        const isDL = mId.includes('lower-door-lift-') && !mId.includes('-half-');
+        const isDL = isDoorLiftTopEndPanelModuleId(mId);
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
         const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mId);
         const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
@@ -3259,7 +3496,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           && spaceInfo.frameConfig?.top !== false;
         if (mod.doorTopGap === undefined) {
           updates.doorTopGap = isDL
-            ? 30
+            ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
             : isTD
               ? getTopDownDoorTopGap(mod.stoneTopThickness)
               : isBasicLowerDoorGap
@@ -3267,6 +3504,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 : isLowerModule
                   ? 20
                   : (isFullSurroundForDoorDefaults ? -3 : 5);
+        } else if (isDL && (mod.doorTopGap === 20 || mod.doorTopGap === 30)) {
+          updates.doorTopGap = DOOR_LIFT_DOOR_TOP_GAP_DEFAULT;
         } else if (isBasicLowerDoorGap && mod.doorTopGap === 20) {
           updates.doorTopGap = BASIC_LOWER_DOOR_TOP_GAP_DEFAULT;
         } else if (isFullSurroundForDoorDefaults && mod.hasTopFrame !== false && mod.doorTopGap === 5 && !isDL && !isTD && !isLowerModule) {
@@ -4643,6 +4882,148 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
+          {/* 마이다 치수 (읽기 전용) — 서랍 모듈 전용, 몸통치수 바로 아래 */}
+          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
+            && isLowerDrawerMaidaModuleId(currentPlacedModule.moduleId)
+            && (() => {
+              const bodyWidth = (() => {
+                const v = parseInt(freeWidthInput, 10);
+                if (!isNaN(v) && v > 0) return v;
+                return currentPlacedModule.freeWidth
+                  || currentPlacedModule.slotCustomWidth
+                  || currentPlacedModule.customWidth
+                  || currentPlacedModule.adjustedWidth
+                  || moduleData.dimensions.width;
+              })();
+              const bodyHeight = Math.round(adjustedFreeHeight || placedBodyHeight || moduleData.dimensions.height || 0);
+              const stoneThickness = (currentPlacedModule as any).stoneTopThickness ?? 20;
+              const maidaOuterOpenSides = resolveDoorOuterOpenSides({
+                spaceInfo,
+                placedModule: currentPlacedModule,
+                moduleWidthMm: bodyWidth,
+                slotCenterX: currentPlacedModule.position?.x
+              });
+              const maidaWidth = resolveMaidaDisplayWidthMm(currentPlacedModule, moduleData, bodyWidth, maidaOuterOpenSides);
+              const maidaThickness = moduleData?.modelConfig?.basicThickness || 18;
+              const moduleId = currentPlacedModule.moduleId ?? '';
+              const heights = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')
+                ? resolveInductionMaidaHeightsMm(currentPlacedModule, bodyHeight)
+                : moduleId.includes('lower-door-lift-touch-') || moduleId.includes('lower-top-down-touch-')
+                  ? resolveTouchMaidaHeightsMm(currentPlacedModule, moduleId, bodyHeight, stoneThickness)
+                  : resolveExternalMaidaHeightsMm(
+                    moduleId,
+                    bodyHeight,
+                    moduleData,
+                    stoneThickness,
+                    currentPlacedModule.doorTopGap,
+                    currentPlacedModule.doorBottomGap
+                  );
+              const displayHeights = heights.slice().reverse();
+              if (displayHeights.length === 0) return null;
+
+              return (
+                <div className={styles.propertySection}>
+                  <h5 className={styles.sectionTitle}>
+                    마이다치수
+                    {displayHeights.length > 1 && <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', fontWeight: 'normal', marginLeft: '6px' }}>(위→아래)</span>}
+                  </h5>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '2px' }}>
+                    {displayHeights.map((heightMm, idx) => (
+                      <div key={`maida-size-${idx}`}>
+                        {displayHeights.length > 1 && (
+                          <div style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', lineHeight: 1.2, marginBottom: '2px' }}>
+                            {formatMaidaTierLabel(idx, displayHeights.length)}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
+                            <div className={styles.inputWithUnit}>
+                              <input type="text" value={maidaWidth} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                              <span className={styles.unit}>mm</span>
+                            </div>
+                          </div>
+                          <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
+                            <div className={styles.inputWithUnit}>
+                              <input type="text" value={heightMm} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                              <span className={styles.unit}>mm</span>
+                            </div>
+                          </div>
+                          <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>t</label>
+                            <div className={styles.inputWithUnit}>
+                              <input type="text" value={maidaThickness} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                              <span className={styles.unit}>mm</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={!!(currentPlacedModule as any).maidaWidthAdjustEnabled}
+                        onChange={(e) => {
+                          const enabled = e.target.checked;
+                          if (enabled) {
+                            const initial = (currentPlacedModule as any).maidaWidthAdjustMm ?? -1.5;
+                            updatePlacedModule(currentPlacedModule.id, {
+                              maidaWidthAdjustEnabled: true,
+                              maidaWidthAdjustMm: initial,
+                            } as any);
+                          } else {
+                            updatePlacedModule(currentPlacedModule.id, {
+                              maidaWidthAdjustEnabled: false,
+                            } as any);
+                          }
+                        }}
+                        style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                      />
+                      <span>마이다 확장/축소</span>
+                    </label>
+                    {!!(currentPlacedModule as any).maidaWidthAdjustEnabled && (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={(currentPlacedModule as any).maidaWidthAdjustMm ?? -1.5}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d*(\.\d*)?$/.test(v)) {
+                                const num = v === '' || v === '-' || v === '.' || v === '-.' ? 0 : parseFloat(v);
+                                if (!isNaN(num)) {
+                                  const rounded = Math.round(num * 10) / 10;
+                                  updatePlacedModule(currentPlacedModule.id, { maidaWidthAdjustMm: Math.max(-500, Math.min(500, rounded)) } as any);
+                                }
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = (currentPlacedModule as any).maidaWidthAdjustMm ?? -1.5;
+                                const step = e.shiftKey ? 1 : 0.1;
+                                const next = Math.round((cur + (e.key === 'ArrowUp' ? step : -step)) * 10) / 10;
+                                updatePlacedModule(currentPlacedModule.id, { maidaWidthAdjustMm: Math.max(-500, Math.min(500, next)) } as any);
+                              }
+                            }}
+                            style={{ width: '70px', padding: '2px 4px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '12px', textAlign: 'right' }}
+                          />
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                        </div>
+                        <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>(+ 확장 / − 축소, 전체 마이다 공통)</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
           {/* 도어 셋팅 (상단갭/하단갭) — 도어 장착 시 표시, insert-frame 및 서랍 전용 모듈 제외 */}
           {/* 단, 도어올림장(lower-door-lift-*)은 서랍이어도 도어 갭 설정 표시 (사용자 예외 요청) */}
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
@@ -4682,6 +5063,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const bottomBodyGapInput = isShelfSplitDoorModule ? lowerDoorBottomGapInput : doorBottomGapInput;
             const cfTopValue = String(Math.round(ceilingToBodyTopMm - (parseFloat(topBodyGapInput) || 0)));
             const cfBotValue = String(Math.round(bodyBottomToFloorMm - (parseFloat(bottomBodyGapInput) || 0)));
+            const isLowerDoorGapModule = moduleData?.category === 'lower';
+            const isUpperDoorGapModule = moduleData?.category === 'upper';
+            const hideCeilingFloorTopGap = isLowerDoorGapModule;
+            const hideCeilingFloorBottomGap = isUpperDoorGapModule;
             const handleDisplayedTopGapChange = (value: string) => {
               if (!isShelfSplitDoorModule) {
                 handleDoorTopGapChange(value);
@@ -4828,12 +5213,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={cfTopValue}
-                      onChange={(e) => onTopCfChange(e.target.value)}
+                      value={hideCeilingFloorTopGap ? '' : cfTopValue}
+                      disabled={hideCeilingFloorTopGap}
+                      readOnly={hideCeilingFloorTopGap}
+                      onChange={(e) => {
+                        if (!hideCeilingFloorTopGap) onTopCfChange(e.target.value);
+                      }}
                       className={styles.depthInput}
-                      style={{ textAlign: 'center', fontSize: '13px' }}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        background: hideCeilingFloorTopGap ? 'var(--theme-background-tertiary)' : undefined,
+                        cursor: hideCeilingFloorTopGap ? 'not-allowed' : undefined,
+                      }}
                     />
-                    <span className={styles.unit}>mm</span>
+                    <span className={styles.unit} style={{ visibility: hideCeilingFloorTopGap ? 'hidden' : 'visible' }}>mm</span>
                   </div>
                 </div>
                 {/* 하단갭 */}
@@ -4856,12 +5250,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={cfBotValue}
-                      onChange={(e) => onBotCfChange(e.target.value)}
+                      value={hideCeilingFloorBottomGap ? '' : cfBotValue}
+                      disabled={hideCeilingFloorBottomGap}
+                      readOnly={hideCeilingFloorBottomGap}
+                      onChange={(e) => {
+                        if (!hideCeilingFloorBottomGap) onBotCfChange(e.target.value);
+                      }}
                       className={styles.depthInput}
-                      style={{ textAlign: 'center', fontSize: '13px' }}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        background: hideCeilingFloorBottomGap ? 'var(--theme-background-tertiary)' : undefined,
+                        cursor: hideCeilingFloorBottomGap ? 'not-allowed' : undefined,
+                      }}
                     />
-                    <span className={styles.unit}>mm</span>
+                    <span className={styles.unit} style={{ visibility: hideCeilingFloorBottomGap ? 'hidden' : 'visible' }}>mm</span>
                   </div>
                 </div>
               </div>
@@ -6928,6 +7331,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           ...(turning ? {
                             topEndPanelOffset: initialTopEndPanelOffset,
                             topEndPanelBackOffset: (currentPlacedModule as any).topEndPanelBackOffset ?? 0,
+                            ...getDoorLiftTopEndPanelOffsetUpdates(initialTopEndPanelOffset),
                           } : {})
                         } as any);
                       }}
@@ -7356,14 +7760,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setEpInputs(s => ({ ...s, topFront: v } as any));
                                 if (v !== '' && v !== '-') {
                                   const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
-                                  updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: num } as any);
+                                  updatePlacedModule(currentPlacedModule.id, {
+                                    topEndPanelOffset: num,
+                                    ...getDoorLiftTopEndPanelOffsetUpdates(num),
+                                  } as any);
                                 }
                               }
                             }}
                             onBlur={() => {
                               const v = (epInputs as any).topFront;
                               if (v === '' || v === '-') {
-                                updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: 0 } as any);
+                                updatePlacedModule(currentPlacedModule.id, {
+                                  topEndPanelOffset: 0,
+                                  ...getDoorLiftTopEndPanelOffsetUpdates(0),
+                                } as any);
                               }
                               setEpInputs(s => ({ ...s, topFront: undefined } as any));
                             }}
@@ -7376,7 +7786,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   (currentPlacedModule as any).topEndPanelOffset
                                 );
                                 const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(currentPlacedModule.id, { topEndPanelOffset: next } as any);
+                                updatePlacedModule(currentPlacedModule.id, {
+                                  topEndPanelOffset: next,
+                                  ...getDoorLiftTopEndPanelOffsetUpdates(next),
+                                } as any);
                                 setEpInputs(s => ({ ...s, topFront: undefined } as any));
                               }
                             }}

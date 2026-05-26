@@ -77,7 +77,9 @@ export const calculatePanelDetails = (
     lowerDoorTopGap?: number;
     lowerDoorBottomGap?: number;
   },
-  lowerSectionTopOffsetMm: number = 0
+  lowerSectionTopOffsetMm: number = 0,
+  maidaWidthAdjustEnabled: boolean = false,
+  maidaWidthAdjustMm: number = -1.5
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -205,6 +207,13 @@ export const calculatePanelDetails = (
   const drawerHandleThickness = PET_PANEL_THICKNESS_MM; // 마이다는 PET 노출 패널이므로 18T 고정
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
+  const maidaOuterOpenCompensationMm = (doorOuterOpenSides?.left ? 1.5 : 0) + (doorOuterOpenSides?.right ? 1.5 : 0);
+  const resolveExternalMaidaPanelWidthMm = (baseWidthMm: number = customWidth): number => {
+    const frontWidthMm = baseWidthMm + maidaOuterOpenCompensationMm;
+    return Math.max(0, maidaWidthAdjustEnabled
+      ? frontWidthMm + maidaWidthAdjustMm
+      : frontWidthMm - 3);
+  };
   const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
   const backPanelOffsetThickness = resolveNominalBackPanelOffsetThicknessMm(basicThickness);
   const backReductionForPanelsMm = backPanelThickness + backPanelOffsetThickness - 1;
@@ -1684,6 +1693,8 @@ export const calculatePanelDetails = (
         ? doorLeafDimensions.leaves.filter((leaf) => leaf.name !== 'right')
         : doorLeafDimensions.leaves;
 
+      const isSinkCabinet = moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet');
+      const topHingeInsetFromBodyTopMm = isSinkCabinet ? 300 : DEFAULT_HINGE_SETTINGS.topBottomMargin;
       const bracketSidePositions: number[] = [];
       doorLeaves.forEach((leaf) => {
         const isLeftHinge = leaf.hingeSide === 'left';
@@ -1707,7 +1718,7 @@ export const calculatePanelDetails = (
             doorBottomOnSideMm: doorVerticalGeometry.bottomMm,
             defaultDoorPositionsMm: calculateHingePositions(leaf.heightMm),
             firstSidePositionMm: DEFAULT_HINGE_SETTINGS.topBottomMargin,
-            lastSidePositionMm: height - DEFAULT_HINGE_SETTINGS.topBottomMargin,
+            lastSidePositionMm: height - topHingeInsetFromBodyTopMm,
           })
         );
         bracketSidePositions.push(...resolved.sidePositionsMm);
@@ -2455,7 +2466,7 @@ export const calculatePanelDetails = (
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
       extDrawerPanels.push(
-        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
+        { name: `서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: Math.round(maidaHeightMm), thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
       );
     }
   }
@@ -2553,7 +2564,7 @@ export const calculatePanelDetails = (
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'PB' },
         { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
-        { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
+        { name: `터치서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
       );
     });
   }
@@ -2602,7 +2613,7 @@ export const calculatePanelDetails = (
       material: 'PB',
     });
     // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)
-    const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
+    const maidaWidthMm = resolveExternalMaidaPanelWidthMm();
     const inductionDefaultDTG = -20;
     const inductionDefaultDBG = 5;
     const inductionGapTopExt = (doorTopGap ?? inductionDefaultDTG) - inductionDefaultDTG;
