@@ -97,7 +97,8 @@ type DoorGapField =
   | 'lowerDoorTopGap'
   | 'lowerDoorBottomGap';
 
-const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
@@ -956,7 +957,7 @@ const Configurator: React.FC = () => {
       const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
       const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
       const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
-      const defaultTop = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness) : isLower ? -20 : topGap;
+      const defaultTop = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) : isLower ? -20 : topGap;
       const defaultBot = isLower ? 5 : botGap;
       return { ...m, doorTopGap: m.doorTopGap ?? defaultTop, doorBottomGap: m.doorBottomGap ?? defaultBot };
     });
@@ -979,7 +980,7 @@ const Configurator: React.FC = () => {
       // 모듈별 올바른 기본값
       const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
       const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
-      const correctTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness) : -20;
+      const correctTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) : -20;
       // undefined만 기본값으로 보정한다. 0/양수/음수는 사용자가 직접 입력한 유효한 도어 갭이다.
       const badTopValues = [undefined];
       const badBotValues = [undefined];

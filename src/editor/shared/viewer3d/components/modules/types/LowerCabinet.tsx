@@ -24,7 +24,7 @@ import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
-import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
+import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
@@ -2500,8 +2500,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
         const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
-        // 상판내림 2/3단: stoneThk별 기본 갭(10→-90, 20→-80, 30→-70) — 마이다 사이즈 stoneThk 무관 유지
-        const topDownDefaultTopGapLR = stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
+        // 상판내림 2/3단: 상부 EP 기본 -82, 일반 stoneThk별 10→-90, 20→-80, 30→-70
+        const topDownDefaultTopGapLR = placedModuleForCorner?.hasTopEndPanel === true ? -82 : stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
         const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? topDownDefaultTopGapLR : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
         const defaultDrawerBottomGap = 5;
         const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
@@ -2822,20 +2822,54 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 하부장 상부 EP — 대리석 상판과 같은 방식으로 몸통 상단에 올라감 */}
+      {/* 하부장 상부 EP — 상판내림은 인조대리석 20T와 같은 ㄱ자 연귀 형상 */}
       {!hideAccessories && showFurniture && topEndPanelData && !(viewMode === '2D' && view2DDirection === 'top') && (
-        <BoxWithEdges
-          args={[topEndPanelData.width, topEndPanelData.thickness, topEndPanelData.depth]}
-          position={[
-            topEndPanelData.xOffset,
-            cabinetYPosition + adjustedHeight / 2 + topEndPanelData.thickness / 2,
-            topEndPanelData.zOffset
-          ]}
-          material={baseFurniture.material}
-          renderMode={renderMode}
-          panelName="상부 EP"
-          furnitureId={placedFurnitureId}
-        />
+        isTopDown ? (() => {
+          const t = topEndPanelData.thickness;
+          const frontPlateH = TOP_DOWN_STONE_FRONT_HEIGHT_MM * 0.01;
+          const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
+          const hPosY = cabinetTopY + t / 2;
+          const vPosY = cabinetTopY + t - frontPlateH / 2;
+          const frontZ = topEndPanelData.zOffset + topEndPanelData.depth / 2;
+          const vPosZ = frontZ - t / 2;
+          return (
+            <>
+              <JollyCutHorizontalPlate
+                width={topEndPanelData.width}
+                thickness={t}
+                depth={topEndPanelData.depth}
+                position={[topEndPanelData.xOffset, hPosY, topEndPanelData.zOffset]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                panelName="상부 EP 상판"
+                furnitureId={placedFurnitureId}
+              />
+              <JollyCutVerticalPlate
+                width={topEndPanelData.width}
+                height={frontPlateH}
+                thickness={t}
+                position={[topEndPanelData.xOffset, vPosY, vPosZ]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                panelName="상부 EP 앞판"
+                furnitureId={placedFurnitureId}
+              />
+            </>
+          );
+        })() : (
+          <BoxWithEdges
+            args={[topEndPanelData.width, topEndPanelData.thickness, topEndPanelData.depth]}
+            position={[
+              topEndPanelData.xOffset,
+              cabinetYPosition + adjustedHeight / 2 + topEndPanelData.thickness / 2,
+              topEndPanelData.zOffset
+            ]}
+            material={baseFurniture.material}
+            renderMode={renderMode}
+            panelName="상부 EP"
+            furnitureId={placedFurnitureId}
+          />
+        )
       )}
 
       {/* 인조대리석 상판 — 상판내림은 졸리컷 L자, 그 외는 단순 박스 (탑뷰에서는 숨김) */}

@@ -34,7 +34,8 @@ const getLowerTopFinishThicknessMm = (mod: any): number => {
   return Math.max(getStoneTopThicknessMm(mod), getTopEndPanelThicknessMm(mod));
 };
 
-const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
@@ -463,6 +464,7 @@ const computeLowerCabinetMaidaHeights = (
   doorBottomGap: number,
   stoneTopThicknessMm: number = 20,
   customMaidaHeights?: number[],
+  hasTopEndPanel?: boolean,
 ): { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] | null => {
   // 하부장 서랍/마이다 모듈만 처리
   const isLowerDrawer = moduleId.includes('lower-drawer-');
@@ -690,7 +692,7 @@ const computeLowerCabinetMaidaHeights = (
 
   // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx line 379-381)
   // 상판내림 2/3단: stoneThk별 기본 갭(10→-90, 20→-80, 30→-70)로 마이다 사이즈 stoneThk 무관 유지
-  const topDownDefaultTopGap = stoneTopThicknessMm === 10 ? -90 : stoneTopThicknessMm === 30 ? -70 : -80;
+  const topDownDefaultTopGap = hasTopEndPanel ? -82 : stoneTopThicknessMm === 10 ? -90 : stoneTopThicknessMm === 30 ? -70 : -80;
   const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? topDownDefaultTopGap : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
   const defaultDoorBottomGap = 5;
 
@@ -1080,7 +1082,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     if (category === 'lower') {
       const isTopDown = modData.id?.includes('lower-top-down-');
       if (isTopDown) {
-        const effectiveTopDownTopGap = mod.doorTopGap ?? getTopDownDoorTopGap(mod.stoneTopThickness);
+        const effectiveTopDownTopGap = mod.doorTopGap ?? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true);
         const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
         const doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
         const doorTopAbsMm = cabinetBottomAbs + cabinetH + effectiveTopDownTopGap;
@@ -1996,8 +1998,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!selModData) return null;
           const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
           const selModCatCombined = getModuleCategory(selectedMod);
-          const selectedBaseFrameMm = selModCatCombined === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
-            ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
+          const selectedBaseFrameMm = selModCatCombined === 'lower'
+            ? baseFrameHeightMm
             : 0;
           const selectedTopFinishMm = selModCatCombined === 'lower'
             ? getLowerTopFinishThicknessForModule(selectedMod)
@@ -2626,12 +2628,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               // 모듈별 기본 doorTopGap (computeLowerCabinetMaidaHeights 내부 defaultDTG와 일치해야 함)
               const isDL = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
-              const modDefaultTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(mod.stoneTopThickness) : -20;
+              const modDefaultTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true) : -20;
               const effectiveTopGap = isTD && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
                 ? modDefaultTopGap
                 : (mod.doorTopGap ?? modDefaultTopGap);
               const effectiveBotGap = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
@@ -3379,8 +3381,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!selModData_r) return null;
           const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
           const selModCatCombined_r = getModuleCategory(selectedMod);
-          const selectedBaseFrameMm_r = selModCatCombined_r === 'lower' && spaceInfo.baseConfig?.type !== 'stand'
-            ? (selectedMod.baseFrameHeight ?? baseFrameHeightMm)
+          const selectedBaseFrameMm_r = selModCatCombined_r === 'lower'
+            ? baseFrameHeightMm
             : 0;
           const selectedTopFinishMm_r = selModCatCombined_r === 'lower'
             ? getLowerTopFinishThicknessForModule(selectedMod)
@@ -3851,12 +3853,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
               const isDL_r = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD_r = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
-              const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? getTopDownDoorTopGap(mod.stoneTopThickness) : -20;
+              const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true) : -20;
               const effectiveTopGap_r = isTD_r && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
                 ? modDefaultTopGap_r
                 : (mod.doorTopGap ?? modDefaultTopGap_r);
               const effectiveBotGap_r = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 

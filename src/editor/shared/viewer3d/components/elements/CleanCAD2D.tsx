@@ -8309,6 +8309,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? (bottomFrameRefMod.individualFloatHeight ?? 0)
               : (bottomFrameRefMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? bottomFrameRefMod.baseFrameHeight : globalBottomFrame;
+            const moduleFloatHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
+              ? Math.max(0, Math.round(bottomFrameRefMod.individualFloatHeight ?? 0))
+              : 0;
+            const sideIsFloating = isFloating || moduleFloatHeight > 0;
+            const sideFloatHeight = isFloating ? floatHeight : moduleFloatHeight;
+            const sideBodyStartMm = sideIsFloating ? floorFinishHeightMm + sideFloatHeight : bottomFrameHeight;
             const shelfSplitDynamicTopFrame = (() => {
               const refMod = topFrameRefMod ?? viewMod;
               const sections = Array.isArray((refMod as any)?.customSections) ? (refMod as any).customSections : [];
@@ -8353,7 +8359,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
               const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
               if (sections.length < 2) return [] as number[];
-              const bodyBottomMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
+              const bodyBottomMm = sideBodyStartMm;
               const bodyTopMm = Math.max(0, spaceInfo.height - topFrameDimensionHeight);
               const sectionBasisH = Math.max(0, Math.round(bodyTopMm - bodyBottomMm));
               const rawHeights = sections.map(s => {
@@ -8397,7 +8403,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return [...rawHeights.slice(0, -1), Math.max(0, sectionBasisH - fixedSum)];
             })();
             const hasSideSectionSplit = sideSectionHeights.length >= 2;
-            const sideSectionStartMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
+            const sideSectionStartMm = sideBodyStartMm;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameDimensionHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
@@ -8406,6 +8412,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const floorFinishTopYLocal = mmToThreeUnits(floorFinishHeightMm); // 바닥마감재 상단
             const baseStartYLocal = floorFinishHeightMm > 0 ? floorFinishTopYLocal : bottomY; // 받침대 시작점
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 걸래받이 상단
+            const sideBodyStartY = mmToThreeUnits(sideBodyStartMm);
+            const isLowerSideMeasure = bottomFrameRefCategory === 'lower' || viewModCategoryForFrame === 'lower';
+            const lowerSideMeasureStartY = isLowerSideMeasure ? bottomY : sideBodyStartY;
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameDimensionHeight); // 상단 몰딩 상단
 
@@ -8455,10 +8464,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 const moduleTopY = category === 'upper'
                   ? cabinetAreaTopY
-                  : ((isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY) + mmToThreeUnits(moduleHeight));
+                  : (sideBodyStartY + mmToThreeUnits(moduleHeight));
                 const moduleBottomY = category === 'upper'
                   ? moduleTopY - mmToThreeUnits(moduleHeight)
-                  : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
+                  : sideBodyStartY;
                 maxFurnitureTop = moduleTopY;
                 maxModuleHeightMm = moduleHeight;
                 tallestModuleTopY = moduleTopY;
@@ -8471,12 +8480,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 띄움배치 시에는 바닥재 + floatHeight를 기준으로 텍스트 위치 계산
             const furnitureStartY = hasFurnitureHeight
               ? tallestModuleBottomY
-              : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
+              : sideBodyStartY;
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
-            const topFinishBottomY = furnitureTopY;
+            const lowerSideFurnitureTopY = (() => {
+              if (!isLowerSideMeasure || bottomFrameRefCategory !== 'lower' || !bottomFrameRefMod) return null;
+              const lowerModuleData = getModuleById(bottomFrameRefMod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+              const lowerModuleHeight = bottomFrameRefMod.freeHeight
+                ?? bottomFrameRefMod.customHeight
+                ?? lowerModuleData?.dimensions.height
+                ?? (bottomFrameRefMod.customConfig?.totalHeight || 0);
+              return lowerModuleHeight > 0
+                ? sideBodyStartY + mmToThreeUnits(lowerModuleHeight)
+                : null;
+            })();
+            const topFinishBottomY = lowerSideFurnitureTopY ?? furnitureTopY;
             const topFinishTopY = topFinishBottomY + mmToThreeUnits(topFinishThicknessMm);
-            const furnitureMeasuredStartY = topFinishThicknessMm > 0 ? bottomY : furnitureStartY;
-            const furnitureMeasuredTopY = topFinishThicknessMm > 0 ? topFinishTopY : furnitureTopY;
+            const furnitureMeasuredStartY = isLowerSideMeasure
+              ? bottomY
+              : topFinishThicknessMm > 0
+                ? bottomY
+                : furnitureStartY;
+            const furnitureMeasuredTopY = topFinishThicknessMm > 0 ? topFinishTopY : (lowerSideFurnitureTopY ?? furnitureTopY);
             const furnitureMeasuredHeightValue = Math.round(threeUnitsToMm(furnitureMeasuredTopY - furnitureMeasuredStartY));
             const furnitureMeasuredTextY = furnitureMeasuredStartY + (furnitureMeasuredTopY - furnitureMeasuredStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
@@ -8498,10 +8522,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 1. 띄움 높이 또는 걸래받이 높이 */}
                 {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
-                {isFloating && floatHeight > 0 && (
+                {sideIsFloating && sideFloatHeight > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(floorFinishHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(floorFinishHeightMm), rightDimensionZ], [0, sideBodyStartY, rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -8511,14 +8535,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, sideBodyStartY, rightDimensionZ], [0, sideBodyStartY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floorFinishHeightMm) + mmToThreeUnits(floatHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(floorFinishHeightMm) + mmToThreeUnits(sideFloatHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8527,13 +8551,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {floatHeight}
+                    {sideFloatHeight}
                   </Text>
                 </group>
                 )}
 
                 {/* 띄움 배치가 아니고 받침대가 있는 경우: 걸래받이 높이 표시 (바닥부터) */}
-                {!isFloating && bottomFrameHeight > 0 && (
+                {!sideIsFloating && bottomFrameHeight > 0 && (
                 <group>
                   <Line
                     points={[[0, bottomY, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
@@ -8569,27 +8593,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {isFloating && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
+                {sideIsFloating && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ]]}
+                    points={[[0, lowerSideMeasureStartY, rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, lowerSideMeasureStartY, rightDimensionZ], [0, lowerSideMeasureStartY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + (mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, lowerSideMeasureStartY + (mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8598,13 +8622,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {Math.round(threeUnitsToMm(mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))))}
+                    {Math.round(threeUnitsToMm(mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY))}
                   </Text>
                 </group>
                 )}
 
                 {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
-                {!isFloating && !hasSideSectionSplit && (
+                {(!sideIsFloating || isLowerSideMeasure) && !hasSideSectionSplit && (
                 <group>
                   <Line
                     points={[[0, furnitureMeasuredStartY, rightDimensionZ], [0, furnitureMeasuredTopY, rightDimensionZ]]}
@@ -8674,27 +8698,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {isFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
+                {sideIsFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8709,7 +8733,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!isFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
+                {!sideIsFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
@@ -9817,6 +9841,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? (bottomFrameRefMod.individualFloatHeight ?? 0)
               : (bottomFrameRefMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? bottomFrameRefMod.baseFrameHeight : globalBottomFrame;
+            const moduleFloatHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
+              ? Math.max(0, Math.round(bottomFrameRefMod.individualFloatHeight ?? 0))
+              : 0;
+            const sideIsFloating = isFloating || moduleFloatHeight > 0;
+            const sideFloatHeight = isFloating ? floatHeight : moduleFloatHeight;
+            const sideBodyStartMm = sideIsFloating ? floorFinishHeightMm + sideFloatHeight : bottomFrameHeight;
             const shelfSplitDynamicTopFrame = (() => {
               const refMod = topFrameRefMod ?? viewMod;
               const sections = Array.isArray((refMod as any)?.customSections) ? (refMod as any).customSections : [];
@@ -9860,7 +9890,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
               const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
               if (sections.length < 2) return [] as number[];
-              const bodyBottomMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
+              const bodyBottomMm = sideBodyStartMm;
               const bodyTopMm = Math.max(0, spaceInfo.height - topFrameDimensionHeight);
               const sectionBasisH = Math.max(0, Math.round(bodyTopMm - bodyBottomMm));
               const rawHeights = sections.map(s => {
@@ -9904,7 +9934,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return [...rawHeights.slice(0, -1), Math.max(0, sectionBasisH - fixedSum)];
             })();
             const hasSideSectionSplit = sideSectionHeights.length >= 2;
-            const sideSectionStartMm = isFloating ? floorFinishHeightMm + floatHeight : bottomFrameHeight;
+            const sideSectionStartMm = sideBodyStartMm;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameDimensionHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
@@ -9913,6 +9943,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const floorFinishTopYRight = mmToThreeUnits(floorFinishHeightMm);
             const baseStartYRight = floorFinishHeightMm > 0 ? floorFinishTopYRight : bottomY;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
+            const sideBodyStartY = mmToThreeUnits(sideBodyStartMm);
+            const isLowerSideMeasure = bottomFrameRefCategory === 'lower' || viewModCategoryForFrame === 'lower';
+            const lowerSideMeasureStartY = isLowerSideMeasure ? bottomY : sideBodyStartY;
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameDimensionHeight);
 
@@ -9962,10 +9995,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 const moduleTopY = category === 'upper'
                   ? cabinetAreaTopY
-                  : ((isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY) + mmToThreeUnits(moduleHeight));
+                  : (sideBodyStartY + mmToThreeUnits(moduleHeight));
                 const moduleBottomY = category === 'upper'
                   ? moduleTopY - mmToThreeUnits(moduleHeight)
-                  : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
+                  : sideBodyStartY;
                 maxFurnitureTop = moduleTopY;
                 maxModuleHeightMm = moduleHeight;
                 tallestModuleTopY = moduleTopY;
@@ -9979,12 +10012,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 띄움배치 시에는 바닥재 + floatHeight를 기준으로 텍스트 위치 계산
             const furnitureStartY = hasFurnitureHeight
               ? tallestModuleBottomY
-              : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
+              : sideBodyStartY;
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
-            const topFinishBottomY = furnitureTopY;
+            const lowerSideFurnitureTopY = (() => {
+              if (!isLowerSideMeasure || bottomFrameRefCategory !== 'lower' || !bottomFrameRefMod) return null;
+              const lowerModuleData = getModuleById(bottomFrameRefMod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+              const lowerModuleHeight = bottomFrameRefMod.freeHeight
+                ?? bottomFrameRefMod.customHeight
+                ?? lowerModuleData?.dimensions.height
+                ?? (bottomFrameRefMod.customConfig?.totalHeight || 0);
+              return lowerModuleHeight > 0
+                ? sideBodyStartY + mmToThreeUnits(lowerModuleHeight)
+                : null;
+            })();
+            const topFinishBottomY = lowerSideFurnitureTopY ?? furnitureTopY;
             const topFinishTopY = topFinishBottomY + mmToThreeUnits(topFinishThicknessMm);
-            const furnitureMeasuredStartY = topFinishThicknessMm > 0 ? bottomY : furnitureStartY;
-            const furnitureMeasuredTopY = topFinishThicknessMm > 0 ? topFinishTopY : furnitureTopY;
+            const furnitureMeasuredStartY = isLowerSideMeasure
+              ? bottomY
+              : topFinishThicknessMm > 0
+                ? bottomY
+                : furnitureStartY;
+            const furnitureMeasuredTopY = topFinishThicknessMm > 0 ? topFinishTopY : (lowerSideFurnitureTopY ?? furnitureTopY);
             const furnitureMeasuredHeightValue = Math.round(threeUnitsToMm(furnitureMeasuredTopY - furnitureMeasuredStartY));
             const furnitureMeasuredTextY = furnitureMeasuredStartY + (furnitureMeasuredTopY - furnitureMeasuredStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
@@ -10014,10 +10062,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
                 {/* 1. 띄움 높이 또는 걸래받이 높이 */}
                 {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
-                {isFloating && floatHeight > 0 && (
+                {sideIsFloating && sideFloatHeight > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm), leftDimensionZ], [spaceWidth, sideBodyStartY, leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -10027,14 +10075,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, sideBodyStartY, leftDimensionZ], [spaceWidth, sideBodyStartY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm) + mmToThreeUnits(floatHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm) + mmToThreeUnits(sideFloatHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10043,13 +10091,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {floatHeight}
+                    {sideFloatHeight}
                   </Text>
                 </group>
                 )}
 
                 {/* 띄움 배치가 아니고 받침대가 있는 경우: 걸래받이 높이 표시 (바닥부터) */}
-                {!isFloating && bottomFrameHeight > 0 && (
+                {!sideIsFloating && bottomFrameHeight > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
@@ -10085,27 +10133,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {isFloating && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
+                {sideIsFloating && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ]]}
+                    points={[[spaceWidth, lowerSideMeasureStartY, leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, lowerSideMeasureStartY, leftDimensionZ], [spaceWidth, lowerSideMeasureStartY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight)) + (mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, lowerSideMeasureStartY + (mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10114,13 +10162,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {Math.round(threeUnitsToMm(mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + topFinishThicknessMm) - (topFinishThicknessMm > 0 ? bottomY : mmToThreeUnits(floorFinishHeightMm + floatHeight))))}
+                    {Math.round(threeUnitsToMm(mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY))}
                   </Text>
                 </group>
                 )}
 
                 {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
-                {!isFloating && !hasSideSectionSplit && (
+                {(!sideIsFloating || isLowerSideMeasure) && !hasSideSectionSplit && (
                 <group>
                   <Line
                     points={[[spaceWidth, furnitureMeasuredStartY, leftDimensionZ], [spaceWidth, furnitureMeasuredTopY, leftDimensionZ]]}
@@ -10190,27 +10238,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {isFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
+                {sideIsFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10225,7 +10273,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!isFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
+                {!sideIsFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}

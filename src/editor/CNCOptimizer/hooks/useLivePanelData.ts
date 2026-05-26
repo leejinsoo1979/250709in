@@ -14,7 +14,7 @@ import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetySh
 import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
-import { resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
+import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import {
   getDirectLowerDowelShelfBoringDetails,
   hasDirectLowerTopPanel,
@@ -30,7 +30,8 @@ function toMeshName(cncName: string): string {
   return toViewerPanelName(cncName);
 }
 
-const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
@@ -815,7 +816,7 @@ export function useLivePanelData() {
         const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
         const isDoorLiftMod = modId.includes('lower-door-lift-') && !modId.includes('-half-');
         const isTopDownMod = modId.includes('lower-top-down-') && !modId.includes('-half-');
-        const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? getTopDownDoorTopGap((placedModule as any).stoneTopThickness) : isLowerMod ? -20 : 5;
+        const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? getTopDownDoorTopGap((placedModule as any).stoneTopThickness, (placedModule as any).hasTopEndPanel === true) : isLowerMod ? -20 : 5;
         const moduleDoorTopGap = (rawDoorTopGap === undefined || (isLowerMod && rawDoorTopGap === 0)) ? defaultTopGap : rawDoorTopGap;
         const moduleDoorBottomGap = (rawDoorBottomGap === undefined || (isLowerMod && rawDoorBottomGap === 0)) ? (isLowerMod ? 5 : 25) : rawDoorBottomGap;
 
@@ -1331,19 +1332,41 @@ export function useLivePanelData() {
         const refMod = placedModules.find(m => m.id === group.moduleIds[0]);
         if (!refMod) return;
         const materialThickness = group.thicknessMm;
-        allPanels.push({
-          id: `merged_top_ep_${gIdx}`,
-          name: `${group.label} 상부 EP`,
+        const basePanel = {
           width: Math.round(group.totalWidthMm * 10) / 10,
-          height: Math.round(group.depthMm * 10) / 10,
           thickness: materialThickness,
           material: 'PET',
           color: refMod.color || placedModules[0]?.color || 'MW',
           quantity: 1,
           grain: 'H' as any,
-          meshName: 'top-end-panel',
           furnitureId: refMod.id,
           sourceFurnitureIds: group.moduleIds,
+        };
+
+        if (group.isTopDown) {
+          allPanels.push({
+            ...basePanel,
+            id: `merged_top_ep_${gIdx}_top`,
+            name: `${group.label} 상부 EP 상판`,
+            height: Math.round(group.depthMm * 10) / 10,
+            meshName: 'top-end-panel-top',
+          });
+          allPanels.push({
+            ...basePanel,
+            id: `merged_top_ep_${gIdx}_front`,
+            name: `${group.label} 상부 EP 앞판`,
+            height: TOP_DOWN_STONE_FRONT_HEIGHT_MM,
+            meshName: 'top-end-panel-front',
+          });
+          return;
+        }
+
+        allPanels.push({
+          ...basePanel,
+          id: `merged_top_ep_${gIdx}`,
+          name: `${group.label} 상부 EP`,
+          height: Math.round(group.depthMm * 10) / 10,
+          meshName: 'top-end-panel',
         });
       });
 
@@ -1477,7 +1500,7 @@ export function useLivePanelData() {
               const refModuleData = getModuleById(refModuleId);
               const refHeight = refMod.freeHeight || refMod.customHeight || refModuleData?.dimensions.height || 785;
               const rawTopGap = (refMod as any).doorTopGap ?? spaceInfo.doorTopGap;
-              const defaultDoorTopGap = getTopDownDoorTopGap(refMod.stoneTopThickness);
+              const defaultDoorTopGap = getTopDownDoorTopGap(refMod.stoneTopThickness, refMod.hasTopEndPanel === true);
               const effectiveDoorTopGap = (rawTopGap === undefined || rawTopGap === 0) ? defaultDoorTopGap : rawTopGap;
               const topFrontMm = 705 + (effectiveDoorTopGap - defaultDoorTopGap);
               const frontPlateHeight = Math.max(0, refHeight - topFrontMm - 20) + (refMod.stoneTopThickness || 12);
@@ -1731,7 +1754,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
       const isDoorLiftMod = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDownMod = modId.includes('lower-top-down-') && !modId.includes('-half-');
-      const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? getTopDownDoorTopGap((placedModule as any).stoneTopThickness) : isLowerMod ? -20 : 5;
+      const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? getTopDownDoorTopGap((placedModule as any).stoneTopThickness, (placedModule as any).hasTopEndPanel === true) : isLowerMod ? -20 : 5;
       const moduleDoorTopGap = (rawDoorTopGap === undefined || (isLowerMod && rawDoorTopGap === 0)) ? defaultTopGap : rawDoorTopGap;
       const moduleDoorBottomGap = (rawDoorBottomGap === undefined || (isLowerMod && rawDoorBottomGap === 0)) ? (isLowerMod ? 5 : 25) : rawDoorBottomGap;
 

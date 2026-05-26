@@ -279,8 +279,8 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                   const isTopDown = mid.includes('lower-top-down');
                   if (isTopDown) {
                     const sThk = matched.stoneTopThickness || 0;
-                    const expectedGap = sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
-                    if (matched.doorTopGap !== expectedGap && sThk > 0) {
+                    const expectedGap = matched.hasTopEndPanel === true ? -82 : sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
+                    if (matched.doorTopGap !== expectedGap && (sThk > 0 || matched.hasTopEndPanel === true)) {
                       fStore.updatePlacedModule(matched.id, { doorTopGap: expectedGap });
                     }
                   }

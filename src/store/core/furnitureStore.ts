@@ -11,7 +11,8 @@ import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitur
 const isCornerCabinetModuleId = (moduleId?: string): boolean =>
   !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
 
-const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
@@ -456,7 +457,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (module.doorTopGap === undefined) {
         if (isTopDown) {
           // 상판내림: 10T=-90, 20T=-80, 30T=-70
-          module.doorTopGap = userDoorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness);
+          module.doorTopGap = userDoorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);
         } else if (isDoorLift) {
           // 도어올림: 상단 30mm (마이다가 위로 올라감)
           module.doorTopGap = userDoorTopGap ?? 30;
@@ -531,7 +532,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const isTopDownNew = module.moduleId?.includes('lower-top-down-');
           const sThk = module.stoneTopThickness || 0;
           if (isTopDownNew && sThk > 0) {
-            const expectedGap = getTopDownDoorTopGap(sThk);
+            const expectedGap = getTopDownDoorTopGap(sThk, module.hasTopEndPanel === true);
             module.doorTopGap = expectedGap;
             // cabH: 805 - sThk 기준 (반통/한통/2단/3단 공통)
             const expectedCabH = 805 - sThk;
@@ -1099,7 +1100,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,
-            ...(needsTopFix ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness) } : {}),
+            ...(needsTopFix ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) } : {}),
             ...(needsBottomFix ? { doorBottomGap: 5 } : {})
           };
         }
@@ -1185,7 +1186,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	      const isTopDown = module.moduleId?.includes('lower-top-down-');
       const isShelfSplit = module.moduleId?.includes('shelf-split');
       if (isTopDown) {
-        topGap = getTopDownDoorTopGap(module.stoneTopThickness);   // 상판내림: 10T=-90, 20T=-80, 30T=-70
+        topGap = getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);   // 상판내림: 상부EP=-82, 일반 10T=-90/20T=-80/30T=-70
         bottomGap = 5;  // 상판내림: 하단 5mm
       } else if (isDoorLift) {
         topGap = 30;    // 도어올림: 상단 30mm
@@ -1542,7 +1543,7 @@ useFurnitureStore.subscribe((state) => {
       const fixTop = m.doorTopGap === undefined;
       const fixBot = m.doorBottomGap === undefined;
       if (!fixTop && !fixBot) return m;
-      return { ...m, ...(fixTop ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+      return { ...m, ...(fixTop ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
     return m;
   });
@@ -1580,7 +1581,7 @@ useFurnitureStore.subscribe((state) => {
         const fixBot = m.doorBottomGap === undefined;
         if (!fixTop && !fixBot) return m;
         changed = true;
-        return { ...m, ...(fixTop ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+        return { ...m, ...(fixTop ? { doorTopGap: getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
       }
       return m;
     });

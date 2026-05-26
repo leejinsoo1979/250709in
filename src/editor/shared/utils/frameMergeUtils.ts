@@ -24,6 +24,7 @@ export interface TopEndPanelMergeGroup extends FrameMergeGroup {
   thicknessMm: number;
   frontGapMm: number;
   backGapMm: number;
+  isTopDown: boolean;
 }
 
 /**
@@ -238,12 +239,17 @@ function isLowerCabinetModule(mod: PlacedModule): boolean {
   return id.startsWith('lower-') || id.includes('dual-lower-');
 }
 
+function isTopDownLowerModule(mod: PlacedModule): boolean {
+  const id = mod.moduleId || '';
+  return id.includes('lower-top-down-') || id.includes('dual-lower-top-down-');
+}
+
 function getTopEndPanelSettings(mod: PlacedModule) {
   const frontGapMm = resolveTopEndPanelFrontOffsetMm(mod.moduleId, mod.doorTopGap, mod.topEndPanelOffset);
   const backGapMm = mod.topEndPanelBackOffset ?? 0;
   const depthMm = Math.max(0, (mod.customDepth ?? mod.freeDepth ?? 600) + frontGapMm + backGapMm);
   const thicknessMm = resolvePetPanelThicknessMm(mod.endPanelThickness);
-  return { frontGapMm, backGapMm, depthMm, thicknessMm };
+  return { frontGapMm, backGapMm, depthMm, thicknessMm, isTopDown: isTopDownLowerModule(mod) };
 }
 
 /**
@@ -298,7 +304,8 @@ export function computeTopEndPanelMergeGroups(
       Math.abs(prevSettings.thicknessMm - settings.thicknessMm) < 0.1 &&
       Math.abs(prevSettings.frontGapMm - settings.frontGapMm) < 0.1 &&
       Math.abs(prevSettings.backGapMm - settings.backGapMm) < 0.1 &&
-      Math.abs(prevSettings.depthMm - settings.depthMm) < 0.1;
+      Math.abs(prevSettings.depthMm - settings.depthMm) < 0.1 &&
+      prevSettings.isTopDown === settings.isTopDown;
     const samePosition =
       Math.abs(prevMod.position.y - mod.position.y) < 0.1 &&
       Math.abs(prevMod.position.z - mod.position.z) < 0.1;

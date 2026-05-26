@@ -589,7 +589,8 @@ interface DoorModuleProps {
   lowerDoorHingePositionsMm?: number[];
 }
 
-const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
@@ -1450,7 +1451,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     if (isTopDown) {
       // 상판내림: 도어 상단 = cabH + topGap(10T=-90, 20T=-80, 30T=-70), 도어 하단 = -bottomGap(5)
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? getTopDownDoorTopGap(storePlacedModule?.stoneTopThickness);
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? getTopDownDoorTopGap(storePlacedModule?.stoneTopThickness, storePlacedModule?.hasTopEndPanel === true);
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
@@ -1530,7 +1531,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
       const isTopDown = moduleData?.id?.includes('lower-top-down-');
       if (isTopDown) {
-        const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? getTopDownDoorTopGap(storePlacedModule?.stoneTopThickness);
+        const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? getTopDownDoorTopGap(storePlacedModule?.stoneTopThickness, storePlacedModule?.hasTopEndPanel === true);
         const doorTopMm = lowerCabinetHeight / 2 + effectiveTopDownTopGap;
         return doorTopMm - actualDoorHeight / 2;
       }
@@ -2158,7 +2159,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     if (isTopDownForY) {
       // 상판내림: 도어 상단 = cabH + topGap(10T=-90, 20T=-80, 30T=-70)
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? getTopDownDoorTopGap(storePlacedModule?.stoneTopThickness);
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? getTopDownDoorTopGap(storePlacedModule?.stoneTopThickness, storePlacedModule?.hasTopEndPanel === true);
       const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
