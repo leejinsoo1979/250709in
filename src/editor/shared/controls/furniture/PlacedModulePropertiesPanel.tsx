@@ -57,7 +57,8 @@ const isShelfSplitModuleId = (moduleId?: string): boolean => {
   return !!moduleId?.includes('shelf-split');
 };
 
-const getTopDownDoorTopGap = (stoneTopThickness?: number): number => {
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
@@ -280,7 +281,8 @@ const resolveExternalMaidaHeightsMm = (
   moduleData: any,
   stoneThickness: number,
   doorTopGap?: number,
-  doorBottomGap?: number
+  doorBottomGap?: number,
+  hasTopEndPanel?: boolean
 ): number[] => {
   const is3Tier = moduleId.includes('lower-drawer-3tier');
   const is2Tier = moduleId.includes('lower-drawer-2tier');
@@ -291,7 +293,7 @@ const resolveExternalMaidaHeightsMm = (
   if (!(is3Tier || is2Tier || isDoorLift3Tier || isDoorLift2Tier || isTopDown3Tier || isTopDown2Tier)) return [];
 
   const currentCabinetHmm = Math.round(bodyHeightMm);
-  const topDownDefaultTopGap = stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
+  const topDownDefaultTopGap = hasTopEndPanel ? -82 : stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
   const defaultTopGap = (isTopDown2Tier || isTopDown3Tier) ? topDownDefaultTopGap : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
   const defaultBottomGap = 5;
   const effectiveTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
@@ -1835,7 +1837,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const defaultTopGap = isDoorLift
         ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
         : isTopDown
-          ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness)
+          ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, currentPlacedModule.hasTopEndPanel === true)
           : isBasicLowerDoorGap
             ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
             : isLowerCategory
@@ -1847,12 +1849,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? 2
           : 25;
       const rawTopGap = currentPlacedModule.doorTopGap;
+      const topDownNoEpDefaultGap = isTopDown
+        ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, false)
+        : undefined;
       const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
         : (isBasicLowerDoorGap && rawTopGap === 20)
           ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
           : (isDoorLift && (rawTopGap === 20 || rawTopGap === 30))
             ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
+          : (isTopDown && currentPlacedModule.hasTopEndPanel === true && rawTopGap === topDownNoEpDefaultGap)
+            ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
       const initialBottomGap = rawBotGap ?? defaultBottomGap;
@@ -2080,7 +2087,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -3498,7 +3505,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           updates.doorTopGap = isDL
             ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
             : isTD
-              ? getTopDownDoorTopGap(mod.stoneTopThickness)
+              ? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true)
               : isBasicLowerDoorGap
                 ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
                 : isLowerModule
@@ -4916,7 +4923,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     moduleData,
                     stoneThickness,
                     currentPlacedModule.doorTopGap,
-                    currentPlacedModule.doorBottomGap
+                    currentPlacedModule.doorBottomGap,
+                    currentPlacedModule.hasTopEndPanel === true
                   );
               const displayHeights = heights.slice().reverse();
               if (displayHeights.length === 0) return null;
@@ -7331,13 +7339,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           currentPlacedModule.doorTopGap,
                           (currentPlacedModule as any).topEndPanelOffset
                         );
+                        const isTopDown = (currentPlacedModule.moduleId || '').includes('lower-top-down-');
+                        const currentTopDownDefaultGap = getTopDownDoorTopGap(
+                          currentPlacedModule.stoneTopThickness,
+                          currentPlacedModule.hasTopEndPanel === true
+                        );
+                        const nextTopDownDefaultGap = getTopDownDoorTopGap(
+                          currentPlacedModule.stoneTopThickness,
+                          turning
+                        );
                         updatePlacedModule(currentPlacedModule.id, {
                           hasTopEndPanel: turning,
                           ...(turning ? {
                             topEndPanelOffset: initialTopEndPanelOffset,
                             topEndPanelBackOffset: (currentPlacedModule as any).topEndPanelBackOffset ?? 0,
                             ...getDoorLiftTopEndPanelOffsetUpdates(initialTopEndPanelOffset),
-                          } : {})
+                          } : {}),
+                          ...(isTopDown && (
+                            currentPlacedModule.doorTopGap === undefined
+                            || currentPlacedModule.doorTopGap === currentTopDownDefaultGap
+                          ) ? { doorTopGap: nextTopDownDefaultGap } : {})
                         } as any);
                       }}
                     />
@@ -7964,6 +7985,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     className={`${styles.doorTab} ${(currentPlacedModule.stoneTopThickness || 0) === thickness ? styles.activeDoorTab : ''}`}
                     onClick={() => {
                       if (currentPlacedModule) {
+                        const applyCountertopThickness = () => {
                         const updates: Record<string, unknown> = {
                           stoneTopMaterial: 'stone',
                           stoneTopThickness: thickness,
@@ -7988,6 +8010,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGapInput(String(defaultGap));
                           }
                         } else {
+                          updates.hasTopEndPanel = false;
                           // 두께 선택/변경 시 기본 앞 오프셋 적용
                           if (isTopDown) {
                             // 상판내림: 두께 무관 앞 오프셋 23mm (인조대리석 상판 깊이 623 고정)
@@ -8021,10 +8044,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGap(defaultGap);
                             setDoorTopGapInput(String(defaultGap));
                           }
-                          // 상판내림: stoneThk별 도어 상단갭 (10→-90, 20→-80, 30→-70)
+                          // 상판내림: 상부 EP 기본 -82, 일반 stoneThk별 10→-90, 20→-80, 30→-70
                           // cabH 변화량(±10) + 도어 상단갭 변화량(±10)으로 도어 H/위치 일정 유지
                           if (isTopDown) {
-                            const newGap = thickness === 10 ? -90 : thickness === 30 ? -70 : -80;
+                            const newGap = getTopDownDoorTopGap(thickness, false);
                             updates.doorTopGap = newGap;
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
@@ -8071,6 +8094,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             bulk.stoneTopBackLip = 0;
                             bulk.stoneTopBackLipThickness = 0;
                           } else {
+                            bulk.hasTopEndPanel = false;
                             // 처음 설치되는 하부장은 기본 앞 오프셋 23 적용
                             if ((m.stoneTopThickness || 0) === 0) {
                               bulk.stoneTopFrontOffset = 23;
@@ -8078,9 +8102,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (isBulkBasicLowerDoorGap && !isBulkDoorLift && !isBulkTopDown) {
                               bulk.doorTopGap = -20;
                             }
+                            if (isBulkTopDown) {
+                              bulk.doorTopGap = getTopDownDoorTopGap(thickness, false);
+                            }
                           }
                           updatePlacedModule(m.id, bulk);
                         });
+                        };
+                        const hasTopEndPanelConflict = thickness > 0 && (
+                          currentPlacedModule.hasTopEndPanel === true
+                          || placedModules.some(m => {
+                            if (m.id === currentPlacedModule.id || m.hasTopEndPanel !== true) return false;
+                            const mid = m.moduleId || '';
+                            return mid.startsWith('lower-') || mid.includes('-lower-') ||
+                              mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
+                              mid.includes('lower-drawer') || mid.includes('lower-sink') ||
+                              mid.includes('lower-induction');
+                          })
+                        );
+                        if (hasTopEndPanelConflict) {
+                          showAlert('상판을 인조대리석으로 교체하시겠습니까?', {
+                            title: '상판 교체',
+                            showCancel: true,
+                            onConfirm: applyCountertopThickness,
+                          });
+                        } else {
+                          applyCountertopThickness();
+                        }
                       }
                     }}
                   >
