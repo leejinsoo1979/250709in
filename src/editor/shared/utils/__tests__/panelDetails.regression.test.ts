@@ -219,6 +219,71 @@ describe('panelDetails regression baselines', () => {
     }
   })
 
+  it('싱크장 반통은 상단 힌지 보링을 몸통 위에서 300mm로 내린다', () => {
+    const panels = calculatePanels('lower-sink-cabinet-500', 500, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const door = findPanel(panels, '도어')
+    const side = findPanel(panels, '좌측판')
+
+    expect(door.height).toBe(780)
+    expect(door.boringPositions).toEqual([120, 480])
+    expect(side.bracketBoringPositions).toEqual([120, 480])
+  })
+
+  it('싱크장 반통은 저장된 기존 경첩 위치가 있어도 상단 힌지를 몸통 위에서 300mm로 고정한다', () => {
+    const panels = calculatePanels('lower-sink-cabinet-500', 500, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9,
+      customHingePositionsMm: [120, 660]
+    })
+
+    expect(findPanel(panels, '도어').boringPositions).toEqual([120, 480])
+    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 480])
+  })
+
+  it('싱크장 한통은 양쪽 도어와 측판 모두 상단 힌지 보링을 몸통 위에서 300mm로 내린다', () => {
+    const panels = calculatePanels('dual-lower-sink-cabinet-1000', 1000, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const doors = panels.filter(panel => panel.isDoor)
+
+    expect(doors.map(panel => panel.boringPositions)).toEqual([
+      [120, 480],
+      [120, 480]
+    ])
+    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 480])
+    expect(findPanel(panels, '우측판').bracketBoringPositions).toEqual([120, 480])
+  })
+
+  it('상판내림 도어 반통은 상단 힌지 보링을 몸통 위에서 180mm로 내린다', () => {
+    const panels = calculatePanels('lower-top-down-half-500', 500, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9,
+      customHingePositionsMm: [120, 660]
+    })
+
+    expect(findPanel(panels, '도어').boringPositions).toEqual([125, 605])
+    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 600])
+  })
+
+  it('상판내림 도어 한통은 양쪽 도어와 측판 모두 상단 힌지 보링을 몸통 위에서 180mm로 내린다', () => {
+    const panels = calculatePanels('dual-lower-top-down-half-1000', 1000, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const doors = panels.filter(panel => panel.isDoor)
+
+    expect(doors.map(panel => panel.boringPositions)).toEqual([
+      [125, 605],
+      [125, 605]
+    ])
+    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 600])
+    expect(findPanel(panels, '우측판').bracketBoringPositions).toEqual([120, 600])
+  })
+
   it('하부 3단 서랍장 높이 축소 시 서랍 패널 높이는 가구 높이 안에서 재계산된다', () => {
     const panels = calculatePanels('lower-drawer-3tier-500', 500, 650, {
       backPanelThicknessMm: 9,

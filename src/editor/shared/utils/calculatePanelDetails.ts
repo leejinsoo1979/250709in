@@ -1694,7 +1694,9 @@ export const calculatePanelDetails = (
         : doorLeafDimensions.leaves;
 
       const isSinkCabinet = moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet');
-      const topHingeInsetFromBodyTopMm = isSinkCabinet ? 300 : DEFAULT_HINGE_SETTINGS.topBottomMargin;
+      const isTopDownDoorCabinet = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
+      const topHingeInsetFromBodyTopMm = isSinkCabinet ? 300 : isTopDownDoorCabinet ? 180 : DEFAULT_HINGE_SETTINGS.topBottomMargin;
+      const effectiveCustomHingePositionsMm = (isSinkCabinet || isTopDownDoorCabinet) ? undefined : customHingePositionsMm;
       const bracketSidePositions: number[] = [];
       doorLeaves.forEach((leaf) => {
         const isLeftHinge = leaf.hingeSide === 'left';
@@ -1711,7 +1713,7 @@ export const calculatePanelDetails = (
         const resolved = resolveMatchedHingePositions(
           doorVerticalGeometry.bottomMm,
           leaf.heightMm,
-          customHingePositionsMm,
+          effectiveCustomHingePositionsMm,
           undefined,
           resolveSideAnchoredDoorHingePositionsMm({
             doorHeightMm: leaf.heightMm,

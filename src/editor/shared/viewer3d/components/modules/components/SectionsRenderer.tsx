@@ -1336,11 +1336,16 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       });
       currentYFromBottom += sectionHeightMm;
     });
+    const isSinkCabinet = currentPlacedModule.moduleId?.includes('lower-sink-cabinet')
+      || currentPlacedModule.moduleId?.includes('dual-lower-sink-cabinet');
+    const isTopDownDoorCabinet = currentPlacedModule.moduleId?.includes('lower-top-down-half')
+      || currentPlacedModule.moduleId?.includes('dual-lower-top-down-half');
+    const topHingeInsetFromBodyTopMm = isSinkCabinet ? 300 : isTopDownDoorCabinet ? 180 : 120;
     const resolvedPositions = resolveSidePanelMatchedHingePositions({
       doorHeightMm: doorGeometry.leafHeightMm,
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-      customSidePositionsMm: currentPlacedModule.hingePositionsMm,
+      customSidePositionsMm: (isSinkCabinet || isTopDownDoorCabinet) ? undefined : currentPlacedModule.hingePositionsMm,
       defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
         doorHeightMm: doorGeometry.leafHeightMm,
         doorBottomOnSideMm: doorGeometry.bottomMm,
@@ -1348,7 +1353,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           doorHeightMm: doorGeometry.leafHeightMm,
         }),
         firstSidePositionMm: 120,
-        lastSidePositionMm: heightMm - 120,
+        lastSidePositionMm: heightMm - topHingeInsetFromBodyTopMm,
       }),
       preserveEdgePositionsMm: true
     });

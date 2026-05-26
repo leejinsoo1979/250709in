@@ -8,6 +8,7 @@ import NativeLine from '../../elements/NativeLine';
  * 서랍장/인덕션장/터치장이 동일 형태로 사용.
  * - 3D 모드: 모듈 앞면 + 12mm 앞에 표시
  * - 2D 정면뷰: 마이다 앞면 + 10mm 앞에 표시
+ * - 2D 탑뷰: 마이다 앞면 바깥에 폭 치수 표시
  *
  * 좌표계 기준
  * - 호출자는 "마이다 하단" Y 지점을 기준으로 이 컴포넌트를 배치해야 한다.
@@ -41,12 +42,13 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  // 3D 또는 2D 정면뷰에서만 표시
-  if (!(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front'))) {
+  // 3D, 2D 정면뷰, 2D 탑뷰에서 표시
+  if (!(viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top')))) {
     return null;
   }
 
   const is3D = viewMode === '3D';
+  const isTopView = viewMode === '2D' && view2DDirection === 'top';
   // 도어 너비 치수와 동일한 값 사용 (DoorModule.tsx의 doorDimensionWidthLineStart/Length)
   const extensionLineStart = mmToThreeUnits(60);
   const extensionLineLength = mmToThreeUnits(100);
@@ -60,6 +62,35 @@ const MaidaWidthDimension: React.FC<MaidaWidthDimensionProps> = ({
 
   const dimLineY = -extensionLineLength - extensionLineStart;
   const extStartY = -extensionLineStart;
+
+  if (isTopView) {
+    const frontFaceZ = maidaZ + mmToThreeUnits(10);
+    const extensionStartZ = frontFaceZ + extensionLineStart;
+    const dimLineZ = frontFaceZ + extensionLineStart + extensionLineLength;
+    const textZ = dimLineZ - mmToThreeUnits(15);
+
+    return (
+      <>
+        <NativeLine name="maida-dimension" points={[[-halfW, 0, extensionStartZ], [-halfW, 0, dimLineZ]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+        <NativeLine name="maida-dimension" points={[[halfW, 0, extensionStartZ], [halfW, 0, dimLineZ]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+        <NativeLine name="maida-dimension" points={[[-halfW, 0, dimLineZ], [halfW, 0, dimLineZ]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+        <NativeLine name="maida-dimension" points={[[-halfW - tickSize, 0, dimLineZ], [-halfW + tickSize, 0, dimLineZ]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+        <NativeLine name="maida-dimension" points={[[halfW - tickSize, 0, dimLineZ], [halfW + tickSize, 0, dimLineZ]]} color={dimColor} lineWidth={1} renderOrder={lineRenderOrder} depthTest={false} />
+        <DimensionText
+          name="maida-dimension-text"
+          value={maidaWidthMm}
+          position={[0, 0, textZ]}
+          color={dimColor}
+          hoverColor={hoverColor}
+          onHoverChange={setIsHovered}
+          anchorX="center"
+          anchorY="top"
+          forceShow={true}
+          rotation={[-Math.PI / 2, 0, 0]}
+        />
+      </>
+    );
+  }
 
   return (
     <>

@@ -5375,6 +5375,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const isUpperModule = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
               const isLowerModule = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet');
               const isPantrySplit = currentPlacedModule.moduleId?.includes('pantry-cabinet-split');
+              const isSinkCabinetHingeModule = currentPlacedModule.moduleId?.includes('lower-sink-cabinet')
+                || currentPlacedModule.moduleId?.includes('dual-lower-sink-cabinet');
+              const isTopDownDoorCabinetHingeModule = currentPlacedModule.moduleId?.includes('lower-top-down-half')
+                || currentPlacedModule.moduleId?.includes('dual-lower-top-down-half');
+              const hasFixedSpecialHingePositions = isSinkCabinetHingeModule || isTopDownDoorCabinetHingeModule;
               const lowerTopHingeInsetMm = currentPlacedModule.moduleId?.includes('shelf-split') ? 140 : 120;
               const moduleBodyHeightMm = Math.round(adjustedFreeHeight ?? placedBodyHeight ?? moduleData?.dimensions.height ?? 0);
               const doorWidthMm = Math.round(doorOriginalWidth ?? customWidth ?? moduleData?.dimensions.width ?? 0);
@@ -5446,7 +5451,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   savedSidePositions.map((position: number) => position - doorBottomOnSideMm),
                   doorHeightMm
                 );
-                if (saved.length > 0) {
+                if (!(hasFixedSpecialHingePositions && field === 'hingePositionsMm') && saved.length > 0) {
                   return saved;
                 }
 
@@ -5459,7 +5464,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   ? splitDoorBottomsMm.lowerLast
                   : field === 'upperDoorHingePositionsMm'
                     ? splitDoorBottomsMm.upperLast
-                    : moduleBodyHeightMm - 120;
+                    : moduleBodyHeightMm - (isSinkCabinetHingeModule ? 300 : isTopDownDoorCabinetHingeModule ? 180 : 120);
                 return resolveSideAnchoredDoorHingePositionsMm({
                     doorHeightMm,
                     doorBottomOnSideMm,

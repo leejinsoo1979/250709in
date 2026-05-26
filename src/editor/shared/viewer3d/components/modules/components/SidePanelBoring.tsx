@@ -130,6 +130,11 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
       hingeSide: placedModule.hingePosition ?? 'right',
       cabinetBottomMm: 0,
     });
+    const isSinkCabinet = placedModule.moduleId?.includes('lower-sink-cabinet')
+      || placedModule.moduleId?.includes('dual-lower-sink-cabinet');
+    const isTopDownDoorCabinet = placedModule.moduleId?.includes('lower-top-down-half')
+      || placedModule.moduleId?.includes('dual-lower-top-down-half');
+    const topHingeInsetFromBodyTopMm = isSinkCabinet ? 300 : isTopDownDoorCabinet ? 180 : 120;
     const defaultPositions = resolveSideAnchoredDoorHingePositionsMm({
       doorHeightMm: doorGeometry.leafHeightMm,
       doorBottomOnSideMm: doorGeometry.bottomMm,
@@ -137,7 +142,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
         doorHeightMm: doorGeometry.leafHeightMm,
       }),
       firstSidePositionMm: 120,
-      lastSidePositionMm: heightMm - 120,
+      lastSidePositionMm: heightMm - topHingeInsetFromBodyTopMm,
     });
     const shelfCollisionRanges = boringDetails
       .filter(detail => detail.role === 'movable-shelf')
@@ -149,7 +154,7 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
       doorHeightMm: doorGeometry.leafHeightMm,
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-      customSidePositionsMm: placedModule.hingePositionsMm,
+      customSidePositionsMm: (isSinkCabinet || isTopDownDoorCabinet) ? undefined : placedModule.hingePositionsMm,
       defaultDoorPositionsMm: defaultPositions,
       preserveEdgePositionsMm: true
     });

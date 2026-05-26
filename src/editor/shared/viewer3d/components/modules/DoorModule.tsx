@@ -1176,6 +1176,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     viewMode,
     view2DDirection
   ) && !isHingePositionEditMode && sideDoorDimensionVisible;
+  const showDoorTopViewWidthDimension = effectiveShowDimensions
+    && !isPlainMaterial
+    && viewMode === '2D'
+    && view2DDirection === 'top'
+    && !isHingePositionEditMode
+    && sideDoorDimensionVisible;
 
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);
@@ -1727,7 +1733,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     .filter(position => Number.isFinite(position))
     .map(position => Math.round(position * 1000) / 1000)
     .sort((a, b) => a - b);
-  const hasCustomHingePositions = customHingePositionsMm.length > 0;
+  const isSinkCabinetHingeModule = splitDoorPanelName !== '상부 도어'
+    && splitDoorPanelName !== '하부 도어'
+    && (moduleIdentifier.includes('lower-sink-cabinet') || moduleIdentifier.includes('dual-lower-sink-cabinet'));
+  const isTopDownDoorCabinetHingeModule = splitDoorPanelName !== '상부 도어'
+    && splitDoorPanelName !== '하부 도어'
+    && (moduleIdentifier.includes('lower-top-down-half') || moduleIdentifier.includes('dual-lower-top-down-half'));
+  const hasFixedSpecialHingePositions = isSinkCabinetHingeModule || isTopDownDoorCabinetHingeModule;
+  const hasCustomHingePositions = !hasFixedSpecialHingePositions && customHingePositionsMm.length > 0;
   const shelfCollisionRangesMm = useMemo(() => {
     const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
     if (!cabinetHeightMm || !moduleData) return [];
@@ -1788,12 +1801,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       hingeMode
     });
     if (splitDoorPanelName !== '상부 도어' && splitDoorPanelName !== '하부 도어') {
+      const topHingeInsetFromBodyTopMm = isSinkCabinetHingeModule
+        ? 300
+        : isTopDownDoorCabinetHingeModule
+          ? 180
+          : 120;
       return resolveSideAnchoredDoorHingePositionsMm({
         doorHeightMm: actualDoorHeight,
         doorBottomOnSideMm,
         defaultDoorPositionsMm: defaultPositions,
         firstSidePositionMm: 120,
-        lastSidePositionMm: cabinetHeightMm - 120,
+        lastSidePositionMm: cabinetHeightMm - topHingeInsetFromBodyTopMm,
       });
     }
 
@@ -2173,6 +2191,89 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const DOOR_BACK_GAP_MM = 2;
   const baseDepthOffset = mmToThreeUnits((DOOR_BACK_GAP_MM + doorThickness / 2) * 2);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset;
+  const renderTopViewDoorWidthDimension = (
+    doorWidthUnits: number,
+    doorWidthMm: number,
+    keyPrefix: string
+  ) => {
+    if (!showDoorTopViewWidthDimension || hideWidthDimension) return null;
+
+    const extensionLineStart = doorDimensionWidthLineStart;
+    const extensionLineLength = doorDimensionWidthLineLength;
+    const tickSize = 0.008;
+    const dimColor = activeDoorDimensionColor;
+    const frontFaceZ = doorThicknessUnits / 2 + 0.002;
+    const extensionStartZ = frontFaceZ + extensionLineStart;
+    const dimensionLineZ = frontFaceZ + extensionLineStart + extensionLineLength;
+    const textZ = dimensionLineZ - mmToThreeUnits(15);
+
+    return (
+      <>
+        <NativeLine
+          name="door-top-width-dimension"
+          points={[[-doorWidthUnits / 2, 0, extensionStartZ], [-doorWidthUnits / 2, 0, dimensionLineZ]]}
+          color={dimColor}
+          lineWidth={1}
+          renderOrder={100001}
+          depthTest={false}
+          depthWrite={false}
+          transparent={true}
+        />
+        <NativeLine
+          name="door-top-width-dimension"
+          points={[[doorWidthUnits / 2, 0, extensionStartZ], [doorWidthUnits / 2, 0, dimensionLineZ]]}
+          color={dimColor}
+          lineWidth={1}
+          renderOrder={100001}
+          depthTest={false}
+          depthWrite={false}
+          transparent={true}
+        />
+        <NativeLine
+          name="door-top-width-dimension"
+          points={[[-doorWidthUnits / 2, 0, dimensionLineZ], [doorWidthUnits / 2, 0, dimensionLineZ]]}
+          color={dimColor}
+          lineWidth={1}
+          renderOrder={100001}
+          depthTest={false}
+          depthWrite={false}
+          transparent={true}
+        />
+        <NativeLine
+          name="door-top-width-dimension"
+          points={[[-doorWidthUnits / 2 - tickSize, 0, dimensionLineZ], [-doorWidthUnits / 2 + tickSize, 0, dimensionLineZ]]}
+          color={dimColor}
+          lineWidth={1}
+          renderOrder={100001}
+          depthTest={false}
+          depthWrite={false}
+          transparent={true}
+        />
+        <NativeLine
+          name="door-top-width-dimension"
+          points={[[doorWidthUnits / 2 - tickSize, 0, dimensionLineZ], [doorWidthUnits / 2 + tickSize, 0, dimensionLineZ]]}
+          color={dimColor}
+          lineWidth={1}
+          renderOrder={100001}
+          depthTest={false}
+          depthWrite={false}
+          transparent={true}
+        />
+        <DimensionText
+          name={`${keyPrefix}-top-width-dimension-text`}
+          value={doorWidthMm}
+          position={[0, 0, textZ]}
+          color={dimColor}
+          hoverColor={doorDimensionHoverColor}
+          onHoverChange={setIsDoorDimensionHovered}
+          anchorX="center"
+          anchorY="top"
+          forceShow={true}
+          rotation={[-Math.PI / 2, 0, 0]}
+        />
+      </>
+    );
+  };
 
   // 힌지 위치 오프셋(9mm) 상수 정의
   const hingeOffset = panelThickness / 2; // 9mm
@@ -2979,6 +3080,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   </>
                 );
               })()}
+              {renderTopViewDoorWidthDimension(leftDoorWidthUnits, leftDoorWidth, 'left-door')}
             </group>
           </animated.group>
         </group>
@@ -3440,6 +3542,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   </>
                 );
               })()}
+              {renderTopViewDoorWidthDimension(rightDoorWidthUnits, rightDoorWidth, 'right-door')}
             </group>
           </animated.group>
         </group>
@@ -4236,6 +4339,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               );
             })()}
+            {renderTopViewDoorWidthDimension(doorWidthUnits, doorWidth, 'single-door')}
           </group>
         </animated.group>
 
