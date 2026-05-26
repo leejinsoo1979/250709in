@@ -1,7 +1,9 @@
 /**
  * 1:1 메신저 페이지 — /dashboard/messages, /dashboard/messages/:convId
+ * UI: @chatscope/chat-ui-kit-react 기반 메신저 룩앤필
+ * 데이터: 기존 Firebase friends 모듈 (subscribeMyConversations / subscribeMessages / sendMessage)
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import {
@@ -13,6 +15,41 @@ import {
   type MessageRecord,
 } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
+import {
+  MainContainer,
+  Sidebar,
+  ConversationList,
+  Conversation,
+  Avatar,
+  ChatContainer,
+  ConversationHeader,
+  MessageList,
+  Message,
+  MessageInput,
+  MessageGroup,
+} from '@chatscope/chat-ui-kit-react';
+
+const FALLBACK_AVATAR =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="100%" height="100%" fill="%233b82f6"/><text x="50%" y="55%" text-anchor="middle" fill="%23ffffff" font-family="sans-serif" font-size="18" font-weight="700">?</text></svg>';
+
+function getInitialAvatar(name?: string, email?: string): string {
+  const letter = (name?.[0] || email?.[0] || '?').toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><rect width="100%" height="100%" fill="%233b82f6"/><text x="50%" y="55%" text-anchor="middle" fill="%23ffffff" font-family="sans-serif" font-size="18" font-weight="700">${letter}</text></svg>`;
+  return `data:image/svg+xml;utf8,${svg}`;
+}
+
+function formatTime(d: Date): string {
+  const today = new Date();
+  const sameDay =
+    d.getFullYear() === today.getFullYear() &&
+    d.getMonth() === today.getMonth() &&
+    d.getDate() === today.getDate();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  if (sameDay) return `${hh}:${mm}`;
+  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
+}
 
 export default function Messages() {
   const { user, loading: authLoading } = useAuth();
@@ -20,9 +57,7 @@ export default function Messages() {
   const { convId: activeConvId } = useParams<{ convId?: string }>();
   const [conversations, setConversations] = useState<ConversationRecord[]>([]);
   const [messages, setMessages] = useState<MessageRecord[]>([]);
-  const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -36,30 +71,22 @@ export default function Messages() {
     }
     const unsub = subscribeMessages(activeConvId, (msgs) => {
       setMessages(msgs);
-      // 읽음 처리
       markConversationRead(activeConvId, user.uid).catch(() => {});
     });
     return () => unsub();
   }, [activeConvId, user?.uid]);
-
-  // 메시지 변경 시 스크롤 하단
-  useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-    }
-  }, [messages.length, activeConvId]);
 
   if (authLoading) return <LoadingSpinner fullscreen message="확인 중..." />;
   if (!user) return <Navigate to="/login" replace />;
 
   const activeConv = conversations.find((c) => c.id === activeConvId);
 
-  const handleSend = async () => {
-    if (!activeConvId || !text.trim() || sending) return;
+  const handleSend = async (innerHtml: string, textContent: string, _innerText: string) => {
+    const text = (textContent || innerHtml || '').trim();
+    if (!activeConvId || !text || sending) return;
     setSending(true);
     try {
       await sendMessage(activeConvId, user.uid, text);
-      setText('');
     } catch (err: any) {
       console.error('[메시지 전송 실패]', err);
       alert(`메시지 전송 실패: ${err?.code || ''} ${err?.message || ''}`);
@@ -68,175 +95,196 @@ export default function Messages() {
     }
   };
 
+  // chatscope 메시지 그룹핑: 같은 발신자가 연속으로 보낸 메시지는 한 그룹으로
+  const buildMessageGroups = () => {
+    const groups: Array<{ senderId: string; isMine: boolean; messages: MessageRecord[] }> = [];
+    messages.forEach((m) => {
+      const isMine = m.senderId === user.uid;
+      const last = groups[groups.length - 1];
+      if (last && last.senderId === m.senderId) {
+        last.messages.push(m);
+      } else {
+        groups.push({ senderId: m.senderId, isMine, messages: [m] });
+      }
+    });
+    return groups;
+  };
+
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--theme-background, #f9fafb)', padding: '24px' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--theme-text, #1f2937)' }}>메시지</h1>
-          <button onClick={() => navigate('/dashboard')} style={btnSecondary}>대시보드</button>
+    <div
+      style={{
+        height: '100vh',
+        background: 'var(--theme-background, #f9fafb)',
+        padding: '24px',
+        boxSizing: 'border-box',
+      }}
+    >
+      <div style={{ maxWidth: 1200, margin: '0 auto', height: '100%' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
+          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: 'var(--theme-text, #1f2937)' }}>
+            메시지
+          </h1>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              padding: '8px 14px',
+              background: 'var(--theme-surface, #fff)',
+              color: 'var(--theme-text, #374151)',
+              border: '1px solid var(--theme-border, #d1d5db)',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            대시보드
+          </button>
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '320px 1fr',
-          gap: 16,
-          height: 'calc(100vh - 140px)',
-          minHeight: 480,
-        }}>
-          {/* 좌측: 대화방 목록 */}
-          <div style={{ ...panel, overflowY: 'auto' }}>
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--theme-border, #e5e7eb)', fontWeight: 600, fontSize: 14 }}>
-              대화 ({conversations.length})
-            </div>
-            {conversations.length === 0 ? (
-              <div style={{ padding: '32px 16px', textAlign: 'center', color: '#6b7280', fontSize: 13 }}>
-                대화가 없습니다.<br />친구 페이지에서 메시지를 시작하세요.
-              </div>
+        <div
+          style={{
+            position: 'relative',
+            height: 'calc(100vh - 140px)',
+            minHeight: 480,
+            border: '1px solid var(--theme-border, #e5e7eb)',
+            borderRadius: 12,
+            overflow: 'hidden',
+            background: 'var(--theme-surface, #fff)',
+          }}
+        >
+          <MainContainer responsive style={{ height: '100%' }}>
+            <Sidebar position="left" scrollable>
+              <ConversationList>
+                {conversations.length === 0 ? (
+                  <Conversation
+                    info="친구 페이지에서 메시지를 시작하세요"
+                    name="대화가 없습니다"
+                  />
+                ) : (
+                  conversations.map((c) => {
+                    const myUnread = (c.unread || {})[user.uid] || 0;
+                    const isActive = c.id === activeConvId;
+                    const avatarSrc =
+                      c.peerPhotoURL || getInitialAvatar(c.peerName, c.peerEmail);
+                    return (
+                      <Conversation
+                        key={c.id}
+                        name={c.peerName || c.peerEmail || '(알 수 없음)'}
+                        info={c.lastMessage || '대화 시작'}
+                        active={isActive}
+                        unreadCnt={myUnread > 0 ? myUnread : undefined}
+                        onClick={() => navigate(`/dashboard/messages/${c.id}`)}
+                      >
+                        <Avatar src={avatarSrc} name={c.peerName || c.peerEmail || '?'} />
+                      </Conversation>
+                    );
+                  })
+                )}
+              </ConversationList>
+            </Sidebar>
+
+            {activeConv ? (
+              <ChatContainer>
+                <ConversationHeader>
+                  <Avatar
+                    src={
+                      activeConv.peerPhotoURL ||
+                      getInitialAvatar(activeConv.peerName, activeConv.peerEmail)
+                    }
+                    name={activeConv.peerName || activeConv.peerEmail || '?'}
+                  />
+                  <ConversationHeader.Content
+                    userName={activeConv.peerName || '(이름 없음)'}
+                    info={activeConv.peerEmail || ''}
+                  />
+                </ConversationHeader>
+
+                <MessageList>
+                  {messages.length === 0 ? (
+                    <MessageList.Content
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: '100%',
+                        color: '#9ca3af',
+                        fontSize: 13,
+                      }}
+                    >
+                      아직 메시지가 없습니다.
+                    </MessageList.Content>
+                  ) : (
+                    buildMessageGroups().map((group, gi) => (
+                      <MessageGroup
+                        key={`${group.senderId}-${gi}`}
+                        direction={group.isMine ? 'outgoing' : 'incoming'}
+                      >
+                        {!group.isMine && (
+                          <Avatar
+                            src={activeConv.peerPhotoURL || FALLBACK_AVATAR}
+                            name={activeConv.peerName || '?'}
+                          />
+                        )}
+                        <MessageGroup.Messages>
+                          {group.messages.map((m) => (
+                            <Message
+                              key={m.id}
+                              model={{
+                                message: m.text,
+                                sentTime: m.createdAt ? formatTime(m.createdAt) : '',
+                                sender: group.isMine ? '나' : activeConv.peerName || '상대',
+                                direction: group.isMine ? 'outgoing' : 'incoming',
+                                position: 'single',
+                              }}
+                            />
+                          ))}
+                        </MessageGroup.Messages>
+                        <MessageGroup.Footer>
+                          {group.messages[group.messages.length - 1]?.createdAt
+                            ? formatTime(group.messages[group.messages.length - 1].createdAt!)
+                            : ''}
+                        </MessageGroup.Footer>
+                      </MessageGroup>
+                    ))
+                  )}
+                </MessageList>
+
+                <MessageInput
+                  placeholder="메시지 입력..."
+                  onSend={handleSend}
+                  attachButton={false}
+                  disabled={sending}
+                  sendDisabled={sending}
+                />
+              </ChatContainer>
             ) : (
-              conversations.map((c) => {
-                const myUnread = (c.unread || {})[user.uid] || 0;
-                const isActive = c.id === activeConvId;
-                return (
-                  <div
-                    key={c.id}
-                    onClick={() => navigate(`/dashboard/messages/${c.id}`)}
+              <ChatContainer>
+                <MessageList>
+                  <MessageList.Content
                     style={{
-                      padding: '12px 16px',
-                      borderBottom: '1px solid var(--theme-border, #f3f4f6)',
-                      cursor: 'pointer',
-                      background: isActive ? 'var(--theme-primary-light, #eff6ff)' : 'transparent',
-                      display: 'flex', gap: 12, alignItems: 'center',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                      color: '#6b7280',
+                      fontSize: 14,
                     }}
                   >
-                    <div style={avatar}>
-                      {c.peerPhotoURL
-                        ? <img src={c.peerPhotoURL} alt="" style={imgFit} />
-                        : (c.peerName?.[0] || c.peerEmail?.[0] || '?').toUpperCase()
-                      }
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {c.peerName || c.peerEmail || '(알 수 없음)'}
-                        </div>
-                        {myUnread > 0 && <span style={badge}>{myUnread}</span>}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {c.lastMessage || '대화 시작'}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+                    좌측에서 대화를 선택하세요.
+                  </MessageList.Content>
+                </MessageList>
+              </ChatContainer>
             )}
-          </div>
-
-          {/* 우측: 대화창 */}
-          <div style={{ ...panel, display: 'flex', flexDirection: 'column' }}>
-            {!activeConv ? (
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280' }}>
-                좌측에서 대화를 선택하세요.
-              </div>
-            ) : (
-              <>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--theme-border, #e5e7eb)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={avatar}>
-                    {activeConv.peerPhotoURL
-                      ? <img src={activeConv.peerPhotoURL} alt="" style={imgFit} />
-                      : (activeConv.peerName?.[0] || activeConv.peerEmail?.[0] || '?').toUpperCase()
-                    }
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 15 }}>{activeConv.peerName || '(이름 없음)'}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>{activeConv.peerEmail}</div>
-                  </div>
-                </div>
-
-                <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: 'var(--theme-background, #f9fafb)' }}>
-                  {messages.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: '#9ca3af', fontSize: 13, marginTop: 40 }}>아직 메시지가 없습니다.</div>
-                  ) : (
-                    messages.map((m) => {
-                      const mine = m.senderId === user.uid;
-                      return (
-                        <div key={m.id} style={{ display: 'flex', justifyContent: mine ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
-                          <div style={{
-                            maxWidth: '70%',
-                            padding: '8px 12px',
-                            borderRadius: 12,
-                            background: mine ? '#3b82f6' : '#fff',
-                            color: mine ? '#fff' : '#1f2937',
-                            border: mine ? 'none' : '1px solid #e5e7eb',
-                            fontSize: 14,
-                            wordBreak: 'break-word',
-                            whiteSpace: 'pre-wrap',
-                          }}>
-                            {m.text}
-                            <div style={{ fontSize: 10, opacity: 0.7, marginTop: 4, textAlign: 'right' }}>
-                              {m.createdAt ? formatTime(m.createdAt) : ''}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                <div style={{ padding: '12px 16px', borderTop: '1px solid var(--theme-border, #e5e7eb)', display: 'flex', gap: 8 }}>
-                  <input
-                    type="text"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder="메시지 입력..."
-                    style={input}
-                    disabled={sending}
-                  />
-                  <button onClick={handleSend} disabled={sending || !text.trim()} style={btnPrimary}>
-                    전송
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          </MainContainer>
         </div>
       </div>
     </div>
   );
 }
-
-function formatTime(d: Date): string {
-  const today = new Date();
-  const sameDay = d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
-  const hh = String(d.getHours()).padStart(2, '0');
-  const mm = String(d.getMinutes()).padStart(2, '0');
-  if (sameDay) return `${hh}:${mm}`;
-  return `${d.getMonth() + 1}/${d.getDate()} ${hh}:${mm}`;
-}
-
-const panel: React.CSSProperties = {
-  background: 'var(--theme-surface, #fff)', borderRadius: 12,
-  border: '1px solid var(--theme-border, #e5e7eb)', overflow: 'hidden',
-};
-const avatar: React.CSSProperties = {
-  width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', color: '#fff',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16,
-  flexShrink: 0, overflow: 'hidden',
-};
-const imgFit: React.CSSProperties = { width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' };
-const input: React.CSSProperties = {
-  flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid var(--theme-border, #d1d5db)',
-  fontSize: 14, outline: 'none', background: 'var(--theme-surface, #fff)', color: 'var(--theme-text, #1f2937)',
-};
-const btnPrimary: React.CSSProperties = {
-  padding: '10px 18px', background: '#3b82f6', color: '#fff', border: 'none',
-  borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
-};
-const btnSecondary: React.CSSProperties = {
-  padding: '8px 14px', background: 'var(--theme-surface, #fff)', color: 'var(--theme-text, #374151)',
-  border: '1px solid var(--theme-border, #d1d5db)', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-};
-const badge: React.CSSProperties = {
-  minWidth: 18, padding: '2px 6px', background: '#ef4444', color: '#fff',
-  borderRadius: 9, fontSize: 11, fontWeight: 700, textAlign: 'center',
-};

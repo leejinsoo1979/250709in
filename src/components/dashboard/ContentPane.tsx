@@ -172,6 +172,16 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     return <FileText size={size} className={styles.itemIconDesign} />;
   };
 
+  const getVisibleDesignFiles = (projectId: string) => (
+    (projectDesignFiles?.[projectId] || []).filter((df: any) => !df.isDeleted)
+  );
+
+  const renderProjectCountBadge = (count: number) => (
+    <div className={styles.projectCountBadge} aria-label={`프로젝트 ${count}개`}>
+      {count}개
+    </div>
+  );
+
   // 체크박스 렌더링 (호버 시 표시, 선택된 아이템은 항상 표시)
   const hasSelection = selectedItems.size > 0;
   const renderCheckbox = (item: ExplorerItem) => {
@@ -434,7 +444,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                   </div>
                 ) : item.type === 'project' && projectDesignFiles ? (
                   (() => {
-                    const designFiles = projectDesignFiles[item.id] || [];
+                    const designFiles = getVisibleDesignFiles(item.id);
                     if (designFiles.length === 0) {
                       return (
                         <div className={styles.projectGridEmpty}>
@@ -463,6 +473,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                         {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
                           <div key={`empty-${i}`} className={styles.saasProjectGridItemEmpty} />
                         ))}
+                        {renderProjectCountBadge(designFiles.length)}
                       </div>
                     );
                   })()
@@ -545,7 +556,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               )
             ) : viewMode === 'large' && item.type === 'project' && projectDesignFiles ? (
               (() => {
-                const designFiles = projectDesignFiles[item.id] || [];
+                const designFiles = getVisibleDesignFiles(item.id);
                 if (designFiles.length === 0) {
                   return (
                     <div className={styles.projectGridEmpty}>
@@ -574,6 +585,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                     {Array.from({ length: 4 - displayItems.length }).map((_, i) => (
                       <div key={`empty-${i}`} className={styles.projectGridItemEmpty} />
                     ))}
+                    {renderProjectCountBadge(designFiles.length)}
                   </div>
                 );
               })()
@@ -595,7 +607,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
             </div>
             {item.type === 'project' && projectDesignFiles && (
               <div className={styles.iconFileCount}>
-                {(projectDesignFiles[item.id] || []).length}개 파일
+                {getVisibleDesignFiles(item.id).length}개 파일
               </div>
             )}
             {item.type === 'design' && item.spaceSize && (

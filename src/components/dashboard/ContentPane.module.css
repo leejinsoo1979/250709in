@@ -486,6 +486,7 @@
 
 /* ── 프로젝트 분할창 썸네일 (아주 큰 아이콘) ── */
 .projectGrid {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
@@ -523,6 +524,27 @@
   color: var(--theme-text-muted);
   background: var(--theme-background-secondary);
   border-radius: 6px;
+}
+
+.projectCountBadge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  min-width: 32px;
+  height: 22px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.78);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* ── SaaS 카드 뷰 (아주 큰 아이콘) ── */
@@ -606,6 +628,7 @@
 
 /* 2x2 프로젝트 그리드 (SaaS 카드) */
 .saasProjectGrid {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
