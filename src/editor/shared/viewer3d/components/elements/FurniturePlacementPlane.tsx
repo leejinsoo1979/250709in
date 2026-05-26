@@ -253,6 +253,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     const slotGuideDashSize = 0.2;
     const slotGuideGapSize = 0.1;
     const slotGuideOpacity = 1;
+    const isActiveSideWall = activePlacementWall === wall;
     const createArrowHead = (
       start: [number, number, number],
       end: [number, number, number],
@@ -285,7 +286,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     );
 
     const renderSideWallDimensionGuides = () => {
-      if (!showSideDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
+      if (!showSideDimensions || !isActiveSideWall) return null;
 
       const hasPlacedSideWallModule = placedModules.some(mod => ((mod as any).placementWall || 'front') === wall);
       const hasDoorOnSideWall = sideModulesForWall.some(mod => mod.hasDoor);
@@ -676,7 +677,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     })() : null;
 
     const sidePlacedWidthDimensions = (() => {
-      if (!showSideDimensions || (activePlacementWall !== wall && activePlacementWall !== 'front')) return null;
+      if (!showSideDimensions || !isActiveSideWall) return null;
 
       const sideModules = sideModulesForWall;
       if (sideModules.length === 0) return null;
