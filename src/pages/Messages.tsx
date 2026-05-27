@@ -796,13 +796,14 @@ export default function Messages() {
                   }}
                 >
                   <InitialAvatar name={c.peerName} email={c.peerEmail} photoURL={c.peerPhotoURL} size={40} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0, background: 'transparent' }}>
                     <div
                       style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
                         marginBottom: 4,
+                        background: 'transparent',
                       }}
                     >
                       <span
@@ -810,6 +811,7 @@ export default function Messages() {
                           fontWeight: 600,
                           fontSize: 14,
                           color: C.text,
+                          background: 'transparent',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
@@ -819,7 +821,7 @@ export default function Messages() {
                       >
                         {c.peerName || c.peerEmail || '(알 수 없음)'}
                       </span>
-                      <span style={{ fontSize: 11, color: C.textSecondary, flexShrink: 0 }}>
+                      <span style={{ fontSize: 11, color: C.textSecondary, background: 'transparent', flexShrink: 0 }}>
                         {c.lastMessageAt ? formatTime(c.lastMessageAt) : ''}
                       </span>
                     </div>
@@ -828,12 +830,14 @@ export default function Messages() {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        background: 'transparent',
                       }}
                     >
                       <span
                         style={{
                           fontSize: 12,
                           color: C.textSecondary,
+                          background: 'transparent',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
