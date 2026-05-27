@@ -1057,12 +1057,15 @@ export default function Messages() {
                       message={m}
                       mine={mine}
                       C={C}
-                      showAvatar={!mine}
+                      showAvatar={isLastInGroup}
                       showSenderName={isLastInGroup}
                       senderLabel={senderLabel}
                       peerName={activeConv.peerName}
                       peerEmail={activeConv.peerEmail}
                       peerPhotoURL={activeConv.peerPhotoURL}
+                      myName={user.displayName || user.email || ''}
+                      myEmail={user.email || ''}
+                      myPhotoURL={user.photoURL || undefined}
                       compact={prevSameSender}
                       isNarrow={isLiveStageVisible}
                       onAcceptLiveSession={(sessionId) => {
@@ -1383,6 +1386,9 @@ function ChatviaBubble({
   peerName,
   peerEmail,
   peerPhotoURL,
+  myName,
+  myEmail,
+  myPhotoURL,
   compact,
   isNarrow,
   onAcceptLiveSession,
@@ -1398,6 +1404,9 @@ function ChatviaBubble({
   peerName?: string;
   peerEmail?: string;
   peerPhotoURL?: string;
+  myName?: string;
+  myEmail?: string;
+  myPhotoURL?: string;
   compact: boolean;
   isNarrow?: boolean;
   onAcceptLiveSession?: (sessionId: string) => void;
@@ -1468,11 +1477,13 @@ function ChatviaBubble({
     );
   }
 
-  const avatarSize = isNarrow ? 32 : 40;
-  // Chatvia 스타일: 양쪽 모두 테마 primary 색
-  const bubbleBg = C.bubbleOutgoingBg;
-  const bubbleColor = '#ffffff';
-  const timeColor = 'rgba(255,255,255,0.85)';
+  const avatarSize = isNarrow ? 36 : 44;
+  // Chatvia 정확한 스타일: 상대방은 흰색 말풍선, 나는 테마 primary 보라
+  const bubbleBg = mine ? C.bubbleOutgoingBg : (C.bubbleIncomingBg || '#ffffff');
+  const bubbleColor = mine ? '#ffffff' : C.text;
+  const timeColor = mine ? 'rgba(255,255,255,0.85)' : C.textSecondary;
+  // 진짜 삼각형 꼬리 (CSS::before로 말풍선 바깥에 돌출)
+  const tailSize = 8;
   return (
     <div
       style={{
@@ -1503,7 +1514,8 @@ function ChatviaBubble({
               gap: 6,
               marginBottom: message.text ? 6 : 0,
               alignSelf: mine ? 'flex-end' : 'flex-start',
-              marginLeft: !mine ? avatarSize + 14 : 0,
+              marginLeft: !mine ? tailSize : 0,
+              marginRight: mine ? tailSize : 0,
             }}
           >
             {message.attachments.map((att, i) => (
@@ -1520,40 +1532,62 @@ function ChatviaBubble({
               gap: 6,
               flexDirection: mine ? 'row-reverse' : 'row',
               maxWidth: '100%',
-              marginLeft: !mine ? avatarSize + 14 : 0,
             }}
           >
             <div
               style={{
-                padding: isNarrow ? '12px 16px' : '14px 20px',
-                borderRadius: 12,
-                // 꼬리: 인커밍은 좌측 하단 0, 아웃고잉은 우측 하단 0
-                borderBottomLeftRadius: mine ? 12 : 0,
-                borderBottomRightRadius: mine ? 0 : 12,
-                background: bubbleBg,
-                color: bubbleColor,
-                fontSize: 14,
-                fontWeight: 500,
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap',
                 position: 'relative',
-                lineHeight: 1.5,
+                marginLeft: !mine ? tailSize : 0,
+                marginRight: mine ? tailSize : 0,
               }}
             >
-              <div style={{ marginBottom: 6 }}>{message.text}</div>
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  fontSize: 11,
-                  color: timeColor,
-                  justifyContent: 'center',
+                  padding: isNarrow ? '12px 16px' : '14px 20px',
+                  borderRadius: 8,
+                  background: bubbleBg,
+                  color: bubbleColor,
+                  fontSize: 14,
+                  fontWeight: 500,
+                  wordBreak: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                  lineHeight: 1.5,
+                  boxShadow: mine ? 'none' : '0 1px 2px rgba(0,0,0,0.08)',
                 }}
               >
-                <HiOutlineClock size={12} />
-                {message.createdAt ? formatTime(message.createdAt) : ''}
+                <div style={{ marginBottom: 6 }}>{message.text}</div>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontSize: 11,
+                    color: timeColor,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <HiOutlineClock size={12} />
+                  {message.createdAt ? formatTime(message.createdAt) : ''}
+                </div>
               </div>
+              {/* 삼각형 꼬리 (말풍선 바깥으로 돌출) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  ...(mine
+                    ? { right: -tailSize, borderLeftColor: bubbleBg, borderBottomColor: bubbleBg }
+                    : { left: -tailSize, borderRightColor: bubbleBg, borderBottomColor: bubbleBg }),
+                  width: 0,
+                  height: 0,
+                  borderStyle: 'solid',
+                  borderWidth: `${tailSize}px`,
+                  borderTopColor: 'transparent',
+                  ...(mine
+                    ? { borderRightColor: 'transparent' }
+                    : { borderLeftColor: 'transparent' }),
+                }}
+              />
             </div>
             {/* 더보기 메뉴 (호버, 좁은 모드 숨김) */}
             {!isNarrow && (
@@ -1577,24 +1611,22 @@ function ChatviaBubble({
             )}
           </div>
         )}
-        {/* 인커밍 메시지: 아바타 + 발신자 이름 (말풍선 좌측 하단에 겹쳐 배치) */}
-        {!mine && (
+        {/* 아바타 + 발신자 이름 (말풍선 아래) */}
+        {showAvatar && (
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: 10,
-              marginTop: -6,
-              marginLeft: 0,
-              position: 'relative',
-              zIndex: 1,
+              marginTop: 6,
+              flexDirection: mine ? 'row-reverse' : 'row',
             }}
           >
             <div style={{ width: avatarSize, flexShrink: 0 }}>
               <InitialAvatar
-                name={peerName}
-                email={peerEmail}
-                photoURL={peerPhotoURL}
+                name={mine ? myName : peerName}
+                email={mine ? myEmail : peerEmail}
+                photoURL={mine ? myPhotoURL : peerPhotoURL}
                 size={avatarSize}
               />
             </div>
