@@ -39,19 +39,22 @@ export default function TallEpContextMenu() {
   ];
 
   return (
-    <div
-      onClick={closeMenu}
-      onContextMenu={(e) => { e.preventDefault(); closeMenu(); }}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 99999,
-      }}
-    >
+    <>
+      {/* 투명 오버레이 (메뉴 바깥 클릭 감지) */}
+      <div
+        onClick={closeMenu}
+        onContextMenu={(e) => { e.preventDefault(); closeMenu(); }}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99998,
+          background: 'transparent',
+        }}
+      />
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
-          position: 'absolute',
+          position: 'fixed',
           left: menu.x,
           top: menu.y,
           minWidth: 160,
@@ -61,6 +64,7 @@ export default function TallEpContextMenu() {
           boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           padding: '6px 0',
           fontSize: 13,
+          zIndex: 99999,
         }}
       >
         {items.map((opt) => {
@@ -105,6 +109,6 @@ export default function TallEpContextMenu() {
           );
         })}
       </div>
-    </div>
+    </>
   );
 }
