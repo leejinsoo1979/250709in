@@ -845,9 +845,7 @@ export default function Messages() {
               visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.viewerCount : 0
             }
             onStopBroadcast={
-              visibleLiveSessions[0].broadcasterUid === user.uid
-                ? (sessionId) => broadcast.stop(sessionId)
-                : undefined
+              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.stop : undefined
             }
             C={C}
           />
@@ -1217,7 +1215,7 @@ export default function Messages() {
                           hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
                         });
                         if (broadcast.isLive || myVisibleLiveSession) {
-                          broadcast.stop(myVisibleLiveSession?.id || undefined);
+                          broadcast.stop();
                         } else {
                           broadcast.start();
                         }
