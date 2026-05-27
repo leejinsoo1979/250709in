@@ -200,6 +200,13 @@ export default function Messages() {
     broadcasterName: user?.displayName || user?.email || '',
   });
 
+  // 내가 시연 종료한 직후엔 Firestore 업데이트 응답이 늦을 수 있으니
+  // 클라이언트 측에서 즉시 내 활성 세션을 필터링 (낙관적 UI)
+  const visibleLiveSessions = activeLiveSessions.filter((s) => {
+    if (!broadcast.isLive && s.broadcasterUid === user?.uid) return false;
+    return true;
+  });
+
   // 라이브 에러 발생 시 즉시 표시
   useEffect(() => {
     if (broadcast.error) {
@@ -834,25 +841,25 @@ export default function Messages() {
       {/* ===== 우측 영역 (라이브 있으면 라이브 메인 + 채팅 사이드 / 없으면 채팅 풀) ===== */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'row', background: C.chatBg, minWidth: 0 }}>
         {/* 라이브 스테이지 (메인 무대) */}
-        {activeConv && activeLiveSessions.length > 0 && (
+        {activeConv && visibleLiveSessions.length > 0 && (
           <LiveStage
-            session={activeLiveSessions[0]}
+            session={visibleLiveSessions[0]}
             myUid={user.uid}
             broadcasterPreviewStream={
-              activeLiveSessions[0].broadcasterUid === user.uid ? broadcast.previewStream : null
+              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.previewStream : null
             }
             broadcasterViewerCount={
-              activeLiveSessions[0].broadcasterUid === user.uid ? broadcast.viewerCount : 0
+              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.viewerCount : 0
             }
             onStopBroadcast={
-              activeLiveSessions[0].broadcasterUid === user.uid ? broadcast.stop : undefined
+              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.stop : undefined
             }
             C={C}
           />
         )}
 
         {/* 라이브 중 우측 채팅 사이드 드래그 핸들 */}
-        {activeConv && activeLiveSessions.length > 0 && !rightChatCollapsed && (
+        {activeConv && visibleLiveSessions.length > 0 && !rightChatCollapsed && (
           <div
             onMouseDown={(e) => {
               e.preventDefault();
@@ -876,7 +883,7 @@ export default function Messages() {
         )}
 
         {/* 라이브 중 우측 채팅 접힘 상태: 펼치기 버튼만 */}
-        {activeConv && activeLiveSessions.length > 0 && rightChatCollapsed && (
+        {activeConv && visibleLiveSessions.length > 0 && rightChatCollapsed && (
           <button
             onClick={() => setRightChatCollapsed(false)}
             title="채팅 펼치기"
@@ -901,10 +908,10 @@ export default function Messages() {
         {/* 채팅 영역 (라이브 있으면 우측 N px 사이드, 없으면 풀) */}
         <div
           style={{
-            display: rightChatCollapsed && activeLiveSessions.length > 0 ? 'none' : 'flex',
+            display: rightChatCollapsed && visibleLiveSessions.length > 0 ? 'none' : 'flex',
             flexDirection: 'column',
             background: C.chatBg,
-            ...(activeConv && activeLiveSessions.length > 0
+            ...(activeConv && visibleLiveSessions.length > 0
               ? { width: rightChatWidth, flexShrink: 0 }
               : { flex: 1 }),
             minWidth: 0,
@@ -954,7 +961,7 @@ export default function Messages() {
                 </div>
               </div>
               {/* 라이브 중일 때만: 시연자에게는 종료 버튼 / 사이드 접기 */}
-              {activeLiveSessions.length > 0 && activeLiveSessions[0].broadcasterUid === user.uid && (
+              {visibleLiveSessions.length > 0 && visibleLiveSessions[0].broadcasterUid === user.uid && (
                 <button
                   onClick={() => {
                     console.log('[채팅 헤더 종료 클릭]');
@@ -975,7 +982,7 @@ export default function Messages() {
                   ● 종료
                 </button>
               )}
-              {activeLiveSessions.length > 0 && (
+              {visibleLiveSessions.length > 0 && (
                 <button
                   onClick={() => setRightChatCollapsed(true)}
                   title="채팅 접기"
@@ -1120,7 +1127,7 @@ export default function Messages() {
 
             {/* 입력창 — 라이브 중 우측 사이드 모드면 2단 (입력 위 / 도구·전송 아래) */}
             {(() => {
-              const isCompact = activeLiveSessions.length > 0;
+              const isCompact = visibleLiveSessions.length > 0;
               return (
                 <div
                   style={{

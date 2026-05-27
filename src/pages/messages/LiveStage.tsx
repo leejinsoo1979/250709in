@@ -59,6 +59,7 @@ function BroadcasterStage({
   C: any;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [stopping, setStopping] = useState(false);
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -78,12 +79,27 @@ function BroadcasterStage({
           </span>
           <div style={{ flex: 1 }} />
           <button
-            onClick={() => {
-              console.log('[LiveStage 종료 버튼 클릭]', { hasOnStop: typeof onStop === 'function' });
-              if (onStop) onStop();
+            type="button"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
+            disabled={stopping}
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (stopping) return;
+              setStopping(true);
+              if (onStop) await onStop();
               else alert('종료 핸들러가 연결되지 않았습니다.');
             }}
-            style={stopBtnStyle()}
+            style={{
+              ...stopBtnStyle(),
+              position: 'relative',
+              zIndex: 30,
+              opacity: stopping ? 0.65 : 1,
+              pointerEvents: 'auto',
+            }}
           >
             <HiOutlineX size={14} /> 종료
           </button>
@@ -210,6 +226,7 @@ function StageShell({ C, header, children }: { C: any; header: React.ReactNode; 
         background: '#000',
         minWidth: 0,
         minHeight: 0,
+        position: 'relative',
       }}
     >
       <div
@@ -220,6 +237,10 @@ function StageShell({ C, header, children }: { C: any; header: React.ReactNode; 
           display: 'flex',
           alignItems: 'center',
           gap: 12,
+          position: 'relative',
+          zIndex: 20,
+          flexShrink: 0,
+          pointerEvents: 'auto',
         }}
       >
         {header}
@@ -232,6 +253,10 @@ function StageShell({ C, header, children }: { C: any; header: React.ReactNode; 
           justifyContent: 'center',
           padding: 20,
           minHeight: 0,
+          minWidth: 0,
+          overflow: 'hidden',
+          position: 'relative',
+          zIndex: 1,
         }}
       >
         {children}
@@ -251,6 +276,7 @@ function videoStyle(): React.CSSProperties {
     borderRadius: 8,
     background: '#000',
     objectFit: 'contain',
+    pointerEvents: 'none',
   };
 }
 
