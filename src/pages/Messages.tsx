@@ -960,28 +960,7 @@ export default function Messages() {
                   {activeConv.peerEmail || ''}
                 </div>
               </div>
-              {/* 라이브 중일 때만: 시연자에게는 종료 버튼 / 사이드 접기 */}
-              {visibleLiveSessions.length > 0 && visibleLiveSessions[0].broadcasterUid === user.uid && (
-                <button
-                  onClick={() => {
-                    console.log('[채팅 헤더 종료 클릭]');
-                    broadcast.stop();
-                  }}
-                  title="라이브 시연 종료"
-                  style={{
-                    background: '#ff3d60',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '6px 10px',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ● 종료
-                </button>
-              )}
+              {/* 라이브 중일 때만: 채팅 사이드 접기 */}
               {visibleLiveSessions.length > 0 && (
                 <button
                   onClick={() => setRightChatCollapsed(true)}
