@@ -155,6 +155,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [activeTab, setActiveTab] = useState<'space' | 'furniture'>('space');
 
   useEffect(() => {
     const load = async () => {
@@ -254,8 +255,47 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
           <button type="button" className={styles.closeButton} onClick={onClose}>×</button>
         </div>
 
+        {/* 탭 바 */}
+        <div
+          style={{
+            display: 'flex',
+            borderBottom: '1px solid var(--theme-border)',
+            background: 'var(--theme-surface, transparent)',
+          }}
+        >
+          {[
+            { id: 'space' as const, label: '공간' },
+            { id: 'furniture' as const, label: '가구' },
+          ].map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  flex: 1,
+                  padding: '14px 16px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: active ? '2px solid var(--theme-primary)' : '2px solid transparent',
+                  color: active ? 'var(--theme-primary)' : 'var(--theme-text-secondary, #7a7f9a)',
+                  fontSize: 14,
+                  fontWeight: active ? 700 : 500,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s, border-color 0.15s',
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
         <div className={styles.body}>
           <div className={styles.notice}>새 프로젝트에서부터 적용됩니다.</div>
+
+          {activeTab === 'space' && (<>
 
           {/* 공간유형 */}
           <div className={styles.section}>
@@ -323,8 +363,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             />
           </div>
 
-          {/* 카테고리별 기본 깊이 */}
-          <div className={styles.section}>
+          {/* 카테고리별 기본 깊이 — 가구 탭으로 이동됨 */}
+          <div className={styles.section} style={{ display: 'none' }}>
             <div className={styles.sectionLabel}>카테고리별 기본 깊이</div>
             <div className={styles.row}>
               <NumberInput label="의류장" value={values.furnitureDepthDefaults.wardrobe ?? 580} onChange={hDepth('wardrobe')} min={100} max={1200} step={10} />
@@ -410,6 +450,30 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             )}
           </div>
 
+          </>)}
+
+          {activeTab === 'furniture' && (<>
+
+          {/* 카테고리별 기본 깊이 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>카테고리별 기본 깊이</div>
+            <div className={styles.row}>
+              <NumberInput label="의류장" value={values.furnitureDepthDefaults.wardrobe ?? 580} onChange={hDepth('wardrobe')} min={100} max={1200} step={10} />
+              <NumberInput label="신발장" value={values.furnitureDepthDefaults.shoe ?? 380} onChange={hDepth('shoe')} min={100} max={1200} step={10} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="기본하부장" value={values.furnitureDepthDefaults.lowerBasic ?? 580} onChange={hDepth('lowerBasic')} min={100} max={1200} step={10} />
+              <NumberInput label="도어올림하부장" value={values.furnitureDepthDefaults.lowerDoorLift ?? 580} onChange={hDepth('lowerDoorLift')} min={100} max={1200} step={10} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="상판내림하부장" value={values.furnitureDepthDefaults.lowerTopDown ?? 580} onChange={hDepth('lowerTopDown')} min={100} max={1200} step={10} />
+              <NumberInput label="상부장" value={values.furnitureDepthDefaults.upper ?? 300} onChange={hDepth('upper')} min={100} max={1200} step={10} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="키큰장" value={values.furnitureDepthDefaults.tall ?? 580} onChange={hDepth('tall')} min={100} max={1200} step={10} />
+            </div>
+          </div>
+
           {/* 도어 셋팅 — 몸통 기준 고정 */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>
@@ -442,6 +506,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               </div>
             </div>
           )}
+
+          </>)}
         </div>
 
         {/* 푸터 */}
