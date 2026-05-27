@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { createPortal } from 'react-dom';
 import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { getModuleById, ModuleData } from '@/data/modules';
@@ -5256,14 +5255,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           </div>
         </Html>
       )}
-      {/* 키큰장 우클릭 컨텍스트 메뉴 (좌 EP / 우 EP / 양쪽 EP 토글) */}
-      {tallContextMenu && createPortal(
-        (
+      {/* 키큰장 우클릭 컨텍스트 메뉴 — R3F Html로 portal 처리 (Canvas 외부 DOM) */}
+      {tallContextMenu && (
+        <Html
+          fullscreen
+          zIndexRange={[100000, 99999]}
+          style={{ pointerEvents: 'none' }}
+        >
           <div
             onClick={() => setTallContextMenu(null)}
             onContextMenu={(e) => { e.preventDefault(); setTallContextMenu(null); }}
             style={{
-              position: 'fixed', inset: 0, zIndex: 99999,
+              position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'auto',
             }}
           >
             <div
@@ -5322,15 +5325,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
                     onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
                   >
-                    <span>{opt.label}</span>
+                    <span style={{ flex: 1 }}>{opt.label}</span>
                     {active && <span style={{ color: 'var(--theme-primary, #7269ef)' }}>✓</span>}
                   </button>
                 );
               })}
             </div>
           </div>
-        ),
-        document.body
+        </Html>
       )}
     </group>
   );
