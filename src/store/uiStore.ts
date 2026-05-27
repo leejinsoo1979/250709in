@@ -457,6 +457,11 @@ interface UIState {
   toggleSelectedFurnitureId: (id: string) => void; // Shift+클릭 토글
   clearSelectedFurnitureIds: () => void;
 
+  // 키큰장 우클릭 EP 컨텍스트 메뉴
+  tallEpContextMenu: { moduleId: string; x: number; y: number } | null;
+  openTallEpContextMenu: (moduleId: string, x: number, y: number) => void;
+  closeTallEpContextMenu: () => void;
+
   // 측정 모드 액션들
   toggleMeasureMode: () => void;
   setMeasureMode: (enabled: boolean) => void;
@@ -536,6 +541,7 @@ const initialUIState = {
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedFurnitureId: null,
   selectedFurnitureIds: [],
+  tallEpContextMenu: null,
   furniturePresets: {},
   doorGapDisplayMode: 'body' as const,
   highlightedSection: null,  // 기본값: 강조된 섹션 없음
@@ -1018,6 +1024,10 @@ export const useUIStore = create<UIState>()(
 
       clearSelectedFurnitureIds: () =>
         set({ selectedFurnitureIds: [], selectedFurnitureId: null }),
+
+      openTallEpContextMenu: (moduleId, x, y) =>
+        set({ tallEpContextMenu: { moduleId, x, y } }),
+      closeTallEpContextMenu: () => set({ tallEpContextMenu: null }),
 
       setFurniturePreset: (category, props) => set((state) => ({
         furniturePresets: {

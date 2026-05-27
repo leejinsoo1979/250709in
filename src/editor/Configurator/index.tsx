@@ -33,6 +33,7 @@ import type { PlacedModule } from '@/editor/shared/furniture/types';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
+import TallEpContextMenu from './components/TallEpContextMenu';
 import TabBar from './components/TabBar';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
@@ -3785,6 +3786,11 @@ const Configurator: React.FC = () => {
 
   // 사이드바 탭 클릭 핸들러
   const handleSidebarTabClick = (tab: SidebarTab) => {
+    // 가이드 탭: 사이드바 패널을 열지 않고 전용 가이드 생성/확정 동작만 실행
+    if (tab === 'guide') {
+      window.dispatchEvent(new CustomEvent('free-placement-guide:toggle'));
+      return;
+    }
     // 아일랜드 탭: 사이드바를 열지 않고 곧바로 아일랜드 설계 팝업을 띄운다
     if (tab === 'island') {
       setIslandSetupMode('create');
@@ -8915,7 +8921,7 @@ const Configurator: React.FC = () => {
             })()}
 
             {/* 측면뷰용 슬롯 선택 버튼 */}
-            <SlotSelector />
+            {!spaceInfo.customGuideMode && <SlotSelector />}
           </div>
           {isMobile && <div className={responsiveStyles.mobileViewerDivider} aria-hidden="true" />}
 
@@ -9403,6 +9409,8 @@ const Configurator: React.FC = () => {
         }}
       />
 
+      {/* 키큰장 우클릭 EP 메뉴 (Canvas 바깥) */}
+      <TallEpContextMenu />
     </div>
   );
 };

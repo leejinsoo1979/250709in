@@ -3696,6 +3696,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
+        onContextMenu={(e) => {
+          // 키큰장(full) 카테고리만 우클릭 메뉴 표시
+          if (actualModuleData?.category !== 'full') return;
+          e.stopPropagation();
+          const native = e.nativeEvent as MouseEvent;
+          native.preventDefault?.();
+          useUIStore.getState().openTallEpContextMenu(placedModule.id, native.clientX, native.clientY);
+        }}
         onClick={(e) => {
           if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
             (window as any).__r3fClickHandled = true;
