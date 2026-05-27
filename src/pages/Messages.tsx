@@ -1506,14 +1506,12 @@ function ChatviaBubble({
   }
 
   const avatarSize = isNarrow ? 36 : 44;
-  // Chatvia 정확: 상대방=진한 테마 primary, 나=테마 primary를 흰색과 mix한 연한 라벤더
-  const themePrimary = C.bubbleOutgoingBg;
-  const bubbleBg = mine
-    ? `color-mix(in srgb, ${themePrimary} 18%, #ffffff)`
-    : themePrimary;
+  // Chatvia 정확: 상대방=진한 테마 primary, 나=연한 라벤더 (#dad7ff)
+  // border-color에 color-mix가 일부 브라우저에서 transparent로 fallback → hex 고정
+  const bubbleBg = mine ? '#dad7ff' : C.bubbleOutgoingBg;
   const bubbleColor = mine ? C.text : '#ffffff';
   const timeColor = mine ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)';
-  // 사각형 꼬리 (말풍선과 같은 색 블록을 좌/우 하단에 돌출)
+  // 직각삼각형 꼬리
   const tailSize = 10;
   return (
     <div
