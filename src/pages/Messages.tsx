@@ -1651,7 +1651,8 @@ function ChatviaBubble({
                     gap: 4,
                     fontSize: 11,
                     color: timeColor,
-                    justifyContent: 'center',
+                    // 내 메시지는 좌측, 상대방은 우측 (참조 #82/#83)
+                    justifyContent: mine ? 'flex-start' : 'flex-end',
                   }}
                 >
                   <HiOutlineClock size={12} />
