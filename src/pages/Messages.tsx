@@ -381,7 +381,7 @@ export default function Messages() {
   // 좌측 네비/입력바: #363f4a, 사이드바: #1d3447, 채팅 본문: #262e34
   const C = {
     pageBg: isDark ? '#262e34' : '#eff2f7',
-    leftNavBg: isDark ? '#363f4a' : '#ffffff',
+    leftNavBg: isDark ? '#1d3447' : '#ffffff',
     leftNavText: isDark ? '#a6b0cf' : '#7a7f9a',
     leftNavTextActive: 'var(--theme-primary, #7269ef)',
     leftNavActiveBg: isDark ? 'rgba(114,105,239,0.25)' : 'rgba(114,105,239,0.18)',
