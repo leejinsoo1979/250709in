@@ -374,8 +374,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const [isHovered, setIsHovered] = React.useState(false);
   const [showDoorOptions, setShowDoorOptions] = useState(false);
   const [showSurroundOptions, setShowSurroundOptions] = useState(false);
-  // 키큰장 우클릭 컨텍스트 메뉴 (좌 EP / 우 EP / 양쪽 EP)
-  const [tallContextMenu, setTallContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>((storeDoorTopGap ?? placedModule.doorTopGap ?? 5).toString());
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((storeDoorBottomGap ?? placedModule.doorBottomGap ?? 1.5).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
@@ -3698,14 +3696,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
-        onContextMenu={(e) => {
-          // 키큰장(full) 카테고리만 우클릭 메뉴 표시
-          if (actualModuleData?.category !== 'full') return;
-          e.stopPropagation();
-          const native = e.nativeEvent as MouseEvent;
-          native.preventDefault?.();
-          setTallContextMenu({ x: native.clientX, y: native.clientY });
-        }}
         onClick={(e) => {
           if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
             (window as any).__r3fClickHandled = true;
@@ -5255,85 +5245,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           </div>
         </Html>
       )}
-      {/* 키큰장 우클릭 컨텍스트 메뉴 — R3F Html로 portal 처리 (Canvas 외부 DOM) */}
-      {tallContextMenu && (
-        <Html
-          fullscreen
-          zIndexRange={[100000, 99999]}
-          style={{ pointerEvents: 'none' }}
-        >
-          <div
-            onClick={() => setTallContextMenu(null)}
-            onContextMenu={(e) => { e.preventDefault(); setTallContextMenu(null); }}
-            style={{
-              position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'auto',
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                position: 'absolute',
-                left: tallContextMenu.x,
-                top: tallContextMenu.y,
-                minWidth: 160,
-                background: '#ffffff',
-                border: '1px solid #e6ebf5',
-                borderRadius: 8,
-                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                padding: '6px 0',
-                fontSize: 13,
-              }}
-            >
-              {[
-                { id: 'left', label: '좌 EP' },
-                { id: 'right', label: '우 EP' },
-                { id: 'both', label: '양쪽 EP' },
-              ].map((opt) => {
-                const cur = placedModule as any;
-                const active =
-                  (opt.id === 'left' && cur.hasLeftEndPanel && !cur.hasRightEndPanel) ||
-                  (opt.id === 'right' && cur.hasRightEndPanel && !cur.hasLeftEndPanel) ||
-                  (opt.id === 'both' && cur.hasLeftEndPanel && cur.hasRightEndPanel);
-                return (
-                  <button
-                    key={opt.id}
-                    onClick={() => {
-                      const next = active
-                        ? { hasLeftEndPanel: false, hasRightEndPanel: false }
-                        : opt.id === 'left'
-                          ? { hasLeftEndPanel: true, hasRightEndPanel: false }
-                          : opt.id === 'right'
-                            ? { hasLeftEndPanel: false, hasRightEndPanel: true }
-                            : { hasLeftEndPanel: true, hasRightEndPanel: true };
-                      updatePlacedModule(placedModule.id, next);
-                      setTallContextMenu(null);
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      width: '100%',
-                      padding: '8px 14px',
-                      background: active ? 'rgba(114,105,239,0.1)' : 'transparent',
-                      border: 'none',
-                      color: active ? 'var(--theme-primary, #7269ef)' : '#1a1a1a',
-                      fontSize: 13,
-                      fontWeight: active ? 700 : 500,
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                    }}
-                    onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
-                    onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
-                  >
-                    <span style={{ flex: 1 }}>{opt.label}</span>
-                    {active && <span style={{ color: 'var(--theme-primary, #7269ef)' }}>✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </Html>
-      )}
+      {/* 키큰장 우클릭 EP 메뉴는 Canvas 바깥 컴포넌트로 분리 예정 (zustand store 사용) */}
     </group>
   );
 };
