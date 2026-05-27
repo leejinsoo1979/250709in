@@ -1601,22 +1601,18 @@ function ChatviaBubble({
                   {message.createdAt ? formatTime(message.createdAt) : ''}
                 </div>
               </div>
-              {/* 아래로 뾰족한 삼각형 꼬리 */}
+              {/* 아래로 뾰족한 좌우 대칭 이등변 삼각형 꼬리 */}
               <div
                 style={{
                   position: 'absolute',
                   bottom: -tailSize,
-                  ...(mine ? { right: 4 } : { left: 4 }),
+                  ...(mine ? { right: 8 } : { left: 8 }),
                   width: 0,
                   height: 0,
                   borderStyle: 'solid',
-                  // 위쪽 변(말풍선 색) + 좌우 변 투명 → 아래로 뾰족
-                  borderWidth: mine
-                    ? `${tailSize}px ${tailSize}px 0 0`
-                    : `${tailSize}px 0 0 ${tailSize}px`,
-                  borderColor: mine
-                    ? `${bubbleBg} transparent transparent transparent`
-                    : `${bubbleBg} transparent transparent transparent`,
+                  // 좌우 같은 너비 + 위쪽 색 → 아래로 뾰족한 대칭 삼각형
+                  borderWidth: `${tailSize}px ${tailSize}px 0 ${tailSize}px`,
+                  borderColor: `${bubbleBg} transparent transparent transparent`,
                 }}
               />
             </div>
