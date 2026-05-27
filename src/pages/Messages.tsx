@@ -63,6 +63,7 @@ import {
 } from '@/firebase/liveSessions';
 import { useScreenShareBroadcast } from '@/hooks/useScreenShareBroadcast';
 import LiveStage from './messages/LiveStage';
+import SettingsPanel from '@/components/common/SettingsPanel';
 
 type LeftTab = 'chats' | 'contacts' | 'profile' | 'settings' | 'groups';
 
@@ -154,6 +155,7 @@ export default function Messages() {
   // 사이드바 토글 (대화 목록)
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [peerProfileOpen, setPeerProfileOpen] = useState(false);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
   // 라이브 중 우측 채팅 사이드 토글 + 드래그 너비
   const [rightChatCollapsed, setRightChatCollapsed] = useState(false);
   const [rightChatWidth, setRightChatWidth] = useState<number>(() => {
@@ -478,8 +480,8 @@ export default function Messages() {
         />
         <ChatviaNavBtn
           icon={<HiOutlineCog size={22} />}
-          active={leftTab === 'settings'}
-          onClick={() => setLeftTab('settings')}
+          active={settingsPanelOpen}
+          onClick={() => setSettingsPanelOpen(true)}
           C={C}
           title="설정"
         />
@@ -1346,6 +1348,12 @@ export default function Messages() {
       </div>
 
       {showAddFriend && <AddFriendModal onClose={() => setShowAddFriend(false)} />}
+
+      {/* 대시보드와 동일한 설정 패널 */}
+      <SettingsPanel
+        isOpen={settingsPanelOpen}
+        onClose={() => setSettingsPanelOpen(false)}
+      />
     </div>
   );
 }
