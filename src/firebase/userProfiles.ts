@@ -773,6 +773,9 @@ export type SpaceConfigDefaults = {
   doorBottomGap?: number;    // 몸통 기준 하단갭
   doorTopGapCf?: number;     // 천장·바닥 기준 상단갭
   doorBottomGapCf?: number;  // 천장·바닥 기준 하단갭
+  // 가구재/백패널 두께
+  panelThickness?: number;       // 가구재 두께 (mm) — 15, 15.5, 18, 18.5
+  backPanelThickness?: number;   // 백패널 두께 (mm) — 3, 3.5, 5, 5.5, 6, 9, 9.5
 };
 
 // 공간설정 기본값 조회

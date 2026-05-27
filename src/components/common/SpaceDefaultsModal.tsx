@@ -59,6 +59,9 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   doorBottomGap: 25,        // 몸통 기준 하단갭
   doorTopGapCf: 70,         // 천장·바닥 기준 상단갭
   doorBottomGapCf: 100,     // 천장·바닥 기준 하단갭
+  // 가구재/백패널 두께
+  panelThickness: 18,
+  backPanelThickness: 9,
 };
 
 const SURROUND_OPTIONS: { id: NonNullable<SpaceConfigDefaults['surroundMode']>; label: string }[] = [
@@ -448,6 +451,39 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
                 <NumberInput label="하단갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={2000} step={1} />
               </div>
             )}
+          </div>
+
+          {/* 가구재 두께 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>가구재 두께</div>
+            <Toggle
+              options={[
+                { id: '15', label: '15mm' },
+                { id: '15.5', label: '15.5mm' },
+                { id: '18', label: '18mm' },
+                { id: '18.5', label: '18.5mm' },
+              ]}
+              selected={String(values.panelThickness ?? 18)}
+              onChange={(id) => set('panelThickness', Number(id) as any)}
+            />
+          </div>
+
+          {/* 백패널 두께 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>백패널 두께</div>
+            <Toggle
+              options={[
+                { id: '3', label: '3mm' },
+                { id: '3.5', label: '3.5mm' },
+                { id: '5', label: '5mm' },
+                { id: '5.5', label: '5.5mm' },
+                { id: '6', label: '6mm' },
+                { id: '9', label: '9mm' },
+                { id: '9.5', label: '9.5mm' },
+              ]}
+              selected={String(values.backPanelThickness ?? 9)}
+              onChange={(id) => set('backPanelThickness', Number(id) as any)}
+            />
           </div>
 
           </>)}
