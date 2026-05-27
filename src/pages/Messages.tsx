@@ -1453,7 +1453,7 @@ function ChatviaBubble({
             style={{
               flex: 1,
               minWidth: 28,
-              height: 1,
+              height: 0.5,
               background: C.textSecondary,
               opacity: 0.7,
               display: 'inline-block',
@@ -1498,7 +1498,7 @@ function ChatviaBubble({
             style={{
               flex: 1,
               minWidth: 28,
-              height: 1,
+              height: 0.5,
               background: C.textSecondary,
               opacity: 0.7,
               display: 'inline-block',
@@ -1547,8 +1547,8 @@ function ChatviaBubble({
               gap: 6,
               marginBottom: message.text ? 6 : 0,
               alignSelf: mine ? 'flex-end' : 'flex-start',
-              marginLeft: !mine ? tailSize : 0,
-              marginRight: mine ? tailSize : 0,
+              marginLeft: !mine ? avatarSize + 10 : 0,
+              marginRight: mine ? avatarSize + 10 : 0,
             }}
           >
             {message.attachments.map((att, i) => (
@@ -1556,7 +1556,7 @@ function ChatviaBubble({
             ))}
           </div>
         )}
-        {/* 텍스트 말풍선 + 더보기 (한 줄) */}
+        {/* 텍스트 말풍선 + 더보기 (한 줄) — 닉네임 위에 위치하도록 아바타 너비만큼 들여쓰기 */}
         {message.text && (
           <div
             style={{
@@ -1565,6 +1565,8 @@ function ChatviaBubble({
               gap: 6,
               flexDirection: mine ? 'row-reverse' : 'row',
               maxWidth: '100%',
+              marginLeft: !mine ? avatarSize + 10 : 0,
+              marginRight: mine ? avatarSize + 10 : 0,
             }}
           >
             <div
