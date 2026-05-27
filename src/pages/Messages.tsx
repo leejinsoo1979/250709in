@@ -674,7 +674,7 @@ export default function Messages() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                background: isDark ? 'rgba(255,255,255,0.04)' : '#eef0f7',
+                background: isDark ? 'rgba(255,255,255,0.04)' : '#e6ebf5',
                 borderRadius: 8,
                 padding: '14px 16px',
               }}
