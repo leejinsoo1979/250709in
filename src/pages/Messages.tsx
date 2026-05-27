@@ -628,36 +628,40 @@ export default function Messages() {
             </button>
           </div>
         )}
-        <div style={{ padding: '0 24px 16px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              background: C.inputBg,
-              borderRadius: 6,
-              padding: '10px 12px',
-            }}
-          >
-            <HiOutlineSearch size={16} color={C.textSecondary} />
-            <input
-              type="text"
-              placeholder={leftTab === 'contacts' ? '친구 검색...' : '대화 검색...'}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+        {(leftTab === 'chats' || leftTab === 'contacts') && (
+          <div style={{ padding: '0 24px 16px' }}>
+            <div
               style={{
-                flex: 1,
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                color: C.text,
-                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                background: C.inputBg,
+                borderRadius: 6,
+                padding: '10px 12px',
               }}
-            />
+            >
+              <HiOutlineSearch size={16} color={C.textSecondary} />
+              <input
+                type="text"
+                placeholder={leftTab === 'contacts' ? '친구 검색...' : '대화 검색...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  color: C.text,
+                  fontSize: 13,
+                }}
+              />
+            </div>
           </div>
-        </div>
+        )}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 16px' }}>
-          {leftTab === 'contacts' ? (
+          {leftTab === 'profile' ? (
+            <ProfilePanel user={user} C={C} />
+          ) : leftTab === 'contacts' ? (
             filteredFriends.length === 0 ? (
               <div style={{ padding: '40px 16px', textAlign: 'center', color: C.textSecondary, fontSize: 13 }}>
                 <div style={{ marginBottom: 12 }}>
@@ -1758,6 +1762,113 @@ function ChatviaBubble({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ProfilePanel({ user, C }: { user: any; C: any }) {
+  const [aboutOpen, setAboutOpen] = useState(true);
+  const [filesOpen, setFilesOpen] = useState(false);
+  const name = user?.displayName || user?.email?.split('@')[0] || '사용자';
+  const email = user?.email || '';
+  const photoURL = user?.photoURL || undefined;
+  const now = new Date();
+  const timeStr = `${String(now.getHours() % 12 || 12).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+
+  return (
+    <div style={{ padding: '8px 12px 16px' }}>
+      {/* 아바타 + 이름 + Active */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 16px 20px', borderBottom: `1px solid ${C.sidebarBorder}` }}>
+        <InitialAvatar name={name} email={email} photoURL={photoURL} size={92} />
+        <div style={{ marginTop: 14, fontSize: 18, fontWeight: 700, color: C.text }}>{name}</div>
+        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: C.textSecondary }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+          Active
+        </div>
+      </div>
+
+      {/* 자기소개 */}
+      <div style={{ padding: '20px 16px', borderBottom: `1px solid ${C.sidebarBorder}`, fontSize: 13, color: C.textSecondary, lineHeight: 1.55 }}>
+        If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
+      </div>
+
+      {/* About 아코디언 */}
+      <div style={{ borderBottom: `1px solid ${C.sidebarBorder}` }}>
+        <button
+          onClick={() => setAboutOpen((v) => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: C.text,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <HiOutlineUser size={16} /> About
+          </span>
+          <HiOutlineChevronRight
+            size={16}
+            style={{ transform: aboutOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
+          />
+        </button>
+        {aboutOpen && (
+          <div style={{ padding: '0 16px 16px', fontSize: 13 }}>
+            <ProfileField label="Name" value={name} C={C} />
+            <ProfileField label="Email" value={email} C={C} />
+            <ProfileField label="Time" value={timeStr} C={C} />
+            <ProfileField label="Location" value="—" C={C} />
+          </div>
+        )}
+      </div>
+
+      {/* Attached Files 아코디언 */}
+      <div>
+        <button
+          onClick={() => setFilesOpen((v) => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: C.text,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <HiOutlinePaperClip size={16} /> Attached Files
+          </span>
+          <HiOutlineChevronRight
+            size={16}
+            style={{ transform: filesOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
+          />
+        </button>
+        {filesOpen && (
+          <div style={{ padding: '0 16px 16px', fontSize: 13, color: C.textSecondary }}>
+            첨부된 파일이 없습니다.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProfileField({ label, value, C }: { label: string; value: string; C: any }) {
+  return (
+    <div style={{ marginTop: 14 }}>
+      <div style={{ fontSize: 12, color: C.textSecondary, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 14, color: C.text, wordBreak: 'break-word' }}>{value || '—'}</div>
     </div>
   );
 }
