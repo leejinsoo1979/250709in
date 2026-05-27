@@ -1619,9 +1619,9 @@ function ChatviaBubble({
 
   const avatarSize = isNarrow ? 36 : 44;
   // Chatvia 정확: 상대방=진한 테마 primary, 나=연한 라벤더 (#dad7ff)
-  // border-color에 color-mix가 일부 브라우저에서 transparent로 fallback → hex 고정
+  // 내 말풍선은 항상 라벤더 배경 + 검정 텍스트 (다크모드에서도 가독성 확보)
   const bubbleBg = mine ? '#dad7ff' : C.bubbleOutgoingBg;
-  const bubbleColor = mine ? C.text : '#ffffff';
+  const bubbleColor = mine ? '#1a1a1a' : '#ffffff';
   const timeColor = mine ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)';
   // 직각삼각형 꼬리
   const tailSize = 10;
