@@ -379,8 +379,9 @@ export default function Messages() {
     }
   };
 
-  // Chatvia 스타일 톤 (다크모드는 참조 #89 색 코드 정확히 매칭)
-  // 좌측 네비/입력바: #363f4a, 사이드바: #1d3447, 채팅 본문: #262e34
+  // Chatvia 스타일 톤 (참조 #89 다크 / #95 라이트 색 코드 정확 매칭)
+  // 라이트: 네비/채팅 #fff, 사이드바 #f5f7fb, 입력 #e6ebf5
+  // 다크: 네비/입력/인커밍 #363f4a, 사이드바 #303841, 채팅 #262e34
   const C = {
     pageBg: isDark ? '#262e34' : '#eff2f7',
     leftNavBg: isDark ? '#363f4a' : '#ffffff',
@@ -389,16 +390,16 @@ export default function Messages() {
     leftNavActiveBg: isDark ? 'rgba(114,105,239,0.25)' : 'rgba(114,105,239,0.18)',
     convItemActiveBg: isDark ? 'rgba(114,105,239,0.18)' : 'rgba(114,105,239,0.06)',
     convItemHoverBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-    sidebarBg: isDark ? '#303841' : '#ffffff',
+    sidebarBg: isDark ? '#303841' : '#f5f7fb',
     sidebarBorder: isDark ? 'rgba(255,255,255,0.05)' : '#e6ebf5',
-    chatBg: isDark ? '#262e34' : '#f5f7fb',
+    chatBg: isDark ? '#262e34' : '#ffffff',
     chatHeaderBg: isDark ? '#262e34' : '#ffffff',
     text: isDark ? '#eff2f7' : '#495057',
     textSecondary: isDark ? '#a6b0cf' : '#7a7f9a',
     bubbleIncomingBg: isDark ? '#363f4a' : '#ffffff',
     bubbleOutgoingBg: 'var(--theme-primary, #7269ef)',
     bubbleOutgoingText: '#ffffff',
-    inputBg: isDark ? '#363f4a' : '#f5f7fb',
+    inputBg: isDark ? '#363f4a' : '#e6ebf5',
     accent: 'var(--theme-primary, #7269ef)',
     danger: '#ff3d60',
     success: '#1ecab8',
