@@ -52,6 +52,10 @@ import {
   HiOutlineChevronRight,
   HiOutlinePhone,
   HiOutlineVideoCamera,
+  HiOutlineClipboardCopy,
+  HiOutlineSave,
+  HiOutlineReply,
+  HiOutlineTrash,
 } from 'react-icons/hi';
 import {
   subscribeActiveLiveSessionsForConv,
@@ -1414,6 +1418,48 @@ function ChatviaBubble({
   isLiveSessionAccepted?: boolean;
 }) {
   const [hover, setHover] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // 더보기 메뉴 액션
+  const handleCopy = () => {
+    if (message.text) {
+      navigator.clipboard.writeText(message.text).catch(() => {});
+    }
+    setMenuOpen(false);
+  };
+  const handleSave = () => {
+    if (message.text) {
+      const blob = new Blob([message.text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `message_${message.id}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    setMenuOpen(false);
+  };
+  const handleForward = () => {
+    // TODO: 전달 기능 (대화방 선택 모달)
+    alert('전달 기능은 준비 중입니다.');
+    setMenuOpen(false);
+  };
+  const handleDelete = () => {
+    // TODO: 메시지 삭제 (Firestore 권한 필요)
+    alert('삭제 기능은 준비 중입니다.');
+    setMenuOpen(false);
+  };
+
+  // 메뉴 바깥 클릭 시 닫기
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    const t = setTimeout(() => document.addEventListener('click', close), 0);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener('click', close);
+    };
+  }, [menuOpen]);
   if (message.kind === 'live_screen_share') {
     const canAccept = !mine
       && message.liveStatus === 'started'
@@ -1453,10 +1499,12 @@ function ChatviaBubble({
             style={{
               flex: 1,
               minWidth: 28,
-              height: 0.5,
+              height: 1,
               background: C.textSecondary,
-              opacity: 0.7,
+              opacity: 0.55,
               display: 'inline-block',
+              transform: 'scaleY(0.35)',
+              transformOrigin: 'center',
             }}
           />
           <span
@@ -1498,10 +1546,12 @@ function ChatviaBubble({
             style={{
               flex: 1,
               minWidth: 28,
-              height: 0.5,
+              height: 1,
               background: C.textSecondary,
-              opacity: 0.7,
+              opacity: 0.55,
               display: 'inline-block',
+              transform: 'scaleY(0.35)',
+              transformOrigin: 'center',
             }}
           />
         </div>
@@ -1625,25 +1675,52 @@ function ChatviaBubble({
                 }}
               />
             </div>
-            {/* 더보기 메뉴 (호버, 좁은 모드 숨김) */}
+            {/* 더보기 메뉴 (호버 시 버튼 표시, 클릭 시 팝업) */}
             {!isNarrow && (
-              <button
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: C.textSecondary,
-                  cursor: 'pointer',
-                  padding: 4,
-                  opacity: hover ? 1 : 0,
-                  transition: 'opacity 0.15s',
-                  flexShrink: 0,
-                  alignSelf: 'flex-start',
-                  marginTop: 8,
-                }}
-                title="더보기"
-              >
-                <HiOutlineDotsVertical size={16} />
-              </button>
+              <div style={{ position: 'relative', alignSelf: 'flex-start' }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen((v) => !v);
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: C.textSecondary,
+                    cursor: 'pointer',
+                    padding: 4,
+                    opacity: hover || menuOpen ? 1 : 0,
+                    transition: 'opacity 0.15s',
+                    flexShrink: 0,
+                    marginTop: 8,
+                  }}
+                  title="더보기"
+                >
+                  <HiOutlineDotsVertical size={16} />
+                </button>
+                {menuOpen && (
+                  <div
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: 'absolute',
+                      top: 32,
+                      ...(mine ? { right: 0 } : { left: 0 }),
+                      minWidth: 180,
+                      background: C.sidebarBg,
+                      border: `1px solid ${C.sidebarBorder}`,
+                      borderRadius: 8,
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                      padding: '6px 0',
+                      zIndex: 50,
+                    }}
+                  >
+                    <MessageMenuItem icon={<HiOutlineClipboardCopy size={18} />} label="Copy" onClick={handleCopy} C={C} />
+                    <MessageMenuItem icon={<HiOutlineSave size={18} />} label="Save" onClick={handleSave} C={C} />
+                    <MessageMenuItem icon={<HiOutlineReply size={18} style={{ transform: 'scaleX(-1)' }} />} label="Forward" onClick={handleForward} C={C} />
+                    <MessageMenuItem icon={<HiOutlineTrash size={18} />} label="Delete" onClick={handleDelete} C={C} danger />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         )}
@@ -1681,6 +1758,47 @@ function ChatviaBubble({
         )}
       </div>
     </div>
+  );
+}
+
+function MessageMenuItem({
+  icon,
+  label,
+  onClick,
+  C,
+  danger,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  C: any;
+  danger?: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        width: '100%',
+        padding: '10px 16px',
+        background: hover ? (C.convItemHoverBg || 'rgba(0,0,0,0.04)') : 'transparent',
+        border: 'none',
+        color: danger ? '#ff3d60' : C.text,
+        fontSize: 14,
+        fontWeight: 500,
+        cursor: 'pointer',
+        transition: 'background 0.12s',
+        textAlign: 'left',
+      }}
+    >
+      <span>{label}</span>
+      <span style={{ display: 'inline-flex', color: danger ? '#ff3d60' : C.textSecondary }}>{icon}</span>
+    </button>
   );
 }
 
