@@ -200,12 +200,8 @@ export default function Messages() {
     broadcasterName: user?.displayName || user?.email || '',
   });
 
-  // 내가 시연 종료한 직후엔 Firestore 업데이트 응답이 늦을 수 있으니
-  // 클라이언트 측에서 즉시 내 활성 세션을 필터링 (낙관적 UI)
-  const visibleLiveSessions = activeLiveSessions.filter((s) => {
-    if (!broadcast.isLive && s.broadcasterUid === user?.uid) return false;
-    return true;
-  });
+  const visibleLiveSessions = activeLiveSessions;
+  const myVisibleLiveSession = visibleLiveSessions.find((s) => s.broadcasterUid === user?.uid) || null;
 
   // 라이브 에러 발생 시 즉시 표시
   useEffect(() => {
@@ -476,6 +472,27 @@ export default function Messages() {
             <HiOutlineChevronRight size={22} />
           </button>
         )}
+
+        {/* 대시보드 가기 */}
+        <button
+          onClick={() => navigate('/dashboard')}
+          title="대시보드"
+          style={{
+            width: 46,
+            height: 46,
+            borderRadius: 8,
+            background: 'transparent',
+            border: 'none',
+            color: C.leftNavText,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 8,
+          }}
+        >
+          <HiOutlineArrowLeft size={22} />
+        </button>
 
         {/* 하단 라이트/다크 토글 */}
         <button
@@ -812,30 +829,6 @@ export default function Messages() {
             })
           )}
         </div>
-        <div style={{ padding: '12px 24px 20px', borderTop: `1px solid ${C.sidebarBorder}` }}>
-          <button
-            onClick={() => navigate('/dashboard')}
-            title="대시보드"
-            style={{
-              width: '100%',
-              border: 'none',
-              background: C.leftNavActiveBg,
-              color: C.accent,
-              borderRadius: 6,
-              padding: '10px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              fontSize: 13,
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            <HiOutlineArrowLeft size={16} />
-            대시보드
-          </button>
-        </div>
       </div>
 
       {/* ===== 우측 영역 (라이브 있으면 라이브 메인 + 채팅 사이드 / 없으면 채팅 풀) ===== */}
@@ -852,7 +845,9 @@ export default function Messages() {
               visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.viewerCount : 0
             }
             onStopBroadcast={
-              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.stop : undefined
+              visibleLiveSessions[0].broadcasterUid === user.uid
+                ? (sessionId) => broadcast.stop(sessionId)
+                : undefined
             }
             C={C}
           />
@@ -1221,16 +1216,16 @@ export default function Messages() {
                           error: broadcast.error,
                           hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
                         });
-                        if (broadcast.isLive) {
-                          broadcast.stop();
+                        if (broadcast.isLive || myVisibleLiveSession) {
+                          broadcast.stop(myVisibleLiveSession?.id || undefined);
                         } else {
                           broadcast.start();
                         }
                       }}
-                      title={broadcast.isLive ? '라이브 시연 종료' : '라이브 시연 시작 (화면 공유)'}
+                      title={broadcast.isLive || myVisibleLiveSession ? '라이브 시연 종료' : '라이브 시연 시작 (화면 공유)'}
                       style={{
-                        ...iconBtnStyle(C, broadcast.isLive),
-                        color: broadcast.isLive ? '#ff3d60' : C.textSecondary,
+                        ...iconBtnStyle(C, broadcast.isLive || Boolean(myVisibleLiveSession)),
+                        color: broadcast.isLive || myVisibleLiveSession ? '#ff3d60' : C.textSecondary,
                       }}
                     >
                       <HiOutlineDesktopComputer size={20} />
