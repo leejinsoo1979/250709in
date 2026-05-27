@@ -428,12 +428,9 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             <Toggle
               options={[
                 { id: '3', label: '3mm' },
-                { id: '3.5', label: '3.5mm' },
-                { id: '5', label: '5mm' },
-                { id: '5.5', label: '5.5mm' },
+                { id: '4.5', label: '4.5mm' },
                 { id: '6', label: '6mm' },
                 { id: '9', label: '9mm' },
-                { id: '9.5', label: '9.5mm' },
               ]}
               selected={String(values.backPanelThickness ?? 9)}
               onChange={(id) => set('backPanelThickness', Number(id) as any)}
