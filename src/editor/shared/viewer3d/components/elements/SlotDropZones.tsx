@@ -80,7 +80,7 @@ declare global {
 
 const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true }) => {
   const isInvalid = !spaceInfo;
-  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement' || spaceInfo?.customGuideMode === true;
   const columns = spaceInfo?.columns ?? [];
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);

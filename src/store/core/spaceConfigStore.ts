@@ -237,6 +237,8 @@ export interface SpaceInfo {
   freePlacementGuides?: FreePlacementGuideSlot[];
   // 자유배치 와리 가이드 편집 중 여부. true면 + 핫스팟 숨김, 폭 편집만 표시
   freePlacementGuideEditing?: boolean;
+  // 좌측 아이콘바의 독립 커스텀 가이드 모드. 자유배치 layoutMode와 분리해서 동작한다.
+  customGuideMode?: boolean;
   // 카테고리별 가구 기본 깊이 (mm)
   furnitureDepthDefaults?: FurnitureDepthDefaults;
 

@@ -811,6 +811,10 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     return meshes;
   };
   
+  if (spaceInfo.customGuideMode) {
+    return null;
+  }
+
   // 도어가 하나라도 장착되면 바닥 슬롯 매쉬를 모두 숨김 (기존 동작 유지)
   if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
     return null;

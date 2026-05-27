@@ -36,6 +36,13 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
 
   // 측면뷰 진입 시 1번 슬롯 자동 선택, 측면뷰 아닐 때 리셋
   React.useEffect(() => {
+    if (spaceInfo.customGuideMode) {
+      if (selectedSlotIndex !== null) {
+        setSelectedSlotIndex(null);
+      }
+      return;
+    }
+
     if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {
       // 측면뷰가 아닐 때 슬롯 선택 해제
       if (selectedSlotIndex !== null) {
@@ -45,7 +52,11 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
       // 측면뷰 진입 시 첫 번째 슬롯 자동 선택
       setSelectedSlotIndex(0);
     }
-  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, forSplitView]);
+  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, forSplitView, spaceInfo.customGuideMode]);
+
+  if (spaceInfo.customGuideMode) {
+    return null;
+  }
 
   // 4분할 뷰가 아닌 경우: 2D 모드이고 좌측/우측 측면뷰일 때만 표시
   if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {

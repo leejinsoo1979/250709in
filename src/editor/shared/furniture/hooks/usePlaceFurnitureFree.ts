@@ -145,6 +145,15 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - baseMm);
   }
 
+  // 키큰장(full)은 어떤 배치 경로에서도 본체가 상단몰딩 영역을 침범하면 안 된다.
+  // 가이드 슬롯/더블클릭 경로에서 stale한 모듈 높이가 들어와도 내경 높이로 한 번 더 제한한다.
+  if (moduleData.category === 'full' && !moduleId.includes('insert-frame')) {
+    const maxTallBodyHeight = effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined
+      ? droppedZone.droppedInternalHeight
+      : internalSpace.height;
+    effectiveHeight = Math.min(effectiveHeight, Math.max(0, maxTallBodyHeight));
+  }
+
   console.log('🏗️ [placeFurnitureFree] zone detection', {
     xPositionMM, clampedX, zone: effectiveZone,
     originalHeight: dimensions.height, effectiveHeight,

@@ -3784,22 +3784,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 </svg>
               </button>
               {/* 좌측 패널용 SlotSelector */}
-              <div
-                data-slot-selector="true"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                style={{
-                  position: 'absolute',
-                  left: '50%',
-                  bottom: '8px',
-                  transform: 'translateX(-50%)',
-                  zIndex: 100,
-                  pointerEvents: 'auto'
-                }}
-              >
-                <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
-              </div>
+              {!spaceInfo.customGuideMode && (
+                <div
+                  data-slot-selector="true"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    bottom: '8px',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100,
+                    pointerEvents: 'auto'
+                  }}
+                >
+                  <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
+                </div>
+              )}
             </div>
 
             {/* 우측 하단: 우측면 뷰 */}
@@ -3899,22 +3901,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 </svg>
               </button>
               {/* 우측 패널용 SlotSelector */}
-              <div
-                data-slot-selector="true"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                style={{
-                  position: 'absolute',
-                  left: '50%',
-                  bottom: '8px',
-                  transform: 'translateX(-50%)',
-                  zIndex: 100,
-                  pointerEvents: 'auto'
-                }}
-              >
-                <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
-              </div>
+              {!spaceInfo.customGuideMode && (
+                <div
+                  data-slot-selector="true"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    bottom: '8px',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100,
+                    pointerEvents: 'auto'
+                  }}
+                >
+                  <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
+                </div>
+              )}
             </div>
           </div>
         </Space3DViewProvider>
@@ -4217,7 +4221,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* Configurator에서 표시되는 요소들 */}
               {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
-              {!isPanelSimulationPresentation && effectiveShowDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
+              {!isPanelSimulationPresentation && !spaceInfo.customGuideMode && effectiveShowDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
 
               {/* CAD 스타일 치수/가이드 표시 - 3D 모드 또는 2D 정면/탑뷰에서 표시 */}
               {effectiveShowDimensions && effectiveShowDimensionsText && ((viewMode === '3D' && activePlacementWall === 'front') || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
@@ -4240,11 +4244,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-              {!isPanelSimulationPresentation && (
+              {!isPanelSimulationPresentation && !spaceInfo.customGuideMode && (
                 <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={effectiveShowDimensions} viewMode={viewMode} view2DDirection={view2DDirection} />
               )}
 
-              {!isPanelSimulationPresentation && viewMode === '3D' && (
+              {!isPanelSimulationPresentation && !spaceInfo.customGuideMode && viewMode === '3D' && (
                 <FurniturePlacementPlane spaceInfo={spaceInfo} />
               )}
 
@@ -4655,7 +4659,7 @@ const QuadrantContent: React.FC<{
       <ambientLight intensity={0.8} color="#ffffff" />
 
       {/* 컬럼 가이드 표시 */}
-      {showDimensions && showAll && <ColumnGuides viewMode="2D" />}
+      {showDimensions && showAll && !spaceInfo.customGuideMode && <ColumnGuides viewMode="2D" />}
 
       {/* CAD 스타일 치수/가이드 표시 (측면뷰 제외) */}
       {showDimensions && showDimensionsText && viewDirection !== 'left' && viewDirection !== 'right' && (
@@ -4677,10 +4681,12 @@ const QuadrantContent: React.FC<{
       )}
 
       {/* 투명 슬롯매쉬 - 탑뷰에서는 제외 */}
-      {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
+      {viewDirection !== 'top' && !spaceInfo.customGuideMode && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
 
       {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" view2DDirection={viewDirection} />
+      {!spaceInfo.customGuideMode && (
+        <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" view2DDirection={viewDirection} />
+      )}
 
       {/* 자유배치 모드 드롭존 */}
       <FreePlacementDropZone />

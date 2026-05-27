@@ -30,7 +30,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 모듈 유효성 검사
   const validation = validateModuleForInternalSpace(module, internalSpace);
-  const isGuideSlotPlacementMode = spaceInfo.layoutMode === 'free-placement'
+  const isGuideSlotPlacementMode = (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true)
     && !spaceInfo.freePlacementGuideEditing
     && (spaceInfo.freePlacementGuides?.length || 0) > 0;
   const isValid = isGuideSlotPlacementMode
@@ -76,7 +76,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   // 더블클릭 핸들러: 자유배치 모드에서 좌측부터 자동 배치
   const handleDoubleClick = () => {
     const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
-    if (spaceInfo.layoutMode !== 'free-placement') return;
+    if (spaceInfo.layoutMode !== 'free-placement' && spaceInfo.customGuideMode !== true) return;
     if (!isValid && !needsWarning) return;
 
     console.log('🔵 ModuleItem 더블클릭 (자동배치):', module.id);

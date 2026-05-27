@@ -430,7 +430,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     if (!isValid) return;
 
     // 자유배치 모드: 즉시 선택 (300ms 딜레이 없음, currentDragData 미설정)
-    if (spaceInfo.layoutMode === 'free-placement') {
+    if (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true) {
       if (selectedFurnitureId === module.id) {
         setSelectedFurnitureId(null);
         setFurniturePlacementMode(false);
@@ -640,7 +640,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setCurrentDragData(null);
 
     // ★ 자유배치 모드: placeFurnitureFree 사용
-    if (spaceInfo.layoutMode === 'free-placement') {
+    if (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true) {
       try {
         const internalSpace = calculateInternalSpace(spaceInfo);
         const moduleData = getModuleById(module.id, internalSpace, spaceInfo);
@@ -1205,7 +1205,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장, 키큰장찬넬)
       // 유리장 게시 (전체 노출). 빌트인 냉장고장은 개발자 계정에서만 노출 (작업 중)
       // 키큰장찬넬은 자유배치 모드에서만 노출
-      const isFreeLayout = spaceInfo.layoutMode === 'free-placement';
+      const isFreeLayout = spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true;
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
         m.id.includes('pull-out-cabinet') ||
@@ -1318,7 +1318,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 유효성 검사 (간단 버전)
   const isModuleValid = (module: ModuleData): boolean => {
-    const isGuideSlotPlacementMode = spaceInfo.layoutMode === 'free-placement'
+    const isGuideSlotPlacementMode = (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true)
       && !spaceInfo.freePlacementGuideEditing
       && (spaceInfo.freePlacementGuides?.length || 0) > 0;
     if (isGuideSlotPlacementMode) {

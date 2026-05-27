@@ -115,6 +115,15 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [showDoorGuide, setShowDoorGuide] = useState(false);
   const [showGuideDialog, setShowGuideDialog] = useState(false);
   const [guideSlotCount, setGuideSlotCount] = useState(() => String(spaceInfo?.freePlacementGuides?.length || 4));
+  const [guideVerticalSplit, setGuideVerticalSplit] = useState(() => (
+    spaceInfo?.freePlacementGuides?.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower') || false
+  ));
+  const [guideUpperSlotCount, setGuideUpperSlotCount] = useState(() => String(
+    spaceInfo?.freePlacementGuides?.filter((slot) => slot.guideZone === 'upper').length || 4
+  ));
+  const [guideLowerSlotCount, setGuideLowerSlotCount] = useState(() => String(
+    spaceInfo?.freePlacementGuides?.filter((slot) => slot.guideZone === 'lower').length || 4
+  ));
 
   // 모든 슬롯이 채워지면 안내 표시, 빈 슬롯 생기면 숨김
   useEffect(() => {
@@ -177,43 +186,115 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   ];
 
   const handleViewDirectionChange = (direction: ViewDirection) => {
-    setView2DDirection(direction);
-    onViewDirectionChange(direction);
+    const nextDirection = spaceInfo?.freePlacementGuideEditing ? 'front' : direction;
+    setView2DDirection(nextDirection);
+    onViewDirectionChange(nextDirection);
   };
 
+  useEffect(() => {
+    if (!spaceInfo?.freePlacementGuideEditing) return;
+
+    if (viewMode !== '2D') {
+      onViewModeChange('2D');
+    }
+    if (view2DDirection !== 'front') {
+      setView2DDirection('front');
+      onViewDirectionChange('front');
+    }
+  }, [
+    spaceInfo?.freePlacementGuideEditing,
+    viewMode,
+    view2DDirection,
+    onViewModeChange,
+    onViewDirectionChange,
+    setView2DDirection
+  ]);
+
   const openGuideDialog = () => {
-    setGuideSlotCount(String(spaceInfo?.freePlacementGuides?.length || 4));
+    const guideSlots = spaceInfo?.freePlacementGuides || [];
+    const hasSplitGuides = guideSlots.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower');
+    const upperCount = guideSlots.filter((slot) => slot.guideZone === 'upper').length;
+    const lowerCount = guideSlots.filter((slot) => slot.guideZone === 'lower').length;
+    const fullCount = guideSlots.filter((slot) => !slot.guideZone || slot.guideZone === 'full').length;
+    setGuideVerticalSplit(hasSplitGuides);
+    setGuideSlotCount(String(fullCount || guideSlots.length || 4));
+    setGuideUpperSlotCount(String(upperCount || 4));
+    setGuideLowerSlotCount(String(lowerCount || 4));
     setShowGuideDialog(true);
   };
 
   const handleGuideButtonClick = () => {
     if (spaceInfo?.freePlacementGuideEditing) {
-      setSpaceInfo({ freePlacementGuideEditing: false });
+      useUIStore.getState().setSelectedSlotIndex(null);
+      setSpaceInfo({
+        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((slot) => ({
+          ...slot,
+          confirmed: true
+        })),
+        freePlacementGuideEditing: false
+      });
       return;
     }
 
     openGuideDialog();
   };
 
+  useEffect(() => {
+    const handleGuideToggle = () => {
+      if (!canCreateFreePlacementGuide) return;
+      handleGuideButtonClick();
+    };
+
+    window.addEventListener('free-placement-guide:toggle', handleGuideToggle);
+    return () => {
+      window.removeEventListener('free-placement-guide:toggle', handleGuideToggle);
+    };
+  }, [
+    canCreateFreePlacementGuide,
+    spaceInfo?.freePlacementGuideEditing,
+    spaceInfo?.freePlacementGuides,
+    handleGuideButtonClick
+  ]);
+
   const createFreePlacementGuides = () => {
-    const count = Math.max(1, Math.min(30, Math.floor(Number(guideSlotCount) || 1)));
+    const clampSlotCount = (value: string) => Math.max(1, Math.min(30, Math.floor(Number(value) || 1)));
     const totalWidth = spaceInfo?.width || 0;
     const bounds = spaceInfo ? getFreePlacementGuideBoundsX(spaceInfo) : { startX: -totalWidth / 2, endX: totalWidth / 2 };
     const guideStartX = bounds.startX + totalWidth / 2;
     const guideWidth = Math.max(0, bounds.endX - bounds.startX);
-    const slotWidth = guideWidth > 0 ? guideWidth / count : 0;
-    setSpaceInfo({
-      freePlacementGuides: Array.from({ length: count }, (_, index) => ({
-        id: `free-guide-${index + 1}`,
+    const makeSlots = (count: number, guideZone: 'full' | 'upper' | 'lower') => {
+      const slotWidth = guideWidth > 0 ? guideWidth / count : 0;
+      return Array.from({ length: count }, (_, index) => ({
+        id: `free-guide-${guideZone}-${index + 1}`,
         index,
         x: guideStartX + slotWidth * index,
         width: slotWidth,
-        guideZone: 'full',
+        guideZone,
         confirmed: false
-      })),
-      freePlacementGuideEditing: true
+      }));
+    };
+    const nextGuides = guideVerticalSplit
+      ? [
+        ...makeSlots(clampSlotCount(guideUpperSlotCount), 'upper'),
+        ...makeSlots(clampSlotCount(guideLowerSlotCount), 'lower')
+      ]
+      : makeSlots(clampSlotCount(guideSlotCount), 'full');
+
+    useUIStore.getState().setSelectedSlotIndex(null);
+    setSpaceInfo({
+      freePlacementGuides: nextGuides,
+      freePlacementGuideEditing: true,
+      customGuideMode: true
     });
-    setGuideSlotCount(String(count));
+    onViewModeChange('2D');
+    setView2DDirection('front');
+    onViewDirectionChange('front');
+    if (guideVerticalSplit) {
+      setGuideUpperSlotCount(String(clampSlotCount(guideUpperSlotCount)));
+      setGuideLowerSlotCount(String(clampSlotCount(guideLowerSlotCount)));
+    } else {
+      setGuideSlotCount(String(clampSlotCount(guideSlotCount)));
+    }
     setShowGuideDialog(false);
   };
 
@@ -221,11 +302,26 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   if (isMobile) {
     return (
       <div className={styles.mobileViewerControls}>
+        {spaceInfo?.freePlacementGuideEditing && (
+          <button
+            type="button"
+            className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive}`}
+            onClick={handleGuideButtonClick}
+          >
+            <Grid3X3 size={13} />
+            <span>슬롯확정</span>
+          </button>
+        )}
+
         <div className={styles.mobileMainBar}>
           <div className={styles.mobileButtonGroup}>
             <button
               className={`${styles.mobileButton} ${viewMode === '3D' ? styles.active : ''}`}
-              onClick={() => onViewModeChange('3D')}
+              disabled={spaceInfo?.freePlacementGuideEditing}
+              onClick={() => {
+                if (spaceInfo?.freePlacementGuideEditing) return;
+                onViewModeChange('3D');
+              }}
             >3D</button>
             <button
               className={`${styles.mobileButton} ${viewMode === '2D' ? styles.active : ''}`}
@@ -262,10 +358,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               { id: 'left' as ViewDirection, label: '측면' }
             ].map((dir) => (
               <button
-                key={dir.id}
-                className={`${styles.mobileDirectionButton} ${view2DDirection === dir.id ? styles.active : ''}`}
-                onClick={() => handleViewDirectionChange(dir.id)}
-              >{dir.label}</button>
+              key={dir.id}
+              className={`${styles.mobileDirectionButton} ${view2DDirection === dir.id ? styles.active : ''}`}
+              disabled={spaceInfo?.freePlacementGuideEditing && dir.id !== 'front'}
+              onClick={() => handleViewDirectionChange(dir.id)}
+            >{dir.label}</button>
             ))}
           </div>
         )}
@@ -332,6 +429,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   // ── Desktop UI ──
   return (
     <div className={styles.viewerControls}>
+      {spaceInfo?.freePlacementGuideEditing && (
+        <button
+          type="button"
+          className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive}`}
+          onClick={handleGuideButtonClick}
+          title="슬롯확정"
+        >
+          <Grid3X3 size={13} />
+          <span>슬롯확정</span>
+        </button>
+      )}
 
       {/* ─── Left: L/F/R 측면 배치벽 토글 (3D 모드에서만) — 기즈모 박스 중앙과 수직 정렬 ─── */}
       {canUsePlacementWallTools && viewMode === '3D' && (
@@ -359,17 +467,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           if (hasUpperOrLower) return null;
           return (
             <>
-              {canCreateFreePlacementGuide && (
-                <button
-                  type="button"
-                  className={`${styles.guideCreateButton} ${spaceInfo.freePlacementGuideEditing ? styles.guideCreateButtonActive : ''}`}
-                  onClick={handleGuideButtonClick}
-                  title={spaceInfo.freePlacementGuideEditing ? '슬롯확정' : '자유배치 가이드 생성'}
-                >
-                  <Grid3X3 size={13} />
-                  <span>{spaceInfo.freePlacementGuideEditing ? '슬롯확정' : '가이드 생성'}</span>
-                </button>
-              )}
               <div className={styles.segmentedControl}>
                 <button
                   className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
@@ -444,7 +541,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               key={mode.id}
               data-view-mode={mode.id}
               className={`${styles.segmentButton} ${styles.segmentAccent} ${viewMode === mode.id ? styles.segmentAccentActive : ''}`}
+              disabled={spaceInfo?.freePlacementGuideEditing && mode.id !== '2D'}
               onClick={() => {
+                if (spaceInfo?.freePlacementGuideEditing && mode.id !== '2D') return;
                 onViewModeChange(mode.id);
                 if (mode.id === '2D') {
                   // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
@@ -515,6 +614,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               data-view-direction={direction.id}
               className={`${styles.segmentButton} ${view2DDirection === direction.id ? styles.segmentActive : ''}`}
               style={{ padding: '0 16px', height: '30px', fontSize: '12px' }}
+              disabled={spaceInfo?.freePlacementGuideEditing && direction.id !== 'front'}
               onClick={() => handleViewDirectionChange(direction.id)}
             >{direction.label}</button>
           ))}
@@ -543,24 +643,73 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               </button>
             </div>
 
-            <label className={styles.guideDialogField}>
-              <span>슬롯 개수</span>
-              <input
-                type="number"
-                min={1}
-                max={30}
-                value={guideSlotCount}
-                onChange={(event) => setGuideSlotCount(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') createFreePlacementGuides();
-                  if (event.key === 'Escape') setShowGuideDialog(false);
-                }}
-                autoFocus
-              />
-            </label>
+            <div className={styles.guideSplitToggle}>
+              <span>슬롯 상하분할</span>
+              <button
+                type="button"
+                className={`${styles.guideSplitToggleButton} ${guideVerticalSplit ? styles.guideSplitToggleButtonActive : ''}`}
+                onClick={() => setGuideVerticalSplit((value) => !value)}
+                aria-pressed={guideVerticalSplit}
+                aria-label="슬롯 상하분할"
+              >
+                <span className={styles.guideSplitToggleKnob} />
+              </button>
+            </div>
+
+            {guideVerticalSplit ? (
+              <div className={styles.guideSplitFields}>
+                <label className={styles.guideDialogField}>
+                  <span>상부 슬롯 개수</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={guideUpperSlotCount}
+                    onChange={(event) => setGuideUpperSlotCount(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') createFreePlacementGuides();
+                      if (event.key === 'Escape') setShowGuideDialog(false);
+                    }}
+                    autoFocus
+                  />
+                </label>
+                <label className={styles.guideDialogField}>
+                  <span>하부 슬롯 개수</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={guideLowerSlotCount}
+                    onChange={(event) => setGuideLowerSlotCount(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') createFreePlacementGuides();
+                      if (event.key === 'Escape') setShowGuideDialog(false);
+                    }}
+                  />
+                </label>
+              </div>
+            ) : (
+              <label className={styles.guideDialogField}>
+                <span>슬롯 개수</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={guideSlotCount}
+                  onChange={(event) => setGuideSlotCount(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') createFreePlacementGuides();
+                    if (event.key === 'Escape') setShowGuideDialog(false);
+                  }}
+                  autoFocus
+                />
+              </label>
+            )}
 
             <div className={styles.guideDialogMeta}>
-              좌우 이격을 제외한 배치 가능 폭 기준으로 우선 균등 가이드를 생성합니다.
+              {guideVerticalSplit
+                ? '좌우 이격을 제외한 배치 가능 폭을 상부/하부 각각 균등 분할합니다.'
+                : '좌우 이격을 제외한 배치 가능 폭 기준으로 우선 균등 가이드를 생성합니다.'}
             </div>
 
             <div className={styles.guideDialogActions}>

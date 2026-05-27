@@ -251,6 +251,48 @@
   transform: scale(0.97);
 }
 
+.guideIconButton {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border: 1px solid var(--theme-border, #d7dce3);
+  border-radius: 8px;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.guideIconButton:hover {
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.guideIconButtonActive {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: #fff;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary) 28%, transparent);
+}
+
+.guideIconButtonActive:hover {
+  color: #fff;
+  border-color: var(--theme-primary);
+  filter: brightness(1.02);
+}
+
+.guideIconButton:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: -2px;
+}
+
+.guideIconButton:active {
+  transform: scale(0.97);
+}
+
 .guideDialogBackdrop {
   position: fixed;
   inset: 0;
@@ -314,6 +356,59 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--theme-text-secondary, #374151);
+}
+
+.guideSplitToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--theme-border, #d7dce3);
+  border-radius: 8px;
+  background: var(--theme-background-secondary, #f8fafc);
+  color: var(--theme-text-secondary, #374151);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.guideSplitToggleButton {
+  position: relative;
+  width: 46px;
+  height: 24px;
+  flex: 0 0 46px;
+  border: 1px solid var(--theme-border, #d7dce3);
+  border-radius: 999px;
+  background: #cbd5e1;
+  padding: 0;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.guideSplitToggleButtonActive {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+}
+
+.guideSplitToggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.24);
+  transition: transform 0.16s ease;
+}
+
+.guideSplitToggleButtonActive .guideSplitToggleKnob {
+  transform: translateX(22px);
+}
+
+.guideSplitFields {
+  display: grid;
+  gap: 10px;
 }
 
 .guideDialogField input {

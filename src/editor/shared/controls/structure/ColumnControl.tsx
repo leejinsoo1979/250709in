@@ -42,7 +42,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     const furnitureBackZ = furnitureZOffset - furnitureDepthM / 2 - doorThicknessM;
     const centerZ = furnitureBackZ + (columnData.depth * 0.01) / 2;
 
-    const isGuideSlotPlacementMode = spaceInfo.layoutMode === 'free-placement'
+    const isGuideSlotPlacementMode = (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true)
       && !spaceInfo.freePlacementGuideEditing
       && (spaceInfo.freePlacementGuides?.length || 0) > 0;
     const columnOccupiedBounds = columns.map((column) => {
@@ -85,7 +85,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     };
 
     // 자유배치 모드에서 기둥-가구 충돌 체크
-    if (spaceInfo.layoutMode === 'free-placement') {
+    if (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true) {
       const colCenterXmm = centerX * 100;
       const colHalfW = newColumn.width / 2;
       for (const mod of placedModules) {

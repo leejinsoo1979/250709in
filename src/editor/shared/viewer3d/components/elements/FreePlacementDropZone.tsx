@@ -19,6 +19,7 @@ import {
   getZoneRemainingWidth,
   calculateOptimalFurnitureWidth,
   getColumnObstacleBoundsX,
+  findAvailableFreeGuideSlot,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import BoxModule from '../modules/BoxModule';
@@ -96,7 +97,8 @@ const FreePlacementDropZone: React.FC = () => {
   }, []);
   const dragPlaneRef = useRef<THREE.Mesh>(null);
 
-  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+  const isCustomGuideMode = spaceInfo.customGuideMode === true;
+  const isFreePlacement = spaceInfo.layoutMode === 'free-placement' || isCustomGuideMode;
   const isGuideSlotPlacementMode = isFreePlacement
     && !spaceInfo.freePlacementGuideEditing
     && (spaceInfo.freePlacementGuides?.length || 0) > 0;
@@ -818,22 +820,44 @@ const FreePlacementDropZone: React.FC = () => {
   }, [guideHoverSlot]);
 
   useEffect(() => {
-    if (!isFreePlacement || !selectedFurnitureId || spaceInfo.freePlacementGuideEditing || guideHoverSlot) return;
+    if (!isGuideSlotPlacementMode || !selectedFurnitureId || !activeModuleData || spaceInfo.freePlacementGuideEditing) {
+      setGuideHoverSlot(null);
+      setHoverZoneWidth(null);
+      setHoverXmm(null);
+      setIsColliding(false);
+      return;
+    }
 
-    const firstGuideSlot = spaceInfo.freePlacementGuides?.[0];
-    if (!firstGuideSlot) return;
+    const targetSlot = findAvailableFreeGuideSlot(
+      spaceInfo.freePlacementGuides,
+      placedModules,
+      spaceInfo,
+      (activeModuleData.category || 'full') as 'full' | 'upper' | 'lower',
+      getColumnObstacleBoundsX(spaceInfo.columns || [])
+    );
 
-    setGuideHoverSlot(firstGuideSlot);
+    if (!targetSlot) {
+      setGuideHoverSlot(null);
+      setHoverZoneWidth(null);
+      setHoverXmm(null);
+      setIsColliding(false);
+      return;
+    }
+
+    setGuideHoverSlot(targetSlot);
     setHoverZoneWidth(null);
-    setHoverXmm(firstGuideSlot.x + firstGuideSlot.width / 2 - (spaceInfo.width || 0) / 2);
+    setHoverXmm(targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2);
     setIsColliding(false);
   }, [
-    isFreePlacement,
+    isGuideSlotPlacementMode,
     selectedFurnitureId,
+    activeModuleData,
+    placedModules,
+    spaceInfo,
     spaceInfo.freePlacementGuideEditing,
     spaceInfo.freePlacementGuides,
-    spaceInfo.width,
-    guideHoverSlot
+    spaceInfo.columns,
+    spaceInfo.width
   ]);
 
   // R3F onClick - 클릭하면 즉시 배치, 배치 모드가 아니면 선택 해제
@@ -899,6 +923,15 @@ const FreePlacementDropZone: React.FC = () => {
   useEffect(() => {
     if (!isFreePlacement) return;
 
+    const canUseGuideSlot = (slot: FreePlacementGuideSlot) => {
+      if (!activeModuleData) return false;
+      const zone = slot.guideZone || 'full';
+      const category = (activeModuleData.category || 'full') as 'full' | 'upper' | 'lower';
+      if (category === 'full') return zone === 'full';
+      if (zone === 'full') return true;
+      return zone === category;
+    };
+
     const setSlotPreview = (slot: FreePlacementGuideSlot | null) => {
       setGuideHoverSlot(slot);
       if (!slot) {
@@ -916,6 +949,10 @@ const FreePlacementDropZone: React.FC = () => {
     const handleGuideSlotHover = (event: Event) => {
       const slot = (event as CustomEvent<FreePlacementGuideSlot>).detail;
       if (!selectedFurnitureId || spaceInfo.freePlacementGuideEditing) return;
+      if (!canUseGuideSlot(slot)) {
+        setSlotPreview(null);
+        return;
+      }
       setSlotPreview(slot);
     };
 
@@ -927,6 +964,7 @@ const FreePlacementDropZone: React.FC = () => {
     const handleGuideSlotClick = (event: Event) => {
       const slot = (event as CustomEvent<FreePlacementGuideSlot>).detail;
       if (!selectedFurnitureId || !activeModuleData || !activeDimensions || spaceInfo.freePlacementGuideEditing) return;
+      if (!canUseGuideSlot(slot)) return;
 
       const centerXmm = slot.x + slot.width / 2 - (spaceInfo.width || 0) / 2;
       const slotDimensions = { ...activeDimensions, width: slot.width };

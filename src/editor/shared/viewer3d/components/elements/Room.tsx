@@ -4157,7 +4157,7 @@ const Room: React.FC<RoomProps> = ({
       )}
 
       {/* 슬롯 바닥면 - 그린색으로 표시 - showAll이 true일 때만 */}
-      {showAll && !isLiveDimensionInspecting && (() => {
+      {showAll && !spaceInfo.customGuideMode && !isLiveDimensionInspecting && (() => {
         // 내경 공간 계산 (ColumnGuides와 동일한 방식)
         const internalSpace = calculateInternalSpace(spaceInfo);
         const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -4378,7 +4378,7 @@ const Room: React.FC<RoomProps> = ({
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                       ? surroundEndPanelZ
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                 ]}
                 material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
@@ -4415,7 +4415,7 @@ const Room: React.FC<RoomProps> = ({
                       : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                         (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ
-                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                   ]}
                   material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
@@ -4508,12 +4508,12 @@ const Room: React.FC<RoomProps> = ({
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
-                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)  // 단내림 구간: 메인프레임과 동일 3mm 앞
+                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                       : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                       ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))  // 단내림 구간: 메인프레임과 동일 3mm 앞
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                 ]}
                 material={leftFrameMaterial ?? createFrameMaterial('left')}
                 renderMode={renderMode}
@@ -4551,12 +4551,12 @@ const Room: React.FC<RoomProps> = ({
                     // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                     spaceInfo.surroundType === 'no-surround'
                       ? (wallConfig?.left
-                        ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)  // 단내림 상부: 메인프레임과 동일 3mm 앞
+                        ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                         : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                       : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                         (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))  // 단내림 상부: 메인프레임과 동일 3mm 앞
+                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                   ]}
                   material={leftFrameMaterial ?? createFrameMaterial('left')}
                   renderMode={renderMode}
@@ -4617,7 +4617,7 @@ const Room: React.FC<RoomProps> = ({
             : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
               (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
               ? surroundEndPanelZ
-              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + leftEdgeZOffset)
+              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + leftEdgeZOffset)
         ];
         if (hasDroppedCeiling && isLeftDropped) return null;
 
@@ -4788,7 +4788,7 @@ const Room: React.FC<RoomProps> = ({
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                       ? surroundEndPanelZ
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                 ]}
                 material={rightFrameMaterial ?? createFrameMaterial('right')}
                 renderMode={renderMode}
@@ -4828,7 +4828,7 @@ const Room: React.FC<RoomProps> = ({
                       : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                         (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ
-                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                   ]}
                   material={rightFrameMaterial ?? createFrameMaterial('right')}
                   renderMode={renderMode}
@@ -4969,12 +4969,12 @@ const Room: React.FC<RoomProps> = ({
                     // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                     spaceInfo.surroundType === 'no-surround'
                       ? (wallConfig?.right
-                        ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)  // 단내림 구간: 메인프레임과 동일 3mm 앞
+                        ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
                         : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                       : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                         (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))  // 단내림 구간: 메인프레임과 동일 3mm 앞
+                        : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2)
                   ];
                   return pos;
                 })()}
@@ -5031,7 +5031,7 @@ const Room: React.FC<RoomProps> = ({
           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
             (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
             ? surroundEndPanelZ
-            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + rightEdgeZOffset);
+            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + rightEdgeZOffset);
         const rightFrameMat = rightFrameMaterial ?? createFrameMaterial('right');
 
         // 분절 모드: 우측 최외곽이 upper/lower만 → 각 가구 높이/Z/깊이에 맞춰 프레임 조각들
@@ -6087,7 +6087,7 @@ const Room: React.FC<RoomProps> = ({
               if (slotModsForFrame.length === 0) return null; // 가구 없으면 상단몰딩 없음
 
               const topZPos = isFullSurround
-                ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                 : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                   mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
 
@@ -6116,7 +6116,7 @@ const Room: React.FC<RoomProps> = ({
                 ((cbIsLeft && isLeftDropped) || (!cbIsLeft && !isLeftDropped));
 
               // 세그먼트 수집
-              const slotTopSegments: (FrameRenderSegment & { key: string })[] = [];
+              const slotTopSegments: (FrameRenderSegment & { key: string; showReturnFrame?: boolean })[] = [];
               slotModsForFrame
                   .filter(mod => {
                     if (((mod as any).placementWall || 'front') !== 'front') return false;
@@ -6241,6 +6241,7 @@ const Room: React.FC<RoomProps> = ({
                     key: `slot-top-${mod.id}`,
                     placedModuleId: mod.id,
                     behindCeiling: isInCBZone && cbSameSideAsDropped,
+                    showReturnFrame: modTopOffsetMM >= -19,
                   });
                 });
 
@@ -6253,12 +6254,22 @@ const Room: React.FC<RoomProps> = ({
                     const args: [number, number, number] = [
                       mmToThreeUnits(seg.widthMm),
                       seg.height,
-                      mmToThreeUnits(endPanelRenderThickness)
+                      mmToThreeUnits(END_PANEL_THICKNESS)
                     ];
                     const pos: [number, number, number] = [
                       mmToThreeUnits(seg.centerXmm),
                       seg.yPosition,
                       seg.zPosition
+                    ];
+                    const returnArgs: [number, number, number] = [
+                      mmToThreeUnits(seg.widthMm),
+                      mmToThreeUnits(END_PANEL_THICKNESS),
+                      mmToThreeUnits(40)
+                    ];
+                    const returnPos: [number, number, number] = [
+                      pos[0],
+                      seg.yPosition - seg.height / 2 + mmToThreeUnits(END_PANEL_THICKNESS) / 2,
+                      seg.zPosition - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(40) / 2
                     ];
                     const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
                     const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
@@ -6279,6 +6290,22 @@ const Room: React.FC<RoomProps> = ({
                           furnitureId={owningId}
                           panelName="top-frame"
                         />
+                        {isFullSurround && seg.showReturnFrame && (
+                          <BoxWithEdges
+                            hideEdges={hideEdges}
+                            isOuterFrame
+                            name={spaceInfo.frameMergeEnabled ? `top-frame-return-${idx}` : 'top-frame-return'}
+                            args={returnArgs}
+                            position={returnPos}
+                            material={seg.material ?? topFrameMat}
+                            renderMode={renderMode}
+                            shadowEnabled={shadowEnabled}
+                            renderOrder={seg.behindCeiling ? -1 : undefined}
+                            excludeKey={`${owningId}::top-frame-return`}
+                            furnitureId={owningId}
+                            panelName="top-frame-return"
+                          />
+                        )}
                         {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                       </React.Fragment>
                     );
@@ -6424,7 +6451,7 @@ const Room: React.FC<RoomProps> = ({
                         droppedX,
                         panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight / 2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
                         isFullSurround
-                          ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                          ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                           : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
@@ -6451,7 +6478,7 @@ const Room: React.FC<RoomProps> = ({
                         normalX,
                         topElementsY,
                         isFullSurround
-                          ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                          ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                           : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                       ]}
@@ -6535,7 +6562,7 @@ const Room: React.FC<RoomProps> = ({
                     frameX, // 노서라운드 모드에서는 전체 너비 중앙 정렬
                     topElementsY,
                     isFullSurround
-                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
@@ -6578,7 +6605,7 @@ const Room: React.FC<RoomProps> = ({
                     segment.x, // 분절된 위치
                     topElementsY,
                     isFullSurround
-                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                   ]}
@@ -6796,7 +6823,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + frameThickness.left - mmToThreeUnits(9),
                       droppedCenterY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(31)
                     ]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -6823,7 +6850,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + frameRenderThickness.left / 2,
                       droppedCenterY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                     ]}
                   >
                     <BoxWithEdges
@@ -6862,7 +6889,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + frameThickness.left - mmToThreeUnits(9),
                       droppedCY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(31)
                     ]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -6889,7 +6916,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + frameRenderThickness.left / 2,
                       droppedCY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                     ]}
                   >
                     <BoxWithEdges
@@ -6921,7 +6948,7 @@ const Room: React.FC<RoomProps> = ({
               // 좌측 최외곽 가구(신발장 등)의 depth에 맞춰 서브프레임 Z 이동
               const leftSubEdgeMod = placedModulesFromStore.find((pm) => pm.id === leftMostModuleId);
               const leftSubEdgeZOffset = computeDepthZOffset(leftSubEdgeMod, 'any');
-              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28) + leftSubEdgeZOffset;
+              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(31) + leftSubEdgeZOffset;
               const subFrameMat = leftSubFrameMaterial ?? createFrameMaterial('left');
 
               // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 몸통 높이/Z/깊이에 맞춰 세로 서브프레임 조각들
@@ -7028,7 +7055,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + width - frameRenderThickness.right / 2,
                       subFrameCY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                     ]}
                   >
                     <BoxWithEdges
@@ -7055,7 +7082,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + width - frameThickness.right + mmToThreeUnits(9),
                       subFrameCY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(31)
                     ]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -7095,7 +7122,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + width - frameRenderThickness.right / 2,
                       droppedCY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
                     ]}
                   >
                     <BoxWithEdges
@@ -7121,7 +7148,7 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       xOffset + width - frameThickness.right + mmToThreeUnits(9),
                       droppedCY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
+                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(31)
                     ]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
@@ -7154,7 +7181,7 @@ const Room: React.FC<RoomProps> = ({
               // 우측 최외곽 가구(신발장 등)의 depth에 맞춰 서브프레임 Z 이동
               const rightSubEdgeMod = placedModulesFromStore.find((pm) => pm.id === rightMostModuleId);
               const rightSubEdgeZOffset = computeDepthZOffset(rightSubEdgeMod, 'any');
-              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28) + rightSubEdgeZOffset;
+              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(31) + rightSubEdgeZOffset;
               const subFrameMat = rightSubFrameMaterial ?? createFrameMaterial('right');
 
               // 분절 모드: 우측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰

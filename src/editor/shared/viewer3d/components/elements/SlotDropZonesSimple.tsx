@@ -165,7 +165,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const [hoveredZone, setHoveredZone] = useState<'normal' | 'dropped' | null>(null);
 
   // 자유배치 모드 플래그 (early return 하지 않고 렌더링 단계에서 null 반환)
-  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const isFreePlacement = spaceInfo?.layoutMode === 'free-placement' || spaceInfo?.customGuideMode === true;
   const isInvalidSpaceInfo = !spaceInfo;
 
   debugLog('🔍 SlotDropZonesSimple - spaceInfo:', {
