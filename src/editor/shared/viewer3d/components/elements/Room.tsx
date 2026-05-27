@@ -5177,18 +5177,20 @@ const Room: React.FC<RoomProps> = ({
                     }
                     const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                     const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
-                    // EP 상단 갭이 0이면 상단몰딩이 EP 자리까지 X 확장 → leftEpAdj/rightEpAdj 0 처리
+                    const modTopOffsetMM = mod.topFrameOffset ?? 0;
+                    const hasTopFrameOffset = Math.abs(modTopOffsetMM) > 0.001;
+                    // EP 상단 갭이 0/음수이면 상단몰딩이 EP 자리까지 X 확장 → leftEpAdj/rightEpAdj 0 처리
                     const epTopGapMm = (mod as any).endPanelTopOffset;
-                    const topGapIsZero = epTopGapMm === 0;
+                    const shouldInsetForEpCollision = epTopGapMm === undefined || epTopGapMm > 0;
                     let leftEpAdj = 0;
                     let rightEpAdj = 0;
                     if (isFullSurround) {
-                      // 전체서라운드: EP가 앞으로 돌출(offset > 0)하면 축소, 아니면 유지
-                      if (mod.hasLeftEndPanel && leftEpOffset > 0 && !topGapIsZero) leftEpAdj = endPanelRenderThickness;
-                      if (mod.hasRightEndPanel && rightEpOffset > 0 && !topGapIsZero) rightEpAdj = endPanelRenderThickness;
+                      // 전체서라운드: EP 돌출 또는 상단몰딩 옵셋으로 충돌하면 EP 두께만큼 안쪽으로 축소
+                      if (mod.hasLeftEndPanel && (leftEpOffset > 0 || hasTopFrameOffset) && shouldInsetForEpCollision) leftEpAdj = endPanelRenderThickness;
+                      if (mod.hasRightEndPanel && (rightEpOffset > 0 || hasTopFrameOffset) && shouldInsetForEpCollision) rightEpAdj = endPanelRenderThickness;
                     } else {
-                      if (mod.hasLeftEndPanel && !topGapIsZero) leftEpAdj = endPanelRenderThickness;
-                      if (mod.hasRightEndPanel && !topGapIsZero) rightEpAdj = endPanelRenderThickness;
+                      if (mod.hasLeftEndPanel && shouldInsetForEpCollision) leftEpAdj = endPanelRenderThickness;
+                      if (mod.hasRightEndPanel && shouldInsetForEpCollision) rightEpAdj = endPanelRenderThickness;
                     }
                     const modWidthMM = (modRight - modLeft) - leftEpAdj - rightEpAdj;
                     const modCenterXmm = (modLeft + leftEpAdj + modRight - rightEpAdj) / 2;
@@ -5259,7 +5261,6 @@ const Room: React.FC<RoomProps> = ({
                       : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
                     // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
-                    const modTopOffsetMM = mod.topFrameOffset ?? 0;
                     const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
                     const DOOR_THICKNESS_MM = PET_PANEL_THICKNESS_MM;
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
@@ -6159,17 +6160,19 @@ const Room: React.FC<RoomProps> = ({
                   const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
                   const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
-                  // EP 상단 갭이 0이면 상단몰딩이 EP 자리까지 X 확장 → 축소 안 함
+                  const modTopOffsetMM = mod.topFrameOffset ?? 0;
+                  const hasTopFrameOffset = Math.abs(modTopOffsetMM) > 0.001;
+                  // EP 상단 갭이 0/음수이면 상단몰딩이 EP 자리까지 X 확장 → 축소 안 함
                   const epTopGapMm2 = (mod as any).endPanelTopOffset;
-                  const topGapIsZero2 = epTopGapMm2 === 0;
+                  const shouldInsetForEpCollision = epTopGapMm2 === undefined || epTopGapMm2 > 0;
                   if (isFullSurround) {
-                    // 전체서라운드: EP가 앞으로 돌출(offset > 0)하면 축소, 아니면 유지(EP 위를 덮음)
-                    if (mod.hasLeftEndPanel && leftEpOffset > 0 && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                    if (mod.hasRightEndPanel && rightEpOffset > 0 && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                    // 전체서라운드: EP 돌출 또는 상단몰딩 옵셋으로 충돌하면 EP 두께만큼 안쪽으로 축소
+                    if (mod.hasLeftEndPanel && (leftEpOffset > 0 || hasTopFrameOffset) && shouldInsetForEpCollision) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                    if (mod.hasRightEndPanel && (rightEpOffset > 0 || hasTopFrameOffset) && shouldInsetForEpCollision) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   } else {
-                    // 양쪽서라운드/노서라운드: EP 달면 항상 축소 (단, 상단 갭 0이면 EP 자리까지 덮음)
-                    if (mod.hasLeftEndPanel && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                    if (mod.hasRightEndPanel && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                    // 양쪽서라운드/노서라운드: EP와 충돌하면 축소
+                    if (mod.hasLeftEndPanel && shouldInsetForEpCollision) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                    if (mod.hasRightEndPanel && shouldInsetForEpCollision) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   }
                   const rawTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                   // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
@@ -6211,7 +6214,6 @@ const Room: React.FC<RoomProps> = ({
                     ? panelStartY + mmToThreeUnits(slotShelfSplitTopFrameBottomMm + slotShelfSplitFrameHeightMm / 2)
                     : panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
-                  const modTopOffsetMM = mod.topFrameOffset ?? 0;
                   const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
@@ -6231,6 +6233,11 @@ const Room: React.FC<RoomProps> = ({
                   // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
                   const slotTopBackWallGapMm = (mod as any).backWallGap ?? 0;
                   const slotTopBackWallGapZ = slotTopBackWallGapMm > 0 ? mmToThreeUnits(slotTopBackWallGapMm) : 0;
+                  const hasAnyEndPanel =
+                    mod.hasTopEndPanel === true
+                    || mod.hasBottomEndPanel === true
+                    || mod.hasLeftEndPanel === true
+                    || mod.hasRightEndPanel === true;
                   slotTopSegments.push({
                     widthMm: modWidthMM,
                     centerXmm: modCenterXmm,
@@ -6241,7 +6248,7 @@ const Room: React.FC<RoomProps> = ({
                     key: `slot-top-${mod.id}`,
                     placedModuleId: mod.id,
                     behindCeiling: isInCBZone && cbSameSideAsDropped,
-                    showReturnFrame: modTopOffsetMM >= -19,
+                    showReturnFrame: modTopOffsetMM >= -19 && !hasAnyEndPanel,
                   });
                 });
 
@@ -7679,11 +7686,11 @@ const Room: React.FC<RoomProps> = ({
                         if (adjPosX != null) modCenterXmm = adjPosX * 100;
                       }
                       const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
-                      // EP 하단 갭이 0이면 걸레받이가 EP 자리까지 X 확장 → 축소 안 함
+                      // EP 하단 갭이 0/음수이면 걸레받이가 EP 자리까지 X 확장 → 축소 안 함
                       const epBottomGapMm = (mod as any).endPanelBottomOffset;
-                      const bottomGapIsZero = epBottomGapMm === 0;
-                      if (mod.hasLeftEndPanel && !bottomGapIsZero) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                      if (mod.hasRightEndPanel && !bottomGapIsZero) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                      const shouldInsetForBottomEpCollision = epBottomGapMm === undefined || epBottomGapMm > 0;
+                      if (mod.hasLeftEndPanel && shouldInsetForBottomEpCollision) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                      if (mod.hasRightEndPanel && shouldInsetForBottomEpCollision) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                       // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
                       const baseFrameGapMm = Math.max(0, Math.min(rawBaseHeight - 1, mod.baseFrameGap ?? 0));
@@ -8196,6 +8203,10 @@ export default React.memo(Room, (prevProps, nextProps) => {
     if (prev.customConfig !== next.customConfig) return false;
     if (prev.hasLeftEndPanel !== next.hasLeftEndPanel) return false;
     if (prev.hasRightEndPanel !== next.hasRightEndPanel) return false;
+    if (prev.hasBottomEndPanel !== next.hasBottomEndPanel) return false;
+    if (prev.hasTopEndPanel !== next.hasTopEndPanel) return false;
+    if (prev.topEndPanelOffset !== next.topEndPanelOffset) return false;
+    if (prev.topEndPanelBackOffset !== next.topEndPanelBackOffset) return false;
     if (JSON.stringify(prev.hingePositionsMm) !== JSON.stringify(next.hingePositionsMm)) return false;
     if (JSON.stringify(prev.upperDoorHingePositionsMm) !== JSON.stringify(next.upperDoorHingePositionsMm)) return false;
     if (JSON.stringify(prev.lowerDoorHingePositionsMm) !== JSON.stringify(next.lowerDoorHingePositionsMm)) return false;

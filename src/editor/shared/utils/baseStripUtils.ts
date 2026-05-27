@@ -47,11 +47,12 @@ export function getBaseFrameBoundsX(module: PlacedModule): { left: number; right
   const fullBounds = getModuleBoundsX(module);
 
   // EP(엔드패널) 적용: 본체 너비 축소 + 비대칭 오프셋
-  // ※ EP 하단 갭이 0이면 걸래받이가 EP 자리까지 확장 → 축소 안 함
+  // ※ EP 하단 갭이 0/음수이면 걸래받이가 EP 자리까지 확장 → 축소 안 함
   const hasLeft = module.hasLeftEndPanel;
   const hasRight = module.hasRightEndPanel;
-  const bottomGapIsZero = (module as any).endPanelBottomOffset === 0;
-  if ((hasLeft || hasRight) && !bottomGapIsZero) {
+  const bottomGapMm = (module as any).endPanelBottomOffset;
+  const shouldInsetForBottomEpCollision = bottomGapMm === undefined || bottomGapMm > 0;
+  if ((hasLeft || hasRight) && shouldInsetForBottomEpCollision) {
     const epThk = resolvePetPanelThicknessMm(module.endPanelThickness);
     const leftEpMM = hasLeft ? epThk : 0;
     const rightEpMM = hasRight ? epThk : 0;

@@ -32,12 +32,10 @@ export default function TallEpContextMenu() {
   }
 
   const cur = placedModule as any;
-  const baseLabel = (id: 'left' | 'right' | 'both') =>
-    id === 'left' ? '좌 EP' : id === 'right' ? '우 EP' : '양쪽 EP';
-  const items: Array<{ id: 'left' | 'right' | 'both' }> = [
-    { id: 'left' },
-    { id: 'right' },
-    { id: 'both' },
+  const items = [
+    { id: 'left' as const, label: '좌 EP' },
+    { id: 'right' as const, label: '우 EP' },
+    { id: 'both' as const, label: '양쪽 EP' },
   ];
 
   return (
@@ -105,7 +103,7 @@ export default function TallEpContextMenu() {
               onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,0,0,0.04)'; }}
               onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
             >
-              <span style={{ flex: 1 }}>{active ? `${baseLabel(opt.id)} 제거` : baseLabel(opt.id)}</span>
+              <span style={{ flex: 1 }}>{opt.label}</span>
               {active && <span style={{ color: 'var(--theme-primary, #7269ef)' }}>✓</span>}
             </button>
           );
