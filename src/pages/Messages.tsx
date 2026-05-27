@@ -638,13 +638,13 @@ export default function Messages() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 8,
-                background: C.inputBg,
-                borderRadius: 6,
-                padding: '10px 12px',
+                gap: 12,
+                background: isDark ? 'rgba(255,255,255,0.04)' : '#eef0f7',
+                borderRadius: 8,
+                padding: '14px 16px',
               }}
             >
-              <HiOutlineSearch size={16} color={C.textSecondary} />
+              <HiOutlineSearch size={18} color={C.textSecondary} />
               <input
                 type="text"
                 placeholder={leftTab === 'contacts' ? '친구 검색...' : '대화 검색...'}
@@ -656,7 +656,7 @@ export default function Messages() {
                   outline: 'none',
                   background: 'transparent',
                   color: C.text,
-                  fontSize: 13,
+                  fontSize: 14,
                 }}
               />
             </div>
