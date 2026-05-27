@@ -246,6 +246,7 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
   /** 시연 종료 */
   const stop = useCallback(async () => {
     const sessionId = sessionIdRef.current;
+    console.log('[broadcast.stop] 시작', { sessionId });
 
     // viewers 구독 해제
     if (viewersUnsubRef.current) {

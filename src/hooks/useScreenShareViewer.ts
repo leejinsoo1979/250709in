@@ -74,6 +74,12 @@ export function useScreenShareViewer(opts: UseScreenShareViewerOptions) {
       // 시연자로부터 받는 stream
       pc.ontrack = (event) => {
         const [stream] = event.streams;
+        console.log('[viewer] ontrack', {
+          kind: event.track.kind,
+          enabled: event.track.enabled,
+          readyState: event.track.readyState,
+          streams: event.streams.length,
+        });
         if (stream) {
           setState((s) => ({ ...s, remoteStream: stream }));
         }

@@ -48,6 +48,8 @@ import {
   HiOutlineLogout,
   HiChat,
   HiOutlineDesktopComputer,
+  HiOutlineChevronLeft,
+  HiOutlineChevronRight,
 } from 'react-icons/hi';
 import {
   subscribeActiveLiveSessionsForConv,
@@ -143,10 +145,43 @@ export default function Messages() {
   const [leavingConvId, setLeavingConvId] = useState<string | null>(null);
   const [showAddFriend, setShowAddFriend] = useState(false);
   const [startingFriendUid, setStartingFriendUid] = useState<string | null>(null);
+  // 사이드바 토글 (대화 목록)
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  // 라이브 중 우측 채팅 사이드 토글 + 드래그 너비
+  const [rightChatCollapsed, setRightChatCollapsed] = useState(false);
+  const [rightChatWidth, setRightChatWidth] = useState<number>(() => {
+    const saved = typeof window !== 'undefined' ? Number(localStorage.getItem('messages.rightChatWidth')) : 0;
+    return saved >= 240 && saved <= 800 ? saved : 360;
+  });
+  const isResizingRef = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // 우측 채팅 사이즈 드래그 핸들러
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      // 마우스 X를 화면 우측 기준으로 계산 → 너비
+      const newWidth = Math.min(800, Math.max(240, window.innerWidth - e.clientX));
+      setRightChatWidth(newWidth);
+    };
+    const onUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        try { localStorage.setItem('messages.rightChatWidth', String(rightChatWidth)); } catch { /* noop */ }
+      }
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [rightChatWidth]);
 
   // 라이브 시연 — 활성 세션 구독
   const [activeLiveSessions, setActiveLiveSessions] = useState<LiveSessionRecord[]>([]);
@@ -164,6 +199,14 @@ export default function Messages() {
     broadcasterUid: user?.uid || '',
     broadcasterName: user?.displayName || user?.email || '',
   });
+
+  // 라이브 에러 발생 시 즉시 표시
+  useEffect(() => {
+    if (broadcast.error) {
+      console.error('[라이브 에러]', broadcast.error);
+      alert(`라이브 시연 오류: ${broadcast.error}`);
+    }
+  }, [broadcast.error]);
   const canBroadcast = Boolean(activeConvId && user?.uid);
 
   useEffect(() => {
@@ -404,6 +447,27 @@ export default function Messages() {
 
         <div style={{ flex: 1 }} />
 
+        {/* 사이드바 접기/펼치기 */}
+        <button
+          onClick={() => setLeftSidebarCollapsed((v) => !v)}
+          title={leftSidebarCollapsed ? '대화 목록 펼치기' : '대화 목록 접기'}
+          style={{
+            width: 46,
+            height: 46,
+            borderRadius: 8,
+            background: 'transparent',
+            border: 'none',
+            color: C.leftNavText,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 8,
+          }}
+        >
+          {leftSidebarCollapsed ? <HiOutlineChevronRight size={22} /> : <HiOutlineChevronLeft size={22} />}
+        </button>
+
         {/* 하단 라이트/다크 토글 */}
         <button
           onClick={toggleMode}
@@ -447,11 +511,14 @@ export default function Messages() {
       {/* ===== 중앙 사이드바 (대화 목록) ===== */}
       <div
         style={{
-          width: 360,
+          width: leftSidebarCollapsed ? 0 : 360,
           background: C.sidebarBg,
-          borderRight: `1px solid ${C.sidebarBorder}`,
+          borderRight: leftSidebarCollapsed ? 'none' : `1px solid ${C.sidebarBorder}`,
           display: 'flex',
           flexDirection: 'column',
+          overflow: 'hidden',
+          transition: 'width 0.18s ease',
+          flexShrink: 0,
         }}
       >
         <div style={{ padding: '24px 24px 12px' }}>
@@ -766,14 +833,61 @@ export default function Messages() {
           />
         )}
 
-        {/* 채팅 영역 (라이브 있으면 우측 360 사이드, 없으면 풀) */}
+        {/* 라이브 중 우측 채팅 사이드 드래그 핸들 */}
+        {activeConv && activeLiveSessions.length > 0 && !rightChatCollapsed && (
+          <div
+            onMouseDown={(e) => {
+              e.preventDefault();
+              isResizingRef.current = true;
+              document.body.style.cursor = 'col-resize';
+              document.body.style.userSelect = 'none';
+            }}
+            title="드래그로 너비 조절"
+            style={{
+              width: 6,
+              cursor: 'col-resize',
+              background: 'transparent',
+              borderLeft: `1px solid ${C.sidebarBorder}`,
+              borderRight: `1px solid ${C.sidebarBorder}`,
+              flexShrink: 0,
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = C.leftNavActiveBg; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+          />
+        )}
+
+        {/* 라이브 중 우측 채팅 접힘 상태: 펼치기 버튼만 */}
+        {activeConv && activeLiveSessions.length > 0 && rightChatCollapsed && (
+          <button
+            onClick={() => setRightChatCollapsed(false)}
+            title="채팅 펼치기"
+            style={{
+              width: 36,
+              alignSelf: 'stretch',
+              background: C.chatHeaderBg,
+              border: 'none',
+              borderLeft: `1px solid ${C.sidebarBorder}`,
+              color: C.text,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <HiOutlineChevronLeft size={20} />
+          </button>
+        )}
+
+        {/* 채팅 영역 (라이브 있으면 우측 N px 사이드, 없으면 풀) */}
         <div
           style={{
-            display: 'flex',
+            display: rightChatCollapsed && activeLiveSessions.length > 0 ? 'none' : 'flex',
             flexDirection: 'column',
             background: C.chatBg,
             ...(activeConv && activeLiveSessions.length > 0
-              ? { width: 360, borderLeft: `1px solid ${C.sidebarBorder}`, flexShrink: 0 }
+              ? { width: rightChatWidth, flexShrink: 0 }
               : { flex: 1 }),
             minWidth: 0,
           }}
@@ -821,6 +935,23 @@ export default function Messages() {
                   {activeConv.peerEmail || ''}
                 </div>
               </div>
+              {/* 라이브 중일 때만: 채팅 사이드 접기 */}
+              {activeLiveSessions.length > 0 && (
+                <button
+                  onClick={() => setRightChatCollapsed(true)}
+                  title="채팅 접기"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: C.textSecondary,
+                    cursor: 'pointer',
+                    padding: 6,
+                    borderRadius: 6,
+                  }}
+                >
+                  <HiOutlineChevronRight size={20} />
+                </button>
+              )}
               <button
                 onClick={handleLeaveConversation}
                 disabled={leavingConvId === activeConv.id}
@@ -1015,6 +1146,13 @@ export default function Messages() {
               </button>
               <button
                 onClick={() => {
+                  console.log('[라이브 버튼 클릭]', {
+                    isLive: broadcast.isLive,
+                    activeConvId,
+                    userUid: user?.uid,
+                    error: broadcast.error,
+                    hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
+                  });
                   if (broadcast.isLive) {
                     broadcast.stop();
                   } else {

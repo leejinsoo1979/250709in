@@ -77,7 +77,14 @@ function BroadcasterStage({
             <HiOutlineUsers size={16} /> {viewerCount}명 시청
           </span>
           <div style={{ flex: 1 }} />
-          <button onClick={onStop} style={stopBtnStyle()}>
+          <button
+            onClick={() => {
+              console.log('[LiveStage 종료 버튼 클릭]', { hasOnStop: typeof onStop === 'function' });
+              if (onStop) onStop();
+              else alert('종료 핸들러가 연결되지 않았습니다.');
+            }}
+            style={stopBtnStyle()}
+          >
             <HiOutlineX size={14} /> 종료
           </button>
         </>
@@ -112,11 +119,22 @@ function ViewerStage({
     autoJoin: true,
   });
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(false);
+  // 브라우저 autoplay 정책: 사운드 있는 stream은 muted로 시작해야 자동 재생됨
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     if (videoRef.current && remoteStream) {
+      console.log('[viewer] remoteStream 수신', {
+        videoTracks: remoteStream.getVideoTracks().length,
+        audioTracks: remoteStream.getAudioTracks().length,
+        videoTrackEnabled: remoteStream.getVideoTracks()[0]?.enabled,
+        videoTrackReadyState: remoteStream.getVideoTracks()[0]?.readyState,
+      });
       videoRef.current.srcObject = remoteStream;
+      // 명시적으로 play() 호출 (autoplay 보조)
+      videoRef.current.play().catch((err) => {
+        console.warn('[viewer] video.play() 실패 (사용자 클릭 필요할 수 있음)', err);
+      });
     }
   }, [remoteStream]);
 
