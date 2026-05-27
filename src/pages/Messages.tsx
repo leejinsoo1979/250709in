@@ -447,26 +447,28 @@ export default function Messages() {
 
         <div style={{ flex: 1 }} />
 
-        {/* 사이드바 접기/펼치기 */}
-        <button
-          onClick={() => setLeftSidebarCollapsed((v) => !v)}
-          title={leftSidebarCollapsed ? '대화 목록 펼치기' : '대화 목록 접기'}
-          style={{
-            width: 46,
-            height: 46,
-            borderRadius: 8,
-            background: 'transparent',
-            border: 'none',
-            color: C.leftNavText,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginBottom: 8,
-          }}
-        >
-          {leftSidebarCollapsed ? <HiOutlineChevronRight size={22} /> : <HiOutlineChevronLeft size={22} />}
-        </button>
+        {/* 사이드바 접혀있을 때만 펼치기 버튼 노출 */}
+        {leftSidebarCollapsed && (
+          <button
+            onClick={() => setLeftSidebarCollapsed(false)}
+            title="대화 목록 펼치기"
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 8,
+              background: C.leftNavActiveBg,
+              border: 'none',
+              color: C.accent,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 8,
+            }}
+          >
+            <HiOutlineChevronRight size={22} />
+          </button>
+        )}
 
         {/* 하단 라이트/다크 토글 */}
         <button
@@ -521,10 +523,26 @@ export default function Messages() {
           flexShrink: 0,
         }}
       >
-        <div style={{ padding: '24px 24px 12px' }}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text }}>
+        <div style={{ padding: '24px 24px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: C.text, flex: 1 }}>
             {leftTab === 'chats' ? '채팅' : leftTab === 'contacts' ? '연락처' : leftTab === 'profile' ? '내 정보' : leftTab === 'groups' ? '그룹' : '설정'}
           </h2>
+          <button
+            onClick={() => setLeftSidebarCollapsed(true)}
+            title="사이드바 접기"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: C.textSecondary,
+              cursor: 'pointer',
+              padding: 6,
+              borderRadius: 6,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
+            <HiOutlineChevronLeft size={18} />
+          </button>
         </div>
         {leftTab === 'contacts' && (
           <div style={{ padding: '0 24px 12px' }}>
@@ -935,7 +953,28 @@ export default function Messages() {
                   {activeConv.peerEmail || ''}
                 </div>
               </div>
-              {/* 라이브 중일 때만: 채팅 사이드 접기 */}
+              {/* 라이브 중일 때만: 시연자에게는 종료 버튼 / 사이드 접기 */}
+              {activeLiveSessions.length > 0 && activeLiveSessions[0].broadcasterUid === user.uid && (
+                <button
+                  onClick={() => {
+                    console.log('[채팅 헤더 종료 클릭]');
+                    broadcast.stop();
+                  }}
+                  title="라이브 시연 종료"
+                  style={{
+                    background: '#ff3d60',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '6px 10px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ● 종료
+                </button>
+              )}
               {activeLiveSessions.length > 0 && (
                 <button
                   onClick={() => setRightChatCollapsed(true)}
@@ -1079,139 +1118,164 @@ export default function Messages() {
               </div>
             )}
 
-            {/* 입력창 */}
-            <div
-              style={{
-                padding: '14px 24px',
-                background: C.chatHeaderBg,
-                borderTop: `1px solid ${C.sidebarBorder}`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                position: 'relative',
-              }}
-            >
-              {emojiOpen && (
+            {/* 입력창 — 라이브 중 우측 사이드 모드면 2단 (입력 위 / 도구·전송 아래) */}
+            {(() => {
+              const isCompact = activeLiveSessions.length > 0;
+              return (
                 <div
                   style={{
-                    position: 'absolute',
-                    bottom: '100%',
-                    left: 16,
-                    zIndex: 100,
+                    padding: isCompact ? '10px 14px' : '14px 24px',
+                    background: C.chatHeaderBg,
+                    borderTop: `1px solid ${C.sidebarBorder}`,
+                    display: 'flex',
+                    flexDirection: isCompact ? 'column' : 'row',
+                    alignItems: isCompact ? 'stretch' : 'center',
+                    gap: isCompact ? 8 : 8,
+                    position: 'relative',
                   }}
                 >
-                  <EmojiPicker
-                    onEmojiClick={handleEmojiClick}
-                    theme={isDark ? EmojiTheme.DARK : EmojiTheme.LIGHT}
-                    width={320}
-                    height={400}
+                  {emojiOpen && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: 16,
+                        zIndex: 100,
+                      }}
+                    >
+                      <EmojiPicker
+                        onEmojiClick={handleEmojiClick}
+                        theme={isDark ? EmojiTheme.DARK : EmojiTheme.LIGHT}
+                        width={320}
+                        height={400}
+                      />
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleFilesPick}
                   />
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleFilesPick}
+                  />
+
+                  {/* 입력박스 — 컴팩트 모드에서는 1행 단독 */}
+                  <input
+                    type="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendText();
+                      }
+                    }}
+                    placeholder="메시지 입력..."
+                    disabled={sending}
+                    style={{
+                      flex: isCompact ? undefined : 1,
+                      width: isCompact ? '100%' : undefined,
+                      order: isCompact ? 0 : 4,
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: C.inputBg,
+                      color: C.text,
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+
+                  {/* 도구 + 전송 — 컴팩트 모드에서는 2행 (도구 좌 / 전송 우) */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      order: isCompact ? 1 : 0,
+                      width: isCompact ? '100%' : undefined,
+                    }}
+                  >
+                    <button
+                      onClick={() => setEmojiOpen((v) => !v)}
+                      title="이모지"
+                      style={iconBtnStyle(C, emojiOpen)}
+                    >
+                      <HiOutlineEmojiHappy size={20} />
+                    </button>
+                    <button
+                      onClick={() => imageInputRef.current?.click()}
+                      title="이미지 첨부"
+                      style={iconBtnStyle(C)}
+                    >
+                      <HiOutlinePhotograph size={20} />
+                    </button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      title="파일 첨부"
+                      style={iconBtnStyle(C)}
+                    >
+                      <HiOutlinePaperClip size={20} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        console.log('[라이브 버튼 클릭]', {
+                          isLive: broadcast.isLive,
+                          activeConvId,
+                          userUid: user?.uid,
+                          error: broadcast.error,
+                          hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
+                        });
+                        if (broadcast.isLive) {
+                          broadcast.stop();
+                        } else {
+                          broadcast.start();
+                        }
+                      }}
+                      title={broadcast.isLive ? '라이브 시연 종료' : '라이브 시연 시작 (화면 공유)'}
+                      style={{
+                        ...iconBtnStyle(C, broadcast.isLive),
+                        color: broadcast.isLive ? '#ff3d60' : C.textSecondary,
+                      }}
+                    >
+                      <HiOutlineDesktopComputer size={20} />
+                    </button>
+                    {isCompact && <div style={{ flex: 1 }} />}
+                    <button
+                      onClick={handleSendText}
+                      disabled={sending || (!text.trim() && pendingFiles.length === 0)}
+                      style={{
+                        padding: isCompact ? '8px 14px' : '12px 16px',
+                        background: C.accent,
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        cursor: sending ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontWeight: 600,
+                        fontSize: 13,
+                        opacity: sending || (!text.trim() && pendingFiles.length === 0) ? 0.6 : 1,
+                        flexShrink: 0,
+                      }}
+                    >
+                      <HiOutlinePaperAirplane size={16} style={{ transform: 'rotate(90deg)' }} />
+                      {isCompact ? '' : '전송'}
+                    </button>
+                  </div>
                 </div>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                style={{ display: 'none' }}
-                onChange={handleFilesPick}
-              />
-              <input
-                ref={imageInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                style={{ display: 'none' }}
-                onChange={handleFilesPick}
-              />
-              <button
-                onClick={() => setEmojiOpen((v) => !v)}
-                title="이모지"
-                style={iconBtnStyle(C, emojiOpen)}
-              >
-                <HiOutlineEmojiHappy size={20} />
-              </button>
-              <button
-                onClick={() => imageInputRef.current?.click()}
-                title="이미지 첨부"
-                style={iconBtnStyle(C)}
-              >
-                <HiOutlinePhotograph size={20} />
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                title="파일 첨부"
-                style={iconBtnStyle(C)}
-              >
-                <HiOutlinePaperClip size={20} />
-              </button>
-              <button
-                onClick={() => {
-                  console.log('[라이브 버튼 클릭]', {
-                    isLive: broadcast.isLive,
-                    activeConvId,
-                    userUid: user?.uid,
-                    error: broadcast.error,
-                    hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
-                  });
-                  if (broadcast.isLive) {
-                    broadcast.stop();
-                  } else {
-                    broadcast.start();
-                  }
-                }}
-                title={broadcast.isLive ? '라이브 시연 종료' : '라이브 시연 시작 (화면 공유)'}
-                style={{
-                  ...iconBtnStyle(C, broadcast.isLive),
-                  color: broadcast.isLive ? '#ff3d60' : C.textSecondary,
-                }}
-              >
-                <HiOutlineDesktopComputer size={20} />
-              </button>
-              <input
-                type="text"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendText();
-                  }
-                }}
-                placeholder="메시지 입력..."
-                disabled={sending}
-                style={{
-                  flex: 1,
-                  padding: '12px 16px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: C.inputBg,
-                  color: C.text,
-                  fontSize: 14,
-                  outline: 'none',
-                }}
-              />
-              <button
-                onClick={handleSendText}
-                disabled={sending || (!text.trim() && pendingFiles.length === 0)}
-                style={{
-                  padding: '12px 16px',
-                  background: C.accent,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  cursor: sending ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  fontWeight: 600,
-                  fontSize: 13,
-                  opacity: sending || (!text.trim() && pendingFiles.length === 0) ? 0.6 : 1,
-                }}
-              >
-                <HiOutlinePaperAirplane size={16} style={{ transform: 'rotate(90deg)' }} />
-                전송
-              </button>
-            </div>
+              );
+            })()}
           </>
         )}
         </div>
