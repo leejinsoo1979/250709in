@@ -6,7 +6,7 @@
  * - 테마 색 적용 (라이트/다크)
  * - Firebase 로직 유지 + 파일 첨부 + 이모지
  */
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -50,6 +50,8 @@ import {
   HiOutlineDesktopComputer,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlinePhone,
+  HiOutlineVideoCamera,
 } from 'react-icons/hi';
 import {
   subscribeActiveLiveSessionsForConv,
@@ -185,23 +187,52 @@ export default function Messages() {
 
   // 라이브 시연 — 활성 세션 구독
   const [activeLiveSessions, setActiveLiveSessions] = useState<LiveSessionRecord[]>([]);
+  const [acceptedLiveSessionIds, setAcceptedLiveSessionIds] = useState<Set<string>>(() => new Set());
   useEffect(() => {
     if (!activeConvId) {
       setActiveLiveSessions([]);
+      setAcceptedLiveSessionIds(new Set());
       return;
     }
     return subscribeActiveLiveSessionsForConv(activeConvId, setActiveLiveSessions);
   }, [activeConvId]);
+
+  useEffect(() => {
+    const activeIds = new Set(activeLiveSessions.map((s) => s.id));
+    setAcceptedLiveSessionIds((prev) => {
+      const next = new Set(Array.from(prev).filter((id) => activeIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [activeLiveSessions]);
+
+  const sendLiveShareNotice = useCallback(async (sessionId: string, status: 'started' | 'ended') => {
+    if (!activeConvId || !user?.uid) return;
+    const name = user.displayName || user.email || '상대방';
+    const text = status === 'started'
+      ? `${name}님이 화면 공유를 시작했습니다.`
+      : `${name}님이 화면 공유를 종료했습니다.`;
+    await sendMessage(activeConvId, user.uid, text, undefined, {
+      kind: 'live_screen_share',
+      liveSessionId: sessionId,
+      liveStatus: status,
+    });
+  }, [activeConvId, user?.displayName, user?.email, user?.uid]);
 
   // 라이브 시연 — 시연자 훅 (활성 대화방 + 본인 정보)
   const broadcast = useScreenShareBroadcast({
     convId: activeConvId || '',
     broadcasterUid: user?.uid || '',
     broadcasterName: user?.displayName || user?.email || '',
+    onSessionStarted: (sessionId) => sendLiveShareNotice(sessionId, 'started'),
+    onSessionStopped: (sessionId) => sendLiveShareNotice(sessionId, 'ended'),
   });
 
   const visibleLiveSessions = activeLiveSessions;
   const myVisibleLiveSession = visibleLiveSessions.find((s) => s.broadcasterUid === user?.uid) || null;
+  const liveStageSession = myVisibleLiveSession
+    || visibleLiveSessions.find((s) => acceptedLiveSessionIds.has(s.id))
+    || null;
+  const isLiveStageVisible = Boolean(liveStageSession);
 
   // 라이브 에러 발생 시 즉시 표시
   useEffect(() => {
@@ -834,25 +865,25 @@ export default function Messages() {
       {/* ===== 우측 영역 (라이브 있으면 라이브 메인 + 채팅 사이드 / 없으면 채팅 풀) ===== */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'row', background: C.chatBg, minWidth: 0 }}>
         {/* 라이브 스테이지 (메인 무대) */}
-        {activeConv && visibleLiveSessions.length > 0 && (
+        {activeConv && liveStageSession && (
           <LiveStage
-            session={visibleLiveSessions[0]}
+            session={liveStageSession}
             myUid={user.uid}
             broadcasterPreviewStream={
-              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.previewStream : null
+              liveStageSession.broadcasterUid === user.uid ? broadcast.previewStream : null
             }
             broadcasterViewerCount={
-              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.viewerCount : 0
+              liveStageSession.broadcasterUid === user.uid ? broadcast.viewerCount : 0
             }
             onStopBroadcast={
-              visibleLiveSessions[0].broadcasterUid === user.uid ? broadcast.stop : undefined
+              liveStageSession.broadcasterUid === user.uid ? broadcast.stop : undefined
             }
             C={C}
           />
         )}
 
         {/* 라이브 중 우측 채팅 사이드 드래그 핸들 */}
-        {activeConv && visibleLiveSessions.length > 0 && !rightChatCollapsed && (
+        {activeConv && isLiveStageVisible && !rightChatCollapsed && (
           <div
             onMouseDown={(e) => {
               e.preventDefault();
@@ -876,7 +907,7 @@ export default function Messages() {
         )}
 
         {/* 라이브 중 우측 채팅 접힘 상태: 펼치기 버튼만 */}
-        {activeConv && visibleLiveSessions.length > 0 && rightChatCollapsed && (
+        {activeConv && isLiveStageVisible && rightChatCollapsed && (
           <button
             onClick={() => setRightChatCollapsed(false)}
             title="채팅 펼치기"
@@ -901,10 +932,10 @@ export default function Messages() {
         {/* 채팅 영역 (라이브 있으면 우측 N px 사이드, 없으면 풀) */}
         <div
           style={{
-            display: rightChatCollapsed && visibleLiveSessions.length > 0 ? 'none' : 'flex',
+            display: rightChatCollapsed && isLiveStageVisible ? 'none' : 'flex',
             flexDirection: 'column',
             background: C.chatBg,
-            ...(activeConv && visibleLiveSessions.length > 0
+            ...(activeConv && isLiveStageVisible
               ? { width: rightChatWidth, flexShrink: 0 }
               : { flex: 1 }),
             minWidth: 0,
@@ -953,55 +984,52 @@ export default function Messages() {
                   {activeConv.peerEmail || ''}
                 </div>
               </div>
+              {/* Chatvia 스타일 헤더 아이콘들: 검색 / 전화 / 영상(라이브 시연) / 프로필 / 더보기 */}
+              <button title="검색" style={headerIconBtn(C)}>
+                <HiOutlineSearch size={18} />
+              </button>
+              <button title="음성 통화" style={headerIconBtn(C)}>
+                <HiOutlinePhone size={18} />
+              </button>
+              <button
+                onClick={() => {
+                  if (broadcast.isLive || myVisibleLiveSession) broadcast.stop();
+                  else broadcast.start();
+                }}
+                title={broadcast.isLive || myVisibleLiveSession ? '라이브 시연 종료' : '영상/화면 공유'}
+                style={{
+                  ...headerIconBtn(C),
+                  color: broadcast.isLive || myVisibleLiveSession ? '#ff3d60' : C.textSecondary,
+                }}
+              >
+                <HiOutlineVideoCamera size={18} />
+              </button>
+              <button title="프로필" style={headerIconBtn(C)}>
+                <HiOutlineUser size={18} />
+              </button>
               {/* 라이브 중일 때만: 채팅 사이드 접기 */}
-              {visibleLiveSessions.length > 0 && (
+              {isLiveStageVisible && (
                 <button
                   onClick={() => setRightChatCollapsed(true)}
                   title="채팅 접기"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: C.textSecondary,
-                    cursor: 'pointer',
-                    padding: 6,
-                    borderRadius: 6,
-                  }}
+                  style={headerIconBtn(C)}
                 >
-                  <HiOutlineChevronRight size={20} />
+                  <HiOutlineChevronRight size={18} />
                 </button>
               )}
               <button
                 onClick={handleLeaveConversation}
                 disabled={leavingConvId === activeConv.id}
                 style={{
-                  background: 'transparent',
-                  border: 'none',
+                  ...headerIconBtn(C),
                   color: C.accent,
-                  cursor: leavingConvId === activeConv.id ? 'not-allowed' : 'pointer',
-                  padding: '6px 8px',
-                  borderRadius: 6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  fontSize: 12,
-                  fontWeight: 600,
                   opacity: leavingConvId === activeConv.id ? 0.55 : 1,
                 }}
                 title="채팅방 나가기"
               >
                 <HiOutlineLogout size={18} />
-                나가기
               </button>
-              <button
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: C.textSecondary,
-                  cursor: 'pointer',
-                  padding: 6,
-                }}
-                title="더보기"
-              >
+              <button title="더보기" style={headerIconBtn(C)}>
                 <HiOutlineDotsVertical size={20} />
               </button>
             </div>
@@ -1029,13 +1057,23 @@ export default function Messages() {
                       message={m}
                       mine={mine}
                       C={C}
-                      showAvatar={!mine && isLastInGroup}
+                      showAvatar={!mine}
                       showSenderName={isLastInGroup}
                       senderLabel={senderLabel}
                       peerName={activeConv.peerName}
                       peerEmail={activeConv.peerEmail}
                       peerPhotoURL={activeConv.peerPhotoURL}
                       compact={prevSameSender}
+                      isNarrow={isLiveStageVisible}
+                      onAcceptLiveSession={(sessionId) => {
+                        setAcceptedLiveSessionIds((prev) => {
+                          const next = new Set(prev);
+                          next.add(sessionId);
+                          return next;
+                        });
+                      }}
+                      isLiveSessionActive={Boolean(m.liveSessionId && visibleLiveSessions.some((s) => s.id === m.liveSessionId))}
+                      isLiveSessionAccepted={Boolean(m.liveSessionId && acceptedLiveSessionIds.has(m.liveSessionId))}
                     />
                   );
                 })
@@ -1099,7 +1137,7 @@ export default function Messages() {
 
             {/* 입력창 — 라이브 중 우측 사이드 모드면 2단 (입력 위 / 도구·전송 아래) */}
             {(() => {
-              const isCompact = visibleLiveSessions.length > 0;
+              const isCompact = isLiveStageVisible;
               return (
                 <div
                   style={{
@@ -1215,7 +1253,7 @@ export default function Messages() {
                           hasGetDisplayMedia: !!navigator.mediaDevices?.getDisplayMedia,
                         });
                         if (broadcast.isLive || myVisibleLiveSession) {
-                          broadcast.stop();
+                          broadcast.stop(myVisibleLiveSession?.id || undefined);
                         } else {
                           broadcast.start();
                         }
@@ -1318,6 +1356,23 @@ function iconBtnStyle(C: any, active?: boolean): React.CSSProperties {
   };
 }
 
+function headerIconBtn(C: any): React.CSSProperties {
+  return {
+    width: 36,
+    height: 36,
+    borderRadius: 6,
+    background: 'transparent',
+    border: 'none',
+    color: C.textSecondary,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    transition: 'background 0.15s, color 0.15s',
+  };
+}
+
 function ChatviaBubble({
   message,
   mine,
@@ -1329,6 +1384,10 @@ function ChatviaBubble({
   peerEmail,
   peerPhotoURL,
   compact,
+  isNarrow,
+  onAcceptLiveSession,
+  isLiveSessionActive,
+  isLiveSessionAccepted,
 }: {
   message: MessageRecord;
   mine: boolean;
@@ -1340,34 +1399,100 @@ function ChatviaBubble({
   peerEmail?: string;
   peerPhotoURL?: string;
   compact: boolean;
+  isNarrow?: boolean;
+  onAcceptLiveSession?: (sessionId: string) => void;
+  isLiveSessionActive?: boolean;
+  isLiveSessionAccepted?: boolean;
 }) {
   const [hover, setHover] = useState(false);
+  if (message.kind === 'live_screen_share') {
+    const canAccept = !mine
+      && message.liveStatus === 'started'
+      && Boolean(message.liveSessionId)
+      && Boolean(isLiveSessionActive)
+      && !isLiveSessionAccepted;
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginBottom: compact ? 6 : 14,
+          padding: isNarrow ? '0 4px' : 0,
+        }}
+      >
+        <div
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 10,
+            maxWidth: isNarrow ? '100%' : '72%',
+            padding: '10px 14px',
+            borderRadius: 8,
+            background: C.leftNavActiveBg,
+            color: C.text,
+            border: `1px solid ${C.sidebarBorder}`,
+            fontSize: 13,
+            lineHeight: 1.35,
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+          }}
+        >
+          <HiOutlineDesktopComputer size={18} color={C.accent} />
+          <span>{message.text}</span>
+          {canAccept && (
+            <button
+              type="button"
+              onClick={() => message.liveSessionId && onAcceptLiveSession?.(message.liveSessionId)}
+              style={{
+                border: 'none',
+                borderRadius: 6,
+                background: C.accent,
+                color: '#fff',
+                padding: '6px 10px',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              수락
+            </button>
+          )}
+          {!mine && message.liveStatus === 'started' && isLiveSessionAccepted && (
+            <span style={{ color: C.accent, fontSize: 12, fontWeight: 700 }}>연결됨</span>
+          )}
+          {message.liveStatus === 'started' && !isLiveSessionActive && (
+            <span style={{ color: C.textSecondary, fontSize: 12 }}>종료됨</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  const avatarSize = isNarrow ? 32 : 40;
+  // Chatvia 스타일: 양쪽 모두 테마 primary 색
+  const bubbleBg = C.bubbleOutgoingBg;
+  const bubbleColor = '#ffffff';
+  const timeColor = 'rgba(255,255,255,0.85)';
   return (
     <div
       style={{
         display: 'flex',
         justifyContent: mine ? 'flex-end' : 'flex-start',
-        marginBottom: compact ? 4 : 16,
-        gap: 12,
-        alignItems: 'flex-end',
+        marginBottom: compact ? 6 : 18,
+        gap: 0,
+        alignItems: 'flex-start',
       }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
     >
-      {!mine && (
-        <div style={{ width: 40, flexShrink: 0 }}>
-          {showAvatar && (
-            <InitialAvatar name={peerName} email={peerEmail} photoURL={peerPhotoURL} size={40} />
-          )}
-        </div>
-      )}
       <div
         style={{
-          maxWidth: '65%',
+          maxWidth: isNarrow ? '85%' : '72%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: mine ? 'flex-end' : 'flex-start',
+          minWidth: 0,
         }}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
       >
         {/* 첨부 */}
         {message.attachments && message.attachments.length > 0 && (
@@ -1377,6 +1502,8 @@ function ChatviaBubble({
               flexDirection: 'column',
               gap: 6,
               marginBottom: message.text ? 6 : 0,
+              alignSelf: mine ? 'flex-end' : 'flex-start',
+              marginLeft: !mine ? avatarSize + 14 : 0,
             }}
           >
             {message.attachments.map((att, i) => (
@@ -1384,73 +1511,104 @@ function ChatviaBubble({
             ))}
           </div>
         )}
-        {/* 텍스트 말풍선 */}
+        {/* 텍스트 말풍선 + 더보기 (한 줄) */}
         {message.text && (
           <div
             style={{
               display: 'flex',
-              alignItems: 'center',
-              gap: 8,
+              alignItems: 'flex-start',
+              gap: 6,
               flexDirection: mine ? 'row-reverse' : 'row',
+              maxWidth: '100%',
+              marginLeft: !mine ? avatarSize + 14 : 0,
             }}
           >
             <div
               style={{
-                padding: '14px 18px',
+                padding: isNarrow ? '12px 16px' : '14px 20px',
                 borderRadius: 12,
-                background: C.bubbleOutgoingBg,
-                color: '#ffffff',
+                // 꼬리: 인커밍은 좌측 하단 0, 아웃고잉은 우측 하단 0
+                borderBottomLeftRadius: mine ? 12 : 0,
+                borderBottomRightRadius: mine ? 0 : 12,
+                background: bubbleBg,
+                color: bubbleColor,
                 fontSize: 14,
+                fontWeight: 500,
                 wordBreak: 'break-word',
                 whiteSpace: 'pre-wrap',
-                minWidth: 120,
                 position: 'relative',
+                lineHeight: 1.5,
               }}
             >
-              <div style={{ marginBottom: 8 }}>{message.text}</div>
+              <div style={{ marginBottom: 6 }}>{message.text}</div>
               <div
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 4,
                   fontSize: 11,
-                  color: 'rgba(255,255,255,0.7)',
-                  justifyContent: 'flex-end',
+                  color: timeColor,
+                  justifyContent: 'center',
                 }}
               >
                 <HiOutlineClock size={12} />
                 {message.createdAt ? formatTime(message.createdAt) : ''}
               </div>
             </div>
-            {/* 더보기 메뉴 (호버 시 표시) */}
-            <button
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: C.textSecondary,
-                cursor: 'pointer',
-                padding: 4,
-                opacity: hover ? 1 : 0,
-                transition: 'opacity 0.15s',
-              }}
-              title="더보기"
-            >
-              <HiOutlineDotsVertical size={16} />
-            </button>
+            {/* 더보기 메뉴 (호버, 좁은 모드 숨김) */}
+            {!isNarrow && (
+              <button
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: C.textSecondary,
+                  cursor: 'pointer',
+                  padding: 4,
+                  opacity: hover ? 1 : 0,
+                  transition: 'opacity 0.15s',
+                  flexShrink: 0,
+                  alignSelf: 'flex-start',
+                  marginTop: 8,
+                }}
+                title="더보기"
+              >
+                <HiOutlineDotsVertical size={16} />
+              </button>
+            )}
           </div>
         )}
-        {/* 발신자 이름 (인커밍 그룹 마지막에만, 아바타 옆) */}
-        {!mine && showSenderName && (
+        {/* 인커밍 메시지: 아바타 + 발신자 이름 (말풍선 좌측 하단에 겹쳐 배치) */}
+        {!mine && (
           <div
             style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: C.text,
-              marginTop: 8,
-              marginLeft: 4,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginTop: -6,
+              marginLeft: 0,
+              position: 'relative',
+              zIndex: 1,
             }}
           >
-            {senderLabel}
+            <div style={{ width: avatarSize, flexShrink: 0 }}>
+              <InitialAvatar
+                name={peerName}
+                email={peerEmail}
+                photoURL={peerPhotoURL}
+                size={avatarSize}
+              />
+            </div>
+            {showSenderName && (
+              <div
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: C.text,
+                }}
+              >
+                {senderLabel}
+              </div>
+            )}
           </div>
         )}
       </div>
