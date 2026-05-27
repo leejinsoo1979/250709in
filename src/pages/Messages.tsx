@@ -1578,6 +1578,9 @@ function ChatviaBubble({
                 style={{
                   padding: isNarrow ? '12px 16px' : '14px 20px',
                   borderRadius: 8,
+                  // 꼬리 쪽 하단 모서리만 직각 (삼각형과 자연스럽게 연결)
+                  borderBottomLeftRadius: mine ? 8 : 0,
+                  borderBottomRightRadius: mine ? 0 : 8,
                   background: bubbleBg,
                   color: bubbleColor,
                   fontSize: 14,
