@@ -387,7 +387,7 @@ export default function Messages() {
     leftNavActiveBg: isDark ? 'rgba(114,105,239,0.25)' : 'rgba(114,105,239,0.18)',
     convItemActiveBg: isDark ? 'rgba(114,105,239,0.18)' : 'rgba(114,105,239,0.06)',
     convItemHoverBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-    sidebarBg: isDark ? '#1d3447' : '#ffffff',
+    sidebarBg: isDark ? '#363f4a' : '#ffffff',
     sidebarBorder: isDark ? 'rgba(255,255,255,0.05)' : '#e6ebf5',
     chatBg: isDark ? '#262e34' : '#f5f7fb',
     chatHeaderBg: isDark ? '#262e34' : '#ffffff',
