@@ -173,20 +173,29 @@ export default function Messages() {
     const style = document.createElement('style');
     style.id = styleId;
     style.textContent = `
-      .messages-search-input,
-      .messages-search-input:focus,
-      .messages-search-input:active,
-      .messages-search-input:hover {
+      input.messages-search-input,
+      input.messages-search-input:focus,
+      input.messages-search-input:active,
+      input.messages-search-input:hover,
+      input.messages-search-input:focus-visible {
         background-color: transparent !important;
+        background-image: none !important;
         background: transparent !important;
         box-shadow: none !important;
+        border: none !important;
+        outline: none !important;
+        -webkit-appearance: none !important;
+        appearance: none !important;
       }
-      .messages-search-input:-webkit-autofill,
-      .messages-search-input:-webkit-autofill:hover,
-      .messages-search-input:-webkit-autofill:focus {
+      input.messages-search-input:-webkit-autofill,
+      input.messages-search-input:-webkit-autofill:hover,
+      input.messages-search-input:-webkit-autofill:focus,
+      input.messages-search-input:-webkit-autofill:active {
         -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
         -webkit-text-fill-color: inherit !important;
-        transition: background-color 5000s ease-in-out 0s !important;
+        background-color: transparent !important;
+        background: transparent !important;
+        transition: background-color 9999s ease-in-out 0s !important;
       }
     `;
     document.head.appendChild(style);
@@ -562,7 +571,7 @@ export default function Messages() {
         {/* 하단 라이트/다크 토글 */}
         <button
           onClick={toggleMode}
-          title={isDark ? '라이트 모드' : '다크 모드'}
+          title={isDark ? '다크 모드' : '라이트 모드'}
           style={{
             width: 46,
             height: 46,
@@ -577,7 +586,7 @@ export default function Messages() {
             marginBottom: 12,
           }}
         >
-          {isDark ? <HiOutlineSun size={22} /> : <HiOutlineMoon size={22} />}
+          {isDark ? <HiOutlineMoon size={22} /> : <HiOutlineSun size={22} />}
         </button>
 
         {/* 최하단 사용자 아바타 */}
