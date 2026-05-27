@@ -40,7 +40,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     // 3번째 줄
     { id: 'wine', name: '바이올렛', color: '#845EC2' },
     { id: 'purple', name: '딥퍼플', color: '#8b5cf6' },
-    { id: 'pink', name: '코랄핑크', color: '#ec4899' },
+    { id: 'pink', name: '브랜드퍼플', color: '#7369ee' },
     { id: 'red', name: '레드', color: '#D2042D' },
     { id: 'maroon', name: '다크레드', color: '#3F0D0D' },
     { id: 'turquoise', name: '터콰이즈', color: '#003A7A' },

@@ -144,7 +144,7 @@ const Navbar1 = ({
     { id: 'blue', color: '#3b82f6' },
     { id: 'purple', color: '#8b5cf6' },
     { id: 'green', color: '#10b981' },
-    { id: 'pink', color: '#ec4899' },
+    { id: 'pink', color: '#7369ee' },
     { id: 'red', color: '#D2042D' },
     { id: 'teal', color: '#14b8a6' },
     { id: 'indigo', color: '#6366f1' },

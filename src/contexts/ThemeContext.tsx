@@ -71,7 +71,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       purple: '#8b5cf6',
       vivid: '#a25378',
       red: '#D2042D',
-      pink: '#ec4899',
+      pink: '#7369ee',
       indigo: '#6366f1',
       teal: '#14b8a6',
       yellow: '#eab308',
@@ -166,10 +166,10 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
       primaryDark: '#7E021B',
     },
     pink: {
-      primary: '#ec4899',
-      primaryHover: '#db2777',
-      primaryLight: theme.mode === 'dark' ? 'rgba(236, 72, 153, 0.2)' : '#fce7f3',
-      primaryDark: '#be185d',
+      primary: '#7369ee',
+      primaryHover: '#5f55d8',
+      primaryLight: theme.mode === 'dark' ? 'rgba(115, 105, 238, 0.2)' : '#e8e7ff',
+      primaryDark: '#493fc2',
     },
     indigo: {
       primary: '#6366f1',
@@ -476,4 +476,3 @@ const applyThemeToDocument = (theme: ThemeConfig) => {
   }, 200);
   
 };
-
