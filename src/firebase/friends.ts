@@ -78,6 +78,9 @@ export interface MessageRecord {
   createdAt?: Date | null;
   readBy?: string[];
   attachments?: MessageAttachment[];
+  kind?: 'text' | 'live_screen_share';
+  liveSessionId?: string;
+  liveStatus?: 'started' | 'ended';
 }
 
 /** 메시지 첨부 파일 업로드 (Firebase Storage → MessageAttachment 반환) */
@@ -311,6 +314,11 @@ export async function sendMessage(
   senderId: string,
   text: string,
   attachments?: MessageAttachment[],
+  options?: {
+    kind?: MessageRecord['kind'];
+    liveSessionId?: string;
+    liveStatus?: MessageRecord['liveStatus'];
+  },
 ): Promise<void> {
   const trimmed = (text || '').trim();
   const hasAttachments = Array.isArray(attachments) && attachments.length > 0;
@@ -326,6 +334,9 @@ export async function sendMessage(
     createdAt: serverTimestamp(),
     readBy: [senderId],
   };
+  if (options?.kind) messagePayload.kind = options.kind;
+  if (options?.liveSessionId) messagePayload.liveSessionId = options.liveSessionId;
+  if (options?.liveStatus) messagePayload.liveStatus = options.liveStatus;
   if (hasAttachments) {
     messagePayload.attachments = attachments;
   }
@@ -391,6 +402,9 @@ export function subscribeMessages(convId: string, cb: (list: MessageRecord[]) =>
         createdAt: tsToDate(data.createdAt),
         readBy: data.readBy || [],
         attachments: Array.isArray(data.attachments) ? data.attachments : undefined,
+        kind: data.kind || 'text',
+        liveSessionId: data.liveSessionId || undefined,
+        liveStatus: data.liveStatus || undefined,
       };
     });
     cb(list);

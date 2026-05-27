@@ -23,7 +23,7 @@ interface LiveStageProps {
   /** 시연자 본인의 시청자 수 */
   broadcasterViewerCount?: number;
   /** 시연자 종료 핸들러 */
-  onStopBroadcast?: () => void;
+  onStopBroadcast?: (sessionId: string) => void | Promise<void>;
   C: any;
 }
 
@@ -34,6 +34,7 @@ export default function LiveStage(props: LiveStageProps) {
   if (isMyBroadcast) {
     return (
       <BroadcasterStage
+        sessionId={session.id}
         stream={broadcasterPreviewStream || null}
         viewerCount={broadcasterViewerCount || 0}
         onStop={onStopBroadcast}
@@ -48,14 +49,16 @@ export default function LiveStage(props: LiveStageProps) {
 // 시연자 — 메인 스테이지 미리보기
 // ===========================================================
 function BroadcasterStage({
+  sessionId,
   stream,
   viewerCount,
   onStop,
   C,
 }: {
+  sessionId: string;
   stream: MediaStream | null;
   viewerCount: number;
-  onStop?: () => void;
+  onStop?: (sessionId: string) => void | Promise<void>;
   C: any;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -90,7 +93,7 @@ function BroadcasterStage({
               e.stopPropagation();
               if (stopping) return;
               setStopping(true);
-              if (onStop) await onStop();
+              if (onStop) await onStop(sessionId);
               else alert('종료 핸들러가 연결되지 않았습니다.');
             }}
             style={{

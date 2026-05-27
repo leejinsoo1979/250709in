@@ -26,6 +26,8 @@ export interface UseScreenShareBroadcastOptions {
   includeMicrophone?: boolean;
   /** 시스템 오디오 (화면 공유 시) 포함 (기본 true) */
   includeSystemAudio?: boolean;
+  onSessionStarted?: (sessionId: string) => void | Promise<void>;
+  onSessionStopped?: (sessionId: string) => void | Promise<void>;
 }
 
 export interface BroadcastState {
@@ -38,7 +40,15 @@ export interface BroadcastState {
 }
 
 export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
-  const { convId, broadcasterUid, broadcasterName, includeMicrophone = true, includeSystemAudio = true } = opts;
+  const {
+    convId,
+    broadcasterUid,
+    broadcasterName,
+    includeMicrophone = true,
+    includeSystemAudio = true,
+    onSessionStarted,
+    onSessionStopped,
+  } = opts;
 
   const [state, setState] = useState<BroadcastState>({
     isLive: false,
@@ -56,6 +66,7 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
   // viewerUid → unsubscribe
   const signalUnsubsRef = useRef<Map<string, () => void>>(new Map());
   const viewersUnsubRef = useRef<(() => void) | null>(null);
+  const stoppingRef = useRef(false);
 
   /** 특정 viewer에 대한 PeerConnection 생성 + offer 전송 */
   const createPeerForViewer = useCallback(async (viewerUid: string) => {
@@ -70,7 +81,18 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
     // 모든 track 추가 (화면 비디오 + 시스템 오디오 + 마이크)
     stream.getTracks().forEach((track) => {
       try {
-        pc.addTrack(track, stream);
+        const sender = pc.addTrack(track, stream);
+        if (track.kind === 'video') {
+          track.contentHint = 'detail';
+          const params = sender.getParameters();
+          params.encodings = params.encodings && params.encodings.length > 0 ? params.encodings : [{}];
+          params.encodings[0].maxBitrate = 6_000_000;
+          params.encodings[0].maxFramerate = 30;
+          (params as any).degradationPreference = 'balanced';
+          void sender.setParameters(params).catch((err) => {
+            console.warn('[broadcast] video sender 저지연 파라미터 적용 실패', err);
+          });
+        }
       } catch (e) {
         console.warn('[broadcast] addTrack 실패', e);
       }
@@ -135,28 +157,31 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
   }, [broadcasterUid]);
 
   /** 시연 시작 */
-  const start = useCallback(async () => {
-    if (state.isLive) return;
+  const start = useCallback(async (): Promise<string | null> => {
+    if (state.isLive) return sessionIdRef.current;
     setState((s) => ({ ...s, error: null }));
 
     if (!navigator.mediaDevices?.getDisplayMedia) {
       setState((s) => ({ ...s, error: '이 브라우저는 화면 공유를 지원하지 않습니다.' }));
-      return;
+      return null;
     }
 
     let displayStream: MediaStream | null = null;
     let micStream: MediaStream | null = null;
     try {
-      // 화면 캡처 (줌과 동일한 선택창: 전체화면/창/탭)
+      // 화면 캡처: 화면 글자/선명도를 위해 1080p를 유지하고 FPS/비트레이트로 지연을 제어
       displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: {
           // @ts-expect-error cursor는 표준 외 옵션이지만 Chrome/Edge 지원
           cursor: 'always',
-          frameRate: { ideal: 30, max: 60 },
-          width: { ideal: 1920, max: 3840 },
-          height: { ideal: 1080, max: 2160 },
+          frameRate: { ideal: 30, max: 30 },
+          width: { ideal: 1920, max: 1920 },
+          height: { ideal: 1080, max: 1080 },
         },
         audio: includeSystemAudio,
+      });
+      displayStream.getVideoTracks().forEach((track) => {
+        track.contentHint = 'detail';
       });
 
       // 마이크 추가
@@ -184,7 +209,7 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
       // 사용자가 브라우저 화면 공유창에서 "중지" 누르면 자동 종료
       displayStream.getVideoTracks().forEach((track) => {
         track.onended = () => {
-          stop();
+          stop(sessionIdRef.current || undefined);
         };
       });
 
@@ -227,6 +252,14 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
           }
         });
       });
+      if (onSessionStarted) {
+        try {
+          await onSessionStarted(sessionId);
+        } catch (err) {
+          console.warn('[broadcast] 시작 알림 전송 실패', err);
+        }
+      }
+      return sessionId;
     } catch (err: any) {
       console.error('[broadcast] start 실패', err);
       // 권한 거부 시 displayStream 정리
@@ -240,52 +273,80 @@ export function useScreenShareBroadcast(opts: UseScreenShareBroadcastOptions) {
         ? '화면 공유 권한이 거부되었습니다.'
         : (err?.message || '화면 공유를 시작할 수 없습니다.');
       setState((s) => ({ ...s, error: msg, isLive: false, previewStream: null }));
+      return null;
     }
-  }, [state.isLive, convId, broadcasterUid, broadcasterName, includeMicrophone, includeSystemAudio, createPeerForViewer]);
+  }, [
+    state.isLive,
+    convId,
+    broadcasterUid,
+    broadcasterName,
+    includeMicrophone,
+    includeSystemAudio,
+    createPeerForViewer,
+    onSessionStarted,
+  ]);
 
   /** 시연 종료 */
-  const stop = useCallback(async () => {
-    const sessionId = sessionIdRef.current;
+  const stop = useCallback(async (targetSessionId?: string) => {
+    if (stoppingRef.current) return;
+    stoppingRef.current = true;
+    const sessionId = targetSessionId || sessionIdRef.current;
     console.log('[broadcast.stop] 시작', { sessionId });
 
-    // viewers 구독 해제
-    if (viewersUnsubRef.current) {
-      try { viewersUnsubRef.current(); } catch {}
-      viewersUnsubRef.current = null;
+    try {
+      // viewers 구독 해제
+      if (viewersUnsubRef.current) {
+        try { viewersUnsubRef.current(); } catch {}
+        viewersUnsubRef.current = null;
+      }
+
+      // 모든 signal 구독 해제
+      signalUnsubsRef.current.forEach((unsub) => { try { unsub(); } catch {} });
+      signalUnsubsRef.current.clear();
+
+      // 모든 PeerConnection close
+      peerConnectionsRef.current.forEach((pc) => { try { pc.close(); } catch {} });
+      peerConnectionsRef.current.clear();
+
+      // tracks stop
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+        streamRef.current = null;
+      }
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
+        micStreamRef.current = null;
+      }
+
+      // 세션 종료 마킹
+      if (sessionId) {
+        try {
+          await endLiveSession(sessionId);
+        } catch (err) {
+          console.error('[broadcast.stop] 세션 종료 마킹 실패', err);
+          setState((s) => ({ ...s, error: '라이브 세션 종료 처리에 실패했습니다.' }));
+        }
+        if (onSessionStopped) {
+          try {
+            await onSessionStopped(sessionId);
+          } catch (err) {
+            console.warn('[broadcast.stop] 종료 알림 전송 실패', err);
+          }
+        }
+      }
+    } finally {
+      sessionIdRef.current = null;
+
+      setState({
+        isLive: false,
+        sessionId: null,
+        error: null,
+        viewerCount: 0,
+        previewStream: null,
+      });
+      stoppingRef.current = false;
     }
-
-    // 모든 signal 구독 해제
-    signalUnsubsRef.current.forEach((unsub) => { try { unsub(); } catch {} });
-    signalUnsubsRef.current.clear();
-
-    // 모든 PeerConnection close
-    peerConnectionsRef.current.forEach((pc) => { try { pc.close(); } catch {} });
-    peerConnectionsRef.current.clear();
-
-    // tracks stop
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
-      streamRef.current = null;
-    }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch {} });
-      micStreamRef.current = null;
-    }
-
-    // 세션 종료 마킹
-    if (sessionId) {
-      await endLiveSession(sessionId);
-    }
-    sessionIdRef.current = null;
-
-    setState({
-      isLive: false,
-      sessionId: null,
-      error: null,
-      viewerCount: 0,
-      previewStream: null,
-    });
-  }, []);
+  }, [onSessionStopped]);
 
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {

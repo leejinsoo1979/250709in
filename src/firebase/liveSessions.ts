@@ -90,6 +90,7 @@ export async function endLiveSession(sessionId: string): Promise<void> {
     });
   } catch (e) {
     console.warn('[liveSessions] endLiveSession 실패', e);
+    throw e;
   }
 }
 
