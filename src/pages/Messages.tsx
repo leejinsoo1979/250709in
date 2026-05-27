@@ -153,6 +153,7 @@ export default function Messages() {
   const [startingFriendUid, setStartingFriendUid] = useState<string | null>(null);
   // 사이드바 토글 (대화 목록)
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [peerProfileOpen, setPeerProfileOpen] = useState(false);
   // 라이브 중 우측 채팅 사이드 토글 + 드래그 너비
   const [rightChatCollapsed, setRightChatCollapsed] = useState(false);
   const [rightChatWidth, setRightChatWidth] = useState<number>(() => {
@@ -978,20 +979,36 @@ export default function Messages() {
                 gap: 12,
               }}
             >
-              <InitialAvatar
-                name={activeConv.peerName}
-                email={activeConv.peerEmail}
-                photoURL={activeConv.peerPhotoURL}
-                size={40}
-              />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 600, fontSize: 15, color: C.text }}>
-                  {activeConv.peerName || '(이름 없음)'}
+              <button
+                onClick={() => setPeerProfileOpen((v) => !v)}
+                title="프로필 보기"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  flex: 1,
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                }}
+              >
+                <InitialAvatar
+                  name={activeConv.peerName}
+                  email={activeConv.peerEmail}
+                  photoURL={activeConv.peerPhotoURL}
+                  size={40}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: 15, color: C.text }}>
+                    {activeConv.peerName || '(이름 없음)'}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.textSecondary }}>
+                    {activeConv.peerEmail || ''}
+                  </div>
                 </div>
-                <div style={{ fontSize: 12, color: C.textSecondary }}>
-                  {activeConv.peerEmail || ''}
-                </div>
-              </div>
+              </button>
               {/* Chatvia 스타일 헤더 아이콘들: 검색 / 전화 / 영상(라이브 시연) / 프로필 / 더보기 */}
               <button title="검색" style={headerIconBtn(C)}>
                 <HiOutlineSearch size={18} />
@@ -1195,42 +1212,17 @@ export default function Messages() {
                     onChange={handleFilesPick}
                   />
 
-                  {/* 입력박스 — 컴팩트 모드에서는 1행 단독 */}
-                  <input
-                    type="text"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendText();
-                      }
-                    }}
-                    placeholder="메시지 입력..."
-                    disabled={sending}
-                    style={{
-                      flex: isCompact ? undefined : 1,
-                      width: isCompact ? '100%' : undefined,
-                      order: isCompact ? 0 : 4,
-                      padding: '10px 14px',
-                      borderRadius: 8,
-                      border: 'none',
-                      background: C.inputBg,
-                      color: C.text,
-                      fontSize: 14,
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
-                  />
+                  {/* 일반 모드: [도구] [입력박스] [전송] 한 줄
+                       컴팩트 모드: 입력박스 1행 / [도구... spacer ...전송] 2행 */}
 
-                  {/* 도구 + 전송 — 컴팩트 모드에서는 2행 (도구 좌 / 전송 우) */}
+                  {/* 도구 묶음 (이모지/이미지/파일/라이브) */}
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: 6,
                       order: isCompact ? 1 : 0,
-                      width: isCompact ? '100%' : undefined,
+                      flexShrink: 0,
                     }}
                   >
                     <button
@@ -1277,36 +1269,76 @@ export default function Messages() {
                     >
                       <HiOutlineDesktopComputer size={20} />
                     </button>
+                    {/* 컴팩트 모드에서만 도구와 전송 사이 spacer */}
                     {isCompact && <div style={{ flex: 1 }} />}
+                    {/* 컴팩트 모드에서는 전송 버튼이 도구 묶음 안에 (우측 끝) */}
+                    {isCompact && (
+                      <button
+                        onClick={handleSendText}
+                        disabled={sending || (!text.trim() && pendingFiles.length === 0)}
+                        style={sendBtnStyle(C, true, sending || (!text.trim() && pendingFiles.length === 0))}
+                      >
+                        <HiOutlinePaperAirplane size={16} style={{ transform: 'rotate(90deg)' }} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 입력박스 */}
+                  <input
+                    type="text"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendText();
+                      }
+                    }}
+                    placeholder="메시지 입력..."
+                    disabled={sending}
+                    style={{
+                      flex: isCompact ? undefined : 1,
+                      width: isCompact ? '100%' : undefined,
+                      order: isCompact ? 0 : 1,
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: C.inputBg,
+                      color: C.text,
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+
+                  {/* 일반 모드: 입력박스 우측에 전송 버튼 */}
+                  {!isCompact && (
                     <button
                       onClick={handleSendText}
                       disabled={sending || (!text.trim() && pendingFiles.length === 0)}
-                      style={{
-                        padding: isCompact ? '8px 14px' : '12px 16px',
-                        background: C.accent,
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 8,
-                        cursor: sending ? 'not-allowed' : 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        fontWeight: 600,
-                        fontSize: 13,
-                        opacity: sending || (!text.trim() && pendingFiles.length === 0) ? 0.6 : 1,
-                        flexShrink: 0,
-                      }}
+                      style={{ ...sendBtnStyle(C, false, sending || (!text.trim() && pendingFiles.length === 0)), order: 2 }}
                     >
                       <HiOutlinePaperAirplane size={16} style={{ transform: 'rotate(90deg)' }} />
-                      {isCompact ? '' : '전송'}
+                      전송
                     </button>
-                  </div>
+                  )}
                 </div>
               );
             })()}
           </>
         )}
         </div>
+
+        {/* 상대방 프로필 패널 (헤더 이름 클릭 시) */}
+        {activeConv && peerProfileOpen && (
+          <PeerProfilePanel
+            peerName={activeConv.peerName}
+            peerEmail={activeConv.peerEmail}
+            peerPhotoURL={activeConv.peerPhotoURL}
+            onClose={() => setPeerProfileOpen(false)}
+            C={C}
+          />
+        )}
       </div>
 
       {showAddFriend && <AddFriendModal onClose={() => setShowAddFriend(false)} />}
@@ -1381,6 +1413,24 @@ function headerIconBtn(C: any): React.CSSProperties {
     justifyContent: 'center',
     flexShrink: 0,
     transition: 'background 0.15s, color 0.15s',
+  };
+}
+
+function sendBtnStyle(C: any, compact: boolean, disabled: boolean): React.CSSProperties {
+  return {
+    padding: compact ? '8px 14px' : '12px 16px',
+    background: C.accent,
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 6,
+    fontWeight: 600,
+    fontSize: 13,
+    opacity: disabled ? 0.6 : 1,
+    flexShrink: 0,
   };
 }
 
@@ -1759,6 +1809,142 @@ function ChatviaBubble({
                 {senderLabel}
               </div>
             )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PeerProfilePanel({
+  peerName,
+  peerEmail,
+  peerPhotoURL,
+  onClose,
+  C,
+}: {
+  peerName?: string;
+  peerEmail?: string;
+  peerPhotoURL?: string;
+  onClose: () => void;
+  C: any;
+}) {
+  const [aboutOpen, setAboutOpen] = useState(true);
+  const [filesOpen, setFilesOpen] = useState(false);
+  const now = new Date();
+  const timeStr = `${String(now.getHours() % 12 || 12).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} ${now.getHours() >= 12 ? 'PM' : 'AM'}`;
+  return (
+    <div
+      style={{
+        width: 360,
+        background: C.sidebarBg,
+        borderLeft: `1px solid ${C.sidebarBorder}`,
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+        overflowY: 'auto',
+      }}
+    >
+      {/* 헤더 (닫기) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '12px 16px 0' }}>
+        <button
+          onClick={onClose}
+          title="닫기"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: C.textSecondary,
+            cursor: 'pointer',
+            padding: 6,
+            borderRadius: 6,
+            fontSize: 22,
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* 아바타 + 이름 + Active */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 16px 20px', borderBottom: `1px solid ${C.sidebarBorder}` }}>
+        <InitialAvatar name={peerName} email={peerEmail} photoURL={peerPhotoURL} size={92} />
+        <div style={{ marginTop: 14, fontSize: 18, fontWeight: 700, color: C.text }}>{peerName || '(이름 없음)'}</div>
+        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: C.textSecondary }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+          Active
+        </div>
+      </div>
+
+      {/* 자기소개 */}
+      <div style={{ padding: '20px 16px', borderBottom: `1px solid ${C.sidebarBorder}`, fontSize: 13, color: C.textSecondary, lineHeight: 1.55 }}>
+        If several languages coalesce, the grammar of the resulting language is more simple and regular than that of the individual.
+      </div>
+
+      {/* About 아코디언 */}
+      <div style={{ borderBottom: `1px solid ${C.sidebarBorder}` }}>
+        <button
+          onClick={() => setAboutOpen((v) => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: C.text,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <HiOutlineUser size={16} /> About
+          </span>
+          <HiOutlineChevronRight
+            size={16}
+            style={{ transform: aboutOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
+          />
+        </button>
+        {aboutOpen && (
+          <div style={{ padding: '0 16px 16px' }}>
+            <ProfileField label="Name" value={peerName || '—'} C={C} />
+            <ProfileField label="Email" value={peerEmail || '—'} C={C} />
+            <ProfileField label="Time" value={timeStr} C={C} />
+            <ProfileField label="Location" value="—" C={C} />
+          </div>
+        )}
+      </div>
+
+      {/* Attached Files 아코디언 */}
+      <div>
+        <button
+          onClick={() => setFilesOpen((v) => !v)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '14px 16px',
+            background: 'transparent',
+            border: 'none',
+            color: C.text,
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <HiOutlinePaperClip size={16} /> Attached Files
+          </span>
+          <HiOutlineChevronRight
+            size={16}
+            style={{ transform: filesOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.15s' }}
+          />
+        </button>
+        {filesOpen && (
+          <div style={{ padding: '0 16px 16px', fontSize: 13, color: C.textSecondary }}>
+            첨부된 파일이 없습니다.
           </div>
         )}
       </div>
