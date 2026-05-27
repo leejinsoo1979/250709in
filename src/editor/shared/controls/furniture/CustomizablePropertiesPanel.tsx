@@ -4646,7 +4646,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     {placedModule.hasLeftEndPanel && (
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                         <div>
-                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 앞</span>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 옵셋 (앞 →)</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                             <EpOffsetInput
                               value={placedModule.leftEndPanelOffset ?? 0}
@@ -4656,7 +4656,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           </div>
                         </div>
                         <div>
-                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 뒤</span>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 옵셋 (뒤 ←)</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                             <EpOffsetInput
                               value={placedModule.leftEndPanelBackOffset ?? 0}
@@ -4671,7 +4671,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     {placedModule.hasRightEndPanel && (
                       <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                         <div>
-                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 앞</span>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 옵셋 (앞 →)</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                             <EpOffsetInput
                               value={placedModule.rightEndPanelOffset ?? 0}
@@ -4681,7 +4681,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           </div>
                         </div>
                         <div>
-                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 뒤</span>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 옵셋 (뒤 ←)</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
                             <EpOffsetInput
                               value={placedModule.rightEndPanelBackOffset ?? 0}

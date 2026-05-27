@@ -1196,6 +1196,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [lowerTopOffsetInput, setLowerTopOffsetInput] = useState<string>('0'); // 하부 섹션 상판 옵셋 입력
   // EP 옵셋 입력 임시 문자열 — '-' 단독 입력 허용용 (undefined면 store값 표시)
   const [epInputs, setEpInputs] = useState<{
+    topGap?: string;
+    bottomGap?: string;
     leftFront?: string;
     leftBack?: string;
     rightFront?: string;
@@ -7399,21 +7401,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
-                            inputMode="numeric"
-                            value={epTopOffsetValue}
+                            inputMode="decimal"
+                            value={epInputs.topGap ?? String(epTopOffsetValue)}
                             onChange={(e) => {
                               const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : Math.max(0, Math.min(500, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: num });
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                setEpInputs(s => ({ ...s, topGap: v }));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-500, Math.min(500, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: num });
+                                }
                               }
+                            }}
+                            onBlur={() => {
+                              const v = epInputs.topGap;
+                              if (v === '' || v === '-') {
+                                updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: 0 });
+                              }
+                              setEpInputs(s => ({ ...s, topGap: undefined }));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = epTopOffsetValue;
-                                const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-500, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: next });
+                                setEpInputs(s => ({ ...s, topGap: undefined }));
                               }
                             }}
                             className={styles.epInput}
@@ -7428,21 +7441,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
-                            inputMode="numeric"
-                            value={epBottomOffsetValue}
+                            inputMode="decimal"
+                            value={epInputs.bottomGap ?? String(epBottomOffsetValue)}
                             onChange={(e) => {
                               const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : Math.max(0, Math.min(500, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: num });
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                setEpInputs(s => ({ ...s, bottomGap: v }));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-500, Math.min(500, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: num });
+                                }
                               }
+                            }}
+                            onBlur={() => {
+                              const v = epInputs.bottomGap;
+                              if (v === '' || v === '-') {
+                                updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: 0 });
+                              }
+                              setEpInputs(s => ({ ...s, bottomGap: undefined }));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = epBottomOffsetValue;
-                                const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-500, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: next });
+                                setEpInputs(s => ({ ...s, bottomGap: undefined }));
                               }
                             }}
                             className={styles.epInput}
@@ -7545,7 +7569,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {currentPlacedModule.hasLeftEndPanel && (
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>좌EP 앞</label>
+                        <label className={styles.epFieldLabel}>좌EP 옵셋 (앞 →)</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
@@ -7585,7 +7609,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>좌EP 뒤</label>
+                        <label className={styles.epFieldLabel}>좌EP 옵셋 (뒤 ←)</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
@@ -7628,7 +7652,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {currentPlacedModule.hasRightEndPanel && (
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>우EP 앞</label>
+                        <label className={styles.epFieldLabel}>우EP 옵셋 (앞 →)</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
@@ -7666,7 +7690,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>우EP 뒤</label>
+                        <label className={styles.epFieldLabel}>우EP 옵셋 (뒤 ←)</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
