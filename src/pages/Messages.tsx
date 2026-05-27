@@ -165,6 +165,32 @@ export default function Messages() {
   const isResizingRef = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 검색 input의 브라우저 기본 흰 배경 / autofill 흰 배경 제거
+  useEffect(() => {
+    const styleId = 'messages-search-input-reset';
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .messages-search-input,
+      .messages-search-input:focus,
+      .messages-search-input:active,
+      .messages-search-input:hover {
+        background-color: transparent !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+      .messages-search-input:-webkit-autofill,
+      .messages-search-input:-webkit-autofill:hover,
+      .messages-search-input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+        -webkit-text-fill-color: inherit !important;
+        transition: background-color 5000s ease-in-out 0s !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -647,16 +673,24 @@ export default function Messages() {
               <HiOutlineSearch size={18} color={C.textSecondary} />
               <input
                 type="text"
+                className="messages-search-input"
                 placeholder={leftTab === 'contacts' ? '친구 검색...' : '대화 검색...'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                autoComplete="off"
                 style={{
                   flex: 1,
                   border: 'none',
                   outline: 'none',
                   background: 'transparent',
+                  backgroundColor: 'transparent',
                   color: C.text,
                   fontSize: 14,
+                  boxShadow: 'none',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  width: '100%',
+                  minWidth: 0,
                 }}
               />
             </div>
