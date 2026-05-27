@@ -761,11 +761,16 @@ export type SpaceConfigDefaults = {
   topMoldingSize?: number;
   topMoldingOffset?: number;
   topMoldingGap?: number;
-  // 걸래받이
+  // 걸래받이 — 키큰장(tall) 기준 (기존 필드, 하위 호환)
   baseboardEnabled?: boolean;
   baseboardSize?: number;
   baseboardOffset?: number;
   baseboardGap?: number;
+  // 걸래받이 — 하부장(lower) 별도
+  baseboardLowerEnabled?: boolean;
+  baseboardLowerSize?: number;
+  baseboardLowerOffset?: number;
+  baseboardLowerGap?: number;
   // 도어 셋팅
   doorSettingEnabled?: boolean;
   doorGapMode?: 'body' | 'cf';

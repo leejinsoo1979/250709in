@@ -47,11 +47,16 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   topMoldingSize: 10,
   topMoldingOffset: 0,
   topMoldingGap: 0,
-  // 걸래받이
+  // 걸래받이 — 키큰장 (기존)
   baseboardEnabled: true,
   baseboardSize: 60,
   baseboardOffset: 0,
   baseboardGap: 0,
+  // 걸래받이 — 하부장 (별도)
+  baseboardLowerEnabled: true,
+  baseboardLowerSize: 100,
+  baseboardLowerOffset: 0,
+  baseboardLowerGap: 0,
   // 도어 셋팅 — 몸통 기준 / 천장·바닥 기준 별도 저장
   doorSettingEnabled: true,
   doorGapMode: 'body',
@@ -402,57 +407,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
           </div>
 
           {/* 상단몰딩 */}
-          <div className={styles.section}>
-            <div className={styles.sectionLabel}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={!!values.topMoldingEnabled}
-                  onChange={(e) => set('topMoldingEnabled', e.target.checked)}
-                  style={{ accentColor: 'var(--theme-primary)' }}
-                />
-                상단몰딩
-              </label>
-            </div>
-            {values.topMoldingEnabled ? (
-              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-                <NumberInput label="size" value={values.topMoldingSize} onChange={h('topMoldingSize')} min={0} max={200} step={1} />
-                <NumberInput label="옵셋" value={values.topMoldingOffset} onChange={h('topMoldingOffset')} min={-200} max={200} step={1} />
-                <NumberInput label="갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={200} step={1} />
-              </div>
-            ) : (
-              <div className={styles.row}>
-                <NumberInput label="상단갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={2000} step={1} />
-              </div>
-            )}
-          </div>
-
-          {/* 걸래받이 */}
-          <div className={styles.section}>
-            <div className={styles.sectionLabel}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={!!values.baseboardEnabled}
-                  onChange={(e) => set('baseboardEnabled', e.target.checked)}
-                  style={{ accentColor: 'var(--theme-primary)' }}
-                />
-                걸래받이
-              </label>
-            </div>
-            {values.baseboardEnabled ? (
-              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-                <NumberInput label="size" value={values.baseboardSize} onChange={h('baseboardSize')} min={0} max={300} step={1} />
-                <NumberInput label="옵셋" value={values.baseboardOffset} onChange={h('baseboardOffset')} min={-200} max={200} step={1} />
-                <NumberInput label="갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={200} step={1} />
-              </div>
-            ) : (
-              <div className={styles.row}>
-                <NumberInput label="하단갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={2000} step={1} />
-              </div>
-            )}
-          </div>
-
           {/* 가구재 두께 */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>가구재 두께</div>
@@ -508,6 +462,84 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             <div className={styles.row}>
               <NumberInput label="키큰장" value={values.furnitureDepthDefaults.tall ?? 580} onChange={hDepth('tall')} min={100} max={1200} step={10} />
             </div>
+          </div>
+
+          {/* 상단몰딩 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!values.topMoldingEnabled}
+                  onChange={(e) => set('topMoldingEnabled', e.target.checked)}
+                  style={{ accentColor: 'var(--theme-primary)' }}
+                />
+                상단몰딩
+              </label>
+            </div>
+            {values.topMoldingEnabled ? (
+              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <NumberInput label="size" value={values.topMoldingSize} onChange={h('topMoldingSize')} min={0} max={200} step={1} />
+                <NumberInput label="옵셋" value={values.topMoldingOffset} onChange={h('topMoldingOffset')} min={-200} max={200} step={1} />
+                <NumberInput label="갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={200} step={1} />
+              </div>
+            ) : (
+              <div className={styles.row}>
+                <NumberInput label="상단갭" value={values.topMoldingGap} onChange={h('topMoldingGap')} min={0} max={2000} step={1} />
+              </div>
+            )}
+          </div>
+
+          {/* 걸래받이 — 키큰장 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!values.baseboardEnabled}
+                  onChange={(e) => set('baseboardEnabled', e.target.checked)}
+                  style={{ accentColor: 'var(--theme-primary)' }}
+                />
+                걸래받이 — 키큰장
+              </label>
+            </div>
+            {values.baseboardEnabled ? (
+              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <NumberInput label="size" value={values.baseboardSize} onChange={h('baseboardSize')} min={0} max={300} step={1} />
+                <NumberInput label="옵셋" value={values.baseboardOffset} onChange={h('baseboardOffset')} min={-200} max={200} step={1} />
+                <NumberInput label="갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={200} step={1} />
+              </div>
+            ) : (
+              <div className={styles.row}>
+                <NumberInput label="하단갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={2000} step={1} />
+              </div>
+            )}
+          </div>
+
+          {/* 걸래받이 — 하부장 */}
+          <div className={styles.section}>
+            <div className={styles.sectionLabel}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={!!values.baseboardLowerEnabled}
+                  onChange={(e) => set('baseboardLowerEnabled', e.target.checked)}
+                  style={{ accentColor: 'var(--theme-primary)' }}
+                />
+                걸래받이 — 하부장
+              </label>
+            </div>
+            {values.baseboardLowerEnabled ? (
+              <div className={styles.row} style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
+                <NumberInput label="size" value={values.baseboardLowerSize} onChange={h('baseboardLowerSize')} min={0} max={300} step={1} />
+                <NumberInput label="옵셋" value={values.baseboardLowerOffset} onChange={h('baseboardLowerOffset')} min={-200} max={200} step={1} />
+                <NumberInput label="갭" value={values.baseboardLowerGap} onChange={h('baseboardLowerGap')} min={0} max={200} step={1} />
+              </div>
+            ) : (
+              <div className={styles.row}>
+                <NumberInput label="하단갭" value={values.baseboardLowerGap} onChange={h('baseboardLowerGap')} min={0} max={2000} step={1} />
+              </div>
+            )}
           </div>
 
           {/* 도어 셋팅 — 몸통 기준 고정 */}
