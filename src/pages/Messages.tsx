@@ -54,7 +54,7 @@ import {
   type LiveSessionRecord,
 } from '@/firebase/liveSessions';
 import { useScreenShareBroadcast } from '@/hooks/useScreenShareBroadcast';
-import LiveSessionPanel from './messages/LiveSessionPanel';
+import LiveStage from './messages/LiveStage';
 
 type LeftTab = 'chats' | 'contacts' | 'profile' | 'settings' | 'groups';
 
@@ -746,8 +746,38 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* ===== 우측 채팅 영역 ===== */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.chatBg }}>
+      {/* ===== 우측 영역 (라이브 있으면 라이브 메인 + 채팅 사이드 / 없으면 채팅 풀) ===== */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'row', background: C.chatBg, minWidth: 0 }}>
+        {/* 라이브 스테이지 (메인 무대) */}
+        {activeConv && activeLiveSessions.length > 0 && (
+          <LiveStage
+            session={activeLiveSessions[0]}
+            myUid={user.uid}
+            broadcasterPreviewStream={
+              activeLiveSessions[0].broadcasterUid === user.uid ? broadcast.previewStream : null
+            }
+            broadcasterViewerCount={
+              activeLiveSessions[0].broadcasterUid === user.uid ? broadcast.viewerCount : 0
+            }
+            onStopBroadcast={
+              activeLiveSessions[0].broadcasterUid === user.uid ? broadcast.stop : undefined
+            }
+            C={C}
+          />
+        )}
+
+        {/* 채팅 영역 (라이브 있으면 우측 360 사이드, 없으면 풀) */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            background: C.chatBg,
+            ...(activeConv && activeLiveSessions.length > 0
+              ? { width: 360, borderLeft: `1px solid ${C.sidebarBorder}`, flexShrink: 0 }
+              : { flex: 1 }),
+            minWidth: 0,
+          }}
+        >
         {!activeConv ? (
           <div
             style={{
@@ -827,24 +857,7 @@ export default function Messages() {
               </button>
             </div>
 
-            {/* 라이브 시연 패널 (활성 세션이 있을 때) */}
-            {activeLiveSessions.map((session) => (
-              <LiveSessionPanel
-                key={session.id}
-                session={session}
-                myUid={user.uid}
-                broadcasterPreviewStream={
-                  session.broadcasterUid === user.uid ? broadcast.previewStream : null
-                }
-                broadcasterViewerCount={
-                  session.broadcasterUid === user.uid ? broadcast.viewerCount : 0
-                }
-                onStopBroadcast={
-                  session.broadcasterUid === user.uid ? broadcast.stop : undefined
-                }
-                C={C}
-              />
-            ))}
+            {/* 라이브 시연 패널은 우측이 아닌 가운데 메인 스테이지(LiveStage)로 표시됨 */}
 
             {/* 메시지 영역 */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
@@ -1063,6 +1076,7 @@ export default function Messages() {
             </div>
           </>
         )}
+        </div>
       </div>
 
       {showAddFriend && <AddFriendModal onClose={() => setShowAddFriend(false)} />}
