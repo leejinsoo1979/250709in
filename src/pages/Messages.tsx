@@ -1425,39 +1425,58 @@ function ChatviaBubble({
         style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: compact ? 6 : 14,
+          marginBottom: 14,
           padding: isNarrow ? '0 4px' : 0,
+          width: '100%',
         }}
       >
         <div
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 10,
-            maxWidth: isNarrow ? '100%' : '72%',
-            padding: '10px 14px',
-            borderRadius: 8,
-            background: C.leftNavActiveBg,
-            color: C.text,
-            border: `1px solid ${C.sidebarBorder}`,
+            gap: 12,
+            width: '100%',
+            maxWidth: isNarrow ? '100%' : 560,
+            padding: '2px 0',
+            background: 'transparent',
+            color: C.textSecondary,
+            border: 'none',
             fontSize: 13,
             lineHeight: 1.35,
             flexWrap: 'wrap',
             justifyContent: 'center',
           }}
         >
-          <HiOutlineDesktopComputer size={18} color={C.accent} />
-          <span>{message.text}</span>
+          <span
+            style={{
+              flex: 1,
+              minWidth: 28,
+              height: 1,
+              background: C.sidebarBorder,
+              display: 'inline-block',
+            }}
+          />
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <HiOutlineDesktopComputer size={15} color={C.textSecondary} />
+            {message.text}
+          </span>
           {canAccept && (
             <button
               type="button"
               onClick={() => message.liveSessionId && onAcceptLiveSession?.(message.liveSessionId)}
               style={{
                 border: 'none',
-                borderRadius: 6,
+                borderRadius: 4,
                 background: C.accent,
                 color: '#fff',
-                padding: '6px 10px',
+                padding: '5px 10px',
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -1472,18 +1491,30 @@ function ChatviaBubble({
           {message.liveStatus === 'started' && !isLiveSessionActive && (
             <span style={{ color: C.textSecondary, fontSize: 12 }}>종료됨</span>
           )}
+          <span
+            style={{
+              flex: 1,
+              minWidth: 28,
+              height: 1,
+              background: C.sidebarBorder,
+              display: 'inline-block',
+            }}
+          />
         </div>
       </div>
     );
   }
 
   const avatarSize = isNarrow ? 36 : 44;
-  // Chatvia 정확한 스타일: 상대방은 흰색 말풍선, 나는 테마 primary 보라
-  const bubbleBg = mine ? C.bubbleOutgoingBg : (C.bubbleIncomingBg || '#ffffff');
-  const bubbleColor = mine ? '#ffffff' : C.text;
-  const timeColor = mine ? 'rgba(255,255,255,0.85)' : C.textSecondary;
-  // 진짜 삼각형 꼬리 (CSS::before로 말풍선 바깥에 돌출)
-  const tailSize = 8;
+  // Chatvia 정확: 상대방=진한 테마 primary, 나=테마 primary opacity 적용 (살짝 연하게)
+  const themePrimary = C.bubbleOutgoingBg;
+  const bubbleBg = mine
+    ? `color-mix(in srgb, ${themePrimary} 70%, transparent)`
+    : themePrimary;
+  const bubbleColor = '#ffffff';
+  const timeColor = 'rgba(255,255,255,0.85)';
+  // 사각형 꼬리 (말풍선과 같은 색 블록을 좌/우 하단에 돌출)
+  const tailSize = 10;
   return (
     <div
       style={{
@@ -1570,22 +1601,16 @@ function ChatviaBubble({
                   {message.createdAt ? formatTime(message.createdAt) : ''}
                 </div>
               </div>
-              {/* 삼각형 꼬리 (말풍선 바깥으로 돌출) */}
+              {/* 사각형 꼬리 (말풍선 같은 색 블록이 좌/우 하단에 돌출) */}
               <div
                 style={{
                   position: 'absolute',
                   bottom: 0,
-                  ...(mine
-                    ? { right: -tailSize, borderLeftColor: bubbleBg, borderBottomColor: bubbleBg }
-                    : { left: -tailSize, borderRightColor: bubbleBg, borderBottomColor: bubbleBg }),
-                  width: 0,
-                  height: 0,
-                  borderStyle: 'solid',
-                  borderWidth: `${tailSize}px`,
-                  borderTopColor: 'transparent',
-                  ...(mine
-                    ? { borderRightColor: 'transparent' }
-                    : { borderLeftColor: 'transparent' }),
+                  ...(mine ? { right: -tailSize } : { left: -tailSize }),
+                  width: tailSize,
+                  height: tailSize,
+                  background: bubbleBg,
+                  borderRadius: 0,
                 }}
               />
             </div>
