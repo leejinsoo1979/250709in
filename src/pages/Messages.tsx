@@ -423,7 +423,7 @@ export default function Messages() {
     leftNavText: isDark ? '#a6b0cf' : '#7a7f9a',
     leftNavTextActive: 'var(--theme-primary, #7269ef)',
     leftNavActiveBg: isDark ? 'rgba(114,105,239,0.25)' : 'rgba(114,105,239,0.18)',
-    convItemActiveBg: isDark ? 'rgba(114,105,239,0.18)' : 'rgba(114,105,239,0.06)',
+    convItemActiveBg: isDark ? 'rgba(114,105,239,0.18)' : '#e6ebf5',
     convItemHoverBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
     sidebarBg: isDark ? '#303841' : '#f5f7fb',
     sidebarBorder: isDark ? 'rgba(255,255,255,0.05)' : '#e6ebf5',
