@@ -310,8 +310,26 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const upperLeftMpr = generateSinglePanelMPR(upperLeft);
 
+    expect(upperLeftMpr).toContain('KP NEST\nX=1445.0000\nY=380.0000');
     expect(upperLeftMpr).toContain('Y=359.0000');
     expect(upperLeftMpr).toContain('YA="359.0000"');
+
+    const upperRight = convertPlacedPanelToMprBoringData({
+      id: 'upper-right-side',
+      name: '(상)우측',
+      width: 380,
+      height: 1445,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+    } as PlacedPanel);
+    const upperRightMpr = generateSinglePanelMPR(upperRight);
+
+    expect(upperRightMpr).toContain('KP NEST\nX=0.0000\nY=0.0000');
 
     const lowerRight = convertPlacedPanelToMprBoringData({
       id: 'lower-right-side',
@@ -329,10 +347,28 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const lowerRightMpr = generateSinglePanelMPR(lowerRight);
 
+    expect(lowerRightMpr).toContain('KP NEST\nX=860.0000\nY=380.0000');
     expect(lowerRightMpr).toContain('Y=21.0000');
     expect(lowerRightMpr).toContain('YA="21.0000"');
     expect(lowerRightMpr).toContain('Y=340.0000');
     expect(lowerRightMpr).toContain('Y=0.0000');
+
+    const lowerLeft = convertPlacedPanelToMprBoringData({
+      id: 'lower-left-side',
+      name: '(하)좌측',
+      width: 380,
+      height: 860,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+    } as PlacedPanel);
+    const lowerLeftMpr = generateSinglePanelMPR(lowerLeft);
+
+    expect(lowerLeftMpr).toContain('KP NEST\nX=0.0000\nY=0.0000');
   });
 
   it('exports door hinge cups and screws with the same coordinates shown in optimizer preview', () => {
@@ -361,14 +397,14 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 22.5, y: 610 },
-      { x: 22.5, y: 120 },
+      { x: 474.5, y: 610 },
+      { x: 474.5, y: 120 },
     ]);
     expect(screwBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 32, y: 632.5 },
-      { x: 32, y: 587.5 },
-      { x: 32, y: 142.5 },
-      { x: 32, y: 97.5 },
+      { x: 465, y: 632.5 },
+      { x: 465, y: 587.5 },
+      { x: 465, y: 142.5 },
+      { x: 465, y: 97.5 },
     ]);
     expect(screwBorings.every(boring => boring.angle === undefined)).toBe(true);
   });
@@ -397,8 +433,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 22.5, y: 610 },
-      { x: 22.5, y: 120 },
+      { x: 474.5, y: 610 },
+      { x: 474.5, y: 120 },
     ]);
     expect(screwBorings).toHaveLength(4);
   });
