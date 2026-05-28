@@ -38,7 +38,7 @@ interface PartnerRequestForm {
   message: string;
 }
 
-const EXPORT_ALLOWED_EMAILS = new Set(['sbbc212@gmail.com', 'sbbc212@kakao.com']);
+const EXPORT_ALLOWED_EMAILS = new Set(['sbbc212@gmail.com', 'sbbc212@kakao.com', 'uablejs@gmail.com']);
 
 const EMPTY_PARTNER_REQUEST_FORM: PartnerRequestForm = {
   companyName: '',
