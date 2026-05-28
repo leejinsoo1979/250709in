@@ -154,13 +154,13 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const mpr = generateSinglePanelMPR(converted);
 
-    expect(converted.width).toBe(860);
-    expect(converted.height).toBe(380);
+    expect(converted.width).toBe(380);
+    expect(converted.height).toBe(860);
     expect(mpr).toContain(']3');
-    expect(mpr).toContain('X=860.0000');
-    expect(mpr).toContain('Y=40.0000');
-    expect(mpr).toContain('X=780.0000');
-    expect(mpr).toContain('Y=0.0000');
+    expect(mpr).toContain('X=340.0000');
+    expect(mpr).toContain('X=380.0000');
+    expect(mpr).toContain('Y=860.0000');
+    expect(mpr).toContain('Y=780.0000');
     expect(mpr).toContain('<105 \\Konturfraesen\\');
     expect(mpr).toContain('EA="3:0"');
     expect(mpr).toContain('EE="3:2"');
@@ -186,17 +186,17 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const mpr = generateSinglePanelMPR(converted);
 
-    expect(converted.width).toBe(860);
-    expect(converted.height).toBe(380);
+    expect(converted.width).toBe(380);
+    expect(converted.height).toBe(860);
     expect(mpr).toContain(']2');
-    expect(mpr).toContain('X=0.0000');
-    expect(mpr).toContain('Y=360.0000');
-    expect(mpr).toContain('X=860.0000');
+    expect(mpr).toContain('X=360.0000');
+    expect(mpr).toContain('Y=0.0000');
+    expect(mpr).toContain('Y=860.0000');
     expect(mpr).toContain('<109 \\Nuten\\');
-    expect(mpr).toContain('XA="-1.0000"');
-    expect(mpr).toContain('YA="361.5000"');
-    expect(mpr).toContain('XE="861.0000"');
-    expect(mpr).toContain('YE="361.5000"');
+    expect(mpr).toContain('XA="361.5000"');
+    expect(mpr).toContain('YA="-1.0000"');
+    expect(mpr).toContain('XE="361.5000"');
+    expect(mpr).toContain('YE="861.0000"');
     expect(mpr).toContain('NB="3.0000"');
     expect(mpr).toContain('TI="7.5000"');
     expect(mpr).not.toContain('백패널 홈');
@@ -227,7 +227,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).not.toContain('<105 \\Ktasche\\');
   });
 
-  it('mirrors furniture right-side panel top borings only in MPR coordinates', () => {
+  it('exports furniture right-side panel borings in optimizer panel coordinates', () => {
     const panel = {
       id: 'right-side-1',
       name: '(하)우측',
@@ -250,15 +250,15 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const fixedBorings = converted.borings.filter(boring => boring.note === 'fixed-panel-through');
 
-    expect(converted.width).toBe(860);
-    expect(converted.height).toBe(380);
+    expect(converted.width).toBe(380);
+    expect(converted.height).toBe(860);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 9.3, y: 350 },
-      { x: 9.3, y: 200 },
-      { x: 9.3, y: 50 },
-      { x: 850.8, y: 291.5 },
-      { x: 850.8, y: 171 },
-      { x: 850.8, y: 50.5 },
+      { x: 350, y: 9.3 },
+      { x: 200, y: 9.3 },
+      { x: 50, y: 9.3 },
+      { x: 291.5, y: 850.8 },
+      { x: 171, y: 850.8 },
+      { x: 50.5, y: 850.8 },
     ]);
   });
 

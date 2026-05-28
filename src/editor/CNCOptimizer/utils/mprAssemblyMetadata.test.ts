@@ -29,8 +29,8 @@ describe('buildMprAssemblyMetadata', () => {
         furnitureName: '',
         panelType: 'side-right',
         panelName: '(하)우측',
-        width: 860,
-        height: 380,
+        width: 380,
+        height: 860,
         thickness: 18,
         material: 'PB',
         grain: 'V',
@@ -39,7 +39,7 @@ describe('buildMprAssemblyMetadata', () => {
             id: 'fixed-side-1',
             type: 'shelf-pin',
             face: 'right',
-            x: 860,
+            x: 380,
             y: 30,
             diameter: 5,
             depth: 30,
@@ -76,8 +76,8 @@ describe('buildMprAssemblyMetadata', () => {
     expect(panel.mirror).toBe(true);
     expect(panel.frontDirection).toEqual([0, -1, 0]);
     expect(panel.innerFaceDirection).toEqual([-1, 0, 0]);
-    expect(panel.localAxes.mprX).toEqual([0, 0, 1]);
-    expect(panel.localAxes.mprY).toEqual([0, 1, 0]);
+    expect(panel.localAxes.mprX).toEqual([0, 1, 0]);
+    expect(panel.localAxes.mprY).toEqual([0, 0, 1]);
     expect(panel.localAxes.mprZ).toEqual([-1, 0, 0]);
     expect(panel.position).toEqual({ x: 1144, y: 0, z: 0 });
     expect(panel.operations).toEqual(expect.arrayContaining([
@@ -87,7 +87,7 @@ describe('buildMprAssemblyMetadata', () => {
         mprCommand: 'Nuten',
         through: false,
         depth: 7.5,
-        mpr: expect.objectContaining({ XA: -1, YA: 361.5, XE: 861, YE: 361.5, NB: 3, TI: 7.5 }),
+        mpr: expect.objectContaining({ XA: 18.5, YA: -1, XE: 18.5, YE: 861, NB: 3, TI: 7.5 }),
       }),
       expect.objectContaining({
         id: 'side-notch-1',
@@ -95,13 +95,13 @@ describe('buildMprAssemblyMetadata', () => {
         mprCommand: 'Konturfraesen',
         through: true,
         depth: 18,
-        mpr: expect.objectContaining({ EA: '3:0', EE: '3:2', ZA: -2, startX: 780, startY: 0, width: 80, height: 40 }),
+        mpr: expect.objectContaining({ EA: '3:0', EE: '3:2', ZA: -2, startX: 340, startY: 780, width: 40, height: 80 }),
       }),
       expect.objectContaining({
         id: 'fixed-side-1',
         operationType: 'boring',
         bmMeaning: 'drill progresses in negative MPR local X direction',
-        drillDirectionVector: [0, 0, -1],
+        drillDirectionVector: [0, -1, 0],
       }),
     ]));
   });

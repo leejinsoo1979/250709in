@@ -149,9 +149,9 @@ function buildModuleGeometries(placedModules: PlacedModule[], spaceInfo: any): M
 function getPanelAxes(role: string): { xAxis: Vec3; yAxis: Vec3; zAxis: Vec3 } {
   switch (role) {
     case 'left_side':
-      return { xAxis: [0, 0, 1], yAxis: [0, 1, 0], zAxis: [1, 0, 0] };
+      return { xAxis: [0, 1, 0], yAxis: [0, 0, 1], zAxis: [1, 0, 0] };
     case 'right_side':
-      return { xAxis: [0, 0, 1], yAxis: [0, 1, 0], zAxis: [-1, 0, 0] };
+      return { xAxis: [0, 1, 0], yAxis: [0, 0, 1], zAxis: [-1, 0, 0] };
     case 'back_panel':
       return { xAxis: [1, 0, 0], yAxis: [0, 0, 1], zAxis: [0, -1, 0] };
     case 'door':
@@ -301,20 +301,23 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
     && !name.includes('서랍')
     && !name.includes('도어')
     && (name.includes('좌측') || name.includes('우측') || name.includes('측판'))
-    && panel.height > BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM;
+    && panel.width > BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM;
 
   if (hasBackPanelGroove) {
-    const y = panel.height - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
-    const centerY = y + BACK_PANEL_GROOVE_WIDTH_MM / 2;
+    const isRightSide = panel.panelType === 'side-right' || name.includes('우측');
+    const x = isRightSide
+      ? BACK_PANEL_GROOVE_REAR_OFFSET_MM
+      : panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
+    const centerX = x + BACK_PANEL_GROOVE_WIDTH_MM / 2;
     operations.push({
       id: 'back-panel-groove',
       operationType: 'groove',
       mprCommand: 'Nuten',
       mpr: {
-        XA: -1,
-        YA: roundMm(centerY),
-        XE: roundMm(panel.width + 1),
-        YE: roundMm(centerY),
+        XA: roundMm(centerX),
+        YA: -1,
+        XE: roundMm(centerX),
+        YE: roundMm(panel.height + 1),
         NB: BACK_PANEL_GROOVE_WIDTH_MM,
         TI: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
       },
@@ -324,10 +327,11 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
   }
 
   (panel.sideNotches || []).forEach((notch, index) => {
-    const width = Math.max(0, Math.min(notch.y, panel.width));
-    const height = Math.max(0, Math.min(notch.z, panel.height));
-    const startX = Math.max(0, Math.min(notch.fromBottom, panel.width - width));
-    const startY = 0;
+    const isRightSide = panel.panelType === 'side-right' || name.includes('우측');
+    const width = Math.max(0, Math.min(notch.z, panel.width));
+    const height = Math.max(0, Math.min(notch.y, panel.height));
+    const startX = isRightSide ? Math.max(0, panel.width - width) : 0;
+    const startY = Math.max(0, Math.min(notch.fromBottom, panel.height - height));
     const blockNumber = hasBackPanelGroove ? index + 3 : index + 2;
     operations.push({
       id: `side-notch-${index + 1}`,
@@ -335,7 +339,7 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
       mprCommand: 'Konturfraesen',
       mpr: {
         EA: `${blockNumber}:0`,
-        EE: `${blockNumber}:${Math.abs(startX + width - panel.width) < 0.001 || startX <= 0.001 ? 2 : 3}`,
+        EE: `${blockNumber}:${Math.abs(startY + height - panel.height) < 0.001 || startY <= 0.001 ? 2 : 3}`,
         ZA: CONTOUR_CUT_DEPTH_MM,
         startX,
         startY,
