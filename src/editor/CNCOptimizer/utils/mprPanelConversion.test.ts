@@ -159,8 +159,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain(']3');
     expect(mpr).toContain('X=340.0000');
     expect(mpr).toContain('X=380.0000');
-    expect(mpr).toContain('Y=860.0000');
-    expect(mpr).toContain('Y=780.0000');
+    expect(mpr).toContain('Y=80.0000');
+    expect(mpr).toContain('Y=0.0000');
     expect(mpr).toContain('<105 \\Konturfraesen\\');
     expect(mpr).toContain('EA="3:0"');
     expect(mpr).toContain('EE="3:2"');
@@ -253,12 +253,43 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 350, y: 9.3 },
-      { x: 200, y: 9.3 },
-      { x: 50, y: 9.3 },
-      { x: 291.5, y: 850.8 },
-      { x: 171, y: 850.8 },
-      { x: 50.5, y: 850.8 },
+      { x: 350, y: 850.7 },
+      { x: 200, y: 850.7 },
+      { x: 50, y: 850.7 },
+      { x: 291.5, y: 9.2 },
+      { x: 171, y: 9.2 },
+      { x: 50.5, y: 9.2 },
+    ]);
+  });
+
+  it('exports split entryway side bracket borings in optimizer display coordinates', () => {
+    const panel = {
+      id: 'upper-left-split-side-1',
+      name: '(상)좌측',
+      width: 380,
+      height: 1540,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      bracketBoringPositions: [120, 770, 1420],
+      bracketBoringDepthPositions: [20, 52],
+      isBracketSide: true,
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const bracketBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
+
+    expect(bracketBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 20, y: 1420 },
+      { x: 52, y: 1420 },
+      { x: 20, y: 770 },
+      { x: 52, y: 770 },
+      { x: 20, y: 120 },
+      { x: 52, y: 120 },
     ]);
   });
 

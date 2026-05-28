@@ -62,6 +62,12 @@ function resolveMprSidePanelDepthY(panel: PlacedPanel, depthPosition: number): n
   return resolveMprTopBoringX(panel, depthPosition);
 }
 
+function resolveMprSidePanelHeightY(panel: PlacedPanel, heightPosition: number): number {
+  const height = Number(panel.height || 0);
+  if (!Number.isFinite(height) || height <= 0) return heightPosition;
+  return Math.round(Math.max(0, Math.min(height, height - heightPosition)) * 10) / 10;
+}
+
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
   const borings: Boring[] = [];
   let boringIdx = 0;
@@ -97,7 +103,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
 
       xPositionsForY.forEach((xPos: number) => {
         const mprX = isFurnitureSidePanelForMpr ? resolveMprSidePanelDepthY(panel, xPos) : resolveMprTopBoringX(panel, xPos);
-        const mprY = yPos;
+        const mprY = isFurnitureSidePanelForMpr ? resolveMprSidePanelHeightY(panel, yPos) : yPos;
         borings.push({
           id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
           type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
@@ -162,7 +168,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
           type: 'hinge-screw',
           face: 'top',
           x: xPos,
-          y: yPos,
+          y: isFurnitureSidePanelForMpr ? resolveMprSidePanelHeightY(panel, yPos) : yPos,
           diameter: 3,
           depth: 3,
           note: 'door-fixing-screw',

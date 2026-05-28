@@ -242,7 +242,7 @@ function resolveSideNotchRect(
     const startX = isRightSidePanel(panel)
       ? Math.max(0, panel.width - notchWidth)
       : 0;
-    const startY = Math.max(0, Math.min(notch.fromBottom, panel.height - notchHeight));
+    const startY = Math.max(0, Math.min(panel.height - notch.fromBottom - notchHeight, panel.height - notchHeight));
 
     return {
       startX,
@@ -339,10 +339,10 @@ function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z
   const endY = rect.startY + rect.height;
   const isFurnitureSide = isFurnitureSidePanelForBackPanelGroove(panel);
   const onTopEdge = isFurnitureSide
-    ? Math.abs(endY - panel.height) < 0.001
+    ? rect.startY <= 0.001
     : Math.abs(endX - panel.width) < 0.001;
   const onBottomEdge = isFurnitureSide
-    ? rect.startY <= 0.001
+    ? Math.abs(endY - panel.height) < 0.001
     : rect.startX <= 0.001;
 
   if (onTopEdge) {

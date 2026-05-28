@@ -331,7 +331,7 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
     const width = Math.max(0, Math.min(notch.z, panel.width));
     const height = Math.max(0, Math.min(notch.y, panel.height));
     const startX = isRightSide ? Math.max(0, panel.width - width) : 0;
-    const startY = Math.max(0, Math.min(notch.fromBottom, panel.height - height));
+    const startY = Math.max(0, Math.min(panel.height - notch.fromBottom - height, panel.height - height));
     const blockNumber = hasBackPanelGroove ? index + 3 : index + 2;
     operations.push({
       id: `side-notch-${index + 1}`,
