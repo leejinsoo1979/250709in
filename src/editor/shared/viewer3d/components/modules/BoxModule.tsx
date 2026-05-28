@@ -276,7 +276,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   let shelfFloatAbsorbedMm = 0;
   let shelfBaseAbsorbedMm = 0;
   let shelfBaseFrameDeltaMm = 0;
-  if (shouldStabilizeShelfBoundary) {
+  if (shouldStabilizeShelfBoundary && !isShelfSplitModule) {
     const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
       && spaceInfo?.baseConfig?.placementType === 'float';
     const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
@@ -290,7 +290,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       shelfFloatAbsorbedMm = globalFloatMm;
     }
   }
-  if ((isShelfSplitModule || isHangingWardrobeModule) && hasBase !== false && typeof baseFrameHeight === 'number') {
+  if (isHangingWardrobeModule && hasBase !== false && typeof baseFrameHeight === 'number') {
     shelfBaseFrameDeltaMm = baseFrameHeight - globalBaseMm;
   }
 

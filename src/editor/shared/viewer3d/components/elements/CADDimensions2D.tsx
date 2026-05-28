@@ -381,18 +381,18 @@ const computeSectionHeightsInfo = (
     const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
       ? (spaceInfo.baseConfig?.height ?? 60)
       : 0;
-    const baseAbsorbedMm = (module as any).hasBase === false
+    const baseAbsorbedMm = !isShelfSplit && (module as any).hasBase === false
       ? globalBaseForShelf
       : 0;
     const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
       && spaceInfo.baseConfig?.placementType === 'float';
     const globalFloatMm = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    const floatAbsorbedMm = (module as any).hasBase === false
+    const floatAbsorbedMm = isShelfSplit
+      ? 0
+      : (module as any).hasBase === false
       ? Math.max(0, (module as any).individualFloatHeight ?? 0)
       : globalFloatMm;
-    const baseFrameDeltaMm = isShelfSplit && (module as any).hasBase !== false && typeof (module as any).baseFrameHeight === 'number'
-      ? ((module as any).baseFrameHeight - globalBaseForShelf)
-      : 0;
+    const baseFrameDeltaMm = 0;
     const lowerHeightMm = Math.min(
       Math.max(0, Math.round(internalHeightMm)),
       Math.max(0, Math.round(lowerOrig + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm))

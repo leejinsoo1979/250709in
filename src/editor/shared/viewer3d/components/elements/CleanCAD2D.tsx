@@ -4584,17 +4584,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
                   ? (spaceInfo?.baseConfig?.height ?? 60)
                   : 0;
-                const shelfBaseAbsorbedMm = (leftLowerHasBase === false)
+                const shelfBaseAbsorbedMm = !leftIsShelfSplit && (leftLowerHasBase === false)
                   ? ((leftLowerMod as any)?.baseFrameHeight ?? globalBaseMm)
                   : 0;
-                const shelfFloatAbsorbedMm = (leftLowerHasBase === false)
+                const shelfFloatAbsorbedMm = leftIsShelfSplit
+                  ? 0
+                  : (leftLowerHasBase === false)
                   ? Math.max(0, (leftLowerMod as any)?.individualFloatHeight ?? 0)
                   : globalFloatMm;
-                const shelfBaseFrameDeltaMm = leftIsShelfSplit
-                  && leftLowerHasBase !== false
-                  && typeof (leftLowerMod as any)?.baseFrameHeight === 'number'
-                  ? (((leftLowerMod as any).baseFrameHeight ?? 0) - globalBaseMm)
-                  : 0;
+                const shelfBaseFrameDeltaMm = 0;
                 const lowerOrig = rawHeights[0];
                 const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm - shelfBaseFrameDeltaMm));
                 const remainingUpperH = Math.max(0, sectionBasisH - newLowerH);
@@ -7288,20 +7286,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
             ? (spaceInfo?.baseConfig?.height ?? 60)
             : 0;
-          const baseAbsorbedMm = (module as any).hasBase === false
+          const baseAbsorbedMm = !isShelfSplitEff && (module as any).hasBase === false
             ? globalBaseMm
             : 0;
           const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
             && spaceInfo?.baseConfig?.placementType === 'float';
           const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
-          const floatAbsorbedMm = (module as any).hasBase === false
+          const floatAbsorbedMm = isShelfSplitEff
+            ? 0
+            : (module as any).hasBase === false
             ? Math.max(0, (module as any).individualFloatHeight ?? 0)
             : globalFloatMm;
-          const baseFrameDeltaMm = isShelfSplitEff
-            && (module as any).hasBase !== false
-            && typeof (module as any).baseFrameHeight === 'number'
-            ? ((module as any).baseFrameHeight - globalBaseMm)
-            : 0;
+          const baseFrameDeltaMm = 0;
           const newLowerH = Math.max(0, Math.round(lowerOrig + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
           const remainingUpperH = Math.max(0, Math.round(furnitureOuterH - newLowerH));
           const newUpperH = isShelfSplitEff && Array.isArray((module as any).customSections)
@@ -8380,18 +8376,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
                   ? (spaceInfo.baseConfig?.height ?? 60)
                   : 0;
-                const baseAbsorbedMm = (viewMod as any).hasBase === false
+                const baseAbsorbedMm = !isShelfSplit && (viewMod as any).hasBase === false
                   ? globalBaseForShelf
                   : 0;
                 const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
                   && spaceInfo.baseConfig?.placementType === 'float';
                 const globalFloatMm = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-                const floatAbsorbedMm = (viewMod as any).hasBase === false
+                const floatAbsorbedMm = isShelfSplit
+                  ? 0
+                  : (viewMod as any).hasBase === false
                   ? Math.max(0, (viewMod as any).individualFloatHeight ?? 0)
                   : globalFloatMm;
-                const baseFrameDeltaMm = isShelfSplit && (viewMod as any).hasBase !== false && typeof (viewMod as any).baseFrameHeight === 'number'
-                  ? ((viewMod as any).baseFrameHeight - globalBaseForShelf)
-                  : 0;
+                const baseFrameDeltaMm = 0;
                 const newLowerH = Math.max(0, Math.round((rawHeights[0] || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
                 const remainingUpperH = Math.max(0, sectionBasisH - newLowerH);
                 const upperH = isShelfSplit && Array.isArray((viewMod as any).customSections)
@@ -10002,18 +9998,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const globalBaseForShelf = spaceInfo.baseConfig?.type === 'floor'
                   ? (spaceInfo.baseConfig?.height ?? 60)
                   : 0;
-                const baseAbsorbedMm = (viewMod as any).hasBase === false
+                const baseAbsorbedMm = !isShelfSplit && (viewMod as any).hasBase === false
                   ? globalBaseForShelf
                   : 0;
                 const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand'
                   && spaceInfo.baseConfig?.placementType === 'float';
                 const globalFloatMm = isFloatPlacement ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-                const floatAbsorbedMm = (viewMod as any).hasBase === false
+                const floatAbsorbedMm = isShelfSplit
+                  ? 0
+                  : (viewMod as any).hasBase === false
                   ? Math.max(0, (viewMod as any).individualFloatHeight ?? 0)
                   : globalFloatMm;
-                const baseFrameDeltaMm = isShelfSplit && (viewMod as any).hasBase !== false && typeof (viewMod as any).baseFrameHeight === 'number'
-                  ? ((viewMod as any).baseFrameHeight - globalBaseForShelf)
-                  : 0;
+                const baseFrameDeltaMm = 0;
                 const newLowerH = Math.max(0, Math.round((rawHeights[0] || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
                 const remainingUpperH = Math.max(0, sectionBasisH - newLowerH);
                 const upperH = isShelfSplit && Array.isArray((viewMod as any).customSections)
