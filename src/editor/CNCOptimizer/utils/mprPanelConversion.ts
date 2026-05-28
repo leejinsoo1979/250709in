@@ -50,6 +50,27 @@ function toMprSidePanelPoint(point: { x: number; y: number }): { x: number; y: n
   };
 }
 
+function roundMprCoord(value: number): number {
+  return Math.round(value * 10000) / 10000;
+}
+
+function toMprDoorPoint(panel: PlacedPanel, point: { x: number; y: number }): { x: number; y: number } {
+  const panelName = panel.name || '';
+  if (panelName.includes('좌측')) {
+    return {
+      x: roundMprCoord(panel.width - point.x),
+      y: point.y,
+    };
+  }
+  if (panelName.includes('우측')) {
+    return {
+      x: point.x,
+      y: roundMprCoord(panel.height - point.y),
+    };
+  }
+  return point;
+}
+
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
   const borings: Boring[] = [];
   let boringIdx = 0;
@@ -115,24 +136,26 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
     const doorPoints = resolveOptimizerDoorBoringPoints(panel);
 
     doorPoints.cupPoints.forEach((point) => {
+      const mprPoint = toMprDoorPoint(panel, point);
       borings.push({
         id: `hinge-cup-${boringIdx++}`,
         type: 'hinge-cup',
         face: 'top',
-        x: point.x,
-        y: point.y,
+        x: mprPoint.x,
+        y: mprPoint.y,
         diameter: 35,
         depth: 13,
       });
     });
 
     doorPoints.screwPoints.forEach((point) => {
+      const mprPoint = toMprDoorPoint(panel, point);
       borings.push({
         id: `hinge-screw-${boringIdx++}`,
         type: 'hinge-screw',
         face: 'top',
-        x: point.x,
-        y: point.y,
+        x: mprPoint.x,
+        y: mprPoint.y,
         diameter: 3,
         depth: 3,
         note: 'door-fixing-screw',

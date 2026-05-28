@@ -373,6 +373,68 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(screwBorings.every(boring => boring.angle === undefined)).toBe(true);
   });
 
+  it('exports left/right door hinge coordinates with side-specific MPR axes', () => {
+    const leftDoor = convertPlacedPanelToMprBoringData({
+      id: 'door-left-hinge-1',
+      name: '좌측 도어',
+      width: 497,
+      height: 730,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PET',
+      color: 'MW',
+      grain: 'VERTICAL',
+      isDoor: true,
+      isLeftHinge: true,
+      boringPositions: [120, 610],
+      boringDepthPositions: [474.5],
+      screwPositions: [97.5, 142.5, 587.5, 632.5],
+      screwDepthPositions: [465],
+    } as PlacedPanel);
+    const rightDoor = convertPlacedPanelToMprBoringData({
+      id: 'door-right-hinge-2',
+      name: '우측 도어',
+      width: 497,
+      height: 730,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PET',
+      color: 'MW',
+      grain: 'VERTICAL',
+      isDoor: true,
+      isLeftHinge: false,
+      boringPositions: [120, 610],
+      boringDepthPositions: [22.5],
+      screwPositions: [97.5, 142.5, 587.5, 632.5],
+      screwDepthPositions: [32],
+    } as PlacedPanel);
+
+    expect(leftDoor.borings.filter(boring => boring.type === 'hinge-cup').map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 22.5, y: 610 },
+      { x: 22.5, y: 120 },
+    ]);
+    expect(leftDoor.borings.filter(boring => boring.note === 'door-fixing-screw').map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 32, y: 632.5 },
+      { x: 32, y: 587.5 },
+      { x: 32, y: 142.5 },
+      { x: 32, y: 97.5 },
+    ]);
+    expect(rightDoor.borings.filter(boring => boring.type === 'hinge-cup').map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 22.5, y: 120 },
+      { x: 22.5, y: 610 },
+    ]);
+    expect(rightDoor.borings.filter(boring => boring.note === 'door-fixing-screw').map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 32, y: 97.5 },
+      { x: 32, y: 142.5 },
+      { x: 32, y: 587.5 },
+      { x: 32, y: 632.5 },
+    ]);
+  });
+
   it('exports door fallback hinge cup coordinates when optimizer preview derives them from screw data', () => {
     const panel = {
       id: 'door-screw-only-1',
@@ -397,8 +459,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 22.5, y: 610 },
       { x: 22.5, y: 120 },
+      { x: 22.5, y: 610 },
     ]);
     expect(screwBorings).toHaveLength(4);
   });
