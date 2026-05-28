@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Settings, Search, Sun, Moon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
@@ -26,10 +26,16 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const { theme, toggleMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const photoURL = user?.photoURL || '';
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isGallery = location.pathname.startsWith('/gallery');
   const isNews = location.pathname.startsWith('/news');
   const isQnA = location.pathname.startsWith('/qna');
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [photoURL]);
 
   return (
     <header className={styles.header}>
@@ -104,11 +110,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           onClick={onProfileClick}
           title={user?.displayName || user?.email || '프로필'}
         >
-          {user?.photoURL ? (
+          {photoURL && !avatarLoadFailed ? (
             <img
-              src={user.photoURL}
-              alt={user.displayName || '프로필'}
+              src={photoURL}
+              alt={user?.displayName || '프로필'}
               className={styles.avatar}
+              referrerPolicy="no-referrer"
+              onError={() => setAvatarLoadFailed(true)}
             />
           ) : (
             <div className={styles.avatarFallback}>

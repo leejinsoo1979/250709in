@@ -33,7 +33,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
   const [error, setError] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'privacy' | 'account' | 'subscription' | 'security'>(initialSection);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoURL = user?.photoURL || '';
 
   // 프로필 데이터
   const [displayName, setDisplayName] = useState('');
@@ -64,6 +66,10 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
   // 사용자 plan (free / pro / enterprise / ...)
   const [userPlan, setUserPlan] = useState<string>('free');
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [photoURL]);
 
   // 비밀번호 변경
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -495,8 +501,13 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                   <div className={styles.profileLeft}>
                     <div className={styles.profileAvatarContainer}>
                       <div className={styles.profileAvatar}>
-                        {user?.photoURL ? (
-                          <img src={user.photoURL} alt="프로필" />
+                        {photoURL && !avatarLoadFailed ? (
+                          <img
+                            src={photoURL}
+                            alt="프로필"
+                            referrerPolicy="no-referrer"
+                            onError={() => setAvatarLoadFailed(true)}
+                          />
                         ) : (
                           <UserIcon size={48} />
                         )}

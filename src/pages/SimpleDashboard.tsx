@@ -16,6 +16,7 @@ import OrderModal from '@/components/orders/OrderModal';
 import GalleryPublishModal from '@/components/gallery/GalleryPublishModal';
 import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { PopupManager } from '@/components/PopupManager';
 // import { Chatbot } from '@/components/Chatbot';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -38,6 +39,14 @@ import { useMarqueeSelection } from '@/hooks/dashboard/useMarqueeSelection';
 import type { ViewMode, SortBy, SortDirection, ExplorerItem } from '@/hooks/dashboard/types';
 
 import styles from './SimpleDashboard.module.css';
+
+type DeleteConfirmState = {
+  title: string;
+  message: string;
+  confirmText: string;
+  isDangerous: boolean;
+  onConfirm: () => Promise<void> | void;
+};
 
 const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -116,7 +125,31 @@ const SimpleDashboard: React.FC = () => {
   const [galleryPublishOpen, setGalleryPublishOpen] = useState(false);
   const [galleryPublishItem, setGalleryPublishItem] = useState<ExplorerItem | null>(null);
 
+  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null);
+  const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
+
   const effectiveViewMode = viewMode;
+
+  const requestDeleteConfirm = useCallback((config: DeleteConfirmState) => {
+    setDeleteConfirm(config);
+  }, []);
+
+  const closeDeleteConfirm = useCallback(() => {
+    if (isDeleteConfirming) return;
+    setDeleteConfirm(null);
+  }, [isDeleteConfirming]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteConfirm || isDeleteConfirming) return;
+
+    setIsDeleteConfirming(true);
+    try {
+      await deleteConfirm.onConfirm();
+      setDeleteConfirm(null);
+    } finally {
+      setIsDeleteConfirming(false);
+    }
+  }, [deleteConfirm, isDeleteConfirming]);
 
   // Pull-to-refresh (모바일에서만)
   const { isRefreshing, pullDistance, pullIndicatorStyle, containerRef: pullContainerRef } = usePullToRefresh({
@@ -750,13 +783,21 @@ const SimpleDashboard: React.FC = () => {
           .map(item => ({ id: item.id, type: item.type, projectId: item.projectId || nav.currentProjectId || undefined }));
         if (itemsToDelete.length === 0) return;
         if (nav.activeMenu === 'trash') {
-          if (confirm(`${itemsToDelete.length}개 항목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
-            actions.permanentDeleteItems(itemsToDelete);
-          }
+          requestDeleteConfirm({
+            title: '',
+            message: `${itemsToDelete.length}개 항목을 완전히 지우시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+            confirmText: '확인',
+            isDangerous: true,
+            onConfirm: () => actions.permanentDeleteItems(itemsToDelete),
+          });
         } else {
-          if (confirm(`${itemsToDelete.length}개 항목을 삭제하시겠습니까?`)) {
-            actions.deleteItems(itemsToDelete);
-          }
+          requestDeleteConfirm({
+            title: '',
+            message: `${itemsToDelete.length}개 항목을 휴지통으로 이동하시겠습니까?`,
+            confirmText: '확인',
+            isDangerous: false,
+            onConfirm: () => actions.deleteItems(itemsToDelete),
+          });
         }
         return;
       }
@@ -785,7 +826,7 @@ const SimpleDashboard: React.FC = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nav, actions, data.currentItems, handleItemDoubleClick, getSelectedExplorerItems]);
+  }, [nav, actions, data.currentItems, handleItemDoubleClick, getSelectedExplorerItems, requestDeleteConfirm]);
 
   // --- 로딩/에러 상태 ---
 
@@ -932,17 +973,26 @@ const SimpleDashboard: React.FC = () => {
                   const itemsToDelete = data.currentItems
                     .filter(i => actions.selectedItems.has(i.id))
                     .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
-                  if (itemsToDelete.length > 0 && confirm(`${itemsToDelete.length}개 항목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
-                    actions.permanentDeleteItems(itemsToDelete);
-                  }
+                  if (itemsToDelete.length === 0) return;
+                  requestDeleteConfirm({
+                    title: '',
+                    message: `${itemsToDelete.length}개 항목을 완전히 지우시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+                    confirmText: '확인',
+                    isDangerous: true,
+                    onConfirm: () => actions.permanentDeleteItems(itemsToDelete),
+                  });
                 } : undefined}
                 onEmptyTrash={nav.activeMenu === 'trash' && data.currentItems.length > 0 && actions.selectedItems.size === 0 ? () => {
                   const allItems = data.currentItems.map(i => ({
                     id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined,
                   }));
-                  if (confirm(`휴지통의 ${allItems.length}개 항목을 모두 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
-                    actions.permanentDeleteItems(allItems);
-                  }
+                  requestDeleteConfirm({
+                    title: '',
+                    message: `휴지통의 ${allItems.length}개 항목을 모두 비우시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+                    confirmText: '확인',
+                    isDangerous: true,
+                    onConfirm: () => actions.permanentDeleteItems(allItems),
+                  });
                 } : undefined}
               />
 
@@ -1004,9 +1054,20 @@ const SimpleDashboard: React.FC = () => {
               onCreateProject={handleCreateProject}
               onProfileClick={() => setIsProfilePopupOpen(true)}
             />
-          )}
+      )}
 
       {/* ===== 모달들 ===== */}
+
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteConfirm)}
+        title={deleteConfirm?.title || ''}
+        message={deleteConfirm?.message || ''}
+        confirmText={deleteConfirm?.confirmText}
+        isDangerous={deleteConfirm?.isDangerous}
+        isLoading={isDeleteConfirming}
+        onConfirm={handleDeleteConfirm}
+        onCancel={closeDeleteConfirm}
+      />
 
       {/* 프로젝트 생성 모달 */}
       {isCreateModalOpen && (
@@ -1336,10 +1397,10 @@ const SimpleDashboard: React.FC = () => {
                 <button
                   style={{
                     width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                    color: '#ef4444', textAlign: 'left', 
+                    color: 'var(--theme-text, #111827)', textAlign: 'left', 
                     display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-background-hover, rgba(0,0,0,0.06))')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                   onClick={() => {
                     const item = contextMenu.item;
@@ -1349,17 +1410,25 @@ const SimpleDashboard: React.FC = () => {
                       const itemsToDelete = data.currentItems
                         .filter(i => actions.selectedItems.has(i.id))
                         .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
-                      if (confirm(`${itemsToDelete.length}개 항목을 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
-                        actions.permanentDeleteItems(itemsToDelete);
-                      }
+                      requestDeleteConfirm({
+                        title: '',
+                        message: `${itemsToDelete.length}개 항목을 완전히 지우시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+                        confirmText: '확인',
+                        isDangerous: true,
+                        onConfirm: () => actions.permanentDeleteItems(itemsToDelete),
+                      });
                     } else {
-                      if (confirm(`"${item.name}"을(를) 영구적으로 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) {
-                        actions.permanentDeleteItems([{
+                      requestDeleteConfirm({
+                        title: '',
+                        message: `"${item.name}"을(를) 완전히 지우시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+                        confirmText: '확인',
+                        isDangerous: true,
+                        onConfirm: () => actions.permanentDeleteItems([{
                           id: item.id,
                           type: item.type,
                           projectId: item.projectId || nav.currentProjectId || undefined,
-                        }]);
-                      }
+                        }]),
+                      });
                     }
                     setContextMenu(null);
                   }}
@@ -1618,10 +1687,10 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: '#ef4444', textAlign: 'left', 
+                color: 'var(--theme-text, #111827)', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
+              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-background-hover, rgba(0,0,0,0.06))')}
               onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               onClick={() => {
                 const item = contextMenu.item;
@@ -1632,17 +1701,25 @@ const SimpleDashboard: React.FC = () => {
                   const itemsToDelete = data.currentItems
                     .filter(i => actions.selectedItems.has(i.id))
                     .map(i => ({ id: i.id, type: i.type, projectId: i.projectId || nav.currentProjectId || undefined }));
-                  if (confirm(`${itemsToDelete.length}개 항목을 삭제하시겠습니까?`)) {
-                    actions.deleteItems(itemsToDelete);
-                  }
+                  requestDeleteConfirm({
+                    title: '',
+                    message: `${itemsToDelete.length}개 항목을 휴지통으로 이동하시겠습니까?`,
+                    confirmText: '확인',
+                    isDangerous: false,
+                    onConfirm: () => actions.deleteItems(itemsToDelete),
+                  });
                 } else {
-                  if (confirm(`"${item.name}"을(를) 삭제하시겠습니까?`)) {
-                    actions.deleteItems([{
+                  requestDeleteConfirm({
+                    title: '',
+                    message: `"${item.name}"을(를) 휴지통으로 이동하시겠습니까?`,
+                    confirmText: '확인',
+                    isDangerous: false,
+                    onConfirm: () => actions.deleteItems([{
                       id: item.id,
                       type: item.type,
                       projectId: item.projectId || nav.currentProjectId || undefined,
-                    }]);
-                  }
+                    }]),
+                  });
                 }
                 setContextMenu(null);
               }}
@@ -1684,18 +1761,14 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: '#ef4444', textAlign: 'left', 
+                  color: 'var(--theme-text, #111827)', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-background-hover, rgba(0,0,0,0.06))')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 onClick={async () => {
                   const trashItems = data.currentItems;
                   if (trashItems.length === 0) {
-                    setBlankContextMenu(null);
-                    return;
-                  }
-                  if (!confirm(`휴지통의 ${trashItems.length}개 항목을 모두 영구 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`)) {
                     setBlankContextMenu(null);
                     return;
                   }
@@ -1704,8 +1777,14 @@ const SimpleDashboard: React.FC = () => {
                     type: i.type,
                     projectId: i.projectId || nav.currentProjectId || undefined,
                   }));
-                  await actions.permanentDeleteItems(itemsToDelete);
                   setBlankContextMenu(null);
+                  requestDeleteConfirm({
+                    title: '',
+                    message: `휴지통의 ${trashItems.length}개 항목을 모두 비우시겠습니까?\n이 작업은 되돌릴 수 없습니다.`,
+                    confirmText: '확인',
+                    isDangerous: true,
+                    onConfirm: () => actions.permanentDeleteItems(itemsToDelete),
+                  });
                 }}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>

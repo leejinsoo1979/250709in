@@ -29,8 +29,14 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const [nameInput, setNameInput] = useState('');
   const [nameSaving, setNameSaving] = useState(false);
   const [displayNameLocal, setDisplayNameLocal] = useState<string | null>(null);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const photoURL = user?.photoURL || '';
   const effectiveIsSuperAdmin = hasSuperAdminAccess || isSuperAdmin;
   const effectiveIsAdmin = hasAdminAccess || isAdmin;
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [photoURL]);
 
   // 슈퍼 관리자 권한 + plan 체크 — popup 열릴 때마다 강제로 최신값 fetch (서버 우선)
   useEffect(() => {
@@ -147,8 +153,14 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
         <div className={styles.header}>
           <div className={styles.headerContent}>
             <div className={styles.headerLeft}>
-              {user.photoURL ? (
-                <img src={user.photoURL} alt={user.displayName || '사용자'} className={styles.headerAvatar} />
+              {photoURL && !avatarLoadFailed ? (
+                <img
+                  src={photoURL}
+                  alt={user.displayName || '사용자'}
+                  className={styles.headerAvatar}
+                  referrerPolicy="no-referrer"
+                  onError={() => setAvatarLoadFailed(true)}
+                />
               ) : (
                 <div className={styles.headerAvatarPlaceholder}>
                   <User size={20} />
