@@ -864,6 +864,9 @@ const Configurator: React.FC = () => {
   const normalLowerDoorSettingEntries = useMemo(() => (
     partialDoorSettingEntries.filter(entry => entry.category === 'lower' && !entry.splitPart)
   ), [partialDoorSettingEntries]);
+  const hasDoorGapSyncTargets = fullDoorIndices.length > 0
+    || normalUpperDoorSettingEntries.length > 0
+    || normalLowerDoorSettingEntries.length > 0;
   // 도어 셋팅 표시 기준 ('body' = 몸통 기준 / 'cf' = 천장·바닥 기준)
   const doorGapRefMode = useUIStore(s => s.doorGapDisplayMode);
   const setDoorGapRefMode = useUIStore(s => s.setDoorGapDisplayMode);
@@ -7809,17 +7812,19 @@ const Configurator: React.FC = () => {
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
               {/* 표시 기준 토글 (몸통 / 천장·바닥) */}
-              <label
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={doorGapAllSync}
-                  onChange={(e) => setDoorGapAllSync(e.target.checked)}
-                  style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                />
-                <span>전체</span>
-              </label>
+              {hasDoorGapSyncTargets && (
+                <label
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={doorGapAllSync}
+                    onChange={(e) => setDoorGapAllSync(e.target.checked)}
+                    style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                  />
+                  <span>전체</span>
+                </label>
+              )}
               <div style={{ display: 'flex', gap: '2px', marginLeft: '8px' }}>
                 <button
                   type="button"
@@ -7848,48 +7853,9 @@ const Configurator: React.FC = () => {
             {/* Close/Open 토글 → ViewerControls 상단바로 이동됨 */}
 
             {/* 전체 ON: 통합 상단갭/하단갭 입력 1쌍 */}
-            {doorGapAllSync && doorFurnitureList.length > 0 && (
+            {doorGapAllSync && hasDoorGapSyncTargets && (
               <div style={{ marginTop: '8px' }}>
-                {renderDoorCategorySyncTable() || <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                  <thead>
-                    <tr>
-                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
-                      <th style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                        통합
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
-                      {(() => {
-                        const firstMod = doorFurnitureList[0];
-                        const allIds = doorFurnitureList.map(m => m.id);
-                        const { topDistance } = computeRefDistances(firstMod);
-                        return <DoorGapInput key={`top-all-${doorGapRefMode}`} moduleId={firstMod.id} field="doorTopGap"
-                          storeValue={firstMod.doorTopGap ?? 5}
-                          onCommit={handleIndividualDoorGapChange}
-                          highlightModuleIds={allIds}
-                          referenceMode={doorGapRefMode}
-                          refDistanceMm={topDistance} />;
-                      })()}
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
-                      {(() => {
-                        const firstMod = doorFurnitureList[0];
-                        const allIds = doorFurnitureList.map(m => m.id);
-                        const { bottomDistance } = computeRefDistances(firstMod);
-                        return <DoorGapInput key={`bot-all-${doorGapRefMode}`} moduleId={firstMod.id} field="doorBottomGap"
-                          storeValue={firstMod.doorBottomGap ?? 25}
-                          onCommit={handleIndividualDoorGapChange}
-                          highlightModuleIds={allIds}
-                          referenceMode={doorGapRefMode}
-                          refDistanceMm={bottomDistance} />;
-                      })()}
-                    </tr>
-                  </tbody>
-                </table>}
+                {renderDoorCategorySyncTable()}
               </div>
             )}
 

@@ -1910,10 +1910,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       }
 
       // 분할 모드용 섹션별 이격거리 초기화
-      const upperTopGap = currentPlacedModule.upperDoorTopGap ?? 0;
-      const upperBottomGap = currentPlacedModule.upperDoorBottomGap ?? 0;
-      const lowerTopGap = currentPlacedModule.lowerDoorTopGap ?? 0;
-      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? 0;
+      const isPantrySplitForDoorGaps = modId.includes('pantry-cabinet-split');
+      const splitLowerTopDefault = isPantrySplitForDoorGaps ? -2 : -40;
+      const splitUpperBottomDefault = isPantrySplitForDoorGaps ? -1 : 20;
+      const rawSplitLowerTopGap = currentPlacedModule.lowerDoorTopGap;
+      const rawSplitUpperBottomGap = currentPlacedModule.upperDoorBottomGap;
+      const upperTopGap = currentPlacedModule.upperDoorTopGap ?? currentPlacedModule.doorTopGap ?? 0;
+      const upperBottomGap = typeof rawSplitUpperBottomGap === 'number'
+        ? (
+          (!isPantrySplitForDoorGaps && rawSplitUpperBottomGap === -20)
+            ? splitUpperBottomDefault
+            : (isPantrySplitForDoorGaps && rawSplitUpperBottomGap === 1 ? splitUpperBottomDefault : rawSplitUpperBottomGap)
+        )
+        : (isShelfSplitForDoorGaps ? splitUpperBottomDefault : 0);
+      const lowerTopGap = typeof rawSplitLowerTopGap === 'number'
+        ? (rawSplitLowerTopGap === (isPantrySplitForDoorGaps ? 2 : 40) ? splitLowerTopDefault : rawSplitLowerTopGap)
+        : (isShelfSplitForDoorGaps ? splitLowerTopDefault : 0);
+      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? currentPlacedModule.doorBottomGap ?? 0;
 
       setUpperDoorTopGap(upperTopGap);
       setUpperDoorTopGapInput(upperTopGap.toString());
@@ -4795,17 +4808,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 상판내림: 도어 H = cabH + topGap + bottomGap (가구 상단~도어 상단 갭 일정)
             const doorH = Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
-            return (
-              <div className={styles.propertySection}>
-                <h5 className={styles.sectionTitle}>
-                  도어치수
-                  {isDualSlot && <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', fontWeight: 'normal', marginLeft: '6px' }}>(도어 1장 / 총 2장)</span>}
-                </h5>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+            const splitDoorPanelsForDimensions = isShelfSplitModuleId(currentPlacedModule.moduleId)
+              ? panelDetails.filter((panel: any) => panel?.isDoor && typeof panel?.height === 'number')
+              : [];
+            const lowerDoorPanelForDimensions = splitDoorPanelsForDimensions.find((panel: any) => String(panel.name || '').includes('하부 도어'));
+            const upperDoorPanelForDimensions = splitDoorPanelsForDimensions.find((panel: any) => String(panel.name || '').includes('상부 도어'));
+            const isSplitDoorDimension = !!lowerDoorPanelForDimensions && !!upperDoorPanelForDimensions;
+            const upperDoorDimensionH = isSplitDoorDimension
+              ? Math.round(upperDoorPanelForDimensions.height)
+              : doorH;
+            const lowerDoorDimensionH = isSplitDoorDimension
+              ? Math.round(lowerDoorPanelForDimensions.height)
+              : doorH;
+            const upperDoorDimensionW = isSplitDoorDimension
+              ? Math.round(upperDoorPanelForDimensions.width ?? doorW)
+              : doorW;
+            const lowerDoorDimensionW = isSplitDoorDimension
+              ? Math.round(lowerDoorPanelForDimensions.width ?? doorW)
+              : doorW;
+            const middleDoorGapMm = isSplitDoorDimension
+              ? Math.round(-((upperDoorBottomGap || 0) + (lowerDoorTopGap || 0)))
+              : 0;
+            const renderDoorDimensionRow = (
+              label: string | null,
+              widthMm: number,
+              heightMm: number
+            ) => (
+              <div style={{ marginTop: label ? '6px' : '2px' }}>
+                {label && (
+                  <div style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', lineHeight: 1.2, marginBottom: '2px' }}>
+                    {label}
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
                     <div className={styles.inputWithUnit}>
-                      <input type="text" value={doorW} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <input type="text" value={widthMm} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
                       <span className={styles.unit}>mm</span>
                     </div>
                   </div>
@@ -4813,7 +4852,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
                     <div className={styles.inputWithUnit}>
-                      <input type="text" value={doorH} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <input type="text" value={heightMm} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
                       <span className={styles.unit}>mm</span>
                     </div>
                   </div>
@@ -4826,6 +4865,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            );
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>
+                  도어치수
+                  {isSplitDoorDimension
+                    ? <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', fontWeight: 'normal', marginLeft: '6px' }}>(상부/하부 도어)</span>
+                    : isDualSlot && <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', fontWeight: 'normal', marginLeft: '6px' }}>(도어 1장 / 총 2장)</span>}
+                </h5>
+                {isSplitDoorDimension ? (
+                  <>
+                    {renderDoorDimensionRow('상부 도어', upperDoorDimensionW, upperDoorDimensionH)}
+                    <div style={{ margin: '6px 0 0', fontSize: '10px', color: 'var(--theme-text-tertiary)', textAlign: 'center' }}>
+                      도어 간격 {middleDoorGapMm}mm
+                    </div>
+                    {renderDoorDimensionRow('하부 도어', lowerDoorDimensionW, lowerDoorDimensionH)}
+                  </>
+                ) : renderDoorDimensionRow(null, doorW, doorH)}
                 {/* 도어 확장/축소 토글: 사용자가 도어 폭을 좌/우 방향으로 +/- 조정 */}
                 <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
