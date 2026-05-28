@@ -233,18 +233,15 @@ function isSplitFurnitureSidePanel(panel: PanelBoringData): boolean {
 function shouldMirrorFurnitureSidePanelX(panel: PanelBoringData): boolean {
   const name = panel.panelName || '';
   if (isSplitFurnitureSidePanel(panel)) {
-    return !(name.includes('(상)') && name.includes('우측'));
+    return name.includes('(상)') && name.includes('좌측');
   }
   return isRightSidePanel(panel);
 }
 
 function shouldUseOriginalFurnitureSidePanelY(panel: PanelBoringData): boolean {
   const name = panel.panelName || '';
-  return isFurnitureSidePanelForBackPanelGroove(panel)
-    && (
-      (name.includes('(상)') && name.includes('좌측'))
-      || (name.includes('(하)') && name.includes('우측'))
-    );
+  return isSplitFurnitureSidePanel(panel)
+    && name.includes('우측');
 }
 
 interface SideNotchRect {

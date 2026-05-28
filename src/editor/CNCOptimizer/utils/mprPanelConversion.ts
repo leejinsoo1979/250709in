@@ -77,15 +77,17 @@ function isSplitMprSidePanel(panel: PlacedPanel): boolean {
 function shouldMirrorMprSidePanelX(panel: PlacedPanel): boolean {
   const name = panel.name || '';
   if (isSplitMprSidePanel(panel)) {
-    return !(name.includes('(상)') && name.includes('우측'));
+    return name.includes('(상)') && name.includes('좌측');
   }
   return isFurnitureRightSidePanel(panel);
 }
 
 function shouldUseOriginalMprSidePanelY(panel: PlacedPanel): boolean {
   const name = panel.name || '';
-  return (name.includes('(상)') && name.includes('좌측'))
-    || (name.includes('(하)') && name.includes('우측'));
+  if (isSplitMprSidePanel(panel)) {
+    return name.includes('우측');
+  }
+  return false;
 }
 
 function resolveMprSidePanelX(panel: PlacedPanel, x: number): number {

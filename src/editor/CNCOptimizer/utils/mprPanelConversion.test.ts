@@ -157,8 +157,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(mpr).toContain(']3');
-    expect(mpr).toContain('X=0.0000');
-    expect(mpr).toContain('X=40.0000');
+    expect(mpr).toContain('X=340.0000');
+    expect(mpr).toContain('X=380.0000');
     expect(mpr).toContain('Y=860.0000');
     expect(mpr).toContain('Y=780.0000');
     expect(mpr).toContain('<105 \\Konturfraesen\\');
@@ -189,13 +189,13 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(mpr).toContain(']2');
-    expect(mpr).toContain('X=17.0000');
+    expect(mpr).toContain('X=360.0000');
     expect(mpr).toContain('Y=0.0000');
     expect(mpr).toContain('Y=860.0000');
     expect(mpr).toContain('<109 \\Nuten\\');
-    expect(mpr).toContain('XA="18.5000"');
+    expect(mpr).toContain('XA="361.5000"');
     expect(mpr).toContain('YA="-1.0000"');
-    expect(mpr).toContain('XE="18.5000"');
+    expect(mpr).toContain('XE="361.5000"');
     expect(mpr).toContain('YE="861.0000"');
     expect(mpr).toContain('NB="3.0000"');
     expect(mpr).toContain('TI="7.5000"');
@@ -253,12 +253,12 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 350, y: 9.3 },
-      { x: 200, y: 9.3 },
-      { x: 50, y: 9.3 },
-      { x: 291.5, y: 850.8 },
-      { x: 171, y: 850.8 },
-      { x: 50.5, y: 850.8 },
+      { x: 30, y: 9.3 },
+      { x: 180, y: 9.3 },
+      { x: 330, y: 9.3 },
+      { x: 88.5, y: 850.8 },
+      { x: 209, y: 850.8 },
+      { x: 329.5, y: 850.8 },
     ]);
   });
 
@@ -284,12 +284,12 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const bracketBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(bracketBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 360, y: 120 },
-      { x: 328, y: 120 },
-      { x: 360, y: 770 },
-      { x: 328, y: 770 },
       { x: 360, y: 1420 },
       { x: 328, y: 1420 },
+      { x: 360, y: 770 },
+      { x: 328, y: 770 },
+      { x: 360, y: 120 },
+      { x: 328, y: 120 },
     ]);
   });
 
