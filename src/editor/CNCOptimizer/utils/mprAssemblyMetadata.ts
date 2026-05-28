@@ -181,6 +181,46 @@ function getPanelDirections(role: string): { frontDirection: Vec3; innerFaceDire
   }
 }
 
+function isSplitFurnitureSidePanel(panel: PanelBoringData): boolean {
+  const name = panel.panelName || '';
+  const isFurnitureSide = (panel.panelType === 'side-left' || panel.panelType === 'side-right')
+    && !name.includes('서랍')
+    && !name.includes('도어')
+    && !name.includes('Door');
+  return isFurnitureSide
+    && (name.includes('(상)') || name.includes('(하)'))
+    && (name.includes('좌측') || name.includes('우측'));
+}
+
+function shouldMirrorFurnitureSidePanelX(panel: PanelBoringData): boolean {
+  const name = panel.panelName || '';
+  if (isSplitFurnitureSidePanel(panel)) {
+    return !(name.includes('(상)') && name.includes('우측'));
+  }
+  return panel.panelType === 'side-right' || name.includes('우측');
+}
+
+function shouldUseOriginalFurnitureSidePanelY(panel: PanelBoringData): boolean {
+  const name = panel.panelName || '';
+  return isSplitFurnitureSidePanel(panel)
+    && (
+      (name.includes('(상)') && name.includes('좌측'))
+      || (name.includes('(하)') && name.includes('우측'))
+    );
+}
+
+function resolveRotatedX(panel: PanelBoringData, x: number, width: number): number {
+  return shouldMirrorFurnitureSidePanelX(panel)
+    ? Math.max(0, panel.width - x - width)
+    : x;
+}
+
+function resolveRotatedY(panel: PanelBoringData, y: number, height: number): number {
+  return shouldUseOriginalFurnitureSidePanelY(panel)
+    ? Math.max(0, panel.height - y - height)
+    : y;
+}
+
 function resolvePanelPosition(panel: PanelBoringData, role: string, moduleGeometry?: ModuleGeometry): Vec3 {
   const t = panel.thickness;
   const module = moduleGeometry || {
@@ -308,7 +348,8 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
     const x = isRightSide
       ? BACK_PANEL_GROOVE_REAR_OFFSET_MM
       : panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
-    const centerX = x + BACK_PANEL_GROOVE_WIDTH_MM / 2;
+    const resolvedX = resolveRotatedX(panel, x, BACK_PANEL_GROOVE_WIDTH_MM);
+    const centerX = resolvedX + BACK_PANEL_GROOVE_WIDTH_MM / 2;
     operations.push({
       id: 'back-panel-groove',
       operationType: 'groove',
@@ -330,8 +371,10 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
     const isRightSide = panel.panelType === 'side-right' || name.includes('우측');
     const width = Math.max(0, Math.min(notch.z, panel.width));
     const height = Math.max(0, Math.min(notch.y, panel.height));
-    const startX = isRightSide ? Math.max(0, panel.width - width) : 0;
-    const startY = Math.max(0, Math.min(panel.height - notch.fromBottom - height, panel.height - height));
+    const baseStartX = isRightSide ? Math.max(0, panel.width - width) : 0;
+    const baseStartY = Math.max(0, Math.min(panel.height - notch.fromBottom - height, panel.height - height));
+    const startX = resolveRotatedX(panel, baseStartX, width);
+    const startY = resolveRotatedY(panel, baseStartY, height);
     const blockNumber = hasBackPanelGroove ? index + 3 : index + 2;
     operations.push({
       id: `side-notch-${index + 1}`,

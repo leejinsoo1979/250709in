@@ -87,7 +87,7 @@ describe('buildMprAssemblyMetadata', () => {
         mprCommand: 'Nuten',
         through: false,
         depth: 7.5,
-        mpr: expect.objectContaining({ XA: 18.5, YA: -1, XE: 18.5, YE: 861, NB: 3, TI: 7.5 }),
+        mpr: expect.objectContaining({ XA: 361.5, YA: -1, XE: 361.5, YE: 861, NB: 3, TI: 7.5 }),
       }),
       expect.objectContaining({
         id: 'side-notch-1',
@@ -95,7 +95,7 @@ describe('buildMprAssemblyMetadata', () => {
         mprCommand: 'Konturfraesen',
         through: true,
         depth: 18,
-        mpr: expect.objectContaining({ EA: '3:0', EE: '3:2', ZA: -2, startX: 340, startY: 0, width: 40, height: 80 }),
+        mpr: expect.objectContaining({ EA: '3:0', EE: '3:2', ZA: -2, startX: 0, startY: 780, width: 40, height: 80 }),
       }),
       expect.objectContaining({
         id: 'fixed-side-1',

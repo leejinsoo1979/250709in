@@ -68,6 +68,39 @@ function resolveMprSidePanelHeightY(panel: PlacedPanel, heightPosition: number):
   return Math.round(Math.max(0, Math.min(height, height - heightPosition)) * 10) / 10;
 }
 
+function isSplitMprSidePanel(panel: PlacedPanel): boolean {
+  const name = panel.name || '';
+  return (name.includes('(상)') || name.includes('(하)'))
+    && (name.includes('좌측') || name.includes('우측'));
+}
+
+function shouldMirrorMprSidePanelX(panel: PlacedPanel): boolean {
+  const name = panel.name || '';
+  if (isSplitMprSidePanel(panel)) {
+    return !(name.includes('(상)') && name.includes('우측'));
+  }
+  return isFurnitureRightSidePanel(panel);
+}
+
+function shouldUseOriginalMprSidePanelY(panel: PlacedPanel): boolean {
+  const name = panel.name || '';
+  return (name.includes('(상)') && name.includes('좌측'))
+    || (name.includes('(하)') && name.includes('우측'));
+}
+
+function resolveMprSidePanelX(panel: PlacedPanel, x: number): number {
+  if (!shouldMirrorMprSidePanelX(panel)) return x;
+  const width = Number(panel.width || 0);
+  if (!Number.isFinite(width) || width <= 0) return x;
+  return Math.round(Math.max(0, Math.min(width, width - x)) * 10) / 10;
+}
+
+function resolveMprSidePanelY(panel: PlacedPanel, y: number): number {
+  return shouldUseOriginalMprSidePanelY(panel)
+    ? y
+    : resolveMprSidePanelHeightY(panel, y);
+}
+
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
   const borings: Boring[] = [];
   let boringIdx = 0;
@@ -102,8 +135,8 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
         || (!group?.boringType && !isDrawerPanel && xPositionsForY.length >= 3);
 
       xPositionsForY.forEach((xPos: number) => {
-        const mprX = isFurnitureSidePanelForMpr ? resolveMprSidePanelDepthY(panel, xPos) : resolveMprTopBoringX(panel, xPos);
-        const mprY = isFurnitureSidePanelForMpr ? resolveMprSidePanelHeightY(panel, yPos) : yPos;
+        const mprX = isFurnitureSidePanelForMpr ? resolveMprSidePanelX(panel, xPos) : resolveMprTopBoringX(panel, xPos);
+        const mprY = isFurnitureSidePanelForMpr ? resolveMprSidePanelY(panel, yPos) : yPos;
         borings.push({
           id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
           type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
@@ -167,8 +200,8 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
           id: `bracket-${boringIdx++}`,
           type: 'hinge-screw',
           face: 'top',
-          x: xPos,
-          y: isFurnitureSidePanelForMpr ? resolveMprSidePanelHeightY(panel, yPos) : yPos,
+          x: isFurnitureSidePanelForMpr ? resolveMprSidePanelX(panel, xPos) : xPos,
+          y: isFurnitureSidePanelForMpr ? resolveMprSidePanelY(panel, yPos) : yPos,
           diameter: 3,
           depth: 3,
           note: 'door-fixing-screw',
