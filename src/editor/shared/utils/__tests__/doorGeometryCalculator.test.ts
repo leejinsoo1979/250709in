@@ -340,14 +340,14 @@ describe('doorGeometryCalculator', () => {
         name: 'left',
         widthMm: 497,
         heightMm: 720,
-        hingeSide: 'left'
+        hingeSide: 'right'
       },
       {
         index: 1,
         name: 'right',
         widthMm: 497,
         heightMm: 720,
-        hingeSide: 'right'
+        hingeSide: 'left'
       }
     ])
   })

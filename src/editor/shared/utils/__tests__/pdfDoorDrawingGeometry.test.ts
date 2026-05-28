@@ -58,7 +58,7 @@ describe('pdfDoorDrawingGeometry', () => {
 
     expect(item?.items).toHaveLength(2)
     expect(item?.items.map(door => door.width)).toEqual([479, 479])
-    expect(item?.items.map(door => door.hingeSide)).toEqual(['left', 'right'])
+    expect(item?.items.map(door => door.hingeSide)).toEqual(['right', 'left'])
     expect(item?.items[0].x).toBe(18)
     expect(item?.items[1].x).toBe(503)
   })
