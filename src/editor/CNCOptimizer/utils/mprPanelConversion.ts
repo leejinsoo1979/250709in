@@ -3,6 +3,7 @@ import {
   isFurnitureSidePanelName,
   resolveOptimizerBoringPoint,
   resolveOptimizerBracketPoint,
+  resolveOptimizerDoorBoringPoints,
 } from '@/utils/cnc/optimizerMachiningGeometry';
 import type { PlacedPanel } from '../types';
 
@@ -109,39 +110,33 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
   }
 
   // 2) 도어 힌지컵 보링 (Ø35mm, depth=13)
-  if (panel.isDoor && panel.boringPositions && panel.boringPositions.length > 0) {
-    const cupXPositions = panel.boringDepthPositions || [];
-    panel.boringPositions.forEach((yPos) => {
-      cupXPositions.forEach((xPos) => {
-        borings.push({
-          id: `hinge-cup-${boringIdx++}`,
-          type: 'hinge-cup',
-          face: 'top',
-          x: xPos,
-          y: yPos,
-          diameter: 35,
-          depth: 13,
-        });
+  // 3) 도어 나사홀 (Ø3mm, depth=3)
+  if (panel.isDoor) {
+    const doorPoints = resolveOptimizerDoorBoringPoints(panel);
+
+    doorPoints.cupPoints.forEach((point) => {
+      borings.push({
+        id: `hinge-cup-${boringIdx++}`,
+        type: 'hinge-cup',
+        face: 'top',
+        x: point.x,
+        y: point.y,
+        diameter: 35,
+        depth: 13,
       });
     });
-  }
 
-  // 3) 도어 나사홀 (Ø8mm, depth=13)
-  if (panel.isDoor && panel.screwPositions && panel.screwPositions.length > 0) {
-    const screwXPositions = panel.screwDepthPositions || [];
-    panel.screwPositions.forEach((yPos) => {
-      screwXPositions.forEach((xPos) => {
-        borings.push({
-          id: `hinge-screw-${boringIdx++}`,
-          type: 'hinge-screw',
-          face: 'top',
-          x: xPos,
-          y: yPos,
-          diameter: 3,
-          depth: 3,
-          angle: -90,
-          note: 'door-fixing-screw',
-        });
+    doorPoints.screwPoints.forEach((point) => {
+      borings.push({
+        id: `hinge-screw-${boringIdx++}`,
+        type: 'hinge-screw',
+        face: 'top',
+        x: point.x,
+        y: point.y,
+        diameter: 3,
+        depth: 3,
+        angle: -90,
+        note: 'door-fixing-screw',
       });
     });
   }

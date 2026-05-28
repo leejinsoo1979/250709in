@@ -10,6 +10,11 @@ export interface MachiningPoint {
   y: number;
 }
 
+export interface DoorMachiningPoints {
+  cupPoints: MachiningPoint[];
+  screwPoints: MachiningPoint[];
+}
+
 export const roundOptimizerCoord = (value: number): number => Math.round(value * 10) / 10;
 
 export const isDrawerSidePanelName = (name?: string): boolean => {
@@ -119,5 +124,92 @@ export function resolveOptimizerBracketPoint(
   return {
     x: roundOptimizerCoord(xPosMm),
     y: roundOptimizerCoord(flippedY),
+  };
+}
+
+export function resolveOptimizerDoorBoringPoints(
+  panel: MachiningPanel & {
+    boringPositions?: number[];
+    boringDepthPositions?: number[];
+    screwPositions?: number[];
+    screwDepthPositions?: number[];
+    screwHoleSpacing?: number;
+    isLeftHinge?: boolean;
+  }
+): DoorMachiningPoints {
+  const originalWidth = panel.width;
+  const originalHeight = panel.height;
+  const placedWidth = panel.rotated ? originalHeight : originalWidth;
+  const placedHeight = panel.rotated ? originalWidth : originalHeight;
+  const screwRowDistance = 9.5;
+  const screwYOffset = (panel.screwHoleSpacing || 45) / 2;
+
+  const cupYPositions = panel.boringPositions?.length
+    ? panel.boringPositions
+    : (() => {
+      const screwPositions = [...(panel.screwPositions || [])].sort((a, b) => a - b);
+      const centers: number[] = [];
+
+      for (let i = 0; i + 1 < screwPositions.length; i += 2) {
+        centers.push(roundOptimizerCoord((screwPositions[i] + screwPositions[i + 1]) / 2));
+      }
+
+      return Array.from(new Set(centers));
+    })();
+
+  const cupXPositions = panel.boringDepthPositions?.length
+    ? panel.boringDepthPositions
+    : (() => {
+      const screwX = panel.screwDepthPositions?.[0];
+
+      if (typeof screwX === 'number') {
+        const restoredCupX = screwX < originalWidth / 2
+          ? screwX - screwRowDistance
+          : screwX + screwRowDistance;
+        const fallbackCupX = screwX < originalWidth / 2
+          ? screwX + screwRowDistance
+          : screwX - screwRowDistance;
+        const cupX = restoredCupX >= 0 && restoredCupX <= originalWidth
+          ? restoredCupX
+          : fallbackCupX;
+
+        return [roundOptimizerCoord(Math.max(0, Math.min(originalWidth, cupX)))];
+      }
+
+      return [panel.isLeftHinge ? originalWidth - 22.5 : 22.5];
+    })();
+
+  let screwYPositions = panel.screwPositions || [];
+  let screwXPositions = panel.screwDepthPositions || [];
+
+  if (screwYPositions.length === 0 && cupYPositions.length > 0) {
+    screwYPositions = cupYPositions.flatMap(cupY => [cupY - screwYOffset, cupY + screwYOffset]);
+  }
+
+  if (screwXPositions.length === 0 && cupXPositions.length > 0) {
+    const cupX = cupXPositions[0];
+    const isLeftHinge = cupX < originalWidth / 2;
+    screwXPositions = [isLeftHinge ? cupX + screwRowDistance : cupX - screwRowDistance];
+  }
+
+  const toPoint = (posMmX: number, posMmY: number): MachiningPoint => {
+    if (panel.rotated) {
+      const scaleX = placedWidth / originalWidth;
+      const scaleY = placedHeight / originalHeight;
+      return {
+        x: roundOptimizerCoord(posMmX * scaleX),
+        y: roundOptimizerCoord(posMmY * scaleY),
+      };
+    }
+
+    return {
+      x: roundOptimizerCoord(posMmX),
+      y: roundOptimizerCoord(posMmY),
+    };
+  };
+
+  return {
+    cupPoints: cupXPositions.flatMap(cupX => cupYPositions.map(cupY => toPoint(cupX, cupY))),
+    screwPoints: screwXPositions.flatMap(screwX => screwYPositions.map(screwY => toPoint(screwX, screwY))),
   };
 }

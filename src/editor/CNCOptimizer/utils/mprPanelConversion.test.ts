@@ -335,6 +335,73 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(lowerRightMpr).toContain('Y=0.0000');
   });
 
+  it('exports door hinge cups and screws with the same coordinates shown in optimizer preview', () => {
+    const panel = {
+      id: 'door-right-hinge-1',
+      name: '도어',
+      width: 497,
+      height: 730,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PET',
+      color: 'MW',
+      grain: 'VERTICAL',
+      isDoor: true,
+      isLeftHinge: false,
+      boringPositions: [120, 610],
+      boringDepthPositions: [22.5],
+      screwPositions: [97.5, 142.5, 587.5, 632.5],
+      screwDepthPositions: [32],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const cupBorings = converted.borings.filter(boring => boring.type === 'hinge-cup');
+    const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
+
+    expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 22.5, y: 120 },
+      { x: 22.5, y: 610 },
+    ]);
+    expect(screwBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 32, y: 97.5 },
+      { x: 32, y: 142.5 },
+      { x: 32, y: 587.5 },
+      { x: 32, y: 632.5 },
+    ]);
+  });
+
+  it('exports door fallback hinge cup coordinates when optimizer preview derives them from screw data', () => {
+    const panel = {
+      id: 'door-screw-only-1',
+      name: '우측 도어',
+      width: 497,
+      height: 730,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PET',
+      color: 'MW',
+      grain: 'VERTICAL',
+      isDoor: true,
+      isLeftHinge: false,
+      screwPositions: [97.5, 142.5, 587.5, 632.5],
+      screwDepthPositions: [32],
+    } as PlacedPanel;
+
+    const converted = convertPlacedPanelToMprBoringData(panel);
+    const cupBorings = converted.borings.filter(boring => boring.type === 'hinge-cup');
+    const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
+
+    expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
+      { x: 22.5, y: 120 },
+      { x: 22.5, y: 610 },
+    ]);
+    expect(screwBorings).toHaveLength(4);
+  });
+
   it('does not export stale boring data on drawer front panels', () => {
     const panel = {
       id: 'drawer-front-1',
