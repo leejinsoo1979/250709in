@@ -4702,6 +4702,753 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
+          {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) — 편집 탭 전용 */}
+          {!showDetails && currentPlacedModule && (() => {
+            const cc = currentPlacedModule.customConfig;
+            const ccSections = cc?.sections;
+            // 사용자가 customSections로 직접 갱신한 경우 우선 (팬트리장 하부 섹션 변경 등)
+            const userCustomSections = (currentPlacedModule as any).customSections;
+            const mcSections = (Array.isArray(userCustomSections) && userCustomSections.length >= 2)
+              ? userCustomSections
+              : moduleData?.modelConfig?.sections;
+            const hasSections = (ccSections && ccSections.length >= 2) || (mcSections && mcSections.length >= 2);
+            if (!hasSections) return null;
+
+            // 섹션 소스 결정: customConfig 우선, 없으면 modelConfig
+            const isCustom = !!(ccSections && ccSections.length >= 2);
+            const sectionCount = isCustom ? ccSections!.length : mcSections!.length;
+            const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
+            const totalH = placedBodyHeight || moduleData?.dimensions?.height || 2200;
+            const totalW = currentPlacedModule.freeWidth
+              ?? currentPlacedModule.adjustedWidth
+              ?? currentPlacedModule.customWidth
+              ?? moduleData?.dimensions?.width
+              ?? 600;
+            const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
+
+            // 표준 가구의 섹션 높이: 마지막(상부) 섹션이 프레임 토글 흡수분을 먹되,
+            // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
+            // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
+            const shouldAbsorbTopForSections = moduleData?.category === 'full';
+            const shouldAbsorbBaseForSections = moduleData?.category === 'full' || moduleData?.category === 'lower';
+            const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
+              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+              : 0;
+            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false
+              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                - (currentPlacedModule.individualFloatHeight ?? 0))
+              : 0;
+            const sectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
+            const isPlainShoeShelfForSections = !isCustom
+              && !!mcSections
+              && usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
+            const plainShoeShelfSectionHeights = isPlainShoeShelfForSections && mcSections
+              ? getPlainShoeShelfSectionHeights(currentPlacedModule, spaceInfo, mcSections, sectionBasisH)
+              : null;
+
+            const getStdSectionHeightMM = (sIdx: number): number => {
+              if (!mcSections || mcSections.length < 2) return totalH;
+              const sec = mcSections[sIdx];
+              const ht = sec.heightType || 'percentage';
+              const isLast = sIdx === mcSections.length - 1;
+              if (isLast) {
+                // 마지막(상부) 섹션 = sectionBasisH - 이전 섹션 합
+                const fixedSum = mcSections.slice(0, -1).reduce((acc, s) => {
+                  if (s.heightType === 'absolute') return acc + (s.height || 0);
+                  const r = (s.height || s.heightRatio || 50) / 100;
+                  return acc + Math.round(sectionBasisH * r);
+                }, 0);
+                return Math.max(0, sectionBasisH - fixedSum);
+              }
+              if (ht === 'absolute') return sec.height || 0;
+              const ratio = (sec.height || sec.heightRatio || 50) / 100;
+              return Math.round(sectionBasisH * ratio);
+            };
+
+            return (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>섹션별 치수</h5>
+              {Array.from({ length: sectionCount }).map((_, i) => sectionCount - 1 - i).map((sIdx) => {
+                const sec = isCustom ? ccSections![sIdx] : mcSections![sIdx];
+                const sectionLabel = sectionCount === 2
+                  ? (sIdx === 0 ? '하부' : '상부')
+                  : `섹션 ${sIdx + 1}`;
+                const hasHS = isCustom && !!(sec as any).horizontalSplit;
+
+                // 높이 표시값 — 마지막(상부) 섹션은 항상 동적 재계산 (토글 흡수분 반영)
+                // isCustom이어도 마지막 섹션은 sectionBasisH - 이전합으로 계산해야
+                // 상부몰딩/걸레받이 토글 변경 시 흡수된 높이가 즉시 반영됨
+                const isLastSection = sIdx === sectionCount - 1;
+                const isPantryOrPullOutSection = isPullOutOrPantry && !isCustom;
+                const dynamicH = plainShoeShelfSectionHeights
+                  ? (plainShoeShelfSectionHeights[sIdx] ?? 0)
+                  : isPantryOrPullOutSection
+                  ? ((sec as any).height || getStdSectionHeightMM(sIdx))
+                  : isLastSection
+                  ? (() => {
+                      const fixedSum = (isCustom ? ccSections! : mcSections!)
+                        .slice(0, -1)
+                        .reduce((acc: number, s: any) => {
+                          if (s.heightType === 'absolute') return acc + (s.height || 0);
+                          const r = (s.height || s.heightRatio || 50) / 100;
+                          return acc + Math.round(sectionBasisH * r);
+                        }, 0);
+                      return Math.max(0, sectionBasisH - fixedSum);
+                    })()
+                  : (isCustom
+                      ? ((sec as any).height + 2 * pt)
+                      : getStdSectionHeightMM(sIdx));
+                const displayH = sectionHeightInputs[sIdx] || Math.round(dynamicH).toString();
+                // 깊이 표시값: 섹션별 저장값 우선, 없으면 customDepth(신발장 380 등), 최후 totalD
+                // 옛 데이터의 stale 값(moduleDim과 일치) 무시
+                const cDepth = currentPlacedModule.customDepth;
+                const _isShoeCat3 =
+                  currentPlacedModule.moduleId.includes('-entryway-') ||
+                  currentPlacedModule.moduleId.includes('-shelf-') ||
+                  currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+                  currentPlacedModule.moduleId.includes('-2drawer-shelf-');
+                const _modDimD = moduleData.dimensions.depth;
+                const _hasCustomD = typeof cDepth === 'number' && cDepth > 0;
+                const _validSec = (v: number | undefined) =>
+                  (_isShoeCat3 && _hasCustomD && v === _modDimD) ? undefined : v;
+                const secStored = sIdx === 0
+                  ? _validSec(currentPlacedModule.lowerSectionDepth)
+                  : _validSec(currentPlacedModule.upperSectionDepth);
+                const displayD = sectionDepthInputs[sIdx]
+                  || (secStored !== undefined
+                    ? Math.round(secStored).toString()
+                    : (cDepth !== undefined
+                      ? Math.round(cDepth).toString()
+                      : Math.round(totalD).toString()));
+                // 너비 표시값
+                const displayW = sectionWidthInputs[sIdx]
+                  || (() => { const v = Math.round(((sec as any).width || totalW) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
+
+                return (
+                  <div
+                    key={sIdx}
+                    onMouseEnter={() => currentPlacedModule && setHighlightedSection(`${currentPlacedModule.id}-${sIdx}`)}
+                    onMouseLeave={() => setHighlightedSection(null)}
+                    style={{
+                      background: 'var(--theme-background)',
+                      border: '1px solid var(--theme-border)',
+                      borderRadius: '5px',
+                      padding: '6px 8px',
+                      marginBottom: sIdx < sectionCount - 1 ? '6px' : 0,
+                    }}
+                  >
+                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)', marginBottom: '4px' }}>
+                      {sectionLabel}
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {/* 섹션 너비 — 기둥 침범이 있는 슬롯 모드에서는 섹션별 너비 편집 + 좌/우고정 방향 */}
+                      {(() => {
+                        const hasColumnIntrusion =
+                          spaceInfo.layoutMode !== 'free-placement' &&
+                          (currentPlacedModule.adjustedWidth !== undefined && currentPlacedModule.adjustedWidth !== null);
+                        const isLowerSec = sIdx === 0;
+                        const isUpperSec = sIdx === 1;
+                        const sectionWidthVal = isLowerSec
+                          ? lowerWidthInput
+                          : isUpperSec
+                            ? upperWidthInput
+                            : displayW;
+                        const setSectionWidthVal = isLowerSec
+                          ? setLowerWidthInput
+                          : setUpperWidthInput;
+                        const widthDir = isLowerSec ? lowerWidthDirection : upperWidthDirection;
+                        const setWidthDir = isLowerSec ? setLowerWidthDirection : setUpperWidthDirection;
+                        const widthField = isLowerSec ? 'lowerSectionWidth' : 'upperSectionWidth';
+                        const widthDirField = isLowerSec ? 'lowerSectionWidthDirection' : 'upperSectionWidthDirection';
+                        const baseAdjW = currentPlacedModule.adjustedWidth || currentPlacedModule.customWidth || totalW;
+
+                        const commitWidth = (raw: string) => {
+                          const v = parseInt(raw, 10);
+                          if (isNaN(v) || v < 100 || v > 2400) {
+                            setSectionWidthVal(Math.round(baseAdjW).toString());
+                            return;
+                          }
+                          updatePlacedModule(currentPlacedModule.id, { [widthField]: v } as any);
+                        };
+
+                        return (
+                      <div style={{ flex: 1, minWidth: '70px' }}>
+                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>너비</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={hasColumnIntrusion ? sectionWidthVal : displayW}
+                            disabled={spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion}
+                            onChange={(e) => {
+                              if (hasColumnIntrusion) setSectionWidthVal(e.target.value);
+                              else setSectionWidthInputs(prev => ({ ...prev, [sIdx]: e.target.value }));
+                            }}
+                            onBlur={() => {
+                              if (hasColumnIntrusion) {
+                                commitWidth(sectionWidthVal);
+                                return;
+                              }
+                              // 너비 변경 → 전체 가구 너비 변경 (모든 섹션 연동)
+                              const val = parseInt(sectionWidthInputs[sIdx] || displayW, 10);
+                              if (!isNaN(val) && val >= 100 && val <= 2400) {
+                                const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
+                                const fa = useFurnitureStore.getState().placedModules;
+                                const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                                const newX = calcResizedPositionX(fm, val, fa, freshSI);
+                                const updates: any = {
+                                  freeWidth: val,
+                                  moduleWidth: val,
+                                  position: { ...fm.position, x: newX },
+                                };
+                                if (isCustom) {
+                                  const newSecs = cc!.sections.map((s: any) => ({ ...s, width: val }));
+                                  updates.customConfig = { ...cc!, sections: newSecs };
+                                }
+                                updatePlacedModule(currentPlacedModule.id, updates);
+                                setFreeWidthInput(val.toString());
+                                const wInputs: Record<number, string> = {};
+                                for (let i = 0; i < sectionCount; i++) wInputs[i] = val.toString();
+                                setSectionWidthInputs(wInputs);
+                              } else {
+                                setSectionWidthInputs(prev => ({ ...prev, [sIdx]: Math.round(totalW).toString() }));
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                if (hasColumnIntrusion) {
+                                  const cur = parseInt(sectionWidthVal, 10) || Math.round(baseAdjW);
+                                  const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  setSectionWidthVal(next.toString());
+                                  updatePlacedModule(currentPlacedModule.id, { [widthField]: next } as any);
+                                  return;
+                                }
+                                const fm2 = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
+                                const curW2 = fm2.freeWidth || parseInt(displayW, 10) || Math.round(totalW);
+                                const next = Math.max(100, Math.min(2400, curW2 + (e.key === 'ArrowUp' ? 1 : -1)));
+                                setSectionWidthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                const fa2 = useFurnitureStore.getState().placedModules;
+                                const freshSI2 = useSpaceConfigStore.getState().spaceInfo;
+                                const newX = calcResizedPositionX(fm2, next, fa2, freshSI2);
+                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...fm2.position, x: newX } };
+                                if (isCustom) {
+                                  const newSecs = cc!.sections.map((s: any) => ({ ...s, width: next }));
+                                  updates.customConfig = { ...cc!, sections: newSecs };
+                                }
+                                updatePlacedModule(currentPlacedModule.id, updates);
+                                setFreeWidthInput(next.toString());
+                              }
+                            }}
+                            className={styles.depthInput}
+                            style={{
+                              color: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#999' : '#000',
+                              backgroundColor: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#f0f0f0' : '#fff',
+                              WebkitTextFillColor: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#999' : '#000',
+                              opacity: 1,
+                            }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                        {/* 좌고정/우고정 (기둥 침범 시에만 표시) */}
+                        {hasColumnIntrusion && sectionCount === 2 && (
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: widthDir === 'left' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: widthDir === 'left' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setWidthDir('left');
+                                updatePlacedModule(currentPlacedModule.id, { [widthDirField]: 'left' } as any);
+                              }}
+                            >좌고정</button>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: widthDir === 'right' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: widthDir === 'right' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setWidthDir('right');
+                                updatePlacedModule(currentPlacedModule.id, { [widthDirField]: 'right' } as any);
+                              }}
+                            >우고정</button>
+                          </div>
+                        )}
+                      </div>
+                        );
+                      })()}
+                      {/* 섹션 높이 — 표준 가구: 마지막(상부) 섹션만 편집 가능 (전체 높이 역계산), 커스텀: 모두 편집 가능
+                          단, 팬트리장/인출장은 모든 섹션 편집 가능 (하부 변경 시 상부 자동 동기화) */}
+                      {(() => {
+                        // 표준 가구에서 마지막 섹션(상부=가변)만 편집 가능
+                        const isLastSection = sIdx === sectionCount - 1;
+                        const isFreePlacementStandard = !isCustom && !!currentPlacedModule.isFreePlacement && sectionCount >= 2;
+                        const isStdEditable = !isCustom && isLastSection && sectionCount >= 2;
+                        const isPantryOrPullOut = isPullOutOrPantry;
+                        const canEdit = isPlainShoeShelfForSections
+                          ? sectionCount === 2
+                          : (isCustom || isFreePlacementStandard || isStdEditable || (isPantryOrPullOut && sectionCount >= 2));
+                        return (
+                      <div style={{ flex: 1, minWidth: '70px' }}>
+                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text" inputMode="numeric"
+                            value={displayH}
+                            onChange={(e) => setSectionHeightInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                            onBlur={() => {
+                              if (isPlainShoeShelfForSections && mcSections && plainShoeShelfSectionHeights) {
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const fixedSectionBasisH = plainShoeShelfSectionHeights.reduce((sum, h) => sum + h, 0);
+                                const isLowerSectionInput = sIdx === 0;
+                                const minUpperSectionH = 100;
+                                const currentLowerEffectiveH = plainShoeShelfSectionHeights[0] ?? 0;
+                                const maxInputVal = isLowerSectionInput
+                                  ? Math.max(100, fixedSectionBasisH - minUpperSectionH)
+                                  : Math.max(100, fixedSectionBasisH - currentLowerEffectiveH);
+                                const nextInputVal = Math.min(inputVal, maxInputVal);
+                                const wasClamped = nextInputVal !== inputVal;
+                                const nextEffectiveHeights = [...plainShoeShelfSectionHeights];
+                                if (isLowerSectionInput) {
+                                  nextEffectiveHeights[0] = nextInputVal;
+                                  nextEffectiveHeights[1] = Math.max(minUpperSectionH, fixedSectionBasisH - nextInputVal);
+                                } else {
+                                  nextEffectiveHeights[0] = currentLowerEffectiveH;
+                                  nextEffectiveHeights[1] = nextInputVal;
+                                }
+                                const isShelfSplitSectionInput = isShelfSplitModuleId(currentPlacedModule.moduleId);
+                                const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(currentPlacedModule, spaceInfo);
+                                const canonicalLowerH = isShelfSplitSectionInput
+                                  ? Math.max(0, Math.round(nextEffectiveHeights[0]))
+                                  : Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm + baseFrameDeltaMm));
+                                const canonicalUpperH = Math.max(0, Math.round(nextEffectiveHeights[1]));
+                                const effectiveHeightsForShelves = [nextEffectiveHeights[0], nextEffectiveHeights[1]];
+                                const newSections = mcSections.map((s: any, idx: number) => {
+                                  const nextH = idx === 0 ? canonicalLowerH : canonicalUpperH;
+                                  const updated: any = { ...s, height: nextH };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, effectiveHeightsForShelves[idx] - 2 * pt);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, pt);
+                                  }
+                                  return updated;
+                                });
+                                const sectionUpdates: any = { customSections: newSections };
+                                if (isShelfSplitSectionInput) {
+                                  if (isLowerSectionInput) {
+                                    sectionUpdates.lowerDoorHingePositionsMm = undefined;
+                                    sectionUpdates.upperDoorHingePositionsMm = undefined;
+                                  } else {
+                                    sectionUpdates.upperDoorHingePositionsMm = undefined;
+                                  }
+                                }
+                                updatePlacedModule(currentPlacedModule.id, sectionUpdates);
+                                if (wasClamped) {
+                                  showAlert(
+                                    `상하부섹션과 상단몰딩, 걸레받이의 합은 공간높이를 초과할 수 없습니다. 가능한 최대값 ${maxInputVal}으로 변경했습니다.`,
+                                    { title: '치수 변경 불가' }
+                                  );
+                                }
+                                setSectionHeightInputs({});
+                              } else if (isCustom) {
+                                handleSectionHeightBlur(sIdx);
+                              } else if (isFreePlacementStandard && mcSections) {
+                                // 자유배치 표준 가구: 선택 섹션 높이를 고정하고, 나머지 섹션 치수는 유지한 채 전체 H를 재계산한다.
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const renderedHeights = mcSections.map((section: any, idx: number) => {
+                                  if (idx === sIdx) return inputVal;
+                                  if (plainShoeShelfSectionHeights) return plainShoeShelfSectionHeights[idx] ?? 0;
+                                  if (idx === mcSections.length - 1) {
+                                    const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
+                                      if ((s.heightType || 'percentage') === 'absolute') return acc + (s.height || 0);
+                                      const ratio = (s.height || s.heightRatio || 50) / 100;
+                                      return acc + Math.round(sectionBasisH * ratio);
+                                    }, 0);
+                                    return Math.max(0, sectionBasisH - fixedSum);
+                                  }
+                                  if ((section.heightType || 'percentage') === 'absolute') return section.height || 0;
+                                  return Math.round(sectionBasisH * ((section.height || section.heightRatio || 50) / 100));
+                                });
+                                const nextTotalH = renderedHeights.reduce((sum: number, h: number) => sum + h, 0);
+                                const clampedH = Math.max(300, Math.min(3000, Math.round(nextTotalH)));
+                                const basicThickness = moduleData?.modelConfig?.basicThickness || 18;
+                                const nextSections = mcSections.map((section: any, idx: number) => {
+                                  if (idx !== sIdx || idx === mcSections.length - 1) return section;
+                                  const updated: any = { ...section, height: inputVal, heightType: 'absolute' };
+                                  if ((section.type === 'shelf' || section.type === 'open') && (section.count > 0 || (Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0))) {
+                                    const shelfCount = section.count || (section.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                updatePlacedModule(currentPlacedModule.id, {
+                                  freeHeight: clampedH,
+                                  customSections: nextSections,
+                                } as any);
+                                setFreeHeightInput(clampedH.toString());
+                                setSectionHeightInputs({});
+                              } else if (isPantryOrPullOut && mcSections) {
+                                // 팬트리장/인출장: 전체 몸통 H 고정, 변경한 섹션의 반대쪽 섹션이 흡수한다.
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const totalH = placedBodyHeight || moduleData.dimensions.height;
+                                const basicThickness = (spaceInfo as any).panelThickness || 18;
+                                // 변경된 섹션 height 적용 + 변경된 섹션이 shelf면 shelfPositions 재배치
+                                const tentative = mcSections.map((s: any, idx: number) => {
+                                  if (idx !== sIdx) return s;
+                                  const updated: any = { ...s, height: inputVal };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                const absorbTarget = sIdx === 0 ? mcSections.length - 1 : 0;
+                                const otherSum = tentative
+                                  .filter((_: any, idx: number) => idx !== absorbTarget)
+                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
+                                const newAbsorbH = totalH - otherSum;
+                                if (newAbsorbH < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const newSections = tentative.map((s: any, idx: number) => {
+                                  if (idx !== absorbTarget) return s;
+                                  const updated: any = { ...s, height: newAbsorbH };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, newAbsorbH - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                updatePlacedModule(currentPlacedModule.id, { customSections: newSections } as any);
+                                setSectionHeightInputs({});
+                              } else if (isStdEditable && mcSections) {
+                                // 표준 가구 마지막(상부) 섹션 높이 변경 → 전체 높이 역계산
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                // 하부 고정 섹션 합 + 패널 두께 → 전체 높이 역계산
+                                const prevFixed = mcSections
+                                  .filter((_: any, idx: number) => idx < sIdx)
+                                  .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
+                                // 역계산: 상부 = sec.height + (totalH - dimH)
+                                // → totalH = inputVal - sec.height + dimH  (단, sec.height는 원래 모듈의 상부 높이)
+                                // 더 단순하게: newTotalH = prevFixed + inputVal (하부+상부 = 전체)
+                                const newTotalH = prevFixed + inputVal;
+                                const clampedH = Math.max(300, Math.min(3000, newTotalH));
+                                const secUpdates: any = { freeHeight: clampedH };
+                                // 키큰장: 상단몰딩도 연동
+                                if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
+                                  const iSpace = calculateInternalSpace(spaceInfo);
+                                  const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                                  secUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - clampedH));
+                                }
+                                updatePlacedModule(currentPlacedModule.id, secUpdates);
+                                setFreeHeightInput(clampedH.toString());
+                                setSectionHeightInputs({});
+                              } else {
+                                setSectionHeightInputs(prev => ({ ...prev, [sIdx]: displayH }));
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                              else if (canEdit && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                                e.preventDefault();
+                                const cur = parseInt(displayH, 10) || 0;
+                                const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                setSectionHeightInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
+                              }
+                            }}
+                            className={styles.depthInput}
+                            readOnly={!canEdit}
+                            style={{
+                              color: '#000', backgroundColor: canEdit ? '#fff' : '#f5f5f5',
+                              WebkitTextFillColor: '#000', opacity: canEdit ? 1 : 0.7,
+                              cursor: canEdit ? 'text' : 'default',
+                            }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                        );
+                      })()}
+                      {/* 섹션 깊이 (2섹션 가구 + 인출장/팬트리장 N섹션 한정) */}
+                      {(sectionCount === 2 || isPullOutOrPantry) && (() => {
+                        // 인출장/팬트리장: sectionDepths 배열 사용 (각 섹션 독립)
+                        const sectionDepths = (currentPlacedModule as any)?.sectionDepths as number[] | undefined;
+                        const sectionDirs = (currentPlacedModule as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
+                        const moduleDefaultDepth = moduleData?.dimensions.depth || 600;
+                        const sectionDepthVal = isPullOutOrPantry
+                          ? (sectionDepths?.[sIdx] ?? currentPlacedModule?.customDepth ?? moduleDefaultDepth).toString()
+                          : '';
+                        const sectionDirVal = isPullOutOrPantry
+                          ? (sectionDirs?.[sIdx] ?? 'front')
+                          : 'front';
+                        // 2섹션 가구: 기존 매핑 사용
+                        // N섹션 가구: 마지막 섹션을 "상부"로 매핑, 그 외 모든 섹션은 "하부" 사용
+                        const isLowerSec = sIdx < sectionCount - 1;
+                        const onSectionDepthChange = (val: string) => {
+                          if (isPullOutOrPantry && currentPlacedModule) {
+                            const numV = parseInt(val);
+                            if (!isNaN(numV) && numV > 0) {
+                              const arr = [...(sectionDepths ?? new Array(sectionCount).fill(moduleDefaultDepth))];
+                              arr[sIdx] = numV;
+                              // 마지막 섹션 변경 시 upperSectionDepth도 동기화 (Room/CleanCAD2D 등 다른 가구 인터페이스와 호환)
+                              const updates: any = { sectionDepths: arr };
+                              if (sIdx === sectionCount - 1) {
+                                updates.upperSectionDepth = numV;
+                              } else if (sIdx === 0) {
+                                updates.lowerSectionDepth = numV;
+                              }
+                              updatePlacedModule(currentPlacedModule.id, updates);
+                            }
+                          } else {
+                            (isLowerSec ? handleLowerDepthChange : handleUpperDepthChange)(val);
+                          }
+                        };
+                        const depthVal = isPullOutOrPantry ? sectionDepthVal : (isLowerSec ? lowerDepthInput : upperDepthInput);
+                        const onDepthChange = onSectionDepthChange;
+                        const dir = isPullOutOrPantry ? sectionDirVal : (isLowerSec ? lowerDepthDirection : upperDepthDirection);
+                        const setDir = isPullOutOrPantry
+                          ? (newDir: 'front' | 'back') => {
+                              if (currentPlacedModule) {
+                                const arr = [...(sectionDirs ?? new Array(sectionCount).fill('front'))];
+                                arr[sIdx] = newDir;
+                                updatePlacedModule(currentPlacedModule.id, { sectionDepthDirections: arr } as any);
+                              }
+                            }
+                          : (isLowerSec ? setLowerDepthDirection : setUpperDepthDirection);
+                        const dirField = isLowerSec ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                        return (
+                        <div style={{ flex: 1, minWidth: '70px' }}>
+                          <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>깊이</label>
+                          <div className={styles.inputWithUnit}>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={depthVal}
+                              onChange={(e) => onDepthChange(e.target.value)}
+                              onFocus={() => currentPlacedModule && setHighlightedSection(`${currentPlacedModule.id}-${sIdx}`)}
+                              onBlur={() => setHighlightedSection(null)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const cur = parseInt(depthVal, 10) || 0;
+                                  const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  onDepthChange(next.toString());
+                                }
+                              }}
+                              className={styles.depthInput}
+                              style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
+                            />
+                            <span className={styles.unit}>mm</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: dir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: dir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setDir('front');
+                                if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { [dirField]: 'front' } as any);
+                              }}
+                            >뒤고정</button>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: dir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: dir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setDir('back');
+                                if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { [dirField]: 'back' } as any);
+                              }}
+                            >앞고정</button>
+                          </div>
+                        </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* 좌우 분할 서브박스 치수 (커스텀 가구 전용) */}
+                    {hasHS && (() => {
+                      const hs = (sec as any).horizontalSplit;
+                      return (
+                      <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed var(--theme-border)' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>좌우 분할</div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {/* 좌측 */}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>좌측</div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input type="text" inputMode="numeric"
+                                    value={hsLeftWidthInput[sIdx] || ''}
+                                    onChange={(e) => setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsLeftWidthBlur(sIdx)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsLeftWidthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                        setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input type="text" inputMode="numeric"
+                                    value={hsLeftDepthInput[sIdx] || ''}
+                                    onChange={(e) => setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsDepthBlur(sIdx, 'left')}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsLeftDepthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                        setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* 중앙 (3분할 시) */}
+                          {hs.secondPosition && (
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>중앙</div>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                <div style={{ flex: 1 }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
+                                  <div className={styles.inputWithUnit}>
+                                    <input type="text" inputMode="numeric"
+                                      value={hsCenterWidthInput[sIdx] || ''} readOnly
+                                      className={styles.depthInput}
+                                      style={{ color: '#000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000', opacity: 0.7, fontSize: '12px' }}
+                                    />
+                                  </div>
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
+                                  <div className={styles.inputWithUnit}>
+                                    <input type="text" inputMode="numeric"
+                                      value={hsCenterDepthInput[sIdx] || ''}
+                                      onChange={(e) => setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                      onBlur={() => handleHsDepthBlur(sIdx, 'center')}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                          e.preventDefault();
+                                          const cur = parseInt(hsCenterDepthInput[sIdx] || '0', 10);
+                                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                          setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                        }
+                                      }}
+                                      className={styles.depthInput}
+                                      style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {/* 우측 */}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>우측</div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input type="text" inputMode="numeric"
+                                    value={hsRightWidthInput[sIdx] || ''}
+                                    onChange={(e) => setHsRightWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsRightWidthBlur(sIdx)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsRightWidthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                        setHsRightWidthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
+                                <div className={styles.inputWithUnit}>
+                                  <input type="text" inputMode="numeric"
+                                    value={hsRightDepthInput[sIdx] || ''}
+                                    onChange={(e) => setHsRightDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                                    onBlur={() => handleHsDepthBlur(sIdx, 'right')}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = parseInt(hsRightDepthInput[sIdx] || '0', 10);
+                                        const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                        setHsRightDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
+                                      }
+                                    }}
+                                    className={styles.depthInput}
+                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      );
+                    })()}
+                  </div>
+                );
+              })}
+            </div>
+            );
+          })()}
+
           {/* 도어 치수 (읽기 전용) — 몸통치수 바로 아래, 편집 탭 전용 */}
           {/* 키큰장 찬넬(insert-frame) 및 서랍 전용 모듈 제외 */}
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
@@ -6105,752 +6852,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
-          {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) — 편집 탭 전용 */}
-          {!showDetails && currentPlacedModule && (() => {
-            const cc = currentPlacedModule.customConfig;
-            const ccSections = cc?.sections;
-            // 사용자가 customSections로 직접 갱신한 경우 우선 (팬트리장 하부 섹션 변경 등)
-            const userCustomSections = (currentPlacedModule as any).customSections;
-            const mcSections = (Array.isArray(userCustomSections) && userCustomSections.length >= 2)
-              ? userCustomSections
-              : moduleData?.modelConfig?.sections;
-            const hasSections = (ccSections && ccSections.length >= 2) || (mcSections && mcSections.length >= 2);
-            if (!hasSections) return null;
-
-            // 섹션 소스 결정: customConfig 우선, 없으면 modelConfig
-            const isCustom = !!(ccSections && ccSections.length >= 2);
-            const sectionCount = isCustom ? ccSections!.length : mcSections!.length;
-            const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
-            const totalH = placedBodyHeight || moduleData?.dimensions?.height || 2200;
-            const totalW = currentPlacedModule.freeWidth
-              ?? currentPlacedModule.adjustedWidth
-              ?? currentPlacedModule.customWidth
-              ?? moduleData?.dimensions?.width
-              ?? 600;
-            const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
-
-            // 표준 가구의 섹션 높이: 마지막(상부) 섹션이 프레임 토글 흡수분을 먹되,
-            // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
-            // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
-            const shouldAbsorbTopForSections = moduleData?.category === 'full';
-            const shouldAbsorbBaseForSections = moduleData?.category === 'full' || moduleData?.category === 'lower';
-            const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
-              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
-              : 0;
-            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false
-              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
-                - (currentPlacedModule.individualFloatHeight ?? 0))
-              : 0;
-            const sectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
-            const isPlainShoeShelfForSections = !isCustom
-              && !!mcSections
-              && usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
-            const plainShoeShelfSectionHeights = isPlainShoeShelfForSections && mcSections
-              ? getPlainShoeShelfSectionHeights(currentPlacedModule, spaceInfo, mcSections, sectionBasisH)
-              : null;
-
-            const getStdSectionHeightMM = (sIdx: number): number => {
-              if (!mcSections || mcSections.length < 2) return totalH;
-              const sec = mcSections[sIdx];
-              const ht = sec.heightType || 'percentage';
-              const isLast = sIdx === mcSections.length - 1;
-              if (isLast) {
-                // 마지막(상부) 섹션 = sectionBasisH - 이전 섹션 합
-                const fixedSum = mcSections.slice(0, -1).reduce((acc, s) => {
-                  if (s.heightType === 'absolute') return acc + (s.height || 0);
-                  const r = (s.height || s.heightRatio || 50) / 100;
-                  return acc + Math.round(sectionBasisH * r);
-                }, 0);
-                return Math.max(0, sectionBasisH - fixedSum);
-              }
-              if (ht === 'absolute') return sec.height || 0;
-              const ratio = (sec.height || sec.heightRatio || 50) / 100;
-              return Math.round(sectionBasisH * ratio);
-            };
-
-            return (
-            <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>섹션별 치수</h5>
-              {Array.from({ length: sectionCount }).map((_, i) => sectionCount - 1 - i).map((sIdx) => {
-                const sec = isCustom ? ccSections![sIdx] : mcSections![sIdx];
-                const sectionLabel = sectionCount === 2
-                  ? (sIdx === 0 ? '하부' : '상부')
-                  : `섹션 ${sIdx + 1}`;
-                const hasHS = isCustom && !!(sec as any).horizontalSplit;
-
-                // 높이 표시값 — 마지막(상부) 섹션은 항상 동적 재계산 (토글 흡수분 반영)
-                // isCustom이어도 마지막 섹션은 sectionBasisH - 이전합으로 계산해야
-                // 상부몰딩/걸레받이 토글 변경 시 흡수된 높이가 즉시 반영됨
-                const isLastSection = sIdx === sectionCount - 1;
-                const isPantryOrPullOutSection = isPullOutOrPantry && !isCustom;
-                const dynamicH = plainShoeShelfSectionHeights
-                  ? (plainShoeShelfSectionHeights[sIdx] ?? 0)
-                  : isPantryOrPullOutSection
-                  ? ((sec as any).height || getStdSectionHeightMM(sIdx))
-                  : isLastSection
-                  ? (() => {
-                      const fixedSum = (isCustom ? ccSections! : mcSections!)
-                        .slice(0, -1)
-                        .reduce((acc: number, s: any) => {
-                          if (s.heightType === 'absolute') return acc + (s.height || 0);
-                          const r = (s.height || s.heightRatio || 50) / 100;
-                          return acc + Math.round(sectionBasisH * r);
-                        }, 0);
-                      return Math.max(0, sectionBasisH - fixedSum);
-                    })()
-                  : (isCustom
-                      ? ((sec as any).height + 2 * pt)
-                      : getStdSectionHeightMM(sIdx));
-                const displayH = sectionHeightInputs[sIdx] || Math.round(dynamicH).toString();
-                // 깊이 표시값: 섹션별 저장값 우선, 없으면 customDepth(신발장 380 등), 최후 totalD
-                // 옛 데이터의 stale 값(moduleDim과 일치) 무시
-                const cDepth = currentPlacedModule.customDepth;
-                const _isShoeCat3 =
-                  currentPlacedModule.moduleId.includes('-entryway-') ||
-                  currentPlacedModule.moduleId.includes('-shelf-') ||
-                  currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
-                  currentPlacedModule.moduleId.includes('-2drawer-shelf-');
-                const _modDimD = moduleData.dimensions.depth;
-                const _hasCustomD = typeof cDepth === 'number' && cDepth > 0;
-                const _validSec = (v: number | undefined) =>
-                  (_isShoeCat3 && _hasCustomD && v === _modDimD) ? undefined : v;
-                const secStored = sIdx === 0
-                  ? _validSec(currentPlacedModule.lowerSectionDepth)
-                  : _validSec(currentPlacedModule.upperSectionDepth);
-                const displayD = sectionDepthInputs[sIdx]
-                  || (secStored !== undefined
-                    ? Math.round(secStored).toString()
-                    : (cDepth !== undefined
-                      ? Math.round(cDepth).toString()
-                      : Math.round(totalD).toString()));
-                // 너비 표시값
-                const displayW = sectionWidthInputs[sIdx]
-                  || (() => { const v = Math.round(((sec as any).width || totalW) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
-
-                return (
-                  <div
-                    key={sIdx}
-                    onMouseEnter={() => currentPlacedModule && setHighlightedSection(`${currentPlacedModule.id}-${sIdx}`)}
-                    onMouseLeave={() => setHighlightedSection(null)}
-                    style={{
-                      background: 'var(--theme-background)',
-                      border: '1px solid var(--theme-border)',
-                      borderRadius: '5px',
-                      padding: '6px 8px',
-                      marginBottom: sIdx < sectionCount - 1 ? '6px' : 0,
-                    }}
-                  >
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)', marginBottom: '4px' }}>
-                      {sectionLabel}
-                    </div>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      {/* 섹션 너비 — 기둥 침범이 있는 슬롯 모드에서는 섹션별 너비 편집 + 좌/우고정 방향 */}
-                      {(() => {
-                        const hasColumnIntrusion =
-                          spaceInfo.layoutMode !== 'free-placement' &&
-                          (currentPlacedModule.adjustedWidth !== undefined && currentPlacedModule.adjustedWidth !== null);
-                        const isLowerSec = sIdx === 0;
-                        const isUpperSec = sIdx === 1;
-                        const sectionWidthVal = isLowerSec
-                          ? lowerWidthInput
-                          : isUpperSec
-                            ? upperWidthInput
-                            : displayW;
-                        const setSectionWidthVal = isLowerSec
-                          ? setLowerWidthInput
-                          : setUpperWidthInput;
-                        const widthDir = isLowerSec ? lowerWidthDirection : upperWidthDirection;
-                        const setWidthDir = isLowerSec ? setLowerWidthDirection : setUpperWidthDirection;
-                        const widthField = isLowerSec ? 'lowerSectionWidth' : 'upperSectionWidth';
-                        const widthDirField = isLowerSec ? 'lowerSectionWidthDirection' : 'upperSectionWidthDirection';
-                        const baseAdjW = currentPlacedModule.adjustedWidth || currentPlacedModule.customWidth || totalW;
-
-                        const commitWidth = (raw: string) => {
-                          const v = parseInt(raw, 10);
-                          if (isNaN(v) || v < 100 || v > 2400) {
-                            setSectionWidthVal(Math.round(baseAdjW).toString());
-                            return;
-                          }
-                          updatePlacedModule(currentPlacedModule.id, { [widthField]: v } as any);
-                        };
-
-                        return (
-                      <div style={{ flex: 1, minWidth: '70px' }}>
-                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>너비</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={hasColumnIntrusion ? sectionWidthVal : displayW}
-                            disabled={spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion}
-                            onChange={(e) => {
-                              if (hasColumnIntrusion) setSectionWidthVal(e.target.value);
-                              else setSectionWidthInputs(prev => ({ ...prev, [sIdx]: e.target.value }));
-                            }}
-                            onBlur={() => {
-                              if (hasColumnIntrusion) {
-                                commitWidth(sectionWidthVal);
-                                return;
-                              }
-                              // 너비 변경 → 전체 가구 너비 변경 (모든 섹션 연동)
-                              const val = parseInt(sectionWidthInputs[sIdx] || displayW, 10);
-                              if (!isNaN(val) && val >= 100 && val <= 2400) {
-                                const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
-                                const fa = useFurnitureStore.getState().placedModules;
-                                const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                                const newX = calcResizedPositionX(fm, val, fa, freshSI);
-                                const updates: any = {
-                                  freeWidth: val,
-                                  moduleWidth: val,
-                                  position: { ...fm.position, x: newX },
-                                };
-                                if (isCustom) {
-                                  const newSecs = cc!.sections.map((s: any) => ({ ...s, width: val }));
-                                  updates.customConfig = { ...cc!, sections: newSecs };
-                                }
-                                updatePlacedModule(currentPlacedModule.id, updates);
-                                setFreeWidthInput(val.toString());
-                                const wInputs: Record<number, string> = {};
-                                for (let i = 0; i < sectionCount; i++) wInputs[i] = val.toString();
-                                setSectionWidthInputs(wInputs);
-                              } else {
-                                setSectionWidthInputs(prev => ({ ...prev, [sIdx]: Math.round(totalW).toString() }));
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                if (hasColumnIntrusion) {
-                                  const cur = parseInt(sectionWidthVal, 10) || Math.round(baseAdjW);
-                                  const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  setSectionWidthVal(next.toString());
-                                  updatePlacedModule(currentPlacedModule.id, { [widthField]: next } as any);
-                                  return;
-                                }
-                                const fm2 = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
-                                const curW2 = fm2.freeWidth || parseInt(displayW, 10) || Math.round(totalW);
-                                const next = Math.max(100, Math.min(2400, curW2 + (e.key === 'ArrowUp' ? 1 : -1)));
-                                setSectionWidthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                const fa2 = useFurnitureStore.getState().placedModules;
-                                const freshSI2 = useSpaceConfigStore.getState().spaceInfo;
-                                const newX = calcResizedPositionX(fm2, next, fa2, freshSI2);
-                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...fm2.position, x: newX } };
-                                if (isCustom) {
-                                  const newSecs = cc!.sections.map((s: any) => ({ ...s, width: next }));
-                                  updates.customConfig = { ...cc!, sections: newSecs };
-                                }
-                                updatePlacedModule(currentPlacedModule.id, updates);
-                                setFreeWidthInput(next.toString());
-                              }
-                            }}
-                            className={styles.depthInput}
-                            style={{
-                              color: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#999' : '#000',
-                              backgroundColor: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#f0f0f0' : '#fff',
-                              WebkitTextFillColor: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#999' : '#000',
-                              opacity: 1,
-                            }}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                        {/* 좌고정/우고정 (기둥 침범 시에만 표시) */}
-                        {hasColumnIntrusion && sectionCount === 2 && (
-                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                            <button
-                              style={{
-                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                                background: widthDir === 'left' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                                color: widthDir === 'left' ? '#fff' : 'var(--theme-text-secondary)',
-                                fontSize: '10px', cursor: 'pointer',
-                              }}
-                              onClick={() => {
-                                setWidthDir('left');
-                                updatePlacedModule(currentPlacedModule.id, { [widthDirField]: 'left' } as any);
-                              }}
-                            >좌고정</button>
-                            <button
-                              style={{
-                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                                background: widthDir === 'right' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                                color: widthDir === 'right' ? '#fff' : 'var(--theme-text-secondary)',
-                                fontSize: '10px', cursor: 'pointer',
-                              }}
-                              onClick={() => {
-                                setWidthDir('right');
-                                updatePlacedModule(currentPlacedModule.id, { [widthDirField]: 'right' } as any);
-                              }}
-                            >우고정</button>
-                          </div>
-                        )}
-                      </div>
-                        );
-                      })()}
-                      {/* 섹션 높이 — 표준 가구: 마지막(상부) 섹션만 편집 가능 (전체 높이 역계산), 커스텀: 모두 편집 가능
-                          단, 팬트리장/인출장은 모든 섹션 편집 가능 (하부 변경 시 상부 자동 동기화) */}
-                      {(() => {
-                        // 표준 가구에서 마지막 섹션(상부=가변)만 편집 가능
-                        const isLastSection = sIdx === sectionCount - 1;
-                        const isFreePlacementStandard = !isCustom && !!currentPlacedModule.isFreePlacement && sectionCount >= 2;
-                        const isStdEditable = !isCustom && isLastSection && sectionCount >= 2;
-                        const isPantryOrPullOut = isPullOutOrPantry;
-                        const canEdit = isPlainShoeShelfForSections
-                          ? sectionCount === 2
-                          : (isCustom || isFreePlacementStandard || isStdEditable || (isPantryOrPullOut && sectionCount >= 2));
-                        return (
-                      <div style={{ flex: 1, minWidth: '70px' }}>
-                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={displayH}
-                            onChange={(e) => setSectionHeightInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                            onBlur={() => {
-                              if (isPlainShoeShelfForSections && mcSections && plainShoeShelfSectionHeights) {
-                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
-                                if (isNaN(inputVal) || inputVal < 100) {
-                                  setSectionHeightInputs({});
-                                  return;
-                                }
-                                const fixedSectionBasisH = plainShoeShelfSectionHeights.reduce((sum, h) => sum + h, 0);
-                                const isLowerSectionInput = sIdx === 0;
-                                const minUpperSectionH = 100;
-                                const currentLowerEffectiveH = plainShoeShelfSectionHeights[0] ?? 0;
-                                const maxInputVal = isLowerSectionInput
-                                  ? Math.max(100, fixedSectionBasisH - minUpperSectionH)
-                                  : Math.max(100, fixedSectionBasisH - currentLowerEffectiveH);
-                                const nextInputVal = Math.min(inputVal, maxInputVal);
-                                const wasClamped = nextInputVal !== inputVal;
-                                const nextEffectiveHeights = [...plainShoeShelfSectionHeights];
-                                if (isLowerSectionInput) {
-                                  nextEffectiveHeights[0] = nextInputVal;
-                                  nextEffectiveHeights[1] = Math.max(minUpperSectionH, fixedSectionBasisH - nextInputVal);
-                                } else {
-                                  nextEffectiveHeights[0] = currentLowerEffectiveH;
-                                  nextEffectiveHeights[1] = nextInputVal;
-                                }
-                                const isShelfSplitSectionInput = isShelfSplitModuleId(currentPlacedModule.moduleId);
-                                const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(currentPlacedModule, spaceInfo);
-                                const canonicalLowerH = isShelfSplitSectionInput
-                                  ? Math.max(0, Math.round(nextEffectiveHeights[0]))
-                                  : Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm + baseFrameDeltaMm));
-                                const canonicalUpperH = Math.max(0, Math.round(nextEffectiveHeights[1]));
-                                const effectiveHeightsForShelves = [nextEffectiveHeights[0], nextEffectiveHeights[1]];
-                                const newSections = mcSections.map((s: any, idx: number) => {
-                                  const nextH = idx === 0 ? canonicalLowerH : canonicalUpperH;
-                                  const updated: any = { ...s, height: nextH };
-                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
-                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, effectiveHeightsForShelves[idx] - 2 * pt);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, pt);
-                                  }
-                                  return updated;
-                                });
-                                const sectionUpdates: any = { customSections: newSections };
-                                if (isShelfSplitSectionInput) {
-                                  if (isLowerSectionInput) {
-                                    sectionUpdates.lowerDoorHingePositionsMm = undefined;
-                                    sectionUpdates.upperDoorHingePositionsMm = undefined;
-                                  } else {
-                                    sectionUpdates.upperDoorHingePositionsMm = undefined;
-                                  }
-                                }
-                                updatePlacedModule(currentPlacedModule.id, sectionUpdates);
-                                if (wasClamped) {
-                                  showAlert(
-                                    `상하부섹션과 상단몰딩, 걸레받이의 합은 공간높이를 초과할 수 없습니다. 가능한 최대값 ${maxInputVal}으로 변경했습니다.`,
-                                    { title: '치수 변경 불가' }
-                                  );
-                                }
-                                setSectionHeightInputs({});
-                              } else if (isCustom) {
-                                handleSectionHeightBlur(sIdx);
-                              } else if (isFreePlacementStandard && mcSections) {
-                                // 자유배치 표준 가구: 선택 섹션 높이를 고정하고, 나머지 섹션 치수는 유지한 채 전체 H를 재계산한다.
-                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
-                                if (isNaN(inputVal) || inputVal < 100) {
-                                  setSectionHeightInputs({});
-                                  return;
-                                }
-                                const renderedHeights = mcSections.map((section: any, idx: number) => {
-                                  if (idx === sIdx) return inputVal;
-                                  if (plainShoeShelfSectionHeights) return plainShoeShelfSectionHeights[idx] ?? 0;
-                                  if (idx === mcSections.length - 1) {
-                                    const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
-                                      if ((s.heightType || 'percentage') === 'absolute') return acc + (s.height || 0);
-                                      const ratio = (s.height || s.heightRatio || 50) / 100;
-                                      return acc + Math.round(sectionBasisH * ratio);
-                                    }, 0);
-                                    return Math.max(0, sectionBasisH - fixedSum);
-                                  }
-                                  if ((section.heightType || 'percentage') === 'absolute') return section.height || 0;
-                                  return Math.round(sectionBasisH * ((section.height || section.heightRatio || 50) / 100));
-                                });
-                                const nextTotalH = renderedHeights.reduce((sum: number, h: number) => sum + h, 0);
-                                const clampedH = Math.max(300, Math.min(3000, Math.round(nextTotalH)));
-                                const basicThickness = moduleData?.modelConfig?.basicThickness || 18;
-                                const nextSections = mcSections.map((section: any, idx: number) => {
-                                  if (idx !== sIdx || idx === mcSections.length - 1) return section;
-                                  const updated: any = { ...section, height: inputVal, heightType: 'absolute' };
-                                  if ((section.type === 'shelf' || section.type === 'open') && (section.count > 0 || (Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0))) {
-                                    const shelfCount = section.count || (section.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
-                                  }
-                                  return updated;
-                                });
-                                updatePlacedModule(currentPlacedModule.id, {
-                                  freeHeight: clampedH,
-                                  customSections: nextSections,
-                                } as any);
-                                setFreeHeightInput(clampedH.toString());
-                                setSectionHeightInputs({});
-                              } else if (isPantryOrPullOut && mcSections) {
-                                // 팬트리장/인출장: 전체 몸통 H 고정, 변경한 섹션의 반대쪽 섹션이 흡수한다.
-                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
-                                if (isNaN(inputVal) || inputVal < 100) {
-                                  setSectionHeightInputs({});
-                                  return;
-                                }
-                                const totalH = placedBodyHeight || moduleData.dimensions.height;
-                                const basicThickness = (spaceInfo as any).panelThickness || 18;
-                                // 변경된 섹션 height 적용 + 변경된 섹션이 shelf면 shelfPositions 재배치
-                                const tentative = mcSections.map((s: any, idx: number) => {
-                                  if (idx !== sIdx) return s;
-                                  const updated: any = { ...s, height: inputVal };
-                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
-                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
-                                  }
-                                  return updated;
-                                });
-                                const absorbTarget = sIdx === 0 ? mcSections.length - 1 : 0;
-                                const otherSum = tentative
-                                  .filter((_: any, idx: number) => idx !== absorbTarget)
-                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
-                                const newAbsorbH = totalH - otherSum;
-                                if (newAbsorbH < 100) {
-                                  setSectionHeightInputs({});
-                                  return;
-                                }
-                                const newSections = tentative.map((s: any, idx: number) => {
-                                  if (idx !== absorbTarget) return s;
-                                  const updated: any = { ...s, height: newAbsorbH };
-                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
-                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, newAbsorbH - 2 * basicThickness);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
-                                  }
-                                  return updated;
-                                });
-                                updatePlacedModule(currentPlacedModule.id, { customSections: newSections } as any);
-                                setSectionHeightInputs({});
-                              } else if (isStdEditable && mcSections) {
-                                // 표준 가구 마지막(상부) 섹션 높이 변경 → 전체 높이 역계산
-                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
-                                if (isNaN(inputVal) || inputVal < 100) {
-                                  setSectionHeightInputs({});
-                                  return;
-                                }
-                                // 하부 고정 섹션 합 + 패널 두께 → 전체 높이 역계산
-                                const prevFixed = mcSections
-                                  .filter((_: any, idx: number) => idx < sIdx)
-                                  .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                                // 역계산: 상부 = sec.height + (totalH - dimH)
-                                // → totalH = inputVal - sec.height + dimH  (단, sec.height는 원래 모듈의 상부 높이)
-                                // 더 단순하게: newTotalH = prevFixed + inputVal (하부+상부 = 전체)
-                                const newTotalH = prevFixed + inputVal;
-                                const clampedH = Math.max(300, Math.min(3000, newTotalH));
-                                const secUpdates: any = { freeHeight: clampedH };
-                                // 키큰장: 상단몰딩도 연동
-                                if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
-                                  const iSpace = calculateInternalSpace(spaceInfo);
-                                  const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                                  secUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - clampedH));
-                                }
-                                updatePlacedModule(currentPlacedModule.id, secUpdates);
-                                setFreeHeightInput(clampedH.toString());
-                                setSectionHeightInputs({});
-                              } else {
-                                setSectionHeightInputs(prev => ({ ...prev, [sIdx]: displayH }));
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                              else if (canEdit && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-                                e.preventDefault();
-                                const cur = parseInt(displayH, 10) || 0;
-                                const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
-                                setSectionHeightInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
-                              }
-                            }}
-                            className={styles.depthInput}
-                            readOnly={!canEdit}
-                            style={{
-                              color: '#000', backgroundColor: canEdit ? '#fff' : '#f5f5f5',
-                              WebkitTextFillColor: '#000', opacity: canEdit ? 1 : 0.7,
-                              cursor: canEdit ? 'text' : 'default',
-                            }}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                        );
-                      })()}
-                      {/* 섹션 깊이 (2섹션 가구 + 인출장/팬트리장 N섹션 한정) */}
-                      {(sectionCount === 2 || isPullOutOrPantry) && (() => {
-                        // 인출장/팬트리장: sectionDepths 배열 사용 (각 섹션 독립)
-                        const sectionDepths = (currentPlacedModule as any)?.sectionDepths as number[] | undefined;
-                        const sectionDirs = (currentPlacedModule as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
-                        const moduleDefaultDepth = moduleData?.dimensions.depth || 600;
-                        const sectionDepthVal = isPullOutOrPantry
-                          ? (sectionDepths?.[sIdx] ?? currentPlacedModule?.customDepth ?? moduleDefaultDepth).toString()
-                          : '';
-                        const sectionDirVal = isPullOutOrPantry
-                          ? (sectionDirs?.[sIdx] ?? 'front')
-                          : 'front';
-                        // 2섹션 가구: 기존 매핑 사용
-                        // N섹션 가구: 마지막 섹션을 "상부"로 매핑, 그 외 모든 섹션은 "하부" 사용
-                        const isLowerSec = sIdx < sectionCount - 1;
-                        const onSectionDepthChange = (val: string) => {
-                          if (isPullOutOrPantry && currentPlacedModule) {
-                            const numV = parseInt(val);
-                            if (!isNaN(numV) && numV > 0) {
-                              const arr = [...(sectionDepths ?? new Array(sectionCount).fill(moduleDefaultDepth))];
-                              arr[sIdx] = numV;
-                              // 마지막 섹션 변경 시 upperSectionDepth도 동기화 (Room/CleanCAD2D 등 다른 가구 인터페이스와 호환)
-                              const updates: any = { sectionDepths: arr };
-                              if (sIdx === sectionCount - 1) {
-                                updates.upperSectionDepth = numV;
-                              } else if (sIdx === 0) {
-                                updates.lowerSectionDepth = numV;
-                              }
-                              updatePlacedModule(currentPlacedModule.id, updates);
-                            }
-                          } else {
-                            (isLowerSec ? handleLowerDepthChange : handleUpperDepthChange)(val);
-                          }
-                        };
-                        const depthVal = isPullOutOrPantry ? sectionDepthVal : (isLowerSec ? lowerDepthInput : upperDepthInput);
-                        const onDepthChange = onSectionDepthChange;
-                        const dir = isPullOutOrPantry ? sectionDirVal : (isLowerSec ? lowerDepthDirection : upperDepthDirection);
-                        const setDir = isPullOutOrPantry
-                          ? (newDir: 'front' | 'back') => {
-                              if (currentPlacedModule) {
-                                const arr = [...(sectionDirs ?? new Array(sectionCount).fill('front'))];
-                                arr[sIdx] = newDir;
-                                updatePlacedModule(currentPlacedModule.id, { sectionDepthDirections: arr } as any);
-                              }
-                            }
-                          : (isLowerSec ? setLowerDepthDirection : setUpperDepthDirection);
-                        const dirField = isLowerSec ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
-                        return (
-                        <div style={{ flex: 1, minWidth: '70px' }}>
-                          <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>깊이</label>
-                          <div className={styles.inputWithUnit}>
-                            <input
-                              type="text" inputMode="numeric"
-                              value={depthVal}
-                              onChange={(e) => onDepthChange(e.target.value)}
-                              onFocus={() => currentPlacedModule && setHighlightedSection(`${currentPlacedModule.id}-${sIdx}`)}
-                              onBlur={() => setHighlightedSection(null)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                  e.preventDefault();
-                                  const cur = parseInt(depthVal, 10) || 0;
-                                  const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  onDepthChange(next.toString());
-                                }
-                              }}
-                              className={styles.depthInput}
-                              style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
-                            />
-                            <span className={styles.unit}>mm</span>
-                          </div>
-                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                            <button
-                              style={{
-                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                                background: dir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                                color: dir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                                fontSize: '10px', cursor: 'pointer',
-                              }}
-                              onClick={() => {
-                                setDir('front');
-                                if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { [dirField]: 'front' } as any);
-                              }}
-                            >뒤고정</button>
-                            <button
-                              style={{
-                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                                background: dir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                                color: dir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                                fontSize: '10px', cursor: 'pointer',
-                              }}
-                              onClick={() => {
-                                setDir('back');
-                                if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { [dirField]: 'back' } as any);
-                              }}
-                            >앞고정</button>
-                          </div>
-                        </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* 좌우 분할 서브박스 치수 (커스텀 가구 전용) */}
-                    {hasHS && (() => {
-                      const hs = (sec as any).horizontalSplit;
-                      return (
-                      <div style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed var(--theme-border)' }}>
-                        <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>좌우 분할</div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          {/* 좌측 */}
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>좌측</div>
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
-                                <div className={styles.inputWithUnit}>
-                                  <input type="text" inputMode="numeric"
-                                    value={hsLeftWidthInput[sIdx] || ''}
-                                    onChange={(e) => setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                                    onBlur={() => handleHsLeftWidthBlur(sIdx)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                        e.preventDefault();
-                                        const cur = parseInt(hsLeftWidthInput[sIdx] || '0', 10);
-                                        const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
-                                        setHsLeftWidthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                      }
-                                    }}
-                                    className={styles.depthInput}
-                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
-                                  />
-                                </div>
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
-                                <div className={styles.inputWithUnit}>
-                                  <input type="text" inputMode="numeric"
-                                    value={hsLeftDepthInput[sIdx] || ''}
-                                    onChange={(e) => setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                                    onBlur={() => handleHsDepthBlur(sIdx, 'left')}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                        e.preventDefault();
-                                        const cur = parseInt(hsLeftDepthInput[sIdx] || '0', 10);
-                                        const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                        setHsLeftDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                      }
-                                    }}
-                                    className={styles.depthInput}
-                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          {/* 중앙 (3분할 시) */}
-                          {hs.secondPosition && (
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>중앙</div>
-                              <div style={{ display: 'flex', gap: '4px' }}>
-                                <div style={{ flex: 1 }}>
-                                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
-                                  <div className={styles.inputWithUnit}>
-                                    <input type="text" inputMode="numeric"
-                                      value={hsCenterWidthInput[sIdx] || ''} readOnly
-                                      className={styles.depthInput}
-                                      style={{ color: '#000', backgroundColor: '#f5f5f5', WebkitTextFillColor: '#000', opacity: 0.7, fontSize: '12px' }}
-                                    />
-                                  </div>
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
-                                  <div className={styles.inputWithUnit}>
-                                    <input type="text" inputMode="numeric"
-                                      value={hsCenterDepthInput[sIdx] || ''}
-                                      onChange={(e) => setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                                      onBlur={() => handleHsDepthBlur(sIdx, 'center')}
-                                      onKeyDown={(e) => {
-                                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                          e.preventDefault();
-                                          const cur = parseInt(hsCenterDepthInput[sIdx] || '0', 10);
-                                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                          setHsCenterDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                        }
-                                      }}
-                                      className={styles.depthInput}
-                                      style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                          {/* 우측 */}
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '11px', fontWeight: 500, marginBottom: '3px' }}>우측</div>
-                            <div style={{ display: 'flex', gap: '4px' }}>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>너비</label>
-                                <div className={styles.inputWithUnit}>
-                                  <input type="text" inputMode="numeric"
-                                    value={hsRightWidthInput[sIdx] || ''}
-                                    onChange={(e) => setHsRightWidthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                                    onBlur={() => handleHsRightWidthBlur(sIdx)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                        e.preventDefault();
-                                        const cur = parseInt(hsRightWidthInput[sIdx] || '0', 10);
-                                        const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
-                                        setHsRightWidthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                      }
-                                    }}
-                                    className={styles.depthInput}
-                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
-                                  />
-                                </div>
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>깊이</label>
-                                <div className={styles.inputWithUnit}>
-                                  <input type="text" inputMode="numeric"
-                                    value={hsRightDepthInput[sIdx] || ''}
-                                    onChange={(e) => setHsRightDepthInput(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                                    onBlur={() => handleHsDepthBlur(sIdx, 'right')}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                        e.preventDefault();
-                                        const cur = parseInt(hsRightDepthInput[sIdx] || '0', 10);
-                                        const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                        setHsRightDepthInput(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                      }
-                                    }}
-                                    className={styles.depthInput}
-                                    style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, fontSize: '12px' }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      );
-                    })()}
-                  </div>
-                );
-              })}
-            </div>
-            );
-          })()}
 
           {/* 상,걸래받이 — 우측바와 동일 형태 (해당 가구 단일) — 편집 탭 전용 */}
           {!showDetails && currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
