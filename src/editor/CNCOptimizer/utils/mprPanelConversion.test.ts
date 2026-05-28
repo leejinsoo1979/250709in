@@ -370,6 +370,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
       { x: 32, y: 587.5 },
       { x: 32, y: 632.5 },
     ]);
+    expect(screwBorings.every(boring => boring.angle === undefined)).toBe(true);
   });
 
   it('exports door fallback hinge cup coordinates when optimizer preview derives them from screw data', () => {

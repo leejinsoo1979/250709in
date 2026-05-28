@@ -135,7 +135,6 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
         y: point.y,
         diameter: 3,
         depth: 3,
-        angle: -90,
         note: 'door-fixing-screw',
       });
     });
