@@ -235,13 +235,18 @@ function resolveSideNotchRect(
   notch: { y: number; z: number; fromBottom: number }
 ): SideNotchRect | null {
   if (isFurnitureSidePanelForBackPanelGroove(panel)) {
-    const notchWidth = Math.max(0, Math.min(notch.y, panel.width));
-    const notchHeight = Math.max(0, Math.min(notch.z, panel.height));
+    const notchWidth = Math.max(0, Math.min(notch.z, panel.width));
+    const notchHeight = Math.max(0, Math.min(notch.y, panel.height));
     if (notchWidth <= 0 || notchHeight <= 0) return null;
 
+    const startX = isRightSidePanel(panel)
+      ? Math.max(0, panel.width - notchWidth)
+      : 0;
+    const startY = Math.max(0, Math.min(panel.height - notch.fromBottom - notchHeight, panel.height - notchHeight));
+
     return {
-      startX: Math.max(0, Math.min(notch.fromBottom, panel.width - notchWidth)),
-      startY: 0,
+      startX,
+      startY,
       width: notchWidth,
       height: notchHeight,
     };
@@ -262,20 +267,22 @@ function resolveSideNotchRect(
 }
 
 interface BackPanelGrooveLine {
-  y: number;
-  centerY: number;
+  x: number;
+  centerX: number;
   width: number;
   depth: number;
 }
 
 function resolveBackPanelGrooveLine(panel: PanelBoringData): BackPanelGrooveLine | null {
   if (!isFurnitureSidePanelForBackPanelGroove(panel)) return null;
-  if (panel.height <= BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM || panel.width <= 0) return null;
-  const y = panel.height - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
+  if (panel.width <= BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM || panel.height <= 0) return null;
+  const x = isRightSidePanel(panel)
+    ? BACK_PANEL_GROOVE_REAR_OFFSET_MM
+    : panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
 
   return {
-    y,
-    centerY: y + BACK_PANEL_GROOVE_WIDTH_MM / 2,
+    x,
+    centerX: x + BACK_PANEL_GROOVE_WIDTH_MM / 2,
     width: BACK_PANEL_GROOVE_WIDTH_MM,
     depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
   };
@@ -340,11 +347,17 @@ function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z
 
   if (onTopEdge) {
     if (isFurnitureSide) {
-      return [
-        { x: endX, y: endY },
-        { x: rect.startX, y: endY },
-        { x: rect.startX, y: rect.startY },
-      ];
+      return isRightSidePanel(panel)
+        ? [
+          { x: rect.startX, y: endY },
+          { x: rect.startX, y: rect.startY },
+          { x: endX, y: rect.startY },
+        ]
+        : [
+          { x: endX, y: endY },
+          { x: endX, y: rect.startY },
+          { x: rect.startX, y: rect.startY },
+        ];
     }
 
     return [
@@ -356,11 +369,17 @@ function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z
 
   if (onBottomEdge) {
     if (isFurnitureSide) {
-      return [
-        { x: rect.startX, y: rect.startY },
-        { x: endX, y: rect.startY },
-        { x: endX, y: endY },
-      ];
+      return isRightSidePanel(panel)
+        ? [
+          { x: endX, y: rect.startY },
+          { x: rect.startX, y: rect.startY },
+          { x: rect.startX, y: endY },
+        ]
+        : [
+          { x: rect.startX, y: rect.startY },
+          { x: endX, y: rect.startY },
+          { x: endX, y: endY },
+        ];
     }
 
     return [
@@ -393,8 +412,8 @@ function generatePanelDisplayGeometry(panel: PanelBoringData): string {
 
   if (backPanelGrooveLine) {
     geometry += generateContourBlock(2, '', [
-      { x: 0, y: backPanelGrooveLine.y },
-      { x: panel.width, y: backPanelGrooveLine.y },
+      { x: backPanelGrooveLine.x, y: 0 },
+      { x: backPanelGrooveLine.x, y: panel.height },
     ], CONTOUR_CUT_DEPTH_MM);
   }
 
@@ -437,10 +456,10 @@ function generateBackPanelGroovePocket(panel: PanelBoringData): string {
   if (!groove) return '';
 
   return `<109 \\Nuten\\
-XA="${formatMprDecimal4(-1)}"
-YA="${formatMprDecimal4(groove.centerY)}"
-XE="${formatMprDecimal4(panel.width + 1)}"
-YE="${formatMprDecimal4(groove.centerY)}"
+XA="${formatMprDecimal4(groove.centerX)}"
+YA="${formatMprDecimal4(-1)}"
+XE="${formatMprDecimal4(groove.centerX)}"
+YE="${formatMprDecimal4(panel.height + 1)}"
 AN="0"
 NB="${formatMprDecimal4(groove.width)}"
 RK="NOWRK"

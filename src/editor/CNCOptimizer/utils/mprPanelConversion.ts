@@ -33,7 +33,7 @@ function isFurnitureSidePanel(panel: PlacedPanel): boolean {
 
 function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } {
   if (isFurnitureSidePanel(panel)) {
-    return { width: panel.height, height: panel.width };
+    return { width: panel.width, height: panel.height };
   }
 
   if (!panel.isDoor && panel.sideBoringPositions?.length) {
@@ -41,49 +41,6 @@ function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } 
   }
 
   return { width: panel.width, height: panel.height };
-}
-
-function roundMprCoord(value: number): number {
-  return Math.round(value * 10) / 10;
-}
-
-function getMprBoringCoords(
-  panel: PlacedPanel,
-  args: {
-    boringPosMm: number;
-    depthPosMm: number;
-    isDrawerSidePanel: boolean;
-    isDrawerFrontPanel: boolean;
-  }
-): { x: number; y: number } {
-  const { boringPosMm, depthPosMm, isDrawerSidePanel, isDrawerFrontPanel } = args;
-
-  if (isDrawerSidePanel || isDrawerFrontPanel) {
-    return { x: boringPosMm, y: depthPosMm };
-  }
-
-  if (isFurnitureSidePanel(panel)) {
-    return {
-      x: roundMprCoord(panel.height - boringPosMm),
-      y: roundMprCoord(depthPosMm),
-    };
-  }
-
-  return {
-    x: roundMprCoord(depthPosMm),
-    y: roundMprCoord(boringPosMm),
-  };
-}
-
-function getMprBracketCoords(panel: PlacedPanel, xPosMm: number, yPosMm: number): { x: number; y: number } {
-  if (isFurnitureSidePanel(panel)) {
-    return {
-      x: roundMprCoord(panel.height - yPosMm),
-      y: roundMprCoord(xPosMm),
-    };
-  }
-
-  return { x: roundMprCoord(xPosMm), y: roundMprCoord(yPosMm) };
 }
 
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
@@ -119,18 +76,12 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
         || (!group?.boringType && !isDrawerPanel && xPositionsForY.length >= 3);
 
       xPositionsForY.forEach((xPos: number) => {
-        const coords = getMprBoringCoords(panel, {
-          boringPosMm: yPos,
-          depthPosMm: xPos,
-          isDrawerSidePanel,
-          isDrawerFrontPanel: false,
-        });
         borings.push({
           id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
           type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
           face: 'top',
-          x: coords.x,
-          y: coords.y,
+          x: xPos,
+          y: yPos,
           diameter: isDrawerSidePanel ? 3 : (isFixedPanelBoring ? 6 : 5),
           depth: isDrawerSidePanel ? panelThickness : (isFixedPanelBoring ? panelThickness : 12),
           note: isDrawerSidePanel
@@ -184,13 +135,12 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
     const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
     panel.bracketBoringPositions.forEach((yPos) => {
       bracketXPositions.forEach((xPos) => {
-        const coords = getMprBracketCoords(panel, xPos, yPos);
         borings.push({
           id: `bracket-${boringIdx++}`,
           type: 'hinge-screw',
           face: 'top',
-          x: coords.x,
-          y: coords.y,
+          x: xPos,
+          y: yPos,
           diameter: 3,
           depth: 3,
           note: 'door-fixing-screw',
