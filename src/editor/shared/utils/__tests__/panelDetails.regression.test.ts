@@ -433,7 +433,7 @@ describe('panelDetails regression baselines', () => {
     expect(lowerDoor.boringPositions).toEqual([120, 720])
     expect(lowerDoor.screwPositions).toEqual([97.5, 142.5, 697.5, 742.5])
     expect(lowerDoor.hingeCount).toBe(2)
-    expect(upperDoor.height).toBe(1560)
+    expect(upperDoor.height).toBe(1565)
     expect(upperDoor.boringPositions).toEqual([140, 790, 1440])
     expect(upperDoor.screwPositions).toEqual([117.5, 162.5, 767.5, 812.5, 1417.5, 1462.5])
     expect(upperDoor.hingeCount).toBe(3)
@@ -450,6 +450,26 @@ describe('panelDetails regression baselines', () => {
     const lowerDoor = findPanel(panels, '하부 도어')
 
     expect(lowerDoor.height).toBe(860)
+  })
+
+  it('도어분절 현관장 상하부 도어 실제 갭 변경은 CNC 도어 높이에 그대로 반영된다', () => {
+    const panels = calculatePanels('single-shelf-split-500', 500, 380, {
+      hasDoor: true,
+      backPanelThicknessMm: 9,
+      customSections: [
+        { type: 'shelf', heightType: 'absolute', height: 1000, count: 3 },
+        { type: 'shelf', heightType: 'absolute', height: 1300, count: 3 }
+      ],
+      lowerDoorTopGap: 0,
+      lowerDoorBottomGap: 8,
+      upperDoorBottomGap: 0,
+      upperDoorTopGap: 15
+    })
+    const lowerDoor = findPanel(panels, '하부 도어')
+    const upperDoor = findPanel(panels, '상부 도어')
+
+    expect(lowerDoor.height).toBe(1008)
+    expect(upperDoor.height).toBe(1315)
   })
 
   it('듀얼 도어분절 현관장 하부 상단 도어 보링도 목찬넬 80mm 기준 140mm를 따른다', () => {
@@ -471,7 +491,7 @@ describe('panelDetails regression baselines', () => {
       expect(panel.hingeCount).toBe(2)
     })
     doors.filter(panel => panel.name?.includes('상부')).forEach(panel => {
-      expect(panel.height).toBe(1560)
+      expect(panel.height).toBe(1565)
       expect(panel.boringPositions).toEqual([140, 790, 1440])
       expect(panel.hingeCount).toBe(3)
     })

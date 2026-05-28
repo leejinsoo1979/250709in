@@ -18,6 +18,7 @@ import { getDirectLowerDowelShelfPositionsMm, isDirectLowerDowelShelfModule } fr
 import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm } from './panelThickness';
+import { resolveSplitDoorGeometry } from './splitDoorGeometry';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -1615,37 +1616,22 @@ export const calculatePanelDetails = (
     };
 
     if (isDoorSplitPanelModule) {
-      const isPantryDoorSplitModule = moduleData.id.includes('pantry-cabinet-split');
-      const defaultLowerSectionTopMm = isPantryDoorSplitModule ? 1825 : 860;
-      const customLowerSectionTopMm = Array.isArray(customSectionsOverride) && customSectionsOverride[0]?.height > 0
-        ? customSectionsOverride[0].height
-        : undefined;
-      const lowerSectionTopMm = customLowerSectionTopMm ?? defaultLowerSectionTopMm;
-      const customUpperSectionHeightMm = Array.isArray(customSectionsOverride) && customSectionsOverride[1]?.height > 0
-        ? customSectionsOverride[1].height
-        : undefined;
-      const upperSectionTopMm = customUpperSectionHeightMm !== undefined
-        ? Math.min(height, lowerSectionTopMm + customUpperSectionHeightMm)
-        : height;
-      const defaultLowerDoorTopGapMm = isPantryDoorSplitModule ? -2 : -40;
-      const defaultUpperDoorBottomGapMm = isPantryDoorSplitModule ? -1 : 20;
-      const effectiveLowerDoorTopGapMm = typeof splitDoorGaps?.lowerDoorTopGap === 'number'
-        ? (splitDoorGaps.lowerDoorTopGap === (isPantryDoorSplitModule ? 2 : 40) ? defaultLowerDoorTopGapMm : splitDoorGaps.lowerDoorTopGap)
-        : defaultLowerDoorTopGapMm;
-      const effectiveUpperDoorBottomGapMm = typeof splitDoorGaps?.upperDoorBottomGap === 'number'
-        ? (
-          (!isPantryDoorSplitModule && splitDoorGaps.upperDoorBottomGap === -20)
-            ? defaultUpperDoorBottomGapMm
-            : (isPantryDoorSplitModule && splitDoorGaps.upperDoorBottomGap === 1 ? defaultUpperDoorBottomGapMm : splitDoorGaps.upperDoorBottomGap)
-        )
-        : defaultUpperDoorBottomGapMm;
-      const effectiveLowerDoorBottomGapMm = splitDoorGaps?.lowerDoorBottomGap ?? 0;
-      const effectiveUpperDoorTopGapMm = splitDoorGaps?.upperDoorTopGap ?? doorTopGap ?? 0;
-      const lowerDoorTopMm = lowerSectionTopMm + effectiveLowerDoorTopGapMm;
-      const upperDoorBottomMm = lowerSectionTopMm - effectiveUpperDoorBottomGapMm;
-      const lowerDoorBottomMm = -effectiveLowerDoorBottomGapMm;
-      const lowerDoorH = lowerDoorTopMm - lowerDoorBottomMm;
-      const upperDoorH = upperSectionTopMm + effectiveUpperDoorTopGapMm - upperDoorBottomMm;
+      const splitDoorGeometry = resolveSplitDoorGeometry({
+        moduleId: moduleData.id,
+        cabinetHeightMm: height,
+        sections: customSectionsOverride || sections,
+        lowerDoorTopGap: splitDoorGaps?.lowerDoorTopGap,
+        upperDoorBottomGap: splitDoorGaps?.upperDoorBottomGap,
+        lowerDoorBottomGap: splitDoorGaps?.lowerDoorBottomGap,
+        upperDoorTopGap: splitDoorGaps?.upperDoorTopGap,
+        doorTopGap,
+      });
+      const lowerSectionTopMm = splitDoorGeometry.lowerSectionTopMm;
+      const upperSectionTopMm = splitDoorGeometry.upperSectionTopMm;
+      const lowerDoorBottomMm = splitDoorGeometry.lowerDoorBottomMm;
+      const upperDoorBottomMm = splitDoorGeometry.upperDoorBottomMm;
+      const lowerDoorH = splitDoorGeometry.lowerDoorHeightMm;
+      const upperDoorH = splitDoorGeometry.upperDoorHeightMm;
 
       bracketHingeYPositions = [];
 

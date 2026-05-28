@@ -34,6 +34,7 @@ import {
 } from '@/editor/shared/utils/materialConstants';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { PET_PANEL_THICKNESS_MM } from '@/editor/shared/utils/panelThickness';
+import { resolveSplitDoorGeometry } from '@/editor/shared/utils/splitDoorGeometry';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -1802,64 +1803,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           // - 도어 사이 갭 = 780 - 760 = 20mm
           const isDoorSplitModule = moduleData?.id?.includes('shelf-split') || moduleData?.id?.includes('pantry-cabinet-split');
           if (isDoorSplitModule) {
-            // 실제 가구 H 사용 (internalHeight = 토글 흡수 포함 실측 H)
             const cabinetH = internalHeight ?? moduleData.dimensions.height;
-            // 모듈별 사양:
-            //  - 도어분절 현관장(shelf-split): 하부섹션 860, 도어 분절 갭 20mm
-            //  - 도어분절 팬트리장(pantry-cabinet-split): 하부섹션 1825, 도어 분절 갭 3mm
-            const isPantrySplit = moduleData?.id?.includes('pantry-cabinet-split');
-            const defaultLowerSectionTopMm = isPantrySplit ? 1825 : 860;
-            // useBaseFurniture가 프레임/걸레받이 변경분까지 반영한 section height를 우선 사용한다.
-            const customLowerSecH = (baseFurniture.modelConfig?.sections?.[0]?.height as number | undefined)
-              ?? ((customSections && customSections.length > 0) ? customSections[0].height : undefined);
-            const lowerSectionTopMm = (typeof customLowerSecH === 'number' && customLowerSecH > 0)
-              ? customLowerSecH
-              : defaultLowerSectionTopMm;
-            const customUpperSecH = (baseFurniture.modelConfig?.sections?.[1]?.height as number | undefined)
-              ?? ((customSections && customSections.length > 1) ? customSections[1].height : undefined);
-            const upperSectionTopMm = (typeof customUpperSecH === 'number' && customUpperSecH > 0)
-              ? Math.min(cabinetH, lowerSectionTopMm + customUpperSecH)
-              : cabinetH;
-            const defaultLowerDoorTopGapMm = isPantrySplit ? -2 : -40;
-            const defaultUpperDoorBottomGapMm = isPantrySplit ? -1 : 20;
-            const effectiveLowerDoorTopGapMm = typeof lowerDoorTopGap === 'number'
-              ? (lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? defaultLowerDoorTopGapMm : lowerDoorTopGap)
-              : defaultLowerDoorTopGapMm;
-	            const effectiveUpperDoorBottomGapMm = typeof upperDoorBottomGap === 'number'
-	              ? (
-	                (!isPantrySplit && upperDoorBottomGap === -20)
-	                  ? defaultUpperDoorBottomGapMm
-	                  : (isPantrySplit && upperDoorBottomGap === 1 ? defaultUpperDoorBottomGapMm : upperDoorBottomGap)
-	              )
-	              : defaultUpperDoorBottomGapMm;
-	            const effectiveLowerDoorBottomGapMm = lowerDoorBottomGap ?? 0;
-	            const shelfSplitDefaultUpperDoorTopGapMm = !isPantrySplit
-	              ? (spaceInfo?.surroundType === 'surround' && spaceInfo?.frameConfig?.top !== false && hasTopFrame !== false ? -3 : 5)
-	              : 0;
-	            const effectiveUpperDoorTopGapMm = typeof upperDoorTopGap === 'number'
-	              ? upperDoorTopGap
-	              : !isPantrySplit && (doorTopGap === undefined || doorTopGap === 0 || doorTopGap === 5 || doorTopGap === -3)
-	                ? shelfSplitDefaultUpperDoorTopGapMm
-	                : (doorTopGap ?? 0);
-            // 명시 사양 (사용자):
-            //   - shelf-split: 하부도어 상단 = 860-40, 상부도어 하단 = 860-20
-            //   - pantry-cabinet-split: 갭 3mm 비대칭 분할
-            //       · 하부도어 상단 = 하부섹션 상단 - 2mm (아래로 2)
-            //       · 상부도어 하단 = 하부섹션 상단(=상부섹션 하단) + 1mm (위로 1)
-            //       · 총 갭 = 1 + 2 = 3mm
-            const lowerDoorTopMm = lowerSectionTopMm + effectiveLowerDoorTopGapMm;
-            const upperDoorBottomMm = lowerSectionTopMm - effectiveUpperDoorBottomGapMm;
-            const lowerDoorBottomMm = -effectiveLowerDoorBottomGapMm;
-            const upperGapTop = effectiveUpperDoorTopGapMm; // 몸통 기준: +값이면 상부도어 상단이 위로 확장
-            const lowerDoorH = lowerDoorTopMm - lowerDoorBottomMm;
-            const lowerDoorCenterFromBottom = (lowerDoorTopMm + lowerDoorBottomMm) / 2;
-            const lowerDoorY = lowerDoorCenterFromBottom - cabinetH / 2;
-            // 상부도어 H = (상부섹션 상단 + 상단 확장값) - 상부도어 하단
-            const upperDoorTopMm = upperSectionTopMm + upperGapTop;
-            const upperDoorH = upperDoorTopMm - upperDoorBottomMm;
-            // 상부도어 중심(바닥기준) = (상부도어 하단 + 상부도어 상단) / 2
-            const upperDoorCenterFromBottom = (upperDoorBottomMm + upperDoorTopMm) / 2;
-            const upperDoorY = upperDoorCenterFromBottom - cabinetH / 2;
+            const splitDoorGeometry = resolveSplitDoorGeometry({
+              moduleId: moduleData?.id || '',
+              cabinetHeightMm: cabinetH,
+              sections: baseFurniture.modelConfig?.sections || customSections,
+              lowerDoorTopGap,
+              upperDoorBottomGap,
+              lowerDoorBottomGap,
+              upperDoorTopGap,
+              doorTopGap,
+              surroundType: spaceInfo?.surroundType,
+              hasTopFrame,
+            });
+            const lowerDoorH = splitDoorGeometry.lowerDoorHeightMm;
+            const lowerDoorY = splitDoorGeometry.lowerDoorCenterFromBottomMm - cabinetH / 2;
+            const upperDoorH = splitDoorGeometry.upperDoorHeightMm;
+            const upperDoorY = splitDoorGeometry.upperDoorCenterFromBottomMm - cabinetH / 2;
             const lowerDoorDepthPlacement = resolveSplitDoorDepthPlacement(0);
             const upperDoorDepthPlacement = resolveSplitDoorDepthPlacement(1);
             return (
@@ -1902,7 +1862,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     forcedDoorHeightMm={lowerDoorH}
                     forcedDoorYMm={lowerDoorY}
                     splitDoorPanelName="하부 도어"
-                    splitDoorTopGapMm={Math.max(0, upperDoorBottomMm - lowerDoorTopMm)}
+                    splitDoorTopGapMm={splitDoorGeometry.splitGapMm}
                   />
                 </group>
                 {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
