@@ -59,6 +59,8 @@ interface PanelDetailOptions {
   customLowerDoorHingePositionsMm?: number[]
   customSections?: SectionConfig[]
   lowerSectionTopOffsetMm?: number
+  doorWidthAdjustEnabled?: boolean
+  doorWidthAdjustMm?: number
 }
 
 const calculatePanels = (
@@ -127,7 +129,13 @@ const calculatePanels = (
     options.customSections,
     undefined,
     undefined,
-    options.lowerSectionTopOffsetMm
+    options.lowerSectionTopOffsetMm,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    options.doorWidthAdjustEnabled,
+    options.doorWidthAdjustMm
   )
 }
 
@@ -616,6 +624,30 @@ describe('panelDetails regression baselines', () => {
     expect(doors[0].boringDepthPositions).toEqual([22.5])
     expect(doors[0].screwDepthPositions).toEqual([32])
     expect(doors[0].height).toBeGreaterThan(0)
+  })
+
+  it('싱글 도어 확장값은 CNC 도어 패널 폭에 반영된다', () => {
+    const panels = calculatePanels('lower-half-cabinet-500', 500, 650, {
+      hasDoor: true,
+      hingePosition: 'right',
+      doorWidthAdjustEnabled: true,
+      doorWidthAdjustMm: 40
+    })
+    const door = findPanel(panels, '도어')
+
+    expect(door.width).toBe(540)
+  })
+
+  it('듀얼 도어 확장값은 렌더링과 같은 leaf 패널 폭에 반영된다', () => {
+    const panels = calculatePanels('dual-lower-half-cabinet-1000', 1000, 650, {
+      hasDoor: true,
+      doorWidthAdjustEnabled: true,
+      doorWidthAdjustMm: 40
+    })
+    const doors = panels.filter((panel) => panel.isDoor)
+
+    expect(doors).toHaveLength(2)
+    expect(doors.map((panel) => panel.width)).toEqual([497, 540])
   })
 
   it('사용자 경첩 위치는 몸통 기준으로 저장되고 도어 보링에 매칭된다', () => {

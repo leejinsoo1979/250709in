@@ -7,6 +7,7 @@ import {
   normalizeDoorHingePositionsMm,
   resolveDoorLeafDimensions,
   resolveDoorVerticalGeometry,
+  resolveHingeOppositeDoorWidthAdjustment,
   resolveSideAnchoredDoorHingePositionsMm,
   resolveSidePanelMatchedHingePositions
 } from './doorGeometryCalculator';
@@ -81,7 +82,9 @@ export const calculatePanelDetails = (
   maidaWidthAdjustEnabled: boolean = false,
   maidaWidthAdjustMm: number = -1.5,
   leftEndPanelFrontOffsetMm: number = 0,
-  rightEndPanelFrontOffsetMm: number = 0
+  rightEndPanelFrontOffsetMm: number = 0,
+  doorWidthAdjustEnabled: boolean = false,
+  doorWidthAdjustMm: number = -1.5
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1590,14 +1593,23 @@ export const calculatePanelDetails = (
     const getOuterAdjustedDoorWidth = (leaf: { name: 'single' | 'left' | 'right'; widthMm: number }) => {
       const leftCompensation = doorOuterOpenSides?.left ? 1.5 : 0;
       const rightCompensation = doorOuterOpenSides?.right ? 1.5 : 0;
+      const manualDoorWidthAdjustMm = doorWidthAdjustEnabled ? doorWidthAdjustMm + doorGap : 0;
+      const manualSingleAdjustment = resolveHingeOppositeDoorWidthAdjustment(
+        manualDoorWidthAdjustMm,
+        hingePosition ?? 'left'
+      );
       if (leaf.name === 'single') {
-        return leaf.widthMm + leftCompensation + rightCompensation;
+        return leaf.widthMm
+          + leftCompensation
+          + rightCompensation
+          + manualSingleAdjustment.leftMm
+          + manualSingleAdjustment.rightMm;
       }
       if (leaf.name === 'left') {
         return leaf.widthMm + leftCompensation;
       }
       if (leaf.name === 'right') {
-        return leaf.widthMm + rightCompensation;
+        return leaf.widthMm + rightCompensation + manualDoorWidthAdjustMm;
       }
       return leaf.widthMm;
     };

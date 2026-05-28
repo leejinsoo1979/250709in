@@ -438,7 +438,13 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       moduleWidthMm: customWidth
     }),
     undefined,
-    placedModule?.lowerSectionTopOffset
+    placedModule?.lowerSectionTopOffset,
+    !!(placedModule as any)?.maidaWidthAdjustEnabled,
+    (placedModule as any)?.maidaWidthAdjustMm ?? -1.5,
+    (placedModule as any)?.leftEndPanelOffset ?? 0,
+    (placedModule as any)?.rightEndPanelOffset ?? 0,
+    !!(placedModule as any)?.doorWidthAdjustEnabled,
+    (placedModule as any)?.doorWidthAdjustMm ?? -1.5
   );
 
   // 서라운드 패널 (공간 전체 단위)

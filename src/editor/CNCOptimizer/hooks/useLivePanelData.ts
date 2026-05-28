@@ -935,7 +935,9 @@ export function useLivePanelData() {
           !!(placedModule as any).maidaWidthAdjustEnabled,
           (placedModule as any).maidaWidthAdjustMm ?? -1.5,
           (placedModule as any).leftEndPanelOffset ?? 0,
-          (placedModule as any).rightEndPanelOffset ?? 0
+          (placedModule as any).rightEndPanelOffset ?? 0,
+          !!(placedModule as any).doorWidthAdjustEnabled,
+          (placedModule as any).doorWidthAdjustMm ?? -1.5
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1875,7 +1877,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         !!(placedModule as any).maidaWidthAdjustEnabled,
         (placedModule as any).maidaWidthAdjustMm ?? -1.5,
         (placedModule as any).leftEndPanelOffset ?? 0,
-        (placedModule as any).rightEndPanelOffset ?? 0
+        (placedModule as any).rightEndPanelOffset ?? 0,
+        !!(placedModule as any).doorWidthAdjustEnabled,
+        (placedModule as any).doorWidthAdjustMm ?? -1.5
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
