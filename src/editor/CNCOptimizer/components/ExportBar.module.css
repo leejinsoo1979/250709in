@@ -174,6 +174,155 @@
   white-space: nowrap;
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.accessModal,
+.requestModal {
+  width: min(420px, 100%);
+  background: #ffffff;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
+  padding: 20px;
+}
+
+.requestModal {
+  width: min(520px, 100%);
+}
+
+.modalTitle {
+  margin: 0 0 10px;
+  color: var(--theme-text);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.modalText {
+  margin: 0;
+  color: var(--theme-text-secondary);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.primaryButton {
+  border: 1px solid hsl(var(--theme));
+  background: hsl(var(--theme));
+  color: white;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background: hsl(var(--theme) / 0.88);
+}
+
+.secondaryButton {
+  border: 1px solid var(--theme-border);
+  background: #ffffff;
+  color: var(--theme-text-secondary);
+}
+
+.secondaryButton:hover:not(:disabled) {
+  border-color: hsl(var(--theme) / 0.35);
+  color: hsl(var(--theme));
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.requestForm {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.formField {
+  display: grid;
+  gap: 6px;
+}
+
+.fieldLabel {
+  color: var(--theme-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.required {
+  color: hsl(var(--theme));
+}
+
+.requestInput,
+.requestTextarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--theme-text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.requestInput {
+  min-height: 40px;
+}
+
+.requestTextarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.requestInput:focus,
+.requestTextarea:focus {
+  outline: none;
+  border-color: hsl(var(--theme));
+  box-shadow: 0 0 0 3px hsl(var(--theme) / 0.12);
+}
+
+.requestInput::placeholder,
+.requestTextarea::placeholder {
+  color: var(--theme-text-muted);
+}
+
+.requestStatus {
+  margin: 10px 0 0;
+  color: hsl(var(--theme));
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .dropdownMenu {
@@ -211,6 +360,7 @@
   .menuDivider {
     background: #374151;
   }
+
 }
 
 /* Responsive adjustments */

@@ -15,6 +15,10 @@ import {
 import JSZip from 'jszip';
 import { OptimizedResult, PlacedPanel, Panel } from '../types';
 import { Download, FileText, FileDown, Package, Layers, ChevronDown, Circle, Cpu } from 'lucide-react';
+import { doc, getDoc } from 'firebase/firestore';
+import { useAuth } from '@/auth/AuthProvider';
+import { db } from '@/firebase/config';
+import { sendPartnerRegistrationRequest } from '@/firebase/partnerRegistration';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -27,13 +31,38 @@ interface ExportBarProps {
   shelfBoringPositions?: Record<string, number[]>; // 가구별 보링 위치 (moduleKey -> positions)
 }
 
+interface PartnerRequestForm {
+  companyName: string;
+  contact: string;
+  equipment: string;
+  message: string;
+}
+
+const EXPORT_ALLOWED_EMAILS = new Set(['sbbc212@gmail.com', 'sbbc212@kakao.com']);
+
+const EMPTY_PARTNER_REQUEST_FORM: PartnerRequestForm = {
+  companyName: '',
+  contact: '',
+  equipment: '',
+  message: ''
+};
+
 export default function ExportBar({ optimizationResults }: ExportBarProps){
+  const { user } = useAuth();
   const { panels, stock } = useCNCStore();
   const placedModules = useFurnitureStore((state) => state.placedModules);
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const basicInfo = useProjectStore((state) => state.basicInfo);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [accessLoading, setAccessLoading] = useState(true);
+  const [canUseExport, setCanUseExport] = useState(false);
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [partnerRequestForm, setPartnerRequestForm] = useState<PartnerRequestForm>(EMPTY_PARTNER_REQUEST_FORM);
+  const [requestSending, setRequestSending] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+  const [requestStatus, setRequestStatus] = useState('');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 보링이 있는 패널 수 계산 (패널에 직접 boringPositions가 포함됨)
@@ -71,6 +100,129 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkExportAccess = async () => {
+      setAccessLoading(true);
+      setCanUseExport(false);
+
+      if (!user) {
+        if (!cancelled) {
+          setAccessLoading(false);
+        }
+        return;
+      }
+
+      const email = String(user.email || '').toLowerCase();
+      if (EXPORT_ALLOWED_EMAILS.has(email)) {
+        if (!cancelled) {
+          setCanUseExport(true);
+          setAccessLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const userSnap = await getDoc(doc(db, 'users', user.uid));
+        const userData = userSnap.exists() ? userSnap.data() as { isPartner?: boolean } : {};
+        if (!cancelled) {
+          setCanUseExport(userData.isPartner === true);
+        }
+      } catch (error) {
+        console.error('Export 권한 확인 실패:', error);
+        if (!cancelled) {
+          setCanUseExport(false);
+        }
+      } finally {
+        if (!cancelled) {
+          setAccessLoading(false);
+        }
+      }
+    };
+
+    checkExportAccess();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  const handleExportButtonClick = () => {
+    if (accessLoading) return;
+
+    if (!canUseExport) {
+      setIsOpen(false);
+      setAccessModalOpen(true);
+      setRequestStatus('');
+      return;
+    }
+
+    setIsOpen(!isOpen);
+  };
+
+  const openPartnerRequest = () => {
+    setAccessModalOpen(false);
+    setRequestModalOpen(true);
+    setRequestSent(false);
+    setRequestStatus('');
+  };
+
+  const closePartnerRequest = () => {
+    setRequestModalOpen(false);
+    setRequestSending(false);
+    setRequestSent(false);
+    setRequestStatus('');
+    setPartnerRequestForm(EMPTY_PARTNER_REQUEST_FORM);
+  };
+
+  const updatePartnerRequestField = (field: keyof PartnerRequestForm, value: string) => {
+    setPartnerRequestForm((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+    setRequestStatus('');
+  };
+
+  const handleSendPartnerRequest = async () => {
+    if (!user) {
+      setRequestStatus('로그인 후 협력업체 등록 요청을 보낼 수 있습니다.');
+      return;
+    }
+
+    const companyName = partnerRequestForm.companyName.trim();
+    const contact = partnerRequestForm.contact.trim();
+    const equipment = partnerRequestForm.equipment.trim();
+    const note = partnerRequestForm.message.trim();
+
+    if (!companyName || !contact || !equipment) {
+      setRequestStatus('업체명, 담당자 연락처, 보유 CNC 장비를 입력해주세요.');
+      return;
+    }
+
+    const message = [
+      `업체명: ${companyName}`,
+      `담당자/연락처: ${contact}`,
+      `보유 CNC 장비: ${equipment}`,
+      note ? `추가 요청사항: ${note}` : '',
+      user.email ? `로그인 이메일: ${user.email}` : ''
+    ].filter(Boolean).join('\n');
+
+    setRequestSending(true);
+    setRequestStatus('');
+
+    try {
+      await sendPartnerRegistrationRequest({ message });
+      setRequestSent(true);
+      setRequestStatus('');
+    } catch (error) {
+      console.error('협력업체 등록 요청 실패:', error);
+      setRequestStatus('요청 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setRequestSending(false);
+    }
+  };
   
   const handleExportPanels = () => {
     if (panels.length === 0) {
@@ -253,7 +405,7 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
     <div className={styles.exportDropdown} ref={dropdownRef}>
       <button 
         className={styles.exportMainButton}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleExportButtonClick}
         disabled={!hasData}
       >
         <Download size={16} />
@@ -355,6 +507,117 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
             </div>
             <span className={styles.badge}>추천</span>
           </button>
+        </div>
+      )}
+
+      {accessModalOpen && (
+        <div className={styles.modalOverlay} role="presentation" onMouseDown={() => setAccessModalOpen(false)}>
+          <div className={styles.accessModal} role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
+            <h3 className={styles.modalTitle}>Export 사용 제한</h3>
+            <p className={styles.modalText}>제조사로 등록된 업체만 사용이 가능합니다.</p>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setAccessModalOpen(false)}
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={openPartnerRequest}
+              >
+                협력업체 등록
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {requestModalOpen && (
+        <div className={styles.modalOverlay} role="presentation" onMouseDown={closePartnerRequest}>
+          <div className={styles.requestModal} role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
+            {requestSent ? (
+              <>
+                <h3 className={styles.modalTitle}>메시지가 전달되었습니다.</h3>
+                <p className={styles.modalText}>협력업체 등록 요청을 확인한 뒤 연락드리겠습니다.</p>
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={closePartnerRequest}
+                  >
+                    확인
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className={styles.modalTitle}>협력업체 등록 요청</h3>
+                <div className={styles.requestForm}>
+                  <label className={styles.formField}>
+                    <span className={styles.fieldLabel}>업체명 <span className={styles.required}>*</span></span>
+                    <input
+                      className={styles.requestInput}
+                      value={partnerRequestForm.companyName}
+                      onChange={(event) => updatePartnerRequestField('companyName', event.target.value)}
+                      placeholder="업체명을 입력해주세요."
+                    />
+                  </label>
+                  <label className={styles.formField}>
+                    <span className={styles.fieldLabel}>담당자/연락처 <span className={styles.required}>*</span></span>
+                    <input
+                      className={styles.requestInput}
+                      value={partnerRequestForm.contact}
+                      onChange={(event) => updatePartnerRequestField('contact', event.target.value)}
+                      placeholder="담당자명과 연락처를 입력해주세요."
+                    />
+                  </label>
+                  <label className={styles.formField}>
+                    <span className={styles.fieldLabel}>보유 CNC 장비 <span className={styles.required}>*</span></span>
+                    <input
+                      className={styles.requestInput}
+                      value={partnerRequestForm.equipment}
+                      onChange={(event) => updatePartnerRequestField('equipment', event.target.value)}
+                      placeholder="보유 장비명 또는 가공 가능 장비를 입력해주세요."
+                    />
+                  </label>
+                  <label className={styles.formField}>
+                    <span className={styles.fieldLabel}>추가 요청사항</span>
+                    <textarea
+                      className={styles.requestTextarea}
+                      value={partnerRequestForm.message}
+                      onChange={(event) => updatePartnerRequestField('message', event.target.value)}
+                      placeholder="가공 가능 범위, 지역, 협업 요청 내용을 입력해주세요."
+                      rows={5}
+                    />
+                  </label>
+                </div>
+                {requestStatus && (
+                  <p className={styles.requestStatus}>{requestStatus}</p>
+                )}
+                <div className={styles.modalActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={closePartnerRequest}
+                    disabled={requestSending}
+                  >
+                    닫기
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={handleSendPartnerRequest}
+                    disabled={requestSending}
+                  >
+                    {requestSending ? '전송 중...' : '요청 보내기'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
+import { Spherical, Vector3 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
-import { useTouchControls } from '../../../../../../hooks/useTouchControls';
 
 interface UseTouchOrbitControlsOptions {
   enabled?: boolean;
@@ -16,6 +16,18 @@ interface UseTouchOrbitControlsOptions {
   // 키보드 컨트롤 옵션
   enableKeyboard?: boolean; // 키보드 컨트롤 활성화
   keyboardSpeed?: number; // 키보드 이동 속도
+}
+
+type OrbitControlsWithInternalMethods = OrbitControls & {
+  pan?: (deltaX: number, deltaY: number, deltaZ?: number) => void
+  rotateLeft?: (angle: number) => void
+  rotateUp?: (angle: number) => void
+  dollyIn?: (scale: number) => void
+  dollyOut?: (scale: number) => void
+}
+
+type SyntheticPointerEvent = PointerEvent & {
+  __ctrlRotateSynth?: boolean
 }
 
 export const useTouchOrbitControls = (
@@ -36,29 +48,115 @@ export const useTouchOrbitControls = (
     keyboardSpeed = 0.1
   } = options;
   
-  const initialDistance = useRef<number>(0);
-  const lastScale = useRef<number>(1);
-  const lastAngle = useRef<number>(0);
   const isFurnitureDrag = useRef(false);
   const isTrackpad = useRef(false);
   const pressedKeys = useRef<Set<string>>(new Set());
   const touchCount = useRef<number>(0);
   const isPanning = useRef<boolean>(false);
 
+  const updateControls = useCallback(() => {
+    controlsRef.current?.update();
+  }, [controlsRef]);
+
+  const panCamera = useCallback((deltaX: number, deltaY: number) => {
+    if (!enablePan) return;
+
+    const controls = controlsRef.current as OrbitControlsWithInternalMethods | null;
+
+    if (!controls) return;
+
+    const nextDeltaX = deltaX * sensitivity;
+    const nextDeltaY = deltaY * sensitivity;
+
+    if (typeof controls.pan === 'function') {
+      controls.pan(nextDeltaX, nextDeltaY, 0);
+      updateControls();
+      return;
+    }
+
+    const target = controls.target || new Vector3();
+    const right = new Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(nextDeltaX);
+    const up = new Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(nextDeltaY);
+    const move = right.add(up);
+
+    camera.position.add(move);
+    target.add(move);
+    updateControls();
+  }, [camera, controlsRef, enablePan, sensitivity, updateControls]);
+
+  const rotateCamera = useCallback((thetaDelta: number, phiDelta = 0) => {
+    if (!enableRotate) return;
+
+    const controls = controlsRef.current as OrbitControlsWithInternalMethods | null;
+
+    if (!controls) return;
+
+    const nextThetaDelta = thetaDelta * sensitivity;
+    const nextPhiDelta = phiDelta * sensitivity;
+
+    if (typeof controls.rotateLeft === 'function' || typeof controls.rotateUp === 'function') {
+      if (nextThetaDelta && typeof controls.rotateLeft === 'function') controls.rotateLeft(nextThetaDelta);
+      if (nextPhiDelta && typeof controls.rotateUp === 'function') controls.rotateUp(nextPhiDelta);
+      updateControls();
+      return;
+    }
+
+    const target = controls.target || new Vector3();
+    const offset = new Vector3().subVectors(camera.position, target);
+    const spherical = new Spherical().setFromVector3(offset);
+    spherical.theta += nextThetaDelta;
+    spherical.phi += nextPhiDelta;
+    spherical.makeSafe();
+    offset.setFromSpherical(spherical);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+    updateControls();
+  }, [camera, controlsRef, enableRotate, sensitivity, updateControls]);
+
+  const zoomCamera = useCallback((scale: number, direction: 'in' | 'out') => {
+    if (!enableZoom) return;
+
+    const controls = controlsRef.current as OrbitControlsWithInternalMethods | null;
+
+    if (!controls) return;
+
+    if (direction === 'in' && typeof controls.dollyIn === 'function') {
+      controls.dollyIn(scale);
+      updateControls();
+      return;
+    }
+
+    if (direction === 'out' && typeof controls.dollyOut === 'function') {
+      controls.dollyOut(scale);
+      updateControls();
+      return;
+    }
+
+    const target = controls.target || new Vector3();
+    const offset = new Vector3().subVectors(camera.position, target);
+    offset.multiplyScalar(direction === 'in' ? 1 / scale : scale);
+    camera.position.copy(target).add(offset);
+    updateControls();
+  }, [camera, controlsRef, enableZoom, updateControls]);
+
   // 트랙패드 감지
   useEffect(() => {
     const detectTrackpad = () => {
       // 트랙패드 감지 로직
+      if (!trackpadMode) {
+        isTrackpad.current = false;
+        return;
+      }
+
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const hasTouch = 'ontouchstart' in window;
-      const hasPointer = 'onpointerdown' in window;
       
       // 맥북에서 터치 이벤트가 있으면 트랙패드로 간주
       isTrackpad.current = isMac && hasTouch && !('ontouchend' in window);
     };
 
     detectTrackpad();
-  }, []);
+  }, [trackpadMode]);
 
   // 키보드 컨트롤
   useEffect(() => {
@@ -100,43 +198,43 @@ export const useTouchOrbitControls = (
       
       // WASD 키로 카메라 이동
       if (pressedKeys.current.has('w')) {
-        controlsRef.current.pan(0, -speed, 0);
+        panCamera(0, -speed);
       }
       if (pressedKeys.current.has('s')) {
-        controlsRef.current.pan(0, speed, 0);
+        panCamera(0, speed);
       }
       if (pressedKeys.current.has('a')) {
-        controlsRef.current.pan(-speed, 0, 0);
+        panCamera(-speed, 0);
       }
       if (pressedKeys.current.has('d')) {
-        controlsRef.current.pan(speed, 0, 0);
+        panCamera(speed, 0);
       }
       
       // QE 키로 좌우 회전
       if (pressedKeys.current.has('q')) {
-        controlsRef.current.rotateLeft(speed * 0.1);
+        rotateCamera(speed * 0.1);
       }
       if (pressedKeys.current.has('e')) {
-        controlsRef.current.rotateLeft(-speed * 0.1);
+        rotateCamera(-speed * 0.1);
       }
       
       // RF 키로 상하 회전
       if (pressedKeys.current.has('r')) {
-        controlsRef.current.rotateUp(speed * 0.1);
+        rotateCamera(0, speed * 0.1);
       }
       if (pressedKeys.current.has('f')) {
-        controlsRef.current.rotateUp(-speed * 0.1);
+        rotateCamera(0, -speed * 0.1);
       }
       
       // ZX 키로 줌
       if (pressedKeys.current.has('z')) {
-        controlsRef.current.dollyIn(1.05);
+        zoomCamera(1.05, 'in');
       }
       if (pressedKeys.current.has('x')) {
-        controlsRef.current.dollyOut(1.05);
+        zoomCamera(1.05, 'out');
       }
       
-      controlsRef.current.update();
+      updateControls();
       requestAnimationFrame(animate);
     };
 
@@ -145,7 +243,7 @@ export const useTouchOrbitControls = (
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [enableKeyboard, enabled, keyboardSpeed, controlsRef]);
+  }, [enableKeyboard, enabled, keyboardSpeed, controlsRef, panCamera, rotateCamera, updateControls, zoomCamera]);
 
   // Ctrl + 트랙패드/마우스 드래그 → 회전 (마우스 휠 클릭+드래그와 동일)
   // 맥북 트랙패드에서 Ctrl을 누르고 드래그하면 마우스 중간 버튼 드래그처럼 동작
@@ -155,9 +253,10 @@ export const useTouchOrbitControls = (
     const canvas = gl.domElement;
     let isCtrlDragging = false;
     const SYNTH_FLAG = '__ctrlRotateSynth';
+    const captureOptions: AddEventListenerOptions = { capture: true };
 
     const handlePointerDown = (e: PointerEvent) => {
-      if ((e as any)[SYNTH_FLAG]) return; // 합성 이벤트는 무시
+      if ((e as SyntheticPointerEvent)[SYNTH_FLAG]) return; // 합성 이벤트는 무시
       if (isFurnitureDrag.current) return;
       // Ctrl + 클릭/드래그 → 중간 버튼으로 변환 (맥에서 Ctrl+click은 button=2로 올 수 있음)
       if (e.ctrlKey && (e.button === 0 || e.button === 2)) {
@@ -169,13 +268,13 @@ export const useTouchOrbitControls = (
           button: 1, buttons: 4, pointerId: e.pointerId,
           pointerType: e.pointerType, view: window,
         });
-        (synth as any)[SYNTH_FLAG] = true;
+        (synth as SyntheticPointerEvent)[SYNTH_FLAG] = true;
         canvas.dispatchEvent(synth);
       }
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      if ((e as any)[SYNTH_FLAG]) return;
+      if ((e as SyntheticPointerEvent)[SYNTH_FLAG]) return;
       if (!isCtrlDragging) return;
       e.preventDefault();
       e.stopImmediatePropagation();
@@ -184,12 +283,12 @@ export const useTouchOrbitControls = (
         button: 1, buttons: 4, pointerId: e.pointerId,
         pointerType: e.pointerType, view: window,
       });
-      (synth as any)[SYNTH_FLAG] = true;
+      (synth as SyntheticPointerEvent)[SYNTH_FLAG] = true;
       canvas.dispatchEvent(synth);
     };
 
     const handlePointerUp = (e: PointerEvent) => {
-      if ((e as any)[SYNTH_FLAG]) return;
+      if ((e as SyntheticPointerEvent)[SYNTH_FLAG]) return;
       if (!isCtrlDragging) return;
       isCtrlDragging = false;
       e.preventDefault();
@@ -199,7 +298,7 @@ export const useTouchOrbitControls = (
         button: 1, buttons: 0, pointerId: e.pointerId,
         pointerType: e.pointerType, view: window,
       });
-      (synth as any)[SYNTH_FLAG] = true;
+      (synth as SyntheticPointerEvent)[SYNTH_FLAG] = true;
       canvas.dispatchEvent(synth);
     };
 
@@ -211,15 +310,15 @@ export const useTouchOrbitControls = (
     };
 
     // capture phase에서 가로채서 원래 Ctrl+클릭 이벤트를 막고 중간버튼 합성 이벤트 발송
-    canvas.addEventListener('pointerdown', handlePointerDown, { capture: true });
-    window.addEventListener('pointermove', handlePointerMove, { capture: true });
-    window.addEventListener('pointerup', handlePointerUp, { capture: true });
+    canvas.addEventListener('pointerdown', handlePointerDown, captureOptions);
+    window.addEventListener('pointermove', handlePointerMove, captureOptions);
+    window.addEventListener('pointerup', handlePointerUp, captureOptions);
     canvas.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown, { capture: true } as any);
-      window.removeEventListener('pointermove', handlePointerMove, { capture: true } as any);
-      window.removeEventListener('pointerup', handlePointerUp, { capture: true } as any);
+      canvas.removeEventListener('pointerdown', handlePointerDown, captureOptions);
+      window.removeEventListener('pointermove', handlePointerMove, captureOptions);
+      window.removeEventListener('pointerup', handlePointerUp, captureOptions);
       canvas.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [enabled, controlsRef, gl.domElement]);
@@ -267,8 +366,7 @@ export const useTouchOrbitControls = (
           const deltaY = touch.clientY - lastPos.y;
 
           const panSpeed = panSensitivity * 0.01;
-          controlsRef.current.pan(-deltaX * panSpeed, deltaY * panSpeed, 0);
-          controlsRef.current.update();
+          panCamera(-deltaX * panSpeed, deltaY * panSpeed);
         }
 
         lastTouchPositions[0] = { x: touch.clientX, y: touch.clientY };
@@ -299,7 +397,7 @@ export const useTouchOrbitControls = (
             // 줌 처리
             const zoomScale = currentDistance / lastDistance;
             const adjustedZoomScale = Math.pow(zoomScale, zoomSensitivity);
-            controlsRef.current.dollyIn(adjustedZoomScale);
+            zoomCamera(adjustedZoomScale, 'in');
             
             console.log('🔍 두 손가락 줌:', {
               currentDistance: currentDistance.toFixed(2),
@@ -319,7 +417,7 @@ export const useTouchOrbitControls = (
             
             // 팬 민감도 조정
             const panSpeed = panSensitivity * 0.01;
-            controlsRef.current.pan(-deltaX * panSpeed, -deltaY * panSpeed, 0);
+            panCamera(-deltaX * panSpeed, -deltaY * panSpeed);
             
             console.log('📱 두 손가락 팬:', {
               deltaX: deltaX.toFixed(2),
@@ -328,7 +426,7 @@ export const useTouchOrbitControls = (
             });
           }
           
-          controlsRef.current.update();
+          updateControls();
         }
         
         lastTouchPositions[0] = { x: touch1.clientX, y: touch1.clientY };
@@ -363,7 +461,7 @@ export const useTouchOrbitControls = (
       canvas.removeEventListener('touchend', handleTouchEnd);
       console.log('🎮 터치 컨트롤 비활성화됨');
     };
-  }, [enabled, sensitivity, zoomSensitivity, panSensitivity, controlsRef, gl.domElement]);
+  }, [enabled, zoomSensitivity, panSensitivity, controlsRef, gl.domElement, panCamera, updateControls, zoomCamera]);
 
   // 가구 드래그 상태 감지
   useEffect(() => {

@@ -5189,6 +5189,172 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               handleDisplayedBottomGapChange(String(Math.round(bodyBottomToFloorMm - num)));
             };
 
+            const handleSplitDoorGapChange = (
+              field: 'upperDoorTopGap' | 'upperDoorBottomGap' | 'lowerDoorTopGap' | 'lowerDoorBottomGap',
+              value: string
+            ) => {
+              const numValue = parseInt(value);
+              const updates: Record<string, number> = {};
+              if (field === 'upperDoorTopGap') {
+                setUpperDoorTopGapInput(value);
+                if (!isNaN(numValue)) {
+                  setUpperDoorTopGap(numValue);
+                  updates.upperDoorTopGap = numValue;
+                  updates.doorTopGap = numValue;
+                }
+              } else if (field === 'upperDoorBottomGap') {
+                setUpperDoorBottomGapInput(value);
+                if (!isNaN(numValue)) {
+                  setUpperDoorBottomGap(numValue);
+                  updates.upperDoorBottomGap = numValue;
+                }
+              } else if (field === 'lowerDoorTopGap') {
+                setLowerDoorTopGapInput(value);
+                if (!isNaN(numValue)) {
+                  setLowerDoorTopGap(numValue);
+                  updates.lowerDoorTopGap = numValue;
+                }
+              } else {
+                setLowerDoorBottomGapInput(value);
+                if (!isNaN(numValue)) {
+                  setLowerDoorBottomGap(numValue);
+                  updates.lowerDoorBottomGap = numValue;
+                  updates.doorBottomGap = numValue;
+                }
+              }
+              if (currentPlacedModule && Object.keys(updates).length > 0) {
+                updatePlacedModule(currentPlacedModule.id, updates);
+              }
+            };
+
+            const handleSplitDoorGapBlur = (
+              field: 'upperDoorTopGap' | 'upperDoorBottomGap' | 'lowerDoorTopGap' | 'lowerDoorBottomGap',
+              value: string,
+              fallback: number
+            ) => {
+              const parsed = parseInt(value);
+              if (!isNaN(parsed)) {
+                handleSplitDoorGapChange(field, parsed.toString());
+              } else {
+                handleSplitDoorGapChange(field, fallback.toString());
+              }
+            };
+
+            const handleSplitDoorGapKeyDown = (
+              e: React.KeyboardEvent,
+              field: 'upperDoorTopGap' | 'upperDoorBottomGap' | 'lowerDoorTopGap' | 'lowerDoorBottomGap',
+              value: string,
+              fallback: number
+            ) => {
+              if (e.key === 'Enter') {
+                handleSplitDoorGapBlur(field, value, fallback);
+                (e.target as HTMLInputElement).blur();
+                return;
+              }
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const currentValue = parseInt(value) || 0;
+                handleSplitDoorGapChange(field, String(currentValue + (e.key === 'ArrowUp' ? 1 : -1)));
+              }
+            };
+
+            const renderSplitDoorGapRow = (
+              label: string,
+              field: 'upperDoorTopGap' | 'upperDoorBottomGap' | 'lowerDoorTopGap' | 'lowerDoorBottomGap',
+              value: string,
+              fallback: number,
+              cfValue?: string,
+              onCfChange?: (value: string) => void
+            ) => {
+              const hasCfInput = !!onCfChange;
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <label style={{ width: '76px', fontSize: '12px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>{label}</label>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={value}
+                      onChange={(e) => handleSplitDoorGapChange(field, e.target.value)}
+                      onBlur={() => handleSplitDoorGapBlur(field, value, fallback)}
+                      onKeyDown={(e) => handleSplitDoorGapKeyDown(e, field, value, fallback)}
+                      className={styles.depthInput}
+                      style={{ textAlign: 'center', fontSize: '13px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={hasCfInput ? (cfValue || '0') : ''}
+                      disabled={!hasCfInput}
+                      readOnly={!hasCfInput}
+                      onChange={(e) => {
+                        if (onCfChange) onCfChange(e.target.value);
+                      }}
+                      className={styles.depthInput}
+                      style={{
+                        textAlign: 'center',
+                        fontSize: '13px',
+                        background: !hasCfInput ? 'var(--theme-background-tertiary)' : undefined,
+                        cursor: !hasCfInput ? 'not-allowed' : undefined,
+                      }}
+                    />
+                    <span className={styles.unit} style={{ visibility: hasCfInput ? 'visible' : 'hidden' }}>mm</span>
+                  </div>
+                </div>
+              );
+            };
+
+            if (isShelfSplitDoorModule) {
+              return (
+                <div className={styles.propertySection}>
+                  <h5 className={styles.sectionTitle}>
+                    <span style={{ color: 'var(--theme-primary, #10b981)', marginRight: '4px' }}>●</span>
+                    도어 셋팅
+                    <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title="좌측: 몸통/중간판 기준 / 우측: 천장·바닥 기준">ⓘ</span>
+                  </h5>
+                  <div style={{ display: 'flex', gap: '6px', fontSize: '10px', color: 'var(--theme-text-tertiary)', marginBottom: '6px', paddingLeft: '84px' }}>
+                    <div style={{ flex: 1, textAlign: 'center' }}>몸통 기준</div>
+                    <div style={{ flex: 1, textAlign: 'center' }}>천장·바닥 기준</div>
+                  </div>
+
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>상부 도어</div>
+                  {renderSplitDoorGapRow(
+                    '상단갭',
+                    'upperDoorTopGap',
+                    upperDoorTopGapInput,
+                    upperDoorTopGap,
+                    cfTopValue,
+                    onTopCfChange
+                  )}
+                  {renderSplitDoorGapRow(
+                    '하단갭',
+                    'upperDoorBottomGap',
+                    upperDoorBottomGapInput,
+                    upperDoorBottomGap
+                  )}
+
+                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--theme-text-secondary)', margin: '12px 0 6px' }}>하부 도어</div>
+                  {renderSplitDoorGapRow(
+                    '상단갭',
+                    'lowerDoorTopGap',
+                    lowerDoorTopGapInput,
+                    lowerDoorTopGap
+                  )}
+                  {renderSplitDoorGapRow(
+                    '하단갭',
+                    'lowerDoorBottomGap',
+                    lowerDoorBottomGapInput,
+                    lowerDoorBottomGap,
+                    cfBotValue,
+                    onBotCfChange
+                  )}
+                </div>
+              );
+            }
+
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>

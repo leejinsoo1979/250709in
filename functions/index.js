@@ -743,6 +743,89 @@ exports.adminAuditDesignFiles = onCall(
 // ─────────────────────────────────────────────
 
 /**
+ * 협력업체 등록 요청 — Export 제한 팝업에서 관리자에게 요청 메시지 전송
+ *
+ * 입력: { message: string }
+ * 출력: { ok: boolean, requestId: string }
+ */
+exports.sendPartnerRegistrationRequest = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID], region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    if (!callerUid) throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+
+    const message = String(request.data?.message || '').trim();
+    if (message.length < 5) {
+      throw new HttpsError('invalid-argument', '요청 메시지를 5자 이상 입력해주세요.');
+    }
+    if (message.length > 2000) {
+      throw new HttpsError('invalid-argument', '요청 메시지는 2000자 이하로 입력해주세요.');
+    }
+
+    const db = admin.firestore();
+    const userSnap = await db.doc(`users/${callerUid}`).get();
+    const userData = userSnap.exists ? userSnap.data() : {};
+    const email = String(userData.email || request.auth?.token?.email || '').trim();
+    const displayName = String(
+      userData.displayName ||
+      userData.name ||
+      request.auth?.token?.name ||
+      ''
+    ).trim();
+
+    const requestRef = await db.collection('partner_registration_requests').add({
+      uid: callerUid,
+      email,
+      displayName,
+      message,
+      status: 'new',
+      source: 'cnc_optimizer_export',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    try {
+      const token = TELEGRAM_BOT_TOKEN.value();
+      const chatId = String(TELEGRAM_CHAT_ID.value() || '');
+      if (!token || !chatId) {
+        throw new Error('Telegram secret is not configured');
+      }
+
+      const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+      const text = [
+        '협력업체 등록 요청',
+        '',
+        `요청자: ${displayName || email || callerUid}`,
+        email ? `이메일: ${email}` : '',
+        `UID: ${callerUid}`,
+        `요청 ID: ${requestRef.id}`,
+        `시간: ${time}`,
+        '',
+        '메시지',
+        message,
+      ].filter(Boolean).join('\n');
+
+      await tgApi(token, 'sendMessage', { chat_id: chatId, text });
+      await requestRef.set({
+        telegramStatus: 'sent',
+        telegramSentAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+    } catch (e) {
+      await requestRef.set({
+        telegramStatus: 'failed',
+        telegramError: e?.message || 'unknown',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      console.warn('협력업체 등록 요청 텔레그램 전송 실패:', e?.message);
+      throw new HttpsError('internal', '텔레그램 알림 전송에 실패했습니다.');
+    }
+
+    return { ok: true, requestId: requestRef.id };
+  }
+);
+
+/**
  * 발주 생성 — 기업회원이 공장(파트너)에게 발주
  *
  * 입력: {
