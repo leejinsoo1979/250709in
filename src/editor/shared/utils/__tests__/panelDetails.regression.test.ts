@@ -61,6 +61,10 @@ interface PanelDetailOptions {
   lowerSectionTopOffsetMm?: number
   doorWidthAdjustEnabled?: boolean
   doorWidthAdjustMm?: number
+  upperDoorTopGap?: number
+  upperDoorBottomGap?: number
+  lowerDoorTopGap?: number
+  lowerDoorBottomGap?: number
 }
 
 const calculatePanels = (
@@ -128,7 +132,19 @@ const calculatePanels = (
     options.customLowerDoorHingePositionsMm,
     options.customSections,
     undefined,
-    undefined,
+    (
+      options.upperDoorTopGap !== undefined
+      || options.upperDoorBottomGap !== undefined
+      || options.lowerDoorTopGap !== undefined
+      || options.lowerDoorBottomGap !== undefined
+    )
+      ? {
+          upperDoorTopGap: options.upperDoorTopGap,
+          upperDoorBottomGap: options.upperDoorBottomGap,
+          lowerDoorTopGap: options.lowerDoorTopGap,
+          lowerDoorBottomGap: options.lowerDoorBottomGap
+        }
+      : undefined,
     options.lowerSectionTopOffsetMm,
     undefined,
     undefined,
@@ -421,6 +437,19 @@ describe('panelDetails regression baselines', () => {
     expect(upperDoor.boringPositions).toEqual([140, 790, 1440])
     expect(upperDoor.screwPositions).toEqual([117.5, 162.5, 767.5, 812.5, 1417.5, 1462.5])
     expect(upperDoor.hingeCount).toBe(3)
+  })
+
+  it('도어분절 현관장 하부 도어 갭 변경은 CNC 하부 도어 높이에 반영된다', () => {
+    const panels = calculatePanels('single-shelf-split-500', 500, 380, {
+      hasDoor: true,
+      backPanelThicknessMm: 9,
+      lowerDoorTopGap: 0,
+      lowerDoorBottomGap: 0,
+      upperDoorBottomGap: 20
+    })
+    const lowerDoor = findPanel(panels, '하부 도어')
+
+    expect(lowerDoor.height).toBe(860)
   })
 
   it('듀얼 도어분절 현관장 하부 상단 도어 보링도 목찬넬 80mm 기준 140mm를 따른다', () => {

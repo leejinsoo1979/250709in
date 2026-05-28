@@ -930,7 +930,12 @@ export function useLivePanelData() {
           placedModule.lowerDoorHingePositionsMm,
           (placedModule as any).customSections,
           doorOuterOpenSides,
-          undefined,
+          {
+            upperDoorTopGap: placedModule.upperDoorTopGap,
+            upperDoorBottomGap: placedModule.upperDoorBottomGap,
+            lowerDoorTopGap: placedModule.lowerDoorTopGap,
+            lowerDoorBottomGap: placedModule.lowerDoorBottomGap
+          },
           effectiveLowerSectionTopOffsetMm,
           !!(placedModule as any).maidaWidthAdjustEnabled,
           (placedModule as any).maidaWidthAdjustMm ?? -1.5,
@@ -1872,7 +1877,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.lowerDoorHingePositionsMm,
         (placedModule as any).customSections,
         doorOuterOpenSides2,
-        undefined,
+        {
+          upperDoorTopGap: placedModule.upperDoorTopGap,
+          upperDoorBottomGap: placedModule.upperDoorBottomGap,
+          lowerDoorTopGap: placedModule.lowerDoorTopGap,
+          lowerDoorBottomGap: placedModule.lowerDoorBottomGap
+        },
         effectiveLowerSectionTopOffsetMm2,
         !!(placedModule as any).maidaWidthAdjustEnabled,
         (placedModule as any).maidaWidthAdjustMm ?? -1.5,

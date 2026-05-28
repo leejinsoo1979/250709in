@@ -437,7 +437,12 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       placedModule: placedModule as any,
       moduleWidthMm: customWidth
     }),
-    undefined,
+    {
+      upperDoorTopGap: placedModule?.upperDoorTopGap,
+      upperDoorBottomGap: placedModule?.upperDoorBottomGap,
+      lowerDoorTopGap: placedModule?.lowerDoorTopGap,
+      lowerDoorBottomGap: placedModule?.lowerDoorBottomGap
+    },
     placedModule?.lowerSectionTopOffset,
     !!(placedModule as any)?.maidaWidthAdjustEnabled,
     (placedModule as any)?.maidaWidthAdjustMm ?? -1.5,
