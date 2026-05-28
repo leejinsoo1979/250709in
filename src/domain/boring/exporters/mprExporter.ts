@@ -223,23 +223,6 @@ function isFurnitureSidePanelForBackPanelGroove(panel: PanelBoringData): boolean
   return name.includes('좌측') || name.includes('우측') || name.includes('측판');
 }
 
-function isUpperSplitSidePanel(panel: PanelBoringData): boolean {
-  return panel.panelName.includes('(상)') && isFurnitureSidePanelForBackPanelGroove(panel);
-}
-
-function isLowerSplitSidePanel(panel: PanelBoringData): boolean {
-  return panel.panelName.includes('(하)') && isFurnitureSidePanelForBackPanelGroove(panel);
-}
-
-function shouldUseRotatedNestView(panel: PanelBoringData): boolean {
-  return (isUpperSplitSidePanel(panel) && isLeftSidePanel(panel))
-    || (isLowerSplitSidePanel(panel) && isRightSidePanel(panel));
-}
-
-function shouldUseMirroredNestView(panel: PanelBoringData): boolean {
-  return panel.panelType === 'door';
-}
-
 interface SideNotchRect {
   startX: number;
   startY: number;
@@ -454,31 +437,15 @@ function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z
 function generatePanelDisplayGeometry(panel: PanelBoringData): string {
   const sideNotches = panel.sideNotches ?? [];
   const backPanelGrooveLine = resolveBackPanelGrooveLine(panel);
-  const nestPoints = shouldUseMirroredNestView(panel)
-    ? [
-      { x: panel.width, y: 0 },
-      { x: 0, y: 0 },
-      { x: 0, y: panel.height },
-      { x: panel.width, y: panel.height },
-      { x: panel.width, y: 0 },
-    ]
-    : shouldUseRotatedNestView(panel)
-    ? [
-      { x: panel.width, y: panel.height },
-      { x: 0, y: panel.height },
-      { x: 0, y: 0 },
-      { x: panel.width, y: 0 },
-      { x: panel.width, y: panel.height },
-    ]
-    : [
-      { x: 0, y: 0 },
-      { x: panel.width, y: 0 },
-      { x: panel.width, y: panel.height },
-      { x: 0, y: panel.height },
-      { x: 0, y: 0 },
-    ];
+  if (sideNotches.length === 0 && !backPanelGrooveLine) return '';
 
-  let geometry = generateContourBlock(1, 'NEST', nestPoints);
+  let geometry = generateContourBlock(1, 'NEST', [
+    { x: 0, y: 0 },
+    { x: panel.width, y: 0 },
+    { x: panel.width, y: panel.height },
+    { x: 0, y: panel.height },
+    { x: 0, y: 0 },
+  ]);
 
   if (backPanelGrooveLine) {
     geometry += generateContourBlock(2, '', [
