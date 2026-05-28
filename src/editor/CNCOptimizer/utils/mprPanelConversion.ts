@@ -1,4 +1,9 @@
 import type { Boring, PanelBoringData } from '@/domain/boring/types';
+import {
+  isFurnitureSidePanelName,
+  resolveOptimizerBoringPoint,
+  resolveOptimizerBracketPoint,
+} from '@/utils/cnc/optimizerMachiningGeometry';
 import type { PlacedPanel } from '../types';
 
 export const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
@@ -22,18 +27,12 @@ export const isMprFixedHorizontalPanel = (panelName?: string): boolean => {
 };
 
 function isFurnitureSidePanel(panel: PlacedPanel): boolean {
-  const name = panel.name || '';
-  if (name.includes('서랍') || name.includes('도어') || name.includes('Door')) return false;
-  return name.includes('좌측판')
-    || name.includes('우측판')
-    || name.includes('좌측')
-    || name.includes('우측')
-    || name.includes('측판');
+  return isFurnitureSidePanelName(panel.name);
 }
 
 function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } {
   if (isFurnitureSidePanel(panel)) {
-    return { width: panel.width, height: panel.height };
+    return { width: panel.height, height: panel.width };
   }
 
   if (!panel.isDoor && panel.sideBoringPositions?.length) {
@@ -43,76 +42,11 @@ function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } 
   return { width: panel.width, height: panel.height };
 }
 
-function roundMprCoord(value: number): number {
-  return Math.round(value * 10) / 10;
-}
-
-function isFurnitureRightSidePanel(panel: PlacedPanel): boolean {
-  const name = panel.name || '';
-  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
-}
-
-function resolveFurnitureSideDepthPosition(panel: PlacedPanel, depthPosMm: number): number {
-  const originalWidth = panel.width || 0;
-  return isFurnitureRightSidePanel(panel)
-    ? originalWidth - depthPosMm
-    : depthPosMm;
-}
-
-function resolveMprBoringPoint(
-  panel: PlacedPanel,
-  args: {
-    boringPosMm: number;
-    depthPosMm: number;
-    isDrawerSidePanel: boolean;
-    isDrawerFrontPanel: boolean;
-  }
-): { x: number; y: number } {
-  const { boringPosMm, depthPosMm, isDrawerSidePanel, isDrawerFrontPanel } = args;
-
-  if (isDrawerSidePanel || isDrawerFrontPanel) {
-    if (panel.rotated) {
-      return { x: roundMprCoord(depthPosMm), y: roundMprCoord(boringPosMm) };
-    }
-
-    return { x: roundMprCoord(boringPosMm), y: roundMprCoord(depthPosMm) };
-  }
-
-  if (isFurnitureSidePanel(panel)) {
-    const flippedBoringY = panel.height - boringPosMm;
-    const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-
-    if (panel.rotated) {
-      const scaleX = panel.height / panel.width;
-      const scaleY = panel.width / panel.height;
-      return {
-        x: roundMprCoord(resolvedDepthPosMm * scaleX),
-        y: roundMprCoord(flippedBoringY * scaleY),
-      };
-    }
-
-    return {
-      x: roundMprCoord(resolvedDepthPosMm),
-      y: roundMprCoord(flippedBoringY),
-    };
-  }
-
-  return { x: roundMprCoord(depthPosMm), y: roundMprCoord(boringPosMm) };
-}
-
-function resolveMprBracketPoint(panel: PlacedPanel, xPosMm: number, yPosMm: number): { x: number; y: number } {
-  const flippedY = panel.height - yPosMm;
-
-  if (panel.rotated) {
-    const scaleX = panel.height / panel.width;
-    const scaleY = panel.width / panel.height;
-    return {
-      x: roundMprCoord(xPosMm * scaleX),
-      y: roundMprCoord(flippedY * scaleY),
-    };
-  }
-
-  return { x: roundMprCoord(xPosMm), y: roundMprCoord(flippedY) };
+function toMprSidePanelPoint(point: { x: number; y: number }): { x: number; y: number } {
+  return {
+    x: point.y,
+    y: point.x,
+  };
 }
 
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
@@ -122,6 +56,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
   const panelThickness = panel.thickness || ((panel.material === 'PET') ? 18 : 18);
   const mprSize = getMprPanelSize(panel);
   const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
+  const isFurnitureSidePanelForMpr = isFurnitureSidePanel(panel);
 
   // 1) 측판 보링
   // - 고정선반/천지판 결합: Ø6 관통
@@ -148,12 +83,15 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
         || (!group?.boringType && !isDrawerPanel && xPositionsForY.length >= 3);
 
       xPositionsForY.forEach((xPos: number) => {
-        const point = resolveMprBoringPoint(panel, {
+        const optimizerPoint = resolveOptimizerBoringPoint(panel, {
           boringPosMm: yPos,
           depthPosMm: xPos,
           isDrawerSidePanel,
           isDrawerFrontPanel: false,
         });
+        const point = isFurnitureSidePanelForMpr
+          ? toMprSidePanelPoint(optimizerPoint)
+          : optimizerPoint;
         borings.push({
           id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
           type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
@@ -213,7 +151,10 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
     const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
     panel.bracketBoringPositions.forEach((yPos) => {
       bracketXPositions.forEach((xPos) => {
-        const point = resolveMprBracketPoint(panel, xPos, yPos);
+        const optimizerPoint = resolveOptimizerBracketPoint(panel, xPos, yPos);
+        const point = isFurnitureSidePanelForMpr
+          ? toMprSidePanelPoint(optimizerPoint)
+          : optimizerPoint;
         borings.push({
           id: `bracket-${boringIdx++}`,
           type: 'hinge-screw',

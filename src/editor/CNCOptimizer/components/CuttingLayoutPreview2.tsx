@@ -5,6 +5,11 @@ import { useCNCStore } from '../store';
 import { buildSequenceForPanel, generateGuillotineCuts, runSmoothSimulation } from '@/utils/cut/simulate';
 import type { CutStep } from '@/types/cutlist';
 import type { PanelBoringData, BoringType } from '@/domain/boring/types';
+import {
+  isDrawerSidePanelName,
+  resolveOptimizerBoringPoint,
+  roundOptimizerCoord,
+} from '@/utils/cnc/optimizerMachiningGeometry';
 import styles from './CuttingLayoutPreview2.module.css';
 
 const DEBUG_CUTTING_LAYOUT = false;
@@ -20,26 +25,14 @@ const formatPanelMm = (value: number): string => {
   return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(1);
 };
 
-const roundPanelCoordMm = (value: number): number => Math.round(value * 10) / 10;
-
 const getBoringHitRadiusMm = (totalScale: number): number => {
   const safeScale = Math.max(totalScale, 0.0001);
   return Math.max(5, 14 / safeScale);
 };
 
-const isDrawerSidePanelName = (name?: string): boolean => {
-  const panelName = name || '';
-  return panelName.includes('서랍') &&
-    (panelName.includes('좌측판') ||
-      panelName.includes('우측판') ||
-      panelName.includes('좌측') ||
-      panelName.includes('우측') ||
-      panelName.includes('측판'));
-};
-
 const resolveMprSideBoringPositions = (panel: { sideBoringPositions?: number[] }): number[] => {
   if (panel.sideBoringPositions?.length) {
-    return Array.from(new Set(panel.sideBoringPositions.map(roundPanelCoordMm))).sort((a, b) => a - b);
+    return Array.from(new Set(panel.sideBoringPositions.map(roundOptimizerCoord))).sort((a, b) => a - b);
   }
 
   return [];
@@ -84,18 +77,6 @@ function getDepthPositionsForBoring(panel: any, boringY: number, fallback: numbe
     : fallback;
 }
 
-function isFurnitureRightSidePanel(panel: any): boolean {
-  const name = panel?.name || '';
-  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
-}
-
-function resolveFurnitureSideDepthPosition(panel: any, depthPosMm: number): number {
-  const originalWidth = panel.width || 0;
-  return isFurnitureRightSidePanel(panel)
-    ? originalWidth - depthPosMm
-    : depthPosMm;
-}
-
 function getBoringSheetCoords(
   panel: any,
   args: {
@@ -108,40 +89,15 @@ function getBoringSheetCoords(
   }
 ): { x: number; y: number } {
   const { panelX, panelY, boringPosMm, depthPosMm, isDrawerSidePanel, isDrawerFrontPanel } = args;
-  const originalWidth = panel.width;
-  const originalHeight = panel.height;
-
-  if (isDrawerSidePanel || isDrawerFrontPanel) {
-    if (panel.rotated) {
-      return {
-        x: panelX + depthPosMm,
-        y: panelY + boringPosMm
-      };
-    }
-
-    return {
-      x: panelX + boringPosMm,
-      y: panelY + depthPosMm
-    };
-  }
-
-  const flippedBoringY = originalHeight - boringPosMm;
-  const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
-
-  if (panel.rotated) {
-    const placedWidth = originalHeight;
-    const placedHeight = originalWidth;
-    const scaleX = placedWidth / originalWidth;
-    const scaleY = placedHeight / originalHeight;
-    return {
-      x: panelX + resolvedDepthPosMm * scaleX,
-      y: panelY + flippedBoringY * scaleY
-    };
-  }
-
+  const point = resolveOptimizerBoringPoint(panel, {
+    boringPosMm,
+    depthPosMm,
+    isDrawerSidePanel,
+    isDrawerFrontPanel,
+  });
   return {
-    x: panelX + resolvedDepthPosMm,
-    y: panelY + flippedBoringY
+    x: panelX + point.x,
+    y: panelY + point.y,
   };
 }
 
@@ -1740,7 +1696,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               const centers: number[] = [];
 
               for (let i = 0; i + 1 < screwPositions.length; i += 2) {
-                centers.push(roundPanelCoordMm((screwPositions[i] + screwPositions[i + 1]) / 2));
+                centers.push(roundOptimizerCoord((screwPositions[i] + screwPositions[i + 1]) / 2));
               }
 
               return Array.from(new Set(centers));
@@ -1762,7 +1718,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                   ? restoredCupX
                   : fallbackCupX;
 
-                return [roundPanelCoordMm(Math.max(0, Math.min(originalWidth, cupX)))];
+                return [roundOptimizerCoord(Math.max(0, Math.min(originalWidth, cupX)))];
               }
 
               return [panel.isLeftHinge ? originalWidth - 22.5 : 22.5];
@@ -2866,8 +2822,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 boring: {
                   panelName: panel.name,
                   panelId: panel.id,
-                  x: roundPanelCoordMm(depthPosMm),
-                  y: roundPanelCoordMm(boringPosMm),
+                  x: roundOptimizerCoord(depthPosMm),
+                  y: roundOptimizerCoord(boringPosMm),
                   sheetX: boringX,
                   sheetY: boringY,
                   panelX: x,

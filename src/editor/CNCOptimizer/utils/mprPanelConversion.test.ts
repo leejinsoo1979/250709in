@@ -155,13 +155,13 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const mpr = generateSinglePanelMPR(converted);
 
-    expect(converted.width).toBe(380);
-    expect(converted.height).toBe(860);
+    expect(converted.width).toBe(860);
+    expect(converted.height).toBe(380);
     expect(mpr).toContain(']3');
-    expect(mpr).toContain('X=340.0000');
-    expect(mpr).toContain('X=380.0000');
+    expect(mpr).toContain('Y=340.0000');
+    expect(mpr).toContain('X=80.0000');
     expect(mpr).toContain('Y=0.0000');
-    expect(mpr).toContain('Y=80.0000');
+    expect(mpr).toContain('Y=380.0000');
     expect(mpr).toContain('<105 \\Konturfraesen\\');
     expect(mpr).toContain('EA="3:0"');
     expect(mpr).toContain('EE="3:2"');
@@ -187,17 +187,17 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const mpr = generateSinglePanelMPR(converted);
 
-    expect(converted.width).toBe(380);
-    expect(converted.height).toBe(860);
+    expect(converted.width).toBe(860);
+    expect(converted.height).toBe(380);
     expect(mpr).toContain(']2');
-    expect(mpr).toContain('X=359.0000');
+    expect(mpr).toContain('X=860.0000');
     expect(mpr).toContain('Y=0.0000');
-    expect(mpr).toContain('Y=860.0000');
+    expect(mpr).toContain('Y=359.0000');
     expect(mpr).toContain('<109 \\Nuten\\');
-    expect(mpr).toContain('XA="359.0000"');
-    expect(mpr).toContain('YA="-1.0000"');
-    expect(mpr).toContain('XE="359.0000"');
-    expect(mpr).toContain('YE="861.0000"');
+    expect(mpr).toContain('XA="-1.0000"');
+    expect(mpr).toContain('YA="359.0000"');
+    expect(mpr).toContain('XE="861.0000"');
+    expect(mpr).toContain('YE="359.0000"');
     expect(mpr).toContain('NB="3.0000"');
     expect(mpr).toContain('TI="7.5000"');
     expect(mpr).not.toContain('백패널 홈');
@@ -251,15 +251,15 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const converted = convertPlacedPanelToMprBoringData(panel);
     const fixedBorings = converted.borings.filter(boring => boring.note === 'fixed-panel-through');
 
-    expect(converted.width).toBe(380);
-    expect(converted.height).toBe(860);
+    expect(converted.width).toBe(860);
+    expect(converted.height).toBe(380);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 350, y: 850.7 },
-      { x: 200, y: 850.7 },
-      { x: 50, y: 850.7 },
-      { x: 291.5, y: 9.2 },
-      { x: 171, y: 9.2 },
-      { x: 50.5, y: 9.2 },
+      { x: 850.7, y: 350 },
+      { x: 850.7, y: 200 },
+      { x: 850.7, y: 50 },
+      { x: 9.2, y: 291.5 },
+      { x: 9.2, y: 171 },
+      { x: 9.2, y: 50.5 },
     ]);
   });
 
@@ -285,12 +285,12 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const bracketBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(bracketBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 20, y: 1420 },
-      { x: 52, y: 1420 },
-      { x: 20, y: 770 },
-      { x: 52, y: 770 },
-      { x: 20, y: 120 },
-      { x: 52, y: 120 },
+      { x: 1420, y: 20 },
+      { x: 1420, y: 52 },
+      { x: 770, y: 20 },
+      { x: 770, y: 52 },
+      { x: 120, y: 20 },
+      { x: 120, y: 52 },
     ]);
   });
 
@@ -310,8 +310,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const upperLeftMpr = generateSinglePanelMPR(upperLeft);
 
-    expect(upperLeftMpr).toContain('X=359.0000');
-    expect(upperLeftMpr).toContain('XA="359.0000"');
+    expect(upperLeftMpr).toContain('Y=359.0000');
+    expect(upperLeftMpr).toContain('YA="359.0000"');
 
     const lowerRight = convertPlacedPanelToMprBoringData({
       id: 'lower-right-side',
@@ -329,9 +329,9 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const lowerRightMpr = generateSinglePanelMPR(lowerRight);
 
-    expect(lowerRightMpr).toContain('X=21.0000');
-    expect(lowerRightMpr).toContain('XA="21.0000"');
-    expect(lowerRightMpr).toContain('X=340.0000');
+    expect(lowerRightMpr).toContain('Y=21.0000');
+    expect(lowerRightMpr).toContain('YA="21.0000"');
+    expect(lowerRightMpr).toContain('Y=340.0000');
     expect(lowerRightMpr).toContain('Y=0.0000');
   });
 
