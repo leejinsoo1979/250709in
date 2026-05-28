@@ -136,7 +136,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('TI="7.5"');
   });
 
-  it('exports side notch as sample-style contour milling', () => {
+  it('exports side notch using optimizer preview coordinates', () => {
     const panel = {
       id: 'right-side-with-notch-1',
       name: '(하)우측',
@@ -160,7 +160,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain(']3');
     expect(mpr).toContain('X=340.0000');
     expect(mpr).toContain('X=380.0000');
-    expect(mpr).toContain('Y=860.0000');
+    expect(mpr).toContain('Y=0.0000');
     expect(mpr).toContain('Y=80.0000');
     expect(mpr).toContain('<105 \\Konturfraesen\\');
     expect(mpr).toContain('EA="3:0"');
@@ -169,7 +169,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).not.toContain('측판 따내기');
   });
 
-  it('exports furniture side back-panel groove as sample-style Nuten machining', () => {
+  it('exports furniture side back-panel groove using optimizer preview coordinates', () => {
     const panel = {
       id: 'left-side-with-back-groove-1',
       name: '(하)좌측',
@@ -190,13 +190,13 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(mpr).toContain(']2');
-    expect(mpr).toContain('X=360.0000');
+    expect(mpr).toContain('X=359.0000');
     expect(mpr).toContain('Y=0.0000');
     expect(mpr).toContain('Y=860.0000');
     expect(mpr).toContain('<109 \\Nuten\\');
-    expect(mpr).toContain('XA="361.5000"');
+    expect(mpr).toContain('XA="359.0000"');
     expect(mpr).toContain('YA="-1.0000"');
-    expect(mpr).toContain('XE="361.5000"');
+    expect(mpr).toContain('XE="359.0000"');
     expect(mpr).toContain('YE="861.0000"');
     expect(mpr).toContain('NB="3.0000"');
     expect(mpr).toContain('TI="7.5000"');
@@ -228,7 +228,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).not.toContain('<105 \\Ktasche\\');
   });
 
-  it('exports furniture right-side panel borings without MPR-side mirroring', () => {
+  it('exports furniture right-side panel borings using optimizer preview coordinates', () => {
     const panel = {
       id: 'right-side-1',
       name: '(하)우측',
@@ -254,16 +254,16 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 30, y: 9.3 },
-      { x: 180, y: 9.3 },
-      { x: 330, y: 9.3 },
-      { x: 88.5, y: 850.8 },
-      { x: 209, y: 850.8 },
-      { x: 329.5, y: 850.8 },
+      { x: 350, y: 850.7 },
+      { x: 200, y: 850.7 },
+      { x: 50, y: 850.7 },
+      { x: 291.5, y: 9.2 },
+      { x: 171, y: 9.2 },
+      { x: 50.5, y: 9.2 },
     ]);
   });
 
-  it('exports split entryway side bracket borings without MPR-side vertical flipping', () => {
+  it('exports split entryway side bracket borings using optimizer preview coordinates', () => {
     const panel = {
       id: 'upper-left-split-side-1',
       name: '(상)좌측',
@@ -285,12 +285,12 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const bracketBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(bracketBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 20, y: 120 },
-      { x: 52, y: 120 },
-      { x: 20, y: 770 },
-      { x: 52, y: 770 },
       { x: 20, y: 1420 },
       { x: 52, y: 1420 },
+      { x: 20, y: 770 },
+      { x: 52, y: 770 },
+      { x: 20, y: 120 },
+      { x: 52, y: 120 },
     ]);
   });
 
@@ -310,8 +310,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const upperLeftMpr = generateSinglePanelMPR(upperLeft);
 
-    expect(upperLeftMpr).toContain('X=360.0000');
-    expect(upperLeftMpr).toContain('XA="361.5000"');
+    expect(upperLeftMpr).toContain('X=359.0000');
+    expect(upperLeftMpr).toContain('XA="359.0000"');
 
     const lowerRight = convertPlacedPanelToMprBoringData({
       id: 'lower-right-side',
@@ -329,8 +329,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const lowerRightMpr = generateSinglePanelMPR(lowerRight);
 
-    expect(lowerRightMpr).toContain('X=17.0000');
-    expect(lowerRightMpr).toContain('XA="18.5000"');
+    expect(lowerRightMpr).toContain('X=21.0000');
+    expect(lowerRightMpr).toContain('XA="21.0000"');
     expect(lowerRightMpr).toContain('X=340.0000');
     expect(lowerRightMpr).toContain('Y=0.0000');
   });

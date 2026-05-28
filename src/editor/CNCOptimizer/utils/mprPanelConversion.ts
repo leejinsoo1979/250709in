@@ -43,6 +43,78 @@ function getMprPanelSize(panel: PlacedPanel): { width: number; height: number } 
   return { width: panel.width, height: panel.height };
 }
 
+function roundMprCoord(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
+function isFurnitureRightSidePanel(panel: PlacedPanel): boolean {
+  const name = panel.name || '';
+  return !name.includes('서랍') && (name.includes('우측판') || name.includes('우측'));
+}
+
+function resolveFurnitureSideDepthPosition(panel: PlacedPanel, depthPosMm: number): number {
+  const originalWidth = panel.width || 0;
+  return isFurnitureRightSidePanel(panel)
+    ? originalWidth - depthPosMm
+    : depthPosMm;
+}
+
+function resolveMprBoringPoint(
+  panel: PlacedPanel,
+  args: {
+    boringPosMm: number;
+    depthPosMm: number;
+    isDrawerSidePanel: boolean;
+    isDrawerFrontPanel: boolean;
+  }
+): { x: number; y: number } {
+  const { boringPosMm, depthPosMm, isDrawerSidePanel, isDrawerFrontPanel } = args;
+
+  if (isDrawerSidePanel || isDrawerFrontPanel) {
+    if (panel.rotated) {
+      return { x: roundMprCoord(depthPosMm), y: roundMprCoord(boringPosMm) };
+    }
+
+    return { x: roundMprCoord(boringPosMm), y: roundMprCoord(depthPosMm) };
+  }
+
+  if (isFurnitureSidePanel(panel)) {
+    const flippedBoringY = panel.height - boringPosMm;
+    const resolvedDepthPosMm = resolveFurnitureSideDepthPosition(panel, depthPosMm);
+
+    if (panel.rotated) {
+      const scaleX = panel.height / panel.width;
+      const scaleY = panel.width / panel.height;
+      return {
+        x: roundMprCoord(resolvedDepthPosMm * scaleX),
+        y: roundMprCoord(flippedBoringY * scaleY),
+      };
+    }
+
+    return {
+      x: roundMprCoord(resolvedDepthPosMm),
+      y: roundMprCoord(flippedBoringY),
+    };
+  }
+
+  return { x: roundMprCoord(depthPosMm), y: roundMprCoord(boringPosMm) };
+}
+
+function resolveMprBracketPoint(panel: PlacedPanel, xPosMm: number, yPosMm: number): { x: number; y: number } {
+  const flippedY = panel.height - yPosMm;
+
+  if (panel.rotated) {
+    const scaleX = panel.height / panel.width;
+    const scaleY = panel.width / panel.height;
+    return {
+      x: roundMprCoord(xPosMm * scaleX),
+      y: roundMprCoord(flippedY * scaleY),
+    };
+  }
+
+  return { x: roundMprCoord(xPosMm), y: roundMprCoord(flippedY) };
+}
+
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
   const borings: Boring[] = [];
   let boringIdx = 0;
@@ -76,12 +148,18 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
         || (!group?.boringType && !isDrawerPanel && xPositionsForY.length >= 3);
 
       xPositionsForY.forEach((xPos: number) => {
+        const point = resolveMprBoringPoint(panel, {
+          boringPosMm: yPos,
+          depthPosMm: xPos,
+          isDrawerSidePanel,
+          isDrawerFrontPanel: false,
+        });
         borings.push({
           id: isDrawerSidePanel ? `drawer-side-${boringIdx++}` : `shelf-${boringIdx++}`,
           type: isDrawerSidePanel ? 'drawer-panel-connector' : 'shelf-pin',
           face: 'top',
-          x: xPos,
-          y: yPos,
+          x: point.x,
+          y: point.y,
           diameter: isDrawerSidePanel ? 3 : (isFixedPanelBoring ? 6 : 5),
           depth: isDrawerSidePanel ? panelThickness : (isFixedPanelBoring ? panelThickness : 12),
           note: isDrawerSidePanel
@@ -135,12 +213,13 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
     const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
     panel.bracketBoringPositions.forEach((yPos) => {
       bracketXPositions.forEach((xPos) => {
+        const point = resolveMprBracketPoint(panel, xPos, yPos);
         borings.push({
           id: `bracket-${boringIdx++}`,
           type: 'hinge-screw',
           face: 'top',
-          x: xPos,
-          y: yPos,
+          x: point.x,
+          y: point.y,
           diameter: 3,
           depth: 3,
           note: 'door-fixing-screw',

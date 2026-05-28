@@ -275,14 +275,17 @@ interface BackPanelGrooveLine {
 
 function resolveBackPanelGrooveLine(panel: PanelBoringData): BackPanelGrooveLine | null {
   if (!isFurnitureSidePanelForBackPanelGroove(panel)) return null;
-  if (panel.width <= BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM || panel.height <= 0) return null;
-  const x = isRightSidePanel(panel)
-    ? BACK_PANEL_GROOVE_REAR_OFFSET_MM
-    : panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
+  if (panel.width <= 26 || panel.height <= 0) return null;
+  const previewBackPanelDepthOffset = 16;
+  const previewGrooveWidth = 10;
+  const grooveStartX = isLeftSidePanel(panel)
+    ? panel.width - previewBackPanelDepthOffset - previewGrooveWidth
+    : previewBackPanelDepthOffset;
+  const centerX = grooveStartX + previewGrooveWidth / 2;
 
   return {
-    x,
-    centerX: x + BACK_PANEL_GROOVE_WIDTH_MM / 2,
+    x: centerX,
+    centerX,
     width: BACK_PANEL_GROOVE_WIDTH_MM,
     depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
   };
@@ -332,6 +335,32 @@ function getSideNotchBlockNumber(panel: PanelBoringData, index: number): number 
 }
 
 function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z: number; fromBottom: number }): Array<{ x: number; y: number }> {
+  if (isFurnitureSidePanelForBackPanelGroove(panel)) {
+    const notchWidth = Math.max(0, Math.min(notch.z, panel.width));
+    const panelH = panel.height;
+    const isRightSide = isRightSidePanel(panel);
+    const isTopEdge = (notch.fromBottom + notch.y) >= panelH - 1;
+    const frontEdge = isRightSide ? panel.width : 0;
+    const notchInner = isRightSide ? panel.width - notchWidth : notchWidth;
+    const notchBottomY = panel.height - notch.fromBottom;
+    const notchTopY = panel.height - notch.fromBottom - notch.y;
+
+    if (notchWidth <= 0 || notch.y <= 0) return [];
+
+    return isTopEdge
+      ? [
+        { x: notchInner, y: notchTopY },
+        { x: notchInner, y: notchBottomY },
+        { x: frontEdge, y: notchBottomY },
+      ]
+      : [
+        { x: frontEdge, y: notchTopY },
+        { x: notchInner, y: notchTopY },
+        { x: notchInner, y: notchBottomY },
+        { x: frontEdge, y: notchBottomY },
+      ];
+  }
+
   const rect = resolveSideNotchRect(panel, notch);
   if (!rect) return [];
 
