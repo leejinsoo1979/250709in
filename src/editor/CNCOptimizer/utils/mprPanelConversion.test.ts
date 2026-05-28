@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { generateSinglePanelMPR } from '@/domain/boring/exporters/mprExporter';
-import type { PlacedPanel } from '../types';
+import type { Panel, PlacedPanel } from '../types';
 import { convertPlacedPanelToMprBoringData } from './mprPanelConversion';
+import { optimizePanelsMultiple } from './optimizer';
 
 describe('convertPlacedPanelToMprBoringData', () => {
   it('converts optimizer horizontal panel coordinates so side bores are on product left/right edges', () => {
@@ -227,7 +228,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).not.toContain('<105 \\Ktasche\\');
   });
 
-  it('exports furniture right-side panel borings in optimizer panel coordinates', () => {
+  it('exports furniture right-side panel borings without MPR-side mirroring', () => {
     const panel = {
       id: 'right-side-1',
       name: '(하)우측',
@@ -253,16 +254,16 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 350, y: 850.7 },
-      { x: 200, y: 850.7 },
-      { x: 50, y: 850.7 },
-      { x: 291.5, y: 9.2 },
-      { x: 171, y: 9.2 },
-      { x: 50.5, y: 9.2 },
+      { x: 30, y: 9.3 },
+      { x: 180, y: 9.3 },
+      { x: 330, y: 9.3 },
+      { x: 88.5, y: 850.8 },
+      { x: 209, y: 850.8 },
+      { x: 329.5, y: 850.8 },
     ]);
   });
 
-  it('exports split entryway side bracket borings in optimizer display coordinates', () => {
+  it('exports split entryway side bracket borings without MPR-side vertical flipping', () => {
     const panel = {
       id: 'upper-left-split-side-1',
       name: '(상)좌측',
@@ -284,12 +285,12 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const bracketBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(bracketBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 20, y: 1420 },
-      { x: 52, y: 1420 },
-      { x: 20, y: 770 },
-      { x: 52, y: 770 },
       { x: 20, y: 120 },
       { x: 52, y: 120 },
+      { x: 20, y: 770 },
+      { x: 52, y: 770 },
+      { x: 20, y: 1420 },
+      { x: 52, y: 1420 },
     ]);
   });
 
@@ -355,5 +356,44 @@ describe('convertPlacedPanelToMprBoringData', () => {
 
     expect(converted.panelType).toBe('drawer-front');
     expect(converted.borings).toEqual([]);
+  });
+
+  it('preserves side notches through optimizer placement before MPR export', async () => {
+    const panels: Panel[] = [{
+      id: 'lower-right-side',
+      name: '(하)우측',
+      width: 380,
+      height: 860,
+      thickness: 18,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      sideNotches: [{ y: 80, z: 40, fromBottom: 780 }],
+    }];
+
+    const [result] = await optimizePanelsMultiple(
+      panels,
+      {
+        id: 'PB',
+        width: 1220,
+        height: 2440,
+        material: 'PB',
+        color: 'MW',
+        price: 0,
+        stock: 1,
+        thickness: 18,
+      },
+      1,
+      true,
+      5,
+      'BY_LENGTH'
+    );
+
+    expect(result.panels[0].sideNotches).toEqual([{ y: 80, z: 40, fromBottom: 780 }]);
+
+    const mpr = generateSinglePanelMPR(convertPlacedPanelToMprBoringData(result.panels[0]));
+    expect(mpr).toContain('EA="3:0"');
+    expect(mpr).toContain('EE="3:2"');
   });
 });

@@ -243,6 +243,10 @@ export const optimizePanels = async (
         bracketBoringPositions: originalPanel.bracketBoringPositions,
         bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
         isBracketSide: originalPanel.isBracketSide,
+        // 따내기/홈 정보
+        cornerNotch: originalPanel.cornerNotch,
+        sideNotches: originalPanel.sideNotches,
+        rebate: originalPanel.rebate,
       });
     } else {
       unplacedPanels.push(rect);
@@ -343,6 +347,10 @@ export const optimizePanelsImproved = async (
         bracketBoringPositions: originalPanel.bracketBoringPositions,
         bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
         isBracketSide: originalPanel.isBracketSide,
+        // 따내기/홈 정보
+        cornerNotch: originalPanel.cornerNotch,
+        sideNotches: originalPanel.sideNotches,
+        rebate: originalPanel.rebate,
       });
     }
   }
@@ -506,6 +514,10 @@ export const optimizePanelsMultiple = async (
         bracketBoringPositions: originalPanel.bracketBoringPositions,
         bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
         isBracketSide: originalPanel.isBracketSide,
+        // 따내기/홈 정보
+        cornerNotch: originalPanel.cornerNotch,
+        sideNotches: originalPanel.sideNotches,
+        rebate: originalPanel.rebate,
       };
     });
 
@@ -624,6 +636,10 @@ export const optimizePanelsMultipleImproved = async (
         bracketBoringPositions: originalPanel.bracketBoringPositions,
         bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
         isBracketSide: originalPanel.isBracketSide,
+        // 따내기/홈 정보
+        cornerNotch: originalPanel.cornerNotch,
+        sideNotches: originalPanel.sideNotches,
+        rebate: originalPanel.rebate,
       };
     });
 
