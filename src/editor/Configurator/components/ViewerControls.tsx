@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
 import { PiHandTapThin } from 'react-icons/pi';
@@ -49,6 +49,9 @@ interface ViewerControlsProps {
   onSurroundGenerate?: () => void;
   frameMergeEnabled?: boolean;
   onFrameMergeToggle?: () => void;
+  onStartGuideSetupInNewTab?: () => Promise<boolean> | boolean;
+  guideSetupRequest?: boolean;
+  onGuideSetupRequestHandled?: () => void;
 }
 
 const ViewerControls: React.FC<ViewerControlsProps> = ({
@@ -77,9 +80,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   surroundGenerated = false,
   onSurroundGenerate,
   frameMergeEnabled = false,
-  onFrameMergeToggle
+  onFrameMergeToggle,
+  onStartGuideSetupInNewTab,
+  guideSetupRequest = false,
+  onGuideSetupRequestHandled
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, cameraMode, setCameraMode } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = isSuperAdmin(user?.email);
   const canCreateFreePlacementGuide = user?.email?.toLowerCase().trim() === GUIDE_BUTTON_EMAIL;
@@ -124,6 +130,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const [guideLowerSlotCount, setGuideLowerSlotCount] = useState(() => String(
     spaceInfo?.freePlacementGuides?.filter((slot) => slot.guideZone === 'lower').length || 4
   ));
+  const guideSetupAutoOpenedRef = useRef(false);
 
   // 모든 슬롯이 채워지면 안내 표시, 빈 슬롯 생기면 숨김
   useEffect(() => {
@@ -194,8 +201,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   useEffect(() => {
     if (!spaceInfo?.freePlacementGuideEditing) return;
 
-    if (viewMode !== '2D') {
-      onViewModeChange('2D');
+    if (viewMode !== '3D') {
+      onViewModeChange('3D');
+    }
+    if (cameraMode !== 'orthographic') {
+      setCameraMode('orthographic');
     }
     if (view2DDirection !== 'front') {
       setView2DDirection('front');
@@ -204,13 +214,22 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   }, [
     spaceInfo?.freePlacementGuideEditing,
     viewMode,
+    cameraMode,
     view2DDirection,
     onViewModeChange,
     onViewDirectionChange,
+    setCameraMode,
     setView2DDirection
   ]);
 
   const openGuideDialog = () => {
+    useUIStore.getState().clearSelectedFurnitureIds();
+    useUIStore.getState().setSelectedSlotIndex(null);
+    onViewModeChange('3D');
+    setCameraMode('orthographic');
+    setView2DDirection('front');
+    onViewDirectionChange('front');
+
     const guideSlots = spaceInfo?.freePlacementGuides || [];
     const hasSplitGuides = guideSlots.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower');
     const upperCount = guideSlots.filter((slot) => slot.guideZone === 'upper').length;
@@ -223,7 +242,34 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     setShowGuideDialog(true);
   };
 
-  const handleGuideButtonClick = () => {
+  useEffect(() => {
+    if (!guideSetupRequest) {
+      guideSetupAutoOpenedRef.current = false;
+      return;
+    }
+
+    if (guideSetupAutoOpenedRef.current) return;
+
+    guideSetupAutoOpenedRef.current = true;
+    onGuideSetupRequestHandled?.();
+    openGuideDialog();
+  }, [guideSetupRequest]);
+
+  useEffect(() => {
+    if (guideSetupAutoOpenedRef.current || guideSetupRequest || typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('guideSetup') !== '1') return;
+
+    guideSetupAutoOpenedRef.current = true;
+    params.delete('guideSetup');
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', nextUrl);
+    openGuideDialog();
+  }, []);
+
+  const handleGuideButtonClick = async () => {
     if (spaceInfo?.freePlacementGuideEditing) {
       useUIStore.getState().setSelectedSlotIndex(null);
       setSpaceInfo({
@@ -236,13 +282,18 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       return;
     }
 
+    if (!spaceInfo?.customGuideMode && onStartGuideSetupInNewTab) {
+      const startedInNewTab = await onStartGuideSetupInNewTab();
+      if (startedInNewTab) return;
+    }
+
     openGuideDialog();
   };
 
   useEffect(() => {
     const handleGuideToggle = () => {
       if (!canCreateFreePlacementGuide) return;
-      handleGuideButtonClick();
+      void handleGuideButtonClick();
     };
 
     window.addEventListener('free-placement-guide:toggle', handleGuideToggle);
@@ -286,7 +337,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       freePlacementGuideEditing: true,
       customGuideMode: true
     });
-    onViewModeChange('2D');
+    onViewModeChange('3D');
+    setCameraMode('orthographic');
     setView2DDirection('front');
     onViewDirectionChange('front');
     if (guideVerticalSplit) {
@@ -541,9 +593,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               key={mode.id}
               data-view-mode={mode.id}
               className={`${styles.segmentButton} ${styles.segmentAccent} ${viewMode === mode.id ? styles.segmentAccentActive : ''}`}
-              disabled={spaceInfo?.freePlacementGuideEditing && mode.id !== '2D'}
+              disabled={spaceInfo?.freePlacementGuideEditing && mode.id !== '3D'}
               onClick={() => {
-                if (spaceInfo?.freePlacementGuideEditing && mode.id !== '2D') return;
+                if (spaceInfo?.freePlacementGuideEditing && mode.id !== '3D') return;
                 onViewModeChange(mode.id);
                 if (mode.id === '2D') {
                   // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택

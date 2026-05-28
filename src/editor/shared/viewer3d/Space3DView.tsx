@@ -2747,6 +2747,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드에서는 원근 모드 기존 유지
     if (viewMode === '3D') {
+      if (spaceInfo.customGuideMode || spaceInfo.freePlacementGuideEditing) {
+        const guideDistance = distance * (isMobile ? 1.5 : 1.15);
+        return [
+          centerX + guideDistance * 0.65,
+          centerY + guideDistance * 0.45,
+          centerZ + guideDistance * 0.8
+        ] as [number, number, number];
+      }
       // 모바일에서는 1.5배 거리
       if (isMobile) {
         return [centerX, centerY, distance * 1.5] as [number, number, number];

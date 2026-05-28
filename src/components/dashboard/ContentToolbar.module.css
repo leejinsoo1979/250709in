@@ -312,14 +312,14 @@
 }
 
 .dangerBtn {
-  color: #ef4444;
-  border-color: #ef4444;
+  color: var(--theme-text, #111827);
+  border-color: var(--theme-border, #d1d5db);
 }
 
 .dangerBtn:hover {
-  background: #ef4444;
-  color: white;
-  border-color: #ef4444;
+  background: var(--theme-background-hover, #f3f4f6);
+  color: var(--theme-text, #111827);
+  border-color: var(--theme-border-hover, #9ca3af);
 }
 
 .createBtnPrimary {

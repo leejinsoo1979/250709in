@@ -685,6 +685,7 @@ const Configurator: React.FC = () => {
   const [newDesignProjects, setNewDesignProjects] = useState<ProjectSummary[]>([]);
   const [newDesignProjectId, setNewDesignProjectId] = useState<string | null>(null);
   const [isCreatingNewDesign, setIsCreatingNewDesign] = useState(false);
+  const [pendingGuideSetupDesignFileId, setPendingGuideSetupDesignFileId] = useState<string | null>(null);
 
   // 도어 셋팅: 자유배치 모드 + 도어 달린 가구가 실제로 배치되어 있을 때만 표시
   const doorFurnitureList = useMemo(() =>
@@ -2665,6 +2666,83 @@ const Configurator: React.FC = () => {
     } finally {
       setIsCreatingNewDesign(false);
     }
+  };
+
+  const handleStartGuideSetupInNewTab = async () => {
+    if (isReadOnly || isCreatingNewDesign) return false;
+
+    const effectiveProjectId = currentProjectId
+      || searchParams.get('projectId')
+      || searchParams.get('id')
+      || searchParams.get('project');
+
+    if (!effectiveProjectId) {
+      alert('가이드 생성을 시작할 프로젝트를 찾을 수 없습니다.');
+      return false;
+    }
+
+    setIsCreatingNewDesign(true);
+    try {
+      try {
+        await saveProject();
+      } catch (error) {
+        console.warn('가이드 새 탭 생성 전 현재 디자인 저장 실패:', error);
+      }
+
+      const guideSpaceConfig = normalizeSpaceInfoFrameSize({
+        ...stripSessionOnlyFields(spaceInfo),
+        freePlacementGuides: [],
+        freePlacementGuideEditing: false,
+        customGuideMode: true
+      });
+
+      const guideDesignName = '가이드 배치';
+      const createData: any = {
+        name: guideDesignName,
+        projectId: effectiveProjectId,
+        spaceConfig: removeUndefinedValues(guideSpaceConfig),
+        furniture: { placedModules: [] }
+      };
+
+      if (currentFolderId && effectiveProjectId === currentProjectId) {
+        createData.folderId = currentFolderId;
+      }
+
+      const result = await createDesignFile(createData);
+      if (result.error || !result.id) {
+        alert('가이드 새 탭 생성에 실패했습니다: ' + (result.error || '디자인 파일 ID 없음'));
+        return false;
+      }
+
+      const activeTab = useUIStore.getState().openTabs.find(tab => tab.id === useUIStore.getState().activeTabId);
+      useUIStore.getState().addTab({
+        projectId: effectiveProjectId,
+        projectName: activeTab?.projectName || urlProjectName || basicInfo.title || effectiveProjectId,
+        designFileId: result.id,
+        designFileName: guideDesignName,
+      });
+
+      setPendingGuideSetupDesignFileId(result.id);
+      navigate(`/configurator?projectId=${effectiveProjectId}&designFileId=${result.id}&guideSetup=1`, { replace: false });
+      return true;
+    } catch (error) {
+      console.error('가이드 새 탭 생성 중 오류:', error);
+      alert('가이드 새 탭 생성 중 오류가 발생했습니다.');
+      return false;
+    } finally {
+      setIsCreatingNewDesign(false);
+    }
+  };
+
+  const handleGuideSetupRequestHandled = () => {
+    setPendingGuideSetupDesignFileId(null);
+
+    const params = new URLSearchParams(searchParams);
+    if (!params.has('guideSetup')) return;
+
+    params.delete('guideSetup');
+    const nextSearch = params.toString();
+    navigate(`/configurator${nextSearch ? `?${nextSearch}` : ''}`, { replace: true });
   };
 
   // 새 프로젝트 생성 함수
@@ -8484,6 +8562,9 @@ const Configurator: React.FC = () => {
                 }
                 setSpaceInfo({ frameMergeEnabled: !isCurrentlyMerged });
               }}
+              onStartGuideSetupInNewTab={handleStartGuideSetupInNewTab}
+              guideSetupRequest={pendingGuideSetupDesignFileId === currentDesignFileId && searchParams.get('guideSetup') === '1'}
+              onGuideSetupRequestHandled={handleGuideSetupRequestHandled}
             />
           )}
 

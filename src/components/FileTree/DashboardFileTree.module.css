@@ -201,11 +201,11 @@
 }
 
 .moreMenuItem.deleteItem {
-  color: var(--theme-danger, #ef4444);
+  color: var(--theme-text, #111827);
 }
 
 .moreMenuItem.deleteItem:hover {
-  background: var(--theme-danger-light, rgba(239, 68, 68, 0.1));
+  background: var(--theme-background-hover, rgba(0, 0, 0, 0.06));
 }
 
 /* 모달 */

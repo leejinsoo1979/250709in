@@ -4,6 +4,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { getUserProjects, getDesignFiles, loadFolderData, saveFolderData, deleteDesignFile, updateDesignFile } from '@/firebase/projects';
 import { ProjectSummary, DesignFileSummary } from '@/firebase/types';
 import SimpleProjectDropdown from '@/components/common/SimpleProjectDropdown';
+import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { ChevronDownIcon, ChevronRightIcon, FolderIcon, PlusIcon, ProjectIcon } from '@/components/common/Icons';
 import styles from './DashboardFileTree.module.css';
 
@@ -49,6 +50,12 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    itemId: string;
+    itemName: string;
+    itemType: 'folder' | 'design' | 'project';
+  } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // 컴포넌트 마운트 시 프로젝트 데이터 로드
   useEffect(() => {
@@ -346,37 +353,44 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
     closeMoreMenu();
   };
   
-  const handleDeleteItem = async () => {
+  const handleDeleteItem = () => {
     if (!moreMenu) return;
-    
-    const confirmMessage = moreMenu.itemType === 'folder' 
-      ? `정말로 폴더 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?\n\n폴더 내의 모든 파일도 함께 삭제됩니다.`
-      : `정말로 파일 "${moreMenu.itemName}"을(를) 삭제하시겠습니까?`;
-    
-    if (window.confirm(confirmMessage)) {
-      try {
-        if (moreMenu.itemType === 'folder' && selectedProjectId) {
-          const updatedFolders = folders[selectedProjectId]?.filter(folder => folder.id !== moreMenu.itemId) || [];
-          setFolders(prev => ({
-            ...prev,
-            [selectedProjectId]: updatedFolders
-          }));
-          
-          // Firebase에 저장
-          await saveFolderData(selectedProjectId, updatedFolders);
-        } else if (moreMenu.itemType === 'design' && selectedProjectId) {
-          await deleteDesignFile(moreMenu.itemId, selectedProjectId);
-          
-          // 데이터 새로고침
-          await loadDesignFilesForProject(selectedProjectId);
-        }
-      } catch (error) {
-        console.error('삭제 에러:', error);
-        alert('삭제에 실패했습니다.');
-      }
-    }
-    
+
+    setDeleteTarget({
+      itemId: moreMenu.itemId,
+      itemName: moreMenu.itemName,
+      itemType: moreMenu.itemType,
+    });
     closeMoreMenu();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+
+    setIsDeleting(true);
+    try {
+      if (deleteTarget.itemType === 'folder' && selectedProjectId) {
+        const updatedFolders = folders[selectedProjectId]?.filter(folder => folder.id !== deleteTarget.itemId) || [];
+        setFolders(prev => ({
+          ...prev,
+          [selectedProjectId]: updatedFolders
+        }));
+
+        // Firebase에 저장
+        await saveFolderData(selectedProjectId, updatedFolders);
+      } else if (deleteTarget.itemType === 'design' && selectedProjectId) {
+        await deleteDesignFile(deleteTarget.itemId, selectedProjectId);
+
+        // 데이터 새로고침
+        await loadDesignFilesForProject(selectedProjectId);
+      }
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error('삭제 에러:', error);
+      alert('삭제에 실패했습니다.');
+    } finally {
+      setIsDeleting(false);
+    }
   };
   
   // 루트 레벨 디자인 파일 확인 (대시보드와 동일한 로직)
@@ -601,6 +615,23 @@ const DashboardFileTree: React.FC<DashboardFileTreeProps> = ({ onFileSelect, onP
           </div>
         </>
       )}
+
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteTarget)}
+        title=""
+        message={
+          deleteTarget?.itemType === 'folder'
+            ? `폴더 "${deleteTarget.itemName}"을(를) 휴지통으로 이동하시겠습니까?\n폴더 안의 모든 파일도 함께 이동됩니다.`
+            : `파일 "${deleteTarget?.itemName || ''}"을(를) 휴지통으로 이동하시겠습니까?`
+        }
+        confirmText="확인"
+        isDangerous={deleteTarget?.itemType === 'folder'}
+        isLoading={isDeleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          if (!isDeleting) setDeleteTarget(null);
+        }}
+      />
       
       {/* 폴더 생성 모달 */}
       {isCreateFolderModalOpen && (
