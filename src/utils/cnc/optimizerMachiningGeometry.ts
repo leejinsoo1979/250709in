@@ -193,18 +193,20 @@ export function resolveOptimizerDoorBoringPoints(
   }
 
   const toPoint = (posMmX: number, posMmY: number): MachiningPoint => {
+    const yFromSheetTopMm = originalHeight - posMmY;
+
     if (panel.rotated) {
       const scaleX = placedWidth / originalWidth;
       const scaleY = placedHeight / originalHeight;
       return {
         x: roundOptimizerCoord(posMmX * scaleX),
-        y: roundOptimizerCoord(posMmY * scaleY),
+        y: roundOptimizerCoord(yFromSheetTopMm * scaleY),
       };
     }
 
     return {
       x: roundOptimizerCoord(posMmX),
-      y: roundOptimizerCoord(posMmY),
+      y: roundOptimizerCoord(yFromSheetTopMm),
     };
   };
 

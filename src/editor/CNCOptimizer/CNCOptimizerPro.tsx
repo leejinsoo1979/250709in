@@ -421,6 +421,7 @@ function PageInner(){
           const isBackPanel = panelName.includes('백패널');
           const isDrawerSidePanel = panelName.includes('서랍') &&
             (panelName.includes('좌측판') || panelName.includes('우측판'));
+          const isDoorPanel = p.isDoor === true || panelName.includes('도어') || panelName.includes('door');
 
           let width: number;
           let length: number;
@@ -433,7 +434,7 @@ function PageInner(){
             // 서랍 측판 패널목록 기준: L=깊이, W=높이, 결방향=가로.
             length = p.width;
             width = p.height;
-          } else if (p.grain === 'VERTICAL') {
+          } else if (isDoorPanel || p.grain === 'VERTICAL') {
             // 세로 결 패널 (측판, 칸막이, 도어 등): Y축(높이) = Length
             length = p.height;
             width = p.width;
@@ -446,7 +447,7 @@ function PageInner(){
           const isStoneTop = p.material === '인조대리석';
           const grain: Grain = isStoneTop || p.grain === 'NONE'
             ? 'NONE'
-            : p.grain === 'VERTICAL'
+            : (isDoorPanel || p.grain === 'VERTICAL')
               ? 'V'
               : 'H';
 
@@ -472,7 +473,7 @@ function PageInner(){
             quantity: p.quantity || 1,
             material: material,
             grain: grain,
-            canRotate: isDrawerSidePanel ? false : true, // 서랍 측판은 실제 측면도 방향 고정
+            canRotate: (isDoorPanel || isDrawerSidePanel) ? false : true,
             boringPositions: p.boringPositions, // 보링 Y위치 유지
             boringDepthPositions: p.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
             boringDepthGroups: p.boringDepthGroups,
@@ -615,6 +616,7 @@ function PageInner(){
         const isBackPanel = panelName.includes('백패널');
         const isDrawerSidePanel = panelName.includes('서랍') &&
           (panelName.includes('좌측판') || panelName.includes('우측판'));
+        const isDoorPanel = p.isDoor === true || panelName.includes('도어') || panelName.includes('door');
 
         let width: number;
         let length: number;
@@ -626,7 +628,7 @@ function PageInner(){
           // 서랍 측판 패널목록 기준: L=깊이, W=높이, 결방향=가로.
           length = p.width;
           width = p.height;
-        } else if (p.grain === 'VERTICAL') {
+        } else if (isDoorPanel || p.grain === 'VERTICAL') {
           // 세로 결 패널 (측판, 칸막이, 도어 등): Y축(높이) = Length
           length = p.height;
           width = p.width;
@@ -639,7 +641,7 @@ function PageInner(){
         const isStoneTop = p.material === '인조대리석';
         const grain: Grain = isStoneTop || p.grain === 'NONE'
           ? 'NONE'
-          : p.grain === 'VERTICAL'
+          : (isDoorPanel || p.grain === 'VERTICAL')
             ? 'V'
             : 'H';
         // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
@@ -673,7 +675,7 @@ function PageInner(){
           quantity: p.quantity || 1,
           material: material,
           grain: grain,
-          canRotate: isDrawerSidePanel ? false : true,
+          canRotate: (isDoorPanel || isDrawerSidePanel) ? false : true,
           boringPositions: p.boringPositions,
           boringDepthPositions: p.boringDepthPositions,
           boringDepthGroups: p.boringDepthGroups,
@@ -1053,7 +1055,12 @@ function PageInner(){
           const proc = Object.assign({}, p);
           const isDrawerSidePanel = proc.label?.includes('서랍') &&
             (proc.label.includes('좌측판') || proc.label.includes('우측판'));
-          proc.canRotate = isDrawerSidePanel ? false : !hasG;
+          const isDoorPanel = proc.isDoor === true ||
+            proc.label?.includes('도어') ||
+            proc.name?.includes('도어') ||
+            proc.label?.includes('door') ||
+            proc.name?.includes('door');
+          proc.canRotate = (isDoorPanel || isDrawerSidePanel) ? false : !hasG;
           const gk = settings.considerMaterial
             ? (proc.material || 'PB') + '_' + (proc.thickness || 18)
             : 'THICKNESS_' + (proc.thickness || 18);
