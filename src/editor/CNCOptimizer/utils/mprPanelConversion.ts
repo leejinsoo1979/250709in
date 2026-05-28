@@ -58,49 +58,17 @@ function resolveMprTopBoringX(panel: PlacedPanel, x: number): number {
   return Math.round(Math.max(0, Math.min(width, width - x)) * 10) / 10;
 }
 
-function resolveMprSidePanelDepthY(panel: PlacedPanel, depthPosition: number): number {
-  return resolveMprTopBoringX(panel, depthPosition);
-}
-
-function resolveMprSidePanelHeightY(panel: PlacedPanel, heightPosition: number): number {
+function resolveMprSidePanelY(panel: PlacedPanel, heightPosition: number): number {
   const height = Number(panel.height || 0);
   if (!Number.isFinite(height) || height <= 0) return heightPosition;
   return Math.round(Math.max(0, Math.min(height, height - heightPosition)) * 10) / 10;
 }
 
-function isSplitMprSidePanel(panel: PlacedPanel): boolean {
-  const name = panel.name || '';
-  return (name.includes('(상)') || name.includes('(하)'))
-    && (name.includes('좌측') || name.includes('우측'));
-}
-
-function shouldMirrorMprSidePanelX(panel: PlacedPanel): boolean {
-  const name = panel.name || '';
-  if (isSplitMprSidePanel(panel)) {
-    return name.includes('(상)') && name.includes('좌측');
-  }
-  return isFurnitureRightSidePanel(panel);
-}
-
-function shouldUseOriginalMprSidePanelY(panel: PlacedPanel): boolean {
-  const name = panel.name || '';
-  if (isSplitMprSidePanel(panel)) {
-    return name.includes('우측');
-  }
-  return false;
-}
-
 function resolveMprSidePanelX(panel: PlacedPanel, x: number): number {
-  if (!shouldMirrorMprSidePanelX(panel)) return x;
+  if (!isFurnitureRightSidePanel(panel)) return x;
   const width = Number(panel.width || 0);
   if (!Number.isFinite(width) || width <= 0) return x;
   return Math.round(Math.max(0, Math.min(width, width - x)) * 10) / 10;
-}
-
-function resolveMprSidePanelY(panel: PlacedPanel, y: number): number {
-  return shouldUseOriginalMprSidePanelY(panel)
-    ? y
-    : resolveMprSidePanelHeightY(panel, y);
 }
 
 export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBoringData {
@@ -202,7 +170,7 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
           id: `bracket-${boringIdx++}`,
           type: 'hinge-screw',
           face: 'top',
-          x: isFurnitureSidePanelForMpr ? resolveMprSidePanelX(panel, xPos) : xPos,
+          x: xPos,
           y: isFurnitureSidePanelForMpr ? resolveMprSidePanelY(panel, yPos) : yPos,
           diameter: 3,
           depth: 3,

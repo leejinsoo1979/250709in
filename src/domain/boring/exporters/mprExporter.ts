@@ -223,27 +223,6 @@ function isFurnitureSidePanelForBackPanelGroove(panel: PanelBoringData): boolean
   return name.includes('좌측') || name.includes('우측') || name.includes('측판');
 }
 
-function isSplitFurnitureSidePanel(panel: PanelBoringData): boolean {
-  const name = panel.panelName || '';
-  return isFurnitureSidePanelForBackPanelGroove(panel)
-    && (name.includes('(상)') || name.includes('(하)'))
-    && (name.includes('좌측') || name.includes('우측'));
-}
-
-function shouldMirrorFurnitureSidePanelX(panel: PanelBoringData): boolean {
-  const name = panel.panelName || '';
-  if (isSplitFurnitureSidePanel(panel)) {
-    return name.includes('(상)') && name.includes('좌측');
-  }
-  return isRightSidePanel(panel);
-}
-
-function shouldUseOriginalFurnitureSidePanelY(panel: PanelBoringData): boolean {
-  const name = panel.panelName || '';
-  return isSplitFurnitureSidePanel(panel)
-    && name.includes('우측');
-}
-
 interface SideNotchRect {
   startX: number;
   startY: number;
@@ -264,18 +243,6 @@ function resolveSideNotchRect(
       ? Math.max(0, panel.width - notchWidth)
       : 0;
     const startY = Math.max(0, Math.min(panel.height - notch.fromBottom - notchHeight, panel.height - notchHeight));
-    if (shouldMirrorFurnitureSidePanelX(panel) || shouldUseOriginalFurnitureSidePanelY(panel)) {
-      return {
-        startX: shouldMirrorFurnitureSidePanelX(panel)
-          ? Math.max(0, panel.width - startX - notchWidth)
-          : startX,
-        startY: shouldUseOriginalFurnitureSidePanelY(panel)
-          ? Math.max(0, panel.height - startY - notchHeight)
-          : startY,
-        width: notchWidth,
-        height: notchHeight,
-      };
-    }
 
     return {
       startX,
@@ -312,13 +279,10 @@ function resolveBackPanelGrooveLine(panel: PanelBoringData): BackPanelGrooveLine
   const x = isRightSidePanel(panel)
     ? BACK_PANEL_GROOVE_REAR_OFFSET_MM
     : panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
-  const resolvedX = shouldMirrorFurnitureSidePanelX(panel)
-    ? panel.width - x - BACK_PANEL_GROOVE_WIDTH_MM
-    : x;
 
   return {
-    x: resolvedX,
-    centerX: resolvedX + BACK_PANEL_GROOVE_WIDTH_MM / 2,
+    x,
+    centerX: x + BACK_PANEL_GROOVE_WIDTH_MM / 2,
     width: BACK_PANEL_GROOVE_WIDTH_MM,
     depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
   };

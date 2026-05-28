@@ -160,7 +160,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain('X=340.0000');
     expect(mpr).toContain('X=380.0000');
     expect(mpr).toContain('Y=860.0000');
-    expect(mpr).toContain('Y=780.0000');
+    expect(mpr).toContain('Y=80.0000');
     expect(mpr).toContain('<105 \\Konturfraesen\\');
     expect(mpr).toContain('EA="3:0"');
     expect(mpr).toContain('EE="3:2"');
@@ -253,12 +253,12 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.width).toBe(380);
     expect(converted.height).toBe(860);
     expect(fixedBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 30, y: 9.3 },
-      { x: 180, y: 9.3 },
-      { x: 330, y: 9.3 },
-      { x: 88.5, y: 850.8 },
-      { x: 209, y: 850.8 },
-      { x: 329.5, y: 850.8 },
+      { x: 350, y: 850.7 },
+      { x: 200, y: 850.7 },
+      { x: 50, y: 850.7 },
+      { x: 291.5, y: 9.2 },
+      { x: 171, y: 9.2 },
+      { x: 50.5, y: 9.2 },
     ]);
   });
 
@@ -284,13 +284,54 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const bracketBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(bracketBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 360, y: 1420 },
-      { x: 328, y: 1420 },
-      { x: 360, y: 770 },
-      { x: 328, y: 770 },
-      { x: 360, y: 120 },
-      { x: 328, y: 120 },
+      { x: 20, y: 1420 },
+      { x: 52, y: 1420 },
+      { x: 20, y: 770 },
+      { x: 52, y: 770 },
+      { x: 20, y: 120 },
+      { x: 52, y: 120 },
     ]);
+  });
+
+  it('exports split side panel grooves/notches with the same left-right rule as optimizer preview', () => {
+    const upperLeft = convertPlacedPanelToMprBoringData({
+      id: 'upper-left-side',
+      name: '(상)좌측',
+      width: 380,
+      height: 1445,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+    } as PlacedPanel);
+    const upperLeftMpr = generateSinglePanelMPR(upperLeft);
+
+    expect(upperLeftMpr).toContain('X=360.0000');
+    expect(upperLeftMpr).toContain('XA="361.5000"');
+
+    const lowerRight = convertPlacedPanelToMprBoringData({
+      id: 'lower-right-side',
+      name: '(하)우측',
+      width: 380,
+      height: 860,
+      x: 0,
+      y: 0,
+      rotated: false,
+      quantity: 1,
+      material: 'PB',
+      color: 'MW',
+      grain: 'VERTICAL',
+      sideNotches: [{ y: 80, z: 40, fromBottom: 780 }],
+    } as PlacedPanel);
+    const lowerRightMpr = generateSinglePanelMPR(lowerRight);
+
+    expect(lowerRightMpr).toContain('X=17.0000');
+    expect(lowerRightMpr).toContain('XA="18.5000"');
+    expect(lowerRightMpr).toContain('X=340.0000');
+    expect(lowerRightMpr).toContain('Y=0.0000');
   });
 
   it('does not export stale boring data on drawer front panels', () => {
