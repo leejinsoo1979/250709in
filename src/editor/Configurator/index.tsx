@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { TbRulerMeasure, TbZoomScan } from 'react-icons/tb';
 import { RulerDimensionLine } from 'lucide-react';
 import { GoQuestion } from 'react-icons/go';
@@ -4758,25 +4759,28 @@ const Configurator: React.FC = () => {
   // 섹션 헬프 버튼
   const HelpBtn: React.FC<{ title: string; text: string }> = ({ title, text }) => {
     const [open, setOpen] = useState(false);
-    const ref = React.useRef<HTMLDivElement>(null);
     React.useEffect(() => {
       if (!open) return;
-      const handler = (e: MouseEvent) => {
-        if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-      };
-      document.addEventListener('mousedown', handler);
-      return () => document.removeEventListener('mousedown', handler);
+      const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+      document.addEventListener('keydown', onKey);
+      return () => document.removeEventListener('keydown', onKey);
     }, [open]);
     return (
-      <div ref={ref} style={{ position: 'relative', display: 'inline-flex' }}>
-        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}><GoQuestion size={16} /></button>
-        {open && (
-          <div className={styles.helpPopover}>
-            <div className={styles.helpPopoverTitle}>{title}</div>
-            <div className={styles.helpPopoverText}>{text}</div>
-          </div>
+      <>
+        <button className={styles.helpBtn} onClick={(e) => { e.stopPropagation(); setOpen(true); }}><GoQuestion size={16} /></button>
+        {open && createPortal(
+          <div className={styles.helpModalOverlay} onMouseDown={() => setOpen(false)}>
+            <div className={styles.helpModal} onMouseDown={(e) => e.stopPropagation()}>
+              <div className={styles.helpModalHeader}>
+                <div className={styles.helpModalTitle}>{title}</div>
+                <button className={styles.helpModalClose} onClick={() => setOpen(false)} aria-label="닫기">×</button>
+              </div>
+              <div className={styles.helpModalText}>{text}</div>
+            </div>
+          </div>,
+          document.body
         )}
-      </div>
+      </>
     );
   };
 
