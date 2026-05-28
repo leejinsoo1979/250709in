@@ -236,6 +236,10 @@ function shouldUseRotatedNestView(panel: PanelBoringData): boolean {
     || (isLowerSplitSidePanel(panel) && isRightSidePanel(panel));
 }
 
+function shouldUseMirroredNestView(panel: PanelBoringData): boolean {
+  return panel.panelType === 'door';
+}
+
 interface SideNotchRect {
   startX: number;
   startY: number;
@@ -450,7 +454,15 @@ function getSideNotchContourPoints(panel: PanelBoringData, notch: { y: number; z
 function generatePanelDisplayGeometry(panel: PanelBoringData): string {
   const sideNotches = panel.sideNotches ?? [];
   const backPanelGrooveLine = resolveBackPanelGrooveLine(panel);
-  const nestPoints = shouldUseRotatedNestView(panel)
+  const nestPoints = shouldUseMirroredNestView(panel)
+    ? [
+      { x: panel.width, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: panel.height },
+      { x: panel.width, y: panel.height },
+      { x: panel.width, y: 0 },
+    ]
+    : shouldUseRotatedNestView(panel)
     ? [
       { x: panel.width, y: panel.height },
       { x: 0, y: panel.height },

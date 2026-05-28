@@ -397,15 +397,16 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 474.5, y: 610 },
-      { x: 474.5, y: 120 },
+      { x: 22.5, y: 610 },
+      { x: 22.5, y: 120 },
     ]);
     expect(screwBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 465, y: 632.5 },
-      { x: 465, y: 587.5 },
-      { x: 465, y: 142.5 },
-      { x: 465, y: 97.5 },
+      { x: 32, y: 632.5 },
+      { x: 32, y: 587.5 },
+      { x: 32, y: 142.5 },
+      { x: 32, y: 97.5 },
     ]);
+    expect(generateSinglePanelMPR(converted)).toContain('KP NEST\nX=497.0000\nY=0.0000');
     expect(screwBorings.every(boring => boring.angle === undefined)).toBe(true);
   });
 
@@ -433,8 +434,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     const screwBorings = converted.borings.filter(boring => boring.note === 'door-fixing-screw');
 
     expect(cupBorings.map(boring => ({ x: boring.x, y: boring.y }))).toEqual([
-      { x: 474.5, y: 610 },
-      { x: 474.5, y: 120 },
+      { x: 22.5, y: 610 },
+      { x: 22.5, y: 120 },
     ]);
     expect(screwBorings).toHaveLength(4);
   });
