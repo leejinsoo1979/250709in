@@ -1537,9 +1537,8 @@ export const calculatePanelDetails = (
             : calculateHingePositions(doorH),
         doorH
       );
-      const resolvedInsideFaceHingeSide = insideFaceHingeSide ?? (isLeftHinge ? 'right' : 'left');
-      // 옵티마이저/MPR은 도어 안쪽면 기준이다.
-      // 우측 도어/우측 힌지 타공은 화면 왼쪽, 좌측 도어/좌측 힌지 타공은 화면 오른쪽에 온다.
+      const resolvedInsideFaceHingeSide = insideFaceHingeSide ?? (isLeftHinge ? 'left' : 'right');
+      // 옵티마이저/MPR은 화면에 보이는 힌지 방향을 그대로 쓴다.
       const cupX = resolvedInsideFaceHingeSide === 'left'
         ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
         : doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
@@ -1679,9 +1678,9 @@ export const calculatePanelDetails = (
 
         const adjustedLeafWidth = getOuterAdjustedDoorWidth(leaf);
         const insideFaceHingeSide = leaf.name === 'right'
-          ? 'left'
+          ? 'right'
           : leaf.name === 'left'
-            ? 'right'
+            ? 'left'
             : undefined;
         pushDoorPanel(`${prefix}하부 도어`, adjustedLeafWidth, lowerDoorH, isLeftHinge, undefined, resolvedLower.doorPositionsMm, insideFaceHingeSide);
         pushDoorPanel(`${prefix}상부 도어`, adjustedLeafWidth, upperDoorH, isLeftHinge, undefined, resolvedUpper.doorPositionsMm, insideFaceHingeSide);
@@ -1706,9 +1705,9 @@ export const calculatePanelDetails = (
             ? '우측 도어'
             : '도어';
         const insideFaceHingeSide = leaf.name === 'right'
-          ? 'left'
+          ? 'right'
           : leaf.name === 'left'
-            ? 'right'
+            ? 'left'
             : undefined;
         const resolved = resolveMatchedHingePositions(
           doorVerticalGeometry.bottomMm,

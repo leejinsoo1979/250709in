@@ -177,14 +177,14 @@ export const resolveDoorLeafDimensions = (
           name: 'left',
           widthMm: leafWidthMm,
           heightMm: leafHeightMm,
-          hingeSide: 'right'
+          hingeSide: 'left'
         },
         {
           index: 1,
           name: 'right',
           widthMm: leafWidthMm,
           heightMm: leafHeightMm,
-          hingeSide: 'left'
+          hingeSide: 'right'
         }
       ]
     }

@@ -651,9 +651,9 @@ describe('panelDetails regression baselines', () => {
     expect(doors).toHaveLength(2)
     expect(doors.map((panel) => panel.name)).toEqual(['좌측 도어', '우측 도어'])
     expect(doors.map((panel) => panel.width)).toEqual([497, 497])
-    expect(doors.map((panel) => panel.isLeftHinge)).toEqual([false, true])
-    expect(doors.map((panel) => panel.boringDepthPositions)).toEqual([[474.5], [22.5]])
-    expect(doors.map((panel) => panel.screwDepthPositions)).toEqual([[465], [32]])
+    expect(doors.map((panel) => panel.isLeftHinge)).toEqual([true, false])
+    expect(doors.map((panel) => panel.boringDepthPositions)).toEqual([[22.5], [474.5]])
+    expect(doors.map((panel) => panel.screwDepthPositions)).toEqual([[32], [465]])
     doors.forEach((panel) => {
       expect(panel.height).toBeGreaterThan(0)
     })
@@ -670,8 +670,8 @@ describe('panelDetails regression baselines', () => {
     expect(doors[0].name).toBe('도어')
     expect(doors[0].width).toBe(497)
     expect(doors[0].isLeftHinge).toBe(false)
-    expect(doors[0].boringDepthPositions).toEqual([22.5])
-    expect(doors[0].screwDepthPositions).toEqual([32])
+    expect(doors[0].boringDepthPositions).toEqual([474.5])
+    expect(doors[0].screwDepthPositions).toEqual([465])
     expect(doors[0].height).toBeGreaterThan(0)
   })
 
