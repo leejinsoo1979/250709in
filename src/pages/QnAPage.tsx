@@ -51,6 +51,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
   const [answerText, setAnswerText] = useState('');
   const [answerImages, setAnswerImages] = useState<string[]>([]);
   const [savingAnswer, setSavingAnswer] = useState(false);
+  const [answerFormOpen, setAnswerFormOpen] = useState(false); // 답변 수정 폼 열림 여부
 
   // 로그인 체크
   useEffect(() => {
@@ -81,6 +82,8 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
         setImages(item.images || []);
         setAnswerText(item.answer || '');
         setAnswerImages(item.answerImages || []);
+        // 답변 완료된 글은 수정 폼을 닫아두고, 미답변 글만 폼을 연다
+        setAnswerFormOpen(item.status !== 'answered');
       }
       setLoading(false);
     });
@@ -150,6 +153,8 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
     // 재조회
     const { item } = await getQnA(id);
     if (item) setCurrentItem(item);
+    // 등록/수정 완료 후 폼 닫기
+    setAnswerFormOpen(false);
   };
 
   if (authLoading || adminLoading || !user) {
@@ -217,7 +222,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                     <span className={styles.itemTitle}>
                       {item.title}
                       {isAdmin && (
-                        <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--theme-text-tertiary)' }}>
+                        <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--theme-text-muted)' }}>
                           · {item.authorName}
                         </span>
                       )}
@@ -316,6 +321,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                           className={styles.secondaryBtn}
                           onClick={() => {
                             setAnswerText(currentItem.answer || '');
+                            setAnswerFormOpen(true);
                           }}
                         >
                           답변 수정
@@ -325,8 +331,24 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                   </div>
                 ) : null}
 
+                {currentItem.status !== 'answered' && currentItem.aiStatus && (
+                  <div className={styles.detailCard}>
+                    <div className={styles.detailMeta} style={{ marginBottom: 12, paddingBottom: 12 }}>
+                      <span className={`${styles.categoryBadge} ${styles.categoryNotice}`}>
+                        A.I 확인
+                      </span>
+                      <span>A.I Q&A 관리자</span>
+                    </div>
+                    <div className={styles.detailBody} style={{ minHeight: 0 }}>
+                      {currentItem.aiStatus === 'processing' || currentItem.aiStatus === 'queued'
+                        ? '프로그램 도움말과 기존 Q&A를 기준으로 자동 답변을 찾는 중입니다.'
+                        : currentItem.aiAnswer || '프로그램 도움말 기준으로 확실한 자동 답변을 찾지 못했습니다. 관리자가 확인 후 답변드리겠습니다.'}
+                    </div>
+                  </div>
+                )}
+
                 {/* 관리자: 답변 작성/수정 */}
-                {isAdmin && (
+                {isAdmin && answerFormOpen && (
                   <div className={styles.formCard} style={{ marginTop: 16 }}>
                     <div className={styles.formRow}>
                       <label className={styles.label}>

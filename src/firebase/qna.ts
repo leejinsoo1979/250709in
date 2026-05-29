@@ -12,7 +12,8 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from './config';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from './config';
 import { getCurrentUserAsync } from './auth';
 
 export type QnAStatus = 'pending' | 'answered';
@@ -30,6 +31,12 @@ export interface QnAItem {
   answeredBy?: string;
   answeredByName?: string;
   answeredAt?: Timestamp | null;
+  aiStatus?: 'queued' | 'processing' | 'answered' | 'needs_admin' | 'error';
+  aiAnswer?: string;
+  aiSources?: Array<{ id: string; type: string; title: string; score?: number }>;
+  telegramStatus?: 'sent' | 'failed';
+  telegramSentAt?: Timestamp | null;
+  telegramError?: string;
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
 }
@@ -41,6 +48,37 @@ export interface CreateQnAData {
 }
 
 const QNA_COLLECTION = 'qna';
+
+export const notifyQnACreated = async (qnaId: string): Promise<{ error: string | null }> => {
+  try {
+    const fn = httpsCallable<{ qnaId: string; origin?: string }, { ok: boolean }>(
+      functions,
+      'notifyQnACreated'
+    );
+    await fn({
+      qnaId,
+      origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+    });
+    return { error: null };
+  } catch (e: any) {
+    console.error('notifyQnACreated 실패:', e);
+    return { error: e?.message || 'Q&A 알림 전송 실패' };
+  }
+};
+
+export const requestQnAAiAnswer = async (qnaId: string): Promise<{ error: string | null }> => {
+  try {
+    const fn = httpsCallable<{ qnaId: string }, { ok: boolean; status: string }>(
+      functions,
+      'generateQnAAiAnswer'
+    );
+    await fn({ qnaId });
+    return { error: null };
+  } catch (e: any) {
+    console.error('requestQnAAiAnswer 실패:', e);
+    return { error: e?.message || 'AI 답변 요청 실패' };
+  }
+};
 
 /**
  * 내 질문 목록 조회 (일반 사용자용)
@@ -115,6 +153,10 @@ export const createQnA = async (data: CreateQnAData): Promise<{ id: string | nul
       createdAt: now,
       updatedAt: now,
     });
+    const { error: notifyError } = await notifyQnACreated(ref.id);
+    if (notifyError) {
+      console.warn('Q&A 텔레그램 알림은 건너뜀:', notifyError);
+    }
     return { id: ref.id, error: null };
   } catch (e: any) {
     console.error('createQnA 실패:', e);
@@ -164,6 +206,7 @@ export const answerQnA = async (
       answeredBy: user.uid,
       answeredByName: user.displayName || user.email || '관리자',
       answeredAt: serverTimestamp(),
+      aiStatus: null,
       updatedAt: serverTimestamp(),
     });
     return { error: null };
