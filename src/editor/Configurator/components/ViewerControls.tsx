@@ -338,27 +338,20 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     return String(next);
   };
 
-  const guideStepperStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    width: 28,
-    border: '1px solid var(--theme-border, #d0d0d0)',
-    borderRadius: 6,
-    overflow: 'hidden'
-  };
   const guideStepperBtnStyle: React.CSSProperties = {
-    flex: 1,
+    width: 32,
+    alignSelf: 'stretch',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    border: 'none',
+    border: '1px solid var(--theme-border, #d0d0d0)',
+    borderRadius: 6,
     background: 'var(--theme-surface, #f5f5f5)',
     color: 'var(--theme-text, #333)',
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 1,
     cursor: 'pointer',
-    padding: 0,
-    minHeight: 16
+    padding: 0
   };
 
   const createFreePlacementGuides = () => {
@@ -823,6 +816,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 <label className={styles.guideDialogField}>
                   <span>상부 모듈 갯수</span>
                   <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideUpperSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
                     <input
                       type="number"
                       min={1}
@@ -834,17 +828,15 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                         if (event.key === 'Escape') setShowGuideDialog(false);
                       }}
                       autoFocus
-                      style={{ flex: 1 }}
+                      style={{ flex: 1, textAlign: 'center' }}
                     />
-                    <div style={guideStepperStyle}>
-                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideUpperSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
-                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideUpperSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
-                    </div>
+                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideUpperSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
                   </div>
                 </label>
                 <label className={styles.guideDialogField}>
                   <span>하부 모듈 갯수</span>
                   <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideLowerSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
                     <input
                       type="number"
                       min={1}
@@ -855,12 +847,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                         if (event.key === 'Enter') createFreePlacementGuides();
                         if (event.key === 'Escape') setShowGuideDialog(false);
                       }}
-                      style={{ flex: 1 }}
+                      style={{ flex: 1, textAlign: 'center' }}
                     />
-                    <div style={guideStepperStyle}>
-                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideLowerSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
-                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideLowerSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
-                    </div>
+                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideLowerSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
                   </div>
                 </label>
               </div>
@@ -868,6 +857,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <label className={styles.guideDialogField}>
                 <span>모듈 갯수</span>
                 <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                  <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
                   <input
                     type="number"
                     min={1}
@@ -879,12 +869,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                       if (event.key === 'Escape') setShowGuideDialog(false);
                     }}
                     autoFocus
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, textAlign: 'center' }}
                   />
-                  <div style={guideStepperStyle}>
-                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
-                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
-                  </div>
+                  <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
                 </div>
               </label>
             )}
