@@ -6522,7 +6522,13 @@ const Configurator: React.FC = () => {
                     <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}>
                       <input type="checkbox" checked={topEnabledEmpty} onChange={(e) => {
                         const enabled = e.target.checked;
-                        handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: enabled ? (globalTopEmpty || 30) : 0 } });
+                        handleSpaceInfoUpdate({
+                          frameSize: {
+                            ...spaceInfo.frameSize,
+                            top: enabled ? (globalTopEmpty || 30) : 0,
+                            ...(enabled ? { topGap: 0 } : {})
+                          } as any
+                        });
                       }} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                       <span>전체</span>
                     </label>
@@ -6533,21 +6539,38 @@ const Configurator: React.FC = () => {
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                       <button onClick={() => {
                         const nextEnabled = !topEnabledEmpty;
-                        handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: nextEnabled ? (globalTopEmpty || 30) : 0 } });
+                        handleSpaceInfoUpdate({
+                          frameSize: {
+                            ...spaceInfo.frameSize,
+                            top: nextEnabled ? (globalTopEmpty || 30) : 0,
+                            ...(nextEnabled ? { topGap: 0 } : {})
+                          } as any
+                        });
                       }} className={`${styles.miniToggle} ${topEnabledEmpty ? styles.miniToggleActive : ''}`} />
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                         {topEnabledEmpty ? (
                           <>
                             <div style={numCellStyle}>
                               <span style={numLabelStyle}>size</span>
-                              <input type="text" inputMode="numeric" value={globalTopEmpty || ''}
-                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } }); }}
+                              <input type="text" inputMode="numeric" value={Math.max(0, globalTopEmpty - globalTopGapEmpty) || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || /^\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: (v === '' ? 0 : parseInt(v, 10)) + globalTopGapEmpty } });
+                                  }
+                                }}
                                 style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                             </div>
                             <div style={numCellStyle}>
                               <span style={numLabelStyle}>옵셋</span>
                               <input type="text" inputMode="numeric" value={globalTopOffsetEmpty || ''}
                                 onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any }); }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>갭</span>
+                              <input type="text" inputMode="numeric" value={globalTopGapEmpty || ''}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
                                 style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                             </div>
                           </>
@@ -7079,7 +7102,13 @@ const Configurator: React.FC = () => {
                         checked={topEnabledEmpty}
                         onChange={(e) => {
                           const enabled = e.target.checked;
-                          handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: enabled ? (globalTopEmpty || 30) : 0 } });
+                          handleSpaceInfoUpdate({
+                            frameSize: {
+                              ...spaceInfo.frameSize,
+                              top: enabled ? (globalTopEmpty || 30) : 0,
+                              ...(enabled ? { topGap: 0 } : {})
+                            } as any
+                          });
                         }}
                         style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
                       />
@@ -7093,7 +7122,13 @@ const Configurator: React.FC = () => {
                       <button
                         onClick={() => {
                           const nextEnabled = !topEnabledEmpty;
-                          handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: nextEnabled ? (globalTopEmpty || 30) : 0 } });
+                          handleSpaceInfoUpdate({
+                            frameSize: {
+                              ...spaceInfo.frameSize,
+                              top: nextEnabled ? (globalTopEmpty || 30) : 0,
+                              ...(nextEnabled ? { topGap: 0 } : {})
+                            } as any
+                          });
                         }}
                         className={`${styles.miniToggle} ${topEnabledEmpty ? styles.miniToggleActive : ''}`}
                       />
@@ -7104,11 +7139,11 @@ const Configurator: React.FC = () => {
                               <span style={numLabelStyle}>size</span>
                               <input
                                 type="text" inputMode="numeric"
-                                value={globalTopEmpty || ''}
+                                value={Math.max(0, globalTopEmpty - globalTopGapEmpty) || ''}
                                 onChange={(e) => {
                                   const v = e.target.value;
                                   if (v === '' || /^\d+$/.test(v)) {
-                                    handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v === '' ? 0 : parseInt(v, 10) } });
+                                    handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: (v === '' ? 0 : parseInt(v, 10)) + globalTopGapEmpty } });
                                   }
                                 }}
                                 style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
@@ -7123,6 +7158,20 @@ const Configurator: React.FC = () => {
                                   const v = e.target.value;
                                   if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                     handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) } as any });
+                                  }
+                                }}
+                                style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
+                              />
+                            </div>
+                            <div style={numCellStyle}>
+                              <span style={numLabelStyle}>갭</span>
+                              <input
+                                type="text" inputMode="numeric"
+                                value={globalTopGapEmpty || ''}
+                                onChange={(e) => {
+                                  const v = e.target.value;
+                                  if (v === '' || /^\d+$/.test(v)) {
+                                    handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topGap: v === '' ? 0 : parseInt(v, 10) } as any });
                                   }
                                 }}
                                 style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
