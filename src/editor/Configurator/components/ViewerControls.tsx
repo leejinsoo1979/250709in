@@ -133,6 +133,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     spaceInfo?.freePlacementGuides?.filter((slot) => slot.guideZone === 'lower').length || 4
   ));
   const guideSetupAutoOpenedRef = useRef(false);
+  const guideModeRestoreOpenedRef = useRef(false);
 
   // 모든 슬롯이 채워지면 안내 표시, 빈 슬롯 생기면 숨김
   useEffect(() => {
@@ -273,6 +274,28 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     window.history.replaceState({}, '', nextUrl);
     openGuideDialog();
   }, []);
+
+  useEffect(() => {
+    const guideCount = spaceInfo?.freePlacementGuides?.length || 0;
+    const shouldRestoreGuideDialog = !!spaceInfo?.customGuideMode
+      && !spaceInfo?.freePlacementGuideEditing
+      && guideCount === 0;
+
+    if (!shouldRestoreGuideDialog) {
+      guideModeRestoreOpenedRef.current = false;
+      return;
+    }
+    if (!canCreateFreePlacementGuide || showGuideDialog || guideModeRestoreOpenedRef.current) return;
+
+    guideModeRestoreOpenedRef.current = true;
+    openGuideDialog();
+  }, [
+    spaceInfo?.customGuideMode,
+    spaceInfo?.freePlacementGuideEditing,
+    spaceInfo?.freePlacementGuides?.length,
+    canCreateFreePlacementGuide,
+    showGuideDialog
+  ]);
 
   const handleGuideButtonClick = async () => {
     if (spaceInfo?.freePlacementGuideEditing) {
@@ -486,16 +509,24 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   // ── Desktop UI ──
   return (
     <div className={styles.viewerControls}>
-      {spaceInfo?.freePlacementGuideEditing && (
+      {spaceInfo?.customGuideMode && (spaceInfo.freePlacementGuides?.length || 0) > 0 && (
         <button
           type="button"
           className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive}`}
-          onClick={handleGuideButtonClick}
-          title="배치시작"
+          onClick={() => {
+            if (spaceInfo?.freePlacementGuideEditing) {
+              // 배치시작: 가이드 확정
+              handleGuideButtonClick();
+            } else {
+              // 슬롯수정: 다시 편집 모드로 (초기화)
+              setSpaceInfo({ freePlacementGuideEditing: true });
+            }
+          }}
+          title={spaceInfo?.freePlacementGuideEditing ? '배치시작' : '슬롯수정'}
           style={{ position: 'fixed', left: '50%', bottom: '5%', transform: 'translateX(-50%)', zIndex: 60, padding: '12px 28px', fontSize: 16, gap: 8 }}
         >
           <Grid3X3 size={18} />
-          <span>배치시작</span>
+          <span>{spaceInfo?.freePlacementGuideEditing ? '배치시작' : '슬롯수정'}</span>
         </button>
       )}
 
