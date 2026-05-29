@@ -254,7 +254,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             >
               <span className={styles.menuIcon}><UserPlus size={16} /></span>
               <span className={styles.menuLabel}>친구</span>
-              {pendingRequestCount > 0 && <span className={styles.menuBadgeAlert}>{pendingRequestCount}</span>}
+              {pendingRequestCount > 0 && <span className={styles.menuBadge}>{pendingRequestCount}</span>}
             </button>
             <button
               className={`${styles.menuItem} ${location.pathname.startsWith('/dashboard/messages') ? styles.menuItemActive : ''}`}
@@ -262,7 +262,7 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
             >
               <span className={styles.menuIcon}><MessageCircle size={16} /></span>
               <span className={styles.menuLabel}>메시지</span>
-              {unreadMessageCount > 0 && <span className={styles.menuBadgeAlert}>{unreadMessageCount}</span>}
+              {unreadMessageCount > 0 && <span className={styles.menuBadge}>{unreadMessageCount}</span>}
             </button>
             <button
               className={`${styles.menuItem} ${(location.pathname.startsWith('/dashboard/orders') || location.pathname.startsWith('/factory/orders')) ? styles.menuItemActive : ''}`}
