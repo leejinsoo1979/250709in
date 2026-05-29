@@ -1056,6 +1056,22 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           </div>
         </Html>
 
+        {/* 전체 공간 너비 치수 (상단) */}
+        {(() => {
+          const dimZ = -(halfD + 300) * 0.01; // 공간 위쪽 바깥
+          const lx = -halfW * 0.01, rx = halfW * 0.01;
+          return (
+            <React.Fragment key="guide-depth-width-dim">
+              <NativeLine name="free-placement-guide-line"
+                points={[[lx, guideZ, dimZ], [rx, guideZ, dimZ]]}
+                color={guideColor} lineWidth={1.2} opacity={0.6} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
+              <Html position={[0, guideZ, dimZ - 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
+                <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(spaceInfo.width)}</div>
+              </Html>
+            </React.Fragment>
+          );
+        })()}
+
         {/* 공간 외곽 (탑뷰 X-Z 사각형) */}
         {([
           [[-halfW, halfD], [halfW, halfD]],
