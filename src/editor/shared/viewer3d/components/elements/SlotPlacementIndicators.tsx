@@ -998,13 +998,36 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       return null;
     }
 
-    const fullHeight = spaceInfo.height * 0.01;
-    const splitY = fullHeight * 0.5;
+    const fullHeightMm = spaceInfo.height;
+    const fullHeight = fullHeightMm * 0.01;
     const hasSplitSlots = guideSlots.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower');
+
+    // ── 가이드 상하분할 5단 높이 (mm) ──
+    // 전체 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 걸레받이 (전체 고정)
+    const gTopMolding = spaceInfo.guideTopMolding ?? 100;
+    const gBaseboard = spaceInfo.guideBaseboard ?? 100;
+    const gLower = spaceInfo.guideLowerHeight ?? 800;
+    const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
+    // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 걸레받이 (나머지 흡수)
+    const gMidway = Math.max(0, Math.round(fullHeightMm - gTopMolding - gUpperRaw - gLower - gBaseboard));
+    const gUpper = gUpperRaw;
+
+    // 바닥(0)부터의 누적 경계 (mm): 걸레받이→하부장→미드웨이→상부장→몰딩
+    const yBaseTop = gBaseboard;                  // 걸레받이 상단
+    const yLowerTop = yBaseTop + gLower;          // 하부장 상단 (= 하부 슬롯 영역 상단)
+    const yMidTop = yLowerTop + gMidway;          // 미드웨이 상단 (= 상부 슬롯 영역 하단)
+    const yUpperTop = yMidTop + gUpper;           // 상부장 상단 (= 몰딩 하단)
+    // mm → three units
+    const lowerStartY = yBaseTop * 0.01;
+    const lowerEndY = yLowerTop * 0.01;
+    const upperStartY = yMidTop * 0.01;
+    const upperEndY = yUpperTop * 0.01;
+    const splitY = (yLowerTop + yMidTop) / 2 * 0.01; // 미드웨이 중앙 (분할선 표시용)
+
     const getSlotYRange = (slot: FreePlacementGuideSlot): [number, number] => {
       const zone = slot.guideZone || 'full';
-      if (zone === 'upper') return [splitY, fullHeight];
-      if (zone === 'lower') return [0, splitY];
+      if (zone === 'upper') return [upperStartY, upperEndY];
+      if (zone === 'lower') return [lowerStartY, lowerEndY];
       return [0, fullHeight];
     };
     const getSlotControlY = (slot: FreePlacementGuideSlot) => {
@@ -1108,8 +1131,60 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       });
     };
 
+    // ── 상하분할 5단 높이 치수 편집기 (좌/우 가장자리) ──
+    const spaceHalfWidth = spaceInfo.width / 2;
+    const heightTiers = [
+      { key: 'molding', label: '상단몰딩', value: gTopMolding, centerYmm: (yUpperTop + fullHeightMm) / 2 },
+      { key: 'upper', label: '상부장', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
+      { key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 },
+      { key: 'lower', label: '하부장', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
+      { key: 'baseboard', label: '걸레받이', value: gBaseboard, centerYmm: yBaseTop / 2 },
+    ];
+    const commitTier = (key: string, raw: string) => {
+      const v = Math.round(parseFloat(raw));
+      if (!Number.isFinite(v) || v < 0) return;
+      if (key === 'molding') setSpaceInfo({ guideTopMolding: v });
+      else if (key === 'lower') setSpaceInfo({ guideLowerHeight: v });
+      else if (key === 'baseboard') setSpaceInfo({ guideBaseboard: v });
+      else if (key === 'upper') setSpaceInfo({ guideUpperHeight: v });
+      else if (key === 'midway') {
+        // 미드웨이 변경 → 상부장이 흡수
+        const newUpper = Math.max(0, Math.round(fullHeightMm - gTopMolding - v - gLower - gBaseboard));
+        setSpaceInfo({ guideUpperHeight: newUpper });
+      }
+    };
+    const tierEditorStyle: React.CSSProperties = {
+      width: 56, padding: '3px 4px', fontSize: 13, fontWeight: 700, textAlign: 'center',
+      border: `2px solid ${guideColor}`, borderRadius: 5, outline: 'none',
+      background: 'rgba(255,255,255,0.97)', color: guideColor, lineHeight: 1.1,
+    };
+    const renderHeightTiers = (sideX: number) =>
+      heightTiers.map((tier) => (
+        <Html
+          key={`guide-tier-${tier.key}-${sideX > 0 ? 'r' : 'l'}`}
+          position={[sideX, tier.centerYmm * 0.01, guideZ]}
+          center
+          zIndexRange={[200, 0]}
+          style={{ pointerEvents: 'auto', userSelect: 'none' }}
+        >
+          <input
+            type="number"
+            defaultValue={Math.round(tier.value)}
+            key={`${tier.key}-${Math.round(tier.value)}`}
+            min={0}
+            onPointerDown={(e) => e.stopPropagation()}
+            onWheel={(e) => e.stopPropagation()}
+            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+            onBlur={(e) => commitTier(tier.key, e.target.value)}
+            style={tierEditorStyle}
+          />
+        </Html>
+      ));
+
     return (
       <>
+        {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01)}
+        {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01)}
         {guideSlots.flatMap((slot) => {
           const [startY, endY] = getSlotYRange(slot);
           const leftX = (slot.x - spaceInfo.width / 2) * 0.01;

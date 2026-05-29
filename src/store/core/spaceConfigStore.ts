@@ -239,6 +239,13 @@ export interface SpaceInfo {
   freePlacementGuideEditing?: boolean;
   // 좌측 아이콘바의 독립 커스텀 가이드 모드. 자유배치 layoutMode와 분리해서 동작한다.
   customGuideMode?: boolean;
+  // 가이드 모드 상하분할 시 5단 높이 (mm). 전체 높이 = 몰딩+상부장+미드웨이+하부장+걸레받이 (고정)
+  // 미드웨이 변경 → 상부장이 흡수 / 그 외 변경 → 미드웨이가 흡수
+  guideTopMolding?: number;   // 상단몰딩
+  guideUpperHeight?: number;  // 상부장
+  guideMidway?: number;       // 미드웨이 (상부장↔하부장 빈 공간)
+  guideLowerHeight?: number;  // 하부장
+  guideBaseboard?: number;    // 걸레받이
   // 카테고리별 가구 기본 깊이 (mm)
   furnitureDepthDefaults?: FurnitureDepthDefaults;
 
