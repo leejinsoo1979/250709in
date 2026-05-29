@@ -311,12 +311,11 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
-  const { view2DTheme, viewMode, activePlacementWall, view2DDirection, guideDepthEditMode } = useUIStore();
+  const { view2DTheme, viewMode, activePlacementWall, view2DDirection, guideDepthEditMode, guideDepthZone } = useUIStore();
   const { pendingPlacement } = useMyCabinetStore();
   const { colors } = useThemeColors();
   const [mergeSelectedSlotIds, setMergeSelectedSlotIds] = useState<string[]>([]);
-  // 깊이 편집: 상부/하부 구간 토글 (upper/lower)
-  const [depthZone, setDepthZone] = useState<'upper' | 'lower'>('upper');
+  const depthZone = guideDepthZone;
 
   const isCustomGuideMode = spaceInfo.customGuideMode === true;
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
@@ -995,12 +994,32 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   // 탑뷰 깊이 편집기: 슬롯별 깊이 입력 + 상부/하부 토글 + 앞/뒤 고정
   const renderGuideDepthEditor = (allGuideSlots: FreePlacementGuideSlot[]) => {
     const hasSplit = allGuideSlots.some((s) => (s.guideZone || 'full') === 'upper' || (s.guideZone || 'full') === 'lower');
-    // 표시 대상 슬롯: 분할이 있으면 선택된 zone, 없으면 전체(full)
+    // 표시 대상 슬롯: 상하부 분할이 있어도 병합(full) 슬롯은 양쪽 섹션에서 깊이를 가져야 한다.
     const zoneSlots = hasSplit
-      ? allGuideSlots.filter((s) => (s.guideZone || 'full') === depthZone)
+      ? allGuideSlots.filter((s) => {
+        const zone = s.guideZone || 'full';
+        return zone === depthZone || zone === 'full';
+      })
       : allGuideSlots;
-    // zone별 기본 깊이: 상부장 300, 하부장/전체 600 (공간 깊이 1500을 쓰지 않음)
-    const defaultDepthForZone = (zone?: string) => (zone === 'upper' ? 300 : 600);
+    const clampDefaultDepth = (value: number) => Math.min(value, spaceInfo.depth || value);
+    const defaultFullDepth = clampDefaultDepth(
+      spaceInfo.furnitureDepthDefaults?.wardrobe
+      ?? spaceInfo.furnitureDepthDefaults?.tall
+      ?? 580
+    );
+    const defaultLowerDepth = clampDefaultDepth(
+      spaceInfo.furnitureDepthDefaults?.lowerBasic
+      ?? 580
+    );
+    const defaultUpperDepth = clampDefaultDepth(
+      spaceInfo.furnitureDepthDefaults?.upper
+      ?? 300
+    );
+    const defaultDepthForZone = (zone?: string) => {
+      if (zone === 'upper') return defaultUpperDepth;
+      if (zone === 'lower') return defaultLowerDepth;
+      return defaultFullDepth;
+    };
     const guideZ = 0.006;
     const guideColor = colors?.primary || '#3b82f6';
     const halfW = spaceInfo.width / 2;
@@ -1009,61 +1028,87 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
     const backGuideZ = (furnitureZOffsetMm - furnitureDepthMm / 2 - TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM) * 0.01;
     const frontGuideZ = backGuideZ + panelDepthMm * 0.01;
+    const spaceWidthDimZ = backGuideZ - 3;
+    const slotSpanStartMm = zoneSlots.length > 0
+      ? Math.max(0, Math.min(...zoneSlots.map((slot) => slot.x)))
+      : 0;
+    const slotSpanEndMm = zoneSlots.length > 0
+      ? Math.min(spaceInfo.width, Math.max(...zoneSlots.map((slot) => slot.x + slot.width)))
+      : spaceInfo.width;
+    const rawLeftGuideGapMm = Math.max(0, slotSpanStartMm);
+    const rawRightGuideGapMm = Math.max(0, spaceInfo.width - slotSpanEndMm);
+    const leftGuideGapMm = !spaceInfo.gapConfig?.left && rawLeftGuideGapMm <= 2
+      ? 0
+      : rawLeftGuideGapMm;
+    const rightGuideGapMm = !spaceInfo.gapConfig?.right && rawRightGuideGapMm <= 2
+      ? 0
+      : rawRightGuideGapMm;
+    const dimensionSlotStartMm = leftGuideGapMm;
+    const dimensionSlotEndMm = spaceInfo.width - rightGuideGapMm;
+    const slotWidthTotalMm = Math.max(0, spaceInfo.width - leftGuideGapMm - rightGuideGapMm);
+    const formatGuideMm = (value: number) => (
+      Number.isInteger(value) ? String(value) : String(value).replace(/(\.\d*?[1-9])0+$/, '$1')
+    );
 
-    const commitDepth = (slotId: string, raw: string) => {
-      const v = Math.round(parseFloat(raw));
+    const isFullSlotSectionDepth = (slot: FreePlacementGuideSlot) => hasSplit && (slot.guideZone || 'full') === 'full';
+    const getSlotDepth = (slot: FreePlacementGuideSlot) => {
+      if (isFullSlotSectionDepth(slot)) {
+        return depthZone === 'upper'
+          ? (slot.upperDepth ?? slot.depth ?? defaultFullDepth)
+          : (slot.lowerDepth ?? slot.depth ?? defaultFullDepth);
+      }
+      return slot.depth ?? defaultDepthForZone(slot.guideZone);
+    };
+    const getSlotGap = (slot: FreePlacementGuideSlot) => {
+      if (isFullSlotSectionDepth(slot)) {
+        return depthZone === 'upper'
+          ? (slot.upperDepthGap ?? slot.depthGap ?? 0)
+          : (slot.lowerDepthGap ?? slot.depthGap ?? 0);
+      }
+      return slot.depthGap ?? 0;
+    };
+
+    const commitDepth = (slot: FreePlacementGuideSlot, raw: string) => {
+      const v = parseFloat(raw);
       if (!Number.isFinite(v) || v <= 0) return;
       setSpaceInfo({
-        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) =>
-          s.id === slotId ? { ...s, depth: v } : s
-        ),
+        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) => {
+          if (s.id !== slot.id) return s;
+          if (!isFullSlotSectionDepth(slot)) return { ...s, depth: v };
+          return depthZone === 'upper'
+            ? { ...s, upperDepth: v }
+            : { ...s, lowerDepth: v };
+        }),
       });
     };
 
-    const commitGap = (slotId: string, raw: string) => {
-      const v = Math.round(parseFloat(raw));
+    const commitGap = (slot: FreePlacementGuideSlot, raw: string) => {
+      const v = parseFloat(raw);
       if (!Number.isFinite(v) || v < 0) return;
       setSpaceInfo({
-        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) =>
-          s.id === slotId ? { ...s, depthGap: v } : s
-        ),
+        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) => {
+          if (s.id !== slot.id) return s;
+          if (!isFullSlotSectionDepth(slot)) return { ...s, depthGap: v };
+          return depthZone === 'upper'
+            ? { ...s, upperDepthGap: v }
+            : { ...s, lowerDepthGap: v };
+        }),
       });
     };
 
-    // 알약(pill) 토글 버튼 — 글자 가로 고정
-    const pillBtnStyle = (active: boolean): React.CSSProperties => ({
-      padding: '5px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-      border: 'none', borderRadius: 999,
-      background: active ? guideColor : 'transparent',
-      color: active ? '#fff' : guideColor,
-      whiteSpace: 'nowrap', lineHeight: 1.1, transition: 'all 0.12s',
-    });
     const depthInputStyle: React.CSSProperties = {
       width: 64, padding: '4px 6px', fontSize: 14, fontWeight: 700, textAlign: 'center',
       border: `2px solid ${guideColor}`, borderRadius: 6, outline: 'none',
-      background: 'rgba(255,255,255,0.97)', color: guideColor, lineHeight: 1.1,
+      background: 'transparent', backgroundColor: 'transparent', backgroundImage: 'none',
+      boxShadow: 'none', appearance: 'none', WebkitAppearance: 'none',
+      color: guideColor, lineHeight: 1.1,
     };
 
     return (
       <>
-        {/* 상단 컨트롤: 상부/하부 토글 (공간 위쪽 바깥) */}
-        <Html
-          position={[0, guideZ, backGuideZ - 5.5]}
-          center zIndexRange={[300, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
-        >
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            {hasSplit && (
-              <div style={{ display: 'inline-flex', gap: 2, padding: 3, borderRadius: 999, border: `2px solid ${guideColor}`, background: 'rgba(255,255,255,0.95)' }}>
-                <button style={pillBtnStyle(depthZone === 'upper')} onClick={() => setDepthZone('upper')}>상부장</button>
-                <button style={pillBtnStyle(depthZone === 'lower')} onClick={() => setDepthZone('lower')}>하부장</button>
-              </div>
-            )}
-          </div>
-        </Html>
-
         {/* 전체 공간 너비 치수 (상단) + 연장선 */}
         {(() => {
-          const dimZ = backGuideZ - 3;
+          const dimZ = spaceWidthDimZ;
           const lx = -halfW * 0.01, rx = halfW * 0.01;
           return (
             <React.Fragment key="guide-depth-width-dim">
@@ -1078,8 +1123,57 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 points={[[rx, guideZ, dimZ], [rx, guideZ, backGuideZ]]}
                 color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
               <Html position={[0, guideZ, dimZ - 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
-                <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(spaceInfo.width)}</div>
+                <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{formatGuideMm(spaceInfo.width)}</div>
               </Html>
+            </React.Fragment>
+          );
+        })()}
+
+        {/* 배치 슬롯 폭 합계 + 좌우 이격 치수 (공간 안쪽 레벨) */}
+        {(() => {
+          const innerDimZ = (spaceWidthDimZ + backGuideZ) / 2;
+          const tickHalf = Math.max(0.05, Math.min(panelDepthMm * 0.015, 10) * 0.01);
+          const toX = (xMm: number) => (xMm - halfW) * 0.01;
+          const segmentLabelStyle: React.CSSProperties = {
+            color: guideColor,
+            fontSize: 10,
+            fontWeight: 900,
+            whiteSpace: 'nowrap',
+            background: 'rgba(255,255,255,0.82)',
+            borderRadius: 3,
+            padding: '1px 4px'
+          };
+          const segments = [
+            { key: 'left-gap', start: 0, end: dimensionSlotStartMm, label: formatGuideMm(leftGuideGapMm) },
+            { key: 'slot-sum', start: dimensionSlotStartMm, end: dimensionSlotEndMm, label: formatGuideMm(slotWidthTotalMm) },
+            { key: 'right-gap', start: dimensionSlotEndMm, end: spaceInfo.width, label: formatGuideMm(rightGuideGapMm) },
+          ];
+          const boundaries = [0, dimensionSlotStartMm, dimensionSlotEndMm, spaceInfo.width];
+          return (
+            <React.Fragment key="guide-depth-inner-width-dim">
+              {segments.map((segment) => {
+                const startX = toX(segment.start);
+                const endX = toX(segment.end);
+                const midX = (startX + endX) / 2;
+                return (
+                  <React.Fragment key={segment.key}>
+                    <NativeLine name="free-placement-guide-line"
+                      points={[[startX, guideZ, innerDimZ], [endX, guideZ, innerDimZ]]}
+                      color={guideColor} lineWidth={1.4} opacity={0.78} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
+                    <Html position={[midX, guideZ, innerDimZ + 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
+                      <div style={segmentLabelStyle}>{segment.label}</div>
+                    </Html>
+                  </React.Fragment>
+                );
+              })}
+              {boundaries.map((xMm, index) => {
+                const x = toX(xMm);
+                return (
+                  <NativeLine key={`guide-depth-inner-tick-${index}`} name="free-placement-guide-line"
+                    points={[[x, guideZ, innerDimZ - tickHalf], [x, guideZ, innerDimZ + tickHalf]]}
+                    color={guideColor} lineWidth={1.1} opacity={0.78} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
+                );
+              })}
             </React.Fragment>
           );
         })()}
@@ -1114,8 +1208,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const leftX = (slot.x - halfW) * 0.01;
           const rightX = (slot.x + slot.width - halfW) * 0.01;
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
-          const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
-          const gapVal = Math.round(slot.depthGap ?? 0);
+          const depthVal = getSlotDepth(slot);
+          const gapVal = getSlotGap(slot);
+          const sectionKey = isFullSlotSectionDepth(slot) ? depthZone : (slot.guideZone || 'full');
           const backScreenZ = backGuideZ + gapVal * 0.01;
           const frontScreenZ = backScreenZ + depthVal * 0.01;
           const midScreenZ = (backScreenZ + frontScreenZ) / 2;
@@ -1126,23 +1221,31 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               <planeGeometry args={[rightX - leftX, boxDepthLen]} />
               <meshBasicMaterial color={guideColor} transparent opacity={0.18} depthTest={false} depthWrite={false} />
             </mesh>,
+            <NativeLine key={`guide-depth-box-outline-back-${slot.id}`} name="free-placement-guide-line"
+              points={[[leftX, guideZ + 0.001, backScreenZ], [rightX, guideZ + 0.001, backScreenZ]]}
+              color={guideColor} lineWidth={1.4} opacity={0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+            <NativeLine key={`guide-depth-box-outline-front-${slot.id}`} name="free-placement-guide-line"
+              points={[[leftX, guideZ + 0.001, frontScreenZ], [rightX, guideZ + 0.001, frontScreenZ]]}
+              color={guideColor} lineWidth={1.4} opacity={0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+            <NativeLine key={`guide-depth-box-outline-left-${slot.id}`} name="free-placement-guide-line"
+              points={[[leftX, guideZ + 0.001, backScreenZ], [leftX, guideZ + 0.001, frontScreenZ]]}
+              color={guideColor} lineWidth={1.4} opacity={0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+            <NativeLine key={`guide-depth-box-outline-right-${slot.id}`} name="free-placement-guide-line"
+              points={[[rightX, guideZ + 0.001, backScreenZ], [rightX, guideZ + 0.001, frontScreenZ]]}
+              color={guideColor} lineWidth={1.4} opacity={0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
             // 깊이/갭 입력 (장 영역 중앙)
-            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>갭(뒷벽)</span>
-                  <input type="number" defaultValue={gapVal} key={`g-${slot.id}-${gapVal}`} min={0}
-                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                    onBlur={(e) => commitGap(slot.id, e.target.value)} style={{ ...depthInputStyle, borderStyle: 'dashed' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>깊이</span>
-                  <input type="number" defaultValue={depthVal} key={`d-${slot.id}-${depthVal}`} min={1}
-                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                    onBlur={(e) => commitDepth(slot.id, e.target.value)} style={depthInputStyle} />
-                </div>
+            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '44px 64px', columnGap: 4, rowGap: 3, alignItems: 'center', background: 'transparent' }}>
+                <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>갭(뒷벽)</span>
+                <input type="text" inputMode="decimal" defaultValue={gapVal} key={`g-${slot.id}-${sectionKey}-${gapVal}`}
+                  onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  onBlur={(e) => commitGap(slot, e.target.value)} style={{ ...depthInputStyle, borderStyle: 'dashed' }} />
+                <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>깊이</span>
+                <input type="text" inputMode="decimal" defaultValue={depthVal} key={`d-${slot.id}-${sectionKey}-${depthVal}`}
+                  onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  onBlur={(e) => commitDepth(slot, e.target.value)} style={depthInputStyle} />
               </div>
             </Html>,
           ];
