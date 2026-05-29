@@ -283,7 +283,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const isKitchenLowerModule = moduleData.category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
   const initialBaseFrameHeight = shouldHaveBaseFrame
     ? (hasGuideSlotYRange
-      ? (spaceInfo.baseConfig?.height ?? 0)
+      ? (inheritedBaseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 0))
       : (inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60))))
     : undefined;
   const inheritedAbsorbedBase = shouldHaveBaseFrame

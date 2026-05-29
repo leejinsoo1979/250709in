@@ -310,8 +310,18 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
  */
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, placedModules } = useFurnitureStore();
-  const { view2DTheme, viewMode, activePlacementWall, view2DDirection, guideDepthEditMode, guideDepthZone } = useUIStore();
+  const { selectedFurnitureId, placedModules, updatePlacedModule } = useFurnitureStore();
+  const {
+    view2DTheme,
+    viewMode,
+    activePlacementWall,
+    view2DDirection,
+    guideDepthEditMode,
+    guideDepthZone,
+    selectedFurnitureId: uiSelectedFurnitureId,
+    selectedFurnitureIds,
+    activePopup
+  } = useUIStore();
   const { pendingPlacement } = useMyCabinetStore();
   const { colors } = useThemeColors();
   const [mergeSelectedSlotIds, setMergeSelectedSlotIds] = useState<string[]>([]);
@@ -1294,20 +1304,75 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const gTopMolding = spaceInfo.frameSize?.top ?? 0;
     const gMoldingGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
     const gTopClearance = Math.max(0, gTopMolding > 0 ? gTopMolding : gMoldingGap);
-    const isFloatingBase = spaceInfo.baseConfig?.type === 'stand'
+    const guideInternalSpace = calculateInternalSpace(spaceInfo);
+    const getGuideModuleCategory = (module: typeof placedModules[number]) => {
+      const moduleData = getModuleById(module.moduleId, guideInternalSpace, spaceInfo);
+      return moduleData?.category
+        ?? (module.moduleId.includes('upper') ? 'upper'
+          : module.moduleId.includes('lower') ? 'lower' : 'full');
+    };
+    const activePlacedFurnitureId = activePopup.type === 'furnitureEdit' && activePopup.id
+      ? activePopup.id
+      : (uiSelectedFurnitureId ?? selectedFurnitureIds[selectedFurnitureIds.length - 1] ?? selectedFurnitureId);
+    const guideBaseCandidateModules = placedModules.filter((module) => (
+      !module.isSurroundPanel
+      && (
+        module.guideSlotPlacement === true
+        || module.guideDepthPlacement === true
+        || ((spaceInfo.customGuideMode === true || guideSlots.length > 0) && module.isFreePlacement === true)
+      )
+    ));
+    const guideSelectedBaseModule = guideBaseCandidateModules.find((module) => (
+      module.id === activePlacedFurnitureId
+      && (getGuideModuleCategory(module) === 'lower' || getGuideModuleCategory(module) === 'full')
+    ));
+    const guideLowerBaseModule = guideBaseCandidateModules.find((module) => (
+      getGuideModuleCategory(module) === 'lower'
+    ));
+    const guideFullBaseModule = guideBaseCandidateModules.find((module) => (
+      getGuideModuleCategory(module) === 'full'
+    ));
+    const guideBaseReferenceModule = guideSelectedBaseModule ?? guideLowerBaseModule ?? guideFullBaseModule;
+    const resolveGuideBaseHeight = (module: typeof placedModules[number] | undefined) => {
+      if (!module) {
+        return spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0;
+      }
+      if (module.hasBase === false) return 0;
+      return Math.max(0, module.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 0));
+    };
+    const resolveGuideLowerBodyHeight = (module: typeof placedModules[number] | undefined) => {
+      if (!module) return spaceInfo.guideLowerHeight ?? 800;
+      const moduleData = getModuleById(module.moduleId, guideInternalSpace, spaceInfo);
+      return Math.max(0, Math.round(
+        module.cabinetBodyHeight
+          ?? module.customHeight
+          ?? module.freeHeight
+          ?? moduleData?.dimensions.height
+          ?? spaceInfo.guideLowerHeight
+          ?? 800
+      ));
+    };
+    const globalFloatingBase = spaceInfo.baseConfig?.type === 'stand'
       || (spaceInfo.baseConfig?.height ?? 0) <= 0;
-    const gBaseboard = spaceInfo.baseConfig?.type === 'floor'
-      ? (spaceInfo.baseConfig?.height ?? 0)
+    const isFloatingBase = guideBaseReferenceModule
+      ? guideBaseReferenceModule.hasBase === false
+      : globalFloatingBase;
+    const gBaseboard = guideBaseReferenceModule
+      ? resolveGuideBaseHeight(guideBaseReferenceModule)
+      : (spaceInfo.baseConfig?.type === 'floor'
+        ? (spaceInfo.baseConfig?.height ?? 0)
+        : 0);
+    const gFloatHeight = isFloatingBase
+      ? Math.max(0, guideBaseReferenceModule?.individualFloatHeight ?? spaceInfo.baseConfig?.floatHeight ?? 0)
       : 0;
-    const gFloatHeight = isFloatingBase ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0) : 0;
     const gBottomClearance = isFloatingBase ? gFloatHeight : gBaseboard;
     // 우측바 옵셋/갭과 연동되는 값
     const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
-    const gBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
-    const gBaseGap = isFloatingBase ? 0 : ((spaceInfo.baseConfig as any)?.gap ?? 0);
+    const gBaseOffset = guideBaseReferenceModule?.baseFrameOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 0;
+    const gBaseGap = isFloatingBase ? 0 : Math.max(0, Math.min(gBaseboard, guideBaseReferenceModule?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0));
     const gMoldingVisible = gTopMolding > 0 ? Math.max(0, gTopMolding - gMoldingGap) : gMoldingGap;
     const gBaseboardVisible = isFloatingBase ? gFloatHeight : Math.max(0, gBaseboard - gBaseGap);
-    const gLower = spaceInfo.guideLowerHeight ?? 800;
+    const gLower = resolveGuideLowerBodyHeight(guideLowerBaseModule);
     const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
     // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 하단 구간 (나머지 흡수)
     const gMidway = Math.max(0, Math.round(fullHeightMm - gTopClearance - gUpperRaw - gLower - gBottomClearance));
@@ -1470,10 +1535,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       }
       else if (key === 'lower') setSpaceInfo({ guideLowerHeight: v });
       else if (key === 'baseboard') {
+        const nextBaseHeight = isFloatingBase ? v : v + gBaseGap;
+        if (guideBaseReferenceModule) {
+          updatePlacedModule(guideBaseReferenceModule.id, isFloatingBase
+            ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: v }
+            : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextBaseHeight }
+          );
+        }
         setSpaceInfo({
           baseConfig: isFloatingBase
             ? { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', floatHeight: v }
-            : { ...(spaceInfo.baseConfig as any), type: 'floor', height: v + gBaseGap }
+            : { ...(spaceInfo.baseConfig as any), type: 'floor', height: nextBaseHeight }
         });
       }
       else if (key === 'upper') setSpaceInfo({ guideUpperHeight: v });
@@ -1578,8 +1650,15 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {offsetGapField('옵셋', gBaseOffset, (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } }), 'base-offset')}
-              {offsetGapField('갭', gBaseGap, (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: v } }), 'base-gap')}
+              {offsetGapField('옵셋', gBaseOffset, (v) => {
+                if (guideBaseReferenceModule) updatePlacedModule(guideBaseReferenceModule.id, { baseFrameOffset: v });
+                setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } });
+              }, 'base-offset')}
+              {offsetGapField('갭', gBaseGap, (v) => {
+                const nextGap = Math.max(0, Math.min(gBaseboard, v));
+                if (guideBaseReferenceModule) updatePlacedModule(guideBaseReferenceModule.id, { baseFrameGap: nextGap });
+                setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: nextGap } });
+              }, 'base-gap')}
             </div>
           </Html>
         )}

@@ -1104,9 +1104,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       || rounded === Math.round(moduleData.dimensions.height + 65);
   };
 
+  const currentGuideSlotBottomClearanceMm = (() => {
+    if (!placedModule.guideSlotPlacement) return undefined;
+    if (placedModule.hasBase === false) {
+      return Math.max(0, placedModule.individualFloatHeight ?? 0);
+    }
+    if (typeof placedModule.baseFrameHeight === 'number') {
+      return Math.max(0, placedModule.baseFrameHeight);
+    }
+    const isFloatingBase = spaceInfo.baseConfig?.type === 'stand'
+      || (spaceInfo.baseConfig?.height ?? 0) <= 0;
+    return isFloatingBase
+      ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0)
+      : Math.max(0, spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0);
+  })();
+
   const currentGuideSlotYRangeMm = placedModule.guideSlotPlacement
     && (placedModule.guideSlotZone === 'upper' || placedModule.guideSlotZone === 'lower')
-    ? getFreeGuideZoneYRangeMm(placedModule.guideSlotZone, spaceInfo)
+    ? getFreeGuideZoneYRangeMm(placedModule.guideSlotZone, spaceInfo, {
+      bottomClearanceMm: currentGuideSlotBottomClearanceMm
+    })
     : null;
   const currentGuideSlotHeightMm = currentGuideSlotYRangeMm
     ? Math.max(0, currentGuideSlotYRangeMm.end - currentGuideSlotYRangeMm.start)
@@ -3183,7 +3200,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (spaceInfo.baseConfig?.type !== 'floor') return null;
 
     const rawHeightMm = placedModule.guideSlotPlacement
-      ? (spaceInfo.baseConfig?.height ?? placedModule.baseFrameHeight ?? 65)
+      ? (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65)
       : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65));
     const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm - 1, (placedModule as any).baseFrameGap ?? 0)) : 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);

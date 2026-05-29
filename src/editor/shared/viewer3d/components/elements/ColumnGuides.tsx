@@ -21,7 +21,21 @@ interface ColumnGuidesProps {
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, clearAllModules } = useFurnitureStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode, isLiveDimensionMode, isTapeMeasureMode, activePlacementWall } = useUIStore();
+  const {
+    viewMode: contextViewMode,
+    showDimensions,
+    view2DDirection,
+    activeDroppedCeilingTab,
+    setActiveDroppedCeilingTab,
+    view2DTheme,
+    slotWidthEditMode,
+    isLiveDimensionMode,
+    isTapeMeasureMode,
+    activePlacementWall,
+    selectedFurnitureId,
+    selectedFurnitureIds,
+    activePopup
+  } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -378,7 +392,31 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 내경 공간의 시작 높이 계산
   //   바닥마감재 위에 받침대(걸레받이)가 그대로 얹히므로 두 값을 항상 합산.
   const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-  const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+  const activePlacedFurnitureId = activePopup.type === 'furnitureEdit' && activePopup.id
+    ? activePopup.id
+    : (selectedFurnitureId ?? selectedFurnitureIds[selectedFurnitureIds.length - 1] ?? null);
+  const slotBaseReferenceModule = (() => {
+    const slotPlacementCandidates = frontPlacedModules.filter((module) => (
+      !module.isSurroundPanel
+      && module.slotIndex !== undefined
+      && module.isFreePlacement !== true
+    ));
+    const selectedCandidate = slotPlacementCandidates.find((module) => module.id === activePlacedFurnitureId);
+    return selectedCandidate ?? slotPlacementCandidates.find((module) => module.hasBase !== undefined || module.baseFrameHeight !== undefined || module.individualFloatHeight !== undefined);
+  })();
+  const resolveBaseClearanceMm = (module?: typeof frontPlacedModules[number]) => {
+    if (module) {
+      if (module.hasBase === false) {
+        return Math.max(0, module.individualFloatHeight ?? 0);
+      }
+      return Math.max(0, module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0));
+    }
+    if (spaceInfo.baseConfig?.type === 'stand') {
+      return Math.max(0, spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight ?? 0) : 0);
+    }
+    return Math.max(0, spaceInfo.baseConfig?.height || 0);
+  };
+  const baseFrameHeightMm = resolveBaseClearanceMm(slotBaseReferenceModule);
   const furnitureStartY = (floorFinishHeightMm + baseFrameHeightMm) * 0.01;
   
   // CSS 변수에서 실제 테마 색상 가져오기
@@ -395,7 +433,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const guideColor = primaryColor; // 2D 모드에서도 투명도 없이
   const lineWidth = viewMode === '2D' ? 0.3 : 0.5; // 더 얇은 점선으로 조정
-  const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  const floatHeight = slotBaseReferenceModule ? 0 : (isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0);
   
   // 바닥과 천장 높이 (Three.js 단위)
   //   floorY = 바닥마감재 + 걸레받이(또는 OFF 시 띄움) + 띄움 높이
@@ -416,7 +454,9 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const offBaseFrameGap = baseOffMods.reduce((acc, m) => Math.max(acc, (m as any).baseFrameGap || 0), 0);
   const maxIndividualFloat = placedModules.reduce((acc, m) => Math.max(acc, (m as any).individualFloatHeight || 0), 0);
   const effectiveTopFrameMm = anyTopFrameOff ? offTopFrameGap : topFrameMmCeil;
-  const effectiveBaseFrameMm = anyBaseOff ? (maxIndividualFloat + offBaseFrameGap) : baseFrameMmCeil;
+  const effectiveBaseFrameMm = slotBaseReferenceModule
+    ? baseFrameHeightMm
+    : (anyBaseOff ? (maxIndividualFloat + offBaseFrameGap) : baseFrameMmCeil);
   const floorY = mmToThreeUnits(floorFinishMmCeil + effectiveBaseFrameMm) + floatHeight;
   const ceilingY = mmToThreeUnits(spaceInfo.height - effectiveTopFrameMm);
   
@@ -569,6 +609,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // });
     
     const guides = [];
+    const guideMidY = (floorY + ceilingY) / 2;
     
     // 활성 탭에 따른 강조 여부 결정
     // activeZone이 전달되지 않으면 모든 영역이 활성화됨
@@ -736,8 +777,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           <Line
             key={`${zoneType}-horizontal-guide-top-${index}`}
             points={[
-              new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), backZ),
-              new THREE.Vector3(xPos, floorY + mmToThreeUnits(internalSpace.height/2), frontZ)
+              new THREE.Vector3(xPos, guideMidY, backZ),
+              new THREE.Vector3(xPos, guideMidY, frontZ)
             ]}
             color={zoneColor}
             lineWidth={zoneLineWidth}
@@ -795,7 +836,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           textRotation = [-Math.PI / 2, 0, 0]; // 텍스트를 수평으로 눕힘
         } else {
           // 프론트뷰 및 3D뷰: 기존 위치 유지
-          const textY = floorY + mmToThreeUnits(internalSpace.height / 2); // 슬롯 중앙 높이
+          const textY = guideMidY; // 치수가이드와 같은 슬롯 중앙 높이
           const textZ = frontIndicatorBackZ + 0.5; // 뒷면 인디게이터에서 살짝 앞으로
           textPosition = [xPos, textY, textZ];
           textRotation = [0, 0, 0];

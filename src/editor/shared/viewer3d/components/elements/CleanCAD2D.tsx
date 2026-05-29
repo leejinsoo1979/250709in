@@ -553,6 +553,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isExternalMaidaModule = (moduleId = '') => moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-half-cabinet')
+    || moduleId.includes('dual-lower-half-cabinet')
+    || moduleId.includes('lower-sink-cabinet')
+    || moduleId.includes('dual-lower-sink-cabinet')
     || moduleId.includes('lower-door-lift-')
     || moduleId.includes('lower-top-down-')
     || moduleId.includes('lower-induction-cabinet')
@@ -4948,7 +4952,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         >
                           {middleGapH}
                         </Text>
-                        {upperMod && (
+                        {upperMod && !spaceInfo?.customGuideMode && (
                           <Html
                             position={[innerX - mmToThreeUnits(25), (furnitureTopY + upperCabinetBottomY) / 2, 0.02]}
                             center
@@ -5952,7 +5956,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         >
                           {rMiddleGapH}
                         </Text>
-                        {rUpperMod && (
+                        {rUpperMod && !spaceInfo?.customGuideMode && (
                           <Html
                             position={[rightInnerX + mmToThreeUnits(10), (rFurnitureTopY + rUpperCabinetBottomY) / 2, 0.02]}
                             center

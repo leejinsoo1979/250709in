@@ -18,9 +18,16 @@ export interface FurnitureBoundsX {
   category: 'full' | 'upper' | 'lower';
 }
 
+export interface FreeGuideZoneYRangeOptions {
+  bottomClearanceMm?: number;
+  lowerHeightMm?: number;
+  upperHeightMm?: number;
+}
+
 export function getFreeGuideZoneYRangeMm(
   zone: 'full' | 'upper' | 'lower',
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  options: FreeGuideZoneYRangeOptions = {}
 ): { start: number; end: number } | null {
   if (zone !== 'upper' && zone !== 'lower') return null;
 
@@ -30,11 +37,12 @@ export function getFreeGuideZoneYRangeMm(
   const topClearanceMm = Math.max(0, topMoldingMm > 0 ? topMoldingMm : topGapMm);
   const isFloatingBase = spaceInfo.baseConfig?.type === 'stand'
     || (spaceInfo.baseConfig?.height ?? 0) <= 0;
-  const bottomClearanceMm = isFloatingBase
+  const defaultBottomClearanceMm = isFloatingBase
     ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0)
     : Math.max(0, spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0);
-  const lowerMm = spaceInfo.guideLowerHeight ?? 800;
-  const upperMm = spaceInfo.guideUpperHeight ?? 700;
+  const bottomClearanceMm = options.bottomClearanceMm ?? defaultBottomClearanceMm;
+  const lowerMm = options.lowerHeightMm ?? spaceInfo.guideLowerHeight ?? 800;
+  const upperMm = options.upperHeightMm ?? spaceInfo.guideUpperHeight ?? 700;
   const midwayMm = Math.max(0, Math.round(fullHeightMm - topClearanceMm - upperMm - lowerMm - bottomClearanceMm));
 
   const yBaseTop = bottomClearanceMm;
