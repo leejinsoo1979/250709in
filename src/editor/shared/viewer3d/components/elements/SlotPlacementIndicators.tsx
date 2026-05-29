@@ -1254,7 +1254,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           ];
         })}
 
-        {splitLineSegments.map((segment, index) => (
+        {/* 미드웨이 중앙 분할선 제거: 5단 경계선(renderTierLines)이 미드웨이 위/아래 경계를 이미 표시 */}
+        {!hasSplitSlots && splitLineSegments.map((segment, index) => (
           <NativeLine
             key={`free-guide-split-line-${index}`}
             name="free-placement-guide-line"
