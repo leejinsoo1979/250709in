@@ -702,12 +702,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       cam.up.set(0, 0, -1);
       cam.position.set(cx, cy + dist, cz);
       cam.lookAt(cx, cy, cz);
-      // 오소그래픽이면 zoom으로 거리감 결정 → 공간이 화면에 맞게 줌 초기화
-      if (cam.isOrthographicCamera) {
-        const fitMm = Math.max(width, depth);
-        cam.zoom = Math.max(0.0001, 900 / fitMm);
-        cam.updateProjectionMatrix?.();
-      }
       controls.update();
       return;
     }
