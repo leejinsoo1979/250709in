@@ -10,6 +10,7 @@ import {
   orderBy,
   serverTimestamp,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from './config';
 import { getCurrentUserAsync } from './auth';
@@ -36,6 +37,46 @@ export interface CreateNewsData {
 }
 
 const NEWS_COLLECTION = 'news';
+const NOTIFICATIONS_COLLECTION = 'notifications';
+const USERS_COLLECTION = 'users';
+
+const trimNotificationMessage = (value: string): string => {
+  const text = value.replace(/\s+/g, ' ').trim();
+  if (!text) return '새 공지사항이 등록되었습니다.';
+  return text.length > 80 ? `${text.slice(0, 80)}...` : text;
+};
+
+const createNoticeNotifications = async (
+  newsId: string,
+  data: CreateNewsData
+): Promise<void> => {
+  if (data.category !== 'notice') return;
+
+  const usersSnap = await getDocs(collection(db, USERS_COLLECTION));
+  if (usersSnap.empty) return;
+
+  const userIds = usersSnap.docs.map(userDoc => userDoc.id).filter(Boolean);
+  const now = Timestamp.now();
+  const message = trimNotificationMessage(data.body);
+
+  for (let i = 0; i < userIds.length; i += 450) {
+    const batch = writeBatch(db);
+    userIds.slice(i, i + 450).forEach((userId) => {
+      const notificationRef = doc(collection(db, NOTIFICATIONS_COLLECTION));
+      batch.set(notificationRef, {
+        id: notificationRef.id,
+        userId,
+        type: 'system',
+        title: `새 공지사항: ${data.title}`,
+        message,
+        actionUrl: `/news/${newsId}`,
+        isRead: false,
+        createdAt: now,
+      });
+    });
+    await batch.commit();
+  }
+};
 
 /** 뉴스 목록 조회 (최신순) */
 export const listNews = async (): Promise<{ items: NewsItem[]; error: string | null }> => {
@@ -82,6 +123,11 @@ export const createNews = async (data: CreateNewsData): Promise<{ id: string | n
       createdAt: now,
       updatedAt: now,
     });
+    try {
+      await createNoticeNotifications(ref.id, data);
+    } catch (notificationError) {
+      console.error('공지 알림 생성 실패:', notificationError);
+    }
     return { id: ref.id, error: null };
   } catch (e: any) {
     console.error('createNews 실패:', e);
