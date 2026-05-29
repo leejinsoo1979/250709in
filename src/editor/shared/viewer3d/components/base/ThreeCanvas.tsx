@@ -102,7 +102,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { user } = useAuth();
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo, activePlacementWall, setActivePlacementWall } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode, isTapeMeasureMode, showGizmo, activePlacementWall, setActivePlacementWall, guideDepthEditMode } = useUIStore();
 
   // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
   const cameraMode = cameraModeFromProps || cameraModeFromStore;
@@ -153,6 +153,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [placementTogglePosition, setPlacementTogglePosition] = useState({ top: 0, left: 0 });
   const prevViewModeRef = useRef(viewMode);
+  const guideDepthEntryResetDoneRef = useRef(false);
   // isFurnitureDragging 상태는 UIStore에서 가져옴
 
   // 캔버스 참조 저장
@@ -284,6 +285,82 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier, viewportSize);
+
+  const clearOrbitControlState = useCallback((controls: any) => {
+    if (controls._panOffset) controls._panOffset.set(0, 0, 0);
+    if (controls._sphericalDelta) controls._sphericalDelta.set(0, 0, 0);
+    if (controls._dollyDirection) controls._dollyDirection.set(0, 0, 0);
+    if (controls._scale !== undefined) controls._scale = 1;
+    controls._performCursorZoom = false;
+  }, []);
+
+  const applyGuideDepthCameraReset = useCallback(() => {
+    const controls = controlsRef.current;
+    const object = controls?.object as (THREE.Camera & {
+      zoom?: number;
+      updateProjectionMatrix?: () => void;
+      isOrthographicCamera?: boolean;
+    }) | undefined;
+    if (!controls || !object) return false;
+
+    const target = new THREE.Vector3(...camera.target);
+    const position = new THREE.Vector3(...camera.position);
+    const prevDamping = controls.enableDamping;
+    controls.enableDamping = false;
+    clearOrbitControlState(controls);
+
+    controls.target.copy(target);
+    object.position.copy(position);
+    object.up.set(0, 0, -1);
+
+    if ('zoom' in object && typeof camera.zoom === 'number') {
+      object.zoom = camera.zoom;
+    }
+
+    if (object.isOrthographicCamera && typeof object.updateProjectionMatrix === 'function') {
+      const canvas = controls.domElement;
+      const ortho = object as THREE.OrthographicCamera;
+      if (canvas) {
+        const rect = canvas.getBoundingClientRect();
+        ortho.left = rect.width / -2;
+        ortho.right = rect.width / 2;
+        ortho.top = rect.height / 2;
+        ortho.bottom = rect.height / -2;
+      }
+      ortho.updateProjectionMatrix();
+    } else {
+      object.updateProjectionMatrix?.();
+    }
+
+    object.lookAt(controls.target);
+    controls.update();
+    controls.enableDamping = prevDamping;
+    return true;
+  }, [camera.position, camera.target, camera.zoom, clearOrbitControlState]);
+
+  useEffect(() => {
+    if (!guideDepthEditMode) {
+      guideDepthEntryResetDoneRef.current = false;
+      return;
+    }
+    if (viewMode !== '3D' || cameraMode !== 'orthographic' || guideDepthEntryResetDoneRef.current) {
+      return;
+    }
+
+    let raf1 = 0;
+    let raf2 = 0;
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        guideDepthEntryResetDoneRef.current = applyGuideDepthCameraReset();
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+    };
+  }, [guideDepthEditMode, viewMode, cameraMode, applyGuideDepthCameraReset]);
+
   const isSidePlacementView = viewMode === '3D'
     && canUsePlacementWallTools
     && (
@@ -353,7 +430,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           toThree(sideWallRangeStartZMm + sideWallRangeDepthMm / 2)
         );
       };
-      const target = canUsePlacementWallTools && (effectiveView === 'left' || effectiveView === 'right')
+      const isGuideDepthTopView = useUIStore.getState().guideDepthEditMode && effectiveView === 'top';
+      const guideDepthTopTarget = new THREE.Vector3(0, toThree(height / 2), -toThree(depth / 2));
+      const target = isGuideDepthTopView
+        ? guideDepthTopTarget
+        : canUsePlacementWallTools && (effectiveView === 'left' || effectiveView === 'right')
         ? getSideWallTarget(effectiveView)
         : roomTarget;
       const radius = Math.max(toThree(width), toThree(height), toThree(depth)) * 1.45;
@@ -366,7 +447,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         // Left 벽 안쪽을 보려면 카메라는 방의 오른쪽 바깥에 있어야 하고, Right는 반대다.
         left: new THREE.Vector3(target.x + radius, target.y, target.z),
         right: new THREE.Vector3(target.x - radius, target.y, target.z),
-        top: new THREE.Vector3(0, toThree(height) + radius, roomTarget.z),
+        top: isGuideDepthTopView
+          ? new THREE.Vector3(0, guideDepthTopTarget.y + radius, guideDepthTopTarget.z)
+          : new THREE.Vector3(0, toThree(height) + radius, roomTarget.z),
         bottom: new THREE.Vector3(0, -radius, roomTarget.z),
       };
 
@@ -383,7 +466,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const eased = ease(progress);
         object.position.lerpVectors(startPosition, endPosition, eased);
         controls.target.lerpVectors(startTarget, endTarget, eased);
-        object.up.set(0, 1, 0);
+        object.up.set(isGuideDepthTopView ? 0 : 0, isGuideDepthTopView ? 0 : 1, isGuideDepthTopView ? -1 : 0);
         object.lookAt(controls.target);
 
         if ('updateProjectionMatrix' in object) {
@@ -698,7 +781,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const height = spaceInfo?.height || 2400;
       const depth = spaceInfo?.depth || 600;
       // 2D 탑뷰와 동일한 카메라 거리 계산 사용
-      const cx = 0, cy = toThree(height / 2), cz = 0;
+      const cx = 0, cy = toThree(height / 2), cz = -toThree(depth / 2);
       const dist = calculateOptimalDistance(width, depth, height, 0);
       controls.target.set(cx, cy, cz);
       cam.up.set(0, 0, -1);

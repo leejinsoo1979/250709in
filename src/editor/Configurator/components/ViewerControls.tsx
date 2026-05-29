@@ -85,7 +85,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   guideSetupRequest = false,
   onGuideSetupRequestHandled
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, cameraMode, setCameraMode, guideDepthEditMode, setGuideDepthEditMode } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, setActivePlacementWall, cameraMode, setCameraMode, guideDepthEditMode, setGuideDepthEditMode } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = isSuperAdmin(user?.email);
   const canCreateFreePlacementGuide = user?.email?.toLowerCase().trim() === GUIDE_BUTTON_EMAIL;
@@ -626,11 +626,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={`${styles.segmentButton} ${guideDepthEditMode ? styles.segmentActive : ''}`}
               onClick={() => {
                 if (guideDepthEditMode) return;
-                // 깊이: 탑 시점 (기즈모 top 동기화)
+                // 깊이: 진입 시 ThreeCanvas에서 탑뷰 카메라/줌/포커스를 완전 초기화한다.
+                setActivePlacementWall('front');
                 setGuideDepthEditMode(true);
                 onViewModeChange('3D');
                 setCameraMode('orthographic');
-                viewCubeRequest.handler?.('top');
               }}
             >깊이</button>
           </div>

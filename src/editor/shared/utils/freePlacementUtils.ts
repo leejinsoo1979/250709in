@@ -115,8 +115,8 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
 export function getFreePlacementGuideBoundsX(spaceInfo: SpaceInfo): { startX: number; endX: number } {
   const totalWidth = spaceInfo.width || 2400;
   const halfW = totalWidth / 2;
-  const leftGap = spaceInfo.gapConfig?.left ?? 1.5;
-  const rightGap = spaceInfo.gapConfig?.right ?? 1.5;
+  const leftGap = spaceInfo.gapConfig?.left ?? 0;
+  const rightGap = spaceInfo.gapConfig?.right ?? 0;
 
   return {
     startX: -halfW + leftGap,

@@ -496,6 +496,8 @@ interface UIState {
   // 가이드 깊이 편집 모드 (폭/깊이 토글에서 '깊이' 선택 시 true → 탑뷰 슬롯별 깊이 설정)
   guideDepthEditMode: boolean;
   setGuideDepthEditMode: (enabled: boolean) => void;
+  guideDepthZone: 'upper' | 'lower';
+  setGuideDepthZone: (zone: 'upper' | 'lower') => void;
   // 자유 모드 진입 직전의 컬럼 수 (균등 복귀 시 사용)
   slotEditOriginalColumnCount: number | null;
   setSlotEditOriginalColumnCount: (n: number | null) => void;
@@ -588,6 +590,7 @@ const initialUIState = {
   equalDistributionLower: false,  // 하부장 전용 균등
   slotWidthEditMode: false,  // 슬롯배치 모드의 자유(슬롯 너비 직접 입력) 토글
   guideDepthEditMode: false,  // 가이드 깊이 편집(탑뷰) 모드
+  guideDepthZone: 'upper' as const,  // 가이드 깊이 편집 상/하부 선택
   slotEditOriginalColumnCount: null,  // 자유 모드 진입 전 컬럼 수 (복귀용)
   isInteriorMaterialMode: false,  // 기본값: 속장 재질 모드 비활성
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
@@ -1383,6 +1386,9 @@ export const useUIStore = create<UIState>()(
 
       setGuideDepthEditMode: (enabled: boolean) =>
         set({ guideDepthEditMode: enabled }),
+
+      setGuideDepthZone: (zone: 'upper' | 'lower') =>
+        set({ guideDepthZone: zone }),
 
       setSlotEditOriginalColumnCount: (n: number | null) =>
         set({ slotEditOriginalColumnCount: n }),

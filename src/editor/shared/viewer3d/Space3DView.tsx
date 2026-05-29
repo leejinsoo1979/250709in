@@ -2741,7 +2741,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
     const centerX = 0;
     const centerY = targetY;
-    const centerZ = 0;
+    const centerZ = guideDepthEditMode ? -mmToThreeUnits(depth / 2) : 0;
 
     // 2D front 위치 계산 - 3D와 동일한 거리 사용
     const frontPosition = [centerX, centerY, distance] as [number, number, number];
@@ -2786,10 +2786,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       default:
         return frontPosition;
     }
-  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier, targetY, isMobile]);
+  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier, targetY, isMobile, guideDepthEditMode]);
 
   // 카메라 타겟 배열 memoization (하위 컴포넌트의 불필요한 useEffect 재실행 방지)
-  const cameraTargetArr = useMemo<[number, number, number]>(() => [0, targetY, 0], [targetY]);
+  const cameraTargetArr = useMemo<[number, number, number]>(() => {
+    const depth = spaceInfo?.depth || 600;
+    return [0, targetY, guideDepthEditMode ? -mmToThreeUnits(depth / 2) : 0];
+  }, [targetY, guideDepthEditMode, spaceInfo?.depth]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2862,7 +2865,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const controls = orbitControlsRef.current;
     if (!controls?.object || !spaceInfo) return;
     const camera = controls.object;
-    const cx = 0, cy = targetY, cz = 0;
+    const cx = 0, cy = targetY, cz = guideDepthEditMode ? -mmToThreeUnits((spaceInfo.depth || 600) / 2) : 0;
     if (guideDepthEditMode) {
       const dist = calculateOptimalDistance(spaceInfo.width, spaceInfo.depth || 600, spaceInfo.height, placedModules.length) * 1.2;
       controls.target.set(cx, cy, cz);
@@ -2880,7 +2883,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       controls.update();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [guideDepthEditMode]);
+  }, [guideDepthEditMode, targetY, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, placedModules.length]);
 
   useEffect(() => {
     if (panelSimulationPhase !== 'layout') {
@@ -3974,6 +3977,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <ThreeCanvas
             cameraPosition={cameraPosition}
             cameraTarget={cameraTargetArr}
+            cameraUp={guideDepthEditMode ? [0, 0, -1] : undefined}
             viewMode={viewMode}
             view2DDirection={view2DDirection}
             renderMode={effectiveRenderMode}
@@ -4287,7 +4291,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {!isPanelSimulationPresentation && <FreePlacementDropZone />}
 
               {/* 슬롯 배치 인디케이터 - 가구 선택 시 + 아이콘 표시 */}
-              {!isPanelSimulationPresentation && (viewMode !== '3D' || activePlacementWall === 'front') && <SlotPlacementIndicators onSlotClick={placeFurniture} />}
+              {!isPanelSimulationPresentation && (viewMode !== '3D' || activePlacementWall === 'front' || guideDepthEditMode) && <SlotPlacementIndicators onSlotClick={placeFurniture} />}
 
               {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
               {!isPanelSimulationPresentation && <InternalDimensionDisplay />}

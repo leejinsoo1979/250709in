@@ -151,6 +151,10 @@ export interface FreePlacementGuideSlot {
   confirmed?: boolean; // true면 폭 확정, false/undefined면 편집 중
   depth?: number; // 슬롯 배치 깊이(mm) — 가이드 깊이 모드(탑뷰)에서 설정
   depthGap?: number; // 뒷벽에서 떨어진 갭(mm) — 장이 뒷벽에서 이만큼 띄워서 배치됨
+  upperDepth?: number; // 병합 슬롯의 상부 섹션 배치 깊이(mm)
+  lowerDepth?: number; // 병합 슬롯의 하부 섹션 배치 깊이(mm)
+  upperDepthGap?: number; // 병합 슬롯의 상부 섹션 뒷벽 갭(mm)
+  lowerDepthGap?: number; // 병합 슬롯의 하부 섹션 뒷벽 갭(mm)
 }
 
 // 공간 정보 타입
