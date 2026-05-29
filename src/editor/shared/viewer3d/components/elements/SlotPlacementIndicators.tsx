@@ -1289,30 +1289,39 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const hasSplitSlots = guideSlots.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower');
 
     // ── 가이드 상하분할 5단 높이 (mm) ──
-    // 전체 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 걸레받이 (전체 고정)
-    // 상단몰딩/걸레받이는 우측바와 연동되도록 frameSize.top / baseConfig.height 사용
+    // 전체 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 하단 구간(걸레받이 또는 띄움) (전체 고정)
+    // 상단몰딩/하단 구간은 우측바와 연동되도록 frameSize.top / baseConfig 사용
     const gTopMolding = spaceInfo.frameSize?.top ?? 0;
-    const gBaseboard = spaceInfo.baseConfig?.height ?? 0;
+    const gMoldingGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
+    const gTopClearance = Math.max(0, gTopMolding > 0 ? gTopMolding : gMoldingGap);
+    const isFloatingBase = spaceInfo.baseConfig?.type === 'stand'
+      || (spaceInfo.baseConfig?.height ?? 0) <= 0;
+    const gBaseboard = spaceInfo.baseConfig?.type === 'floor'
+      ? (spaceInfo.baseConfig?.height ?? 0)
+      : 0;
+    const gFloatHeight = isFloatingBase ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0) : 0;
+    const gBottomClearance = isFloatingBase ? gFloatHeight : gBaseboard;
     // 우측바 옵셋/갭과 연동되는 값
     const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
-    const gMoldingGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
     const gBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
-    const gBaseGap = (spaceInfo.baseConfig as any)?.gap ?? 0;
-    const gMoldingVisible = Math.max(0, gTopMolding - gMoldingGap);
-    const gBaseboardVisible = Math.max(0, gBaseboard - gBaseGap);
+    const gBaseGap = isFloatingBase ? 0 : ((spaceInfo.baseConfig as any)?.gap ?? 0);
+    const gMoldingVisible = gTopMolding > 0 ? Math.max(0, gTopMolding - gMoldingGap) : gMoldingGap;
+    const gBaseboardVisible = isFloatingBase ? gFloatHeight : Math.max(0, gBaseboard - gBaseGap);
     const gLower = spaceInfo.guideLowerHeight ?? 800;
     const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
-    // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 걸레받이 (나머지 흡수)
-    const gMidway = Math.max(0, Math.round(fullHeightMm - gTopMolding - gUpperRaw - gLower - gBaseboard));
+    // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 하단 구간 (나머지 흡수)
+    const gMidway = Math.max(0, Math.round(fullHeightMm - gTopClearance - gUpperRaw - gLower - gBottomClearance));
     const gUpper = gUpperRaw;
 
-    // 바닥(0)부터의 누적 경계 (mm): 걸레받이→하부장→미드웨이→상부장→몰딩
-    const yBaseTop = gBaseboard;                  // 걸레받이 상단
+    // 바닥(0)부터의 누적 경계 (mm): 하단 구간→하부장→미드웨이→상부장→몰딩
+    const yBaseTop = gBottomClearance;            // 걸레받이/띄움 상단
     const yBaseGapTop = Math.min(gBaseGap, yBaseTop);
     const yLowerTop = yBaseTop + gLower;          // 하부장 상단 (= 하부 슬롯 영역 상단)
     const yMidTop = yLowerTop + gMidway;          // 미드웨이 상단 (= 상부 슬롯 영역 하단)
     const yUpperTop = yMidTop + gUpper;           // 상부장 상단 (= 몰딩 하단)
-    const yMoldingGapBottom = Math.max(yUpperTop, fullHeightMm - gMoldingGap);
+    const yMoldingGapBottom = gTopMolding > 0
+      ? Math.max(yUpperTop, fullHeightMm - gMoldingGap)
+      : yUpperTop;
     // mm → three units
     const lowerStartY = yBaseTop * 0.01;
     const lowerEndY = yLowerTop * 0.01;
@@ -1443,22 +1452,34 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // ── 상하분할 5단 높이 치수 편집기 (좌/우 가장자리) ──
     const spaceHalfWidth = spaceInfo.width / 2;
     const heightTiers = [
-      { key: 'molding', label: '상단몰딩', value: gMoldingVisible, centerYmm: (yUpperTop + yMoldingGapBottom) / 2 },
+      { key: 'molding', label: gTopMolding > 0 ? '상단몰딩' : '상단갭', value: gMoldingVisible, centerYmm: gTopMolding > 0 ? (yUpperTop + yMoldingGapBottom) / 2 : (yUpperTop + fullHeightMm) / 2 },
       { key: 'upper', label: '상부장', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
       { key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 },
       { key: 'lower', label: '하부장', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
-      { key: 'baseboard', label: '걸레받이', value: gBaseboardVisible, centerYmm: (yBaseGapTop + yBaseTop) / 2 },
+      { key: 'baseboard', label: isFloatingBase ? '띄움높이' : '걸레받이', value: gBaseboardVisible, centerYmm: isFloatingBase ? yBaseTop / 2 : (yBaseGapTop + yBaseTop) / 2 },
     ];
     const commitTier = (key: string, raw: string) => {
       const v = Math.round(parseFloat(raw));
       if (!Number.isFinite(v) || v < 0) return;
-      if (key === 'molding') setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), top: v + gMoldingGap } });
+      if (key === 'molding') {
+        setSpaceInfo({
+          frameSize: gTopMolding > 0
+            ? { ...(spaceInfo.frameSize as any), top: v + gMoldingGap }
+            : { ...(spaceInfo.frameSize as any), top: 0, topGap: v }
+        });
+      }
       else if (key === 'lower') setSpaceInfo({ guideLowerHeight: v });
-      else if (key === 'baseboard') setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), height: v + gBaseGap } });
+      else if (key === 'baseboard') {
+        setSpaceInfo({
+          baseConfig: isFloatingBase
+            ? { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', floatHeight: v }
+            : { ...(spaceInfo.baseConfig as any), type: 'floor', height: v + gBaseGap }
+        });
+      }
       else if (key === 'upper') setSpaceInfo({ guideUpperHeight: v });
       else if (key === 'midway') {
         // 미드웨이 변경 → 상부장이 흡수
-        const newUpper = Math.max(0, Math.round(fullHeightMm - gTopMolding - v - gLower - gBaseboard));
+        const newUpper = Math.max(0, Math.round(fullHeightMm - gTopClearance - v - gLower - gBottomClearance));
         setSpaceInfo({ guideUpperHeight: newUpper });
       }
     };
@@ -1550,7 +1571,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           </Html>
         )}
         {/* 걸레받이 옵셋·갭 — 걸레받이 구간 중앙(하단 가까이) */}
-        {gBaseboard > 0 && (
+        {!isFloatingBase && gBaseboard > 0 && (
           <Html
             key="guide-base-offsetgap"
             position={[0, (yBaseTop / 2) * 0.01, guideZ]}

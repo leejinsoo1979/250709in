@@ -270,12 +270,16 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
   const inheritedBaseFrameHeight = baseFrameCapableExistingModules.find(module => module.baseFrameHeight !== undefined)?.baseFrameHeight;
   const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
-  // spaceInfo.baseConfig.height === 0 이면 공간설정에서 걸레받이 OFF로 저장됨
-  const baseFrameDisabledByGlobal = (spaceInfo.baseConfig?.height ?? 65) <= 0;
+  // 걸레받이 OFF(type=stand) 또는 height=0이면 받침대 없이 배치한다.
+  const baseFrameDisabledByGlobal = spaceInfo.baseConfig?.type === 'stand'
+    || (spaceInfo.baseConfig?.height ?? 65) <= 0;
   const shouldHaveBaseFrame = moduleFlags.hasBase === false
     ? false
     : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
-  const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
+  const globalFloatHeight = (spaceInfo.baseConfig?.type === 'stand' || (spaceInfo.baseConfig?.height ?? 0) <= 0)
+    ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0)
+    : 0;
+  const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : (inheritedFloatHeight || globalFloatHeight));
   const isKitchenLowerModule = moduleData.category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
   const initialBaseFrameHeight = shouldHaveBaseFrame
     ? (hasGuideSlotYRange
@@ -395,7 +399,7 @@ export function calculateYPosition(
 
   // full / lower: 바닥에서 위로 배치
   const isFloat =
-    spaceInfo.baseConfig?.placementType === 'float' &&
+    (spaceInfo.baseConfig?.type === 'stand' || (spaceInfo.baseConfig?.height ?? 0) <= 0) &&
     (spaceInfo.baseConfig?.floatHeight || 0) > 0;
 
   // 가구 개별 띄움 우선 — hasBase=false 가구는 받침대 높이를 더하지 않음

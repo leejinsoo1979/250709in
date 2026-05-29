@@ -26,12 +26,18 @@ export function getFreeGuideZoneYRangeMm(
 
   const fullHeightMm = spaceInfo.height || 0;
   const topMoldingMm = spaceInfo.frameSize?.top ?? 0;
-  const baseboardMm = spaceInfo.baseConfig?.height ?? 0;
+  const topGapMm = (spaceInfo.frameSize as any)?.topGap ?? 0;
+  const topClearanceMm = Math.max(0, topMoldingMm > 0 ? topMoldingMm : topGapMm);
+  const isFloatingBase = spaceInfo.baseConfig?.type === 'stand'
+    || (spaceInfo.baseConfig?.height ?? 0) <= 0;
+  const bottomClearanceMm = isFloatingBase
+    ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0)
+    : Math.max(0, spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0);
   const lowerMm = spaceInfo.guideLowerHeight ?? 800;
   const upperMm = spaceInfo.guideUpperHeight ?? 700;
-  const midwayMm = Math.max(0, Math.round(fullHeightMm - topMoldingMm - upperMm - lowerMm - baseboardMm));
+  const midwayMm = Math.max(0, Math.round(fullHeightMm - topClearanceMm - upperMm - lowerMm - bottomClearanceMm));
 
-  const yBaseTop = baseboardMm;
+  const yBaseTop = bottomClearanceMm;
   const yLowerTop = yBaseTop + lowerMm;
   const yMidTop = yLowerTop + midwayMm;
   const yUpperTop = yMidTop + upperMm;

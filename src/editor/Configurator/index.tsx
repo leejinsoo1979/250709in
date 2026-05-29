@@ -6506,9 +6506,10 @@ const Configurator: React.FC = () => {
             const globalTopGapEmpty = (spaceInfo.frameSize as any)?.topGap ?? 0;
             const globalBaseEmpty = spaceInfo.baseConfig?.height ?? 65;
             const globalBaseOffsetEmpty = (spaceInfo.baseConfig as any)?.offset ?? 0;
-            const globalBaseGapEmpty = (spaceInfo.baseConfig as any)?.gap ?? 0;
+            const globalFloatHeightEmpty = spaceInfo.baseConfig?.floatHeight ?? 0;
             const topEnabledEmpty = globalTopEmpty > 0;
-            const baseEnabledEmpty = globalBaseEmpty > 0;
+            const baseEnabledEmpty = spaceInfo.baseConfig?.type !== 'stand' && globalBaseEmpty > 0;
+            const globalBaseGapEmpty = baseEnabledEmpty ? ((spaceInfo.baseConfig as any)?.gap ?? 0) : 0;
             const numCellStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' };
             const numInputStyle: React.CSSProperties = { width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent' };
             const numLabelStyle: React.CSSProperties = { fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 };
@@ -6569,7 +6570,15 @@ const Configurator: React.FC = () => {
                     <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}>
                       <input type="checkbox" checked={baseEnabledEmpty} onChange={(e) => {
                         const enabled = e.target.checked;
-                        handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: enabled ? (globalBaseEmpty || 65) : 0 } });
+                        handleSpaceInfoUpdate({
+                          baseConfig: {
+                            ...spaceInfo.baseConfig,
+                            type: enabled ? 'floor' : 'stand',
+                            placementType: enabled ? 'ground' : 'float',
+                            height: enabled ? (globalBaseEmpty || 65) : 0,
+                            ...(enabled ? { gap: 0 } : { floatHeight: globalFloatHeightEmpty })
+                          }
+                        });
                       }} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                       <span>전체</span>
                     </label>
@@ -6580,7 +6589,15 @@ const Configurator: React.FC = () => {
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                       <button onClick={() => {
                         const nextEnabled = !baseEnabledEmpty;
-                        handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: nextEnabled ? (globalBaseEmpty || 65) : 0 } });
+                        handleSpaceInfoUpdate({
+                          baseConfig: {
+                            ...spaceInfo.baseConfig,
+                            type: nextEnabled ? 'floor' : 'stand',
+                            placementType: nextEnabled ? 'ground' : 'float',
+                            height: nextEnabled ? (globalBaseEmpty || 65) : 0,
+                            ...(nextEnabled ? { gap: 0 } : { floatHeight: globalFloatHeightEmpty })
+                          }
+                        });
                       }} className={`${styles.miniToggle} ${baseEnabledEmpty ? styles.miniToggleActive : ''}`} />
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                         {baseEnabledEmpty ? (
@@ -6607,8 +6624,21 @@ const Configurator: React.FC = () => {
                         ) : (
                           <div style={numCellStyle}>
                             <span style={numLabelStyle}>띄움높이</span>
-                            <input type="text" inputMode="numeric" value={globalBaseGapEmpty || ''}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
+                            <input type="text" inputMode="numeric" value={globalFloatHeightEmpty || ''}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  handleSpaceInfoUpdate({
+                                    baseConfig: {
+                                      ...spaceInfo.baseConfig,
+                                      type: 'stand',
+                                      placementType: 'float',
+                                      height: 0,
+                                      floatHeight: v === '' ? 0 : parseInt(v, 10)
+                                    } as any
+                                  });
+                                }
+                              }}
                               style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                           </div>
                         )}
@@ -7027,9 +7057,10 @@ const Configurator: React.FC = () => {
             const globalTopGapEmpty = (spaceInfo.frameSize as any)?.topGap ?? 0;
             const globalBaseEmpty = spaceInfo.baseConfig?.height ?? 65;
             const globalBaseOffsetEmpty = (spaceInfo.baseConfig as any)?.offset ?? 0;
-            const globalBaseGapEmpty = (spaceInfo.baseConfig as any)?.gap ?? 0;
+            const globalFloatHeightEmpty = spaceInfo.baseConfig?.floatHeight ?? 0;
             const topEnabledEmpty = globalTopEmpty > 0;
-            const baseEnabledEmpty = globalBaseEmpty > 0;
+            const baseEnabledEmpty = spaceInfo.baseConfig?.type !== 'stand' && globalBaseEmpty > 0;
+            const globalBaseGapEmpty = baseEnabledEmpty ? ((spaceInfo.baseConfig as any)?.gap ?? 0) : 0;
             const numCellStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' };
             const numInputStyle: React.CSSProperties = { width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent' };
             const numLabelStyle: React.CSSProperties = { fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 };
@@ -7131,7 +7162,15 @@ const Configurator: React.FC = () => {
                         checked={baseEnabledEmpty}
                         onChange={(e) => {
                           const enabled = e.target.checked;
-                          handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: enabled ? (globalBaseEmpty || 65) : 0 } });
+                          handleSpaceInfoUpdate({
+                            baseConfig: {
+                              ...spaceInfo.baseConfig,
+                              type: enabled ? 'floor' : 'stand',
+                              placementType: enabled ? 'ground' : 'float',
+                              height: enabled ? (globalBaseEmpty || 65) : 0,
+                              ...(enabled ? { gap: 0 } : { floatHeight: globalFloatHeightEmpty })
+                            } as any
+                          });
                         }}
                         style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
                       />
@@ -7145,7 +7184,15 @@ const Configurator: React.FC = () => {
                       <button
                         onClick={() => {
                           const nextEnabled = !baseEnabledEmpty;
-                          handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: nextEnabled ? (globalBaseEmpty || 65) : 0 } });
+                          handleSpaceInfoUpdate({
+                            baseConfig: {
+                              ...spaceInfo.baseConfig,
+                              type: nextEnabled ? 'floor' : 'stand',
+                              placementType: nextEnabled ? 'ground' : 'float',
+                              height: nextEnabled ? (globalBaseEmpty || 65) : 0,
+                              ...(nextEnabled ? { gap: 0 } : { floatHeight: globalFloatHeightEmpty })
+                            } as any
+                          });
                         }}
                         className={`${styles.miniToggle} ${baseEnabledEmpty ? styles.miniToggleActive : ''}`}
                       />
@@ -7200,11 +7247,19 @@ const Configurator: React.FC = () => {
                             <span style={numLabelStyle}>띄움높이</span>
                             <input
                               type="text" inputMode="numeric"
-                              value={globalBaseGapEmpty || ''}
+                              value={globalFloatHeightEmpty || ''}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
-                                  handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any });
+                                  handleSpaceInfoUpdate({
+                                    baseConfig: {
+                                      ...spaceInfo.baseConfig,
+                                      type: 'stand',
+                                      placementType: 'float',
+                                      height: 0,
+                                      floatHeight: v === '' ? 0 : parseInt(v, 10)
+                                    } as any
+                                  });
                                 }
                               }}
                               style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
