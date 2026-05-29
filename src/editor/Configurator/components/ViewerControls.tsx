@@ -518,8 +518,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               // 배치시작: 가이드 확정
               handleGuideButtonClick();
             } else {
-              // 슬롯수정: 다시 편집 모드로 (초기화)
-              setSpaceInfo({ freePlacementGuideEditing: true });
+              // 슬롯수정: 편집 모드로 + 슬롯 confirmed 해제 → 너비 수정/추가 가능
+              setSpaceInfo({
+                freePlacementGuideEditing: true,
+                freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) => ({ ...s, confirmed: false })),
+              });
             }
           }}
           title={spaceInfo?.freePlacementGuideEditing ? '배치시작' : '슬롯수정'}
