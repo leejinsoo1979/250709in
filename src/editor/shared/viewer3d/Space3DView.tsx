@@ -2748,8 +2748,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드: 항상 정면 시점 (가이드배치 포함 — 비스듬한 아이소 시점 제거)
     if (viewMode === '3D') {
-      // 가이드 깊이 편집 모드: 위에서 내려다보는 탑 시점 (오소그래픽 유지) — 가이드 모드에서만
-      if (guideDepthEditMode && spaceInfo.customGuideMode) {
+      // 탑 시점(T 버튼/가이드 깊이): 위에서 내려다보는 오소그래픽 카메라
+      if (guideDepthEditMode) {
         const topDist = calculateOptimalDistance(width, depth, height, placedModules.length);
         return [centerX, centerY + topDist * 1.2, centerZ + 0.001] as [number, number, number];
       }

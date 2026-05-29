@@ -100,8 +100,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     ...(spaceInfo?.wallConfig?.left ? [{ id: 'left' as const, label: 'L' }] : []),
     { id: 'front' as const, label: 'F' },
     ...(spaceInfo?.wallConfig?.right ? [{ id: 'right' as const, label: 'R' }] : []),
-    // 가이드 모드: 탑뷰(T) 버튼 추가
-    ...(spaceInfo?.customGuideMode ? [{ id: 'top' as const, label: 'T' }] : []),
+    // 탑뷰(T) 버튼 — 모든 모드
+    { id: 'top' as const, label: 'T' },
   ];
   const hasFurniture = placedModules.length > 0;
   // 모든 슬롯이 가구로 채워졌는지 판단 (프레임병합 버튼 표시 조건)
@@ -510,12 +510,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 className={`${styles.segmentButton} ${styles.segmentAccent} ${active ? styles.segmentAccentActive : ''}`}
                 onClick={() => {
                   if (isTop) {
-                    // T: 깊이 모드 — 탑 카메라
+                    // T: 위에서 내려다보는 탑 카메라 (오소그래픽 3D)
                     setGuideDepthEditMode(true);
                     onViewModeChange('3D');
                     setCameraMode('orthographic');
                   } else {
-                    // L/F/R: 깊이 모드 해제 후 해당 면으로
+                    // L/F/R: 탑 모드 해제 후 해당 면으로
                     if (guideDepthEditMode) setGuideDepthEditMode(false);
                     viewCubeRequest.handler?.(btn.id as any);
                   }
