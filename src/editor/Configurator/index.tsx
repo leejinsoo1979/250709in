@@ -8500,6 +8500,11 @@ const Configurator: React.FC = () => {
                     className={`${styles.layoutModeBtn} ${spaceInfo.customGuideMode ? styles.layoutModeActive : ''}`}
                     onClick={() => {
                       if (spaceInfo.customGuideMode) return;
+                      // 가이드 모드 진입 시 기존 배치 가구는 모두 초기화
+                      if (placedModules.length > 0) {
+                        if (!window.confirm('가이드 모드로 전환하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
+                        clearAllModules();
+                      }
                       // 즉시 가이드 모드 활성화 (탭이 바로 가이드로 바뀜) + 가이드 생성 팝업 표시
                       setSpaceInfo({ customGuideMode: true });
                       window.dispatchEvent(new CustomEvent('free-placement-guide:toggle'));
