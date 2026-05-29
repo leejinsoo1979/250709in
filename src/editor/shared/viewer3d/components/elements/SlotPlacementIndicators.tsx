@@ -1048,6 +1048,39 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           </div>
         </Html>
 
+        {/* 공간 외곽 (탑뷰 X-Z 사각형) */}
+        {([
+          [[-halfW, halfD], [halfW, halfD]],
+          [[-halfW, -halfD], [halfW, -halfD]],
+          [[-halfW, -halfD], [-halfW, halfD]],
+          [[halfW, -halfD], [halfW, halfD]],
+        ] as [number, number][][]).map((seg, i) => (
+          <NativeLine
+            key={`guide-depth-outline-${i}`}
+            name="free-placement-guide-line"
+            points={[[seg[0][0] * 0.01, guideZ, -seg[0][1] * 0.01], [seg[1][0] * 0.01, guideZ, -seg[1][1] * 0.01]]}
+            color={guideColor} lineWidth={1.2} opacity={0.5} transparent depthTest={false} depthWrite={false} renderOrder={100000}
+          />
+        ))}
+
+        {/* 슬롯 경계 세로선 (X 분할) — 깊이(Z) 방향 전체 + 슬롯 폭 라벨 */}
+        {zoneSlots.flatMap((slot) => {
+          const leftX = (slot.x - halfW) * 0.01;
+          const rightX = (slot.x + slot.width - halfW) * 0.01;
+          const cX = (slot.x + slot.width / 2 - halfW) * 0.01;
+          return [
+            <NativeLine key={`guide-depth-edge-l-${slot.id}`} name="free-placement-guide-line"
+              points={[[leftX, guideZ, -halfD * 0.01], [leftX, guideZ, halfD * 0.01]]}
+              color={guideColor} lineWidth={1.2} dashed dashSize={0.08} gapSize={0.05} opacity={0.42} transparent depthTest={false} depthWrite={false} renderOrder={100000} />,
+            <NativeLine key={`guide-depth-edge-r-${slot.id}`} name="free-placement-guide-line"
+              points={[[rightX, guideZ, -halfD * 0.01], [rightX, guideZ, halfD * 0.01]]}
+              color={guideColor} lineWidth={1.2} dashed dashSize={0.08} gapSize={0.05} opacity={0.42} transparent depthTest={false} depthWrite={false} renderOrder={100000} />,
+            <Html key={`guide-depth-width-${slot.id}`} position={[cX, guideZ, -(halfD + 80) * 0.01]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
+              <div style={{ color: guideColor, fontSize: 11, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(slot.width)}</div>
+            </Html>,
+          ];
+        })}
+
         {/* 슬롯별 깊이 입력 — 각 슬롯 중앙(X) , 공간 깊이 중앙(Z=0) */}
         {zoneSlots.map((slot) => {
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
