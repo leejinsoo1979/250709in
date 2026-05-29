@@ -1060,18 +1060,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         {(() => {
           const dimZ = -(halfD + 300) * 0.01;
           const lx = -halfW * 0.01, rx = halfW * 0.01;
-          const wallScreenZ = -halfD * 0.01;
           return (
             <React.Fragment key="guide-depth-width-dim">
               <NativeLine name="free-placement-guide-line"
                 points={[[lx, guideZ, dimZ], [rx, guideZ, dimZ]]}
                 color={guideColor} lineWidth={1.2} opacity={0.6} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
-              <NativeLine name="free-placement-guide-line"
-                points={[[lx, guideZ, dimZ], [lx, guideZ, wallScreenZ]]}
-                color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
-              <NativeLine name="free-placement-guide-line"
-                points={[[rx, guideZ, dimZ], [rx, guideZ, wallScreenZ]]}
-                color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
               <Html position={[0, guideZ, dimZ - 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
                 <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(spaceInfo.width)}</div>
               </Html>
@@ -1079,19 +1072,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           );
         })()}
 
-        {/* 공간 외곽 (탑뷰 X-Z 사각형) */}
+        {/* 공간 외곽 좌/우 세로변만 (가로 검정선 제거) */}
         {([
-          [[-halfW, halfD], [halfW, halfD]],
-          [[-halfW, -halfD], [halfW, -halfD]],
           [[-halfW, -halfD], [-halfW, halfD]],
           [[halfW, -halfD], [halfW, halfD]],
         ] as [number, number][][]).map((seg, i) => (
-          <NativeLine
-            key={`guide-depth-outline-${i}`}
-            name="free-placement-guide-line"
+          <NativeLine key={`guide-depth-side-${i}`} name="free-placement-guide-line"
             points={[[seg[0][0] * 0.01, guideZ, -seg[0][1] * 0.01], [seg[1][0] * 0.01, guideZ, -seg[1][1] * 0.01]]}
-            color={guideColor} lineWidth={1.2} opacity={0.5} transparent depthTest={false} depthWrite={false} renderOrder={100000}
-          />
+            color={guideColor} lineWidth={1.2} opacity={0.5} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
         ))}
 
         {/* 슬롯 경계 세로선 (X 분할) + 슬롯 폭 라벨 */}
@@ -1112,14 +1100,26 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           ];
         })}
 
-        {/* 슬롯별 깊이/갭 입력 */}
+        {/* 슬롯별 깊이 박스 + 깊이/갭 입력 */}
         {zoneSlots.flatMap((slot) => {
+          const leftX = (slot.x - halfW) * 0.01;
+          const rightX = (slot.x + slot.width - halfW) * 0.01;
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
+          // 뒷벽 = -halfD (화면 위). 갭만큼 앞(+), 그 다음 깊이만큼.
+          const backScreenZ = -(halfD - gapVal) * 0.01;
+          const frontScreenZ = -(halfD - gapVal - depthVal) * 0.01;
+          const midScreenZ = (backScreenZ + frontScreenZ) / 2;
+          const boxDepthLen = Math.abs(frontScreenZ - backScreenZ);
           return [
-            // 깊이/갭 입력 (슬롯 중앙) — 박스 시각화는 좌표 정합 확보 전까지 보류
-            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, 0]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}>
+            // 깊이 박스 (장 영역 채움)
+            <mesh key={`guide-depth-box-${slot.id}`} position={[centerX, guideZ - 0.001, midScreenZ]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[rightX - leftX, boxDepthLen]} />
+              <meshBasicMaterial color={guideColor} transparent opacity={0.18} depthTest={false} depthWrite={false} />
+            </mesh>,
+            // 깊이/갭 입력 (장 영역 중앙)
+            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                   <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>갭(뒷벽)</span>

@@ -4053,7 +4053,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
-                showDimensions={effectiveShowDimensions}
+                showDimensions={guideDepthEditMode ? false : effectiveShowDimensions}
                 showGuides={effectiveShowGuides}
                 isStep2={isStep2}
                 activeZone={activeZone}
@@ -4265,7 +4265,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               )}
 
               {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용, 자유배치모드에서는 가구 배치 후 표시) */}
-              {effectiveShowDimensions && effectiveShowDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (spaceInfo?.layoutMode !== 'free-placement' || placedModules.length > 0) && (
+              {!guideDepthEditMode && effectiveShowDimensions && effectiveShowDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (spaceInfo?.layoutMode !== 'free-placement' || placedModules.length > 0) && (
                 <CADDimensions2D
                   viewDirection={view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
