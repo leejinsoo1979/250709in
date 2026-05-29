@@ -162,6 +162,16 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
     setIsOpen(!isOpen);
   };
 
+  const requireManufacturerExportAccess = () => {
+    if (accessLoading) return false;
+    if (canUseExport) return true;
+
+    setIsOpen(false);
+    setAccessModalOpen(true);
+    setRequestStatus('');
+    return false;
+  };
+
   const openPartnerRequest = () => {
     setAccessModalOpen(false);
     setRequestModalOpen(true);
@@ -314,6 +324,8 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
 
   // imos MPR 내보내기
   const handleExportMPR = async () => {
+    if (!requireManufacturerExportAccess()) return;
+
     // 모든 패널 수집 (보링 유무와 무관하게 재단 데이터 필요)
     if (optimizedPanels.length === 0) {
       alert('내보낼 패널 데이터가 없습니다.');
@@ -363,6 +375,8 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
 
   // Biesse CIX 내보내기
   const handleExportCIX = async () => {
+    if (!requireManufacturerExportAccess()) return;
+
     if (optimizedPanels.length === 0) {
       alert('내보낼 패널 데이터가 없습니다.');
       return;
@@ -460,24 +474,24 @@ export default function ExportBar({ optimizationResults }: ExportBarProps){
           <button
             className={styles.menuItem}
             onClick={handleExportMPR}
-            disabled={!hasOptimizedPanelData}
+            disabled={!hasOptimizedPanelData || !canUseExport}
           >
             <Cpu size={16} />
             <div className={styles.menuItemContent}>
               <span className={styles.menuItemTitle}>HOMAG (MPR)</span>
-              <span className={styles.menuItemDesc}>woodWOP 네이티브 형식</span>
+              <span className={styles.menuItemDesc}>제조 파트너 전용 woodWOP 네이티브 형식</span>
             </div>
           </button>
 
           <button
             className={styles.menuItem}
             onClick={handleExportCIX}
-            disabled={!hasOptimizedPanelData}
+            disabled={!hasOptimizedPanelData || !canUseExport}
           >
             <Cpu size={16} />
             <div className={styles.menuItemContent}>
               <span className={styles.menuItemTitle}>Biesse (CIX)</span>
-              <span className={styles.menuItemDesc}>bSolid XML 형식</span>
+              <span className={styles.menuItemDesc}>제조 파트너 전용 bSolid XML 형식</span>
             </div>
           </button>
 

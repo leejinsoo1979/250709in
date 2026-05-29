@@ -24,6 +24,8 @@ const NTS_API_KEY = defineSecret('NTS_API_KEY');
 const TELEGRAM_BOT_TOKEN = defineSecret('TELEGRAM_BOT_TOKEN');
 // 관리자 chat_id (텔레그램에서 메시지 받을 채팅방)
 const TELEGRAM_CHAT_ID = defineSecret('TELEGRAM_CHAT_ID');
+// OpenAI API 키 (Q&A AI 답변 생성용)
+const OPENAI_API_KEY = defineSecret('OPENAI_API_KEY');
 
 async function assertAdminCaller(request) {
   const callerUid = request.auth?.uid;
@@ -98,13 +100,15 @@ function scoreKnowledgeSource(question, source) {
   const questionText = String(question || '').toLowerCase();
   const title = String(source.title || '').toLowerCase();
   const content = String(source.content || '').toLowerCase();
+  const tags = Array.isArray(source.tags) ? source.tags.join(' ').toLowerCase() : '';
   const tokens = Array.from(new Set(tokenizeKnowledgeText(questionText)));
   if (tokens.length === 0) return 0;
 
-  let score = 0;
+  let score = Number(source.baseScore || 0);
   for (const token of tokens) {
     if (title.includes(token)) score += 4;
     if (content.includes(token)) score += 2;
+    if (tags.includes(token)) score += 3;
   }
 
   const normalizedTitle = title.replace(/\s+/g, '');
@@ -122,7 +126,11 @@ function scoreKnowledgeSource(question, source) {
 async function loadQnAKnowledgeSources(db) {
   const sources = [];
 
-  const [chatbotSnap, newsSnap, answeredQnaSnap] = await Promise.all([
+  const [knowledgeSnap, chatbotSnap, newsSnap, answeredQnaSnap] = await Promise.all([
+    db.collection('qnaKnowledgeBase').where('isActive', '==', true).limit(400).get().catch((error) => {
+      console.warn('[QnA AI] qnaKnowledgeBase 로드 실패:', error?.message || error);
+      return null;
+    }),
     db.collection('chatbotQAs').where('isActive', '==', true).limit(200).get().catch((error) => {
       console.warn('[QnA AI] chatbotQAs 로드 실패:', error?.message || error);
       return null;
@@ -136,6 +144,29 @@ async function loadQnAKnowledgeSources(db) {
       return null;
     }),
   ]);
+
+  if (knowledgeSnap) {
+    knowledgeSnap.forEach((doc) => {
+      const data = doc.data() || {};
+      const contentParts = [
+        data.summary,
+        data.content,
+        data.rules,
+        data.answerGuidance,
+        data.examples,
+      ].filter(Boolean);
+      if (!data.title || contentParts.length === 0) return;
+      sources.push({
+        id: doc.id,
+        type: 'qnaKnowledgeBase',
+        title: data.title || '프로그램 지식',
+        content: contentParts.join('\n\n'),
+        tags: data.tags || [],
+        category: data.category || '일반',
+        baseScore: 8 + Math.max(0, Number(data.priority || 1) - 1),
+      });
+    });
+  }
 
   if (chatbotSnap) {
     chatbotSnap.forEach((doc) => {
@@ -178,14 +209,109 @@ async function loadQnAKnowledgeSources(db) {
   return sources;
 }
 
-function buildKnowledgeAnswer(bestSource) {
-  return [
-    '아래 답변은 인쇼 프로그램 도움말과 기존 Q&A를 기준으로 자동 생성한 A.I 답변입니다.',
-    '',
-    String(bestSource.content || '').trim(),
-    '',
-    '답변이 현재 상황과 다르거나 재현이 필요한 문제라면 화면 캡처, 프로젝트명, 작업 순서를 남겨주세요. 관리자가 이어서 확인하겠습니다.',
-  ].join('\n');
+function extractOpenAIText(responseData) {
+  if (typeof responseData?.output_text === 'string') {
+    return responseData.output_text;
+  }
+
+  const output = Array.isArray(responseData?.output) ? responseData.output : [];
+  const texts = [];
+  for (const item of output) {
+    const content = Array.isArray(item?.content) ? item.content : [];
+    for (const part of content) {
+      if (typeof part?.text === 'string') texts.push(part.text);
+    }
+  }
+  return texts.join('\n').trim();
+}
+
+async function generateLiveQnAAnswer(openaiApiKey, question, rankedSources) {
+  const sourceContext = rankedSources.map((source, index) => [
+    `[${index + 1}] id=${source.id} type=${source.type} category=${source.category || ''} score=${source.score}`,
+    `title: ${source.title}`,
+    `content:\n${String(source.content || '').slice(0, 2500)}`,
+  ].join('\n')).join('\n\n---\n\n');
+
+  const payload = {
+    model: 'gpt-4.1-mini',
+    input: [
+      {
+        role: 'system',
+        content: [
+          '당신은 인쇼 가구 설계 프로그램의 Q&A 답변 담당자입니다.',
+          '제공된 근거 자료에 있는 내용만 사용해서 한국어로 답변하세요.',
+          '근거 자료를 그대로 복사하지 말고, 사용자의 질문 상황에 맞게 새 답변을 작성하세요.',
+          '근거가 부족하거나 질문을 해결하기 어렵다면 canAnswer=false로 답하세요.',
+          '추측, 임의 계산, 코드에 없는 동작 단정은 금지합니다.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: [
+          '사용자 질문:',
+          question,
+          '',
+          '근거 자료:',
+          sourceContext || '(근거 자료 없음)',
+        ].join('\n'),
+      },
+    ],
+    text: {
+      format: {
+        type: 'json_schema',
+        name: 'qna_ai_answer',
+        strict: true,
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            canAnswer: { type: 'boolean' },
+            confidence: { type: 'number' },
+            answer: { type: 'string' },
+            reason: { type: 'string' },
+            sourceIds: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+          },
+          required: ['canAnswer', 'confidence', 'answer', 'reason', 'sourceIds'],
+        },
+      },
+    },
+    max_output_tokens: 1400,
+  };
+
+  let response;
+  let lastError;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      response = await axios.post('https://api.openai.com/v1/responses', payload, {
+        headers: {
+          Authorization: `Bearer ${openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 30000,
+      });
+      lastError = null;
+      break;
+    } catch (error) {
+      lastError = error;
+      const status = error?.response?.status || 0;
+      const retryable = status === 429 || status >= 500 || !status;
+      if (!retryable || attempt === 3) break;
+      await new Promise(resolve => setTimeout(resolve, attempt * 1200));
+    }
+  }
+
+  if (!response) {
+    throw lastError || new Error('OpenAI 응답 생성 실패');
+  }
+
+  const text = extractOpenAIText(response.data);
+  if (!text) {
+    throw new Error('OpenAI 응답이 비어 있습니다.');
+  }
+  return JSON.parse(text);
 }
 
 async function createQnAAnsweredNotification(db, qnaId, qna, wasAnswered) {
@@ -283,7 +409,7 @@ exports.notifyQnACreated = onCall(
 );
 
 exports.generateQnAAiAnswer = onCall(
-  { region: 'asia-northeast3' },
+  { secrets: [OPENAI_API_KEY], region: 'asia-northeast3' },
   async (request) => {
     const { callerUid } = await assertAdminCaller(request);
 
@@ -313,34 +439,61 @@ exports.generateQnAAiAnswer = onCall(
       .map((source) => ({ ...source, score: scoreKnowledgeSource(question, source) }))
       .filter((source) => source.score > 0)
       .sort((a, b) => b.score - a.score)
-      .slice(0, 5);
+      .slice(0, 8);
 
     const best = ranked[0];
-    if (!best || best.score < 6) {
-      const fallbackAnswer = [
-        '아래 답변은 인쇼 프로그램 도움말과 기존 Q&A를 기준으로 자동 생성한 A.I 답변입니다.',
-        '',
-        '현재 질문과 정확히 일치하는 도움말을 찾지 못했습니다.',
-        '화면 캡처, 프로젝트명, 작업 순서가 있으면 관리자가 더 정확히 확인할 수 있습니다.',
-      ].join('\n');
+    const aiSources = ranked.slice(0, 5).map(({ id, type, title, score }) => ({ id, type, title, score }));
+
+    if (!best || best.score < 10) {
+      const fallbackAnswer = '답변용 지식베이스에서 이 질문에 대한 충분한 근거를 찾지 못했습니다. 관리자가 직접 확인해야 합니다.';
       await qnaRef.set({
-        answer: fallbackAnswer,
-        answerImages: [],
-        status: 'answered',
-        answeredBy: 'ai',
-        answeredByName: 'A.I Q&A 관리자',
-        answeredAt: admin.firestore.FieldValue.serverTimestamp(),
         aiStatus: 'needs_admin',
         aiAnswer: fallbackAnswer,
-        aiSources: ranked.map(({ id, type, title, score }) => ({ id, type, title, score })),
+        aiSources,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       }, { merge: true });
-      await createQnAAnsweredNotification(db, qnaId, qna, wasAnswered);
-      return { ok: true, status: 'answered', sourceCount: ranked.length };
+      return { ok: true, status: 'needs_admin', sourceCount: ranked.length, reason: fallbackAnswer };
     }
 
-    const answer = buildKnowledgeAnswer(best);
-    const aiSources = ranked.slice(0, 3).map(({ id, type, title, score }) => ({ id, type, title, score }));
+    let generated;
+    try {
+      const openaiApiKey = OPENAI_API_KEY.value();
+      if (!openaiApiKey) {
+        throw new Error('OPENAI_API_KEY secret is not configured');
+      }
+      generated = await generateLiveQnAAnswer(openaiApiKey, question, ranked);
+    } catch (error) {
+      const reason = 'OpenAI 응답 오류로 자동 답변을 완료하지 않았습니다. 잠시 후 다시 AI 답변을 누르거나 직접입력으로 처리하세요.';
+      await qnaRef.set({
+        aiStatus: 'needs_admin',
+        aiAnswer: reason,
+        aiError: error?.message || 'unknown',
+        aiSources,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      console.error('[QnA AI] OpenAI 답변 생성 실패:', error?.response?.data || error?.message || error);
+      return { ok: true, status: 'needs_admin', sourceCount: aiSources.length, reason };
+    }
+
+    const confidence = Number(generated?.confidence || 0);
+    const answerBody = String(generated?.answer || '').trim();
+    if (!generated?.canAnswer || confidence < 0.72 || answerBody.length < 20) {
+      const reason = String(generated?.reason || '근거가 부족해 자동 답변을 완료하지 않았습니다.');
+      await qnaRef.set({
+        aiStatus: 'needs_admin',
+        aiAnswer: reason,
+        aiSources,
+        aiConfidence: confidence,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      return { ok: true, status: 'needs_admin', sourceCount: aiSources.length, confidence, reason };
+    }
+
+    const answer = [
+      answerBody,
+      '',
+      '※ 이 답변은 프로그램의 지식베이스를 기반으로 A.I로 실시간 작성되었습니다.',
+    ].join('\n');
 
     await qnaRef.set({
       answer,
@@ -352,6 +505,7 @@ exports.generateQnAAiAnswer = onCall(
       aiStatus: 'answered',
       aiAnswer: answer,
       aiSources,
+      aiConfidence: confidence,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
     await createQnAAnsweredNotification(db, qnaId, qna, wasAnswered);

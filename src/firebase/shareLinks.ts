@@ -615,6 +615,11 @@ export async function getMySharedLinks(userId: string) {
 
 export async function getProjectCollaborators(projectId: string): Promise<ProjectCollaborator[]> {
   try {
+    if (!projectId) {
+      console.warn('⚠️ 프로젝트 협업자 조회 건너뜀: projectId 없음');
+      return [];
+    }
+
     // projectId로 시작하는 모든 sharedProjectAccess 문서 조회
     const q = query(
       collection(db, 'sharedProjectAccess'),

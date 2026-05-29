@@ -267,7 +267,7 @@ export function useExplorerData(
 
     // 아직 조회 안 한 프로젝트만 추출
     const fetched = fetchedCollaboratorIdsRef.current;
-    const toFetch = allProjects.filter(p => !fetched.has(p.id));
+    const toFetch = allProjects.filter(p => p.id && !fetched.has(p.id));
     if (toFetch.length === 0) return;
 
     const fetchPending = async () => {
