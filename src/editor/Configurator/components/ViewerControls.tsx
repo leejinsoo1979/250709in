@@ -510,12 +510,13 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 className={`${styles.segmentButton} ${styles.segmentAccent} ${active ? styles.segmentAccentActive : ''}`}
                 onClick={() => {
                   if (isTop) {
-                    // T: 위에서 내려다보는 탑 카메라 (오소그래픽 3D)
+                    // T: 깊이 편집 모드 ON + 기즈모 top 시점 (카메라·기즈모 동기화)
                     setGuideDepthEditMode(true);
                     onViewModeChange('3D');
                     setCameraMode('orthographic');
+                    viewCubeRequest.handler?.('top');
                   } else {
-                    // L/F/R: 탑 모드 해제 후 해당 면으로
+                    // L/F/R: 깊이 모드 해제 후 해당 면으로 (기즈모 동기화)
                     if (guideDepthEditMode) setGuideDepthEditMode(false);
                     viewCubeRequest.handler?.(btn.id as any);
                   }
