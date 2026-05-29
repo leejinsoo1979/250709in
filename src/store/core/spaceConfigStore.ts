@@ -149,6 +149,7 @@ export interface FreePlacementGuideSlot {
   guideZone?: 'full' | 'upper' | 'lower'; // 자유배치 가이드 상/하/전체 영역
   guideGroupId?: string; // 분할 슬롯이 속한 원본 슬롯 그룹
   confirmed?: boolean; // true면 폭 확정, false/undefined면 편집 중
+  depth?: number; // 슬롯 배치 깊이(mm) — 가이드 깊이 모드(탑뷰)에서 설정
 }
 
 // 공간 정보 타입
@@ -246,6 +247,8 @@ export interface SpaceInfo {
   guideMidway?: number;       // 미드웨이 (상부장↔하부장 빈 공간)
   guideLowerHeight?: number;  // 하부장
   guideBaseboard?: number;    // 걸레받이
+  // 가이드 깊이 모드(탑뷰) 공통 앞/뒤 고정 기준
+  guideDepthAnchor?: 'front' | 'back';
   // 카테고리별 가구 기본 깊이 (mm)
   furnitureDepthDefaults?: FurnitureDepthDefaults;
 

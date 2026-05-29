@@ -85,7 +85,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   guideSetupRequest = false,
   onGuideSetupRequestHandled
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, cameraMode, setCameraMode } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, cameraMode, setCameraMode, guideDepthEditMode, setGuideDepthEditMode } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = isSuperAdmin(user?.email);
   const canCreateFreePlacementGuide = user?.email?.toLowerCase().trim() === GUIDE_BUTTON_EMAIL;
@@ -586,6 +586,30 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </div>
           );
         })()}
+
+        {/* 가이드 모드: 폭/깊이 토글 — 깊이 선택 시 탑뷰로 슬롯별 깊이 설정 */}
+        {spaceInfo?.customGuideMode && (
+          <div className={styles.segmentedControl}>
+            <button
+              className={`${styles.segmentButton} ${!guideDepthEditMode ? styles.segmentActive : ''}`}
+              onClick={() => {
+                if (!guideDepthEditMode) return;
+                setGuideDepthEditMode(false);
+                onViewModeChange('2D');
+                setView2DDirection('front');
+              }}
+            >폭</button>
+            <button
+              className={`${styles.segmentButton} ${guideDepthEditMode ? styles.segmentActive : ''}`}
+              onClick={() => {
+                if (guideDepthEditMode) return;
+                setGuideDepthEditMode(true);
+                onViewModeChange('2D');
+                setView2DDirection('top');
+              }}
+            >깊이</button>
+          </div>
+        )}
 
         <div className={styles.segmentedControl}>
           {viewModes.map((mode) => (
