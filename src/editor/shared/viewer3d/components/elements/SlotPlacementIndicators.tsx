@@ -1007,6 +1007,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // 상단몰딩/걸레받이는 우측바와 연동되도록 frameSize.top / baseConfig.height 사용
     const gTopMolding = spaceInfo.frameSize?.top ?? 0;
     const gBaseboard = spaceInfo.baseConfig?.height ?? 0;
+    // 우측바 옵셋/갭과 연동되는 값
+    const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
+    const gBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
+    const gBaseGap = (spaceInfo.baseConfig as any)?.gap ?? 0;
     const gLower = spaceInfo.guideLowerHeight ?? 800;
     const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
     // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 걸레받이 (나머지 흡수)
@@ -1182,6 +1186,57 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         </Html>
       ));
 
+    // 상단몰딩 옵셋 / 걸레받이 옵셋·갭 편집기 (우측바와 연동) — 중앙 상/하단에 표시
+    const offsetGapEditorStyle: React.CSSProperties = {
+      width: 50, padding: '2px 4px', fontSize: 12, fontWeight: 600, textAlign: 'center',
+      border: `1.5px dashed ${guideColor}`, borderRadius: 4, outline: 'none',
+      background: 'rgba(255,255,255,0.95)', color: guideColor, lineHeight: 1.1,
+    };
+    const offsetGapField = (labelText: string, val: number, commit: (v: number) => void, kkey: string) => (
+      <div key={kkey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+        <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>{labelText}</span>
+        <input
+          type="number"
+          defaultValue={Math.round(val)}
+          key={`${kkey}-${Math.round(val)}`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+          onBlur={(e) => { const n = Math.round(parseFloat(e.target.value)); if (Number.isFinite(n)) commit(n); }}
+          style={offsetGapEditorStyle}
+        />
+      </div>
+    );
+    const renderOffsetGapEditors = () => (
+      <>
+        {/* 상단몰딩 옵셋 — 몰딩 구간 중앙(상단 가까이) */}
+        {gTopMolding > 0 && (
+          <Html
+            key="guide-molding-offset"
+            position={[0, ((yUpperTop + fullHeightMm) / 2) * 0.01, guideZ]}
+            center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+          >
+            <div style={{ display: 'flex', gap: 6 }}>
+              {offsetGapField('옵셋', gMoldingOffset, (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topOffset: v } }), 'molding-offset')}
+            </div>
+          </Html>
+        )}
+        {/* 걸레받이 옵셋·갭 — 걸레받이 구간 중앙(하단 가까이) */}
+        {gBaseboard > 0 && (
+          <Html
+            key="guide-base-offsetgap"
+            position={[0, (yBaseTop / 2) * 0.01, guideZ]}
+            center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+          >
+            <div style={{ display: 'flex', gap: 6 }}>
+              {offsetGapField('옵셋', gBaseOffset, (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } }), 'base-offset')}
+              {offsetGapField('갭', gBaseGap, (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: v } }), 'base-gap')}
+            </div>
+          </Html>
+        )}
+      </>
+    );
+
     // 전체 폭 공통 경계(바닥/걸레받이상단/상부장상단/천장): 몰딩·걸레받이는 전체 공통
     const fullWidthBoundaryYmm = [0, yBaseTop, yUpperTop, fullHeightMm];
     // 미드웨이 경계(하부장상단/미드웨이상단): 분할(upper/lower) 슬롯 구간에만 — 병합(full)은 제외
@@ -1223,6 +1278,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         {hasSplitSlots && renderTierLines()}
         {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01)}
         {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01)}
+        {hasSplitSlots && renderOffsetGapEditors()}
         {guideSlots.flatMap((slot) => {
           const [startY, endY] = getSlotYRange(slot);
           const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
