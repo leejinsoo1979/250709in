@@ -1122,18 +1122,22 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
-          // 탑뷰 화면 위쪽 = 뒷벽(+halfD). 갭 0이면 장이 뒷벽에 붙음.
-          // 장 뒷면 = +halfD - 갭, 장 앞면 = +halfD - 갭 - 깊이 (앞쪽=−Z)
-          const backZmm = halfD - gapVal;             // 장 뒷면 (mm)
-          const frontZmm = halfD - gapVal - depthVal;  // 장 앞면 (mm)
-          // 화면 변환: screenZ = -zmm*0.01
-          const backScreenZ = -backZmm * 0.01;
-          const frontScreenZ = -frontZmm * 0.01;
+          // 외곽 뒷변과 동일 좌표계 사용: 뒷변 점 [x, halfD] → screenZ = -halfD*0.01
+          // 갭 0이면 장 뒷면 = 뒷벽(halfD). 앞쪽으로 갈수록 z 감소.
+          const backScreenZ = -(halfD - gapVal) * 0.01;            // 장 뒷면 (화면)
+          const frontScreenZ = -(halfD - gapVal - depthVal) * 0.01; // 장 앞면 (화면)
           const midScreenZ = (backScreenZ + frontScreenZ) / 2;
+          const boxDepthLen = Math.abs(frontScreenZ - backScreenZ);
           return [
-            // 깊이 박스 (장 영역 채움)
+            // 깊이 박스 — 외곽과 동일한 NativeLine 사각형 4변 (부호 혼동 제거)
+            <NativeLine key={`guide-depth-box-b-${slot.id}`} name="free-placement-guide-line"
+              points={[[leftX, guideZ, backScreenZ], [rightX, guideZ, backScreenZ]]}
+              color={guideColor} lineWidth={1} opacity={0.55} transparent depthTest={false} depthWrite={false} renderOrder={100000} />,
+            <NativeLine key={`guide-depth-box-f-${slot.id}`} name="free-placement-guide-line"
+              points={[[leftX, guideZ, frontScreenZ], [rightX, guideZ, frontScreenZ]]}
+              color={guideColor} lineWidth={1} opacity={0.55} transparent depthTest={false} depthWrite={false} renderOrder={100000} />,
             <mesh key={`guide-depth-box-${slot.id}`} position={[centerX, guideZ - 0.001, midScreenZ]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[rightX - leftX, Math.abs(frontScreenZ - backScreenZ)]} />
+              <planeGeometry args={[rightX - leftX, boxDepthLen]} />
               <meshBasicMaterial color={guideColor} transparent opacity={0.18} depthTest={false} depthWrite={false} />
             </mesh>,
             // 깊이/갭 입력 (장 영역 중앙)
