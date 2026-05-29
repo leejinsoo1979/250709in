@@ -597,18 +597,20 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={`${styles.segmentButton} ${!guideDepthEditMode ? styles.segmentActive : ''}`}
               onClick={() => {
                 if (!guideDepthEditMode) return;
+                // 폭: 정면 오소그래픽 복귀 (3D 유지)
                 setGuideDepthEditMode(false);
-                onViewModeChange('2D');
-                setView2DDirection('front');
+                onViewModeChange('3D');
+                setCameraMode('orthographic');
               }}
             >폭</button>
             <button
               className={`${styles.segmentButton} ${guideDepthEditMode ? styles.segmentActive : ''}`}
               onClick={() => {
                 if (guideDepthEditMode) return;
+                // 깊이: 3D 오소그래픽 유지한 채 카메라만 탑(위에서 내려다보기)으로
                 setGuideDepthEditMode(true);
-                onViewModeChange('2D');
-                setView2DDirection('top');
+                onViewModeChange('3D');
+                setCameraMode('orthographic');
               }}
             >깊이</button>
           </div>

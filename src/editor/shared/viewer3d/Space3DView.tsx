@@ -2046,6 +2046,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
   const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode, closePanelSimulation } = useUIStore();
   const activePlacementWall = useUIStore(state => state.activePlacementWall);
+  const guideDepthEditMode = useUIStore(state => state.guideDepthEditMode);
   const { ready: panelSimulationAccessReady, canUsePanelSimulation } = usePanelSimulationAccess();
   const isInspectionMode3D = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const effectiveRenderMode = isInspectionMode3D ? 'solid' : renderMode;
@@ -2747,6 +2748,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드: 항상 정면 시점 (가이드배치 포함 — 비스듬한 아이소 시점 제거)
     if (viewMode === '3D') {
+      // 가이드 깊이 편집 모드: 위에서 내려다보는 탑 시점 (오소그래픽 유지)
+      if (guideDepthEditMode) {
+        const topDist = calculateOptimalDistance(width, depth, height, placedModules.length);
+        return [centerX, centerY + topDist * 1.2, centerZ + 0.001] as [number, number, number];
+      }
       // 모바일에서는 1.5배 거리
       if (isMobile) {
         return [centerX, centerY, distance * 1.5] as [number, number, number];
