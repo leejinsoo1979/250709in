@@ -16,6 +16,7 @@ import {
   getFreePlacementGuideBoundsX,
   getModuleBoundsX
 } from '@/editor/shared/utils/freePlacementUtils';
+import { TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM } from '@/editor/shared/utils/panelThickness';
 
 interface SlotPlacementIndicatorsProps {
   onSlotClick: (slotIndex: number, zone?: 'normal' | 'dropped') => void;
@@ -1003,7 +1004,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const guideZ = 0.006;
     const guideColor = colors?.primary || '#3b82f6';
     const halfW = spaceInfo.width / 2;
-    const halfD = (spaceInfo.depth || 600) / 2;
+    const panelDepthMm = spaceInfo.depth || 600;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+    const backGuideZ = (furnitureZOffsetMm - furnitureDepthMm / 2 - TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM) * 0.01;
+    const frontGuideZ = backGuideZ + panelDepthMm * 0.01;
 
     const commitDepth = (slotId: string, raw: string) => {
       const v = Math.round(parseFloat(raw));
@@ -1043,7 +1048,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       <>
         {/* 상단 컨트롤: 상부/하부 토글 (공간 위쪽 바깥) */}
         <Html
-          position={[0, guideZ, -(halfD + 550) * 0.01]}
+          position={[0, guideZ, backGuideZ - 5.5]}
           center zIndexRange={[300, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
         >
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -1058,9 +1063,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
         {/* 전체 공간 너비 치수 (상단) + 연장선 */}
         {(() => {
-          const dimZ = -(halfD + 300) * 0.01;
+          const dimZ = backGuideZ - 3;
           const lx = -halfW * 0.01, rx = halfW * 0.01;
-          const wallScreenZ = -halfD * 0.01; // 공간 뒷변
           return (
             <React.Fragment key="guide-depth-width-dim">
               <NativeLine name="free-placement-guide-line"
@@ -1068,10 +1072,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 color={guideColor} lineWidth={1.2} opacity={0.6} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
               {/* 연장선 좌/우 (치수선 → 공간 뒷변) */}
               <NativeLine name="free-placement-guide-line"
-                points={[[lx, guideZ, dimZ], [lx, guideZ, wallScreenZ]]}
+                points={[[lx, guideZ, dimZ], [lx, guideZ, backGuideZ]]}
                 color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
               <NativeLine name="free-placement-guide-line"
-                points={[[rx, guideZ, dimZ], [rx, guideZ, wallScreenZ]]}
+                points={[[rx, guideZ, dimZ], [rx, guideZ, backGuideZ]]}
                 color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
               <Html position={[0, guideZ, dimZ - 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
                 <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(spaceInfo.width)}</div>
@@ -1081,12 +1085,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         })()}
 
         {/* 공간 외곽 좌/우 세로변만 (가로 검정선 제거) */}
-        {([
-          [[-halfW, -halfD], [-halfW, halfD]],
-          [[halfW, -halfD], [halfW, halfD]],
-        ] as [number, number][][]).map((seg, i) => (
+        {([-halfW, halfW] as number[]).map((xMm, i) => (
           <NativeLine key={`guide-depth-side-${i}`} name="free-placement-guide-line"
-            points={[[seg[0][0] * 0.01, guideZ, -seg[0][1] * 0.01], [seg[1][0] * 0.01, guideZ, -seg[1][1] * 0.01]]}
+            points={[[xMm * 0.01, guideZ, backGuideZ], [xMm * 0.01, guideZ, frontGuideZ]]}
             color={guideColor} lineWidth={1.2} opacity={0.5} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
         ))}
 
@@ -1097,12 +1098,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const cX = (slot.x + slot.width / 2 - halfW) * 0.01;
           return [
             <NativeLine key={`guide-depth-edge-l-${slot.id}`} name="free-placement-guide-line"
-              points={[[leftX, guideZ, -halfD * 0.01], [leftX, guideZ, halfD * 0.01]]}
+              points={[[leftX, guideZ, backGuideZ], [leftX, guideZ, frontGuideZ]]}
               color={guideColor} lineWidth={1.2} dashed dashSize={0.08} gapSize={0.05} opacity={0.42} transparent depthTest={false} depthWrite={false} renderOrder={100000} />,
             <NativeLine key={`guide-depth-edge-r-${slot.id}`} name="free-placement-guide-line"
-              points={[[rightX, guideZ, -halfD * 0.01], [rightX, guideZ, halfD * 0.01]]}
+              points={[[rightX, guideZ, backGuideZ], [rightX, guideZ, frontGuideZ]]}
               color={guideColor} lineWidth={1.2} dashed dashSize={0.08} gapSize={0.05} opacity={0.42} transparent depthTest={false} depthWrite={false} renderOrder={100000} />,
-            <Html key={`guide-depth-width-${slot.id}`} position={[cX, guideZ, -(halfD + 80) * 0.01]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
+            <Html key={`guide-depth-width-${slot.id}`} position={[cX, guideZ, backGuideZ - 0.8]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
               <div style={{ color: guideColor, fontSize: 11, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(slot.width)}</div>
             </Html>,
           ];
@@ -1115,9 +1116,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
-          // 뒷벽 = -halfD (화면 위). 갭만큼 앞(+), 그 다음 깊이만큼.
-          const backScreenZ = -(halfD - gapVal) * 0.01;
-          const frontScreenZ = -(halfD - gapVal - depthVal) * 0.01;
+          const backScreenZ = backGuideZ + gapVal * 0.01;
+          const frontScreenZ = backScreenZ + depthVal * 0.01;
           const midScreenZ = (backScreenZ + frontScreenZ) / 2;
           const boxDepthLen = Math.abs(frontScreenZ - backScreenZ);
           return [
