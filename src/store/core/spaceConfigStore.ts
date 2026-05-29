@@ -150,6 +150,7 @@ export interface FreePlacementGuideSlot {
   guideGroupId?: string; // 분할 슬롯이 속한 원본 슬롯 그룹
   confirmed?: boolean; // true면 폭 확정, false/undefined면 편집 중
   depth?: number; // 슬롯 배치 깊이(mm) — 가이드 깊이 모드(탑뷰)에서 설정
+  depthGap?: number; // 뒷벽에서 떨어진 갭(mm) — 장이 뒷벽에서 이만큼 띄워서 배치됨
 }
 
 // 공간 정보 타입

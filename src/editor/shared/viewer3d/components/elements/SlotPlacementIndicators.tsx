@@ -1015,6 +1015,16 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       });
     };
 
+    const commitGap = (slotId: string, raw: string) => {
+      const v = Math.round(parseFloat(raw));
+      if (!Number.isFinite(v) || v < 0) return;
+      setSpaceInfo({
+        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) =>
+          s.id === slotId ? { ...s, depthGap: v } : s
+        ),
+      });
+    };
+
     const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
       padding: '4px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
       border: `2px solid ${guideColor}`, borderRadius: 6,
@@ -1081,29 +1091,47 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           ];
         })}
 
-        {/* 슬롯별 깊이 입력 — 각 슬롯 중앙(X) , 공간 깊이 중앙(Z=0) */}
-        {zoneSlots.map((slot) => {
+        {/* 슬롯별 깊이 박스 시각화 + 깊이/갭 입력
+            뒷벽(Z=-halfD)에서 갭만큼 띄우고 깊이만큼 장 배치 */}
+        {zoneSlots.flatMap((slot) => {
+          const leftX = (slot.x - halfW) * 0.01;
+          const rightX = (slot.x + slot.width - halfW) * 0.01;
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepth);
-          return (
-            <Html
-              key={`guide-depth-input-${slot.id}`}
-              position={[centerX, guideZ, 0]}
-              center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
-            >
-              <input
-                type="number"
-                defaultValue={depthVal}
-                key={`${slot.id}-${depthVal}`}
-                min={1}
-                onPointerDown={(e) => e.stopPropagation()}
-                onWheel={(e) => e.stopPropagation()}
-                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                onBlur={(e) => commitDepth(slot.id, e.target.value)}
-                style={depthInputStyle}
-              />
-            </Html>
-          );
+          const gapVal = Math.round(slot.depthGap ?? 0);
+          // mm 기준: 뒷벽 z=-halfD. 장 뒷면 = 뒷벽 + 갭, 장 앞면 = 뒷벽 + 갭 + 깊이
+          const backZmm = -halfD + gapVal;            // 장 뒷면 (mm)
+          const frontZmm = -halfD + gapVal + depthVal; // 장 앞면 (mm)
+          // 화면 변환: screenZ = -zmm*0.01
+          const backScreenZ = -backZmm * 0.01;
+          const frontScreenZ = -frontZmm * 0.01;
+          const midScreenZ = (backScreenZ + frontScreenZ) / 2;
+          return [
+            // 깊이 박스 (장 영역 채움)
+            <mesh key={`guide-depth-box-${slot.id}`} position={[centerX, guideZ - 0.001, midScreenZ]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[rightX - leftX, Math.abs(frontScreenZ - backScreenZ)]} />
+              <meshBasicMaterial color={guideColor} transparent opacity={0.18} depthTest={false} depthWrite={false} />
+            </mesh>,
+            // 깊이/갭 입력 (장 영역 중앙)
+            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>깊이</span>
+                  <input type="number" defaultValue={depthVal} key={`d-${slot.id}-${depthVal}`} min={1}
+                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    onBlur={(e) => commitDepth(slot.id, e.target.value)} style={depthInputStyle} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>갭(뒷벽)</span>
+                  <input type="number" defaultValue={gapVal} key={`g-${slot.id}-${gapVal}`} min={0}
+                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    onBlur={(e) => commitGap(slot.id, e.target.value)} style={{ ...depthInputStyle, borderStyle: 'dashed' }} />
+                </div>
+              </div>
+            </Html>,
+          ];
         })}
       </>
     );
