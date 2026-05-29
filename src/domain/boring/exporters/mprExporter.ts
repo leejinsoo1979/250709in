@@ -113,6 +113,19 @@ function formatMprDecimal4(value: number): string {
   return value.toFixed(4);
 }
 
+function shouldRotateLeftSidePanelMpr(panel: PanelBoringData): boolean {
+  return isFurnitureSidePanelForBackPanelGroove(panel) && isLeftSidePanel(panel);
+}
+
+function rotatePoint180ForMpr(panel: PanelBoringData, point: { x: number; y: number }): { x: number; y: number } {
+  if (!shouldRotateLeftSidePanelMpr(panel)) return point;
+
+  return {
+    x: panel.width - point.x,
+    y: panel.height - point.y,
+  };
+}
+
 function isFixedPanelThroughBoring(boring: Boring): boolean {
   return boring.note === 'fixed-panel-through';
 }
@@ -135,10 +148,11 @@ function generateBohrVert(boring: Boring, panel: PanelBoringData): string {
   if (boring.angle !== undefined) {
     wi = `\nWI="${formatMprDecimal4(boring.angle)}"`;
   }
+  const point = rotatePoint180ForMpr(panel, { x: boring.x, y: boring.y });
 
   return `<102 \\BohrVert\\
-XA="${formatMprDecimal4(boring.x)}"
-YA="${formatMprDecimal4(boring.y)}"
+XA="${formatMprDecimal4(point.x)}"
+YA="${formatMprDecimal4(point.y)}"
 TI="${formatMprDecimal4(ti)}"
 DU="${formatMprDecimal4(du)}"
 F_="STANDARD"
@@ -170,12 +184,13 @@ function generateBohrHoriz(boring: Boring, panel: PanelBoringData): string {
   const ti = boring.depth;
   const du = boring.diameter;
   const za = panel.thickness / 2;
+  const point = rotatePoint180ForMpr(panel, { x: boring.x, y: boring.y });
 
   if (boring.note === 'fixed-panel-side-bore') {
     const bm = boring.face === 'right' ? 'XM' : 'XP';
     return `<103 \\BohrHoriz\\
-XA="${formatMprDecimal4(boring.x)}"
-YA="${formatMprDecimal4(boring.y)}"
+XA="${formatMprDecimal4(point.x)}"
+YA="${formatMprDecimal4(point.y)}"
 ZA="${formatMprDecimal4(za)}"
 TI="${formatMprDecimal4(ti)}"
 DU="${formatMprDecimal4(du)}"
@@ -188,8 +203,8 @@ WI="${formatMprDecimal4(wi)}"
   }
 
   return `<103 \\BohrHoriz\\
-XA="${boring.x.toFixed(1)}"
-YA="${boring.y.toFixed(1)}"
+XA="${point.x.toFixed(1)}"
+YA="${point.y.toFixed(1)}"
 ZA="${formatMprCoordinate(za)}"
 TI="${formatMprNumber(ti)}"
 AB="32"
@@ -302,11 +317,12 @@ function generateContourBlock(
   blockNumber: number,
   name: string,
   points: Array<{ x: number; y: number }>,
-  z: number = 0
+  z: number = 0,
+  transformPoint: (point: { x: number; y: number }) => { x: number; y: number } = point => point
 ): string {
   if (points.length < 2) return '';
 
-  const [start, ...rest] = points;
+  const [start, ...rest] = points.map(transformPoint);
   const lines = rest.map((point, index) => `$E${index + 1}
 KL
 X=${formatMprDecimal4(point.x)}
@@ -438,6 +454,7 @@ function generatePanelDisplayGeometry(panel: PanelBoringData): string {
   const sideNotches = panel.sideNotches ?? [];
   const backPanelGrooveLine = resolveBackPanelGrooveLine(panel);
   if (sideNotches.length === 0 && !backPanelGrooveLine) return '';
+  const transformPoint = (point: { x: number; y: number }) => rotatePoint180ForMpr(panel, point);
 
   let geometry = generateContourBlock(1, 'NEST', [
     { x: 0, y: 0 },
@@ -445,19 +462,19 @@ function generatePanelDisplayGeometry(panel: PanelBoringData): string {
     { x: panel.width, y: panel.height },
     { x: 0, y: panel.height },
     { x: 0, y: 0 },
-  ]);
+  ], 0, transformPoint);
 
   if (backPanelGrooveLine) {
     geometry += generateContourBlock(2, '', [
       { x: backPanelGrooveLine.x1, y: backPanelGrooveLine.y1 },
       { x: backPanelGrooveLine.x2, y: backPanelGrooveLine.y2 },
-    ], CONTOUR_CUT_DEPTH_MM);
+    ], CONTOUR_CUT_DEPTH_MM, transformPoint);
   }
 
   sideNotches.forEach((notch, index) => {
     const points = getSideNotchContourPoints(panel, notch);
     if (points.length < 2) return;
-    geometry += generateContourBlock(getSideNotchBlockNumber(panel, index), '', points, CONTOUR_CUT_DEPTH_MM);
+    geometry += generateContourBlock(getSideNotchBlockNumber(panel, index), '', points, CONTOUR_CUT_DEPTH_MM, transformPoint);
   });
 
   return geometry;
@@ -491,12 +508,14 @@ function generateSideNotchPocket(
 function generateBackPanelGroovePocket(panel: PanelBoringData): string {
   const groove = resolveBackPanelGrooveLine(panel);
   if (!groove) return '';
+  const start = rotatePoint180ForMpr(panel, { x: -1, y: groove.centerY ?? groove.y1 });
+  const end = rotatePoint180ForMpr(panel, { x: panel.width + 1, y: groove.centerY ?? groove.y2 });
 
   return `<109 \\Nuten\\
-XA="${formatMprDecimal4(-1)}"
-YA="${formatMprDecimal4(groove.centerY ?? groove.y1)}"
-XE="${formatMprDecimal4(panel.width + 1)}"
-YE="${formatMprDecimal4(groove.centerY ?? groove.y2)}"
+XA="${formatMprDecimal4(start.x)}"
+YA="${formatMprDecimal4(start.y)}"
+XE="${formatMprDecimal4(end.x)}"
+YE="${formatMprDecimal4(end.y)}"
 AN="0"
 NB="${formatMprDecimal4(groove.width)}"
 RK="NOWRK"
