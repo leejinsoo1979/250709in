@@ -1097,9 +1097,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
-          // mm 기준: 뒷벽 z=-halfD. 장 뒷면 = 뒷벽 + 갭, 장 앞면 = 뒷벽 + 갭 + 깊이
-          const backZmm = -halfD + gapVal;            // 장 뒷면 (mm)
-          const frontZmm = -halfD + gapVal + depthVal; // 장 앞면 (mm)
+          // 탑뷰 화면 위쪽 = 뒷벽(+halfD). 갭 0이면 장이 뒷벽에 붙음.
+          // 장 뒷면 = +halfD - 갭, 장 앞면 = +halfD - 갭 - 깊이 (앞쪽=−Z)
+          const backZmm = halfD - gapVal;             // 장 뒷면 (mm)
+          const frontZmm = halfD - gapVal - depthVal;  // 장 앞면 (mm)
           // 화면 변환: screenZ = -zmm*0.01
           const backScreenZ = -backZmm * 0.01;
           const frontScreenZ = -frontZmm * 0.01;
