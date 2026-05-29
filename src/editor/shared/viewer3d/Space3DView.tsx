@@ -2857,6 +2857,31 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     setPanelSimulationLayouts,
   ]);
 
+  // 가이드 깊이 모드: 카메라를 위에서 똑바로 내려다보는 탑뷰로 (up=-Z) / 해제 시 정면 복귀
+  useEffect(() => {
+    const controls = orbitControlsRef.current;
+    if (!controls?.object || !spaceInfo) return;
+    const camera = controls.object;
+    const cx = 0, cy = targetY, cz = 0;
+    if (guideDepthEditMode) {
+      const dist = calculateOptimalDistance(spaceInfo.width, spaceInfo.depth || 600, spaceInfo.height, placedModules.length) * 1.2;
+      controls.target.set(cx, cy, cz);
+      camera.up.set(0, 0, -1);           // 위에서 내려다볼 때 화면 위쪽 = -Z(뒤쪽)
+      camera.position.set(cx, cy + dist, cz);
+      camera.lookAt(cx, cy, cz);
+      controls.update();
+    } else {
+      // 정면 복귀
+      camera.up.set(0, 1, 0);
+      const dist = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length);
+      controls.target.set(cx, cy, cz);
+      camera.position.set(cx, cy, cz + dist);
+      camera.lookAt(cx, cy, cz);
+      controls.update();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guideDepthEditMode]);
+
   useEffect(() => {
     if (panelSimulationPhase !== 'layout') {
       const controls = orbitControlsRef.current;
