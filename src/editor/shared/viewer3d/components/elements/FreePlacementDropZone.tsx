@@ -20,6 +20,7 @@ import {
   calculateOptimalFurnitureWidth,
   getColumnObstacleBoundsX,
   findAvailableFreeGuideSlot,
+  applyFreeGuideSlotToPlacement,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import BoxModule from '../modules/BoxModule';
@@ -542,12 +543,18 @@ const FreePlacementDropZone: React.FC = () => {
   // 구간 최적화 적용된 치수 (고스트/배치/충돌에 사용)
   const effectiveDimensions = useMemo(() => {
     if (!activeDimensions) return null;
-    if (!spaceInfo.freePlacementGuideEditing && guideHoverSlot) {
-      return { ...activeDimensions, width: guideHoverSlot.width };
+    if (!spaceInfo.freePlacementGuideEditing && guideHoverSlot && activeModuleData) {
+      return applyFreeGuideSlotToPlacement(guideHoverSlot, spaceInfo, activeDimensions, activeModuleData).dimensions;
     }
     if (hoverZoneWidth === null) return activeDimensions;
     return { ...activeDimensions, width: hoverZoneWidth };
-  }, [activeDimensions, hoverZoneWidth, guideHoverSlot, spaceInfo.freePlacementGuideEditing]);
+  }, [activeDimensions, activeModuleData, hoverZoneWidth, guideHoverSlot, spaceInfo]);
+
+  const guideHoverDepthGap = useMemo(() => {
+    if (!activeDimensions || !activeModuleData || spaceInfo.freePlacementGuideEditing || !guideHoverSlot) return 0;
+    const { moduleData } = applyFreeGuideSlotToPlacement(guideHoverSlot, spaceInfo, activeDimensions, activeModuleData);
+    return moduleData.guideSlotDepthGapMm ?? 0;
+  }, [activeDimensions, activeModuleData, guideHoverSlot, spaceInfo]);
 
   // 활성 카테고리
   const activeCategory = useMemo(() => {
@@ -967,14 +974,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (!canUseGuideSlot(slot)) return;
 
       const centerXmm = slot.x + slot.width / 2 - (spaceInfo.width || 0) / 2;
-      const slotDimensions = { ...activeDimensions, width: slot.width };
-      const slotModuleData = {
-        ...activeModuleData,
-        dimensions: {
-          ...activeModuleData.dimensions,
-          width: slot.width
-        }
-      };
+      const { dimensions: slotDimensions, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(slot, spaceInfo, activeDimensions, activeModuleData);
       const placedId = executePlacement(selectedFurnitureId, centerXmm, slotDimensions, slotModuleData, false);
       if (!placedId) return;
 
@@ -997,8 +997,7 @@ const FreePlacementDropZone: React.FC = () => {
     activeModuleData,
     activeDimensions,
     executePlacement,
-    spaceInfo.freePlacementGuideEditing,
-    spaceInfo.width
+    spaceInfo
   ]);
 
   // 단내림 구간 감지 → 고스트 높이 조정
@@ -1131,13 +1130,7 @@ const FreePlacementDropZone: React.FC = () => {
     // 편집 중 선반제거 토글 상태 실시간 반영
     const safeModuleData = withUpperSafetyShelfRemoved(modData, editingRemoveUpperSafetyShelf);
     if (!spaceInfo.freePlacementGuideEditing && guideHoverSlot) {
-      return {
-        ...safeModuleData,
-        dimensions: {
-          ...safeModuleData.dimensions,
-          width: guideHoverSlot.width
-        }
-      };
+      return applyFreeGuideSlotToPlacement(guideHoverSlot, spaceInfo, safeModuleData.dimensions, safeModuleData).moduleData;
     }
     return safeModuleData;
   }, [activeModuleId, internalSpace, spaceInfo, activeModuleData, editingRemoveUpperSafetyShelf, guideHoverSlot]);
@@ -1153,8 +1146,11 @@ const FreePlacementDropZone: React.FC = () => {
     const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
     const doorThickness = 20 * 0.01;
     const previewDepth = effectiveDimensions.depth * 0.01;
+    if (guideHoverSlot && !spaceInfo.freePlacementGuideEditing) {
+      return furnitureZOffset - furnitureDepth / 2 - doorThickness + guideHoverDepthGap * 0.01 + previewDepth / 2;
+    }
     return furnitureZOffset + furnitureDepth / 2 - doorThickness - previewDepth / 2;
-  }, [effectiveDimensions, spaceInfo.depth]);
+  }, [effectiveDimensions, spaceInfo.depth, guideHoverSlot, spaceInfo.freePlacementGuideEditing, guideHoverDepthGap]);
 
   // 치수선 Z 좌표 (가구 앞면에 표시)
   const guideZPosition = useMemo(() => {
@@ -2053,7 +2049,7 @@ const FreePlacementDropZone: React.FC = () => {
       )}
 
       {/* 실시간 이격거리 가이드 (고스트 이동 중) */}
-      {ghostDistanceGuides && ghostPosition && effectiveDimensions && !isColliding && (
+      {ghostDistanceGuides && ghostPosition && effectiveDimensions && !isColliding && !isGuideSlotPlacementMode && (
         <>
           {/* 왼쪽 이격거리 */}
           {ghostDistanceGuides.leftDistance > 2 && (
@@ -2523,7 +2519,7 @@ const FreePlacementDropZone: React.FC = () => {
         return boxes;
       })()}
 
-      {!isDraggingPlaced && !isMoveMode && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && remainingGaps.map((gap, i) => {
+      {!isGuideSlotPlacementMode && !isDraggingPlaced && !isMoveMode && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && remainingGaps.map((gap, i) => {
         const lineColor = themeColor;
 
         return (

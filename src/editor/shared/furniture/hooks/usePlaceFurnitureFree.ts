@@ -21,6 +21,7 @@ import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { isSurroundPanelId, getSurroundPanelType } from '@/data/modules/surroundPanels';
 import { getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { resolveInitialFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
+import { TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM } from '@/editor/shared/utils/panelThickness';
 
 type FreePlacementModuleFlags = ModuleData & {
   hasBase?: boolean;
@@ -48,6 +49,18 @@ const isPlainShoeShelfModuleId = (moduleId?: string): boolean => {
     && !moduleId.includes('-4drawer-shelf-')
     && !moduleId.includes('-2drawer-shelf-')
     && !moduleId.includes('shelf-split');
+};
+
+const calculateGuideDepthZPosition = (
+  spaceInfo: SpaceInfo,
+  depthMm: number,
+  gapMm: number
+): number => {
+  const panelDepthMm = spaceInfo.depth || 600;
+  const furnitureDepthMm = Math.min(panelDepthMm, 600);
+  const furnitureZOffsetMm = -panelDepthMm / 2 + (panelDepthMm - furnitureDepthMm) / 2;
+  const backGuideZMm = furnitureZOffsetMm - furnitureDepthMm / 2 - TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM;
+  return (backGuideZMm + Math.max(0, gapMm) + depthMm / 2) * 0.01;
 };
 
 const clampTopFrameGapForModule = (
@@ -154,6 +167,15 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     effectiveHeight = Math.min(effectiveHeight, Math.max(0, maxTallBodyHeight));
   }
 
+  const guideSlotYRange = (moduleData as any)?.guideSlotYRangeMm as { start: number; end: number } | undefined;
+  const hasGuideSlotYRange = !!guideSlotYRange
+    && Number.isFinite(guideSlotYRange.start)
+    && Number.isFinite(guideSlotYRange.end)
+    && guideSlotYRange.end > guideSlotYRange.start;
+  if (hasGuideSlotYRange && (moduleData.category === 'upper' || moduleData.category === 'lower')) {
+    effectiveHeight = Math.max(0, guideSlotYRange.end - guideSlotYRange.start);
+  }
+
   console.log('🏗️ [placeFurnitureFree] zone detection', {
     xPositionMM, clampedX, zone: effectiveZone,
     originalHeight: dimensions.height, effectiveHeight,
@@ -161,22 +183,30 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     category: moduleData.category,
   });
 
-  const effectiveDepth = resolveInitialFurnitureDepth(
-    spaceInfo,
-    moduleData.id || moduleId,
-    dimensions.depth
-  );
+  const guideSlotDepthMm = (moduleData as any)?.guideSlotDepthMm;
+  const guideSlotDepthGapMm = (moduleData as any)?.guideSlotDepthGapMm;
+  const hasGuideSlotDepth = Number.isFinite(guideSlotDepthMm) && guideSlotDepthMm > 0;
+  const effectiveDepth = hasGuideSlotDepth
+    ? Math.max(1, Math.round(guideSlotDepthMm))
+    : resolveInitialFurnitureDepth(
+      spaceInfo,
+      moduleData.id || moduleId,
+      dimensions.depth
+    );
+  const guideDepthGap = Number.isFinite(guideSlotDepthGapMm) ? Math.max(0, Math.round(guideSlotDepthGapMm)) : 0;
 
   // Y좌표 계산 (카테고리별)
   // 상부장이 단내림 구간에 배치될 때: 천장 기준이 stepCeiling.height여야 함
-  const yPositionThree = calculateYPosition(
-    moduleData.category,
-    effectiveHeight,
-    spaceInfo,
-    effectiveZone === 'dropped' ? droppedZone.droppedInternalHeight : undefined,
-    (moduleData as any).individualFloatHeight,
-    (moduleData as any).hasBase,
-  );
+  const yPositionThree = hasGuideSlotYRange && (moduleData.category === 'upper' || moduleData.category === 'lower')
+    ? ((guideSlotYRange.start + guideSlotYRange.end) / 2) * 0.01
+    : calculateYPosition(
+      moduleData.category,
+      effectiveHeight,
+      spaceInfo,
+      effectiveZone === 'dropped' ? droppedZone.droppedInternalHeight : undefined,
+      (moduleData as any).individualFloatHeight,
+      (moduleData as any).hasBase,
+    );
 
   // 충돌 체크
   const newBounds: FurnitureBoundsX = {
@@ -194,6 +224,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   // Three.js 좌표 변환 (mm → Three.js units: mm * 0.01)
   const xThree = clampedX * 0.01;
+  const zThree = hasGuideSlotDepth
+    ? calculateGuideDepthZPosition(spaceInfo, effectiveDepth, guideDepthGap)
+    : 0;
 
   const baseType = moduleId.replace(/-[\d.]+$/, '');
 
@@ -245,7 +278,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
   const isKitchenLowerModule = moduleData.category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
   const initialBaseFrameHeight = shouldHaveBaseFrame
-    ? (inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60)))
+    ? (hasGuideSlotYRange
+      ? (spaceInfo.baseConfig?.height ?? 0)
+      : (inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60))))
     : undefined;
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
@@ -260,12 +295,29 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     moduleId,
     baseModuleType: baseType,
     moduleWidth: dimensions.width,
-    position: { x: xThree, y: yPositionThree, z: 0 },
+    position: { x: xThree, y: yPositionThree, z: zThree },
     rotation: 0,
     isFreePlacement: true,
     freeWidth: dimensions.width,
     freeHeight: effectiveHeight,
     freeDepth: effectiveDepth,
+    ...(hasGuideSlotYRange ? {
+      guideSlotPlacement: true,
+      guideSlotZone: moduleData.category as 'upper' | 'lower',
+    } : {}),
+    ...(hasGuideSlotDepth ? {
+      customDepth: effectiveDepth,
+      backWallGap: guideDepthGap,
+      guideDepthPlacement: true,
+    } : {}),
+    ...((moduleData as any).guideSlotUpperDepthMm !== undefined ? {
+      upperSectionDepth: (moduleData as any).guideSlotUpperDepthMm,
+      upperSectionDepthDirection: 'back' as const,
+    } : {}),
+    ...((moduleData as any).guideSlotLowerDepthMm !== undefined ? {
+      lowerSectionDepth: (moduleData as any).guideSlotLowerDepthMm,
+      lowerSectionDepthDirection: 'back' as const,
+    } : {}),
     zone: effectiveZone,
     // ModuleData가 명시적으로 hasBase=false 라면 우선
     hasBase: shouldHaveBaseFrame,

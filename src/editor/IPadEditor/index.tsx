@@ -354,7 +354,7 @@ const IPadEditor: React.FC = () => {
         }}>
           {activeIcon === 'module' && (
             <>
-              {/* 슬롯배치/자유배치 */}
+              {/* 오토슬롯/자유배치 */}
               <div style={{ padding: '14px 12px 10px', display: 'flex', gap: 6 }}>
                 <SegBtn
                   active={layoutMode === 'equal-division'}
@@ -366,7 +366,7 @@ const IPadEditor: React.FC = () => {
                     }
                     setSpaceInfo({ layoutMode: 'equal-division' });
                   }}
-                >슬롯배치</SegBtn>
+                >오토슬롯</SegBtn>
                 <SegBtn
                   active={layoutMode === 'free-placement'}
                   flex

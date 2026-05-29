@@ -139,6 +139,9 @@ export interface PlacedModule {
   freeWidth?: number;        // 자유배치 모드에서 사용자 지정 너비 (mm)
   freeHeight?: number;       // 자유배치 모드에서 사용자 지정 높이 (mm)
   freeDepth?: number;        // 자유배치 모드에서 사용자 지정 깊이 (mm)
+  guideSlotPlacement?: boolean; // 자유배치 가이드 슬롯 기준으로 높이/위치를 동기화
+  guideSlotZone?: 'full' | 'upper' | 'lower'; // 가이드 슬롯 상/하/전체 구분
+  guideDepthPlacement?: boolean; // 가이드 깊이 슬롯 기준으로 Z 위치까지 고정 배치
   hasBase?: boolean;         // 자유배치 걸래받이 표시 여부 (기본: full/lower=true, upper=false)
   individualFloatHeight?: number; // 걸래받이 OFF 시 개별 띄움 높이 (mm, 기본 0)
   hasTopFrame?: boolean;     // 자유배치 상단몰딩 표시 여부 (기본: full/upper=true, lower=false)

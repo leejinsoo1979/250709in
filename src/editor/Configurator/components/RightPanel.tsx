@@ -1347,7 +1347,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               label={t('space.layoutMode')}
               expanded={expandedSections.has('layoutMode')}
               onToggle={() => toggleSection('layoutMode')}
-              helpText="균등분할: 공간을 동일한 폭으로 나누어 가구를 배치합니다. 자유배치: 원하는 위치에 자유롭게 가구를 배치합니다."
+              helpText="오토슬롯: 공간을 동일한 폭으로 나누어 가구를 배치합니다. 자유배치: 원하는 위치에 자유롭게 가구를 배치합니다."
             >
               <ToggleGroup
                 key={`layout-mode-${currentLanguage}`}
@@ -1372,7 +1372,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               />
             </FormControl>
 
-            {/* 컬럼수 - 균등분할 모드에서만 표시 */}
+            {/* 컬럼수 - 오토슬롯 모드에서만 표시 */}
             {isEqualDivision && (
               <FormControl
                 label={t('space.columnCount')}

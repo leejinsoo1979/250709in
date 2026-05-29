@@ -1428,6 +1428,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         return !canCoexist;
       });
     };
+    const isHeightTierOccupied = (key: string) => {
+      if (key === 'midway') return false;
+      const matchesTier = (slot: FreePlacementGuideSlot) => {
+        const zone = slot.guideZone || 'full';
+        if (zone === 'full') return true;
+        if (key === 'upper' || key === 'molding') return zone === 'upper';
+        if (key === 'lower' || key === 'baseboard') return zone === 'lower';
+        return false;
+      };
+      return guideSlots.some((slot) => matchesTier(slot) && isGuideSlotOccupied(slot));
+    };
 
     // ── 상하분할 5단 높이 치수 편집기 (좌/우 가장자리) ──
     const spaceHalfWidth = spaceInfo.width / 2;
@@ -1456,28 +1467,51 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       border: `2px solid ${guideColor}`, borderRadius: 5, outline: 'none',
       background: 'rgba(255,255,255,0.97)', color: guideColor, lineHeight: 1.1,
     };
-    const renderHeightTiers = (sideX: number) =>
-      heightTiers.map((tier) => (
-        <Html
-          key={`guide-tier-${tier.key}-${sideX > 0 ? 'r' : 'l'}`}
-          position={[sideX, tier.centerYmm * 0.01, guideZ]}
-          center
-          zIndexRange={[200, 0]}
-          style={{ pointerEvents: 'auto', userSelect: 'none' }}
-        >
-          <input
-            type="number"
-            defaultValue={Math.round(tier.value)}
-            key={`${tier.key}-${Math.round(tier.value)}`}
-            min={0}
-            onPointerDown={(e) => e.stopPropagation()}
-            onWheel={(e) => e.stopPropagation()}
-            onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-            onBlur={(e) => commitTier(tier.key, e.target.value)}
-            style={tierEditorStyle}
-          />
-        </Html>
-      ));
+    const renderHeightTiers = (sideX: number, editable: boolean) =>
+      heightTiers.map((tier) => {
+        if (!editable && isHeightTierOccupied(tier.key)) return null;
+
+        return (
+          <Html
+            key={`guide-tier-${tier.key}-${sideX > 0 ? 'r' : 'l'}-${editable ? 'edit' : 'read'}`}
+            position={[sideX, tier.centerYmm * 0.01, guideZ]}
+            center
+            zIndexRange={[200, 0]}
+            style={{ pointerEvents: editable ? 'auto' : 'none', userSelect: 'none', background: 'transparent' }}
+          >
+            {editable ? (
+              <input
+                type="number"
+                defaultValue={Math.round(tier.value)}
+                key={`${tier.key}-${Math.round(tier.value)}`}
+                min={0}
+                onPointerDown={(e) => e.stopPropagation()}
+                onWheel={(e) => e.stopPropagation()}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                onBlur={(e) => commitTier(tier.key, e.target.value)}
+                style={tierEditorStyle}
+              />
+            ) : (
+              <div
+                style={{
+                  minWidth: 34,
+                  padding: '2px 5px',
+                  color: guideColor,
+                  fontSize: 13,
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  textAlign: 'center',
+                  fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap',
+                  textShadow: '0 1px 2px var(--theme-background), 0 -1px 2px var(--theme-background)'
+                }}
+              >
+                {Math.round(tier.value)}
+              </div>
+            )}
+          </Html>
+        );
+      });
 
     // 상단몰딩 옵셋 / 걸레받이 옵셋·갭 편집기 (우측바와 연동) — 중앙 상/하단에 표시
     const offsetGapEditorStyle: React.CSSProperties = {
@@ -1577,9 +1611,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     return (
       <>
         {hasSplitSlots && renderTierLines()}
-        {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01)}
-        {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01)}
-        {hasSplitSlots && renderOffsetGapEditors()}
+        {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01, isGuideEditing)}
+        {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01, isGuideEditing)}
+        {hasSplitSlots && isGuideEditing && renderOffsetGapEditors()}
         {guideSlots.flatMap((slot) => {
           const [startY, endY] = getSlotYRange(slot);
           const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
@@ -1649,6 +1683,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
         {guideSlots.map((slot) => {
           if (!slot.confirmed) return null;
+          if (!isGuideEditing && isGuideSlotOccupied(slot)) return null;
 
           const centerX = (slot.x + slot.width / 2 - spaceInfo.width / 2) * 0.01;
 

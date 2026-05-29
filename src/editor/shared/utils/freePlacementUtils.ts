@@ -18,6 +18,117 @@ export interface FurnitureBoundsX {
   category: 'full' | 'upper' | 'lower';
 }
 
+export function getFreeGuideZoneYRangeMm(
+  zone: 'full' | 'upper' | 'lower',
+  spaceInfo: SpaceInfo
+): { start: number; end: number } | null {
+  if (zone !== 'upper' && zone !== 'lower') return null;
+
+  const fullHeightMm = spaceInfo.height || 0;
+  const topMoldingMm = spaceInfo.frameSize?.top ?? 0;
+  const baseboardMm = spaceInfo.baseConfig?.height ?? 0;
+  const lowerMm = spaceInfo.guideLowerHeight ?? 800;
+  const upperMm = spaceInfo.guideUpperHeight ?? 700;
+  const midwayMm = Math.max(0, Math.round(fullHeightMm - topMoldingMm - upperMm - lowerMm - baseboardMm));
+
+  const yBaseTop = baseboardMm;
+  const yLowerTop = yBaseTop + lowerMm;
+  const yMidTop = yLowerTop + midwayMm;
+  const yUpperTop = yMidTop + upperMm;
+
+  if (zone === 'upper') return { start: yMidTop, end: yUpperTop };
+  return { start: yBaseTop, end: yLowerTop };
+}
+
+export function getFreeGuideSlotYRangeMm(
+  slot: FreePlacementGuideSlot,
+  spaceInfo: SpaceInfo
+): { start: number; end: number } | null {
+  return getFreeGuideZoneYRangeMm(slot.guideZone || 'full', spaceInfo);
+}
+
+export function applyFreeGuideSlotToPlacement<TDimensions extends { width: number; height: number; depth: number }, TModuleData extends { dimensions?: Partial<TDimensions> }>(
+  slot: FreePlacementGuideSlot,
+  spaceInfo: SpaceInfo,
+  dimensions: TDimensions,
+  moduleData: TModuleData
+): { dimensions: TDimensions; moduleData: TModuleData & {
+  guideSlotYRangeMm?: { start: number; end: number };
+  guideSlotDepthMm?: number;
+  guideSlotDepthGapMm?: number;
+  guideSlotUpperDepthMm?: number;
+  guideSlotLowerDepthMm?: number;
+} } {
+  const guideSlotYRange = getFreeGuideSlotYRangeMm(slot, spaceInfo);
+  const guideSlotHeight = guideSlotYRange ? guideSlotYRange.end - guideSlotYRange.start : undefined;
+  const placementWidth = Math.max(1, Math.round(slot.width));
+  const category = (moduleData as any).category as 'full' | 'upper' | 'lower' | undefined;
+  const defaultUpperDepth = Math.min(spaceInfo.depth || 300, spaceInfo.furnitureDepthDefaults?.upper ?? 300);
+  const defaultLowerDepth = Math.min(spaceInfo.depth || 580, spaceInfo.furnitureDepthDefaults?.lowerBasic ?? 580);
+  const defaultFullDepth = Math.min(spaceInfo.depth || 580, spaceInfo.furnitureDepthDefaults?.wardrobe ?? spaceInfo.furnitureDepthDefaults?.tall ?? 580);
+  const slotZone = slot.guideZone || 'full';
+  const upperDepth = slot.upperDepth ?? slot.depth ?? defaultUpperDepth;
+  const lowerDepth = slot.lowerDepth ?? slot.depth ?? defaultLowerDepth;
+  const fullDepth = slot.depth ?? (
+    slot.upperDepth !== undefined || slot.lowerDepth !== undefined
+      ? Math.max(upperDepth, lowerDepth)
+      : defaultFullDepth
+  );
+  const placementDepth = Math.max(1, Math.round(
+    slotZone === 'upper' || category === 'upper'
+      ? upperDepth
+      : slotZone === 'lower' || category === 'lower'
+        ? lowerDepth
+        : fullDepth
+  ));
+  const upperGap = slot.upperDepthGap ?? slot.depthGap ?? 0;
+  const lowerGap = slot.lowerDepthGap ?? slot.depthGap ?? 0;
+  const fullGap = slot.depthGap ?? (
+    slot.upperDepthGap !== undefined || slot.lowerDepthGap !== undefined
+      ? Math.min(upperGap, lowerGap)
+      : 0
+  );
+  const placementGap = Math.max(0, Math.round(
+    slotZone === 'upper' || category === 'upper'
+      ? upperGap
+      : slotZone === 'lower' || category === 'lower'
+        ? lowerGap
+        : fullGap
+  ));
+  const nextDimensions = {
+    ...dimensions,
+    width: placementWidth,
+    depth: placementDepth,
+    ...(guideSlotHeight !== undefined ? { height: guideSlotHeight } : {}),
+  } as TDimensions;
+  const nextModuleData = {
+    ...moduleData,
+    ...(guideSlotYRange ? { guideSlotYRangeMm: guideSlotYRange } : {}),
+    guideSlotDepthMm: placementDepth,
+    guideSlotDepthGapMm: placementGap,
+    ...(slot.guideZone === 'full' && (slot.upperDepth !== undefined || slot.lowerDepth !== undefined)
+      ? {
+        guideSlotUpperDepthMm: Math.max(1, Math.round(upperDepth)),
+        guideSlotLowerDepthMm: Math.max(1, Math.round(lowerDepth)),
+      }
+      : {}),
+    dimensions: {
+      ...(moduleData.dimensions || {}),
+      width: placementWidth,
+      depth: placementDepth,
+      ...(guideSlotHeight !== undefined ? { height: guideSlotHeight } : {}),
+    }
+  } as TModuleData & {
+    guideSlotYRangeMm?: { start: number; end: number };
+    guideSlotDepthMm?: number;
+    guideSlotDepthGapMm?: number;
+    guideSlotUpperDepthMm?: number;
+    guideSlotLowerDepthMm?: number;
+  };
+
+  return { dimensions: nextDimensions, moduleData: nextModuleData };
+}
+
 /**
  * 내부 공간의 X 범위 반환 (mm 단위)
  * surroundType에 따라:

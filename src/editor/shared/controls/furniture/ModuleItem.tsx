@@ -4,7 +4,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
-import { getInternalSpaceBoundsX, getModuleBoundsX, findAvailableFreeGuideSlot, getColumnObstacleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { getInternalSpaceBoundsX, getModuleBoundsX, findAvailableFreeGuideSlot, getColumnObstacleBoundsX, applyFreeGuideSlotToPlacement } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, CUSTOMIZABLE_DEFAULTS } from './CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
@@ -147,14 +147,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         return;
       }
 
-      const slotDims = { ...dims, width: targetSlot.width };
-      const slotModuleData = {
-        ...moduleData,
-        dimensions: {
-          ...moduleData.dimensions,
-          width: targetSlot.width
-        }
-      };
+      const { dimensions: slotDims, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(targetSlot, spaceInfo, dims, moduleData);
       const targetX = targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2;
       const pendingPlacement = useMyCabinetStore.getState().pendingPlacement;
       const result = placeFurnitureFree({

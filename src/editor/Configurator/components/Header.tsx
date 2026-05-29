@@ -102,7 +102,7 @@ interface HeaderProps {
   boringFurnitureCount?: number;
 }
 
-// 모바일 배치 모드 토글 (슬롯배치/자유배치)
+// 모바일 배치 모드 토글 (오토슬롯/자유배치)
 const MobileLayoutToggle: React.FC = () => {
   const spaceInfo = useSpaceConfigStore(s => s.spaceInfo);
   const setSpaceInfo = useSpaceConfigStore(s => s.setSpaceInfo);
@@ -143,7 +143,7 @@ const MobileLayoutToggle: React.FC = () => {
         className={`${styles.viewModeButton} ${!isFree ? styles.active : ''}`}
         onClick={() => handleMode('equal-division')}
       >
-        <span>슬롯배치</span>
+        <span>오토슬롯</span>
       </button>
       <button
         className={`${styles.viewModeButton} ${isFree ? styles.active : ''}`}

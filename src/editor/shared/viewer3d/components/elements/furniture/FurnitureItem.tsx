@@ -24,6 +24,7 @@ import { FaRegObjectGroup } from 'react-icons/fa';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { getFreeGuideZoneYRangeMm } from '@/editor/shared/utils/freePlacementUtils';
 
 // 엔드패널 슬롯 계산 기준 두께
 const END_PANEL_THICKNESS = 18; // mm
@@ -1103,14 +1104,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       || rounded === Math.round(moduleData.dimensions.height + 65);
   };
 
+  const currentGuideSlotYRangeMm = placedModule.guideSlotPlacement
+    && (placedModule.guideSlotZone === 'upper' || placedModule.guideSlotZone === 'lower')
+    ? getFreeGuideZoneYRangeMm(placedModule.guideSlotZone, spaceInfo)
+    : null;
+  const currentGuideSlotHeightMm = currentGuideSlotYRangeMm
+    ? Math.max(0, currentGuideSlotYRangeMm.end - currentGuideSlotYRangeMm.start)
+    : undefined;
+
   const validUpperCustomHeight = moduleData?.category === 'upper'
     && placedModule.customHeight
     ? placedModule.customHeight
     : undefined;
-  const validFreeHeight = placedModule.freeHeight
+  const validFreeHeight = currentGuideSlotHeightMm ?? (placedModule.freeHeight
     && !isStaleUpperTotalHeight(placedModule.freeHeight)
     ? placedModule.freeHeight
-    : undefined;
+    : undefined);
   const directModuleHeight = moduleData?.category === 'upper'
     ? (validUpperCustomHeight ?? validFreeHeight)
     : validFreeHeight;
@@ -1544,41 +1553,49 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
-      const upperCabinetHeight = (placedModule.customHeight && !autoDroppedUpperHeight.customHeight)
+      const upperCabinetHeight = currentGuideSlotHeightMm ?? ((placedModule.customHeight && !autoDroppedUpperHeight.customHeight)
         ? placedModule.customHeight
         : (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight)
           ? placedModule.freeHeight
-          : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
+          : (actualModuleData?.dimensions.height || 0))); // 상부장 높이
 
-      // 띄워서 배치 모드와 관계없이 상부장은 항상 상단몰딩 하단에 붙어야 함
-      // 상단몰딩 OFF: 몰딩 두께가 아니라 사용자가 지정한 상단갭만 천장에서 띄움
-      const topFrameHeightMm = placedModule.hasTopFrame === false
-        ? (placedModule.topFrameGap ?? 0)
-        : (placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top || 30));
+      if (currentGuideSlotYRangeMm && placedModule.guideSlotZone === 'upper') {
+        adjustedPosition = {
+          ...adjustedPosition,
+          y: ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01
+        };
+      } else {
 
-      // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
-      const isInDroppedZone = placedModule.zone === 'dropped';
-      let ceilingHeight = spaceInfo.height;
-      if (isInDroppedZone) {
-        if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
-          // 자유배치: stepCeiling 단내림
-          ceilingHeight = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
-        } else if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined) {
-          // 균등배치: droppedCeiling 단내림
-          ceilingHeight = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+        // 띄워서 배치 모드와 관계없이 상부장은 항상 상단몰딩 하단에 붙어야 함
+        // 상단몰딩 OFF: 몰딩 두께가 아니라 사용자가 지정한 상단갭만 천장에서 띄움
+        const topFrameHeightMm = placedModule.hasTopFrame === false
+          ? (placedModule.topFrameGap ?? 0)
+          : (placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top || 30));
+
+        // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
+        const isInDroppedZone = placedModule.zone === 'dropped';
+        let ceilingHeight = spaceInfo.height;
+        if (isInDroppedZone) {
+          if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+            // 자유배치: stepCeiling 단내림
+            ceilingHeight = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+          } else if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined) {
+            // 균등배치: droppedCeiling 단내림
+            ceilingHeight = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+          }
         }
+
+        // 상부장 상단 Y = 천장 높이 - 상단몰딩 높이 (상단몰딩 하단)
+        const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
+        // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
+        const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight / 2) * 0.01;
+
+
+        adjustedPosition = {
+          ...adjustedPosition,
+          y: upperCabinetCenterY
+        };
       }
-
-      // 상부장 상단 Y = 천장 높이 - 상단몰딩 높이 (상단몰딩 하단)
-      const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
-      // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
-      const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight / 2) * 0.01;
-
-
-      adjustedPosition = {
-        ...adjustedPosition,
-        y: upperCabinetCenterY
-      };
     }
   }
 
@@ -1616,6 +1633,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatH = placedModule.individualFloatHeight ?? 0;
       furnitureHeightMm += (absorbedBase - floatH);
     }
+  } else if (currentGuideSlotHeightMm !== undefined && (isUpperCabinetForY || isLowerCabinetForY)) {
+    furnitureHeightMm = currentGuideSlotHeightMm;
   } else if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight) {
     furnitureHeightMm = placedModule.customHeight;
   } else if (placedModule.isFreePlacement && placedModule.freeHeight && !(isUpperCabinetForY && (autoDroppedUpperHeight.freeHeight || isStaleUpperTotalHeight(placedModule.freeHeight)))) {
@@ -1757,65 +1776,72 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         y: placedModule.position.y
       };
     } else {
-      // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
-      const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+      if (currentGuideSlotYRangeMm && placedModule.guideSlotZone === 'lower') {
+        adjustedPosition = {
+          ...adjustedPosition,
+          y: ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01
+        };
+      } else {
+        // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
+        const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
 
-      if (isFloatPlacement) {
-        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
-          spaceInfo.floorFinish.height : 0;
-        const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
-        const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
-        const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-        // 클램핑된 furnitureHeightMm 사용 (띄움배치 시 높이 축소 반영)
-        const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
+        if (isFloatPlacement) {
+          const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
+            spaceInfo.floorFinish.height : 0;
+          const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+          const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+          const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
+          // 클램핑된 furnitureHeightMm 사용 (띄움배치 시 높이 축소 반영)
+          const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
-        if (isLowerCabinetForY) {
-          // 하부장은 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
-          const yPos = floatHeight + (furnitureHeight / 2);
+          if (isLowerCabinetForY) {
+            // 하부장은 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
+            const yPos = floatHeight + (furnitureHeight / 2);
 
-          adjustedPosition = {
-            ...adjustedPosition,
-            y: yPos
-          };
+            adjustedPosition = {
+              ...adjustedPosition,
+              y: yPos
+            };
+          } else {
+            // 키큰장: 하부장과 동일하게 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
+            const yPos = floatHeight + (furnitureHeight / 2);
+
+            adjustedPosition = {
+              ...adjustedPosition,
+              y: yPos
+            };
+          }
         } else {
-          // 키큰장: 하부장과 동일하게 띄움 높이만큼 전체가 떠야 함 (바닥마감재는 조절발로 흡수)
-          const yPos = floatHeight + (furnitureHeight / 2);
+          // 일반 배치 (받침대 있거나 바닥 배치)
+          // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
+          // 바닥판 올림(bottomPanelRaise) 활성 시 조절발 높이를 0으로 → 가구 전체가 바닥으로 내려감
+          // customConfig.sections에서 bottomPanelRaise 확인 (customSections가 아닌 customConfig가 실제 데이터 소스)
+          const configSections = placedModule.customConfig?.sections;
+          const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
+          const isLowerModBase = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
+          // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 OFF 영향을 받지 않음 (바닥 아래로 내려가는 문제 방지)
+          const isInsertFrameForBase = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
+          const effectiveHasBaseFalse = !isInsertFrameForBase && placedModule.hasBase === false;
+          const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (effectiveHasBaseFalse ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 105 : 60))));
+          // 걸래받이 OFF + 개별 띄움 높이
+          const indivFloatMm = effectiveHasBaseFalse ? (placedModule.individualFloatHeight ?? 0) : 0;
+          const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units
 
+          // 바닥 마감재 높이
+          const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
+            spaceInfo.floorFinish.height : 0;
+          const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+
+          // 가구 높이 (단내림 구간에서 조정된 높이 사용)
+          const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
+
+          // Y 위치 계산: 바닥마감재높이 + 받침대높이(+개별띄움) + 가구높이/2
+          const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
           adjustedPosition = {
             ...adjustedPosition,
             y: yPos
           };
         }
-      } else {
-        // 일반 배치 (받침대 있거나 바닥 배치)
-        // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
-        // 바닥판 올림(bottomPanelRaise) 활성 시 조절발 높이를 0으로 → 가구 전체가 바닥으로 내려감
-        // customConfig.sections에서 bottomPanelRaise 확인 (customSections가 아닌 customConfig가 실제 데이터 소스)
-        const configSections = placedModule.customConfig?.sections;
-        const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
-        const isLowerModBase = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
-        // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 OFF 영향을 받지 않음 (바닥 아래로 내려가는 문제 방지)
-        const isInsertFrameForBase = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
-        const effectiveHasBaseFalse = !isInsertFrameForBase && placedModule.hasBase === false;
-        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (effectiveHasBaseFalse ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 105 : 60))));
-        // 걸래받이 OFF + 개별 띄움 높이
-        const indivFloatMm = effectiveHasBaseFalse ? (placedModule.individualFloatHeight ?? 0) : 0;
-        const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units
-
-        // 바닥 마감재 높이
-        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
-          spaceInfo.floorFinish.height : 0;
-        const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
-
-        // 가구 높이 (단내림 구간에서 조정된 높이 사용)
-        const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
-
-        // Y 위치 계산: 바닥마감재높이 + 받침대높이(+개별띄움) + 가구높이/2
-        const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
-        adjustedPosition = {
-          ...adjustedPosition,
-          y: yPos
-        };
       }
     }
   }
@@ -3050,7 +3076,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const midForZ = placedModule.moduleId || '';
   const isShoeCabinet = (midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-') || midForZ.includes('glass-cabinet'));
   let furnitureZ: number;
-  if (isFrontSpaceFurniture || isSideWallFurniture) {
+  if (placedModule.guideDepthPlacement || isFrontSpaceFurniture || isSideWallFurniture) {
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
     // 상부장: 뒷면을 하부장 뒷면에 정렬
@@ -3078,7 +3104,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 뒷벽과 이격: 기본 위치 유지(0=앞면정렬). 양수면 앞으로 이동.
   // (키큰장찬넬은 insertFrontInsetMm으로 내부 프레임만 들이고 가구 위치는 이동 안 함)
   const backWallGapMm = placedModule.backWallGap ?? 0;
-  if (!isFrontSpaceFurniture && backWallGapMm > 0) {
+  if (!placedModule.guideDepthPlacement && !isFrontSpaceFurniture && backWallGapMm > 0) {
     furnitureZ += mmToThreeUnits(backWallGapMm);
   }
 
@@ -3156,7 +3182,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet')) return null;
     if (spaceInfo.baseConfig?.type !== 'floor') return null;
 
-    const rawHeightMm = placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+    const rawHeightMm = placedModule.guideSlotPlacement
+      ? (spaceInfo.baseConfig?.height ?? placedModule.baseFrameHeight ?? 65)
+      : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65));
     const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm - 1, (placedModule as any).baseFrameGap ?? 0)) : 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
     if (visibleHeightMm <= 0.5) return null;

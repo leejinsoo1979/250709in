@@ -8,7 +8,7 @@ import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
-import { getInternalSpaceBoundsX, getModuleBoundsX, getColumnObstacleBoundsX, findAvailableFreeGuideSlot } from '@/editor/shared/utils/freePlacementUtils';
+import { getInternalSpaceBoundsX, getModuleBoundsX, getColumnObstacleBoundsX, findAvailableFreeGuideSlot, applyFreeGuideSlotToPlacement } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -664,17 +664,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             return;
           }
 
-          const slotDimensions = {
-            ...module.dimensions,
-            width: targetSlot.width
-          };
-          const slotModuleData = {
-            ...moduleData,
-            dimensions: {
-              ...moduleData.dimensions,
-              width: targetSlot.width
-            }
-          };
+          const { dimensions: slotDimensions, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(targetSlot, spaceInfo, module.dimensions, moduleData);
           const targetX = targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2;
           const result = placeFurnitureFree({
             moduleId: module.id,
