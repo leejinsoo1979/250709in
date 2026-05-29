@@ -1562,7 +1562,7 @@ function PageInner(){
   })();
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} data-theme="light">
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>

@@ -114,7 +114,7 @@ export default function AddFriendModal({ onClose }: Props) {
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: 15 }}>{result.name || '(이름 없음)'}</div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>{result.email}</div>
+                    <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>{result.email}</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
@@ -132,7 +132,7 @@ export default function AddFriendModal({ onClose }: Props) {
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <div style={{ fontSize: 36, marginBottom: 8 }}>✓</div>
             <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 4 }}>친구 요청을 보냈습니다</div>
-            <div style={{ fontSize: 13, color: '#6b7280', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, color: 'var(--theme-text-secondary, #6b7280)', marginBottom: 16 }}>
               상대방이 수락하면 친구가 됩니다.
             </div>
             <button onClick={onClose} style={btnPrimary}>확인</button>
@@ -144,34 +144,57 @@ export default function AddFriendModal({ onClose }: Props) {
 }
 
 const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+  position: 'fixed', inset: 0, background: 'var(--theme-overlay, rgba(0,0,0,0.5))',
   display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
 };
 const modal: React.CSSProperties = {
-  background: '#fff', borderRadius: 12, padding: 24, width: 'min(90vw, 440px)',
-  boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+  background: 'var(--theme-surface, #fff)',
+  color: 'var(--theme-text, #111827)',
+  border: '1px solid var(--theme-border, #e5e7eb)',
+  borderRadius: 12,
+  padding: 24,
+  width: 'min(90vw, 440px)',
+  boxShadow: 'var(--popup-shadow, 0 20px 50px rgba(0,0,0,0.2))',
 };
 const closeBtn: React.CSSProperties = {
-  background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: '#6b7280', lineHeight: 1,
+  background: 'transparent', border: 'none', fontSize: 28, cursor: 'pointer', color: 'var(--theme-text-secondary, #6b7280)', lineHeight: 1,
 };
-const label: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: '#374151' };
+const label: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--theme-text, #374151)' };
 const input: React.CSSProperties = {
-  flex: 1, padding: '10px 12px', borderRadius: 8, border: '1px solid #d1d5db', fontSize: 14, outline: 'none',
+  flex: 1,
+  padding: '10px 12px',
+  borderRadius: 8,
+  border: '1px solid var(--theme-border, #d1d5db)',
+  background: 'var(--theme-background, #fff)',
+  color: 'var(--theme-text, #111827)',
+  fontSize: 14,
+  outline: 'none',
 };
 const btnPrimary: React.CSSProperties = {
   padding: '10px 16px', background: 'var(--theme-primary, #7269ef)', color: '#fff', border: 'none',
   borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
 };
 const btnSecondary: React.CSSProperties = {
-  padding: '10px 16px', background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db',
+  padding: '10px 16px',
+  background: 'var(--theme-background-secondary, #f3f4f6)',
+  color: 'var(--theme-text, #374151)',
+  border: '1px solid var(--theme-border, #d1d5db)',
   borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
 };
 const errorBox: React.CSSProperties = {
-  background: '#fef2f2', color: '#b91c1c', padding: '8px 12px', borderRadius: 6,
+  background: 'var(--theme-danger-light, #fef2f2)',
+  color: 'var(--theme-danger, #b91c1c)',
+  border: '1px solid var(--theme-danger-light, #fecaca)',
+  padding: '8px 12px',
+  borderRadius: 6,
   fontSize: 13, marginBottom: 8,
 };
 const resultCard: React.CSSProperties = {
-  border: '1px solid #e5e7eb', borderRadius: 8, padding: 16, marginTop: 8, background: '#f9fafb',
+  border: '1px solid var(--theme-border, #e5e7eb)',
+  borderRadius: 8,
+  padding: 16,
+  marginTop: 8,
+  background: 'var(--theme-background-secondary, #f9fafb)',
 };
 const avatar: React.CSSProperties = {
   width: 44, height: 44, borderRadius: '50%', background: 'var(--theme-primary, #7269ef)', color: '#fff',

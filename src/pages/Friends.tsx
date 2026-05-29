@@ -91,7 +91,7 @@ export default function Friends() {
                       </div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{f.name || '(이름 없음)'}</div>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>{f.email}</div>
+                        <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>{f.email}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -119,7 +119,7 @@ export default function Friends() {
                       </div>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{r.fromName || '(이름 없음)'}</div>
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>{r.fromEmail}</div>
+                        <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>{r.fromEmail}</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -175,13 +175,13 @@ const row: React.CSSProperties = {
   borderBottom: '1px solid var(--theme-border, #e5e7eb)',
 };
 const avatar: React.CSSProperties = {
-  width: 40, height: 40, borderRadius: '50%', background: '#3b82f6', color: '#fff',
+  width: 40, height: 40, borderRadius: '50%', background: 'var(--theme-primary, #3b82f6)', color: '#fff',
   display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16,
   flexShrink: 0, overflow: 'hidden',
 };
 const imgFit: React.CSSProperties = { width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' };
 const btnPrimary: React.CSSProperties = {
-  padding: '10px 16px', background: '#3b82f6', color: '#fff', border: 'none',
+  padding: '10px 16px', background: 'var(--theme-primary, #3b82f6)', color: '#fff', border: 'none',
   borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer',
 };
 const btnSecondary: React.CSSProperties = {
@@ -193,14 +193,17 @@ const btnSm: React.CSSProperties = {
   border: '1px solid var(--theme-border, #d1d5db)', borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
 const btnSmPrimary: React.CSSProperties = {
-  padding: '6px 12px', background: '#3b82f6', color: '#fff', border: 'none',
+  padding: '6px 12px', background: 'var(--theme-primary, #3b82f6)', color: '#fff', border: 'none',
   borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
 const btnSmDanger: React.CSSProperties = {
-  padding: '6px 12px', background: '#fff', color: '#b91c1c', border: '1px solid #fecaca',
+  padding: '6px 12px',
+  background: 'var(--theme-surface, #fff)',
+  color: 'var(--theme-danger, #b91c1c)',
+  border: '1px solid var(--theme-danger-light, #fecaca)',
   borderRadius: 6, fontSize: 13, fontWeight: 600, cursor: 'pointer',
 };
 const badge: React.CSSProperties = {
   display: 'inline-block', minWidth: 18, padding: '2px 6px', marginLeft: 4,
-  background: '#ef4444', color: '#fff', borderRadius: 9, fontSize: 11, fontWeight: 700,
+  background: 'var(--theme-danger, #ef4444)', color: '#fff', borderRadius: 9, fontSize: 11, fontWeight: 700,
 };
