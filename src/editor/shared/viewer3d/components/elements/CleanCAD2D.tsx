@@ -5399,7 +5399,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
           // 상하부장 동시배치 시 rightmostMod가 하부장이면 rightUpperMod(상부장)의 hasTopFrame 참조
           const topRefMod_R = rightUpperMod ?? rightmostMod;
-          const rActualBottomSize = rightmostMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
+          const rActualBottomSize = rightLowerMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
           const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame);
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -5432,8 +5432,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const topGapMm = topRefMod_R?.hasTopFrame === false
                 ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
                 : 0;
-              const bottomClearanceMm = rightmostMod?.hasBase === false
-                ? Math.max(0, Math.round(rightmostMod?.individualFloatHeight ?? 0))
+              const bottomClearanceMm = rightLowerMod?.hasBase === false
+                ? Math.max(0, Math.round(rightLowerMod?.individualFloatHeight ?? 0))
                 : rActualBottomSize;
               rFurnitureH = Math.max(0, rEffectiveH - topFrameMm - topGapMm - bottomClearanceMm);
             } else if (rightCategoryResolved === 'upper' && rightmostMod.customHeight) {

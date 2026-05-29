@@ -24,6 +24,24 @@ describe('doorDimensionGuides', () => {
     expect(resolveDoorHeightDimensionSides(modules, 'right')).toEqual({ left: false, right: true })
   })
 
+  it('명시 플래그가 없어도 가장 우측 슬롯 가구는 우측 높이 치수를 허용한다', () => {
+    const modules = [
+      { id: 'left', x: -5, index: 0, slotIndex: 0 },
+      { id: 'right', x: 5, index: 1, slotIndex: 2 }
+    ]
+
+    expect(resolveDoorHeightDimensionSides(modules, 'right')).toEqual({ left: false, right: true })
+  })
+
+  it('slotIndex가 없는 커스텀 배치도 가장 우측 가구는 우측 높이 치수를 허용한다', () => {
+    const modules = [
+      { id: 'left', x: -5, index: 0 },
+      { id: 'right', x: 5, index: 1 }
+    ]
+
+    expect(resolveDoorHeightDimensionSides(modules, 'right')).toEqual({ left: false, right: true })
+  })
+
   it('단일 가구도 우측 슬롯이 아니면 좌측 높이 치수만 허용한다', () => {
     expect(resolveDoorHeightDimensionSides([{ id: 'only', x: 0, index: 0 }], 'only')).toEqual({
       left: true,

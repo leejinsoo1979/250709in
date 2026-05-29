@@ -29,6 +29,7 @@ import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPosition
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import { resolveDoorHeightDimensionSides } from '@/editor/shared/utils/doorDimensionGuides';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -1298,6 +1299,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const placedModuleForCorner = useFurnitureStore(state => (
     placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
   )) as any;
+  const placedModulesForDoorDimensions = useFurnitureStore(state => state.placedModules);
   const isCurrentModuleFocused = !!placedFurnitureId && (
     uiSelectedFurnitureId === placedFurnitureId ||
     storeSelectedFurnitureId === placedFurnitureId ||
@@ -1305,6 +1307,36 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     (activePopup?.type === 'furnitureEdit' && activePopup?.id === placedFurnitureId)
   );
   const maidaDimensionSide: 'left' | 'right' | null = (() => {
+    if (placedFurnitureId) {
+      const totalSlotCount = (() => {
+        if (!spaceInfo) return 0;
+        return spaceInfo.customColumnCount || calculateSpaceIndexing(spaceInfo).slotWidths?.length || 0;
+      })();
+      const visibleModules = placedModulesForDoorDimensions
+        .filter(module => !module.isSurroundPanel && module.hasDoor === true)
+        .map((module, index) => {
+          const moduleSlotIndex = module.slotIndex;
+          const moduleRightSlotIndex = moduleSlotIndex !== undefined
+            ? moduleSlotIndex + (module.isDualSlot ? 1 : 0)
+            : undefined;
+          return {
+            id: module.id,
+            x: module.position?.x ?? 0,
+            index,
+            slotIndex: moduleSlotIndex,
+            isRightmostSlot: moduleRightSlotIndex !== undefined
+              && totalSlotCount > 0
+              && moduleRightSlotIndex >= totalSlotCount - 1,
+          };
+        });
+      const resolvedSides = resolveDoorHeightDimensionSides(visibleModules, placedFurnitureId);
+      const sides = placedModuleForCorner?.placementWall === 'right'
+        ? { left: resolvedSides.right, right: resolvedSides.left }
+        : resolvedSides;
+      if (sides.left) return 'left';
+      if (sides.right) return 'right';
+    }
+
     const resolvedSlotIndex = typeof slotIndex === 'number'
       ? slotIndex
       : typeof placedModuleForCorner?.slotIndex === 'number'
