@@ -234,26 +234,42 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
             ) : (
               <div className={styles.list}>
                 {filteredItems.map(item => (
-                  <div
-                    key={item.id}
-                    className={styles.listItem}
-                    onClick={() => navigate(`/qna/${item.id}`)}
-                  >
-                    <span
-                      className={`${styles.categoryBadge} ${item.status === 'answered' ? styles.categoryUpdate : styles.categoryNotice}`}
+                  <React.Fragment key={item.id}>
+                    <div
+                      className={styles.listItem}
+                      onClick={() => navigate(`/qna/${item.id}`)}
                     >
-                      {item.status === 'answered' ? '답변완료' : '답변대기'}
-                    </span>
-                    <span className={styles.itemTitle}>
-                      {item.title}
-                      {isAdmin && (
-                        <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--theme-text-muted)' }}>
-                          · {item.authorName}
+                      <span
+                        className={`${styles.categoryBadge} ${styles.categoryNotice}`}
+                      >
+                        질문
+                      </span>
+                      <span className={styles.itemTitle}>{item.title}</span>
+                      <span style={{ fontSize: 12, color: 'var(--theme-text-muted, #999)', flexShrink: 0, minWidth: 90, textAlign: 'right', marginRight: 20 }}>
+                        {item.authorName}
+                      </span>
+                      <span className={styles.itemDate}>{formatDate(item.createdAt)}</span>
+                    </div>
+                    {item.status === 'answered' && item.answer && (
+                      <div
+                        className={styles.listItem}
+                        onClick={() => navigate(`/qna/${item.id}`)}
+                        style={{ paddingLeft: 40 }}
+                      >
+                        <span style={{ color: 'var(--theme-text-muted, #999)', marginRight: 4 }}>↳</span>
+                        <span
+                          className={`${styles.categoryBadge} ${styles.categoryUpdate}`}
+                        >
+                          답변완료
                         </span>
-                      )}
-                    </span>
-                    <span className={styles.itemDate}>{formatDate(item.createdAt)}</span>
-                  </div>
+                        <span className={styles.itemTitle}>{`[답변] ${item.title}`}</span>
+                        <span style={{ fontSize: 12, color: 'var(--theme-text-muted, #999)', flexShrink: 0, minWidth: 90, textAlign: 'right', marginRight: 20 }}>
+                          {item.answeredByName || 'A.I Q&A 관리자'}
+                        </span>
+                        <span className={styles.itemDate}>{formatDate(item.answeredAt)}</span>
+                      </div>
+                    )}
+                  </React.Fragment>
                 ))}
               </div>
             )}
