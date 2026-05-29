@@ -689,9 +689,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       return;
     }
 
-    // 깊이(탑) 모드: 탑뷰에서 초기화 — 위에서 내려다보는 시점 유지
+    // 깊이(탑) 모드: 탑뷰에서 초기화 — 위에서 내려다보는 시점 + 거리/줌 초기화
     if (useUIStore.getState().guideDepthEditMode) {
-      const cam = controls.object as THREE.Camera & { up: THREE.Vector3 };
+      const cam = controls.object as THREE.Camera & { up: THREE.Vector3; isOrthographicCamera?: boolean; zoom?: number; updateProjectionMatrix?: () => void };
       const toThree = (mm: number) => mm * 0.01;
       const width = spaceInfo?.width || 2400;
       const height = spaceInfo?.height || 2400;
@@ -702,6 +702,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       cam.up.set(0, 0, -1);
       cam.position.set(cx, cy + dist, cz);
       cam.lookAt(cx, cy, cz);
+      // 오소그래픽이면 zoom으로 거리감 결정 → 공간이 화면에 맞게 줌 초기화
+      if (cam.isOrthographicCamera) {
+        const fitMm = Math.max(width, depth);
+        cam.zoom = Math.max(0.0001, 900 / fitMm);
+        cam.updateProjectionMatrix?.();
+      }
       controls.update();
       return;
     }
