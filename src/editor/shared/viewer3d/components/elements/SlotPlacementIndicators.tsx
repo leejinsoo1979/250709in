@@ -1181,8 +1181,32 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         </Html>
       ));
 
+    // 5단 경계 가로선 Y (mm): 바닥 / 걸레받이상단 / 하부장상단 / 미드웨이상단 / 상부장상단 / 천장
+    const tierBoundaryYmm = [0, yBaseTop, yLowerTop, yMidTop, yUpperTop, fullHeightMm];
+    const tierLineLeftX = -spaceHalfWidth * 0.01;
+    const tierLineRightX = spaceHalfWidth * 0.01;
+    const renderTierLines = () =>
+      tierBoundaryYmm.map((ymm, i) => (
+        <NativeLine
+          key={`guide-tier-line-${i}`}
+          name="free-placement-guide-line"
+          points={[[tierLineLeftX, ymm * 0.01, guideZ], [tierLineRightX, ymm * 0.01, guideZ]]}
+          color={guideColor}
+          lineWidth={1.2}
+          dashed
+          dashSize={0.08}
+          gapSize={0.05}
+          opacity={0.5}
+          transparent
+          depthTest={false}
+          depthWrite={false}
+          renderOrder={100000}
+        />
+      ));
+
     return (
       <>
+        {hasSplitSlots && renderTierLines()}
         {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01)}
         {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01)}
         {guideSlots.flatMap((slot) => {
