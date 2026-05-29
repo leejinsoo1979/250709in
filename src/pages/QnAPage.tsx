@@ -13,6 +13,7 @@ import {
   deleteQnA,
   answerQnA,
   requestQnAAiAnswer,
+  incrementQnAView,
   QnAItem,
 } from '@/firebase/qna';
 
@@ -46,6 +47,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [images, setImages] = useState<string[]>([]);
+  const [isPublic, setIsPublic] = useState(true); // 질문 공개 여부 (기본 공개)
   const [saving, setSaving] = useState(false);
 
   // 답변 입력 (관리자용)
@@ -74,26 +76,63 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
 
   // 상세 / 수정 로드
   useEffect(() => {
-    if ((mode !== 'detail' && mode !== 'edit') || !id) return;
-    setLoading(true);
-    getQnA(id).then(({ item }) => {
+    if ((mode !== 'detail' && mode !== 'edit') || !id || !user) return;
+    let mounted = true;
+
+    const loadItem = async () => {
+      setLoading(true);
+      const { item } = await getQnA(id);
+      if (!mounted) return;
+
       if (item) {
-        setCurrentItem(item);
-        setTitle(item.title);
-        setBody(item.body);
-        setImages(item.images || []);
-        setAnswerText(item.answer || '');
-        setAnswerImages(item.answerImages || []);
+        let loadedItem = item;
+
+        if (mode === 'detail') {
+          const storageKey = `qna-viewed:${id}`;
+          const alreadyViewed = typeof window !== 'undefined'
+            ? window.sessionStorage.getItem(storageKey)
+            : '1';
+
+          if (!alreadyViewed) {
+            const { error } = await incrementQnAView(id);
+            if (!mounted) return;
+            if (!error) {
+              window.sessionStorage.setItem(storageKey, '1');
+              loadedItem = {
+                ...item,
+                viewCount: (item.viewCount || 0) + 1,
+              };
+            }
+          }
+        }
+
+        setCurrentItem(loadedItem);
+        setTitle(loadedItem.title);
+        setBody(loadedItem.body);
+        setImages(loadedItem.images || []);
+        setIsPublic(loadedItem.isPublic !== false);
+        setAnswerText(loadedItem.answer || '');
+        setAnswerImages(loadedItem.answerImages || []);
         setAnswerFormOpen(false);
       }
       setLoading(false);
-    });
-  }, [mode, id]);
+    };
+
+    loadItem();
+
+    return () => {
+      mounted = false;
+    };
+  }, [mode, id, user]);
 
   const filteredItems = useMemo(() => {
-    if (tab === 'all') return items;
-    return items.filter(i => i.status === tab);
-  }, [items, tab]);
+    // 비공개(isPublic === false) 글은 관리자 또는 작성자 본인만 볼 수 있음
+    const visible = items.filter(i =>
+      isAdmin || i.isPublic !== false || (user && i.authorId === user.uid)
+    );
+    if (tab === 'all') return visible;
+    return visible.filter(i => i.status === tab);
+  }, [items, tab, isAdmin, user]);
 
   const canEditItem = useMemo(() => {
     if (!currentItem || !user) return false;
@@ -109,7 +148,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
     }
     setSaving(true);
     if (mode === 'new') {
-      const { id: newId, error } = await createQnA({ title: title.trim(), body, images });
+      const { id: newId, error } = await createQnA({ title: title.trim(), body, images, isPublic });
       setSaving(false);
       if (error || !newId) {
         alert('작성 실패: ' + (error || ''));
@@ -117,7 +156,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
       }
       navigate(`/qna/${newId}`);
     } else if (mode === 'edit' && id) {
-      const { error } = await updateQnA(id, { title: title.trim(), body, images });
+      const { error } = await updateQnA(id, { title: title.trim(), body, images, isPublic });
       setSaving(false);
       if (error) {
         alert('수정 실패: ' + error);
@@ -249,6 +288,9 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                         {item.authorName}
                       </span>
                       <span className={styles.itemDate}>{formatDate(item.createdAt)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--theme-text-muted, #999)', flexShrink: 0, minWidth: 64, textAlign: 'right', marginRight: 20 }}>
+                        조회 {item.viewCount || 0}
+                      </span>
                     </div>
                     {item.status === 'answered' && item.answer && (
                       <div
@@ -295,6 +337,8 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                   <span>{currentItem.authorName}</span>
                   <span>·</span>
                   <span>{formatDate(currentItem.createdAt)}</span>
+                  <span>·</span>
+                  <span>조회 {currentItem.viewCount || 0}</span>
                 </div>
                 <div className={styles.detailBody}>{currentItem.body}</div>
                 {currentItem.images && currentItem.images.length > 0 && (
@@ -482,6 +526,17 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                 onChange={setImages}
                 prefix="qna"
               />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>공개 설정</label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: 'var(--theme-text, #333)' }}>
+                <input
+                  type="checkbox"
+                  checked={!isPublic}
+                  onChange={e => setIsPublic(!e.target.checked)}
+                />
+                비공개 (작성자와 관리자만 볼 수 있음)
+              </label>
             </div>
             <div className={styles.formActions}>
               <button

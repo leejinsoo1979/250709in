@@ -6,6 +6,7 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  increment,
   query,
   where,
   orderBy,
@@ -28,6 +29,8 @@ export interface QnAItem {
   authorId: string;
   authorName: string;
   status: QnAStatus;
+  isPublic?: boolean; // 공개(true) / 비공개 1:1(false). 미설정(기존 글)은 공개로 간주
+  viewCount?: number;
   answer?: string;
   answeredBy?: string;
   answeredByName?: string;
@@ -46,6 +49,7 @@ export interface CreateQnAData {
   title: string;
   body: string;
   images?: string[];
+  isPublic?: boolean; // 공개 여부 (기본 공개)
 }
 
 const QNA_COLLECTION = 'qna';
@@ -152,6 +156,8 @@ export const createQnA = async (data: CreateQnAData): Promise<{ id: string | nul
       authorId: user.uid,
       authorName: user.displayName || user.email || '사용자',
       status: 'pending' as QnAStatus,
+      isPublic: data.isPublic ?? true,
+      viewCount: 0,
       createdAt: now,
       updatedAt: now,
     });
@@ -191,6 +197,19 @@ export const deleteQnA = async (id: string): Promise<{ error: string | null }> =
   }
 };
 
+/** 조회수 증가 */
+export const incrementQnAView = async (id: string): Promise<{ error: string | null }> => {
+  try {
+    await updateDoc(doc(db, QNA_COLLECTION, id), {
+      viewCount: increment(1),
+    });
+    return { error: null };
+  } catch (e: any) {
+    console.error('incrementQnAView 실패:', e);
+    return { error: e?.message || '조회수 업데이트 실패' };
+  }
+};
+
 /** 답변 등록/수정 (관리자만) */
 export const answerQnA = async (
   id: string,
@@ -213,7 +232,7 @@ export const answerQnA = async (
       answerImages,
       status: 'answered' as QnAStatus,
       answeredBy: user.uid,
-      answeredByName: user.displayName || user.email || '관리자',
+      answeredByName: 'A.I Q&A 관리자',
       answeredAt: serverTimestamp(),
       aiStatus: null,
       updatedAt: serverTimestamp(),

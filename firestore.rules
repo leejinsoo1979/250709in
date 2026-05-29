@@ -55,11 +55,21 @@ service cloud.firestore {
     // - 답변 필드 업데이트: 관리자만
     // - 삭제: 작성자 또는 관리자
     match /qna/{qnaId} {
-      allow read, list: if isSignedIn();
+      // 목록(list)은 로그인 사용자 허용 (비공개 글 노출은 클라이언트에서 필터)
+      allow list: if isSignedIn();
+      // 단일 문서 읽기: 공개 글이거나(또는 isPublic 미설정 기존 글), 작성자 본인 또는 관리자만
+      allow get: if isSignedIn() && (
+        resource.data.get('isPublic', true) == true ||
+        resource.data.authorId == request.auth.uid ||
+        isAdmin()
+      );
       allow create: if isSignedIn() &&
                     request.resource.data.authorId == request.auth.uid &&
                     request.resource.data.status == 'pending';
       allow update: if isSignedIn() && (
+        // 로그인 사용자는 조회수만 1씩 증가 가능
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewCount']) &&
+         request.resource.data.viewCount == resource.data.get('viewCount', 0) + 1) ||
         isAdmin() ||
         // 작성자 본인: title/body만 수정 가능 (status, answer 등은 불가)
         (resource.data.authorId == request.auth.uid &&
@@ -69,6 +79,13 @@ service cloud.firestore {
       allow delete: if isSignedIn() && (
         isAdmin() || resource.data.authorId == request.auth.uid
       );
+    }
+
+    // qnaKnowledgeBase - Q&A AI 답변용 프로그램 지식베이스
+    // - 관리자만 조회/수정 가능
+    // - Cloud Functions는 Admin SDK로 이 컬렉션을 읽어 AI 답변 근거로 사용
+    match /qnaKnowledgeBase/{knowledgeId} {
+      allow read, list, create, update, delete: if isAdmin();
     }
 
     // organizations - 조직 정보 (관리자만 모든 조직 읽기 가능)
