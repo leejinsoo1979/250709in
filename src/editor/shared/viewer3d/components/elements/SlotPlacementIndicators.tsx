@@ -1497,7 +1497,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             key={`guide-tier-${tier.key}-${sideX > 0 ? 'r' : 'l'}-${editable ? 'edit' : 'read'}`}
             position={[sideX, tier.centerYmm * 0.01, guideZ]}
             center
-            zIndexRange={[200, 0]}
+            zIndexRange={[100100, 100000]}
             style={{ pointerEvents: editable ? 'auto' : 'none', userSelect: 'none', background: 'transparent' }}
           >
             {editable ? (
