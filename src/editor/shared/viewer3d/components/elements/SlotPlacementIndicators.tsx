@@ -1041,9 +1041,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     return (
       <>
-        {/* 상단 컨트롤: 상부/하부 토글 + 앞/뒤 고정 (공간 앞쪽 바깥) */}
+        {/* 상단 컨트롤: 상부/하부 토글 (공간 위쪽 바깥) */}
         <Html
-          position={[0, guideZ, -(halfD + 250) * 0.01]}
+          position={[0, guideZ, -(halfD + 550) * 0.01]}
           center zIndexRange={[300, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
         >
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
