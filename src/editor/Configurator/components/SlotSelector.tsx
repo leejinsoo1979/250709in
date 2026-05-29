@@ -4,6 +4,7 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getSideViewGuideSlotGroups } from '@/editor/shared/utils/sideViewModuleFilter';
 import styles from './SlotSelector.module.css';
 
 interface SlotSelectorProps {
@@ -30,33 +31,20 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   const { theme } = useTheme();
   const { spaceInfo } = useSpaceConfigStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
+  const isCustomGuideMode = spaceInfo.customGuideMode === true;
 
   // 실제 방향 결정 (4분할 뷰에서는 splitViewDirection 사용)
   const effectiveDirection = forSplitView ? splitViewDirection : view2DDirection;
 
-  // 측면뷰 진입 시 1번 슬롯 자동 선택, 측면뷰 아닐 때 리셋
+  // 측면뷰가 아닐 때만 슬롯 선택을 해제한다.
+  // 측면뷰 기본 상태는 선택 슬롯 없이 좌/우 끝단 기준으로 보여야 한다.
   React.useEffect(() => {
-    if (spaceInfo.customGuideMode) {
-      if (selectedSlotIndex !== null) {
-        setSelectedSlotIndex(null);
-      }
-      return;
-    }
-
     if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {
-      // 측면뷰가 아닐 때 슬롯 선택 해제
       if (selectedSlotIndex !== null) {
         setSelectedSlotIndex(null);
       }
-    } else if (!forSplitView && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex === null) {
-      // 측면뷰 진입 시 첫 번째 슬롯 자동 선택
-      setSelectedSlotIndex(0);
     }
-  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, forSplitView, spaceInfo.customGuideMode]);
-
-  if (spaceInfo.customGuideMode) {
-    return null;
-  }
+  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, forSplitView]);
 
   // 4분할 뷰가 아닌 경우: 2D 모드이고 좌측/우측 측면뷰일 때만 표시
   if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {
@@ -113,11 +101,20 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
 
   // 자유배치 모드 여부
   const isFreePlacementMode = spaceInfo?.layoutMode === 'free-placement';
+  const isGuidePlacementMode = isFreePlacementMode || isCustomGuideMode;
 
   // 슬롯 배열 생성
   const slotButtons: { displayIndex: number; actualIndex: number; zone: 'normal' | 'dropped' }[] = [];
 
-  if (isFreePlacementMode) {
+  if (isCustomGuideMode) {
+    getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []).forEach((slot) => {
+      slotButtons.push({
+        displayIndex: slot.displayIndex,
+        actualIndex: slot.selectedSlotIndex,
+        zone: 'normal' as const
+      });
+    });
+  } else if (isFreePlacementMode) {
     // 자유배치 모드: 배치된 가구 수 기반으로 가상 슬롯 생성 (X좌표 순)
     const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
     const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
@@ -254,19 +251,26 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                 setSelectedSlotIndex(slot.actualIndex);
                 // 해당 슬롯에 배치된 가구로 팝업 전환
                 let matched: typeof placedModules[number] | undefined;
-                if (isFreePlacementMode) {
+                if (isGuidePlacementMode) {
                   // 자유배치: 가상 슬롯 = X좌표 순서로 그룹화된 X 좌표. actualIndex번째 X그룹의 가구
                   const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
+                  const guideGroups = isCustomGuideMode
+                    ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []).map(group => (
+                      (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
+                    ))
+                    : [];
                   const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
-                  const xGroups: number[] = [];
-                  let lastX: number | null = null;
-                  sortedByX.forEach(m => {
-                    const mx = m.position?.x ?? 0;
-                    if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-                      xGroups.push(mx);
-                      lastX = mx;
-                    }
-                  });
+                  const xGroups: number[] = guideGroups.length > 0 ? guideGroups : [];
+                  if (xGroups.length === 0) {
+                    let lastX: number | null = null;
+                    sortedByX.forEach(m => {
+                      const mx = m.position?.x ?? 0;
+                      if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+                        xGroups.push(mx);
+                        lastX = mx;
+                      }
+                    });
+                  }
                   const targetX = xGroups[slot.actualIndex];
                   if (targetX !== undefined) {
                     // 해당 X 그룹의 가구 중 첫 번째 (상부/하부 혼재 시 하부 우선)

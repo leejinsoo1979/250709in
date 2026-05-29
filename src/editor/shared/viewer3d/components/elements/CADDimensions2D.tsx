@@ -15,6 +15,7 @@ import type { SectionConfig } from '@/data/modules/shelving';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { getSideViewGuideSlotGroups } from '@/editor/shared/utils/sideViewModuleFilter';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
@@ -847,7 +848,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     ? (isFloating ? 0 : (spaceInfo.baseConfig?.height || 0))  // 띄움 배치면 바닥 프레임 없음
     : calculateBaseFrameHeight(spaceInfo);
 
-  const isFreePlacementMode = spaceInfo.layoutMode === 'free-placement';
+  const isFreePlacementMode = spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true;
 
   // 내경 높이 (전역 기준 — 후에 per-furniture delta 보정)
   const floatHeightMmForCalc = isFloating ? floatHeightMm : 0;
@@ -896,19 +897,31 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
     if (selectedSlotIndex !== null) {
       if (isFreePlacementMode) {
-        // 자유배치 모드: X좌표 기반 가상 슬롯 그룹핑
+        // 자유배치/커스텀슬롯 모드: X좌표 기반 슬롯 그룹핑
         const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
-        const xGroups: number[][] = [];
-        let lastX: number | null = null;
-        sortedByX.forEach((m, idx) => {
-          const mx = m.position?.x ?? 0;
-          if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-            xGroups.push([idx]);
-            lastX = mx;
-          } else {
-            xGroups[xGroups.length - 1].push(idx);
-          }
-        });
+        const guideCenters = spaceInfo.customGuideMode === true
+          ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []).map(group => (
+            (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
+          ))
+          : [];
+        const xGroups: number[][] = guideCenters.length > 0
+          ? guideCenters.map(centerX => sortedByX
+            .map((m, idx) => ({ idx, x: m.position?.x ?? 0 }))
+            .filter(item => Math.abs(item.x - centerX) < 0.015)
+            .map(item => item.idx))
+          : [];
+        if (xGroups.length === 0) {
+          let lastX: number | null = null;
+          sortedByX.forEach((m, idx) => {
+            const mx = m.position?.x ?? 0;
+            if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+              xGroups.push([idx]);
+              lastX = mx;
+            } else {
+              xGroups[xGroups.length - 1].push(idx);
+            }
+          });
+        }
 
         if (selectedSlotIndex < xGroups.length) {
           const selectedIds = new Set(
@@ -1715,15 +1728,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   heightMm: Math.round(splitBounds.lower.heightMm),
                   key: `door-split-lower-${moduleIndex}`,
                   isUpper: false,
-                });
-              }
-              if (splitBounds.splitGap.heightMm > 0) {
-                doorSegs.push({
-                  bottomY: mmToThreeUnits(splitBounds.splitGap.bottomAbsMm),
-                  topY: mmToThreeUnits(splitBounds.splitGap.topAbsMm),
-                  heightMm: Math.round(splitBounds.splitGap.heightMm),
-                  key: `door-split-gap-${moduleIndex}`,
-                  isUpper: false,
+                  suppressGapAfter: true,
                 });
               }
               if (splitBounds.upper.heightMm > 0) {
@@ -3168,15 +3173,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   heightMm: Math.round(splitBounds.lower.heightMm),
                   key: `door-split-lower-r-${moduleIndex}`,
                   isUpper: false,
-                });
-              }
-              if (splitBounds.splitGap.heightMm > 0) {
-                doorSegs_r.push({
-                  bottomY: mmToThreeUnits(splitBounds.splitGap.bottomAbsMm),
-                  topY: mmToThreeUnits(splitBounds.splitGap.topAbsMm),
-                  heightMm: Math.round(splitBounds.splitGap.heightMm),
-                  key: `door-split-gap-r-${moduleIndex}`,
-                  isUpper: false,
+                  suppressGapAfter: true,
                 });
               }
               if (splitBounds.upper.heightMm > 0) {

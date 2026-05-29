@@ -67,7 +67,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       placedModules: basePlacedModules,
       viewDirection: finalView2DDirection,
       selectedSlotIndex,
-      isFreePlacement: spaceInfo.layoutMode === 'free-placement',
+      isFreePlacement: spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true,
       spaceInfo,
       zones,
       excludeSurroundPanels: true

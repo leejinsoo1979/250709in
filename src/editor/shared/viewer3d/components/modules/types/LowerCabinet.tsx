@@ -1358,14 +1358,25 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       return isCurrentModuleFocused ? 'left' : null;
     }
 
-    if (spaceInfo?.layoutMode !== 'free-placement') {
+    if (spaceInfo?.layoutMode !== 'free-placement' && spaceInfo?.customGuideMode !== true) {
       return isCurrentModuleFocused ? 'left' : null;
     }
 
     if (placedModuleForCorner?.placementWall === 'right') return 'right';
     if (placedModuleForCorner?.placementWall === 'left') return 'left';
+
     const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
-    if (Math.abs(x) < 0.001 && !isCurrentModuleFocused) return null;
+    const visibleDoorXs = placedModulesForDoorDimensions
+      .filter(module => !module.isSurroundPanel && module.hasDoor === true)
+      .map(module => module.position?.x ?? 0);
+    if (visibleDoorXs.length > 0) {
+      const leftmostX = Math.min(...visibleDoorXs);
+      const rightmostX = Math.max(...visibleDoorXs);
+      if (Math.abs(x - leftmostX) <= 0.001) return 'left';
+      if (visibleDoorXs.length > 1 && Math.abs(x - rightmostX) <= 0.001) return 'right';
+    }
+
+    if (!isCurrentModuleFocused) return null;
     return x > 0 ? 'right' : 'left';
   })();
   const isRightCornerCabinet = moduleData.id.includes('right-corner');

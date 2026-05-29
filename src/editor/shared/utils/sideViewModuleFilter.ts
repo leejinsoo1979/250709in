@@ -1,5 +1,5 @@
 import type { PlacedModule } from '@/editor/shared/furniture/types'
-import type { SpaceInfo } from '@/store/core/spaceConfigStore'
+import type { FreePlacementGuideSlot, SpaceInfo } from '@/store/core/spaceConfigStore'
 
 export interface SideViewZoneInfo {
   normal?: {
@@ -16,7 +16,7 @@ export interface SideViewModuleFilterInput {
   viewDirection?: 'front' | 'left' | 'right' | 'top' | 'all' | '3D'
   selectedSlotIndex?: number | null
   isFreePlacement?: boolean
-  spaceInfo?: Pick<SpaceInfo, 'customColumnCount' | 'droppedCeiling'>
+  spaceInfo?: Pick<SpaceInfo, 'customColumnCount' | 'droppedCeiling' | 'freePlacementGuides' | 'width'>
   zones?: SideViewZoneInfo | null
   excludeSurroundPanels?: boolean
 }
@@ -28,7 +28,45 @@ export interface SideViewSlotGroup {
   modules: PlacedModule[]
 }
 
+export interface SideViewGuideSlotGroup {
+  displayIndex: number
+  selectedSlotIndex: number
+  x: number
+  width: number
+  slotIds: string[]
+}
+
 const getModuleX = (module: PlacedModule): number => module.position?.x ?? 0
+
+export const getSideViewGuideSlotGroups = (
+  guideSlots: FreePlacementGuideSlot[] = []
+): SideViewGuideSlotGroup[] => {
+  const sortedSlots = [...guideSlots].sort((a, b) => {
+    if (Math.abs(a.x - b.x) > 0.5) return a.x - b.x
+    return a.width - b.width
+  })
+
+  const groups: Array<{ x: number; width: number; slotIds: string[] }> = []
+  sortedSlots.forEach(slot => {
+    const existing = groups.find(group =>
+      Math.abs(group.x - slot.x) <= 0.5 &&
+      Math.abs(group.width - slot.width) <= 0.5
+    )
+
+    if (existing) {
+      existing.slotIds.push(slot.id)
+      return
+    }
+
+    groups.push({ x: slot.x, width: slot.width, slotIds: [slot.id] })
+  })
+
+  return groups.map((group, index) => ({
+    ...group,
+    displayIndex: index + 1,
+    selectedSlotIndex: index
+  }))
+}
 
 const getFreePlacementSlotModules = (
   modules: PlacedModule[],
@@ -54,6 +92,20 @@ const getFreePlacementSlotModules = (
 
   const moduleIds = new Set(slotGroup.map(index => sortedByX[index].id))
   return modules.filter(module => moduleIds.has(module.id))
+}
+
+const getGuidePlacementSlotModules = (
+  modules: PlacedModule[],
+  selectedSlotIndex: number,
+  spaceInfo?: Pick<SpaceInfo, 'freePlacementGuides' | 'width'>
+): PlacedModule[] | null => {
+  const guideGroups = getSideViewGuideSlotGroups(spaceInfo?.freePlacementGuides || [])
+  const targetGroup = guideGroups[selectedSlotIndex]
+  const spaceWidth = spaceInfo?.width || 0
+  if (!targetGroup || spaceWidth <= 0) return null
+
+  const targetCenterX = (targetGroup.x + targetGroup.width / 2 - spaceWidth / 2) * 0.01
+  return modules.filter(module => Math.abs(getModuleX(module) - targetCenterX) < 0.015)
 }
 
 const getSlotPlacedModules = (
@@ -122,9 +174,12 @@ export const filterSideViewModules = ({
     : [...placedModules]
 
   if (selectedSlotIndex !== null && selectedSlotIndex !== undefined) {
-    filtered = isFreePlacement
-      ? getFreePlacementSlotModules(filtered, selectedSlotIndex)
-      : getSlotPlacedModules(filtered, selectedSlotIndex, spaceInfo, zones)
+    if (isFreePlacement) {
+      filtered = getGuidePlacementSlotModules(filtered, selectedSlotIndex, spaceInfo)
+        ?? getFreePlacementSlotModules(filtered, selectedSlotIndex)
+    } else {
+      filtered = getSlotPlacedModules(filtered, selectedSlotIndex, spaceInfo, zones)
+    }
 
     return filtered
   }

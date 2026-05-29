@@ -3817,24 +3817,22 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 </svg>
               </button>
               {/* 좌측 패널용 SlotSelector */}
-              {!spaceInfo.customGuideMode && (
-                <div
-                  data-slot-selector="true"
-                  onClick={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: '8px',
-                    transform: 'translateX(-50%)',
-                    zIndex: 100,
-                    pointerEvents: 'auto'
-                  }}
-                >
-                  <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
-                </div>
-              )}
+              <div
+                data-slot-selector="true"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: '8px',
+                  transform: 'translateX(-50%)',
+                  zIndex: 100,
+                  pointerEvents: 'auto'
+                }}
+              >
+                <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
+              </div>
             </div>
 
             {/* 우측 하단: 우측면 뷰 */}
@@ -3934,24 +3932,22 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 </svg>
               </button>
               {/* 우측 패널용 SlotSelector */}
-              {!spaceInfo.customGuideMode && (
-                <div
-                  data-slot-selector="true"
-                  onClick={(e) => e.stopPropagation()}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: '8px',
-                    transform: 'translateX(-50%)',
-                    zIndex: 100,
-                    pointerEvents: 'auto'
-                  }}
-                >
-                  <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
-                </div>
-              )}
+              <div
+                data-slot-selector="true"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  bottom: '8px',
+                  transform: 'translateX(-50%)',
+                  zIndex: 100,
+                  pointerEvents: 'auto'
+                }}
+              >
+                <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
+              </div>
             </div>
           </div>
         </Space3DViewProvider>

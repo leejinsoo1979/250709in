@@ -499,7 +499,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       placedModules,
       viewDirection: 'left',
       selectedSlotIndex,
-      isFreePlacement: spaceInfo.layoutMode === 'free-placement',
+      isFreePlacement: spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true,
       spaceInfo,
       zones,
       excludeSurroundPanels: true
@@ -513,14 +513,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       placedModules,
       viewDirection: 'right',
       selectedSlotIndex,
-      isFreePlacement: spaceInfo.layoutMode === 'free-placement',
+      isFreePlacement: spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true,
       spaceInfo,
       zones,
       excludeSurroundPanels: true
     });
   }, [showDimensions, placedModules, selectedSlotIndex, spaceInfo, zones]);
 
-  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+  const isFreePlacement = spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true;
 
   // 측면뷰 3구간 치수 기준 가구: CADDimensions2D.getVisibleFurnitureForSideView()와 완전 동기화
   const sideViewMod = useMemo(() => {
@@ -9295,16 +9295,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const upperBY = mmToThreeUnits(upperDoorBottomAbs);
                     const upperTY = mmToThreeUnits(upperDoorTopAbs);
                     const upperMidY = (upperBY + upperTY) / 2;
-                    const splitGapH = upperDoorBottomAbs - lowerDoorTopAbs;
-                    const splitGapBY = mmToThreeUnits(lowerDoorTopAbs);
-                    const splitGapTY = mmToThreeUnits(upperDoorBottomAbs);
-                    const splitGapMidY = (splitGapBY + splitGapTY) / 2;
                     const lowerDoorGuideFrontZ = resolveDoorSectionFrontZ('lower');
                     const upperDoorGuideFrontZ = resolveDoorSectionFrontZ('upper');
                     const lowerDoorDimZ = lowerDoorGuideFrontZ + doorDimOffsetZ;
                     const upperDoorDimZ = upperDoorGuideFrontZ + doorDimOffsetZ;
-                    const splitGapGuideFrontZ = Math.max(lowerDoorGuideFrontZ, upperDoorGuideFrontZ);
-                    const splitGapDimZ = splitGapGuideFrontZ + doorDimOffsetZ;
 
                     const renderSplitDim = (
                       bY: number,
@@ -9337,7 +9331,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     return (
                       <group name="door-dimension-height-split">
                         {lowerDoorH > 0 && renderSplitDim(lowerBY, lowerTY, lowerMidY, lowerDoorH, 'lower', lowerDoorGuideFrontZ, lowerDoorDimZ)}
-                        {splitGapH > 0 && renderSplitDim(splitGapBY, splitGapTY, splitGapMidY, splitGapH, 'split-gap', splitGapGuideFrontZ, splitGapDimZ)}
                         {upperDoorH > 0 && renderSplitDim(upperBY, upperTY, upperMidY, upperDoorH, 'upper', upperDoorGuideFrontZ, upperDoorDimZ)}
                       </group>
                     );

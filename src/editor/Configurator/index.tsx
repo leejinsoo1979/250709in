@@ -9227,7 +9227,7 @@ const Configurator: React.FC = () => {
             })()}
 
             {/* 측면뷰용 슬롯 선택 버튼 */}
-            {!spaceInfo.customGuideMode && <SlotSelector />}
+            <SlotSelector />
           </div>
           {isMobile && <div className={responsiveStyles.mobileViewerDivider} aria-hidden="true" />}
 
