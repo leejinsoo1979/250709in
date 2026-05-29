@@ -1182,28 +1182,41 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         </Html>
       ));
 
-    // 5단 경계 가로선 Y (mm): 바닥 / 걸레받이상단 / 하부장상단 / 미드웨이상단 / 상부장상단 / 천장
-    const tierBoundaryYmm = [0, yBaseTop, yLowerTop, yMidTop, yUpperTop, fullHeightMm];
+    // 전체 폭 공통 경계(바닥/걸레받이상단/상부장상단/천장): 몰딩·걸레받이는 전체 공통
+    const fullWidthBoundaryYmm = [0, yBaseTop, yUpperTop, fullHeightMm];
+    // 미드웨이 경계(하부장상단/미드웨이상단): 분할(upper/lower) 슬롯 구간에만 — 병합(full)은 제외
+    const midwayBoundaryYmm = [yLowerTop, yMidTop];
     const tierLineLeftX = -spaceHalfWidth * 0.01;
     const tierLineRightX = spaceHalfWidth * 0.01;
-    const renderTierLines = () =>
-      tierBoundaryYmm.map((ymm, i) => (
+    const tierLineProps = {
+      color: guideColor, lineWidth: 1.2, dashed: true, dashSize: 0.08, gapSize: 0.05,
+      opacity: 0.5, transparent: true, depthTest: false, depthWrite: false, renderOrder: 100000,
+    } as const;
+    const renderTierLines = () => [
+      // 전체 폭 공통 선
+      ...fullWidthBoundaryYmm.map((ymm, i) => (
         <NativeLine
-          key={`guide-tier-line-${i}`}
+          key={`guide-tier-full-${i}`}
           name="free-placement-guide-line"
           points={[[tierLineLeftX, ymm * 0.01, guideZ], [tierLineRightX, ymm * 0.01, guideZ]]}
-          color={guideColor}
-          lineWidth={1.2}
-          dashed
-          dashSize={0.08}
-          gapSize={0.05}
-          opacity={0.5}
-          transparent
-          depthTest={false}
-          depthWrite={false}
-          renderOrder={100000}
+          {...tierLineProps}
         />
-      ));
+      )),
+      // 미드웨이 경계 — 분할 슬롯 X구간(splitLineSegments)에만
+      ...midwayBoundaryYmm.flatMap((ymm, yi) =>
+        splitLineSegments.map((segment, si) => (
+          <NativeLine
+            key={`guide-tier-mid-${yi}-${si}`}
+            name="free-placement-guide-line"
+            points={[
+              [(segment.startX - spaceInfo.width / 2) * 0.01, ymm * 0.01, guideZ],
+              [(segment.endX - spaceInfo.width / 2) * 0.01, ymm * 0.01, guideZ],
+            ]}
+            {...tierLineProps}
+          />
+        ))
+      ),
+    ];
 
     return (
       <>
