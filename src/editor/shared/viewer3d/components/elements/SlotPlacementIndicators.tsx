@@ -321,7 +321,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
   const isGuidePlacementMode = isFreePlacement || isCustomGuideMode;
 
-  if (viewMode === '3D' && activePlacementWall !== 'front') {
+  if (viewMode === '3D' && activePlacementWall !== 'front' && !guideDepthEditMode) {
     return null;
   }
 
@@ -1234,7 +1234,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               points={[[rightX, guideZ + 0.001, backScreenZ], [rightX, guideZ + 0.001, frontScreenZ]]}
               color={guideColor} lineWidth={1.4} opacity={0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
             // 깊이/갭 입력 (장 영역 중앙)
-            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center transform distanceFactor={10} zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}>
+            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '40px 40px', columnGap: 3, rowGap: 2, alignItems: 'center', background: 'transparent' }}>
                 <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>갭(뒷벽)</span>
                 <input type="text" inputMode="decimal" defaultValue={gapVal} key={`g-${slot.id}-${sectionKey}-${gapVal}`}
