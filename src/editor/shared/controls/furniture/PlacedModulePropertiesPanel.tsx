@@ -2137,6 +2137,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 개별 가구 baseFrameHeight 우선 → 글로벌 spaceInfo 폴백 (FurnitureItem.tsx와 동일 우선순위)
   const globalBaseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
   const baseFrameHeightMm = currentPlacedModule?.baseFrameHeight ?? globalBaseFrameHeightMm;
+  const baseFrameGapMm = Math.max(0, Math.min(baseFrameHeightMm, currentPlacedModule?.baseFrameGap ?? 0));
+  const panelTopFrameHeightMm = currentPlacedModule?.topFrameThickness ?? topFrameHeightMm;
+  const topFrameGapMm = Math.max(0, Math.min(panelTopFrameHeightMm, currentPlacedModule?.topFrameGap ?? 0));
   // 받침대 높이는 바닥마감재와 무관하게 원래 값 사용
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
   const visualBaseFrameHeightMm = baseFrameHeightMm;
@@ -2199,7 +2202,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
       currentPlacedModule?.endPanelThickness, adjustedFreeHeight,
-      topFrameHeightMm, visualBaseFrameHeightMm,
+      panelTopFrameHeightMm, visualBaseFrameHeightMm,
       currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase,
       currentPlacedModule?.isDualSlot,
       leftEpAdjacent, rightEpAdjacent,
@@ -2237,9 +2240,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       currentPlacedModule?.leftEndPanelOffset ?? 0,
       currentPlacedModule?.rightEndPanelOffset ?? 0,
       !!(currentPlacedModule as any)?.doorWidthAdjustEnabled,
-      (currentPlacedModule as any)?.doorWidthAdjustMm ?? -1.5
+      (currentPlacedModule as any)?.doorWidthAdjustMm ?? -1.5,
+      baseFrameGapMm,
+      topFrameGapMm
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -6891,6 +6896,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const baseSize = mod.baseFrameHeight ?? bfDefault;
             const baseOffset = mod.baseFrameOffset ?? 0;
             const baseGap = mod.baseFrameGap ?? 0;
+            const visibleBaseSize = Math.max(0, baseSize - baseGap);
             const getEndPanelGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
               if (!mod.hasLeftEndPanel && !mod.hasRightEndPanel) return {};
               const updates: Record<string, number> = {};
@@ -7285,13 +7291,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div style={cellStyle}>
                           <span style={cellLabelStyle}>높이</span>
                           <input type="text" inputMode="numeric"
-                            value={baseSize || ''} placeholder="0"
+                            value={visibleBaseSize || ''} placeholder="0"
                             onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
                             onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              const cur = mod.baseFrameHeight ?? bfDefault;
-                                const next = Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(bfMin, Math.min(bfMax, visibleBaseSize + (e.key === 'ArrowUp' ? 1 : -1))) + baseGap;
                                 updatePlacedModule(mod.id, {
                                   ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
@@ -7305,7 +7310,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
                                 const num = v === '' ? 0 : parseInt(v, 10);
-                                const next = num > bfMax ? bfMax : num;
+                                const next = (num > bfMax ? bfMax : num) + baseGap;
                                 updatePlacedModule(mod.id, {
                                   ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
@@ -7315,7 +7320,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onBlur={(e) => {
                               setHighlightedFrame(null);
-                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault));
+                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) + baseGap;
                               updatePlacedModule(mod.id, {
                                 ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                 ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),

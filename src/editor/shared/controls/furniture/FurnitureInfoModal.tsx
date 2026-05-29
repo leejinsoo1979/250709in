@@ -377,7 +377,9 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   
   // 프레임 높이 계산
   const topFrameHeightMm = placedModule?.topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
+  const topFrameGapMm = Math.max(0, Math.min(topFrameHeightMm, placedModule?.topFrameGap ?? 0));
   const baseFrameHeightMm = placedModule?.baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
+  const baseFrameGapMm = Math.max(0, Math.min(baseFrameHeightMm, placedModule?.baseFrameGap ?? 0));
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
   const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
     ? Math.max(0, baseFrameHeightMm - floorFinishH)
@@ -449,7 +451,9 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     (placedModule as any)?.leftEndPanelOffset ?? 0,
     (placedModule as any)?.rightEndPanelOffset ?? 0,
     !!(placedModule as any)?.doorWidthAdjustEnabled,
-    (placedModule as any)?.doorWidthAdjustMm ?? -1.5
+    (placedModule as any)?.doorWidthAdjustMm ?? -1.5,
+    baseFrameGapMm,
+    topFrameGapMm
   );
 
   // 서라운드 패널 (공간 전체 단위)

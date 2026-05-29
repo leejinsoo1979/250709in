@@ -834,7 +834,9 @@ export function useLivePanelData() {
 
         // 프레임 높이 계산
         const topFrameH = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
+        const topFrameGapH = Math.max(0, Math.min(topFrameH, (placedModule as any).topFrameGap ?? 0));
         const baseFrameH = (placedModule as any).baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
+        const baseFrameGapH = Math.max(0, Math.min(baseFrameH, (placedModule as any).baseFrameGap ?? 0));
         const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
         const visualBaseFrameH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
           ? Math.max(0, baseFrameH - floorFinishH) : baseFrameH;
@@ -942,7 +944,9 @@ export function useLivePanelData() {
           (placedModule as any).leftEndPanelOffset ?? 0,
           (placedModule as any).rightEndPanelOffset ?? 0,
           !!(placedModule as any).doorWidthAdjustEnabled,
-          (placedModule as any).doorWidthAdjustMm ?? -1.5
+          (placedModule as any).doorWidthAdjustMm ?? -1.5,
+          baseFrameGapH,
+          topFrameGapH
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1782,7 +1786,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       // 프레임 높이 계산
       const topFrameH2 = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
+      const topFrameGapH2 = Math.max(0, Math.min(topFrameH2, (placedModule as any).topFrameGap ?? 0));
       const baseFrameH2 = (placedModule as any).baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
+      const baseFrameGapH2 = Math.max(0, Math.min(baseFrameH2, (placedModule as any).baseFrameGap ?? 0));
       const floorFinishH2 = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
       const visualBaseFrameH2 = spaceInfo.baseConfig?.type === 'floor' && floorFinishH2 > 0
         ? Math.max(0, baseFrameH2 - floorFinishH2) : baseFrameH2;
@@ -1889,7 +1895,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         (placedModule as any).leftEndPanelOffset ?? 0,
         (placedModule as any).rightEndPanelOffset ?? 0,
         !!(placedModule as any).doorWidthAdjustEnabled,
-        (placedModule as any).doorWidthAdjustMm ?? -1.5
+        (placedModule as any).doorWidthAdjustMm ?? -1.5,
+        baseFrameGapH2,
+        topFrameGapH2
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

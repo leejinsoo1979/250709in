@@ -22,13 +22,19 @@ declare global {
 }
 
 /* ── 프레임 행 컴포넌트 (모듈 레벨) ── */
-const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame, gap, onGapChange }: {
+const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame, gap, onGapChange, splitGapFromSize = false }: {
   label: string; enabled: boolean; widthMM?: number; sizeMM: number; offset: number;
   onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
   setHighlightedFrame: (v: string | null) => void;
   gap?: number; onGapChange?: (v: number) => void;
+  splitGapFromSize?: boolean;
 }) => {
-  const [sizeText, setSizeText] = React.useState(String(sizeMM || ''));
+  const gapMM = Math.max(0, gap ?? 0);
+  const displaySizeMM = splitGapFromSize ? Math.max(0, sizeMM - gapMM) : sizeMM;
+  const commitDisplaySize = (nextDisplaySize: number) => {
+    onSizeChange(splitGapFromSize ? nextDisplaySize + gapMM : nextDisplaySize);
+  };
+  const [sizeText, setSizeText] = React.useState(String(displaySizeMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const [gapText, setGapText] = React.useState((gap ?? 0) !== 0 ? String(gap) : '');
   const sizeEditingRef = React.useRef(false);
@@ -36,8 +42,8 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
   const gapEditingRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (!sizeEditingRef.current) setSizeText(sizeMM ? String(sizeMM) : '');
-  }, [sizeMM]);
+    if (!sizeEditingRef.current) setSizeText(displaySizeMM ? String(displaySizeMM) : '');
+  }, [displaySizeMM]);
   React.useEffect(() => {
     if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
   }, [offset]);
@@ -84,15 +90,21 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                const next = Math.max(0, Math.min(9999, (displaySizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                 setSizeText(String(next));
-                onSizeChange(next);
+                commitDisplaySize(next);
               } else if (e.key === 'Enter') {
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
-            onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === '' || /^\d+$/.test(v)) {
+                setSizeText(v);
+                commitDisplaySize(v === '' ? 0 : parseInt(v, 10));
+              }
+            }}
+            onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); commitDisplaySize(clamped); }}
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: enabled ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)', cursor: enabled ? 'text' : 'not-allowed' }}
           />
         </div>
@@ -145,17 +157,23 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
   );
 });
 
-const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame, isLowerCategory = false, userBaseHeightDefault, gap, onGapChange }: {
+const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame, isLowerCategory = false, userBaseHeightDefault, gap, onGapChange, splitGapFromSize = false }: {
   label: string; enabled: boolean; widthMM: number; heightMM: number; offset: number;
   onToggle: () => void; onHeightChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
   setHighlightedFrame: (v: string | null) => void; isLowerCategory?: boolean; userBaseHeightDefault?: number;
   gap?: number; onGapChange?: (v: number) => void;
+  splitGapFromSize?: boolean;
 }) => {
   const bfMin = isLowerCategory ? 60 : 40;
   const bfMax = isLowerCategory ? 150 : 100;
   // 일반 가구의 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
   const bfDefault = isLowerCategory ? 105 : (userBaseHeightDefault ?? 60);
-  const [heightText, setHeightText] = React.useState(String(heightMM || ''));
+  const gapMM = Math.max(0, gap ?? 0);
+  const displayHeightMM = splitGapFromSize ? Math.max(0, heightMM - gapMM) : heightMM;
+  const commitDisplayHeight = (nextDisplayHeight: number) => {
+    onHeightChange(splitGapFromSize ? nextDisplayHeight + gapMM : nextDisplayHeight);
+  };
+  const [heightText, setHeightText] = React.useState(String(displayHeightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const [gapText, setGapText] = React.useState((gap ?? 0) !== 0 ? String(gap) : '');
   const heightEditingRef = React.useRef(false);
@@ -163,8 +181,8 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
   const gapEditingRef = React.useRef(false);
 
   React.useEffect(() => {
-    if (!heightEditingRef.current) setHeightText(heightMM ? String(heightMM) : '');
-  }, [heightMM]);
+    if (!heightEditingRef.current) setHeightText(displayHeightMM ? String(displayHeightMM) : '');
+  }, [displayHeightMM]);
   React.useEffect(() => {
     if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
   }, [offset]);
@@ -210,15 +228,22 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
             onKeyDown={(e) => {
               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                 e.preventDefault();
-                const next = Math.max(bfMin, Math.min(bfMax, (heightMM || bfDefault) + (e.key === 'ArrowUp' ? 1 : -1)));
+                const next = Math.max(bfMin, Math.min(bfMax, (displayHeightMM || bfDefault) + (e.key === 'ArrowUp' ? 1 : -1)));
                 setHeightText(String(next));
-                onHeightChange(next);
+                commitDisplayHeight(next);
               } else if (e.key === 'Enter') {
                 (e.target as HTMLInputElement).blur();
               }
             }}
-            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { if (v !== '' && parseInt(v) > bfMax) { setHeightText(String(bfMax)); } else { setHeightText(v); } } }}
-            onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)); setHeightText(String(clamped)); onHeightChange(clamped); }}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === '' || /^\d+$/.test(v)) {
+                const next = v === '' ? 0 : Math.min(bfMax, parseInt(v, 10));
+                setHeightText(v !== '' && parseInt(v, 10) > bfMax ? String(bfMax) : v);
+                commitDisplayHeight(next);
+              }
+            }}
+            onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)); setHeightText(String(clamped)); commitDisplayHeight(clamped); }}
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
           />
         </div>
@@ -1477,7 +1502,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const getTopGapDisplay = (m: any) => (
                 m?.hasTopFrame === false
                   ? getTopOffGapDisplay(m)
-                  : 0
+                  : Math.max(0, m?.topFrameGap ?? 0)
               );
 
               // 병합 모드: computeFrameMergeGroups 사용
@@ -1532,6 +1557,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               heightMM={getTopSizeDisplay(firstMod)}
                               offset={getTopOffsetDisplay(firstMod)}
                               gap={getTopGapDisplay(firstMod)}
+                              splitGapFromSize={allEnabled}
                               userBaseHeightDefault={userDefaults.frameTop}
                               onToggle={() => {
                                 const newVal = !allEnabled;
@@ -1567,6 +1593,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               sizeMM={getTopSizeDisplay(mod)}
                               offset={getTopOffsetDisplay(mod)}
                               gap={getTopGapDisplay(mod)}
+                              splitGapFromSize={mod.hasTopFrame !== false}
                               onToggle={() => {
                                 const newVal = !(mod.hasTopFrame !== false);
                                 updatePlacedModule(mod.id, {
@@ -1723,6 +1750,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           sizeMM={getTopSizeDisplay(first)}
                           offset={getTopOffsetDisplay(first)}
                           gap={getTopGapDisplay(first)}
+                          splitGapFromSize={unifiedEnabled}
                           onToggle={() => {
                             const newVal = !unifiedEnabled;
                             topSortedMods.forEach(m => updatePlacedModule(m.id, {
@@ -1751,6 +1779,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           sizeMM={getTopSizeDisplay(mod)}
                           offset={getTopOffsetDisplay(mod)}
                           gap={getTopGapDisplay(mod)}
+                          splitGapFromSize={mod.hasTopFrame !== false}
                           onToggle={() => {
                             const newVal = !(mod.hasTopFrame !== false);
                             updatePlacedModule(mod.id, {

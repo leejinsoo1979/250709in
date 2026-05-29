@@ -4505,6 +4505,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameH = leftLowerMod?.hasBase === false
             ? (leftLowerMod.individualFloatHeight ?? 0)
             : actualBottomSize;
+          const bottomFrameGapH = leftLowerMod?.hasBase === false
+            ? 0
+            : Math.max(0, Math.min(bottomFrameH, (baseRefMod as any)?.baseFrameGap ?? 0));
+          const bottomFrameVisibleH = Math.max(0, bottomFrameH - bottomFrameGapH);
           const leftTopGapForDim = topRefMod_L?.hasTopFrame === false
             ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
             : 0;
@@ -4618,6 +4622,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // Y 좌표 (1단용)
           const floorFinishBaseY = mmToThreeUnits(floorFinishForHeight);
           const effectiveCeilingY = mmToThreeUnits(effectiveH);
+          const bottomFrameGapTopY = floorFinishBaseY + mmToThreeUnits(bottomFrameGapH);
+          const bottomFrameSegments = bottomFrameGapH > 0
+            ? [
+              { key: 'gap', bottomY: floorFinishBaseY, topY: bottomFrameGapTopY, heightMm: bottomFrameGapH },
+              { key: 'base', bottomY: bottomFrameGapTopY, topY: mmToThreeUnits(floorFinishForHeight + bottomFrameH), heightMm: bottomFrameVisibleH },
+            ].filter(seg => seg.heightMm > 0)
+            : [{ key: 'base', bottomY: floorFinishBaseY, topY: mmToThreeUnits(floorFinishForHeight + bottomFrameH), heightMm: bottomFrameH }];
           // 상부장: 천장→상단몰딩→가구→빈공간→바닥 순서
           // 하부장/키큰장: 바닥→바닥마감재→받침대→가구→상단몰딩→천장 순서
           // 상하부장 동시배치: 바닥→받침대→하부장→빈공간→상부장→상단몰딩→천장
@@ -4824,13 +4835,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[innerX - mmToThreeUnits(15), bottomFrameTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameTopY, baseDimZ_L]]}
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[innerX - mmToThreeUnits(25), (floorFinishBaseY + bottomFrameTopY) / 2, baseTextZ_L]}
-                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {bottomFrameH}
-                    </Text>
+                    {bottomFrameGapH > 0 && (
+                      <NativeLine name="dimension_line"
+                        points={[[innerX - mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {bottomFrameSegments.map(seg => (
+                      <Text key={`left-dual-base-${seg.key}`} renderOrder={100001} depthTest={false}
+                        position={[innerX - mmToThreeUnits(seg.key === 'gap' ? 45 : 25), (seg.bottomY + seg.topY) / 2, baseTextZ_L]}
+                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(seg.heightMm)}
+                      </Text>
+                    ))}
                   </>
                 )
               ) : isUpperCategory ? (
@@ -4858,13 +4877,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[innerX - mmToThreeUnits(15), bottomFrameTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameTopY, baseDimZ_L]]}
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[innerX - mmToThreeUnits(25), (floorFinishBaseY + bottomFrameTopY) / 2, baseTextZ_L]}
-                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {bottomFrameH}
-                    </Text>
+                    {bottomFrameGapH > 0 && (
+                      <NativeLine name="dimension_line"
+                        points={[[innerX - mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {bottomFrameSegments.map(seg => (
+                      <Text key={`left-base-${seg.key}`} renderOrder={100001} depthTest={false}
+                        position={[innerX - mmToThreeUnits(seg.key === 'gap' ? 45 : 25), (seg.bottomY + seg.topY) / 2, baseTextZ_L]}
+                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(seg.heightMm)}
+                      </Text>
+                    ))}
                   </>
                 )
               )}
@@ -5113,6 +5140,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? userTopGap
                   : Math.max(0, Math.round(shelfSplitTopFrameForDim ?? topFrameH));
                 if (displayTopFrame <= 0) return null;
+                const topGapH = topRefMod_L?.hasTopFrame === false
+                  ? 0
+                  : Math.max(0, Math.min(displayTopFrame, Math.round(topRefMod_L?.topFrameGap ?? 0)));
+                const visibleTopFrameH = Math.max(0, displayTopFrame - topGapH);
                 const singleLowerTopRef = singleLowerCountertopH > 0 ? singleLowerCountertopTopY : furnitureTopY;
                 const sectionSplitTopRef = hasSectionSplit
                   ? mmToThreeUnits(floorFinishForHeight + bottomFrameH + sectionHeights.reduce((sum, h) => sum + h, 0))
@@ -5120,6 +5151,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const topFrameBottomRef = topRefMod_L?.hasTopFrame === false
                   ? effectiveCeilingY - mmToThreeUnits(userTopGap)
                   : (hasDualCabinet ? upperCabinetTopY : sectionSplitTopRef);
+                const topGapBottomRef = effectiveCeilingY - mmToThreeUnits(topGapH);
+                const topFrameSegments = topGapH > 0
+                  ? [
+                    { key: 'frame', bottomY: topFrameBottomRef, topY: topGapBottomRef, heightMm: visibleTopFrameH },
+                    { key: 'gap', bottomY: topGapBottomRef, topY: effectiveCeilingY, heightMm: topGapH },
+                  ].filter(seg => seg.heightMm > 0)
+                  : [{ key: 'frame', bottomY: topFrameBottomRef, topY: effectiveCeilingY, heightMm: displayTopFrame }];
                 return (
                   <>
                     <NativeLine name="dimension_line"
@@ -5134,6 +5172,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[innerX - mmToThreeUnits(15), topFrameBottomRef, topDimZ_L], [innerX + mmToThreeUnits(15), topFrameBottomRef, topDimZ_L]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
+                    {topGapH > 0 && (
+                      <NativeLine name="dimension_line"
+                        points={[[innerX - mmToThreeUnits(15), topGapBottomRef, topDimZ_L], [innerX + mmToThreeUnits(15), topGapBottomRef, topDimZ_L]]}
+                        color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                    )}
                     <NativeLine name="dimension_line"
                       points={[[leftOffset, effectiveCeilingY, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)], [innerX - mmToThreeUnits(20), effectiveCeilingY, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
@@ -5142,13 +5186,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[leftOffset, topFrameBottomRef, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)], [innerX - mmToThreeUnits(20), topFrameBottomRef, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
                     />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[innerX - mmToThreeUnits(25), (topFrameBottomRef + effectiveCeilingY) / 2, topTextZ_L]}
-                      fontSize={baseFontSize} color={frameDimensionColor} anchorX="right" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {displayTopFrame}
-                    </Text>
+                    {topFrameSegments.map(seg => (
+                      <Text key={`left-top-${seg.key}`} renderOrder={100001} depthTest={false}
+                        position={[innerX - mmToThreeUnits(seg.key === 'gap' ? 45 : 25), (seg.bottomY + seg.topY) / 2, topTextZ_L]}
+                        fontSize={baseFontSize} color={frameDimensionColor} anchorX="right" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(seg.heightMm)}
+                      </Text>
+                    ))}
                   </>
                 );
               })()}
@@ -5487,6 +5533,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rBottomFrameH = rightLowerMod?.hasBase === false
             ? (rightLowerMod.individualFloatHeight ?? 0)
             : rActualBottomSize;
+          const rBaseRefMod = rightLowerMod ?? rightmostMod;
+          const rBottomFrameGapH = rightLowerMod?.hasBase === false
+            ? 0
+            : Math.max(0, Math.min(rBottomFrameH, (rBaseRefMod as any)?.baseFrameGap ?? 0));
+          const rBottomFrameVisibleH = Math.max(0, rBottomFrameH - rBottomFrameGapH);
           const rTopGapForDim = topRefMod_R?.hasTopFrame === false
             ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
             : 0;
@@ -5580,6 +5631,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // Y 좌표 (1단용) — 바닥마감재가 있으면 마감재 위에서 시작
           const rFloorFinishBaseY = mmToThreeUnits(rFloorFinishForHeight);
           const rEffectiveCeilingY = mmToThreeUnits(rEffectiveH);
+          const rBottomFrameGapTopY = rFloorFinishBaseY + mmToThreeUnits(rBottomFrameGapH);
+          const rBottomFrameSegments = rBottomFrameGapH > 0
+            ? [
+              { key: 'gap', bottomY: rFloorFinishBaseY, topY: rBottomFrameGapTopY, heightMm: rBottomFrameGapH },
+              { key: 'base', bottomY: rBottomFrameGapTopY, topY: mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH), heightMm: rBottomFrameVisibleH },
+            ].filter(seg => seg.heightMm > 0)
+            : [{ key: 'base', bottomY: rFloorFinishBaseY, topY: mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH), heightMm: rBottomFrameH }];
           let rBottomFrameTopY: number, rFurnitureTopY: number, rLowerCabinetBodyTopY: number, rSingleLowerCountertopTopY: number;
           if (rHasDualCabinet) {
             // 상하부장 동시 배치: 하부장 기준으로 좌표 설정
@@ -5782,13 +5840,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameTopY, baseDimZ_R]]}
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[rightInnerX + mmToThreeUnits(10), (rFloorFinishBaseY + rBottomFrameTopY) / 2, baseTextZ_R]}
-                      fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {rBottomFrameH}
-                    </Text>
+                    {rBottomFrameGapH > 0 && (
+                      <NativeLine name="dimension_line"
+                        points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {rBottomFrameSegments.map(seg => (
+                      <Text key={`right-dual-base-${seg.key}`} renderOrder={100001} depthTest={false}
+                        position={[rightInnerX + mmToThreeUnits(seg.key === 'gap' ? 30 : 10), (seg.bottomY + seg.topY) / 2, baseTextZ_R]}
+                        fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(seg.heightMm)}
+                      </Text>
+                    ))}
                   </>
                 )
               ) : rIsUpperCategory ? (
@@ -5816,13 +5882,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameTopY, baseDimZ_R]]}
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[rightInnerX + mmToThreeUnits(10), (rFloorFinishBaseY + rBottomFrameTopY) / 2, baseTextZ_R]}
-                      fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {rBottomFrameH}
-                    </Text>
+                    {rBottomFrameGapH > 0 && (
+                      <NativeLine name="dimension_line"
+                        points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R]]}
+                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {rBottomFrameSegments.map(seg => (
+                      <Text key={`right-base-${seg.key}`} renderOrder={100001} depthTest={false}
+                        position={[rightInnerX + mmToThreeUnits(seg.key === 'gap' ? 30 : 10), (seg.bottomY + seg.topY) / 2, baseTextZ_R]}
+                        fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(seg.heightMm)}
+                      </Text>
+                    ))}
                   </>
                 )
               )}
@@ -6049,6 +6123,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? userTopGap
                   : rTopFrameH;
                 if (displayTopFrame <= 0) return null;
+                const topGapH = topRefMod_R?.hasTopFrame === false
+                  ? 0
+                  : Math.max(0, Math.min(displayTopFrame, Math.round(topRefMod_R?.topFrameGap ?? 0)));
+                const visibleTopFrameH = Math.max(0, displayTopFrame - topGapH);
                 const rSingleLowerTopRef = rSingleLowerCountertopH > 0 ? rSingleLowerCountertopTopY : rFurnitureTopY;
                 const rSectionSplitTopRef = rHasSectionSplit
                   ? mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rSectionHeights.reduce((sum, h) => sum + h, 0))
@@ -6056,6 +6134,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const topFrameBottomRef = topRefMod_R?.hasTopFrame === false
                   ? rEffectiveCeilingY - mmToThreeUnits(userTopGap)
                   : (rHasDualCabinet ? rUpperCabinetTopY : rSectionSplitTopRef);
+                const topGapBottomRef = rEffectiveCeilingY - mmToThreeUnits(topGapH);
+                const topFrameSegments = topGapH > 0
+                  ? [
+                    { key: 'frame', bottomY: topFrameBottomRef, topY: topGapBottomRef, heightMm: visibleTopFrameH },
+                    { key: 'gap', bottomY: topGapBottomRef, topY: rEffectiveCeilingY, heightMm: topGapH },
+                  ].filter(seg => seg.heightMm > 0)
+                  : [{ key: 'frame', bottomY: topFrameBottomRef, topY: rEffectiveCeilingY, heightMm: displayTopFrame }];
                 return (
                   <>
                     <NativeLine name="dimension_line"
@@ -6070,6 +6155,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[rightInnerX - mmToThreeUnits(15), topFrameBottomRef, topDimZ_R], [rightInnerX + mmToThreeUnits(15), topFrameBottomRef, topDimZ_R]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
+                    {topGapH > 0 && (
+                      <NativeLine name="dimension_line"
+                        points={[[rightInnerX - mmToThreeUnits(15), topGapBottomRef, topDimZ_R], [rightInnerX + mmToThreeUnits(15), topGapBottomRef, topDimZ_R]]}
+                        color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                      />
+                    )}
                     <NativeLine name="dimension_line"
                       points={[[rightWallX, rEffectiveCeilingY, frontViewLocalZ(upperFrontZ_R ?? lowerFrontZ_R, 0.003)], [rightInnerX + mmToThreeUnits(20), rEffectiveCeilingY, frontViewLocalZ(upperFrontZ_R ?? lowerFrontZ_R, 0.003)]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
@@ -6078,13 +6169,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       points={[[rightWallX, topFrameBottomRef, frontViewLocalZ(upperFrontZ_R ?? lowerFrontZ_R, 0.003)], [rightInnerX + mmToThreeUnits(20), topFrameBottomRef, frontViewLocalZ(upperFrontZ_R ?? lowerFrontZ_R, 0.003)]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
                     />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[rightInnerX + mmToThreeUnits(10), (topFrameBottomRef + rEffectiveCeilingY) / 2, topTextZ_R]}
-                      fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {displayTopFrame}
-                    </Text>
+                    {topFrameSegments.map(seg => (
+                      <Text key={`right-top-${seg.key}`} renderOrder={100001} depthTest={false}
+                        position={[rightInnerX + mmToThreeUnits(seg.key === 'gap' ? 30 : 10), (seg.bottomY + seg.topY) / 2, topTextZ_R]}
+                        fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
+                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                      >
+                        {Math.round(seg.heightMm)}
+                      </Text>
+                    ))}
                   </>
                 );
               })()}
@@ -8305,6 +8398,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? (bottomFrameRefMod.individualFloatHeight ?? 0)
               : (bottomFrameRefMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? bottomFrameRefMod.baseFrameHeight : globalBottomFrame;
+            const bottomFrameGapHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
+              ? 0
+              : Math.max(0, Math.min(bottomFrameHeight, (bottomFrameRefMod as any)?.baseFrameGap ?? 0));
+            const bottomFrameVisibleHeight = Math.max(0, bottomFrameHeight - bottomFrameGapHeight);
             const moduleFloatHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
               ? Math.max(0, Math.round(bottomFrameRefMod.individualFloatHeight ?? 0))
               : 0;
@@ -8408,6 +8505,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const floorFinishTopYLocal = mmToThreeUnits(floorFinishHeightMm); // 바닥마감재 상단
             const baseStartYLocal = floorFinishHeightMm > 0 ? floorFinishTopYLocal : bottomY; // 받침대 시작점
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 걸래받이 상단
+            const bottomFrameGapTopY = mmToThreeUnits(bottomFrameGapHeight);
+            const bottomFrameSegments = bottomFrameGapHeight > 0
+              ? [
+                { key: 'gap', bottomY, topY: bottomFrameGapTopY, heightMm: bottomFrameGapHeight },
+                { key: 'base', bottomY: bottomFrameGapTopY, topY: bottomFrameTopY, heightMm: bottomFrameVisibleHeight },
+              ].filter(seg => seg.heightMm > 0)
+              : [{ key: 'base', bottomY, topY: bottomFrameTopY, heightMm: bottomFrameHeight }];
             const sideBodyStartY = mmToThreeUnits(sideBodyStartMm);
             const isLowerSideMeasure = bottomFrameRefCategory === 'lower' || viewModCategoryForFrame === 'lower';
             const lowerSideMeasureStartY = isLowerSideMeasure ? bottomY : sideBodyStartY;
@@ -8570,20 +8674,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
-                  <Text
-                    renderOrder={100001}
-                    depthTest={false}
-                    position={[0, (bottomY + bottomFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-                  >
-                    {Math.max(0, bottomFrameHeight - floorFinishHeightMmGlobal)}
-                  </Text>
+                  {bottomFrameGapHeight > 0 && (
+                    <Line
+                      points={[[0, bottomFrameGapTopY, rightDimensionZ], [0, bottomFrameGapTopY, rightDimensionZ + mmToThreeUnits(25)]]}
+                      color={dimensionColor}
+                      lineWidth={0.6}
+                    />
+                  )}
+                  {bottomFrameSegments.map(seg => (
+                    <Text
+                      key={`left-side-base-${seg.key}`}
+                      renderOrder={100001}
+                      depthTest={false}
+                      position={[0, (seg.bottomY + seg.topY) / 2, rightDimensionZ + mmToThreeUnits(seg.key === 'gap' ? 100 : 60)]}
+                      fontSize={baseFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                      rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                    >
+                      {Math.round(seg.heightMm)}
+                    </Text>
+                  ))}
                 </group>
                 )}
 
@@ -8824,6 +8938,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const epEnabled = epRefMod?.hasTopEndPanel === true;
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
+                  const topGapMm = Math.min(totalMm, Math.max(0, Math.round((epRefMod as any)?.topFrameGap ?? 0)));
+                  const visibleTopMm = Math.max(0, totalMm - topGapMm);
+                  const topGapBottomY = topFrameTopY - mmToThreeUnits(topGapMm);
                   const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
 
                   if (!isEpSplit) {
@@ -8844,20 +8961,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={topSegmentColor}
                           lineWidth={0.6}
                         />
-                        <Text
-                          renderOrder={100001}
-                          depthTest={false}
-                          position={[0, (cabinetAreaTopY + topFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
-                          fontSize={baseFontSize}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          outlineWidth={textOutlineWidth}
-                          outlineColor={textOutlineColor}
-                          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-                        >
-                          {totalMm}
-                        </Text>
+                        {topGapMm > 0 && (
+                          <Line
+                            points={[[0, topGapBottomY, rightDimensionZ], [0, topGapBottomY, rightDimensionZ + mmToThreeUnits(25)]]}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                        )}
+                        {visibleTopMm > 0 && (
+                          <Text
+                            renderOrder={100001}
+                            depthTest={false}
+                            position={[0, (cabinetAreaTopY + topGapBottomY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                            fontSize={baseFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                          >
+                            {visibleTopMm}
+                          </Text>
+                        )}
+                        {topGapMm > 0 && (
+                          <Text
+                            renderOrder={100001}
+                            depthTest={false}
+                            position={[0, (topGapBottomY + topFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(100)]}
+                            fontSize={baseFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                          >
+                            {topGapMm}
+                          </Text>
+                        )}
                       </group>
                     );
                   }
@@ -9928,6 +10070,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? (bottomFrameRefMod.individualFloatHeight ?? 0)
               : (bottomFrameRefMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? bottomFrameRefMod.baseFrameHeight : globalBottomFrame;
+            const bottomFrameGapHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
+              ? 0
+              : Math.max(0, Math.min(bottomFrameHeight, (bottomFrameRefMod as any)?.baseFrameGap ?? 0));
+            const bottomFrameVisibleHeight = Math.max(0, bottomFrameHeight - bottomFrameGapHeight);
             const moduleFloatHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
               ? Math.max(0, Math.round(bottomFrameRefMod.individualFloatHeight ?? 0))
               : 0;
@@ -10030,6 +10176,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const floorFinishTopYRight = mmToThreeUnits(floorFinishHeightMm);
             const baseStartYRight = floorFinishHeightMm > 0 ? floorFinishTopYRight : bottomY;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
+            const bottomFrameGapTopY = mmToThreeUnits(bottomFrameGapHeight);
+            const bottomFrameSegments = bottomFrameGapHeight > 0
+              ? [
+                { key: 'gap', bottomY, topY: bottomFrameGapTopY, heightMm: bottomFrameGapHeight },
+                { key: 'base', bottomY: bottomFrameGapTopY, topY: bottomFrameTopY, heightMm: bottomFrameVisibleHeight },
+              ].filter(seg => seg.heightMm > 0)
+              : [{ key: 'base', bottomY, topY: bottomFrameTopY, heightMm: bottomFrameHeight }];
             const sideBodyStartY = mmToThreeUnits(sideBodyStartMm);
             const isLowerSideMeasure = bottomFrameRefCategory === 'lower' || viewModCategoryForFrame === 'lower';
             const lowerSideMeasureStartY = isLowerSideMeasure ? bottomY : sideBodyStartY;
@@ -10201,20 +10354,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
-                  <Text
-                    renderOrder={100001}
-                    depthTest={false}
-                    position={[spaceWidth, (bottomY + bottomFrameTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
-                    fontSize={baseFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    outlineWidth={textOutlineWidth}
-                    outlineColor={textOutlineColor}
-                    rotation={[0, 0, 0]}
-                  >
-                    {Math.max(0, bottomFrameHeight - floorFinishHeightMmGlobal)}
-                  </Text>
+                  {bottomFrameGapHeight > 0 && (
+                    <Line
+                      points={[[spaceWidth, bottomFrameGapTopY, leftDimensionZ], [spaceWidth, bottomFrameGapTopY, leftDimensionZ + mmToThreeUnits(25)]]}
+                      color={dimensionColor}
+                      lineWidth={0.6}
+                    />
+                  )}
+                  {bottomFrameSegments.map(seg => (
+                    <Text
+                      key={`right-side-base-${seg.key}`}
+                      renderOrder={100001}
+                      depthTest={false}
+                      position={[spaceWidth, (seg.bottomY + seg.topY) / 2, leftDimensionZ + mmToThreeUnits(seg.key === 'gap' ? 100 : 60)]}
+                      fontSize={baseFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      outlineWidth={textOutlineWidth}
+                      outlineColor={textOutlineColor}
+                      rotation={[0, 0, 0]}
+                    >
+                      {Math.round(seg.heightMm)}
+                    </Text>
+                  ))}
                 </group>
                 )}
 
@@ -10454,6 +10617,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const epEnabled = epRefMod?.hasTopEndPanel === true;
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
+                  const topGapMm = Math.min(totalMm, Math.max(0, Math.round((epRefMod as any)?.topFrameGap ?? 0)));
+                  const visibleTopMm = Math.max(0, totalMm - topGapMm);
+                  const topGapBottomY = topFrameLineTopY - mmToThreeUnits(topGapMm);
                   const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
 
                   if (!isEpSplit) {
@@ -10474,20 +10640,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           color={topSegmentColor}
                           lineWidth={0.6}
                         />
-                        <Text
-                          renderOrder={100001}
-                          depthTest={false}
-                          position={[spaceWidth, (cabinetAreaTopY + topFrameLineTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
-                          fontSize={baseFontSize}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          outlineWidth={textOutlineWidth}
-                          outlineColor={textOutlineColor}
-                          rotation={[0, 0, 0]}
-                        >
-                          {totalMm}
-                        </Text>
+                        {topGapMm > 0 && (
+                          <Line
+                            points={[[spaceWidth, topGapBottomY, leftDimensionZ], [spaceWidth, topGapBottomY, leftDimensionZ + mmToThreeUnits(25)]]}
+                            color={topSegmentColor}
+                            lineWidth={0.6}
+                          />
+                        )}
+                        {visibleTopMm > 0 && (
+                          <Text
+                            renderOrder={100001}
+                            depthTest={false}
+                            position={[spaceWidth, (cabinetAreaTopY + topGapBottomY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                            fontSize={baseFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, 0, 0]}
+                          >
+                            {visibleTopMm}
+                          </Text>
+                        )}
+                        {topGapMm > 0 && (
+                          <Text
+                            renderOrder={100001}
+                            depthTest={false}
+                            position={[spaceWidth, (topGapBottomY + topFrameLineTopY) / 2, leftDimensionZ + mmToThreeUnits(100)]}
+                            fontSize={baseFontSize}
+                            color={textColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            outlineWidth={textOutlineWidth}
+                            outlineColor={textOutlineColor}
+                            rotation={[0, 0, 0]}
+                          >
+                            {topGapMm}
+                          </Text>
+                        )}
                       </group>
                     );
                   }

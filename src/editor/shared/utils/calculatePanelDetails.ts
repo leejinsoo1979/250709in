@@ -85,7 +85,9 @@ export const calculatePanelDetails = (
   leftEndPanelFrontOffsetMm: number = 0,
   rightEndPanelFrontOffsetMm: number = 0,
   doorWidthAdjustEnabled: boolean = false,
-  doorWidthAdjustMm: number = -1.5
+  doorWidthAdjustMm: number = -1.5,
+  baseFrameGapMm: number = 0,
+  topFrameGapMm: number = 0
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -93,6 +95,12 @@ export const calculatePanelDetails = (
     door: [],      // 도어 패널
     frame: []      // 프레임 패널 (상부/하부)
   };
+  const visibleBaseFrameHeightMm = baseFrameHeightMm && baseFrameHeightMm > 0
+    ? Math.max(0, baseFrameHeightMm - Math.max(0, Math.min(baseFrameHeightMm, baseFrameGapMm)))
+    : 0;
+  const visibleTopFrameHeightMm = topFrameHeightMm && topFrameHeightMm > 0
+    ? Math.max(0, topFrameHeightMm - Math.max(0, Math.min(topFrameHeightMm, topFrameGapMm)))
+    : 0;
 
   // === 키큰장찬넬(insert-frame) 전용 패널 처리 ===
   // 3D BoxModule.tsx Insert 분기와 동일: 전면 프레임(136×H×18) + 좌EP(18×H×40) + 우EP(18×H×40)
@@ -154,22 +162,22 @@ export const calculatePanelDetails = (
       quantity: 1,
     });
     // 상단몰딩 — 공간 frameSize.top 기준 (옆 가구 상단몰딩과 동일)
-    if (hasInsertTopFrame) {
+    if (hasInsertTopFrame && visibleTopFrameHeightMm > 0) {
       insertResult.push({
         name: '상단몰딩',
         width: insertOuterWidthMm,
-        height: insertTopFrameMm,
+        height: visibleTopFrameHeightMm,
         thickness: insertFrontFrameThicknessMm,
         material: 'PET',
         quantity: 1,
       });
     }
-    // 걸레받이 — 공간 baseConfig.height 기준 (옆 가구 걸레받이와 동일)
-    if (hasInsertBaseFrame) {
+    // 걸레받이 — 하부 갭을 제외한 실제 부재 높이
+    if (hasInsertBaseFrame && visibleBaseFrameHeightMm > 0) {
       insertResult.push({
         name: '걸래받이',
         width: insertOuterWidthMm,
-        height: insertBaseFrameMm,
+        height: visibleBaseFrameHeightMm,
         thickness: insertFrontFrameThicknessMm,
         material: 'PET',
         quantity: 1,
@@ -2834,22 +2842,22 @@ export const calculatePanelDetails = (
   const PET_THICKNESS = PET_PANEL_THICKNESS_MM;
 
   // 상단몰딩 — 하부장(lower-*)에는 없음. 상부장/키큰장은 실제 렌더링과 동일하게 포함
-  if (!isLowerCabinetModule && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
+  if (!isLowerCabinetModule && hasTopFrame !== false && visibleTopFrameHeightMm > 0) {
     panels.frame.push({
       name: '상단몰딩',
       width: customWidth,
-      height: topFrameHeightMm,
+      height: visibleTopFrameHeightMm,
       thickness: PET_THICKNESS,
       material: 'PET',
     });
   }
 
   // 걸래받이 (받침대) — 상부장(upper)은 벽걸이라 걸래받이 없음
-  if (!isUpperCabinet && hasBase !== false && baseFrameHeightMm && baseFrameHeightMm > 0) {
+  if (!isUpperCabinet && hasBase !== false && visibleBaseFrameHeightMm > 0) {
     panels.frame.push({
       name: '걸래받이',
       width: customWidth,
-      height: baseFrameHeightMm,
+      height: visibleBaseFrameHeightMm,
       thickness: PET_THICKNESS,
       material: 'PET',
     });

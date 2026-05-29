@@ -6706,7 +6706,7 @@ const Configurator: React.FC = () => {
                         enabled={true}
                         sizeMM={firstTopFrameSize}
                         offset={firstTop.topFrameOffset ?? topOffsetDefaultU}
-                        gap={0}
+                        gap={firstTop.topFrameGap ?? 0}
                         onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                           hasTopFrame: false,
                           topFrameGap: getFreeTopOffGap(m),
@@ -6717,6 +6717,7 @@ const Configurator: React.FC = () => {
                         onGapChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: Math.max(0, v) })))}
                         highlightKey="top-all-free"
                         toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                        splitGapFromSize
                       />;
                     }
                     // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 걸레받이 - 바닥마감재 - 띄움
@@ -6776,7 +6777,7 @@ const Configurator: React.FC = () => {
                     return <FrameOffsetRow key={`top-${mod.id}`}
                       num={tn} label="(상)"
                       enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? upperOffsetDefault}
-                      gap={mod.hasTopFrame === false ? (mod.topFrameGap ?? 0) : 0}
+                      gap={mod.topFrameGap ?? 0}
                       onToggle={() => {
                         const newVal = !(mod.hasTopFrame !== false);
                         updatePlacedModule(mod.id, {
@@ -6790,6 +6791,7 @@ const Configurator: React.FC = () => {
                       onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
                       highlightKey={`top-${mod.id}`}
                       toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                      splitGapFromSize={mod.hasTopFrame !== false}
                     />;
                   }
                   // 키큰장(full): 공간높이 - 받침대 - 띄움높이 - 가구높이
@@ -6813,7 +6815,7 @@ const Configurator: React.FC = () => {
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
-                    gap={mod.hasTopFrame === false ? (mod.topFrameGap ?? actualTopFrameSize) : 0}
+                    gap={mod.hasTopFrame === false ? (mod.topFrameGap ?? actualTopFrameSize) : (mod.topFrameGap ?? 0)}
                     onToggle={() => {
                       const newVal = !(mod.hasTopFrame !== false);
                       updatePlacedModule(mod.id, {
@@ -6836,6 +6838,7 @@ const Configurator: React.FC = () => {
                     onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
                     highlightKey={`top-${mod.id}`}
                     toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                    splitGapFromSize={mod.hasTopFrame !== false}
                   />;
                 })
                 )}
@@ -7684,10 +7687,11 @@ const Configurator: React.FC = () => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
                           },
                           'top-all',
-                          0,
+                          firstTop.topFrameGap ?? 0,
                           (v) => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: Math.max(0, v) })));
                           },
+                          true,
                         );
                         }
                         // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 걸래받이 - 바닥마감재 - 띄움 (실제 빈 공간)
@@ -7765,8 +7769,9 @@ const Configurator: React.FC = () => {
                           (v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v)),
                           (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                           `top-${mod.id}`,
-                          mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? mod.topFrameGap ?? 0) : 0,
+                          mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? mod.topFrameGap ?? 0) : (mod.topFrameGap ?? 0),
                           (v) => updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { topFrameGap: Math.max(0, v) })),
+                          mod.hasTopFrame !== false,
                         )}</React.Fragment>;
                       })
                     )}
