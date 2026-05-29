@@ -795,7 +795,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             {guideVerticalSplit ? (
               <div className={styles.guideSplitFields}>
                 <label className={styles.guideDialogField}>
-                  <span>상부 슬롯 개수</span>
+                  <span>상부 모듈 갯수</span>
                   <input
                     type="number"
                     min={1}
@@ -810,7 +810,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                   />
                 </label>
                 <label className={styles.guideDialogField}>
-                  <span>하부 슬롯 개수</span>
+                  <span>하부 모듈 갯수</span>
                   <input
                     type="number"
                     min={1}
@@ -826,7 +826,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               </div>
             ) : (
               <label className={styles.guideDialogField}>
-                <span>슬롯 개수</span>
+                <span>모듈 갯수</span>
                 <input
                   type="number"
                   min={1}
