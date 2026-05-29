@@ -103,6 +103,7 @@ const FreePlacementDropZone: React.FC = () => {
   const isGuideSlotPlacementMode = isFreePlacement
     && !spaceInfo.freePlacementGuideEditing
     && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+  const hasGuideSlotPlacedModules = placedModules.some(module => module.guideSlotPlacement === true);
 
   // 테마 색상 (Three.js용 hex)
   const themeColorMap: Record<string, string> = {
@@ -234,6 +235,7 @@ const FreePlacementDropZone: React.FC = () => {
   // 상부장/하부장이 있으면 카테고리별로 독립 균등 (equalDistributionUpper/Lower 플래그)
   useEffect(() => {
     if (!isFreePlacement || freeModules.length === 0) return;
+    if (isCustomGuideMode || isGuideSlotPlacementMode || hasGuideSlotPlacedModules) return;
 
     // 카테고리 판별
     const isUpperMod = (m: any) => !m.isSurroundPanel && (m.moduleId?.startsWith('upper-') || m.moduleId?.includes('-upper-'));
@@ -403,7 +405,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (mainModules.length > 0) runMain(mainModules);
       runDropped(droppedModules);
     }
-  }, [equalDistribution, equalDistributionUpper, equalDistributionLower, isFreePlacement, zonePlacementBounds, spaceBounds, columnObstacleBounds]);
+  }, [equalDistribution, equalDistributionUpper, equalDistributionLower, isFreePlacement, isCustomGuideMode, isGuideSlotPlacementMode, hasGuideSlotPlacedModules, zonePlacementBounds, spaceBounds, columnObstacleBounds]);
 
   // ── 서라운드 패널 자동 배치 (선택 즉시 배치, 클릭 위치 불필요) ──
   useEffect(() => {

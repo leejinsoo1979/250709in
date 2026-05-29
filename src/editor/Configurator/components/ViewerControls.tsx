@@ -91,6 +91,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
+  const isCustomSlotMode = spaceInfo?.customGuideMode === true
+    || (spaceInfo?.freePlacementGuides?.length || 0) > 0
+    || placedModules.some(module => module.guideSlotPlacement === true);
   const isNoWallSpace = spaceInfo?.installType === 'freestanding'
     || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
   const canUsePlacementWallTools = isAllowedUser && !isNoWallSpace;
@@ -528,7 +531,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   // ── Desktop UI ──
   return (
     <div className={styles.viewerControls}>
-      {spaceInfo?.customGuideMode && (spaceInfo.freePlacementGuides?.length || 0) > 0 && (
+      {viewMode === '3D' && spaceInfo?.customGuideMode && (spaceInfo.freePlacementGuides?.length || 0) > 0 && (
         <button
           type="button"
           className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive} ${styles.guideSlotEditButton}`}
@@ -582,7 +585,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
       <div className={styles.centerAbsolute}>
-        {isFreePlacement && !spaceInfo?.customGuideMode && (() => {
+        {isFreePlacement && !isCustomSlotMode && (() => {
           // 자유배치에서 상부장/하부장이 하나라도 배치되면 중앙 자유/균등 토글 숨김
           // (대신 상부장은 위쪽, 하부장은 아래쪽에 각각 전용 토글이 표시됨)
           const hasUpperOrLower = placedModules.some(m => {
@@ -612,7 +615,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         })()}
 
         {/* 슬롯배치 모드: 자유=슬롯 너비 직접 입력, 균등=균등분할 (sbbc212@gmail.com 전용) */}
-        {isAllowedUser && !isFreePlacement && !spaceInfo?.customGuideMode && !spaceInfo?.droppedCeiling?.enabled && !spaceInfo?.curtainBox?.enabled && (() => {
+        {isAllowedUser && !isFreePlacement && !isCustomSlotMode && !spaceInfo?.droppedCeiling?.enabled && !spaceInfo?.curtainBox?.enabled && (() => {
           const isSlotCustom = Array.isArray(spaceInfo?.customSlotWidths) && spaceInfo.customSlotWidths.length > 0;
           const hasSlotPlaced = placedModules.some(m => !m.isFreePlacement);
           const isCustomActive = isSlotCustom || slotWidthEditMode;

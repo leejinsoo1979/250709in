@@ -8776,6 +8776,10 @@ const Configurator: React.FC = () => {
           <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`} onMouseDown={() => { if (highlightedFrame) setHighlightedFrame(null); }}>
             {/* 상부장/하부장 전용 자유/균등 토글 (자유배치 + 상/하부 가구 배치 시) */}
             {!isMobile && spaceInfo.layoutMode === 'free-placement' && (() => {
+              const isCustomSlotActive = spaceInfo.customGuideMode === true
+                || (spaceInfo.freePlacementGuides?.length || 0) > 0
+                || placedModules.some(m => m.guideSlotPlacement === true);
+              if (isCustomSlotActive) return null;
               const dark = viewMode === '2D' && view2DTheme === 'dark';
               const hasUpper = placedModules.some(m => !m.isSurroundPanel && (m.moduleId?.startsWith('upper-') || m.moduleId?.includes('-upper-')));
               const hasLower = placedModules.some(m => !m.isSurroundPanel && (m.moduleId?.startsWith('lower-') || m.moduleId?.includes('-lower-')));
