@@ -1127,8 +1127,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const allPlacedModules = useFurnitureStore(state => state.placedModules);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const doorHeightDimensionSides = useMemo(() => {
-    const useSlotIndexForDoorDimension = originalSpaceInfo.layoutMode !== 'free-placement'
-      && originalSpaceInfo.customGuideMode !== true;
+    const usePositionBasedDoorDimension = originalSpaceInfo.layoutMode === 'free-placement'
+      || originalSpaceInfo.customGuideMode === true;
     const totalSlotCount = (() => {
       if (originalSpaceInfo.droppedCeiling?.enabled) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(originalSpaceInfo, originalSpaceInfo.customColumnCount);
@@ -1139,7 +1139,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const visibleModules = allPlacedModules
       .filter(module => !module.isSurroundPanel && module.hasDoor === true)
       .map((module, index) => {
-        const moduleSlotIndex = useSlotIndexForDoorDimension ? module.slotIndex : undefined;
+        const isPositionPlacedModule = usePositionBasedDoorDimension
+          || module.isFreePlacement === true
+          || (module as any).guideSlotPlacement === true;
+        const moduleSlotIndex = isPositionPlacedModule ? undefined : module.slotIndex;
         const moduleRightSlotIndex = moduleSlotIndex !== undefined
           ? moduleSlotIndex + (module.isDualSlot ? 1 : 0)
           : undefined;
