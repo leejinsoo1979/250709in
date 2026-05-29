@@ -311,7 +311,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     controls.target.copy(target);
     object.position.copy(position);
-    object.up.set(0, 0, -1);
 
     if ('zoom' in object && typeof camera.zoom === 'number') {
       object.zoom = camera.zoom;
@@ -431,7 +430,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         );
       };
       const isGuideDepthTopView = useUIStore.getState().guideDepthEditMode && effectiveView === 'top';
-      const guideDepthTopTarget = new THREE.Vector3(0, toThree(height / 2), -toThree(depth / 2));
+      const guideDepthTopTarget = new THREE.Vector3(0, toThree(height / 2), toThree(depth * 0.28));
       const target = isGuideDepthTopView
         ? guideDepthTopTarget
         : canUsePlacementWallTools && (effectiveView === 'left' || effectiveView === 'right')
@@ -466,7 +465,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const eased = ease(progress);
         object.position.lerpVectors(startPosition, endPosition, eased);
         controls.target.lerpVectors(startTarget, endTarget, eased);
-        object.up.set(isGuideDepthTopView ? 0 : 0, isGuideDepthTopView ? 0 : 1, isGuideDepthTopView ? -1 : 0);
+        object.up.set(0, 1, 0);
         object.lookAt(controls.target);
 
         if ('updateProjectionMatrix' in object) {
@@ -781,11 +780,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const height = spaceInfo?.height || 2400;
       const depth = spaceInfo?.depth || 600;
       // 2D 탑뷰와 동일한 카메라 거리 계산 사용
-      const cx = 0, cy = toThree(height / 2), cz = -toThree(depth / 2);
+      const cx = 0, cy = toThree(height / 2), cz = toThree(depth * 0.28);
       const dist = calculateOptimalDistance(width, depth, height, 0);
       controls.target.set(cx, cy, cz);
-      cam.up.set(0, 0, -1);
       cam.position.set(cx, cy + dist, cz);
+      if ('zoom' in cam && typeof camera.zoom === 'number') {
+        cam.zoom = camera.zoom;
+        cam.updateProjectionMatrix?.();
+      }
       cam.lookAt(cx, cy, cz);
       controls.update();
       return;

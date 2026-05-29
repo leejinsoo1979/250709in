@@ -2741,7 +2741,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
     const centerX = 0;
     const centerY = targetY;
-    const centerZ = guideDepthEditMode ? -mmToThreeUnits(depth / 2) : 0;
+    const centerZ = guideDepthEditMode ? mmToThreeUnits(depth * 0.28) : 0;
 
     // 2D front 위치 계산 - 3D와 동일한 거리 사용
     const frontPosition = [centerX, centerY, distance] as [number, number, number];
@@ -2791,7 +2791,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 카메라 타겟 배열 memoization (하위 컴포넌트의 불필요한 useEffect 재실행 방지)
   const cameraTargetArr = useMemo<[number, number, number]>(() => {
     const depth = spaceInfo?.depth || 600;
-    return [0, targetY, guideDepthEditMode ? -mmToThreeUnits(depth / 2) : 0];
+    return [0, targetY, guideDepthEditMode ? mmToThreeUnits(depth * 0.28) : 0];
   }, [targetY, guideDepthEditMode, spaceInfo?.depth]);
 
   useEffect(() => {
@@ -2865,11 +2865,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const controls = orbitControlsRef.current;
     if (!controls?.object || !spaceInfo) return;
     const camera = controls.object;
-    const cx = 0, cy = targetY, cz = guideDepthEditMode ? -mmToThreeUnits((spaceInfo.depth || 600) / 2) : 0;
+    const cx = 0, cy = targetY, cz = guideDepthEditMode ? mmToThreeUnits((spaceInfo.depth || 600) * 0.28) : 0;
     if (guideDepthEditMode) {
       const dist = calculateOptimalDistance(spaceInfo.width, spaceInfo.depth || 600, spaceInfo.height, placedModules.length) * 1.2;
       controls.target.set(cx, cy, cz);
-      camera.up.set(0, 0, -1);           // 위에서 내려다볼 때 화면 위쪽 = -Z(뒤쪽)
       camera.position.set(cx, cy + dist, cz);
       camera.lookAt(cx, cy, cz);
       controls.update();
@@ -3977,7 +3976,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <ThreeCanvas
             cameraPosition={cameraPosition}
             cameraTarget={cameraTargetArr}
-            cameraUp={guideDepthEditMode ? [0, 0, -1] : undefined}
             viewMode={viewMode}
             view2DDirection={view2DDirection}
             renderMode={effectiveRenderMode}
