@@ -366,7 +366,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             onClick={handleGuideButtonClick}
           >
             <Grid3X3 size={13} />
-            <span>슬롯확정</span>
+            <span>배치시작</span>
           </button>
         )}
 
@@ -491,11 +491,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           type="button"
           className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive}`}
           onClick={handleGuideButtonClick}
-          title="슬롯확정"
-          style={{ position: 'fixed', left: '50%', bottom: '12%', transform: 'translateX(-50%)', zIndex: 60 }}
+          title="배치시작"
+          style={{ position: 'fixed', left: '50%', bottom: '5%', transform: 'translateX(-50%)', zIndex: 60, padding: '12px 28px', fontSize: 16, gap: 8 }}
         >
-          <Grid3X3 size={13} />
-          <span>슬롯확정</span>
+          <Grid3X3 size={18} />
+          <span>배치시작</span>
         </button>
       )}
 
