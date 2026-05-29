@@ -241,6 +241,57 @@ export function getFreePlacementGuideBoundsX(spaceInfo: SpaceInfo): { startX: nu
   };
 }
 
+export function redistributeFreePlacementGuidesForSpaceChange(
+  slots: FreePlacementGuideSlot[] | undefined,
+  previousSpaceInfo: SpaceInfo,
+  nextSpaceInfo: SpaceInfo
+): FreePlacementGuideSlot[] | undefined {
+  if (!slots || slots.length === 0) return slots;
+
+  const previousWidth = previousSpaceInfo.width || 0;
+  const nextWidth = nextSpaceInfo.width || 0;
+  const previousBounds = getFreePlacementGuideBoundsX(previousSpaceInfo);
+  const nextBounds = getFreePlacementGuideBoundsX(nextSpaceInfo);
+  const previousStartX = previousBounds.startX + previousWidth / 2;
+  const previousEndX = previousBounds.endX + previousWidth / 2;
+  const nextStartX = nextBounds.startX + nextWidth / 2;
+  const nextEndX = nextBounds.endX + nextWidth / 2;
+  const previousGuideWidth = Math.max(0, previousEndX - previousStartX);
+  const nextGuideWidth = Math.max(0, nextEndX - nextStartX);
+
+  if (previousGuideWidth <= 0 || nextGuideWidth <= 0) {
+    return slots.map((slot) => ({ ...slot }));
+  }
+
+  const scale = nextGuideWidth / previousGuideWidth;
+  const zoneOrder = { full: 0, upper: 1, lower: 2 };
+
+  return slots
+    .map((slot) => {
+      const relativeStart = (slot.x - previousStartX) / previousGuideWidth;
+      const nextX = nextStartX + relativeStart * nextGuideWidth;
+      return {
+        ...slot,
+        x: Math.max(nextStartX, Math.min(nextEndX, nextX)),
+        width: Math.max(1, slot.width * scale)
+      };
+    })
+    .sort((a, b) => {
+      const zoneA = a.guideZone || 'full';
+      const zoneB = b.guideZone || 'full';
+      return zoneOrder[zoneA] - zoneOrder[zoneB] || a.x - b.x || a.index - b.index;
+    })
+    .map((slot, index, list) => {
+      const sameLineIndex = list
+        .slice(0, index + 1)
+        .filter((item) => (
+          (item.guideZone || 'full') === (slot.guideZone || 'full')
+          && (item.guideGroupId || '') === (slot.guideGroupId || '')
+        )).length - 1;
+      return { ...slot, index: sameLineIndex };
+    });
+}
+
 /**
  * PlacedModule의 X 범위 반환 (mm 단위)
  */

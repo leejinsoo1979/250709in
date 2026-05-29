@@ -22,7 +22,7 @@ import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/sh
 import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace, calculateTopBottomFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
-import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { getModuleCategory, redistributeFreePlacementGuidesForSpaceChange } from '@/editor/shared/utils/freePlacementUtils';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -4257,6 +4257,24 @@ const Configurator: React.FC = () => {
       // depth: finalUpdates.baseConfig?.depth
     // });
     // 도어 상하단갭은 상단몰딩 높이 변경과 무관 — 우측바의 상하갭 컨트롤로만 조정
+    if (
+      finalUpdates.width !== undefined
+      && finalUpdates.width !== spaceInfo.width
+      && (spaceInfo.freePlacementGuides?.length || 0) > 0
+    ) {
+      const nextSpaceInfo = {
+        ...spaceInfo,
+        ...finalUpdates,
+        gapConfig: finalUpdates.gapConfig !== undefined
+          ? { ...spaceInfo.gapConfig, ...finalUpdates.gapConfig }
+          : spaceInfo.gapConfig
+      } as SpaceInfo;
+      finalUpdates.freePlacementGuides = redistributeFreePlacementGuidesForSpaceChange(
+        spaceInfo.freePlacementGuides,
+        spaceInfo,
+        nextSpaceInfo
+      );
+    }
 
     setSpaceInfo(finalUpdates);
 
