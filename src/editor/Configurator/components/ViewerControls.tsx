@@ -200,6 +200,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
   useEffect(() => {
     if (!spaceInfo?.freePlacementGuideEditing) return;
+    // 깊이 편집 모드에서는 탑뷰를 허용 — front 강제하지 않음
+    if (guideDepthEditMode) return;
 
     if (viewMode !== '3D') {
       onViewModeChange('3D');
@@ -213,6 +215,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     }
   }, [
     spaceInfo?.freePlacementGuideEditing,
+    guideDepthEditMode,
     viewMode,
     cameraMode,
     view2DDirection,
