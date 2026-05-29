@@ -148,6 +148,28 @@
   color: white;
 }
 
+/* 알림 배지 (안읽은 메시지/친구 요청) — 테마색 강조 */
+.menuBadgeAlert {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--theme-primary);
+  border-radius: 9px;
+  font-size: 11px;
+  line-height: 1;
+  color: white;
+  font-weight: 700;
+}
+
+.menuItemActive .menuBadgeAlert {
+  background: white;
+  color: var(--theme-primary);
+}
+
 /* 트리 아이템 */
 .treeItem {
   display: flex;

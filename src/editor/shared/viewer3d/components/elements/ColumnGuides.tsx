@@ -201,7 +201,58 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       handleSlotInputCommit(i);
     }
   };
-  
+
+  // ── 높이 가이드 자유 입력 모드 (슬롯확장 모드에서만) ──
+  // 걸레받이(baseConfig.height) / 상단몰딩(frameSize.top) / 가구 높이(내부 높이)
+  const baseboardMm = spaceInfo.baseConfig?.height ?? 0;       // 걸레받이(받침대) 높이
+  const moldingMm = spaceInfo.frameSize?.top ?? 0;             // 상단몰딩 높이
+  // 가구 내부 높이 = 전체 높이 - 상단몰딩 - 걸레받이 - 바닥마감
+  const floorFinishMm0 = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  const furnitureHeightMm = Math.max(0, (spaceInfo.height ?? 0) - moldingMm - baseboardMm - floorFinishMm0);
+
+  const [baseboardDraft, setBaseboardDraft] = useState('');
+  const [moldingDraft, setMoldingDraft] = useState('');
+  const [furnitureHeightDraft, setFurnitureHeightDraft] = useState('');
+
+  // 슬롯 편집 활성/값 변경 시 드래프트 동기화
+  useEffect(() => {
+    setBaseboardDraft(String(Math.round(baseboardMm)));
+    setMoldingDraft(String(Math.round(moldingMm)));
+    setFurnitureHeightDraft(String(Math.round(furnitureHeightMm)));
+  }, [slotEditActive, baseboardMm, moldingMm, furnitureHeightMm]);
+
+  // 걸레받이 높이 적용
+  const commitBaseboard = () => {
+    const v = parseFloat(baseboardDraft);
+    if (!Number.isFinite(v) || v < 0) { setBaseboardDraft(String(Math.round(baseboardMm))); return; }
+    if (v === Math.round(baseboardMm)) return;
+    setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), height: v } });
+  };
+
+  // 상단몰딩 높이 적용
+  const commitMolding = () => {
+    const v = parseFloat(moldingDraft);
+    if (!Number.isFinite(v) || v < 0) { setMoldingDraft(String(Math.round(moldingMm))); return; }
+    if (v === Math.round(moldingMm)) return;
+    setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), top: v } });
+  };
+
+  // 가구 내부 높이 적용 → 전체 공간 높이(H) 역산 (몰딩/걸레받이/바닥마감 고정)
+  const commitFurnitureHeight = () => {
+    const v = parseFloat(furnitureHeightDraft);
+    if (!Number.isFinite(v) || v <= 0) { setFurnitureHeightDraft(String(Math.round(furnitureHeightMm))); return; }
+    if (v === Math.round(furnitureHeightMm)) return;
+    const newTotalHeight = Math.round(v + moldingMm + baseboardMm + floorFinishMm0);
+    setSpaceInfo({ height: newTotalHeight });
+  };
+
+  const onHeightKeyDown = (commit: () => void) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+      commit();
+    }
+  };
+
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
     frontPlacedModules.some(module => {
@@ -1019,8 +1070,90 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     }
   };
 
+  // 높이 가이드 편집기 위치: 내경 좌측 가장자리 바깥쪽
+  const heightEditorX = mmToThreeUnits(internalSpace.startX) - mmToThreeUnits(120);
+  const heightEditorZ = frontIndicatorBackZ + 0.5;
+  // 각 항목의 Y 위치(해당 영역 중앙 높이)
+  const baseboardCenterY = mmToThreeUnits(floorFinishMm0 + baseboardMm / 2);
+  const moldingCenterY = mmToThreeUnits((spaceInfo.height ?? 0) - moldingMm / 2);
+  const furnitureCenterY = floorY + mmToThreeUnits(furnitureHeightMm / 2);
+
+  const heightEditorStyle = (valid: boolean): React.CSSProperties => ({
+    width: 110,
+    padding: '5px 6px',
+    fontSize: 34,
+    fontWeight: 500,
+    textAlign: 'center',
+    border: `2px solid ${valid ? primaryColor : '#d33'}`,
+    borderRadius: 6,
+    outline: 'none',
+    background: 'rgba(255,255,255,0.98)',
+    color: primaryColor,
+    boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+    lineHeight: 1.1,
+  });
+  const heightLabelStyle: React.CSSProperties = {
+    fontSize: 22,
+    fontWeight: 600,
+    color: primaryColor,
+    background: 'rgba(255,255,255,0.9)',
+    padding: '2px 6px',
+    borderRadius: 4,
+    whiteSpace: 'nowrap',
+    textAlign: 'center',
+    marginBottom: 4,
+  };
+
+  // 슬롯확장 모드 + 정면(2D front / 3D)일 때만 높이 편집기 노출
+  const showHeightEditors =
+    slotEditActive &&
+    !hasDroppedCeiling &&
+    (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front'));
+
+  const renderHeightEditor = (
+    key: string,
+    label: string,
+    y: number,
+    value: string,
+    setValue: (v: string) => void,
+    commit: () => void
+  ) => (
+    <Html
+      key={key}
+      position={[heightEditorX, y, heightEditorZ]}
+      center
+      distanceFactor={10}
+      zIndexRange={[100, 0]}
+      style={{ pointerEvents: 'auto' }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={heightLabelStyle}>{label}</div>
+        <input
+          type="number"
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={onHeightKeyDown(commit)}
+          onBlur={commit}
+          onPointerDown={e => e.stopPropagation()}
+          onWheel={e => e.stopPropagation()}
+          min={0}
+          step={1}
+          style={heightEditorStyle(true)}
+        />
+      </div>
+    </Html>
+  );
+
   return (
     <group>
+      {/* 높이 가이드 편집기 (슬롯확장 모드 전용): 걸레받이 / 상단몰딩 / 가구 높이 */}
+      {showHeightEditors && (
+        <>
+          {moldingMm > 0 && renderHeightEditor('molding-editor', '상단몰딩', moldingCenterY, moldingDraft, setMoldingDraft, commitMolding)}
+          {renderHeightEditor('furniture-height-editor', '가구높이', furnitureCenterY, furnitureHeightDraft, setFurnitureHeightDraft, commitFurnitureHeight)}
+          {baseboardMm > 0 && renderHeightEditor('baseboard-editor', '걸레받이', baseboardCenterY, baseboardDraft, setBaseboardDraft, commitBaseboard)}
+        </>
+      )}
       {/* 단내림 여부에 따른 가이드 렌더링 */}
       {hasDroppedCeiling && zoneSlotInfo.dropped ? (
         <>
