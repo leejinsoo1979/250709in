@@ -963,6 +963,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         e.preventDefault(); // 페이지 스크롤 방지
         e.stopPropagation(); // 이벤트 전파 방지
 
+        // 깊이(탑) 모드: 탑뷰에서 초기화만 (시점/카메라모드 변경 안 함)
+        if (useUIStore.getState().guideDepthEditMode) {
+          resetCamera();
+          spaceToggleStepRef.current = 0;
+          return;
+        }
+
         // 2D 모드: 항상 카메라 초기화만 (시점 순환 비활성화)
         if (viewMode === '2D') {
           canvasLog('🚀 스페이스 (2D) - resetCamera');
