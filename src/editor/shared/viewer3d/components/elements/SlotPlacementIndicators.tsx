@@ -1004,8 +1004,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     // ── 가이드 상하분할 5단 높이 (mm) ──
     // 전체 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 걸레받이 (전체 고정)
-    const gTopMolding = spaceInfo.guideTopMolding ?? 100;
-    const gBaseboard = spaceInfo.guideBaseboard ?? 100;
+    // 상단몰딩/걸레받이는 우측바와 연동되도록 frameSize.top / baseConfig.height 사용
+    const gTopMolding = spaceInfo.frameSize?.top ?? 0;
+    const gBaseboard = spaceInfo.baseConfig?.height ?? 0;
     const gLower = spaceInfo.guideLowerHeight ?? 800;
     const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
     // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 걸레받이 (나머지 흡수)
@@ -1143,9 +1144,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const commitTier = (key: string, raw: string) => {
       const v = Math.round(parseFloat(raw));
       if (!Number.isFinite(v) || v < 0) return;
-      if (key === 'molding') setSpaceInfo({ guideTopMolding: v });
+      if (key === 'molding') setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), top: v } });
       else if (key === 'lower') setSpaceInfo({ guideLowerHeight: v });
-      else if (key === 'baseboard') setSpaceInfo({ guideBaseboard: v });
+      else if (key === 'baseboard') setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), height: v } });
       else if (key === 'upper') setSpaceInfo({ guideUpperHeight: v });
       else if (key === 'midway') {
         // 미드웨이 변경 → 상부장이 흡수
