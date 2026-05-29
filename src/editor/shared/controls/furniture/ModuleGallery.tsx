@@ -11,6 +11,7 @@ import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurn
 import { getInternalSpaceBoundsX, getModuleBoundsX, getColumnObstacleBoundsX, findAvailableFreeGuideSlot, applyFreeGuideSlotToPlacement } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
+import { useConfirm } from '@/hooks/useConfirm';
 import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -180,6 +181,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
+  const { showConfirm, ConfirmComponent } = useConfirm();
   const { activeDroppedCeilingTab, setIsSlotDragging, activePlacementWall } = useUIStore();
   // (다크모드 검정 배경 처리 제거 — 누끼 처리된 PNG로 사용자가 직접 작업함)
 
@@ -596,7 +598,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   };
 
   // 더블클릭 시 자동 배치 핸들러
-  const handleDoubleClick = () => {
+  const handleDoubleClick = async () => {
     // 더블클릭 플래그 설정
     isDoubleClickRef.current = true;
 
@@ -608,6 +610,37 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
       clickTimeoutRef.current = null;
+    }
+
+    let placementSpaceInfo = spaceInfo;
+    if (
+      (placementSpaceInfo.layoutMode === 'free-placement' || placementSpaceInfo.customGuideMode === true)
+      && placementSpaceInfo.freePlacementGuideEditing
+      && (placementSpaceInfo.freePlacementGuides?.length || 0) > 0
+    ) {
+      const shouldStartPlacement = await showConfirm('현재 레이아웃으로 시작', {
+        title: '배치슬롯을 완성해주세요',
+        confirmText: '확인',
+        cancelText: '취소'
+      });
+      if (!shouldStartPlacement) {
+        setTimeout(() => { isDoubleClickRef.current = false; }, 100);
+        return;
+      }
+
+      const confirmedGuides = (placementSpaceInfo.freePlacementGuides || []).map((slot) => ({
+        ...slot,
+        confirmed: true
+      }));
+      useSpaceConfigStore.getState().setSpaceInfo({
+        freePlacementGuides: confirmedGuides,
+        freePlacementGuideEditing: false
+      });
+      placementSpaceInfo = {
+        ...placementSpaceInfo,
+        freePlacementGuides: confirmedGuides,
+        freePlacementGuideEditing: false
+      };
     }
 
     if (activePlacementWall === 'left' || activePlacementWall === 'right') {
@@ -640,36 +673,36 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     setCurrentDragData(null);
 
     // ★ 자유배치 모드: placeFurnitureFree 사용
-    if (spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true) {
+    if (placementSpaceInfo.layoutMode === 'free-placement' || placementSpaceInfo.customGuideMode === true) {
       try {
-        const internalSpace = calculateInternalSpace(spaceInfo);
-        const moduleData = getModuleById(module.id, internalSpace, spaceInfo);
+        const internalSpace = calculateInternalSpace(placementSpaceInfo);
+        const moduleData = getModuleById(module.id, internalSpace, placementSpaceInfo);
         if (!moduleData) {
           console.warn('❌ [자유배치 더블클릭] 모듈 데이터 없음:', module.id);
           return;
         }
 
-        const isGuideSlotPlacementMode = !spaceInfo.freePlacementGuideEditing
-          && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+        const isGuideSlotPlacementMode = !placementSpaceInfo.freePlacementGuideEditing
+          && (placementSpaceInfo.freePlacementGuides?.length || 0) > 0;
         if (isGuideSlotPlacementMode) {
           const targetSlot = findAvailableFreeGuideSlot(
-            spaceInfo.freePlacementGuides,
+            placementSpaceInfo.freePlacementGuides,
             placedModules,
-            spaceInfo,
+            placementSpaceInfo,
             (moduleData.category || 'full') as 'full' | 'upper' | 'lower',
-            getColumnObstacleBoundsX(spaceInfo.columns || [])
+            getColumnObstacleBoundsX(placementSpaceInfo.columns || [])
           );
           if (!targetSlot) {
             showAlert('배치할 빈 슬롯이 없습니다', { title: '배치 불가' });
             return;
           }
 
-          const { dimensions: slotDimensions, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(targetSlot, spaceInfo, module.dimensions, moduleData);
-          const targetX = targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2;
+          const { dimensions: slotDimensions, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(targetSlot, placementSpaceInfo, module.dimensions, moduleData);
+          const targetX = targetSlot.x + targetSlot.width / 2 - (placementSpaceInfo.width || 0) / 2;
           const result = placeFurnitureFree({
             moduleId: module.id,
             xPositionMM: targetX,
-            spaceInfo,
+            spaceInfo: placementSpaceInfo,
             dimensions: slotDimensions,
             existingModules: placedModules,
             moduleData: slotModuleData,
@@ -698,13 +731,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               depth: lastDims.depth
             }
           : { ...module.dimensions };
-        const fullBounds = getInternalSpaceBoundsX(spaceInfo);
+        const fullBounds = getInternalSpaceBoundsX(placementSpaceInfo);
 
         // 단내림(stepCeiling) 활성 시: 메인 구간 + 단내림 구간을 별도로 검색
-        const hasStepCeiling = !!spaceInfo.stepCeiling?.enabled;
-        const scWidthMm = hasStepCeiling ? (spaceInfo.stepCeiling!.width || 0) : 0;
-        const scPos = hasStepCeiling ? (spaceInfo.stepCeiling!.position || 'right') : 'right';
-        const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
+        const hasStepCeiling = !!placementSpaceInfo.stepCeiling?.enabled;
+        const scWidthMm = hasStepCeiling ? (placementSpaceInfo.stepCeiling!.width || 0) : 0;
+        const scPos = hasStepCeiling ? (placementSpaceInfo.stepCeiling!.position || 'right') : 'right';
+        const middleGap = placementSpaceInfo.gapConfig?.middle ?? 1.5;
 
         // 구간별 영역 계산
         // fullBounds = 통합 배치공간(메인+단내림, 커튼박스 제외)
@@ -714,8 +747,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         if (hasStepCeiling) {
           // 단내림 경계점 = 공간 원점 기준으로 계산
           // 커튼박스는 항상 단내림과 같은 쪽 → 커튼박스 폭 차감
-          const halfW = (spaceInfo.width || 2400) / 2;
-          const cbWidth = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 150) : 0;
+          const halfW = (placementSpaceInfo.width || 2400) / 2;
+          const cbWidth = placementSpaceInfo.droppedCeiling?.enabled ? (placementSpaceInfo.droppedCeiling.width || 150) : 0;
 
           const scBoundary = scPos === 'left'
             ? -halfW + cbWidth + scWidthMm  // 좌: [벽][커튼박스][단내림]|경계|[메인][벽]
@@ -749,7 +782,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const furnitureBounds = freeModules.map(m => getModuleBoundsX(m));
-        const columnBounds = getColumnObstacleBoundsX(spaceInfo.columns || []);
+        const columnBounds = getColumnObstacleBoundsX(placementSpaceInfo.columns || []);
         const allBounds = [...furnitureBounds, ...columnBounds].sort((a, b) => a.left - b.left);
 
         // upper/lower 공존: 다른 카테고리 가구는 장애물에서 제외
@@ -823,7 +856,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const result = placeFurnitureFree({
           moduleId: module.id,
           xPositionMM: targetX,
-          spaceInfo,
+          spaceInfo: placementSpaceInfo,
           dimensions: dims,
           existingModules: placedModules,
           moduleData,
@@ -1080,6 +1113,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       )}
 
       <AlertComponent />
+      <ConfirmComponent />
     </>
   );
 };

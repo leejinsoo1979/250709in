@@ -8,6 +8,7 @@ import { getInternalSpaceBoundsX, getModuleBoundsX, findAvailableFreeGuideSlot, 
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, CUSTOMIZABLE_DEFAULTS } from './CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
+import { useConfirm } from '@/hooks/useConfirm';
 import DoorIcon from './DoorIcon';
 import styles from './ModuleLibrary.module.css';
 
@@ -23,6 +24,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { spaceInfo } = useSpaceConfigStore();
   const { openFurniturePopup, setIsSlotDragging } = useUIStore();
+  const { showConfirm, ConfirmComponent } = useConfirm();
   const itemRef = useRef<HTMLDivElement>(null);
 
   // 도어 상태 관리 (기본값: false - 도어 없음)
@@ -74,16 +76,39 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   };
 
   // 더블클릭 핸들러: 자유배치 모드에서 좌측부터 자동 배치
-  const handleDoubleClick = () => {
-    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
-    if (spaceInfo.layoutMode !== 'free-placement' && spaceInfo.customGuideMode !== true) return;
+  const handleDoubleClick = async () => {
+    let placementSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    if (placementSpaceInfo.layoutMode !== 'free-placement' && placementSpaceInfo.customGuideMode !== true) return;
     if (!isValid && !needsWarning) return;
+
+    if (placementSpaceInfo.freePlacementGuideEditing && (placementSpaceInfo.freePlacementGuides?.length || 0) > 0) {
+      const shouldStartPlacement = await showConfirm('현재 레이아웃으로 시작', {
+        title: '배치슬롯을 완성해주세요',
+        confirmText: '확인',
+        cancelText: '취소'
+      });
+      if (!shouldStartPlacement) return;
+
+      const confirmedGuides = (placementSpaceInfo.freePlacementGuides || []).map((slot) => ({
+        ...slot,
+        confirmed: true
+      }));
+      useSpaceConfigStore.getState().setSpaceInfo({
+        freePlacementGuides: confirmedGuides,
+        freePlacementGuideEditing: false
+      });
+      placementSpaceInfo = {
+        ...placementSpaceInfo,
+        freePlacementGuides: confirmedGuides,
+        freePlacementGuideEditing: false
+      };
+    }
 
     console.log('🔵 ModuleItem 더블클릭 (자동배치):', module.id);
 
     const furnitureStore = useFurnitureStore.getState();
     const placedModules = furnitureStore.placedModules;
-    const internalSpace = calculateInternalSpace(spaceInfo);
+    const internalSpace = calculateInternalSpace(placementSpaceInfo);
 
     // 활성 가구 데이터 결정
     let moduleData: any;
@@ -113,10 +138,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         isDynamic: false,
         type: 'box' as const,
         defaultDepth: dims.depth,
-        modelConfig: { basicThickness: spaceInfo.panelThickness ?? 18, hasOpenFront: true, hasShelf: false, sections: [] },
+        modelConfig: { basicThickness: placementSpaceInfo.panelThickness ?? 18, hasOpenFront: true, hasShelf: false, sections: [] },
       };
     } else {
-      moduleData = getModuleById(module.id, internalSpace, spaceInfo);
+      moduleData = getModuleById(module.id, internalSpace, placementSpaceInfo);
       if (!moduleData) return;
       // 모듈ID별 키 우선, 없으면 기본 dimensions 사용 (카테고리 stdKey는 너비 공유용이므로 깊이 fallback X)
       // → 도어분절 팬트리장 같은 깊이 고정 가구가 다른 키큰장의 D 변경 영향 받지 않음
@@ -132,28 +157,28 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       moduleData = { ...moduleData, dimensions: dims };
     }
 
-    const isGuideSlotPlacementMode = !spaceInfo.freePlacementGuideEditing
-      && (spaceInfo.freePlacementGuides?.length || 0) > 0;
+    const isGuideSlotPlacementMode = !placementSpaceInfo.freePlacementGuideEditing
+      && (placementSpaceInfo.freePlacementGuides?.length || 0) > 0;
     if (isGuideSlotPlacementMode) {
       const targetSlot = findAvailableFreeGuideSlot(
-        spaceInfo.freePlacementGuides,
+        placementSpaceInfo.freePlacementGuides,
         placedModules,
-        spaceInfo,
+        placementSpaceInfo,
         (moduleData.category || 'full') as 'full' | 'upper' | 'lower',
-        getColumnObstacleBoundsX(spaceInfo.columns || [])
+        getColumnObstacleBoundsX(placementSpaceInfo.columns || [])
       );
       if (!targetSlot) {
         console.warn('❌ [가이드 슬롯 자동배치] 배치할 빈 슬롯이 없습니다');
         return;
       }
 
-      const { dimensions: slotDims, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(targetSlot, spaceInfo, dims, moduleData);
-      const targetX = targetSlot.x + targetSlot.width / 2 - (spaceInfo.width || 0) / 2;
+      const { dimensions: slotDims, moduleData: slotModuleData } = applyFreeGuideSlotToPlacement(targetSlot, placementSpaceInfo, dims, moduleData);
+      const targetX = targetSlot.x + targetSlot.width / 2 - (placementSpaceInfo.width || 0) / 2;
       const pendingPlacement = useMyCabinetStore.getState().pendingPlacement;
       const result = placeFurnitureFree({
         moduleId: module.id,
         xPositionMM: targetX,
-        spaceInfo,
+        spaceInfo: placementSpaceInfo,
         dimensions: slotDims,
         existingModules: placedModules,
         moduleData: slotModuleData,
@@ -176,10 +201,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     const furnitureWidth = dims.width;
 
     // 공간 경계 계산 (이격거리 반영)
-    const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
-    const gapLeft = spaceInfo.gapConfig?.left || 0;
-    const gapRight = spaceInfo.gapConfig?.right || 0;
-    const lockedGaps = spaceInfo.lockedWallGaps;
+    const { startX, endX } = getInternalSpaceBoundsX(placementSpaceInfo);
+    const gapLeft = placementSpaceInfo.gapConfig?.left || 0;
+    const gapRight = placementSpaceInfo.gapConfig?.right || 0;
+    const lockedGaps = placementSpaceInfo.lockedWallGaps;
     // 잠긴 이격거리 또는 gapConfig 중 더 큰 값 적용
     const effStartX = startX + Math.max(gapLeft, (lockedGaps?.left != null ? lockedGaps.left : 0));
     const effEndX = endX - Math.max(gapRight, (lockedGaps?.right != null ? lockedGaps.right : 0));
@@ -266,7 +291,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     const result = placeFurnitureFree({
       moduleId: module.id,
       xPositionMM: targetX,
-      spaceInfo,
+      spaceInfo: placementSpaceInfo,
       dimensions: dims,
       existingModules: placedModules,
       moduleData,
@@ -368,6 +393,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const isSelected = selectedFurnitureId === module.id;
 
   return (
+    <>
     <div
       ref={itemRef}
       key={module.id}
@@ -451,6 +477,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         />
       </div>
     </div>
+    <ConfirmComponent />
+    </>
   );
 };
 
