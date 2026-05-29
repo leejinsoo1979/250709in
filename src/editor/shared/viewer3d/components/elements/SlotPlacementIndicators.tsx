@@ -1122,7 +1122,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               <NativeLine name="free-placement-guide-line"
                 points={[[rx, guideZ, dimZ], [rx, guideZ, backGuideZ]]}
                 color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
-              <Html position={[0, guideZ, dimZ - 0.18]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
+              <Html position={[0, guideZ, dimZ - 0.5]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
                 <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{formatGuideMm(spaceInfo.width)}</div>
               </Html>
             </React.Fragment>
@@ -1221,6 +1221,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const frontScreenZ = backScreenZ + depthVal * 0.01;
           const midScreenZ = (backScreenZ + frontScreenZ) / 2;
           const boxDepthLen = Math.abs(frontScreenZ - backScreenZ);
+          const dashedInactiveLower = depthZone === 'upper' && slot.guideZone === 'lower';
           const elements: React.ReactNode[] = [
             // 깊이 박스 (장 영역 채움)
             <mesh key={`guide-depth-box-${slot.id}`} position={[centerX, guideZ - 0.001, midScreenZ]} rotation={[-Math.PI / 2, 0, 0]}>
@@ -1229,35 +1230,35 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             </mesh>,
             <NativeLine key={`guide-depth-box-outline-back-${slot.id}`} name="free-placement-guide-line"
               points={[[leftX, guideZ + 0.001, backScreenZ], [rightX, guideZ + 0.001, backScreenZ]]}
-              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} dashed={dashedInactiveLower} dashSize={0.08} gapSize={0.05} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
             <NativeLine key={`guide-depth-box-outline-front-${slot.id}`} name="free-placement-guide-line"
               points={[[leftX, guideZ + 0.001, frontScreenZ], [rightX, guideZ + 0.001, frontScreenZ]]}
-              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} dashed={dashedInactiveLower} dashSize={0.08} gapSize={0.05} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
             <NativeLine key={`guide-depth-box-outline-left-${slot.id}`} name="free-placement-guide-line"
               points={[[leftX, guideZ + 0.001, backScreenZ], [leftX, guideZ + 0.001, frontScreenZ]]}
-              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} dashed={dashedInactiveLower} dashSize={0.08} gapSize={0.05} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
             <NativeLine key={`guide-depth-box-outline-right-${slot.id}`} name="free-placement-guide-line"
               points={[[rightX, guideZ + 0.001, backScreenZ], [rightX, guideZ + 0.001, frontScreenZ]]}
-              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
+              color={guideColor} lineWidth={inactive ? 0.9 : 1.4} dashed={dashedInactiveLower} dashSize={0.08} gapSize={0.05} opacity={inactive ? 0.22 : 0.9} transparent depthTest={false} depthWrite={false} renderOrder={100001} />,
           ];
 
           if (!inactive) {
             elements.push(
               // 깊이/갭 입력 (장 영역 중앙)
-            <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '40px 40px', columnGap: 3, rowGap: 2, alignItems: 'center', background: 'transparent' }}>
-                <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>갭(뒷벽)</span>
-                <input type="text" inputMode="decimal" defaultValue={gapVal} key={`g-${slot.id}-${sectionKey}-${gapVal}`}
-                  onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                  onBlur={(e) => commitGap(slot, e.target.value)} style={{ ...depthInputStyle, borderStyle: 'dashed' }} />
-                <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>깊이</span>
-                <input type="text" inputMode="decimal" defaultValue={depthVal} key={`d-${slot.id}-${sectionKey}-${depthVal}`}
-                  onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                  onBlur={(e) => commitDepth(slot, e.target.value)} style={depthInputStyle} />
-              </div>
-            </Html>,
+              <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '40px 40px', columnGap: 3, rowGap: 2, alignItems: 'center', background: 'transparent' }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>갭(뒷벽)</span>
+                  <input type="text" inputMode="decimal" defaultValue={gapVal} key={`g-${slot.id}-${sectionKey}-${gapVal}`}
+                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    onBlur={(e) => commitGap(slot, e.target.value)} style={{ ...depthInputStyle, borderStyle: 'dashed' }} />
+                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap', textAlign: 'right' }}>깊이</span>
+                  <input type="text" inputMode="decimal" defaultValue={depthVal} key={`d-${slot.id}-${sectionKey}-${depthVal}`}
+                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    onBlur={(e) => commitDepth(slot, e.target.value)} style={depthInputStyle} />
+                </div>
+              </Html>,
             );
           }
 
