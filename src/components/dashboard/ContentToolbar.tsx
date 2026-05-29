@@ -41,6 +41,12 @@ const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] =
   { mode: 'details', label: '자세히', icon: <List size={15} /> },
 ];
 
+const SORT_OPTIONS: { value: SortBy; label: string }[] = [
+  { value: 'updatedAt', label: '수정일' },
+  { value: 'createdAt', label: '생성일' },
+  { value: 'name', label: '이름순' },
+];
+
 const ContentToolbar: React.FC<ContentToolbarProps> = ({
   viewMode,
   sortBy,
@@ -67,10 +73,12 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
 }) => {
   const { isMobile } = useResponsive();
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [treeOpen, setTreeOpen] = useState(false);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
+  const sortMenuRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,6 +92,17 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [viewMenuOpen]);
+
+  useEffect(() => {
+    if (!sortMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(e.target as Node)) {
+        setSortMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortMenuOpen]);
 
   // 파일트리 드롭다운 외부 클릭 닫기
   useEffect(() => {
@@ -215,6 +234,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   };
 
   const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[0];
+  const currentSortOption = SORT_OPTIONS.find(option => option.value === sortBy) || SORT_OPTIONS[0];
 
   const getBreadcrumbIcon = (item: BreadcrumbItem) => {
     switch (item.type) {
@@ -495,16 +515,35 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
       </div>
 
       {/* 정렬 */}
-      <select
-        className={styles.sortSelect}
-        value={sortBy}
-        onChange={e => onSortChange(e.target.value as SortBy)}
-      >
-        <option value="workOrder">작업순서</option>
-        <option value="date">수정일순</option>
-        <option value="name">이름순</option>
-        <option value="type">종류순</option>
-      </select>
+      <div className={styles.sortDropdown} ref={sortMenuRef}>
+        <button
+          type="button"
+          className={styles.sortDropdownBtn}
+          onClick={() => setSortMenuOpen(prev => !prev)}
+        >
+          <Clock size={14} />
+          <span>{currentSortOption.label}</span>
+          <ChevronDown size={12} className={sortMenuOpen ? styles.chevronUp : ''} />
+        </button>
+
+        {sortMenuOpen && (
+          <div className={styles.sortMenu}>
+            {SORT_OPTIONS.map(option => (
+              <button
+                key={option.value}
+                type="button"
+                className={`${styles.sortMenuItem} ${sortBy === option.value ? styles.sortMenuItemActive : ''}`}
+                onClick={() => {
+                  onSortChange(option.value);
+                  setSortMenuOpen(false);
+                }}
+              >
+                <span>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* 모바일 프로젝트 내부: 2행 — 액션 버튼 (텍스트 포함) */}
       {mobileInsideProject && (

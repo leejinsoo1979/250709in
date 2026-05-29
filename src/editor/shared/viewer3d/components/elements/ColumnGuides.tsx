@@ -395,14 +395,21 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const activePlacedFurnitureId = activePopup.type === 'furnitureEdit' && activePopup.id
     ? activePopup.id
     : (selectedFurnitureId ?? selectedFurnitureIds[selectedFurnitureIds.length - 1] ?? null);
-  const slotBaseReferenceModule = (() => {
+  const slotFrameReferenceModule = (() => {
     const slotPlacementCandidates = frontPlacedModules.filter((module) => (
       !module.isSurroundPanel
       && module.slotIndex !== undefined
       && module.isFreePlacement !== true
     ));
     const selectedCandidate = slotPlacementCandidates.find((module) => module.id === activePlacedFurnitureId);
-    return selectedCandidate ?? slotPlacementCandidates.find((module) => module.hasBase !== undefined || module.baseFrameHeight !== undefined || module.individualFloatHeight !== undefined);
+    return selectedCandidate ?? slotPlacementCandidates.find((module) => (
+      module.hasBase !== undefined
+      || module.baseFrameHeight !== undefined
+      || module.individualFloatHeight !== undefined
+      || module.hasTopFrame !== undefined
+      || module.topFrameThickness !== undefined
+      || module.topFrameGap !== undefined
+    ));
   })();
   const resolveBaseClearanceMm = (module?: typeof frontPlacedModules[number]) => {
     if (module) {
@@ -416,7 +423,18 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     }
     return Math.max(0, spaceInfo.baseConfig?.height || 0);
   };
-  const baseFrameHeightMm = resolveBaseClearanceMm(slotBaseReferenceModule);
+  const resolveTopClearanceMm = (module?: typeof frontPlacedModules[number]) => {
+    const defaultTopFrameMm = spaceInfo.frameSize?.top ?? 30;
+    if (module) {
+      if (module.hasTopFrame === false) {
+        return Math.max(0, module.topFrameGap ?? 0);
+      }
+      return Math.max(0, module.topFrameThickness ?? defaultTopFrameMm);
+    }
+    return Math.max(0, defaultTopFrameMm);
+  };
+  const baseFrameHeightMm = resolveBaseClearanceMm(slotFrameReferenceModule);
+  const topFrameHeightMm = resolveTopClearanceMm(slotFrameReferenceModule);
   const furnitureStartY = (floorFinishHeightMm + baseFrameHeightMm) * 0.01;
   
   // CSS 변수에서 실제 테마 색상 가져오기
@@ -433,7 +451,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const primaryColor = getThemeColorFromCSS('--theme-primary', '#10b981');
   const guideColor = primaryColor; // 2D 모드에서도 투명도 없이
   const lineWidth = viewMode === '2D' ? 0.3 : 0.5; // 더 얇은 점선으로 조정
-  const floatHeight = slotBaseReferenceModule ? 0 : (isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0);
+  const floatHeight = slotFrameReferenceModule ? 0 : (isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0);
   
   // 바닥과 천장 높이 (Three.js 단위)
   //   floorY = 바닥마감재 + 걸레받이(또는 OFF 시 띄움) + 띄움 높이
@@ -453,8 +471,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const offTopFrameGap = topOffMods.reduce((acc, m) => Math.max(acc, (m as any).topFrameGap || 0), 0);
   const offBaseFrameGap = baseOffMods.reduce((acc, m) => Math.max(acc, (m as any).baseFrameGap || 0), 0);
   const maxIndividualFloat = placedModules.reduce((acc, m) => Math.max(acc, (m as any).individualFloatHeight || 0), 0);
-  const effectiveTopFrameMm = anyTopFrameOff ? offTopFrameGap : topFrameMmCeil;
-  const effectiveBaseFrameMm = slotBaseReferenceModule
+  const effectiveTopFrameMm = slotFrameReferenceModule
+    ? topFrameHeightMm
+    : (anyTopFrameOff ? offTopFrameGap : topFrameMmCeil);
+  const effectiveBaseFrameMm = slotFrameReferenceModule
     ? baseFrameHeightMm
     : (anyBaseOff ? (maxIndividualFloat + offBaseFrameGap) : baseFrameMmCeil);
   const floorY = mmToThreeUnits(floorFinishMmCeil + effectiveBaseFrameMm) + floatHeight;

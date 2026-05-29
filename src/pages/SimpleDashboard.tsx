@@ -56,7 +56,7 @@ const SimpleDashboard: React.FC = () => {
 
   // --- 로컬 UI 상태 ---
   const [viewMode, setViewMode] = useState<ViewMode>('large');
-  const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [sortBy, setSortBy] = useState<SortBy>('updatedAt');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -694,7 +694,7 @@ const SimpleDashboard: React.FC = () => {
 
   const handleSortChange = useCallback((nextSort: SortBy) => {
     setSortBy(nextSort);
-    setSortDirection(nextSort === 'date' ? 'desc' : 'asc');
+    setSortDirection(nextSort === 'name' ? 'asc' : 'desc');
   }, []);
 
   // --- 선택된 아이템 헬퍼 ---

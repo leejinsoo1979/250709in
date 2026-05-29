@@ -85,23 +85,21 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       .sort((aEntry, bEntry) => {
       const a = aEntry.item;
       const b = bEntry.item;
-      if (sortBy !== 'date') {
+      if (sortBy !== 'updatedAt' && sortBy !== 'createdAt') {
         if (a.type === 'folder' && b.type !== 'folder') return -1;
         if (a.type !== 'folder' && b.type === 'folder') return 1;
       }
 
       let cmp = 0;
-      if (sortBy === 'workOrder') {
+      if (sortBy === 'createdAt') {
         cmp = getSortTime(a.createdAt || a.updatedAt) - getSortTime(b.createdAt || b.updatedAt);
         if (cmp === 0) cmp = aEntry.index - bEntry.index;
       } else if (sortBy === 'name') {
         cmp = a.name.localeCompare(b.name, 'ko');
-      } else if (sortBy === 'date') {
+      } else if (sortBy === 'updatedAt') {
         const aTime = getSortTime(a.updatedAt);
         const bTime = getSortTime(b.updatedAt);
         cmp = aTime - bTime;
-      } else if (sortBy === 'type') {
-        cmp = a.type.localeCompare(b.type);
       }
 
       return sortDirection === 'desc' ? -cmp : cmp;
@@ -308,7 +306,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           <div className={styles.colType}>종류</div>
           <div className={styles.colSize}>크기</div>
           <div className={styles.colDate} onClick={onSortDirectionToggle}>
-            수정일 {sortBy === 'date' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
+            수정일 {sortBy === 'updatedAt' ? (sortDirection === 'asc' ? '▲' : '▼') : ''}
           </div>
           <div className={styles.colActions} />
         </div>
