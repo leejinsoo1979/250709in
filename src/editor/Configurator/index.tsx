@@ -8465,25 +8465,23 @@ const Configurator: React.FC = () => {
                 >
                   오토슬롯
                 </button>
-                {/* 커스텀슬롯 탭 — 개발자(sbbc212) 계정에서만 노출 */}
-                {user?.email?.trim().toLowerCase() === 'sbbc212@gmail.com' && (
-                  <button
-                    className={`${styles.layoutModeBtn} ${spaceInfo.customGuideMode ? styles.layoutModeActive : ''}`}
-                    onClick={() => {
-                      if (spaceInfo.customGuideMode) return;
-                      // 가이드 모드 진입 시 기존 배치 가구는 모두 초기화
-                      if (placedModules.length > 0) {
-                        if (!window.confirm('커스텀슬롯으로 전환하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
-                        clearAllModules();
-                      }
-                      // 즉시 가이드 모드 활성화 (탭이 바로 커스텀슬롯으로 바뀜) + 가이드 생성 팝업 표시
-                      setSpaceInfo({ customGuideMode: true });
-                      window.dispatchEvent(new CustomEvent('free-placement-guide:toggle'));
-                    }}
-                  >
-                    커스텀슬롯
-                  </button>
-                )}
+                {/* 커스텀슬롯 탭 */}
+                <button
+                  className={`${styles.layoutModeBtn} ${spaceInfo.customGuideMode ? styles.layoutModeActive : ''}`}
+                  onClick={() => {
+                    if (spaceInfo.customGuideMode) return;
+                    // 가이드 모드 진입 시 기존 배치 가구는 모두 초기화
+                    if (placedModules.length > 0) {
+                      if (!window.confirm('커스텀슬롯으로 전환하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
+                      clearAllModules();
+                    }
+                    // 즉시 가이드 모드 활성화 (탭이 바로 커스텀슬롯으로 바뀜) + 가이드 생성 팝업 표시
+                    setSpaceInfo({ customGuideMode: true });
+                    window.dispatchEvent(new CustomEvent('free-placement-guide:toggle'));
+                  }}
+                >
+                  커스텀슬롯
+                </button>
                 <button
                   className={`${styles.layoutModeBtn} ${!spaceInfo.customGuideMode && (spaceInfo.layoutMode || 'equal-division') === 'free-placement' ? styles.layoutModeActive : ''}`}
                   onClick={() => {

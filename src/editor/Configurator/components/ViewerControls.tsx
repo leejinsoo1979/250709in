@@ -16,8 +16,6 @@ import { viewCubeRequest } from '@/editor/shared/viewer3d/components/base/compon
 import { getFreePlacementGuideBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { isSuperAdmin } from '@/firebase/admins';
 
-const GUIDE_BUTTON_EMAIL = 'sbbc212@gmail.com';
-
 export type ViewMode = '2D' | '3D';
 export type ViewDirection = 'front' | 'top' | 'left' | 'right' | 'all';
 export type RenderMode = 'solid' | 'wireframe';
@@ -88,7 +86,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, setActivePlacementWall, cameraMode, setCameraMode, guideDepthEditMode, setGuideDepthEditMode } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = isSuperAdmin(user?.email);
-  const canCreateFreePlacementGuide = user?.email?.toLowerCase().trim() === GUIDE_BUTTON_EMAIL;
+  const canCreateFreePlacementGuide = true;
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
