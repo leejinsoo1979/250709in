@@ -12,6 +12,7 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useAuth } from '@/auth/AuthProvider';
 import { sceneHolder } from '../../sceneHolder';
 import { calculateInternalSpace } from '../../utils/geometry';
+import { calculateOptimalDistance } from './utils/threeUtils';
 import {
   buildFurniturePresetUpdates,
   collectFurniturePresetProps,
@@ -696,8 +697,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const width = spaceInfo?.width || 2400;
       const height = spaceInfo?.height || 2400;
       const depth = spaceInfo?.depth || 600;
+      // 2D 탑뷰와 동일한 카메라 거리 계산 사용
       const cx = 0, cy = toThree(height / 2), cz = 0;
-      const dist = Math.max(toThree(width), toThree(depth)) * 1.6;
+      const dist = calculateOptimalDistance(width, depth, height, 0);
       controls.target.set(cx, cy, cz);
       cam.up.set(0, 0, -1);
       cam.position.set(cx, cy + dist, cz);
