@@ -998,8 +998,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const zoneSlots = hasSplit
       ? allGuideSlots.filter((s) => (s.guideZone || 'full') === depthZone)
       : allGuideSlots;
-    const defaultDepth = spaceInfo.depth || 600;
-    const anchor = spaceInfo.guideDepthAnchor || 'front';
+    // zone별 기본 깊이: 상부장 300, 하부장/전체 600 (공간 깊이 1500을 쓰지 않음)
+    const defaultDepthForZone = (zone?: string) => (zone === 'upper' ? 300 : 600);
     const guideZ = 0.006;
     const guideColor = colors?.primary || '#3b82f6';
     const halfW = spaceInfo.width / 2;
@@ -1051,10 +1051,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 <button style={{ ...toggleBtnStyle(depthZone === 'lower'), borderRadius: '0 6px 6px 0' }} onClick={() => setDepthZone('lower')}>하부장</button>
               </div>
             )}
-            <div style={{ display: 'flex', gap: 0 }}>
-              <button style={{ ...toggleBtnStyle(anchor === 'front'), borderRadius: '6px 0 0 6px' }} onClick={() => setSpaceInfo({ guideDepthAnchor: 'front' })}>앞고정</button>
-              <button style={{ ...toggleBtnStyle(anchor === 'back'), borderRadius: '0 6px 6px 0' }} onClick={() => setSpaceInfo({ guideDepthAnchor: 'back' })}>뒤고정</button>
-            </div>
           </div>
         </Html>
 
@@ -1097,7 +1093,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const leftX = (slot.x - halfW) * 0.01;
           const rightX = (slot.x + slot.width - halfW) * 0.01;
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
-          const depthVal = Math.round(slot.depth ?? defaultDepth);
+          const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
           // mm 기준: 뒷벽 z=-halfD. 장 뒷면 = 뒷벽 + 갭, 장 앞면 = 뒷벽 + 갭 + 깊이
           const backZmm = -halfD + gapVal;            // 장 뒷면 (mm)
