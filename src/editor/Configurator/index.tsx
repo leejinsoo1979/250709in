@@ -206,15 +206,21 @@ const FrameOffsetRow: React.FC<{
   highlightKey: string; toAlpha: (n: number) => string; styles: any;
   setHighlightedFrame: (key: string | null) => void;
   gap?: number; onGapChange?: (v: number) => void;
-}> = ({ num, label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, highlightKey, toAlpha, styles, setHighlightedFrame, gap, onGapChange }) => {
-  const [sizeText, setSizeText] = useState(String(sizeMM || ''));
+  splitGapFromSize?: boolean;
+}> = ({ num, label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, highlightKey, toAlpha, styles, setHighlightedFrame, gap, onGapChange, splitGapFromSize = false }) => {
+  const gapMM = Math.max(0, gap ?? 0);
+  const displaySizeMM = splitGapFromSize ? Math.max(0, sizeMM - gapMM) : sizeMM;
+  const commitDisplaySize = (nextDisplaySize: number) => {
+    onSizeChange(splitGapFromSize ? nextDisplaySize + gapMM : nextDisplaySize);
+  };
+  const [sizeText, setSizeText] = useState(String(displaySizeMM || ''));
   const [offsetText, setOffsetText] = useState(offset !== 0 ? String(offset) : '');
   const [gapText, setGapText] = useState((gap ?? 0) !== 0 ? String(gap) : '');
   const sizeFocusRef = useRef(false);
   const offsetFocusRef = useRef(false);
   const gapFocusRef = useRef(false);
 
-  useEffect(() => { if (!sizeFocusRef.current) setSizeText(sizeMM ? String(sizeMM) : ''); }, [sizeMM]);
+  useEffect(() => { if (!sizeFocusRef.current) setSizeText(displaySizeMM ? String(displaySizeMM) : ''); }, [displaySizeMM]);
   useEffect(() => { if (!offsetFocusRef.current) setOffsetText(offset !== 0 ? String(offset) : ''); }, [offset]);
   useEffect(() => { if (!gapFocusRef.current) setGapText((gap ?? 0) !== 0 ? String(gap) : ''); }, [gap]);
 
@@ -233,12 +239,12 @@ const FrameOffsetRow: React.FC<{
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                   e.preventDefault();
-                  const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                  setSizeText(String(next)); onSizeChange(next);
+                  const next = Math.max(0, Math.min(9999, (displaySizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setSizeText(String(next)); commitDisplaySize(next);
                 } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
               }}
               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
-              onBlur={(e) => { sizeFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(c)); onSizeChange(c); }}
+              onBlur={(e) => { sizeFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(c)); commitDisplaySize(c); }}
               className={styles.frameNumberInput}
             />
           </div>
@@ -6871,6 +6877,7 @@ const Configurator: React.FC = () => {
                         onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)))}
                         onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
                         onGapChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
+                        splitGapFromSize
                         highlightKey="base-all-free"
                         toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                       />;
@@ -6913,6 +6920,9 @@ const Configurator: React.FC = () => {
                   baseNum++;
                   const bn = baseNum;
                   const freeBaseEnabled = mod.hasBase !== false;
+                  const baseGap = Math.max(0, (mod as any).baseFrameGap ?? 0);
+                  const rawBaseHeight = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height || 65);
+                  const visibleBaseHeight = Math.max(0, rawBaseHeight - baseGap);
                   return (
                     <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(bn)}(하)</span>
@@ -6932,17 +6942,16 @@ const Configurator: React.FC = () => {
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                             <input
                               type="text" inputMode="numeric"
-                              value={(mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height || 65)) || ''} placeholder="0"
+                              value={visibleBaseHeight || ''} placeholder="0"
                               onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height || 60);
-                                  updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1)))));
+                                  updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(0, Math.min(9999, visibleBaseHeight + (e.key === 'ArrowUp' ? 1 : -1))) + baseGap));
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, v === '' ? 0 : parseInt(v, 10))); }}
-                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)))); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, (v === '' ? 0 : parseInt(v, 10)) + baseGap)); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) + baseGap)); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -7141,11 +7150,11 @@ const Configurator: React.FC = () => {
                               <span style={numLabelStyle}>size</span>
                               <input
                                 type="text" inputMode="numeric"
-                                value={globalBaseEmpty || ''}
+                                value={Math.max(0, globalBaseEmpty - globalBaseGapEmpty) || ''}
                                 onChange={(e) => {
                                   const v = e.target.value;
                                   if (v === '' || /^\d+$/.test(v)) {
-                                    handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v === '' ? 0 : parseInt(v, 10) } });
+                                    handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: (v === '' ? 0 : parseInt(v, 10)) + globalBaseGapEmpty } });
                                   }
                                 }}
                                 style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }}
@@ -7212,8 +7221,15 @@ const Configurator: React.FC = () => {
             label: string, enabled: boolean, sizeMM: number, offset: number,
             onToggle: () => void, onSizeChange: (v: number) => void, onOffsetChange: (v: number) => void, hlKey: string,
             gap?: number, onGapChange?: (v: number) => void,
-          ) => (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+            splitGapFromSize = false,
+          ) => {
+            const gapMM = Math.max(0, gap ?? 0);
+            const displaySizeMM = splitGapFromSize ? Math.max(0, sizeMM - gapMM) : sizeMM;
+            const commitDisplaySize = (nextDisplaySize: number) => {
+              onSizeChange(splitGapFromSize ? nextDisplaySize + gapMM : nextDisplaySize);
+            };
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
               <button
                 onClick={onToggle}
@@ -7225,22 +7241,22 @@ const Configurator: React.FC = () => {
                     <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                     <input
                       type="text" inputMode="numeric"
-                      value={sizeMM || ''} placeholder="0"
+                      value={displaySizeMM || ''} placeholder="0"
                       onFocus={() => setHighlightedFrame(hlKey)}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onSizeChange(Math.max(0, Math.min(9999, (sizeMM || 0) + delta)));
+                          commitDisplaySize(Math.max(0, Math.min(9999, (displaySizeMM || 0) + delta)));
                         }
                       }}
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onSizeChange(v === '' ? 0 : parseInt(v, 10));
+                        if (v === '' || /^\d+$/.test(v)) commitDisplaySize(v === '' ? 0 : parseInt(v, 10));
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onSizeChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
+                        commitDisplaySize(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
                       }}
                       className={styles.frameNumberInput}
                     />
@@ -7298,7 +7314,8 @@ const Configurator: React.FC = () => {
                 </div>
               ) : null}
             </div>
-          );
+            );
+          };
 
           const renderSlotBaseFrameRow = (
             mod: typeof sorted[0],
@@ -7309,6 +7326,9 @@ const Configurator: React.FC = () => {
             const bfMin = isLower ? 60 : 40;
             const bfMax = isLower ? 150 : 100;
             const bfDefault = isLower ? 105 : 60;
+            const baseGap = Math.max(0, (mod as any).baseFrameGap ?? 0);
+            const rawBaseHeight = mod.baseFrameHeight ?? bfDefault;
+            const visibleBaseHeight = Math.max(0, rawBaseHeight - baseGap);
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -7328,17 +7348,16 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={(mod.baseFrameHeight ?? bfDefault) || ''} placeholder="0"
+                        value={visibleBaseHeight || ''} placeholder="0"
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = mod.baseFrameHeight ?? bfDefault;
-                            updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1)))));
+                            updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(bfMin, Math.min(bfMax, visibleBaseHeight + (e.key === 'ArrowUp' ? 1 : -1))) + baseGap));
                           }
                         }}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, num > bfMax ? bfMax : num)); } }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)))); }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, (num > bfMax ? bfMax : num) + baseGap)); } }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, getBaseFrameSizeUpdates(mod, Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) + baseGap)); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -7803,6 +7822,7 @@ const Configurator: React.FC = () => {
                               (v) => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any));
                               },
+                              true,
                             );
                           }
                           // OFF 상태: 토글 + 띄움 높이 입력
@@ -8448,6 +8468,7 @@ const Configurator: React.FC = () => {
                       clearAllModules();
                       setSpaceInfo({ freeSurround: undefined });
                     }
+                    useUIStore.getState().setGuideDepthEditMode(false);
                     const updates: Record<string, unknown> = { layoutMode: 'free-placement', customGuideMode: false, freePlacementGuides: [], freePlacementGuideEditing: false };
                     // 슬롯→자유배치 전환 시 이격거리 초기화 (노서라운드)
                     if (spaceInfo.surroundType === 'no-surround') {
