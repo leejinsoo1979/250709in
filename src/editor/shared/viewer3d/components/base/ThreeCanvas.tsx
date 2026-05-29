@@ -689,6 +689,23 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       return;
     }
 
+    // 깊이(탑) 모드: 탑뷰에서 초기화 — 위에서 내려다보는 시점 유지
+    if (useUIStore.getState().guideDepthEditMode) {
+      const cam = controls.object as THREE.Camera & { up: THREE.Vector3 };
+      const toThree = (mm: number) => mm * 0.01;
+      const width = spaceInfo?.width || 2400;
+      const height = spaceInfo?.height || 2400;
+      const depth = spaceInfo?.depth || 600;
+      const cx = 0, cy = toThree(height / 2), cz = 0;
+      const dist = Math.max(toThree(width), toThree(depth)) * 1.6;
+      controls.target.set(cx, cy, cz);
+      cam.up.set(0, 0, -1);
+      cam.position.set(cx, cy + dist, cz);
+      cam.lookAt(cx, cy, cz);
+      controls.update();
+      return;
+    }
+
     const isOrthographicCamera = controls.object.type === 'OrthographicCamera';
 
     if (
