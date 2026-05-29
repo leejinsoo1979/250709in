@@ -1122,10 +1122,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
-          // 외곽 뒷변과 동일 좌표계 사용: 뒷변 점 [x, halfD] → screenZ = -halfD*0.01
-          // 갭 0이면 장 뒷면 = 뒷벽(halfD). 앞쪽으로 갈수록 z 감소.
-          const backScreenZ = -(halfD - gapVal) * 0.01;            // 장 뒷면 (화면)
-          const frontScreenZ = -(halfD - gapVal - depthVal) * 0.01; // 장 앞면 (화면)
+          // 뒷벽 변 = 외곽의 한 변, screenZ = -halfD*0.01. 갭/깊이는 거기서 앞쪽(+방향)으로.
+          const backWallScreenZ = -halfD * 0.01;                       // 뒷벽 (화면)
+          const backScreenZ = backWallScreenZ + gapVal * 0.01;          // 장 뒷면 = 뒷벽 + 갭(앞으로)
+          const frontScreenZ = backWallScreenZ + (gapVal + depthVal) * 0.01; // 장 앞면 = 뒷벽 + 갭 + 깊이
           const midScreenZ = (backScreenZ + frontScreenZ) / 2;
           const boxDepthLen = Math.abs(frontScreenZ - backScreenZ);
           return [
