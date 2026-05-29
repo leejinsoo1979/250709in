@@ -169,7 +169,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).not.toContain('측판 따내기');
   });
 
-  it('exports left furniture side back-panel groove rotated for CAM2020 MPR orientation', () => {
+  it('exports furniture side back-panel groove using optimizer preview coordinates', () => {
     const panel = {
       id: 'left-side-with-back-groove-1',
       name: '(하)좌측',
@@ -191,12 +191,13 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(converted.height).toBe(380);
     expect(mpr).toContain(']2');
     expect(mpr).toContain('X=860.0000');
-    expect(mpr).toContain('Y=21.0000');
+    expect(mpr).toContain('Y=0.0000');
+    expect(mpr).toContain('Y=359.0000');
     expect(mpr).toContain('<109 \\Nuten\\');
-    expect(mpr).toContain('XA="861.0000"');
-    expect(mpr).toContain('YA="21.0000"');
-    expect(mpr).toContain('XE="-1.0000"');
-    expect(mpr).toContain('YE="21.0000"');
+    expect(mpr).toContain('XA="-1.0000"');
+    expect(mpr).toContain('YA="359.0000"');
+    expect(mpr).toContain('XE="861.0000"');
+    expect(mpr).toContain('YE="359.0000"');
     expect(mpr).toContain('NB="3.0000"');
     expect(mpr).toContain('TI="7.5000"');
     expect(mpr).not.toContain('백패널 홈');
@@ -309,8 +310,8 @@ describe('convertPlacedPanelToMprBoringData', () => {
     } as PlacedPanel);
     const upperLeftMpr = generateSinglePanelMPR(upperLeft);
 
-    expect(upperLeftMpr).toContain('Y=21.0000');
-    expect(upperLeftMpr).toContain('YA="21.0000"');
+    expect(upperLeftMpr).toContain('Y=359.0000');
+    expect(upperLeftMpr).toContain('YA="359.0000"');
 
     const lowerRight = convertPlacedPanelToMprBoringData({
       id: 'lower-right-side',
@@ -332,39 +333,6 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(lowerRightMpr).toContain('YA="21.0000"');
     expect(lowerRightMpr).toContain('Y=340.0000');
     expect(lowerRightMpr).toContain('Y=0.0000');
-  });
-
-  it('rotates upper/lower left side MPR vertical boring coordinates by 180 degrees only on export', () => {
-    const createLeftSidePanel = (name: string) => convertPlacedPanelToMprBoringData({
-      id: `${name}-side`,
-      name,
-      width: 380,
-      height: 1410,
-      x: 0,
-      y: 0,
-      rotated: false,
-      quantity: 1,
-      material: 'PB',
-      color: 'MW',
-      grain: 'VERTICAL',
-      boringPositions: [9, 199],
-      boringDepthGroups: [
-        { y: 9, depthPositions: [30], boringType: 'fixed-panel' },
-        { y: 199, depthPositions: [50], boringType: 'fixed-panel' },
-      ],
-    } as PlacedPanel);
-    const upperLeftMpr = generateSinglePanelMPR(createLeftSidePanel('(상)좌측'));
-    const lowerLeftMpr = generateSinglePanelMPR(createLeftSidePanel('(하)좌측'));
-
-    [upperLeftMpr, lowerLeftMpr].forEach((mpr) => {
-      expect(mpr).toContain('XA="9.0000"');
-      expect(mpr).toContain('YA="350.0000"');
-      expect(mpr).toContain('XA="199.0000"');
-      expect(mpr).toContain('YA="330.0000"');
-      expect(mpr).toContain('YA="21.0000"');
-      expect(mpr).not.toContain('XA="1401.0000"');
-      expect(mpr).not.toContain('YA="359.0000"');
-    });
   });
 
   it('exports door hinge cups and screws with the same coordinates shown in optimizer preview', () => {
