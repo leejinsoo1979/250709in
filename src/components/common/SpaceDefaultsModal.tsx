@@ -508,7 +508,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               </div>
             ) : (
               <div className={styles.row}>
-                <NumberInput label="하단갭" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={2000} step={1} />
+                <NumberInput label="띄움높이" value={values.baseboardGap} onChange={h('baseboardGap')} min={0} max={2000} step={1} />
               </div>
             )}
           </div>
@@ -534,7 +534,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               </div>
             ) : (
               <div className={styles.row}>
-                <NumberInput label="하단갭" value={values.baseboardLowerGap} onChange={h('baseboardLowerGap')} min={0} max={2000} step={1} />
+                <NumberInput label="띄움높이" value={values.baseboardLowerGap} onChange={h('baseboardLowerGap')} min={0} max={2000} step={1} />
               </div>
             )}
           </div>

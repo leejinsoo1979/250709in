@@ -10,6 +10,7 @@ import { TbTableExport } from 'react-icons/tb';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
 import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -1270,6 +1271,7 @@ const Header: React.FC<HeaderProps> = ({
                       )}
                     </div>
                   </div>
+                  <NotificationCenter />
                 </div>
               ) : (
                 <button

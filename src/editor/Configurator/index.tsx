@@ -6606,7 +6606,7 @@ const Configurator: React.FC = () => {
                           </>
                         ) : (
                           <div style={numCellStyle}>
-                            <span style={numLabelStyle}>하단갭</span>
+                            <span style={numLabelStyle}>띄움높이</span>
                             <input type="text" inputMode="numeric" value={globalBaseGapEmpty || ''}
                               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, gap: v === '' ? 0 : parseInt(v, 10) } as any }); }}
                               style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
@@ -7197,7 +7197,7 @@ const Configurator: React.FC = () => {
                           </>
                         ) : (
                           <div style={numCellStyle}>
-                            <span style={numLabelStyle}>하단갭</span>
+                            <span style={numLabelStyle}>띄움높이</span>
                             <input
                               type="text" inputMode="numeric"
                               value={globalBaseGapEmpty || ''}
