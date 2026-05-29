@@ -1025,11 +1025,13 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       });
     };
 
-    const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
-      padding: '4px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
-      border: `2px solid ${guideColor}`, borderRadius: 6,
-      background: active ? guideColor : 'rgba(255,255,255,0.95)',
-      color: active ? '#fff' : guideColor, lineHeight: 1.1,
+    // 알약(pill) 토글 버튼 — 글자 가로 고정
+    const pillBtnStyle = (active: boolean): React.CSSProperties => ({
+      padding: '5px 16px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+      border: 'none', borderRadius: 999,
+      background: active ? guideColor : 'transparent',
+      color: active ? '#fff' : guideColor,
+      whiteSpace: 'nowrap', lineHeight: 1.1, transition: 'all 0.12s',
     });
     const depthInputStyle: React.CSSProperties = {
       width: 64, padding: '4px 6px', fontSize: 14, fontWeight: 700, textAlign: 'center',
@@ -1046,9 +1048,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         >
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
             {hasSplit && (
-              <div style={{ display: 'flex', gap: 0 }}>
-                <button style={{ ...toggleBtnStyle(depthZone === 'upper'), borderRadius: '6px 0 0 6px' }} onClick={() => setDepthZone('upper')}>상부장</button>
-                <button style={{ ...toggleBtnStyle(depthZone === 'lower'), borderRadius: '0 6px 6px 0' }} onClick={() => setDepthZone('lower')}>하부장</button>
+              <div style={{ display: 'inline-flex', gap: 2, padding: 3, borderRadius: 999, border: `2px solid ${guideColor}`, background: 'rgba(255,255,255,0.95)' }}>
+                <button style={pillBtnStyle(depthZone === 'upper')} onClick={() => setDepthZone('upper')}>상부장</button>
+                <button style={pillBtnStyle(depthZone === 'lower')} onClick={() => setDepthZone('lower')}>하부장</button>
               </div>
             )}
           </div>
@@ -1112,18 +1114,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             <Html key={`guide-depth-input-${slot.id}`} position={[centerX, guideZ, midScreenZ]} center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'center' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>깊이</span>
-                  <input type="number" defaultValue={depthVal} key={`d-${slot.id}-${depthVal}`} min={1}
-                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                    onBlur={(e) => commitDepth(slot.id, e.target.value)} style={depthInputStyle} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                   <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>갭(뒷벽)</span>
                   <input type="number" defaultValue={gapVal} key={`g-${slot.id}-${gapVal}`} min={0}
                     onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
                     onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                     onBlur={(e) => commitGap(slot.id, e.target.value)} style={{ ...depthInputStyle, borderStyle: 'dashed' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>깊이</span>
+                  <input type="number" defaultValue={depthVal} key={`d-${slot.id}-${depthVal}`} min={1}
+                    onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    onBlur={(e) => commitDepth(slot.id, e.target.value)} style={depthInputStyle} />
                 </div>
               </div>
             </Html>,
