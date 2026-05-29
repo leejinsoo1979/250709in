@@ -1306,6 +1306,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     (uiSelectedFurnitureIds?.includes(placedFurnitureId) ?? false) ||
     (activePopup?.type === 'furnitureEdit' && activePopup?.id === placedFurnitureId)
   );
+  const isFreeOrCustomPlacement = spaceInfo?.layoutMode === 'free-placement' || spaceInfo?.customGuideMode === true;
   const maidaDimensionSide: 'left' | 'right' | null = (() => {
     if (placedFurnitureId) {
       const totalSlotCount = (() => {
@@ -1315,7 +1316,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       const visibleModules = placedModulesForDoorDimensions
         .filter(module => !module.isSurroundPanel && module.hasDoor === true)
         .map((module, index) => {
-          const moduleSlotIndex = module.slotIndex;
+          const moduleSlotIndex = isFreeOrCustomPlacement ? undefined : module.slotIndex;
           const moduleRightSlotIndex = moduleSlotIndex !== undefined
             ? moduleSlotIndex + (module.isDualSlot ? 1 : 0)
             : undefined;
@@ -1351,14 +1352,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const slotCount = Array.isArray(effectiveSlotWidths) ? effectiveSlotWidths.length : 0;
     const isDual = !!placedModuleForCorner?.isDualSlot || moduleData.id.includes('dual-');
 
-    if (slotCount > 0 && typeof resolvedSlotIndex === 'number') {
+    if (!isFreeOrCustomPlacement && slotCount > 0 && typeof resolvedSlotIndex === 'number') {
       const endSlotIndex = resolvedSlotIndex + (isDual ? 1 : 0);
       if (resolvedSlotIndex <= 0) return 'left';
       if (endSlotIndex >= slotCount - 1) return 'right';
       return isCurrentModuleFocused ? 'left' : null;
     }
 
-    if (spaceInfo?.layoutMode !== 'free-placement' && spaceInfo?.customGuideMode !== true) {
+    if (!isFreeOrCustomPlacement) {
       return isCurrentModuleFocused ? 'left' : null;
     }
 
