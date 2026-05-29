@@ -288,7 +288,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                         {item.authorName}
                       </span>
                       <span className={styles.itemDate}>{formatDate(item.createdAt)}</span>
-                      <span style={{ fontSize: 12, color: 'var(--theme-text-muted, #999)', flexShrink: 0, minWidth: 64, textAlign: 'right', marginRight: 20 }}>
+                      <span style={{ fontSize: 12, color: 'var(--theme-text-muted, #999)', flexShrink: 0, minWidth: 64, textAlign: 'right' }}>
                         조회 {item.viewCount || 0}
                       </span>
                     </div>
@@ -309,6 +309,9 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                           {item.answeredByName || 'A.I Q&A 관리자'}
                         </span>
                         <span className={styles.itemDate}>{formatDate(item.answeredAt)}</span>
+                        <span style={{ fontSize: 12, color: 'var(--theme-text-muted, #999)', flexShrink: 0, minWidth: 64, textAlign: 'right' }}>
+                          조회 {item.viewCount || 0}
+                        </span>
                       </div>
                     )}
                   </React.Fragment>

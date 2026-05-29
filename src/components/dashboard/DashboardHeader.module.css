@@ -74,7 +74,7 @@
   height: 17px;
   padding: 0 5px;
   border-radius: 999px;
-  background: #ef4444;
+  background: var(--theme-primary);
   color: white;
   font-size: 10px;
   font-weight: 700;
