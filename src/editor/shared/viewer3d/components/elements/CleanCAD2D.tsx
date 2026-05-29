@@ -550,9 +550,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const currentViewDirection = viewDirection || view2DDirection;
   const hasFrontPlacedModules = placedModules.some(module => ((module as any).placementWall || 'front') === 'front');
 
-  // 가이드 배치/슬롯확장 모드: 정면도에서 공간 폭/높이 치수를 클릭 편집 가능하게 노출
-  const guideDimEditEnabled = spaceInfo.customGuideMode === true && currentViewDirection === 'front' && !readOnly;
-
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
   const isExternalMaidaModule = (moduleId = '') => moduleId.includes('lower-drawer-')
@@ -2250,7 +2247,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const topSpaceExtZ = resolveFrontTopDimensionLocalZ(0.001);
           const topSpaceTextZ = resolveFrontTopDimensionLocalZ(0.01);
 
-          const renderDimSegment = (left: number, right: number, label: number, keyId: string, onEdit?: (v: number) => void) => (
+          const renderDimSegment = (left: number, right: number, label: number, keyId: string) => (
             <React.Fragment key={keyId}>
               <NativeLine name="dimension_line"
                 points={[[left, topDimensionY, topSpaceDimZ], [right, topDimensionY, topSpaceDimZ]]}
@@ -2265,29 +2262,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
               />
               {(showDimensionsText || isStep2) && (
-                guideDimEditEnabled && onEdit ? (
-                  <Html
-                    position={[(left + right) / 2, topDimensionY + mmToThreeUnits(40), topSpaceTextZ]}
-                    center
-                    zIndexRange={[200, 0]}
-                    style={{ pointerEvents: 'auto', userSelect: 'none' }}
-                  >
-                    <MidwayGapEditor
-                      value={Math.round(label)}
-                      color={textColor}
-                      onChange={onEdit}
-                    />
-                  </Html>
-                ) : (
-                  <Text
-                    renderOrder={100001} depthTest={false}
-                    position={[(left + right) / 2, topDimensionY + mmToThreeUnits(40), topSpaceTextZ]}
-                    fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {Math.round(label)}
-                  </Text>
-                )
+                <Text
+                  renderOrder={100001} depthTest={false}
+                  position={[(left + right) / 2, topDimensionY + mmToThreeUnits(40), topSpaceTextZ]}
+                  fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                >
+                  {Math.round(label)}
+                </Text>
               )}
             </React.Fragment>
           );
@@ -2299,8 +2281,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 renderDimSegment(spaceLeft, furnitureLeft, cbWidthTop, 'dim-cb-left')}
 
               {/* 가구 배치 공간 치수 */}
-              {renderDimSegment(furnitureLeft, furnitureRight, furnitureWidth, 'dim-furniture',
-                guideDimEditEnabled ? ((v) => { if (v > 0) setSpaceInfo({ width: v + cbWidthTop }); }) : undefined)}
+              {renderDimSegment(furnitureLeft, furnitureRight, furnitureWidth, 'dim-furniture')}
 
               {/* 우측 커튼박스 구간 치수 */}
               {cbEnabledTop && cbPositionTop === 'right' &&
@@ -4765,29 +4746,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   )}
                   {/* 단내림 없을 때 전체 높이 텍스트 */}
                   {!showDropTick && (
-                    guideDimEditEnabled ? (
-                      <Html
-                        position={[outerX - mmToThreeUnits(10), floorFinishY + (spaceTopY - floorFinishY) / 2, spaceTextZ_L]}
-                        center
-                        zIndexRange={[200, 0]}
-                        style={{ pointerEvents: 'auto', userSelect: 'none' }}
-                      >
-                        <MidwayGapEditor
-                          value={spaceHeightMm - floorFinishHeightMmGlobal}
-                          color={textColor}
-                          onChange={(v) => { if (v > 0) setSpaceInfo({ height: v + floorFinishHeightMmGlobal }); }}
-                        />
-                      </Html>
-                    ) : (
-                      <Text renderOrder={100001} depthTest={false}
-                        position={[outerX - mmToThreeUnits(10), floorFinishY + (spaceTopY - floorFinishY) / 2, spaceTextZ_L]}
-                        fontSize={largeFontSize} color={textColor}
-                        anchorX="right" anchorY="middle"
-                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                      >
-                        {spaceHeightMm - floorFinishHeightMmGlobal}
-                      </Text>
-                    )
+                    <Text renderOrder={100001} depthTest={false}
+                      position={[outerX - mmToThreeUnits(10), floorFinishY + (spaceTopY - floorFinishY) / 2, spaceTextZ_L]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="right" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {spaceHeightMm - floorFinishHeightMmGlobal}
+                    </Text>
                   )}
                 </>);
               })()}
@@ -5738,29 +5704,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   )}
                   {/* 단내림 없을 때 전체 높이 텍스트 */}
                   {!showDropTick && (
-                    guideDimEditEnabled ? (
-                      <Html
-                        position={[rightOuterX + mmToThreeUnits(10), floorFinishYR + (spaceTopY - floorFinishYR) / 2, spaceTextZ_R]}
-                        center
-                        zIndexRange={[200, 0]}
-                        style={{ pointerEvents: 'auto', userSelect: 'none' }}
-                      >
-                        <MidwayGapEditor
-                          value={spaceHeightMm - floorFinishHeightMmGlobal}
-                          color={textColor}
-                          onChange={(v) => { if (v > 0) setSpaceInfo({ height: v + floorFinishHeightMmGlobal }); }}
-                        />
-                      </Html>
-                    ) : (
-                      <Text renderOrder={100001} depthTest={false}
-                        position={[rightOuterX + mmToThreeUnits(10), floorFinishYR + (spaceTopY - floorFinishYR) / 2, spaceTextZ_R]}
-                        fontSize={largeFontSize} color={textColor}
-                        anchorX="left" anchorY="middle"
-                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                      >
-                        {spaceHeightMm - floorFinishHeightMmGlobal}
-                      </Text>
-                    )
+                    <Text renderOrder={100001} depthTest={false}
+                      position={[rightOuterX + mmToThreeUnits(10), floorFinishYR + (spaceTopY - floorFinishYR) / 2, spaceTextZ_R]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {spaceHeightMm - floorFinishHeightMmGlobal}
+                    </Text>
                   )}
                 </>);
               })()}
