@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check } from 'lucide-react';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { useAuth } from '@/auth/AuthProvider';
-import { useNavigate } from 'react-router-dom';
+import { db } from '@/firebase/config';
 import {
   subscribeToNotifications,
   subscribeToUnreadCount,
@@ -16,13 +17,43 @@ import styles from './NotificationCenter.module.css';
 
 export const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<Notification | null>(null);
+  const [selectedMessageBody, setSelectedMessageBody] = useState('');
+  const [isMessageBodyLoading, setIsMessageBodyLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   useScrollLock(isOpen || Boolean(selectedMessage));
+
+  const isMessageNotification = (notification: Notification) => (
+    notification.type === 'message' ||
+    Boolean(notification.messageId) ||
+    Boolean(notification.actionUrl?.startsWith('/dashboard/messages'))
+  );
+
+  const getNotificationBody = (notification: Notification | null) => {
+    if (!notification) return '';
+    const data = notification as Notification & {
+      content?: string;
+      body?: string;
+      text?: string;
+      description?: string;
+    };
+    return [
+      data.content,
+      data.body,
+      data.text,
+      data.description,
+      notification.message,
+    ].find(value => typeof value === 'string' && value.trim())?.trim() || '';
+  };
+
+  const getConversationIdFromActionUrl = (actionUrl?: string) => {
+    if (!actionUrl) return null;
+    const match = actionUrl.match(/\/dashboard\/messages\/([^/?#]+)/);
+    return match?.[1] ? decodeURIComponent(match[1]) : null;
+  };
 
   // 알림 실시간 구독
   useEffect(() => {
@@ -49,18 +80,88 @@ export const NotificationCenter: React.FC = () => {
 
   // selectedMessage 변경 감지 및 읽음 처리
   useEffect(() => {
+    let cancelled = false;
+
     if (selectedMessage) {
       console.log('💬 메시지 팝업 열림:', selectedMessage);
+      setSelectedMessageBody(getNotificationBody(selectedMessage));
+
       // 메시지 팝업을 여는 순간 읽음 처리
-      if (!selectedMessage.isRead) {
+      if (!selectedMessage.isRead && selectedMessage.id) {
         console.log('📖 메시지 팝업 열림 → 즉시 읽음 처리:', selectedMessage.id);
         markNotificationAsRead(selectedMessage.id).catch(err => {
           console.error('❌ 읽음 처리 실패:', err);
         });
       }
+
+      const loadFullMessageBody = async () => {
+        setIsMessageBodyLoading(true);
+        try {
+          if (selectedMessage.messageId) {
+            const messageSnap = await getDoc(doc(db, 'messages', selectedMessage.messageId));
+            if (messageSnap.exists()) {
+              const messageData = messageSnap.data() as {
+                content?: string;
+                message?: string;
+                text?: string;
+                body?: string;
+              };
+              const body = [
+                messageData.content,
+                messageData.message,
+                messageData.text,
+                messageData.body,
+              ].find(value => typeof value === 'string' && value.trim())?.trim();
+              if (body && !cancelled) {
+                setSelectedMessageBody(body);
+              }
+              return;
+            }
+          }
+
+          const conversationId = getConversationIdFromActionUrl(selectedMessage.actionUrl);
+          if (conversationId) {
+            const messageQuery = query(
+              collection(db, 'conversations', conversationId, 'messages'),
+              orderBy('createdAt', 'desc'),
+              limit(1)
+            );
+            const messageSnap = await getDocs(messageQuery);
+            const latestMessage = messageSnap.docs[0]?.data() as {
+              text?: string;
+              content?: string;
+              message?: string;
+              body?: string;
+            } | undefined;
+            const body = [
+              latestMessage?.text,
+              latestMessage?.content,
+              latestMessage?.message,
+              latestMessage?.body,
+            ].find(value => typeof value === 'string' && value.trim())?.trim();
+            if (body && !cancelled) {
+              setSelectedMessageBody(body);
+            }
+          }
+        } catch (err) {
+          console.error('❌ 메시지 본문 로드 실패:', err);
+        } finally {
+          if (!cancelled) {
+            setIsMessageBodyLoading(false);
+          }
+        }
+      };
+
+      void loadFullMessageBody();
     } else {
       console.log('💬 메시지 팝업 닫힘');
+      setSelectedMessageBody('');
+      setIsMessageBodyLoading(false);
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedMessage]);
 
   // 외부 클릭 감지
@@ -83,30 +184,13 @@ export const NotificationCenter: React.FC = () => {
     };
   }, [isOpen]);
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = (notification: Notification) => {
     console.log('🔔 알림 클릭:', notification);
     console.log('  - type:', notification.type);
     console.log('  - title:', notification.title);
 
-    // 메시지 타입이면 팝업으로 표시 (읽음 처리는 확인 버튼에서)
-    if (notification.type === 'message') {
-      console.log('✉️ 메시지 알림 → 팝업 열기 (읽음 처리는 확인 버튼에서)');
-      setSelectedMessage(notification);
-      setIsOpen(false);
-      return;
-    }
-
-    // 메시지가 아닌 알림은 클릭 시 바로 읽음 처리
-    if (!notification.isRead) {
-      await markNotificationAsRead(notification.id);
-    }
-
-    console.log('📍 다른 타입 알림 → URL 이동');
-    // 액션 URL이 있으면 이동
-    if (notification.actionUrl) {
-      navigate(notification.actionUrl);
-    }
-
+    console.log('✉️ 알림 내용 팝업 열기');
+    setSelectedMessage(notification);
     setIsOpen(false);
   };
 
@@ -124,7 +208,8 @@ export const NotificationCenter: React.FC = () => {
   };
 
   const formatTime = (timestamp: any) => {
-    const date = timestamp.toDate();
+    const date = typeof timestamp?.toDate === 'function' ? timestamp.toDate() : new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return '';
     const now = new Date();
     const diff = now.getTime() - date.getTime();
 
@@ -211,7 +296,7 @@ export const NotificationCenter: React.FC = () => {
                       </span>
                     </div>
                     <div className={styles.itemActions}>
-                      {notification.type === 'message' && (
+                      {isMessageNotification(notification) && (
                         <button
                           className={styles.viewButton}
                           onClick={(e) => {
@@ -274,7 +359,9 @@ export const NotificationCenter: React.FC = () => {
               </button>
             </div>
             <div className={styles.modalBody}>
-              <p className={styles.messageContent}>{selectedMessage.message}</p>
+              <p className={styles.messageContent}>
+                {selectedMessageBody || (isMessageBodyLoading ? '메시지 내용을 불러오는 중입니다.' : '표시할 메시지 내용이 없습니다.')}
+              </p>
               <div className={styles.messageMeta}>
                 <div className={styles.messageSender}>
                   <span>발신:</span>

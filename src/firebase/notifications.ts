@@ -153,8 +153,11 @@ export async function getUserNotifications(
     const snapshot = await getDocs(q);
     const notifications: Notification[] = [];
 
-    snapshot.forEach((doc) => {
-      notifications.push(doc.data() as Notification);
+    snapshot.forEach((docSnap) => {
+      notifications.push({
+        ...(docSnap.data() as Omit<Notification, 'id'>),
+        id: docSnap.id,
+      });
     });
 
     return notifications;
@@ -271,8 +274,11 @@ export function subscribeToNotifications(
     q,
     (snapshot) => {
       const notifications: Notification[] = [];
-      snapshot.forEach((doc) => {
-        notifications.push(doc.data() as Notification);
+      snapshot.forEach((docSnap) => {
+        notifications.push({
+          ...(docSnap.data() as Omit<Notification, 'id'>),
+          id: docSnap.id,
+        });
       });
       callback(notifications);
     },
