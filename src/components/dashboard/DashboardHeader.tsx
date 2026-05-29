@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { User, Settings, Search, Sun, Moon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import Logo from '@/components/common/Logo';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
+import { db } from '@/firebase/config';
 import styles from './DashboardHeader.module.css';
 
 interface DashboardHeaderProps {
@@ -28,6 +30,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const location = useLocation();
   const photoURL = user?.photoURL || '';
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const [pendingQnACount, setPendingQnACount] = useState(0);
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isGallery = location.pathname.startsWith('/gallery');
   const isNews = location.pathname.startsWith('/news');
@@ -36,6 +39,29 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   useEffect(() => {
     setAvatarLoadFailed(false);
   }, [photoURL]);
+
+  useEffect(() => {
+    if (!user) {
+      setPendingQnACount(0);
+      return;
+    }
+
+    const qnaQuery = query(
+      collection(db, 'qna'),
+      where('status', '==', 'pending')
+    );
+
+    const unsubscribe = onSnapshot(
+      qnaQuery,
+      snapshot => setPendingQnACount(snapshot.size),
+      error => {
+        console.error('Q&A 대기 건수 구독 실패:', error);
+        setPendingQnACount(0);
+      }
+    );
+
+    return unsubscribe;
+  }, [user]);
 
   return (
     <header className={styles.header}>
@@ -74,6 +100,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             title="Q&A"
           >
             <span>Q&amp;A</span>
+            {pendingQnACount > 0 && (
+              <span className={styles.navBadge}>{pendingQnACount > 99 ? '99+' : pendingQnACount}</span>
+            )}
           </button>
         </nav>
         {onSearchChange !== undefined && (

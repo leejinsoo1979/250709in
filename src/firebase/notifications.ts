@@ -15,7 +15,7 @@ import {
 import { db } from './config';
 
 // 알림 타입 정의
-export type NotificationType = 'project_shared' | 'project_access_granted' | 'team_invitation' | 'share_removed' | 'system' | 'message';
+export type NotificationType = 'project_shared' | 'project_access_granted' | 'team_invitation' | 'share_removed' | 'system' | 'message' | 'qna_answered';
 
 export interface Notification {
   id: string;

@@ -69,6 +69,19 @@
   border-radius: 2px;
 }
 
+.navBadge {
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+}
+
 .right {
   display: flex;
   align-items: center;

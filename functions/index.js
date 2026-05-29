@@ -85,6 +85,281 @@ async function tgApi(token, method, body) {
   return res.data;
 }
 
+function tokenizeKnowledgeText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2);
+}
+
+function scoreKnowledgeSource(question, source) {
+  const questionText = String(question || '').toLowerCase();
+  const title = String(source.title || '').toLowerCase();
+  const content = String(source.content || '').toLowerCase();
+  const tokens = Array.from(new Set(tokenizeKnowledgeText(questionText)));
+  if (tokens.length === 0) return 0;
+
+  let score = 0;
+  for (const token of tokens) {
+    if (title.includes(token)) score += 4;
+    if (content.includes(token)) score += 2;
+  }
+
+  const normalizedTitle = title.replace(/\s+/g, '');
+  const normalizedQuestion = questionText.replace(/\s+/g, '');
+  if (normalizedTitle && normalizedQuestion && (
+    normalizedTitle.includes(normalizedQuestion) ||
+    normalizedQuestion.includes(normalizedTitle)
+  )) {
+    score += 10;
+  }
+
+  return score;
+}
+
+async function loadQnAKnowledgeSources(db) {
+  const sources = [];
+
+  const [chatbotSnap, newsSnap, answeredQnaSnap] = await Promise.all([
+    db.collection('chatbotQAs').where('isActive', '==', true).limit(200).get().catch((error) => {
+      console.warn('[QnA AI] chatbotQAs 로드 실패:', error?.message || error);
+      return null;
+    }),
+    db.collection('news').orderBy('createdAt', 'desc').limit(80).get().catch((error) => {
+      console.warn('[QnA AI] news 로드 실패:', error?.message || error);
+      return null;
+    }),
+    db.collection('qna').where('status', '==', 'answered').orderBy('updatedAt', 'desc').limit(120).get().catch((error) => {
+      console.warn('[QnA AI] answered qna 로드 실패:', error?.message || error);
+      return null;
+    }),
+  ]);
+
+  if (chatbotSnap) {
+    chatbotSnap.forEach((doc) => {
+      const data = doc.data() || {};
+      if (!data.answer) return;
+      sources.push({
+        id: doc.id,
+        type: 'chatbotQA',
+        title: data.question || '프로그램 도움말',
+        content: data.answer,
+      });
+    });
+  }
+
+  if (newsSnap) {
+    newsSnap.forEach((doc) => {
+      const data = doc.data() || {};
+      sources.push({
+        id: doc.id,
+        type: 'news',
+        title: data.title || '공지사항',
+        content: data.body || '',
+      });
+    });
+  }
+
+  if (answeredQnaSnap) {
+    answeredQnaSnap.forEach((doc) => {
+      const data = doc.data() || {};
+      if (!data.answer) return;
+      sources.push({
+        id: doc.id,
+        type: 'qna',
+        title: data.title || '기존 Q&A',
+        content: data.answer,
+      });
+    });
+  }
+
+  return sources;
+}
+
+function buildKnowledgeAnswer(bestSource) {
+  return [
+    '아래 답변은 인쇼 프로그램 도움말과 기존 Q&A를 기준으로 자동 생성한 A.I 답변입니다.',
+    '',
+    String(bestSource.content || '').trim(),
+    '',
+    '답변이 현재 상황과 다르거나 재현이 필요한 문제라면 화면 캡처, 프로젝트명, 작업 순서를 남겨주세요. 관리자가 이어서 확인하겠습니다.',
+  ].join('\n');
+}
+
+async function createQnAAnsweredNotification(db, qnaId, qna, wasAnswered) {
+  if (!qna?.authorId) return;
+
+  try {
+    await db.collection('notifications').add({
+      userId: qna.authorId,
+      type: 'qna_answered',
+      title: wasAnswered ? 'Q&A 답변이 수정되었습니다' : 'Q&A 답변이 등록되었습니다',
+      message: `"${qna.title || '질문'}"에 답변이 ${wasAnswered ? '수정' : '등록'}되었습니다.`,
+      actionUrl: `/qna/${qnaId}`,
+      relatedId: qnaId,
+      isRead: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.warn('Q&A 답변 알림 생성 실패:', error?.message || error);
+  }
+}
+
+exports.notifyQnACreated = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID], region: 'asia-northeast3' },
+  async (request) => {
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+
+    const qnaId = String(request.data?.qnaId || '').trim();
+    if (!qnaId) {
+      throw new HttpsError('invalid-argument', 'qnaId가 필요합니다.');
+    }
+
+    const db = admin.firestore();
+    const qnaRef = db.doc(`qna/${qnaId}`);
+    const qnaSnap = await qnaRef.get();
+    if (!qnaSnap.exists) {
+      throw new HttpsError('not-found', '질문을 찾을 수 없습니다.');
+    }
+
+    const qna = qnaSnap.data() || {};
+    const callerEmail = String(request.auth?.token?.email || '').toLowerCase();
+    const isSuperAdmin = callerEmail === 'sbbc212@gmail.com';
+    const isAuthor = qna.authorId === uid;
+    const isAdmin = isSuperAdmin || (await db.doc(`admins/${uid}`).get()).exists;
+    if (!isAuthor && !isAdmin) {
+      throw new HttpsError('permission-denied', '질문 작성자 또는 관리자만 알림을 보낼 수 있습니다.');
+    }
+
+    try {
+      const token = TELEGRAM_BOT_TOKEN.value();
+      const chatId = String(TELEGRAM_CHAT_ID.value() || '');
+      if (!token || !chatId) {
+        throw new Error('Telegram secret is not configured');
+      }
+
+      const origin = String(request.data?.origin || '').replace(/\/+$/, '');
+      const link = origin ? `${origin}/qna/${qnaId}` : `/qna/${qnaId}`;
+      const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+      const body = String(qna.body || '').trim();
+      const text = [
+        '새 Q&A 질문',
+        '',
+        `제목: ${qna.title || '(제목 없음)'}`,
+        `작성자: ${qna.authorName || callerEmail || uid}`,
+        `상태: ${qna.status === 'answered' ? '답변완료' : '답변대기'}`,
+        `질문 ID: ${qnaId}`,
+        `시간: ${time}`,
+        '',
+        '내용',
+        body.length > 1200 ? `${body.slice(0, 1200)}...` : body || '(내용 없음)',
+        '',
+        `링크: ${link}`,
+      ].join('\n');
+
+      await tgApi(token, 'sendMessage', { chat_id: chatId, text });
+      await qnaRef.set({
+        telegramStatus: 'sent',
+        telegramSentAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      return { ok: true };
+    } catch (e) {
+      await qnaRef.set({
+        telegramStatus: 'failed',
+        telegramError: e?.message || 'unknown',
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      console.warn('Q&A 텔레그램 알림 실패:', e?.message || e);
+      throw new HttpsError('internal', '텔레그램 알림 전송에 실패했습니다.');
+    }
+  }
+);
+
+exports.generateQnAAiAnswer = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const { callerUid } = await assertAdminCaller(request);
+
+    const qnaId = String(request.data?.qnaId || '').trim();
+    if (!qnaId) {
+      throw new HttpsError('invalid-argument', 'qnaId가 필요합니다.');
+    }
+
+    const db = admin.firestore();
+    const qnaRef = db.doc(`qna/${qnaId}`);
+    const qnaSnap = await qnaRef.get();
+    if (!qnaSnap.exists) {
+      throw new HttpsError('not-found', '질문을 찾을 수 없습니다.');
+    }
+
+    const qna = qnaSnap.data() || {};
+    const wasAnswered = qna.status === 'answered';
+    await qnaRef.set({
+      aiStatus: 'processing',
+      aiRequestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    const question = `${qna.title || ''}\n${qna.body || ''}`;
+    const sources = await loadQnAKnowledgeSources(db);
+    const ranked = sources
+      .map((source) => ({ ...source, score: scoreKnowledgeSource(question, source) }))
+      .filter((source) => source.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    const best = ranked[0];
+    if (!best || best.score < 6) {
+      const fallbackAnswer = [
+        '아래 답변은 인쇼 프로그램 도움말과 기존 Q&A를 기준으로 자동 생성한 A.I 답변입니다.',
+        '',
+        '현재 질문과 정확히 일치하는 도움말을 찾지 못했습니다.',
+        '화면 캡처, 프로젝트명, 작업 순서가 있으면 관리자가 더 정확히 확인할 수 있습니다.',
+      ].join('\n');
+      await qnaRef.set({
+        answer: fallbackAnswer,
+        answerImages: [],
+        status: 'answered',
+        answeredBy: 'ai',
+        answeredByName: 'A.I Q&A 관리자',
+        answeredAt: admin.firestore.FieldValue.serverTimestamp(),
+        aiStatus: 'needs_admin',
+        aiAnswer: fallbackAnswer,
+        aiSources: ranked.map(({ id, type, title, score }) => ({ id, type, title, score })),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+      await createQnAAnsweredNotification(db, qnaId, qna, wasAnswered);
+      return { ok: true, status: 'answered', sourceCount: ranked.length };
+    }
+
+    const answer = buildKnowledgeAnswer(best);
+    const aiSources = ranked.slice(0, 3).map(({ id, type, title, score }) => ({ id, type, title, score }));
+
+    await qnaRef.set({
+      answer,
+      answerImages: [],
+      status: 'answered',
+      answeredBy: 'ai',
+      answeredByName: 'A.I Q&A 관리자',
+      answeredAt: admin.firestore.FieldValue.serverTimestamp(),
+      aiStatus: 'answered',
+      aiAnswer: answer,
+      aiSources,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    await createQnAAnsweredNotification(db, qnaId, qna, wasAnswered);
+
+    return { ok: true, status: 'answered', sourceCount: aiSources.length, answeredBy: callerUid };
+  }
+);
+
 /**
  * 사업자등록번호 진위 및 영업상태 조회
  *

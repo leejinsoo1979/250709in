@@ -12,6 +12,7 @@ import {
   updateQnA,
   deleteQnA,
   answerQnA,
+  requestQnAAiAnswer,
   QnAItem,
 } from '@/firebase/qna';
 
@@ -51,6 +52,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
   const [answerText, setAnswerText] = useState('');
   const [answerImages, setAnswerImages] = useState<string[]>([]);
   const [savingAnswer, setSavingAnswer] = useState(false);
+  const [generatingAiAnswer, setGeneratingAiAnswer] = useState(false);
   const [answerFormOpen, setAnswerFormOpen] = useState(false); // 답변 수정 폼 열림 여부
 
   // 로그인 체크
@@ -82,8 +84,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
         setImages(item.images || []);
         setAnswerText(item.answer || '');
         setAnswerImages(item.answerImages || []);
-        // 답변 완료된 글은 수정 폼을 닫아두고, 미답변 글만 폼을 연다
-        setAnswerFormOpen(item.status !== 'answered');
+        setAnswerFormOpen(false);
       }
       setLoading(false);
     });
@@ -155,6 +156,30 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
     if (item) setCurrentItem(item);
     // 등록/수정 완료 후 폼 닫기
     setAnswerFormOpen(false);
+  };
+
+  const handleAiAnswerSubmit = async () => {
+    if (!id) return;
+    setGeneratingAiAnswer(true);
+    const { error } = await requestQnAAiAnswer(id);
+    setGeneratingAiAnswer(false);
+    if (error) {
+      alert('AI 답변 작성 실패: ' + error);
+      return;
+    }
+    const { item } = await getQnA(id);
+    if (item) {
+      setCurrentItem(item);
+      setAnswerText(item.answer || '');
+      setAnswerImages(item.answerImages || []);
+    }
+    setAnswerFormOpen(false);
+  };
+
+  const openDirectAnswerForm = () => {
+    setAnswerText(currentItem?.answer || '');
+    setAnswerImages(currentItem?.answerImages || []);
+    setAnswerFormOpen(true);
   };
 
   if (authLoading || adminLoading || !user) {
@@ -317,15 +342,21 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                     {isAdmin && (
                       <div className={styles.detailActions}>
                         <div />
-                        <button
-                          className={styles.secondaryBtn}
-                          onClick={() => {
-                            setAnswerText(currentItem.answer || '');
-                            setAnswerFormOpen(true);
-                          }}
-                        >
-                          답변 수정
-                        </button>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className={styles.primaryBtn}
+                            onClick={handleAiAnswerSubmit}
+                            disabled={generatingAiAnswer}
+                          >
+                            {generatingAiAnswer ? 'AI 작성 중...' : 'AI 답변'}
+                          </button>
+                          <button
+                            className={styles.secondaryBtn}
+                            onClick={openDirectAnswerForm}
+                          >
+                            직접입력
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -343,6 +374,26 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                       {currentItem.aiStatus === 'processing' || currentItem.aiStatus === 'queued'
                         ? '프로그램 도움말과 기존 Q&A를 기준으로 자동 답변을 찾는 중입니다.'
                         : currentItem.aiAnswer || '프로그램 도움말 기준으로 확실한 자동 답변을 찾지 못했습니다. 관리자가 확인 후 답변드리겠습니다.'}
+                    </div>
+                  </div>
+                )}
+
+                {isAdmin && currentItem.status !== 'answered' && !answerFormOpen && (
+                  <div className={styles.formCard} style={{ marginTop: 16 }}>
+                    <div className={styles.formActions} style={{ marginTop: 0 }}>
+                      <button
+                        className={styles.primaryBtn}
+                        onClick={handleAiAnswerSubmit}
+                        disabled={generatingAiAnswer}
+                      >
+                        {generatingAiAnswer ? 'AI 작성 중...' : 'AI 답변'}
+                      </button>
+                      <button
+                        className={styles.secondaryBtn}
+                        onClick={openDirectAnswerForm}
+                      >
+                        직접입력
+                      </button>
                     </div>
                   </div>
                 )}

@@ -15,6 +15,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from './config';
 import { getCurrentUserAsync } from './auth';
+import { createNotification } from './notifications';
 
 export type QnAStatus = 'pending' | 'answered';
 
@@ -55,10 +56,11 @@ export const notifyQnACreated = async (qnaId: string): Promise<{ error: string |
       functions,
       'notifyQnACreated'
     );
-    await fn({
-      qnaId,
-      origin: typeof window !== 'undefined' ? window.location.origin : undefined,
-    });
+    const payload: { qnaId: string; origin?: string } = { qnaId };
+    if (typeof window !== 'undefined' && window.location.origin) {
+      payload.origin = window.location.origin;
+    }
+    await fn(payload);
     return { error: null };
   } catch (e: any) {
     console.error('notifyQnACreated 실패:', e);
@@ -199,7 +201,14 @@ export const answerQnA = async (
     const user = await getCurrentUserAsync();
     if (!user) return { error: '로그인이 필요합니다.' };
 
-    await updateDoc(doc(db, QNA_COLLECTION, id), {
+    const qnaRef = doc(db, QNA_COLLECTION, id);
+    const qnaSnap = await getDoc(qnaRef);
+    if (!qnaSnap.exists()) return { error: '질문을 찾을 수 없습니다.' };
+
+    const qna = qnaSnap.data() as Omit<QnAItem, 'id'>;
+    const wasAnswered = qna.status === 'answered';
+
+    await updateDoc(qnaRef, {
       answer,
       answerImages,
       status: 'answered' as QnAStatus,
@@ -209,6 +218,21 @@ export const answerQnA = async (
       aiStatus: null,
       updatedAt: serverTimestamp(),
     });
+
+    if (qna.authorId) {
+      try {
+        await createNotification(
+          qna.authorId,
+          'qna_answered',
+          wasAnswered ? 'Q&A 답변이 수정되었습니다' : 'Q&A 답변이 등록되었습니다',
+          `"${qna.title || '질문'}"에 답변이 ${wasAnswered ? '수정' : '등록'}되었습니다.`,
+          { actionUrl: `/qna/${id}` }
+        );
+      } catch (notificationError) {
+        console.warn('Q&A 답변 알림 생성 실패:', notificationError);
+      }
+    }
+
     return { error: null };
   } catch (e: any) {
     console.error('answerQnA 실패:', e);
