@@ -310,10 +310,12 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
-  const { view2DTheme, viewMode, activePlacementWall, view2DDirection } = useUIStore();
+  const { view2DTheme, viewMode, activePlacementWall, view2DDirection, guideDepthEditMode } = useUIStore();
   const { pendingPlacement } = useMyCabinetStore();
   const { colors } = useThemeColors();
   const [mergeSelectedSlotIds, setMergeSelectedSlotIds] = useState<string[]>([]);
+  // 깊이 편집: 상부/하부 구간 토글 (upper/lower)
+  const [depthZone, setDepthZone] = useState<'upper' | 'lower'>('upper');
 
   const isCustomGuideMode = spaceInfo.customGuideMode === true;
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
@@ -989,13 +991,105 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     });
   };
 
+  // 탑뷰 깊이 편집기: 슬롯별 깊이 입력 + 상부/하부 토글 + 앞/뒤 고정
+  const renderGuideDepthEditor = (allGuideSlots: FreePlacementGuideSlot[]) => {
+    const hasSplit = allGuideSlots.some((s) => (s.guideZone || 'full') === 'upper' || (s.guideZone || 'full') === 'lower');
+    // 표시 대상 슬롯: 분할이 있으면 선택된 zone, 없으면 전체(full)
+    const zoneSlots = hasSplit
+      ? allGuideSlots.filter((s) => (s.guideZone || 'full') === depthZone)
+      : allGuideSlots;
+    const defaultDepth = spaceInfo.depth || 600;
+    const anchor = spaceInfo.guideDepthAnchor || 'front';
+    const guideZ = 0.006;
+    const guideColor = colors?.primary || '#3b82f6';
+    const halfW = spaceInfo.width / 2;
+    const halfD = (spaceInfo.depth || 600) / 2;
+
+    const commitDepth = (slotId: string, raw: string) => {
+      const v = Math.round(parseFloat(raw));
+      if (!Number.isFinite(v) || v <= 0) return;
+      setSpaceInfo({
+        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) =>
+          s.id === slotId ? { ...s, depth: v } : s
+        ),
+      });
+    };
+
+    const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
+      padding: '4px 12px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+      border: `2px solid ${guideColor}`, borderRadius: 6,
+      background: active ? guideColor : 'rgba(255,255,255,0.95)',
+      color: active ? '#fff' : guideColor, lineHeight: 1.1,
+    });
+    const depthInputStyle: React.CSSProperties = {
+      width: 64, padding: '4px 6px', fontSize: 14, fontWeight: 700, textAlign: 'center',
+      border: `2px solid ${guideColor}`, borderRadius: 6, outline: 'none',
+      background: 'rgba(255,255,255,0.97)', color: guideColor, lineHeight: 1.1,
+    };
+
+    return (
+      <>
+        {/* 상단 컨트롤: 상부/하부 토글 + 앞/뒤 고정 (공간 앞쪽 바깥) */}
+        <Html
+          position={[0, guideZ, -(halfD + 250) * 0.01]}
+          center zIndexRange={[300, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+        >
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {hasSplit && (
+              <div style={{ display: 'flex', gap: 0 }}>
+                <button style={{ ...toggleBtnStyle(depthZone === 'upper'), borderRadius: '6px 0 0 6px' }} onClick={() => setDepthZone('upper')}>상부장</button>
+                <button style={{ ...toggleBtnStyle(depthZone === 'lower'), borderRadius: '0 6px 6px 0' }} onClick={() => setDepthZone('lower')}>하부장</button>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 0 }}>
+              <button style={{ ...toggleBtnStyle(anchor === 'front'), borderRadius: '6px 0 0 6px' }} onClick={() => setSpaceInfo({ guideDepthAnchor: 'front' })}>앞고정</button>
+              <button style={{ ...toggleBtnStyle(anchor === 'back'), borderRadius: '0 6px 6px 0' }} onClick={() => setSpaceInfo({ guideDepthAnchor: 'back' })}>뒤고정</button>
+            </div>
+          </div>
+        </Html>
+
+        {/* 슬롯별 깊이 입력 — 각 슬롯 중앙(X) , 공간 깊이 중앙(Z=0) */}
+        {zoneSlots.map((slot) => {
+          const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
+          const depthVal = Math.round(slot.depth ?? defaultDepth);
+          return (
+            <Html
+              key={`guide-depth-input-${slot.id}`}
+              position={[centerX, guideZ, 0]}
+              center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+            >
+              <input
+                type="number"
+                defaultValue={depthVal}
+                key={`${slot.id}-${depthVal}`}
+                min={1}
+                onPointerDown={(e) => e.stopPropagation()}
+                onWheel={(e) => e.stopPropagation()}
+                onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                onBlur={(e) => commitDepth(slot.id, e.target.value)}
+                style={depthInputStyle}
+              />
+            </Html>
+          );
+        })}
+      </>
+    );
+  };
+
   if (isGuidePlacementMode) {
     const guideSlots = (spaceInfo.freePlacementGuides || []).map((slot) => ({
       ...slot,
       guideZone: slot.guideZone || 'full' as const
     }));
-    if (guideSlots.length === 0 || (viewMode === '2D' && view2DDirection !== 'front')) {
+    if (guideSlots.length === 0) return null;
+    // 2D 측면뷰 등에서는 렌더 안 함. 단, 깊이 모드(탑 카메라)는 허용.
+    if (!guideDepthEditMode && viewMode === '2D' && view2DDirection !== 'front') {
       return null;
+    }
+
+    // ── 깊이 편집 모드(탑뷰): 폭 입력 대신 슬롯별 깊이 입력 ──
+    if (guideDepthEditMode) {
+      return renderGuideDepthEditor(guideSlots);
     }
 
     const fullHeightMm = spaceInfo.height;
