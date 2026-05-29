@@ -1114,8 +1114,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
         {/* 슬롯별 깊이/갭 입력 */}
         {zoneSlots.flatMap((slot) => {
-          const leftX = (slot.x - halfW) * 0.01;
-          const rightX = (slot.x + slot.width - halfW) * 0.01;
           const centerX = (slot.x + slot.width / 2 - halfW) * 0.01;
           const depthVal = Math.round(slot.depth ?? defaultDepthForZone(slot.guideZone));
           const gapVal = Math.round(slot.depthGap ?? 0);
