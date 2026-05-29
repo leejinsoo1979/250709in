@@ -67,7 +67,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     if (!value) return 0;
     if (typeof value === 'number') return value;
     if (value.toMillis) return value.toMillis();
-    if (value.seconds) return value.seconds * 1000;
+    if (value.seconds) return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1000000);
     return new Date(value).getTime() || 0;
   };
 
@@ -85,8 +85,10 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       .sort((aEntry, bEntry) => {
       const a = aEntry.item;
       const b = bEntry.item;
-      if (a.type === 'folder' && b.type !== 'folder') return -1;
-      if (a.type !== 'folder' && b.type === 'folder') return 1;
+      if (sortBy !== 'date') {
+        if (a.type === 'folder' && b.type !== 'folder') return -1;
+        if (a.type !== 'folder' && b.type === 'folder') return 1;
+      }
 
       let cmp = 0;
       if (sortBy === 'workOrder') {

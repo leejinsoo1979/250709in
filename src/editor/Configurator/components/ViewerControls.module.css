@@ -251,6 +251,16 @@
   transform: scale(0.97);
 }
 
+.guideSlotEditButton {
+  position: absolute;
+  top: 5px;
+  right: 16px;
+  z-index: 3;
+  height: 30px;
+  padding: 0 16px;
+  gap: 6px;
+}
+
 .guideIconButton {
   width: 30px;
   height: 30px;

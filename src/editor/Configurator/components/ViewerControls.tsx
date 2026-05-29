@@ -531,7 +531,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       {spaceInfo?.customGuideMode && (spaceInfo.freePlacementGuides?.length || 0) > 0 && (
         <button
           type="button"
-          className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive}`}
+          className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive} ${styles.guideSlotEditButton}`}
           onClick={() => {
             if (spaceInfo?.freePlacementGuideEditing) {
               // 배치시작: 가이드 확정
@@ -545,7 +545,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             }
           }}
           title={spaceInfo?.freePlacementGuideEditing ? '배치시작' : '슬롯수정'}
-          style={{ position: 'fixed', left: '50%', bottom: '5%', transform: 'translateX(-50%)', zIndex: 60, padding: '12px 28px', fontSize: 16, gap: 8 }}
         >
           <Grid3X3 size={18} />
           <span>{spaceInfo?.freePlacementGuideEditing ? '배치시작' : '슬롯수정'}</span>

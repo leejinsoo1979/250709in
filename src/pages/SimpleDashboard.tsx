@@ -56,8 +56,8 @@ const SimpleDashboard: React.FC = () => {
 
   // --- 로컬 UI 상태 ---
   const [viewMode, setViewMode] = useState<ViewMode>('large');
-  const [sortBy, setSortBy] = useState<SortBy>('workOrder');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [searchTerm, setSearchTerm] = useState('');
 
   // --- Explorer 훅 ---

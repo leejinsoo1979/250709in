@@ -478,9 +478,13 @@ export const getDesignFiles = async (projectId: string): Promise<{ designFiles: 
     
     // 수동으로 업데이트 시간순 정렬 (이미 정렬되어 있지만 확실하게)
     result.designs.sort((a, b) => {
-      const aTime = a.updatedAt?.seconds || 0;
-      const bTime = b.updatedAt?.seconds || 0;
-      return bTime - aTime;
+      const getTime = (value: any) => {
+        if (!value) return 0;
+        if (typeof value.toMillis === 'function') return value.toMillis();
+        if (value.seconds) return value.seconds * 1000 + Math.floor((value.nanoseconds || 0) / 1000000);
+        return new Date(value).getTime() || 0;
+      };
+      return getTime(b.updatedAt) - getTime(a.updatedAt);
     });
 
     console.log('🔍 [getDesignFiles] 최종 결과:', {
@@ -1020,16 +1024,19 @@ export const updateDesignFile = async (
       }
     }
     
-    // 디자인파일이 업데이트되면 해당 프로젝트의 썸네일도 업데이트
-    if (updates.thumbnail && projectId) {
+    // 디자인파일이 업데이트되면 루트 대시보드에서도 해당 프로젝트가 최신순으로 올라오게 동기화
+    if (projectId) {
       try {
         const projectRef = doc(db, PROJECTS_COLLECTION, projectId);
-        await updateDoc(projectRef, {
-          thumbnail: updates.thumbnail,
+        const projectUpdateData: Record<string, any> = {
           updatedAt: serverTimestamp()
-        });
+        };
+        if (updates.thumbnail) {
+          projectUpdateData.thumbnail = updates.thumbnail;
+        }
+        await updateDoc(projectRef, projectUpdateData);
       } catch (projectUpdateError) {
-        console.warn('프로젝트 썸네일 업데이트 실패:', projectUpdateError);
+        console.warn('프로젝트 수정일 동기화 실패:', projectUpdateError);
       }
     }
 
