@@ -50,6 +50,8 @@ import {
   HiOutlineDesktopComputer,
   HiOutlineChevronLeft,
   HiOutlineChevronRight,
+  HiOutlinePhone,
+  HiOutlineVideoCamera,
   HiOutlineClipboardCopy,
   HiOutlineSave,
   HiOutlineReply,
@@ -792,9 +794,26 @@ export default function Messages() {
             )
           ) : filteredConversations.length === 0 ? (
             <div style={{ padding: '40px 16px', textAlign: 'center', color: C.textSecondary, fontSize: 13 }}>
-              <div>
-                {searchQuery ? '검색 결과 없음' : '진행중인 대화가 없습니다.'}
+              <div style={{ marginBottom: 12 }}>
+                {searchQuery ? '검색 결과 없음' : '대화가 없습니다.'}
               </div>
+              {!searchQuery && (
+                <button
+                  onClick={() => setLeftTab('contacts')}
+                  style={{
+                    border: 'none',
+                    background: C.leftNavActiveBg,
+                    color: C.accent,
+                    borderRadius: 6,
+                    padding: '8px 12px',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  친구에서 시작
+                </button>
+              )}
             </div>
           ) : (
             filteredConversations.map((c) => {
@@ -1043,6 +1062,22 @@ export default function Messages() {
               {/* Chatvia 스타일 헤더 아이콘들: 검색 / 전화 / 영상(라이브 시연) / 프로필 / 더보기 */}
               <button title="검색" style={headerIconBtn(C)}>
                 <HiOutlineSearch size={18} />
+              </button>
+              <button title="음성 통화" style={headerIconBtn(C)}>
+                <HiOutlinePhone size={18} />
+              </button>
+              <button
+                onClick={() => {
+                  if (broadcast.isLive || myVisibleLiveSession) broadcast.stop();
+                  else broadcast.start();
+                }}
+                title={broadcast.isLive || myVisibleLiveSession ? '라이브 시연 종료' : '영상/화면 공유'}
+                style={{
+                  ...headerIconBtn(C),
+                  color: broadcast.isLive || myVisibleLiveSession ? '#ff3d60' : C.textSecondary,
+                }}
+              >
+                <HiOutlineVideoCamera size={18} />
               </button>
               <button title="프로필" style={headerIconBtn(C)}>
                 <HiOutlineUser size={18} />
