@@ -182,6 +182,28 @@ const ContentPane: React.FC<ContentPaneProps> = ({
     </div>
   );
 
+  const hasDesignSpace = (item: ExplorerItem) => Boolean((item as any).spaceConfig || item.spaceSize);
+
+  const renderGeneratedDesignThumbnail = (item: ExplorerItem, className = '') => (
+    <ThumbnailImage
+      project={{
+        id: (item as any).parentId || (item as any).projectId || item.id,
+        title: item.name,
+        spaceInfo: (item as any).spaceConfig || item.spaceSize,
+        spaceSize: item.spaceSize,
+        placedModules: (item as any).furniture?.placedModules || [],
+      } as any}
+      designFile={{
+        thumbnail: item.thumbnail,
+        updatedAt: item.updatedAt,
+        spaceConfig: (item as any).spaceConfig || item.spaceSize,
+        furniture: (item as any).furniture,
+      }}
+      className={className}
+      alt={item.name}
+    />
+  );
+
   // 체크박스 렌더링 (호버 시 표시, 선택된 아이템은 항상 표시)
   const hasSelection = selectedItems.size > 0;
   const renderCheckbox = (item: ExplorerItem) => {
@@ -390,7 +412,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           >
             {renderCheckbox(item)}
             <div className={styles.tileThumbnail}>
-              {(item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
+              {item.type === 'design' && item.thumbnail ? (
+                <img src={item.thumbnail} alt={item.name} />
+              ) : item.type === 'design' && hasDesignSpace(item) ? (
+                renderGeneratedDesignThumbnail(item)
+              ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                   <FileText size={20} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />
                 </div>
@@ -477,22 +503,12 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                       </div>
                     );
                   })()
-                ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
+                ) : (item.type === 'design' && !item.thumbnail && !hasDesignSpace(item) && (!item.furnitureCount || item.furnitureCount === 0)) ? (
                   <div className={styles.projectGridEmpty}>
                     <FileText size={24} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />
                   </div>
                 ) : item.type === 'design' ? (
-                  <ThumbnailImage
-                    project={{ id: (item as any).parentId || (item as any).projectId || item.id, title: item.name } as any}
-                    designFile={{
-                      thumbnail: item.thumbnail,
-                      updatedAt: item.updatedAt,
-                      spaceConfig: (item as any).spaceConfig,
-                      furniture: (item as any).furniture,
-                    }}
-                    className={styles.saasSingleThumb}
-                    alt={item.name}
-                  />
+                  renderGeneratedDesignThumbnail(item, styles.saasSingleThumb)
                 ) : item.thumbnail ? (
                   <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
                 ) : (
@@ -549,7 +565,11 @@ const ContentPane: React.FC<ContentPaneProps> = ({
           <div className={styles.iconThumbnail}>
             {isMobile ? (
               // 모바일: 64x64 아이콘 또는 썸네일
-              item.thumbnail ? (
+              item.type === 'design' && item.thumbnail ? (
+                <img src={item.thumbnail} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
+              ) : item.type === 'design' && hasDesignSpace(item) ? (
+                renderGeneratedDesignThumbnail(item)
+              ) : item.thumbnail ? (
                 <img src={item.thumbnail} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 10 }} />
               ) : (
                 getItemIcon(item, 32)
@@ -591,6 +611,10 @@ const ContentPane: React.FC<ContentPaneProps> = ({
               })()
             ) : item.type === 'project' ? (
               getItemIcon(item, Math.max(thumbSize * 0.5, 16), true)
+            ) : item.type === 'design' && item.thumbnail ? (
+              <img src={item.thumbnail} alt={item.name} />
+            ) : item.type === 'design' && hasDesignSpace(item) ? (
+              renderGeneratedDesignThumbnail(item)
             ) : (item.type === 'design' && (!item.furnitureCount || item.furnitureCount === 0)) ? (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
                 <FileText size={20} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />

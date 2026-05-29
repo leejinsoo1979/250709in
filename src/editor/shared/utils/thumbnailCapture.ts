@@ -341,33 +341,60 @@ export const generateDefaultThumbnail = (
 
   const fontMain = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
-  if (furnitureCount === 0) {
-    // 가구 없음: 빈 문자열 반환 (ThumbnailImage에서 아이콘 표시)
-    return '';
-  } else {
-    // 가구 있음: 기존 스타일 유지
-    const gradient = ctx.createLinearGradient(0, 0, 0, H);
-    gradient.addColorStop(0, '#ffffff');
-    gradient.addColorStop(1, '#f0f2f5');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, W, H);
+  const gradient = ctx.createLinearGradient(0, 0, 0, H);
+  gradient.addColorStop(0, '#ffffff');
+  gradient.addColorStop(1, '#f0f2f5');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, W, H);
 
-    ctx.strokeStyle = '#e1e4e8';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(0, 0, W, H);
+  ctx.strokeStyle = '#e1e4e8';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(0, 0, W, H);
 
-    ctx.fillStyle = '#1a1d21';
-    ctx.font = `600 18px ${fontMain}`;
-    ctx.textAlign = 'center';
-    const widthMm = Math.round(spaceInfo.width);
-    const heightMm = Math.round(spaceInfo.height);
-    const depthMm = Math.round(spaceInfo.depth);
-    ctx.fillText(`${widthMm} × ${heightMm} × ${depthMm}mm`, W / 2, 85);
+  const padding = 38;
+  const availableW = W - padding * 2;
+  const availableH = H - padding * 2;
+  const scale = Math.min(availableW / Math.max(spaceInfo.width, 1), availableH / Math.max(spaceInfo.depth, 1));
+  const floorW = spaceInfo.width * scale;
+  const floorH = spaceInfo.depth * scale;
+  const floorX = (W - floorW) / 2;
+  const floorY = (H - floorH) / 2 + 14;
 
-    ctx.font = `400 13px ${fontMain}`;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(floorX, floorY, floorW, floorH);
+  ctx.strokeStyle = '#cbd5e1';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(floorX, floorY, floorW, floorH);
+
+  ctx.strokeStyle = '#edf2f7';
+  ctx.lineWidth = 0.5;
+  const gridSpacing = Math.max(8, 500 * scale);
+  for (let y = floorY + gridSpacing; y < floorY + floorH; y += gridSpacing) {
+    ctx.beginPath();
+    ctx.moveTo(floorX, y);
+    ctx.lineTo(floorX + floorW, y);
+    ctx.stroke();
+  }
+  for (let x = floorX + gridSpacing; x < floorX + floorW; x += gridSpacing) {
+    ctx.beginPath();
+    ctx.moveTo(x, floorY);
+    ctx.lineTo(x, floorY + floorH);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#1a1d21';
+  ctx.font = `600 16px ${fontMain}`;
+  ctx.textAlign = 'center';
+  const widthMm = Math.round(spaceInfo.width);
+  const heightMm = Math.round(spaceInfo.height);
+  const depthMm = Math.round(spaceInfo.depth);
+  ctx.fillText(`${widthMm} × ${heightMm} × ${depthMm}mm`, W / 2, 28);
+
+  if (furnitureCount > 0) {
+    ctx.font = `400 12px ${fontMain}`;
     ctx.fillStyle = '#64748b';
-    ctx.fillText(`배치된 가구 ${furnitureCount}개`, W / 2, 115);
+    ctx.fillText(`배치된 가구 ${furnitureCount}개`, W / 2, H - 18);
   }
 
   return canvas.toDataURL('image/png', 0.9);
-}; 
+};

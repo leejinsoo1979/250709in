@@ -150,11 +150,6 @@ export async function generateProjectThumbnail(project: ProjectSummary): Promise
       ctx.textAlign = 'center';
       ctx.fillText(`${Math.round(spaceWidth)} × ${Math.round(spaceHeight)} × ${Math.round(spaceDepth)}mm`, thumbnailSize / 2, floorY - 25);
 
-      // 가구가 없으면 썸네일 생성하지 않음 (ThumbnailImage에서 아이콘 표시)
-      if (!project.placedModules || project.placedModules.length === 0) {
-        return null;
-      }
-
       // 가구 그리기
       if (project.placedModules && project.placedModules.length > 0) {
         console.log(`🪑 ${project.placedModules.length}개의 가구를 썸네일에 렌더링합니다`);

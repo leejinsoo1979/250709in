@@ -74,19 +74,8 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
   const furnitureCount = designFile?.furniture?.placedModules?.length
     ?? project.placedModules?.length
     ?? 0;
-  const isEmpty = furnitureCount === 0;
-
-  // 빈 디자인이면 Canvas 생성 없이 바로 CSS div 렌더링
-  if (isEmpty) {
-    const spaceConfig = designFile?.spaceConfig || (
-      (project.spaceInfo || project.spaceSize) ? {
-        width: (project.spaceInfo as any)?.width || (project.spaceSize as any)?.width || 0,
-        height: (project.spaceInfo as any)?.height || (project.spaceSize as any)?.height || 0,
-        depth: (project.spaceInfo as any)?.depth || (project.spaceSize as any)?.depth || 0,
-      } : undefined
-    );
-    return <EmptyDesignThumbnail className={className} spaceConfig={spaceConfig} />;
-  }
+  const hasSpaceConfig = !!(designFile?.spaceConfig || project.spaceInfo || project.spaceSize);
+  const isEmpty = furnitureCount === 0 && !designFile?.thumbnail && !project.thumbnail && !hasSpaceConfig;
 
   useEffect(() => {
     let mounted = true;
@@ -97,7 +86,7 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
         setError(false);
 
         // 디자인 파일 전용 썸네일 생성
-        if (designFile && designFile.spaceConfig && designFile.furniture) {
+        if (designFile && designFile.spaceConfig) {
           // 가구가 있으면 저장된 썸네일 우선 사용
           if (designFile.thumbnail) {
             setThumbnailUrl(designFile.thumbnail);
@@ -114,7 +103,7 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
               depth: designFile.spaceConfig.depth,
               columns: designFile.spaceConfig.columns || []
             } as any,
-            placedModules: designFile.furniture.placedModules || []
+            placedModules: designFile.furniture?.placedModules || []
           };
 
           const generatedThumbnail = await generateProjectThumbnail(designProjectData);
@@ -161,6 +150,18 @@ const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
       mounted = false;
     };
   }, [project.id, project.thumbnail, project.updatedAt, project.placedModules?.length, designFile?.thumbnail, designFile?.updatedAt, designFile?.spaceConfig, designFile?.furniture]);
+
+  // 빈 디자인이면 Canvas 생성 없이 바로 CSS div 렌더링
+  if (isEmpty) {
+    const spaceConfig = designFile?.spaceConfig || (
+      (project.spaceInfo || project.spaceSize) ? {
+        width: (project.spaceInfo as any)?.width || (project.spaceSize as any)?.width || 0,
+        height: (project.spaceInfo as any)?.height || (project.spaceSize as any)?.height || 0,
+        depth: (project.spaceInfo as any)?.depth || (project.spaceSize as any)?.depth || 0,
+      } : undefined
+    );
+    return <EmptyDesignThumbnail className={className} spaceConfig={spaceConfig} />;
+  }
 
   if (loading) {
     return (
