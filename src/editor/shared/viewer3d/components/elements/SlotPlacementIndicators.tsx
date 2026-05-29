@@ -1056,15 +1056,23 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           </div>
         </Html>
 
-        {/* 전체 공간 너비 치수 (상단) */}
+        {/* 전체 공간 너비 치수 (상단) + 연장선 */}
         {(() => {
           const dimZ = -(halfD + 300) * 0.01;
           const lx = -halfW * 0.01, rx = halfW * 0.01;
+          const wallScreenZ = -halfD * 0.01; // 공간 뒷변
           return (
             <React.Fragment key="guide-depth-width-dim">
               <NativeLine name="free-placement-guide-line"
                 points={[[lx, guideZ, dimZ], [rx, guideZ, dimZ]]}
                 color={guideColor} lineWidth={1.2} opacity={0.6} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
+              {/* 연장선 좌/우 (치수선 → 공간 뒷변) */}
+              <NativeLine name="free-placement-guide-line"
+                points={[[lx, guideZ, dimZ], [lx, guideZ, wallScreenZ]]}
+                color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
+              <NativeLine name="free-placement-guide-line"
+                points={[[rx, guideZ, dimZ], [rx, guideZ, wallScreenZ]]}
+                color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
               <Html position={[0, guideZ, dimZ - 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
                 <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{Math.round(spaceInfo.width)}</div>
               </Html>
