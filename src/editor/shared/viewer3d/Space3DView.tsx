@@ -2791,8 +2791,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 카메라 타겟 배열 memoization (하위 컴포넌트의 불필요한 useEffect 재실행 방지)
   const cameraTargetArr = useMemo<[number, number, number]>(() => {
     const depth = spaceInfo?.depth || 600;
-    // 깊이 모드: 포커싱 Z를 공간 앞쪽으로 당겨 공간이 화면 위로 올라오게
-    return [0, targetY, guideDepthEditMode ? mmToThreeUnits(depth / 2) : 0];
+    return [0, targetY, guideDepthEditMode ? -mmToThreeUnits(depth / 2) : 0];
   }, [targetY, guideDepthEditMode, spaceInfo?.depth]);
 
   useEffect(() => {
