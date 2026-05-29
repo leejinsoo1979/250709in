@@ -79,7 +79,7 @@ const BoardImageUploader: React.FC<Props> = ({ value, onChange, prefix, disabled
               borderRadius: 6,
               overflow: 'hidden',
               border: '1px solid var(--theme-border, #e0e0e0)',
-              background: '#f5f5f5',
+              background: 'var(--theme-background-secondary, #f5f5f5)',
             }}
           >
             <img
@@ -124,7 +124,7 @@ const BoardImageUploader: React.FC<Props> = ({ value, onChange, prefix, disabled
           fontSize: 13,
           border: '1px dashed var(--theme-border, #bbb)',
           borderRadius: 6,
-          background: 'transparent',
+          background: 'var(--theme-surface, transparent)',
           color: 'var(--theme-text-secondary, #555)',
           cursor: disabled || uploading ? 'not-allowed' : 'pointer',
         }}
@@ -133,7 +133,7 @@ const BoardImageUploader: React.FC<Props> = ({ value, onChange, prefix, disabled
       </button>
 
       {err && (
-        <div style={{ color: '#d32f2f', fontSize: 12, marginTop: 6 }}>{err}</div>
+        <div style={{ color: 'var(--theme-danger, #d32f2f)', fontSize: 12, marginTop: 6 }}>{err}</div>
       )}
     </div>
   );
