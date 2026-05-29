@@ -100,6 +100,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     ...(spaceInfo?.wallConfig?.left ? [{ id: 'left' as const, label: 'L' }] : []),
     { id: 'front' as const, label: 'F' },
     ...(spaceInfo?.wallConfig?.right ? [{ id: 'right' as const, label: 'R' }] : []),
+    // 가이드 모드: 탑뷰(T) 버튼 추가
+    ...(spaceInfo?.customGuideMode ? [{ id: 'top' as const, label: 'T' }] : []),
   ];
   const hasFurniture = placedModules.length > 0;
   // 모든 슬롯이 가구로 채워졌는지 판단 (프레임병합 버튼 표시 조건)
@@ -499,13 +501,28 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       {/* ─── Left: L/F/R 측면 배치벽 토글 (3D 모드에서만) — 기즈모 박스 중앙과 수직 정렬 ─── */}
       {canUsePlacementWallTools && viewMode === '3D' && (
         <div className={styles.segmentedControl} style={{ marginLeft: 19 }}>
-          {placementWallButtons.map((btn) => (
-            <button
-              key={btn.id}
-              className={`${styles.segmentButton} ${styles.segmentAccent} ${activePlacementWall === btn.id ? styles.segmentAccentActive : ''}`}
-              onClick={() => viewCubeRequest.handler?.(btn.id)}
-            >{btn.label}</button>
-          ))}
+          {placementWallButtons.map((btn) => {
+            const isTop = btn.id === 'top';
+            const active = isTop ? guideDepthEditMode : (!guideDepthEditMode && activePlacementWall === btn.id);
+            return (
+              <button
+                key={btn.id}
+                className={`${styles.segmentButton} ${styles.segmentAccent} ${active ? styles.segmentAccentActive : ''}`}
+                onClick={() => {
+                  if (isTop) {
+                    // T: 깊이 모드 — 탑 카메라
+                    setGuideDepthEditMode(true);
+                    onViewModeChange('3D');
+                    setCameraMode('orthographic');
+                  } else {
+                    // L/F/R: 깊이 모드 해제 후 해당 면으로
+                    if (guideDepthEditMode) setGuideDepthEditMode(false);
+                    viewCubeRequest.handler?.(btn.id as any);
+                  }
+                }}
+              >{btn.label}</button>
+            );
+          })}
         </div>
       )}
 
