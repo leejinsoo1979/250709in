@@ -333,6 +333,34 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     handleGuideButtonClick
   ]);
 
+  const stepSlotCount = (value: string, delta: number) => {
+    const next = Math.max(1, Math.min(30, Math.floor(Number(value) || 1) + delta));
+    return String(next);
+  };
+
+  const guideStepperStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    width: 28,
+    border: '1px solid var(--theme-border, #d0d0d0)',
+    borderRadius: 6,
+    overflow: 'hidden'
+  };
+  const guideStepperBtnStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: 'none',
+    background: 'var(--theme-surface, #f5f5f5)',
+    color: 'var(--theme-text, #333)',
+    fontSize: 14,
+    lineHeight: 1,
+    cursor: 'pointer',
+    padding: 0,
+    minHeight: 16
+  };
+
   const createFreePlacementGuides = () => {
     const clampSlotCount = (value: string) => Math.max(1, Math.min(30, Math.floor(Number(value) || 1)));
     const totalWidth = spaceInfo?.width || 0;
@@ -794,49 +822,70 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <div className={styles.guideSplitFields}>
                 <label className={styles.guideDialogField}>
                   <span>상부 모듈 갯수</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={guideUpperSlotCount}
-                    onChange={(event) => setGuideUpperSlotCount(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') createFreePlacementGuides();
-                      if (event.key === 'Escape') setShowGuideDialog(false);
-                    }}
-                    autoFocus
-                  />
+                  <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={guideUpperSlotCount}
+                      onChange={(event) => setGuideUpperSlotCount(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') createFreePlacementGuides();
+                        if (event.key === 'Escape') setShowGuideDialog(false);
+                      }}
+                      autoFocus
+                      style={{ flex: 1 }}
+                    />
+                    <div style={guideStepperStyle}>
+                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideUpperSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
+                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideUpperSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
+                    </div>
+                  </div>
                 </label>
                 <label className={styles.guideDialogField}>
                   <span>하부 모듈 갯수</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={30}
-                    value={guideLowerSlotCount}
-                    onChange={(event) => setGuideLowerSlotCount(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') createFreePlacementGuides();
-                      if (event.key === 'Escape') setShowGuideDialog(false);
-                    }}
-                  />
+                  <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={guideLowerSlotCount}
+                      onChange={(event) => setGuideLowerSlotCount(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') createFreePlacementGuides();
+                        if (event.key === 'Escape') setShowGuideDialog(false);
+                      }}
+                      style={{ flex: 1 }}
+                    />
+                    <div style={guideStepperStyle}>
+                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideLowerSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
+                      <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideLowerSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
+                    </div>
+                  </div>
                 </label>
               </div>
             ) : (
               <label className={styles.guideDialogField}>
                 <span>모듈 갯수</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={30}
-                  value={guideSlotCount}
-                  onChange={(event) => setGuideSlotCount(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') createFreePlacementGuides();
-                    if (event.key === 'Escape') setShowGuideDialog(false);
-                  }}
-                  autoFocus
-                />
+                <div style={{ display: 'flex', alignItems: 'stretch', gap: 6 }}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={guideSlotCount}
+                    onChange={(event) => setGuideSlotCount(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') createFreePlacementGuides();
+                      if (event.key === 'Escape') setShowGuideDialog(false);
+                    }}
+                    autoFocus
+                    style={{ flex: 1 }}
+                  />
+                  <div style={guideStepperStyle}>
+                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideSlotCount((v) => stepSlotCount(v, 1))} aria-label="증가">+</button>
+                    <button type="button" style={guideStepperBtnStyle} onClick={() => setGuideSlotCount((v) => stepSlotCount(v, -1))} aria-label="감소">−</button>
+                  </div>
+                </div>
               </label>
             )}
 
