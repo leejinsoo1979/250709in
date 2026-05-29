@@ -1122,7 +1122,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               <NativeLine name="free-placement-guide-line"
                 points={[[rx, guideZ, dimZ], [rx, guideZ, backGuideZ]]}
                 color={guideColor} lineWidth={0.8} opacity={0.45} transparent depthTest={false} depthWrite={false} renderOrder={100000} />
-              <Html position={[0, guideZ, dimZ - 0.5]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
+              <Html position={[0, guideZ, dimZ - 0.001]} center style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}>
                 <div style={{ color: guideColor, fontSize: 12, fontWeight: 900, whiteSpace: 'nowrap' }}>{formatGuideMm(spaceInfo.width)}</div>
               </Html>
             </React.Fragment>
@@ -1295,8 +1295,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const gBaseboard = spaceInfo.baseConfig?.height ?? 0;
     // 우측바 옵셋/갭과 연동되는 값
     const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
+    const gMoldingGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
     const gBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
     const gBaseGap = (spaceInfo.baseConfig as any)?.gap ?? 0;
+    const gMoldingVisible = Math.max(0, gTopMolding - gMoldingGap);
+    const gBaseboardVisible = Math.max(0, gBaseboard - gBaseGap);
     const gLower = spaceInfo.guideLowerHeight ?? 800;
     const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
     // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 걸레받이 (나머지 흡수)
@@ -1305,9 +1308,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     // 바닥(0)부터의 누적 경계 (mm): 걸레받이→하부장→미드웨이→상부장→몰딩
     const yBaseTop = gBaseboard;                  // 걸레받이 상단
+    const yBaseGapTop = Math.min(gBaseGap, yBaseTop);
     const yLowerTop = yBaseTop + gLower;          // 하부장 상단 (= 하부 슬롯 영역 상단)
     const yMidTop = yLowerTop + gMidway;          // 미드웨이 상단 (= 상부 슬롯 영역 하단)
     const yUpperTop = yMidTop + gUpper;           // 상부장 상단 (= 몰딩 하단)
+    const yMoldingGapBottom = Math.max(yUpperTop, fullHeightMm - gMoldingGap);
     // mm → three units
     const lowerStartY = yBaseTop * 0.01;
     const lowerEndY = yLowerTop * 0.01;
@@ -1325,12 +1330,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       const [startY, endY] = getSlotYRange(slot);
       return (startY + endY) / 2;
     };
-    const getSlotLabelY = (slot: FreePlacementGuideSlot) => {
-      const zone = slot.guideZone || 'full';
-      if (zone === 'upper' && hasSplitSlots) return fullHeight + 0.28;
-      if (zone === 'lower' && hasSplitSlots) return -0.28;
-      return fullHeight + 0.28;
-    };
     const guideZ = 0.006;
     const guideColor = colors.primary || '#3b82f6';
     const isGuideEditing = spaceInfo.freePlacementGuideEditing === true;
@@ -1339,6 +1338,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const lastSlotEndX = Math.max(...guideSlots.map((slot) => slot.x + slot.width));
     const remainingFreeWidth = Math.max(0, guideEndX - lastSlotEndX);
     const remainingFreeLabelX = lastSlotEndX + remainingFreeWidth / 2;
+    const splitUpperWidthLabelY = fullHeight + 1.2;
+    const splitLowerWidthLabelY = -1.2;
+    const getSlotLabelY = (slot: FreePlacementGuideSlot) => {
+      const zone = slot.guideZone || 'full';
+      if (zone === 'upper' && hasSplitSlots) return splitUpperWidthLabelY;
+      if (zone === 'lower' && hasSplitSlots) return splitLowerWidthLabelY;
+      return fullHeight + 0.28;
+    };
     const unconfirmedSummaryKeys = Array.from(new Set(
       guideSlots
         .filter((slot) => !slot.confirmed)
@@ -1367,9 +1374,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         totalWidth,
         labelX,
         labelY: zone === 'upper' && hasSplitSlots
-          ? fullHeight + 0.28
+          ? splitUpperWidthLabelY
           : zone === 'lower' && hasSplitSlots
-            ? -0.28
+            ? splitLowerWidthLabelY
             : fullHeight + 0.28
       };
     });
@@ -1425,18 +1432,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // ── 상하분할 5단 높이 치수 편집기 (좌/우 가장자리) ──
     const spaceHalfWidth = spaceInfo.width / 2;
     const heightTiers = [
-      { key: 'molding', label: '상단몰딩', value: gTopMolding, centerYmm: (yUpperTop + fullHeightMm) / 2 },
+      { key: 'molding', label: '상단몰딩', value: gMoldingVisible, centerYmm: (yUpperTop + yMoldingGapBottom) / 2 },
       { key: 'upper', label: '상부장', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
       { key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 },
       { key: 'lower', label: '하부장', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
-      { key: 'baseboard', label: '걸레받이', value: gBaseboard, centerYmm: yBaseTop / 2 },
+      { key: 'baseboard', label: '걸레받이', value: gBaseboardVisible, centerYmm: (yBaseGapTop + yBaseTop) / 2 },
     ];
     const commitTier = (key: string, raw: string) => {
       const v = Math.round(parseFloat(raw));
       if (!Number.isFinite(v) || v < 0) return;
-      if (key === 'molding') setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), top: v } });
+      if (key === 'molding') setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), top: v + gMoldingGap } });
       else if (key === 'lower') setSpaceInfo({ guideLowerHeight: v });
-      else if (key === 'baseboard') setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), height: v } });
+      else if (key === 'baseboard') setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), height: v + gBaseGap } });
       else if (key === 'upper') setSpaceInfo({ guideUpperHeight: v });
       else if (key === 'midway') {
         // 미드웨이 변경 → 상부장이 흡수
@@ -1474,13 +1481,13 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     // 상단몰딩 옵셋 / 걸레받이 옵셋·갭 편집기 (우측바와 연동) — 중앙 상/하단에 표시
     const offsetGapEditorStyle: React.CSSProperties = {
-      width: 50, padding: '2px 4px', fontSize: 12, fontWeight: 600, textAlign: 'center',
+      width: 38, padding: '2px 3px', fontSize: 12, fontWeight: 600, textAlign: 'center',
       border: `1.5px dashed ${guideColor}`, borderRadius: 4, outline: 'none',
       background: 'rgba(255,255,255,0.95)', color: guideColor, lineHeight: 1.1,
     };
     const offsetGapField = (labelText: string, val: number, commit: (v: number) => void, kkey: string) => (
-      <div key={kkey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-        <span style={{ fontSize: 9, fontWeight: 600, color: guideColor, lineHeight: 1 }}>{labelText}</span>
+      <div key={kkey} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <span style={{ fontSize: 10, fontWeight: 700, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap' }}>{labelText}</span>
         <input
           type="number"
           defaultValue={Math.round(val)}
@@ -1502,8 +1509,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             position={[0, ((yUpperTop + fullHeightMm) / 2) * 0.01, guideZ]}
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {offsetGapField('옵셋', gMoldingOffset, (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topOffset: v } }), 'molding-offset')}
+              {offsetGapField('갭', gMoldingGap, (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topGap: v } }), 'molding-gap')}
             </div>
           </Html>
         )}
@@ -1514,7 +1522,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             position={[0, (yBaseTop / 2) * 0.01, guideZ]}
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               {offsetGapField('옵셋', gBaseOffset, (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } }), 'base-offset')}
               {offsetGapField('갭', gBaseGap, (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: v } }), 'base-gap')}
             </div>
@@ -1524,7 +1532,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     );
 
     // 전체 폭 공통 경계(바닥/걸레받이상단/상부장상단/천장): 몰딩·걸레받이는 전체 공통
-    const fullWidthBoundaryYmm = [0, yBaseTop, yUpperTop, fullHeightMm];
+    const fullWidthBoundaryYmm = [
+      0,
+      ...(gBaseGap > 0 ? [yBaseGapTop] : []),
+      yBaseTop,
+      yUpperTop,
+      ...(gMoldingGap > 0 ? [yMoldingGapBottom] : []),
+      fullHeightMm
+    ];
     // 미드웨이 경계(하부장상단/미드웨이상단): 분할(upper/lower) 슬롯 구간에만 — 병합(full)은 제외
     const midwayBoundaryYmm = [yLowerTop, yMidTop];
     const tierLineLeftX = -spaceHalfWidth * 0.01;
