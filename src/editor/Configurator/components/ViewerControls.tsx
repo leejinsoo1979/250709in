@@ -282,11 +282,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       return;
     }
 
-    if (!spaceInfo?.customGuideMode && onStartGuideSetupInNewTab) {
-      const startedInNewTab = await onStartGuideSetupInNewTab();
-      if (startedInNewTab) return;
-    }
-
+    // 새 디자인 파일 생성 없이 현재 화면에서 바로 가이드 생성 팝업만 표시
     openGuideDialog();
   };
 
@@ -296,9 +292,13 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       void handleGuideButtonClick();
     };
 
+    const handleGuideClose = () => setShowGuideDialog(false);
+
     window.addEventListener('free-placement-guide:toggle', handleGuideToggle);
+    window.addEventListener('free-placement-guide:close', handleGuideClose);
     return () => {
       window.removeEventListener('free-placement-guide:toggle', handleGuideToggle);
+      window.removeEventListener('free-placement-guide:close', handleGuideClose);
     };
   }, [
     canCreateFreePlacementGuide,
@@ -678,17 +678,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       )}
 
       {showGuideDialog && (
-        <div className={styles.guideDialogBackdrop} onMouseDown={() => setShowGuideDialog(false)}>
+        <div className={styles.guideDialogBackdrop} onMouseDown={() => { setShowGuideDialog(false); if (!spaceInfo?.freePlacementGuides?.length) setSpaceInfo({ customGuideMode: false }); }}>
           <div className={styles.guideDialog} onMouseDown={(event) => event.stopPropagation()}>
             <div className={styles.guideDialogHeader}>
               <div>
                 <div className={styles.guideDialogTitle}>가이드 생성</div>
-                <div className={styles.guideDialogSubtitle}>자유배치 와리를 몇 개 슬롯으로 나눌지 입력하세요.</div>
+                <div className={styles.guideDialogSubtitle}>와리를 몇 개 슬롯으로 나눌지 입력하세요.</div>
               </div>
               <button
                 type="button"
                 className={styles.guideDialogClose}
-                onClick={() => setShowGuideDialog(false)}
+                onClick={() => { setShowGuideDialog(false); if (!spaceInfo?.freePlacementGuides?.length) setSpaceInfo({ customGuideMode: false }); }}
                 aria-label="닫기"
               >
                 ×
@@ -765,7 +765,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </div>
 
             <div className={styles.guideDialogActions}>
-              <button type="button" className={styles.guideDialogSecondary} onClick={() => setShowGuideDialog(false)}>
+              <button type="button" className={styles.guideDialogSecondary} onClick={() => { setShowGuideDialog(false); if (!spaceInfo?.freePlacementGuides?.length) setSpaceInfo({ customGuideMode: false }); }}>
                 취소
               </button>
               <button type="button" className={styles.guideDialogPrimary} onClick={createFreePlacementGuides}>

@@ -8402,15 +8402,17 @@ const Configurator: React.FC = () => {
             {!isReadOnly && (
               <div className={styles.layoutModeToggle}>
                 <button
-                  className={`${styles.layoutModeBtn} ${(spaceInfo.layoutMode || 'equal-division') === 'equal-division' ? styles.layoutModeActive : ''}`}
+                  className={`${styles.layoutModeBtn} ${!spaceInfo.customGuideMode && (spaceInfo.layoutMode || 'equal-division') === 'equal-division' ? styles.layoutModeActive : ''}`}
                   onClick={() => {
-                    if ((spaceInfo.layoutMode || 'equal-division') === 'equal-division') return;
+                    if (!spaceInfo.customGuideMode && (spaceInfo.layoutMode || 'equal-division') === 'equal-division') return;
+                    // 가이드 모드/팝업에서 슬롯배치로 전환 시 가이드 팝업 닫기
+                    window.dispatchEvent(new CustomEvent('free-placement-guide:close'));
                     if (placedModules.length > 0) {
                       if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
                       clearAllModules();
                       setSpaceInfo({ freeSurround: undefined });
                     }
-                    const updates: Record<string, unknown> = { layoutMode: 'equal-division' };
+                    const updates: Record<string, unknown> = { layoutMode: 'equal-division', customGuideMode: false, freePlacementGuides: [], freePlacementGuideEditing: false };
                     // 자유배치→슬롯 전환 시 이격거리 초기화 (노서라운드, 슬롯 정수화가 재계산)
                     if (spaceInfo.surroundType === 'no-surround') {
                       const wc = spaceInfo.wallConfig || { left: true, right: true };
@@ -8436,15 +8438,17 @@ const Configurator: React.FC = () => {
                   슬롯배치
                 </button>
                 <button
-                  className={`${styles.layoutModeBtn} ${(spaceInfo.layoutMode || 'equal-division') === 'free-placement' ? styles.layoutModeActive : ''}`}
+                  className={`${styles.layoutModeBtn} ${!spaceInfo.customGuideMode && (spaceInfo.layoutMode || 'equal-division') === 'free-placement' ? styles.layoutModeActive : ''}`}
                   onClick={() => {
-                    if ((spaceInfo.layoutMode || 'equal-division') === 'free-placement') return;
+                    if (!spaceInfo.customGuideMode && (spaceInfo.layoutMode || 'equal-division') === 'free-placement') return;
+                    // 가이드 모드/팝업에서 자유배치로 전환 시 가이드 팝업 닫기
+                    window.dispatchEvent(new CustomEvent('free-placement-guide:close'));
                     if (placedModules.length > 0) {
                       if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
                       clearAllModules();
                       setSpaceInfo({ freeSurround: undefined });
                     }
-                    const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
+                    const updates: Record<string, unknown> = { layoutMode: 'free-placement', customGuideMode: false, freePlacementGuides: [], freePlacementGuideEditing: false };
                     // 슬롯→자유배치 전환 시 이격거리 초기화 (노서라운드)
                     if (spaceInfo.surroundType === 'no-surround') {
                       const wc = spaceInfo.wallConfig || { left: true, right: true };
@@ -8469,6 +8473,20 @@ const Configurator: React.FC = () => {
                 >
                   자유배치
                 </button>
+                {/* 가이드 탭 — 개발자(sbbc212) 계정에서만 노출 */}
+                {user?.email?.trim().toLowerCase() === 'sbbc212@gmail.com' && (
+                  <button
+                    className={`${styles.layoutModeBtn} ${spaceInfo.customGuideMode ? styles.layoutModeActive : ''}`}
+                    onClick={() => {
+                      if (spaceInfo.customGuideMode) return;
+                      // 즉시 가이드 모드 활성화 (탭이 바로 가이드로 바뀜) + 가이드 생성 팝업 표시
+                      setSpaceInfo({ customGuideMode: true });
+                      window.dispatchEvent(new CustomEvent('free-placement-guide:toggle'));
+                    }}
+                  >
+                    가이드
+                  </button>
+                )}
               </div>
             )}
             {renderSidebarContent()}

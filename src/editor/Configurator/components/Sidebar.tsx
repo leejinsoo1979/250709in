@@ -4,7 +4,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { TbBoxAlignRight } from 'react-icons/tb';
 import { MdOutlineDashboardCustomize } from 'react-icons/md';
-import { Grid3X3, Sun, Moon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useAuth } from '@/auth/AuthProvider';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -89,22 +89,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         </svg>
       ),
       label: '아일랜드'
-    },
-    {
-      id: 'guide' as SidebarTab,
-      icon: <Grid3X3 size={22} />,
-      label: spaceInfo.freePlacementGuideEditing ? '슬롯확정' : '가이드'
     }
   ];
 
   let tabs = readOnly ? allTabs.filter(tab => tab.id === 'material') : allTabs;
-  // 아일랜드/커스텀/가이드 탭은 개발자 계정에서만 노출
+  // 아일랜드/커스텀 탭은 개발자 계정에서만 노출 (가이드는 좌측 배치모드 탭으로 이동됨)
   if (!isDeveloper) {
-    tabs = tabs.filter(tab => tab.id !== 'island' && tab.id !== 'myCabinet' && tab.id !== 'guide');
+    tabs = tabs.filter(tab => tab.id !== 'island' && tab.id !== 'myCabinet');
   }
   if (isIsland) {
-    // 아일랜드 모드: 기둥/아일랜드/가이드 탭 숨김 (이미 아일랜드 디자인이므로)
-    tabs = tabs.filter(tab => tab.id !== 'structure' && tab.id !== 'island' && tab.id !== 'guide');
+    // 아일랜드 모드: 기둥/아일랜드 탭 숨김 (이미 아일랜드 디자인이므로)
+    tabs = tabs.filter(tab => tab.id !== 'structure' && tab.id !== 'island');
   }
 
   return (
@@ -114,7 +109,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            className={`${styles.tabButton} ${activeTab === tab.id || (tab.id === 'guide' && (spaceInfo.customGuideMode || spaceInfo.freePlacementGuideEditing)) ? styles.active : ''}`}
+            className={`${styles.tabButton} ${activeTab === tab.id ? styles.active : ''}`}
             onClick={() => onTabClick(tab.id)}
             data-tooltip={tab.label}
           >
