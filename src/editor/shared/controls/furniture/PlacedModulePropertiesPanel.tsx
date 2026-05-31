@@ -57,6 +57,10 @@ const isShelfSplitModuleId = (moduleId?: string): boolean => {
   return !!moduleId?.includes('shelf-split');
 };
 
+const isHangingWardrobeModuleId = (moduleId?: string): boolean => {
+  return !!moduleId?.includes('hanging');
+};
+
 const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
   if (hasTopEndPanel) return -82;
   if (stoneTopThickness === 10) return -90;
@@ -73,7 +77,7 @@ const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => {
 };
 
 const usesStableShelfSectionBoundary = (moduleId?: string): boolean => {
-  return isPlainShoeShelfModuleId(moduleId) || isShelfSplitModuleId(moduleId);
+  return isPlainShoeShelfModuleId(moduleId) || isShelfSplitModuleId(moduleId) || isHangingWardrobeModuleId(moduleId);
 };
 
 const getStableShelfSectionOffsets = (module: any, spaceInfo: any) => {
@@ -92,7 +96,11 @@ const getStableShelfSectionOffsets = (module: any, spaceInfo: any) => {
   const floatAbsorbedMm = module?.hasBase === false
     ? Math.max(0, module?.individualFloatHeight ?? 0)
     : globalFloatMm;
-  const baseFrameDeltaMm = 0;
+  const baseFrameDeltaMm = isHangingWardrobeModuleId(module?.moduleId)
+    && module?.hasBase !== false
+    && typeof module?.baseFrameHeight === 'number'
+    ? module.baseFrameHeight - globalBaseMm
+    : 0;
   return { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm };
 };
 
@@ -103,8 +111,7 @@ const getPlainShoeShelfSectionHeights = (
   sectionBasisH: number
 ): number[] | null => {
   if (!usesStableShelfSectionBoundary(module?.moduleId) || sections.length !== 2) return null;
-  const sourceSections = isShelfSplitModuleId(module?.moduleId)
-    && Array.isArray(module?.customSections)
+  const sourceSections = Array.isArray(module?.customSections)
     && module.customSections.length >= 2
     ? module.customSections
     : sections;
