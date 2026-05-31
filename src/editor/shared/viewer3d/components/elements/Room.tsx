@@ -5241,24 +5241,8 @@ const Room: React.FC<RoomProps> = ({
                     const effectiveTotalFrameHeightMM = Math.max(0, totalFrameHeightMM - modTopFrameGapMM);
                     const modFrameHeight = mmToThreeUnits(effectiveTotalFrameHeightMM);
                     const modTopGapThreeUnits = mmToThreeUnits(modTopFrameGapMM);
-                    const shelfSplitSections = modIdForTopFrame.includes('shelf-split') && Array.isArray((mod as any).customSections)
-                      ? (mod as any).customSections
-                      : null;
-                    const shelfSplitTopFrameBottomMm = shelfSplitSections && shelfSplitSections.length >= 2
-                      ? (
-                        (mod.hasBase === false
-                          ? ((mod as any).individualFloatHeight ?? 0)
-                          : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)))
-                        + shelfSplitSections.slice(0, 2).reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0)
-                      )
-                      : null;
-                    const shelfSplitFrameHeightMm = shelfSplitTopFrameBottomMm !== null
-                      ? Math.max(0, Math.round(((effectiveTopY - panelStartY) / mmToThreeUnits(1)) - shelfSplitTopFrameBottomMm))
-                      : effectiveTotalFrameHeightMM;
-                    const renderFrameHeight = mmToThreeUnits(shelfSplitFrameHeightMm);
-                    const modFrameCenterY = shelfSplitTopFrameBottomMm !== null
-                      ? panelStartY + mmToThreeUnits(shelfSplitTopFrameBottomMm + shelfSplitFrameHeightMm / 2)
-                      : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
+                    const renderFrameHeight = modFrameHeight;
+                    const modFrameCenterY = effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
                     // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
                     const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
@@ -6195,24 +6179,8 @@ const Room: React.FC<RoomProps> = ({
                   const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
                   const slotModCategory = getModuleCategory(mod);
                   const slotModMid = mod.moduleId || '';
-                  const slotShelfSplitSections = slotModMid.includes('shelf-split') && Array.isArray((mod as any).customSections)
-                    ? (mod as any).customSections
-                    : null;
-                  const slotShelfSplitTopFrameBottomMm = slotShelfSplitSections && slotShelfSplitSections.length >= 2
-                    ? (
-                      (mod.hasBase === false
-                        ? ((mod as any).individualFloatHeight ?? 0)
-                        : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)))
-                      + slotShelfSplitSections.slice(0, 2).reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0)
-                    )
-                    : null;
-                  const slotShelfSplitFrameHeightMm = slotShelfSplitTopFrameBottomMm !== null
-                    ? Math.max(0, Math.round((ceilingHeight / mmToThreeUnits(1)) - slotShelfSplitTopFrameBottomMm))
-                    : modTopThickness;
-                  const slotRenderTopHeight = mmToThreeUnits(slotShelfSplitFrameHeightMm);
-                  const modTopY = slotShelfSplitTopFrameBottomMm !== null
-                    ? panelStartY + mmToThreeUnits(slotShelfSplitTopFrameBottomMm + slotShelfSplitFrameHeightMm / 2)
-                    : panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
+                  const slotRenderTopHeight = modTopHeight;
+                  const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
                   const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
 
