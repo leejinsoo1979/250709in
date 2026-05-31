@@ -557,6 +557,106 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     && (slot.guideGroupId || '') === (targetGroupId || '')
   );
 
+  const getMergedGuideFamilySlots = (
+    slots: FreePlacementGuideSlot[],
+    mergedSlot: FreePlacementGuideSlot
+  ) => {
+    const mergedGroupPrefix = `${mergedSlot.id}-`;
+    return slots.filter((slot) => (
+      slot.id === mergedSlot.id
+      || (typeof slot.guideGroupId === 'string' && slot.guideGroupId.startsWith(mergedGroupPrefix))
+    ));
+  };
+
+  const getMergedGuideRemainderSide = (
+    slot: FreePlacementGuideSlot,
+    mergedStartX: number
+  ): 'left' | 'right' => {
+    if (slot.guideGroupId?.endsWith('-left')) return 'left';
+    if (slot.guideGroupId?.endsWith('-right')) return 'right';
+    return slot.x + slot.width / 2 < mergedStartX ? 'left' : 'right';
+  };
+
+  const redistributeMergedGuideFamilyWidth = (
+    sourceSlots: FreePlacementGuideSlot[],
+    targetSlot: FreePlacementGuideSlot,
+    widthValue: number
+  ): FreePlacementGuideSlot[] | null => {
+    if ((targetSlot.guideZone || 'full') !== 'full') return null;
+
+    const familySlots = getMergedGuideFamilySlots(sourceSlots, targetSlot);
+    const remainderSlots = familySlots.filter((slot) => slot.id !== targetSlot.id);
+    if (remainderSlots.length === 0) return null;
+
+    const minSlotWidth = 1;
+    const familyStartX = Math.min(...familySlots.map((slot) => slot.x));
+    const familyEndX = Math.max(...familySlots.map((slot) => slot.x + slot.width));
+    const mergedStartX = targetSlot.x;
+    const rightUpperCount = remainderSlots.filter((slot) => (
+      (slot.guideZone || 'full') === 'upper'
+      && getMergedGuideRemainderSide(slot, mergedStartX) === 'right'
+    )).length;
+    const rightLowerCount = remainderSlots.filter((slot) => (
+      (slot.guideZone || 'full') === 'lower'
+      && getMergedGuideRemainderSide(slot, mergedStartX) === 'right'
+    )).length;
+    const rightRemainderCount = Math.max(rightUpperCount, rightLowerCount);
+    const maxTargetWidth = Math.max(
+      minSlotWidth,
+      familyEndX - mergedStartX - rightRemainderCount * minSlotWidth
+    );
+    const nextMergedWidth = Math.min(Math.max(minSlotWidth, widthValue), maxTargetWidth);
+    const nextMergedEndX = mergedStartX + nextMergedWidth;
+
+    const makeRemainderSlots = (
+      zone: 'upper' | 'lower',
+      side: 'left' | 'right',
+      startX: number,
+      endX: number
+    ) => {
+      const slots = remainderSlots
+        .filter((slot) => (slot.guideZone || 'full') === zone)
+        .filter((slot) => getMergedGuideRemainderSide(slot, mergedStartX) === side)
+        .sort((a, b) => a.x - b.x);
+      const segmentWidth = Math.max(0, endX - startX);
+      if (slots.length === 0) return [];
+
+      const slotWidth = Math.max(minSlotWidth, segmentWidth / slots.length);
+      return slots.map((slot, index) => ({
+        ...slot,
+        index,
+        x: startX + slotWidth * index,
+        width: slotWidth,
+        guideZone: zone,
+        guideGroupId: `${targetSlot.id}-${zone}-${side}`,
+        confirmed: false
+      }));
+    };
+
+    const nextFamilySlots = [
+      {
+        ...targetSlot,
+        width: nextMergedWidth,
+        confirmed: true
+      },
+      ...makeRemainderSlots('upper', 'left', familyStartX, mergedStartX),
+      ...makeRemainderSlots('lower', 'left', familyStartX, mergedStartX),
+      ...makeRemainderSlots('upper', 'right', nextMergedEndX, familyEndX),
+      ...makeRemainderSlots('lower', 'right', nextMergedEndX, familyEndX)
+    ];
+    const familySlotIds = new Set(familySlots.map((slot) => slot.id));
+    const zoneOrder = { full: 0, upper: 1, lower: 2 };
+
+    return sourceSlots
+      .filter((slot) => !familySlotIds.has(slot.id))
+      .concat(nextFamilySlots)
+      .sort((a, b) => (
+        zoneOrder[a.guideZone || 'full'] - zoneOrder[b.guideZone || 'full']
+        || a.x - b.x
+        || a.index - b.index
+      ));
+  };
+
   const updateFreeGuideSlotWidth = (slotId: string, widthValue: number) => {
     const sourceSlots = spaceInfo.freePlacementGuides || [];
     if (sourceSlots.length === 0) return;
@@ -566,6 +666,13 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const minSlotWidth = 1;
     const targetSlot = sourceSlots.find((slot) => slot.id === slotId);
     if (!targetSlot) return;
+
+    const redistributedMergedFamily = redistributeMergedGuideFamilyWidth(sourceSlots, targetSlot, widthValue);
+    if (redistributedMergedFamily) {
+      setSpaceInfo({ freePlacementGuides: redistributedMergedFamily });
+      return;
+    }
+
     const targetZone = targetSlot.guideZone || 'full';
     const targetGroupId = targetSlot.guideGroupId;
     const targetZoneSlots = sourceSlots.filter((slot) => isSameGuideLine(slot, targetZone, targetGroupId));
