@@ -6279,7 +6279,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             || customModule.freeHeight
             || customModule.customHeight
             || customModule.moduleHeight
-            || (spaceInfo.height - (spaceInfo.frameSize?.top || 30) - bottomFrameHeight);
+            || (spaceInfo.height - (spaceInfo.frameSize?.top ?? 30) - bottomFrameHeight);
           let sections = rawSections;
           if (rawSections.length >= 2) {
             const outerSum = rawSections.reduce((sum: number, s: any) => {

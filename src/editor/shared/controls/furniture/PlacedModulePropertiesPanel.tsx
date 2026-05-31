@@ -1513,9 +1513,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? currentPlacedModule.customHeight
         : undefined;
 
-      return moduleData.category === 'upper'
+      const baseHeight = moduleData.category === 'upper'
         ? (validCustomHeight ?? validFreeHeight ?? moduleData.dimensions.height)
         : (validFreeHeight ?? validCustomHeight ?? moduleData.dimensions.height);
+      return usesStableShelfSectionBoundary(currentPlacedModule.moduleId)
+        ? getRenderedSectionBasisHeight(currentPlacedModule, spaceInfo, baseHeight)
+        : baseHeight;
     })()
     : 0;
 

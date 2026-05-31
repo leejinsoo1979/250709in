@@ -463,7 +463,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const floorFinishHeight = floorFinishHeightMm * 0.01;
 
   if (isUpperCabinet) {
-    const topFrameHeightMm = spaceInfo.frameSize?.top || 30;
+    const topFrameHeightMm = spaceInfo.frameSize?.top ?? 30;
     const internalHeight = spaceInfo.height - topFrameHeightMm - floorFinishHeightMm;
     const upperCabinetHeight = moduleData.dimensions.height;
     yPosition = (floorFinishHeightMm + internalHeight - upperCabinetHeight / 2) * 0.01;
@@ -564,7 +564,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       isCustomizable = false; // My캐비넷은 편집 불가 상태로 배치
     } else {
       // 일반 커스텀 가구: 기본 customConfig 생성
-      const topFrameMm = spaceInfo.frameSize?.top || 30;
+      const topFrameMm = spaceInfo.frameSize?.top ?? 30;
       const bottomFrameMm = 0;
       const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
       const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (moduleData.category === 'lower' ? 105 : (spaceInfo.baseConfig?.height || 65));
@@ -679,7 +679,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
     : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
-  const topFrameThickness = inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top || 30);
+  const topFrameThickness = inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
   const initialTopFrameGap = clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
 
   const newModule: PlacedModule = {

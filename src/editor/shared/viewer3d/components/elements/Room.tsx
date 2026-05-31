@@ -1821,7 +1821,7 @@ const Room: React.FC<RoomProps> = ({
     // 카테고리 판별 + Y 범위 계산
     const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseH = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height ?? 0);
-    const topFrameMM = spaceInfo.frameSize?.top || 30;
+    const topFrameMM = spaceInfo.frameSize?.top ?? 30;
     return outermost.map((m): OuterMod => {
       const id = m.moduleId || '';
       const cat: 'full' | 'upper' | 'lower' =
@@ -5201,7 +5201,7 @@ const Room: React.FC<RoomProps> = ({
                       const maxFH = internalSpaceHeight - floatHeightForFrame;
                       modFreeHeight = Math.min(baseFH, maxFH);
                       if (mod.topFrameThickness !== undefined) {
-                        const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                        const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
                         const topFrameDelta = mod.topFrameThickness - globalTopFrame;
                         modFreeHeight -= topFrameDelta;
                       }
@@ -5232,7 +5232,7 @@ const Room: React.FC<RoomProps> = ({
                     // 일반 키큰장(full)은 본체 높이 변경분을 상단몰딩이 흡수하므로 공간 기반으로 계산한다.
                     let totalFrameHeightMM: number;
                     if (modCategory === 'upper' || isGlassCabinetTopFrame || isPlainShelfTopFrame) {
-                      totalFrameHeightMM = mod.topFrameThickness ?? (spaceInfo.frameSize?.top || 30);
+                      totalFrameHeightMM = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
                     } else {
                       totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
                     }
@@ -6076,7 +6076,7 @@ const Room: React.FC<RoomProps> = ({
                 : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                   mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
 
-              const globalTopFrameMm = spaceInfo.frameSize?.top || 30;
+              const globalTopFrameMm = spaceInfo.frameSize?.top ?? 30;
               const topFrameMat = topFrameMaterial ?? createFrameMaterial('top');
               // 단내림 구간 가구 판별을 위한 정보 — X 위치 기반 판별
               const droppedCeilingHeight = hasDroppedCeiling

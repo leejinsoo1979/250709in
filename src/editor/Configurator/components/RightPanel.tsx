@@ -1450,7 +1450,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               >
                 <NumberInput
                   label={t('space.frameHeight')}
-                  value={spaceInfo.frameSize?.top || 30}
+                  value={spaceInfo.frameSize?.top ?? 30}
                   onChange={(value) => {
                     const updates = {
                       frameSize: {
@@ -1504,6 +1504,27 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   ? getTopOffGapDisplay(m)
                   : Math.max(0, m?.topFrameGap ?? 0)
               );
+              const getTopFrameSizeUpdates = (m: any, nextSize: number) => {
+                const clampedSize = Math.max(0, nextSize);
+                const sections = Array.isArray(m?.customSections) ? m.customSections : [];
+                if (!isShelfSplitModuleId(m?.moduleId) || sections.length < 2) {
+                  return { topFrameThickness: clampedSize };
+                }
+
+                const baseDistance = m.hasBase === false
+                  ? (m.individualFloatHeight ?? 0)
+                  : (m.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+                const lowerH = Number(sections[0]?.height) || 0;
+                const nextUpperH = Math.max(100, (spaceInfo.height ?? 0) - baseDistance - clampedSize - lowerH);
+                const nextSections = sections.map((section: any, index: number) => (
+                  index === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
+                ));
+                return {
+                  topFrameThickness: clampedSize,
+                  customSections: nextSections,
+                  upperDoorHingePositionsMm: undefined,
+                };
+              };
 
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
@@ -1571,7 +1592,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 });
                               }}
                               onHeightChange={(v) => {
-                                group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
+                                group.moduleIds.forEach(id => {
+                                  const target = topSortedMods.find(m => m.id === id);
+                                  updatePlacedModule(id, target ? getTopFrameSizeUpdates(target, v) : { topFrameThickness: v });
+                                });
                               }}
                               onOffsetChange={(v) => {
                                 group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
@@ -1602,7 +1626,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                   doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
                                 });
                               }}
-                              onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: v })}
+                              onSizeChange={(v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v))}
                               onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                               onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
                               hlKey={`top-${mod.id}`}
@@ -1759,7 +1783,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
                             }));
                           }}
-                          onSizeChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
+                          onSizeChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)))}
                           onOffsetChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
                           onGapChange={(v) => topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
                           hlKey="top-all"
@@ -1789,7 +1813,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             });
                           }}
                           onSizeChange={(v) => {
-                            updatePlacedModule(mod.id, { topFrameThickness: v });
+                            updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v));
                           }}
                           onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                           onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}

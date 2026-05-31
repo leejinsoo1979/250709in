@@ -800,6 +800,31 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         finalUpdates = { ...finalUpdates, topFrameGap: 0 };
       }
 
+      if (
+        typeof updates.topFrameThickness === 'number'
+        && typeof existingModule.moduleId === 'string'
+        && existingModule.moduleId.includes('shelf-split')
+      ) {
+        const sections = Array.isArray((finalUpdates as any).customSections)
+          ? (finalUpdates as any).customSections
+          : (Array.isArray((existingModule as any).customSections) ? (existingModule as any).customSections : []);
+        if (sections.length >= 2) {
+          const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+          const baseDistance = (finalUpdates.hasBase ?? existingModule.hasBase) === false
+            ? ((finalUpdates as any).individualFloatHeight ?? (existingModule as any).individualFloatHeight ?? 0)
+            : ((finalUpdates as any).baseFrameHeight ?? existingModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+          const lowerH = Number(sections[0]?.height) || 0;
+          const nextUpperH = Math.max(100, (spaceInfo.height ?? 0) - baseDistance - Math.max(0, updates.topFrameThickness) - lowerH);
+          finalUpdates = {
+            ...finalUpdates,
+            customSections: sections.map((section: any, index: number) => (
+              index === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
+            )),
+            upperDoorHingePositionsMm: undefined,
+          };
+        }
+      }
+
       const requestedBodyDepth = typeof updates.customDepth === 'number' && updates.customDepth > 0
         ? updates.customDepth
         : (typeof updates.freeDepth === 'number' && updates.freeDepth > 0 ? updates.freeDepth : undefined);

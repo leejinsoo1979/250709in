@@ -252,7 +252,7 @@ const computeFurnitureHeightMm = (
     heightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 상단몰딩 두께 변경 시 보정
     if (mod.topFrameThickness !== undefined || mod.moduleId?.includes('shelf-split')) {
-      const globalTopFrame = spaceInfo.frameSize?.top || 30;
+      const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
       heightMm -= (resolveTopFrameDistanceMm(mod, spaceInfo, globalTopFrame) - globalTopFrame);
     }
     if ((mod as any).hasTopFrame === false) {

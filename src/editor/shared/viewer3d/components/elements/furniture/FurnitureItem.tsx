@@ -1596,7 +1596,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 상단몰딩 OFF: 몰딩 두께가 아니라 사용자가 지정한 상단갭만 천장에서 띄움
         const topFrameHeightMm = placedModule.hasTopFrame === false
           ? (placedModule.topFrameGap ?? 0)
-          : (placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top || 30));
+          : (placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
 
         // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
         const isInDroppedZone = placedModule.zone === 'dropped';
@@ -1644,7 +1644,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureHeightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 가구 상단몰딩 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
-      const globalTopFrame = spaceInfo.frameSize?.top || 30;
+      const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
       const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
       furnitureHeightMm -= topFrameDelta;
     }
