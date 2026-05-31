@@ -147,6 +147,24 @@ const getRenderedSectionBasisHeight = (
   return Math.max(0, Math.round(effectiveHeight - topClearance - bottomClearance - floorFinish));
 };
 
+const getFullBodyDisplayHeight = (
+  module: any,
+  spaceInfo: any,
+  fallbackHeight: number
+): number => {
+  if (!module || !spaceInfo) return Math.max(0, Math.round(fallbackHeight || 0));
+  let effectiveHeight = spaceInfo.height ?? fallbackHeight ?? 0;
+  if (module.zone === 'dropped') {
+    if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+      effectiveHeight = (spaceInfo.height ?? effectiveHeight) - (spaceInfo.stepCeiling.dropHeight || 0);
+    } else if (spaceInfo.droppedCeiling?.enabled) {
+      effectiveHeight = (spaceInfo.height ?? effectiveHeight) - (spaceInfo.droppedCeiling.dropHeight || 0);
+    }
+  }
+  const topGap = Math.max(0, Math.round(module.topFrameGap ?? 0));
+  return Math.max(0, Math.round(effectiveHeight - topGap));
+};
+
 type RenderedSurroundPanelMod = {
   sideHeightMm: number;
   frontHeightMm: number;
@@ -1517,7 +1535,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? (validCustomHeight ?? validFreeHeight ?? moduleData.dimensions.height)
         : (validFreeHeight ?? validCustomHeight ?? moduleData.dimensions.height);
       return usesStableShelfSectionBoundary(currentPlacedModule.moduleId)
-        ? getRenderedSectionBasisHeight(currentPlacedModule, spaceInfo, baseHeight)
+        ? getFullBodyDisplayHeight(currentPlacedModule, spaceInfo, baseHeight)
         : baseHeight;
     })()
     : 0;
