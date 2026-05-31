@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Html } from '@react-three/drei';
+import { DoubleSide } from 'three';
+import { Plus } from 'lucide-react';
 import { useSpaceConfigStore, type FreePlacementGuideSlot } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
@@ -109,7 +111,7 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
               }}
             />
           )}
-          {Math.round(slot.width)}mm
+          {Math.round(slot.width)}
         </div>
         <button
           type="button"
@@ -325,7 +327,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const { pendingPlacement } = useMyCabinetStore();
   const { colors } = useThemeColors();
   const [mergeSelectedSlotIds, setMergeSelectedSlotIds] = useState<string[]>([]);
-  const [draggingGuideBoundaryKey, setDraggingGuideBoundaryKey] = useState<string | null>(null);
+  const [selectedGuideSlotIds, setSelectedGuideSlotIds] = useState<string[]>([]);
+  const [selectedGuideAnchorSlotId, setSelectedGuideAnchorSlotId] = useState<string | null>(null);
   const depthZone = guideDepthZone;
 
   const isCustomGuideMode = spaceInfo.customGuideMode === true;
@@ -333,13 +336,321 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const isGuidePlacementMode = isFreePlacement || isCustomGuideMode;
 
   useEffect(() => {
-    if (!draggingGuideBoundaryKey || typeof document === 'undefined') return undefined;
-    const previousCursor = document.body.style.cursor;
-    document.body.style.cursor = 'col-resize';
-    return () => {
-      document.body.style.cursor = previousCursor;
+    if (selectedGuideSlotIds.length === 0) return;
+    const guideSlots = spaceInfo.freePlacementGuides || [];
+    const guideSlotIds = new Set(guideSlots.map((slot) => slot.id));
+    const nextSelectedIds = selectedGuideSlotIds.filter((id) => guideSlotIds.has(id));
+    if (nextSelectedIds.length !== selectedGuideSlotIds.length) {
+      setSelectedGuideSlotIds(nextSelectedIds);
+    }
+    if (selectedGuideAnchorSlotId && !guideSlotIds.has(selectedGuideAnchorSlotId)) {
+      setSelectedGuideAnchorSlotId(nextSelectedIds[0] || null);
+    }
+  }, [selectedGuideAnchorSlotId, selectedGuideSlotIds, spaceInfo.freePlacementGuides]);
+
+  const getGuideSlotRangeIds = (anchorSlotId: string, targetSlotId: string) => {
+    const guideSlots = spaceInfo.freePlacementGuides || [];
+    const anchorSlot = guideSlots.find((slot) => slot.id === anchorSlotId);
+    const targetSlot = guideSlots.find((slot) => slot.id === targetSlotId);
+
+    if (!anchorSlot || !targetSlot) return [targetSlotId];
+
+    const anchorZone = anchorSlot.guideZone || 'full';
+    const targetZone = targetSlot.guideZone || 'full';
+    const anchorGroupId = anchorSlot.guideGroupId || '';
+    const targetGroupId = targetSlot.guideGroupId || '';
+
+    if (anchorZone !== targetZone || (anchorZone !== 'full' && anchorGroupId !== targetGroupId)) {
+      return [targetSlotId];
+    }
+
+    const lineSlots = guideSlots
+      .filter((slot) => (
+        (slot.guideZone || 'full') === anchorZone
+        && (anchorZone === 'full' || (slot.guideGroupId || '') === anchorGroupId)
+      ))
+      .sort((a, b) => a.x - b.x || a.index - b.index);
+    const anchorIndex = lineSlots.findIndex((slot) => slot.id === anchorSlotId);
+    const targetIndex = lineSlots.findIndex((slot) => slot.id === targetSlotId);
+
+    if (anchorIndex < 0 || targetIndex < 0) return [targetSlotId];
+
+    const startIndex = Math.min(anchorIndex, targetIndex);
+    const endIndex = Math.max(anchorIndex, targetIndex);
+    return lineSlots.slice(startIndex, endIndex + 1).map((slot) => slot.id);
+  };
+
+  const selectGuideSlot = (slotId: string, range = false) => {
+    if (!range) {
+      setSelectedGuideAnchorSlotId(slotId);
+      setSelectedGuideSlotIds([slotId]);
+      return;
+    }
+
+    const anchorSlotId = selectedGuideAnchorSlotId && selectedGuideSlotIds.includes(selectedGuideAnchorSlotId)
+      ? selectedGuideAnchorSlotId
+      : selectedGuideSlotIds[selectedGuideSlotIds.length - 1];
+
+    if (!anchorSlotId) {
+      setSelectedGuideAnchorSlotId(slotId);
+      setSelectedGuideSlotIds([slotId]);
+      return;
+    }
+
+    const rangeSlotIds = getGuideSlotRangeIds(anchorSlotId, slotId);
+    setSelectedGuideSlotIds((current) => Array.from(new Set([...current, ...rangeSlotIds])));
+  };
+
+  const applySelectedGuideSlotKeyboardEdit = (action: 'move-left' | 'move-right' | 'grow' | 'shrink', step = 10) => {
+    const sourceSlots = spaceInfo.freePlacementGuides || [];
+    if (sourceSlots.length === 0 || selectedGuideSlotIds.length === 0) return;
+
+    const selectedIds = new Set(selectedGuideSlotIds);
+    const minSlotWidth = 1;
+    const nextSlotsById = new Map(sourceSlots.map((slot) => [slot.id, { ...slot, confirmed: true }]));
+    const hasSplitSlots = sourceSlots.some((slot) => {
+      const zone = slot.guideZone || 'full';
+      return zone === 'upper' || zone === 'lower';
+    });
+    const selectedFullSlots = sourceSlots
+      .filter((slot) => selectedIds.has(slot.id) && (slot.guideZone || 'full') === 'full')
+      .sort((a, b) => a.x - b.x || a.index - b.index);
+    const sortEditedGuideSlots = (slots: FreePlacementGuideSlot[]) => {
+      const zoneOrder = { full: 0, upper: 1, lower: 2 };
+      return slots.sort((a, b) => (
+        zoneOrder[a.guideZone || 'full'] - zoneOrder[b.guideZone || 'full']
+        || a.x - b.x
+        || a.index - b.index
+      ));
     };
-  }, [draggingGuideBoundaryKey]);
+
+    if (hasSplitSlots && selectedFullSlots.length > 0) {
+      const epsilon = 0.5;
+      const selectionStartX = Math.min(...selectedFullSlots.map((slot) => slot.x));
+      const selectionEndX = Math.max(...selectedFullSlots.map((slot) => slot.x + slot.width));
+      const selectedFullIds = new Set(selectedFullSlots.map((slot) => slot.id));
+      const leftNeighbors = sourceSlots
+        .filter((slot) => !selectedFullIds.has(slot.id))
+        .filter((slot) => Math.abs(slot.x + slot.width - selectionStartX) <= epsilon)
+        .map((slot) => nextSlotsById.get(slot.id))
+        .filter((slot): slot is FreePlacementGuideSlot => !!slot);
+      const rightNeighbors = sourceSlots
+        .filter((slot) => !selectedFullIds.has(slot.id))
+        .filter((slot) => Math.abs(slot.x - selectionEndX) <= epsilon)
+        .map((slot) => nextSlotsById.get(slot.id))
+        .filter((slot): slot is FreePlacementGuideSlot => !!slot);
+      const selectedRangeSlots = selectedFullSlots
+        .map((slot) => nextSlotsById.get(slot.id))
+        .filter((slot): slot is FreePlacementGuideSlot => !!slot);
+      const firstSelected = selectedRangeSlots[0];
+      const lastSelected = selectedRangeSlots[selectedRangeSlots.length - 1];
+
+      if (firstSelected && lastSelected && selectedRangeSlots.length > 0) {
+        if (action === 'move-left' && leftNeighbors.length > 0 && rightNeighbors.length > 0) {
+          const delta = Math.min(step, ...leftNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+          if (delta > 0) {
+            leftNeighbors.forEach((slot) => {
+              slot.width -= delta;
+            });
+            selectedRangeSlots.forEach((slot) => {
+              slot.x -= delta;
+            });
+            rightNeighbors.forEach((slot) => {
+              slot.x -= delta;
+              slot.width += delta;
+            });
+          }
+        } else if (action === 'move-right' && leftNeighbors.length > 0 && rightNeighbors.length > 0) {
+          const delta = Math.min(step, ...rightNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+          if (delta > 0) {
+            leftNeighbors.forEach((slot) => {
+              slot.width += delta;
+            });
+            selectedRangeSlots.forEach((slot) => {
+              slot.x += delta;
+            });
+            rightNeighbors.forEach((slot) => {
+              slot.x += delta;
+              slot.width -= delta;
+            });
+          }
+        } else if (action === 'grow') {
+          if (rightNeighbors.length > 0) {
+            const delta = Math.min(step, ...rightNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+            if (delta > 0) {
+              lastSelected.width += delta;
+              rightNeighbors.forEach((slot) => {
+                slot.x += delta;
+                slot.width -= delta;
+              });
+            }
+          } else if (leftNeighbors.length > 0) {
+            const delta = Math.min(step, ...leftNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+            if (delta > 0) {
+              leftNeighbors.forEach((slot) => {
+                slot.width -= delta;
+              });
+              firstSelected.x -= delta;
+              firstSelected.width += delta;
+            }
+          }
+        } else if (action === 'shrink') {
+          if (rightNeighbors.length > 0) {
+            const delta = Math.min(step, Math.max(0, lastSelected.width - minSlotWidth));
+            if (delta > 0) {
+              lastSelected.width -= delta;
+              rightNeighbors.forEach((slot) => {
+                slot.x -= delta;
+                slot.width += delta;
+              });
+            }
+          } else if (leftNeighbors.length > 0) {
+            const delta = Math.min(step, Math.max(0, firstSelected.width - minSlotWidth));
+            if (delta > 0) {
+              leftNeighbors.forEach((slot) => {
+                slot.width += delta;
+              });
+              firstSelected.x += delta;
+              firstSelected.width -= delta;
+            }
+          }
+        }
+      }
+
+      setSpaceInfo({ freePlacementGuides: sortEditedGuideSlots(Array.from(nextSlotsById.values())) });
+      return;
+    }
+    const lineGroups = new Map<string, FreePlacementGuideSlot[]>();
+
+    sourceSlots.forEach((slot) => {
+      const lineKey = `${slot.guideZone || 'full'}|${slot.guideGroupId || ''}`;
+      const lineSlots = lineGroups.get(lineKey) || [];
+      lineSlots.push(slot);
+      lineGroups.set(lineKey, lineSlots);
+    });
+
+    lineGroups.forEach((lineSlots) => {
+      const sortedLineSlots = [...lineSlots].sort((a, b) => a.x - b.x || a.index - b.index);
+      const selectedIndexes = sortedLineSlots
+        .map((slot, index) => (selectedIds.has(slot.id) ? index : -1))
+        .filter((index) => index >= 0);
+      if (selectedIndexes.length === 0) return;
+
+      const startIndex = Math.min(...selectedIndexes);
+      const endIndex = Math.max(...selectedIndexes);
+      const leftNeighbor = startIndex > 0 ? nextSlotsById.get(sortedLineSlots[startIndex - 1].id) : null;
+      const rightNeighbor = endIndex < sortedLineSlots.length - 1 ? nextSlotsById.get(sortedLineSlots[endIndex + 1].id) : null;
+      const firstSelected = nextSlotsById.get(sortedLineSlots[startIndex].id);
+      const lastSelected = nextSlotsById.get(sortedLineSlots[endIndex].id);
+      const selectedRangeSlots = sortedLineSlots
+        .slice(startIndex, endIndex + 1)
+        .map((slot) => nextSlotsById.get(slot.id))
+        .filter((slot): slot is FreePlacementGuideSlot => !!slot);
+
+      if (!firstSelected || !lastSelected || selectedRangeSlots.length === 0) return;
+
+      if (action === 'move-left') {
+        if (!leftNeighbor || !rightNeighbor) return;
+        const delta = Math.min(step, Math.max(0, leftNeighbor.width - minSlotWidth));
+        if (delta <= 0) return;
+
+        leftNeighbor.width -= delta;
+        selectedRangeSlots.forEach((slot) => {
+          slot.x -= delta;
+        });
+        rightNeighbor.x -= delta;
+        rightNeighbor.width += delta;
+        return;
+      }
+
+      if (action === 'move-right') {
+        if (!leftNeighbor || !rightNeighbor) return;
+        const delta = Math.min(step, Math.max(0, rightNeighbor.width - minSlotWidth));
+        if (delta <= 0) return;
+
+        leftNeighbor.width += delta;
+        selectedRangeSlots.forEach((slot) => {
+          slot.x += delta;
+        });
+        rightNeighbor.x += delta;
+        rightNeighbor.width -= delta;
+        return;
+      }
+
+      if (action === 'grow') {
+        if (rightNeighbor) {
+          const delta = Math.min(step, Math.max(0, rightNeighbor.width - minSlotWidth));
+          if (delta <= 0) return;
+
+          lastSelected.width += delta;
+          rightNeighbor.x += delta;
+          rightNeighbor.width -= delta;
+          return;
+        }
+
+        if (!leftNeighbor) return;
+        const delta = Math.min(step, Math.max(0, leftNeighbor.width - minSlotWidth));
+        if (delta <= 0) return;
+
+        leftNeighbor.width -= delta;
+        firstSelected.x -= delta;
+        firstSelected.width += delta;
+        return;
+      }
+
+      if (rightNeighbor) {
+        const delta = Math.min(step, Math.max(0, lastSelected.width - minSlotWidth));
+        if (delta <= 0) return;
+
+        lastSelected.width -= delta;
+        rightNeighbor.x -= delta;
+        rightNeighbor.width += delta;
+        return;
+      }
+
+      if (!leftNeighbor) return;
+      const delta = Math.min(step, Math.max(0, firstSelected.width - minSlotWidth));
+      if (delta <= 0) return;
+
+      leftNeighbor.width += delta;
+      firstSelected.x += delta;
+      firstSelected.width -= delta;
+    });
+
+    setSpaceInfo({
+      freePlacementGuides: sortEditedGuideSlots(Array.from(nextSlotsById.values()))
+    });
+  };
+
+  useEffect(() => {
+    const isGuideEditing = spaceInfo.freePlacementGuideEditing === true;
+    if (!isGuideEditing || selectedGuideSlotIds.length === 0 || typeof window === 'undefined') return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const tagName = target?.tagName?.toLowerCase();
+      if (tagName === 'input' || tagName === 'textarea' || target?.isContentEditable) return;
+
+      const step = event.shiftKey ? 10 : 1;
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        applySelectedGuideSlotKeyboardEdit('move-left', step);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        applySelectedGuideSlotKeyboardEdit('move-right', step);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        applySelectedGuideSlotKeyboardEdit('grow', step);
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        applySelectedGuideSlotKeyboardEdit('shrink', step);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedGuideSlotIds, spaceInfo.freePlacementGuideEditing, spaceInfo.freePlacementGuides]);
 
   if (viewMode === '3D' && activePlacementWall !== 'front' && !guideDepthEditMode) {
     return null;
@@ -787,45 +1098,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     });
 
     return sortFreeGuideSlots(nextSlots);
-  };
-
-  const moveFreeGuideBoundary = (boundaryX: number, nextBoundaryX: number) => {
-    const sourceSlots = spaceInfo.freePlacementGuides || [];
-    if (sourceSlots.length === 0) return;
-
-    const epsilon = 0.5;
-    const minSlotWidth = 1;
-    const leftSlots = sourceSlots.filter((slot) => Math.abs(slot.x + slot.width - boundaryX) <= epsilon);
-    const rightSlots = sourceSlots.filter((slot) => Math.abs(slot.x - boundaryX) <= epsilon);
-    if (leftSlots.length === 0 || rightSlots.length === 0) return;
-
-    const minDelta = Math.max(...leftSlots.map((slot) => minSlotWidth - slot.width));
-    const maxDelta = Math.min(...rightSlots.map((slot) => slot.width - minSlotWidth));
-    const delta = Math.max(minDelta, Math.min(maxDelta, nextBoundaryX - boundaryX));
-    if (Math.abs(delta) < 0.01) return;
-
-    const leftIds = new Set(leftSlots.map((slot) => slot.id));
-    const rightIds = new Set(rightSlots.map((slot) => slot.id));
-    const nextSlots = sourceSlots.map((slot) => {
-      if (leftIds.has(slot.id)) {
-        return {
-          ...slot,
-          width: slot.width + delta,
-          confirmed: true
-        };
-      }
-      if (rightIds.has(slot.id)) {
-        return {
-          ...slot,
-          x: slot.x + delta,
-          width: slot.width - delta,
-          confirmed: true
-        };
-      }
-      return slot;
-    });
-
-    setSpaceInfo({ freePlacementGuides: sortFreeGuideSlots(nextSlots) });
   };
 
   const updateFreeGuideSlotWidth = (slotId: string, widthValue: number) => {
@@ -1403,9 +1675,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const dimensionSlotStartMm = leftGuideGapMm;
     const dimensionSlotEndMm = spaceInfo.width - rightGuideGapMm;
     const slotWidthTotalMm = Math.max(0, spaceInfo.width - leftGuideGapMm - rightGuideGapMm);
-    const formatGuideMm = (value: number) => (
-      Number.isInteger(value) ? String(value) : String(value).replace(/(\.\d*?[1-9])0+$/, '$1')
-    );
+    const formatGuideMm = (value: number) => {
+      const rounded = Math.round((Math.abs(value) < 1e-9 ? 0 : value) * 1000) / 1000;
+      return Number.isInteger(rounded)
+        ? String(rounded)
+        : rounded.toFixed(3).replace(/\.?0+$/, '');
+    };
 
     const isFullSlotSectionDepth = (slot: FreePlacementGuideSlot) => hasSplit && (slot.guideZone || 'full') === 'full';
     const isInactiveDepthSlot = (slot: FreePlacementGuideSlot) => (
@@ -1750,34 +2025,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       const zone = slot.guideZone || 'full';
       if (zone === 'upper') return [upperStartY, upperEndY];
       if (zone === 'lower') return [lowerStartY, lowerEndY];
+      if (hasSplitSlots) return [lowerStartY, upperEndY];
       return [0, fullHeight];
     };
-    const guideResizeBoundaries = (() => {
-      const epsilon = 0.5;
-      const boundaryXs = Array.from(new Set(
-        guideSlots.flatMap((slot) => [slot.x, slot.x + slot.width].map((value) => Math.round(value * 1000) / 1000))
-      )).sort((a, b) => a - b);
-
-      return boundaryXs.flatMap((boundaryX) => {
-        const leftSlots = guideSlots.filter((slot) => Math.abs(slot.x + slot.width - boundaryX) <= epsilon);
-        const rightSlots = guideSlots.filter((slot) => Math.abs(slot.x - boundaryX) <= epsilon);
-        if (leftSlots.length === 0 || rightSlots.length === 0) return [];
-
-        const relatedSlots = [...leftSlots, ...rightSlots];
-        const yRanges = relatedSlots.map(getSlotYRange);
-        const startY = Math.min(...yRanges.map(([start]) => start));
-        const endY = Math.max(...yRanges.map(([, end]) => end));
-        const leftKey = leftSlots.map((slot) => slot.id).sort().join(',');
-        const rightKey = rightSlots.map((slot) => slot.id).sort().join(',');
-
-        return [{
-          key: `${leftKey}|${rightKey}`,
-          boundaryX,
-          startY,
-          endY
-        }];
-      });
-    })();
     const getSlotControlY = (slot: FreePlacementGuideSlot) => {
       const [startY, endY] = getSlotYRange(slot);
       return (startY + endY) / 2;
@@ -1785,6 +2035,38 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const guideZ = 0.006;
     const guideColor = colors.primary || '#3b82f6';
     const isGuideEditing = spaceInfo.freePlacementGuideEditing === true;
+    const selectedGuideSlotRanges = (() => {
+      if (!isGuideEditing || selectedGuideSlotIds.length === 0) return [];
+
+      const selectedIds = new Set(selectedGuideSlotIds);
+      const selectedLineGroups = new Map<string, FreePlacementGuideSlot[]>();
+
+      guideSlots.forEach((slot) => {
+        if (!selectedIds.has(slot.id)) return;
+
+        const zone = slot.guideZone || 'full';
+        const lineKey = zone === 'full' ? 'full' : `${zone}|${slot.guideGroupId || ''}`;
+        const lineSlots = selectedLineGroups.get(lineKey) || [];
+        lineSlots.push(slot);
+        selectedLineGroups.set(lineKey, lineSlots);
+      });
+
+      return Array.from(selectedLineGroups.entries()).map(([lineKey, lineSlots]) => {
+        const sortedLineSlots = [...lineSlots].sort((a, b) => a.x - b.x || a.index - b.index);
+        const leftX = (Math.min(...sortedLineSlots.map((slot) => slot.x)) - spaceInfo.width / 2) * 0.01;
+        const rightX = (Math.max(...sortedLineSlots.map((slot) => slot.x + slot.width)) - spaceInfo.width / 2) * 0.01;
+        const yRanges = sortedLineSlots.map(getSlotYRange);
+        const startY = Math.min(...yRanges.map(([start]) => start));
+        const endY = Math.max(...yRanges.map(([, end]) => end));
+
+        return {
+          key: lineKey,
+          leftX,
+          rightX,
+          centerY: (startY + endY) / 2
+        };
+      });
+    })();
     const guideBounds = getFreePlacementGuideBoundsX(spaceInfo);
     const guideEndX = guideBounds.endX + spaceInfo.width / 2;
     const lastSlotEndX = Math.max(...guideSlots.map((slot) => slot.x + slot.width));
@@ -2089,13 +2371,192 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     return (
       <>
         {hasSplitSlots && renderTierLines()}
+        {isGuideEditing && selectedGuideSlotIds.length > 0 && (
+          <mesh
+            key="free-guide-slot-selection-clear-plane"
+            position={[0, fullHeight / 2, guideZ - 0.01]}
+            onPointerDown={(event: any) => {
+              event.stopPropagation();
+              (window as any).__r3fClickHandled = true;
+              setSelectedGuideAnchorSlotId(null);
+              setSelectedGuideSlotIds([]);
+            }}
+          >
+            <planeGeometry args={[(spaceInfo.width + 260) * 0.01, fullHeight + 2.6]} />
+            <meshBasicMaterial
+              color={guideColor}
+              transparent
+              opacity={0}
+              side={DoubleSide}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </mesh>
+        )}
+        {selectedGuideSlotRanges.map((range) => (
+          <React.Fragment key={`free-guide-slot-arrow-${range.key}`}>
+            <Html
+              position={[range.leftX - 0.08, range.centerY, guideZ + 0.012]}
+              center
+              zIndexRange={[180, 0]}
+              style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}
+            >
+              <span
+                style={{
+                  color: guideColor,
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  textShadow: '0 1px 2px rgba(15, 23, 42, 0.22)'
+                }}
+              >
+                ‹
+              </span>
+            </Html>
+            <Html
+              position={[range.rightX + 0.08, range.centerY, guideZ + 0.012]}
+              center
+              zIndexRange={[180, 0]}
+              style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}
+            >
+              <span
+                style={{
+                  color: guideColor,
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  lineHeight: 1,
+                  textShadow: '0 1px 2px rgba(15, 23, 42, 0.22)'
+                }}
+              >
+                ›
+              </span>
+            </Html>
+          </React.Fragment>
+        ))}
         {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01, isGuideEditing)}
         {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01, isGuideEditing)}
         {hasSplitSlots && isGuideEditing && renderOffsetGapEditors()}
+        {!isGuideEditing && guideSlots.map((slot) => {
+          const canPlaceInSlot = canUseGuideSlot(slot);
+          const canShowPlacementSlot = !isGuideSlotOccupied(slot) && (!selectedModuleData || canPlaceInSlot);
+          if (!canShowPlacementSlot) return null;
+
+          const [startY, endY] = getSlotYRange(slot);
+          const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
+          const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+          const centerX = (leftX + rightX) / 2;
+          const centerY = (startY + endY) / 2;
+          const width = Math.max(0.001, rightX - leftX);
+          const height = Math.max(0.001, endY - startY);
+
+          return (
+            <mesh
+              key={`free-guide-placement-slot-mesh-${slot.id}`}
+              position={[centerX, centerY, guideZ - 0.002]}
+              renderOrder={99998}
+              onPointerDown={(event: any) => {
+                event.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+                if (canPlaceInSlot) {
+                  window.dispatchEvent(new CustomEvent('free-placement-guide:slot-click', { detail: slot }));
+                }
+              }}
+              onPointerEnter={() => {
+                if (canPlaceInSlot) {
+                  window.dispatchEvent(new CustomEvent('free-placement-guide:slot-hover', { detail: slot }));
+                }
+              }}
+              onPointerLeave={() => {
+                window.dispatchEvent(new CustomEvent('free-placement-guide:slot-leave', { detail: slot }));
+              }}
+            >
+              <planeGeometry args={[width, height]} />
+              <meshBasicMaterial
+                color={guideColor}
+                transparent
+                opacity={0.08}
+                side={DoubleSide}
+                depthTest={false}
+                depthWrite={false}
+              />
+            </mesh>
+          );
+        })}
+        {isGuideEditing && guideSlots.map((slot) => {
+          const [startY, endY] = getSlotYRange(slot);
+          const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
+          const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+          const centerX = (leftX + rightX) / 2;
+          const centerY = (startY + endY) / 2;
+          const width = Math.max(0.001, rightX - leftX);
+          const height = Math.max(0.001, endY - startY);
+          const isSelected = selectedGuideSlotIds.includes(slot.id);
+          const selectedLineProps = {
+            color: guideColor,
+            lineWidth: 2.8,
+            opacity: 0.96,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+            renderOrder: 100004
+          } as const;
+
+          return (
+            <group key={`free-guide-slot-select-${slot.id}`}>
+              <mesh
+                position={[centerX, centerY, guideZ + 0.002]}
+                onPointerDown={(event: any) => {
+                  event.stopPropagation();
+                  (window as any).__r3fClickHandled = true;
+                  selectGuideSlot(slot.id, event.shiftKey === true);
+                }}
+              >
+                <planeGeometry args={[width, height]} />
+                <meshBasicMaterial
+                  color={guideColor}
+                  transparent
+                  opacity={isSelected ? 0.12 : 0.001}
+                  side={DoubleSide}
+                  depthTest={false}
+                  depthWrite={false}
+                />
+              </mesh>
+              {isSelected && (
+                <>
+                  <NativeLine
+                    key={`selected-top-${slot.id}`}
+                    name="free-placement-guide-line"
+                    points={[[leftX, endY, guideZ + 0.004], [rightX, endY, guideZ + 0.004]]}
+                    {...selectedLineProps}
+                  />
+                  <NativeLine
+                    key={`selected-bottom-${slot.id}`}
+                    name="free-placement-guide-line"
+                    points={[[leftX, startY, guideZ + 0.004], [rightX, startY, guideZ + 0.004]]}
+                    {...selectedLineProps}
+                  />
+                  <NativeLine
+                    key={`selected-left-${slot.id}`}
+                    name="free-placement-guide-line"
+                    points={[[leftX, startY, guideZ + 0.004], [leftX, endY, guideZ + 0.004]]}
+                    {...selectedLineProps}
+                  />
+                  <NativeLine
+                    key={`selected-right-${slot.id}`}
+                    name="free-placement-guide-line"
+                    points={[[rightX, startY, guideZ + 0.004], [rightX, endY, guideZ + 0.004]]}
+                    {...selectedLineProps}
+                  />
+                </>
+              )}
+            </group>
+          );
+        })}
         {guideSlots.flatMap((slot) => {
           const [startY, endY] = getSlotYRange(slot);
           const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
           const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+          const isSelected = selectedGuideSlotIds.includes(slot.id);
 
           return [
             <NativeLine
@@ -2106,11 +2567,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 [leftX, endY, guideZ]
               ]}
               color={guideColor}
-              lineWidth={1.2}
+              lineWidth={isSelected ? 2.6 : 1.2}
               dashed
               dashSize={0.08}
               gapSize={0.05}
-              opacity={0.42}
+              opacity={isSelected ? 0.95 : 0.42}
               transparent
               depthTest={false}
               depthWrite={false}
@@ -2124,77 +2585,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 [rightX, endY, guideZ]
               ]}
               color={guideColor}
-              lineWidth={1.2}
+              lineWidth={isSelected ? 2.6 : 1.2}
               dashed
               dashSize={0.08}
               gapSize={0.05}
-              opacity={0.42}
+              opacity={isSelected ? 0.95 : 0.42}
               transparent
               depthTest={false}
               depthWrite={false}
               renderOrder={100000}
             />
           ];
-        })}
-
-        {isGuideEditing && guideResizeBoundaries.map((boundary) => {
-          const boundaryWorldX = (boundary.boundaryX - spaceInfo.width / 2) * 0.01;
-          const boundaryHeight = Math.max(0.2, boundary.endY - boundary.startY);
-          const boundaryCenterY = (boundary.startY + boundary.endY) / 2;
-          const isDragging = draggingGuideBoundaryKey === boundary.key;
-
-          return (
-            <group key={`free-guide-resize-${boundary.key}`}>
-              <NativeLine
-                name="free-placement-guide-line"
-                points={[
-                  [boundaryWorldX, boundary.startY, guideZ + 0.003],
-                  [boundaryWorldX, boundary.endY, guideZ + 0.003]
-                ]}
-                color={guideColor}
-                lineWidth={isDragging ? 2.6 : 1.8}
-                opacity={isDragging ? 0.95 : 0.72}
-                transparent
-                depthTest={false}
-                depthWrite={false}
-                renderOrder={100002}
-              />
-              <mesh
-                position={[boundaryWorldX, boundaryCenterY, guideZ + 0.006]}
-                onPointerDown={(event: any) => {
-                  event.stopPropagation();
-                  (window as any).__r3fClickHandled = true;
-                  setDraggingGuideBoundaryKey(boundary.key);
-                  event.target?.setPointerCapture?.(event.pointerId);
-                }}
-                onPointerMove={(event: any) => {
-                  if (draggingGuideBoundaryKey !== boundary.key) return;
-                  event.stopPropagation();
-                  const nextBoundaryX = event.point.x / 0.01 + spaceInfo.width / 2;
-                  moveFreeGuideBoundary(boundary.boundaryX, nextBoundaryX);
-                }}
-                onPointerUp={(event: any) => {
-                  event.stopPropagation();
-                  event.target?.releasePointerCapture?.(event.pointerId);
-                  setDraggingGuideBoundaryKey(null);
-                }}
-                onPointerCancel={(event: any) => {
-                  event.stopPropagation();
-                  event.target?.releasePointerCapture?.(event.pointerId);
-                  setDraggingGuideBoundaryKey(null);
-                }}
-              >
-                <planeGeometry args={[0.1, boundaryHeight]} />
-                <meshBasicMaterial
-                  color={guideColor}
-                  transparent
-                  opacity={isDragging ? 0.16 : 0.015}
-                  depthTest={false}
-                  depthWrite={false}
-                />
-              </mesh>
-            </group>
-          );
         })}
 
         {/* 미드웨이 중앙 분할선 제거: 5단 경계선(renderTierLines)이 미드웨이 위/아래 경계를 이미 표시 */}
@@ -2345,6 +2746,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 onClick={(e) => {
                   e.stopPropagation();
                   (window as any).__r3fClickHandled = true;
+                  if (isGuideEditing) {
+                    selectGuideSlot(slot.id, e.shiftKey === true);
+                    return;
+                  }
                   if (!isGuideEditing && canPlaceInSlot) {
                     window.dispatchEvent(new CustomEvent('free-placement-guide:slot-click', { detail: slot }));
                   }
@@ -2370,35 +2775,49 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                   <button
                     type="button"
                     style={{
-                      width: '27px',
-                      height: '27px',
+                      width: '32px',
+                      height: '32px',
                       borderRadius: '50%',
-                      background: 'var(--theme-primary)',
-                      border: '1.5px solid rgba(255, 255, 255, 0.92)',
+                      backgroundColor: 'var(--theme-primary)',
+                      border: '2px solid white',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       cursor: 'pointer',
-                      boxShadow: '0 3px 10px rgba(15, 23, 42, 0.22)',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                       transition: 'all 0.2s ease',
-                      fontSize: '20px',
                       color: 'white',
-                      fontWeight: 700,
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.35)',
                       lineHeight: '1',
-                      padding: 0
+                      padding: 0,
+                      animation: 'guideSlotPulse 0.8s ease-in-out infinite'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.08)';
-                      e.currentTarget.style.boxShadow = '0 5px 14px rgba(15, 23, 42, 0.28)';
+                      e.currentTarget.style.transform = 'scale(1.15)';
+                      e.currentTarget.style.opacity = '0.8';
+                      e.currentTarget.style.animation = 'none';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'scale(1)';
-                      e.currentTarget.style.boxShadow = '0 3px 10px rgba(15, 23, 42, 0.22)';
+                      e.currentTarget.style.opacity = '1';
+                      e.currentTarget.style.animation = 'guideSlotPulse 0.8s ease-in-out infinite';
                     }}
                   >
-                    +
+                    <Plus size={19} strokeWidth={3} style={{ display: 'block' }} aria-hidden="true" />
                   </button>
+                )}
+                {canShowPlacementHotspot && (
+                  <style>{`
+                    @keyframes guideSlotPulse {
+                      0%, 100% {
+                        transform: scale(1);
+                        opacity: 1;
+                      }
+                      50% {
+                        transform: scale(1.1);
+                        opacity: 0.8;
+                      }
+                    }
+                  `}</style>
                 )}
                 {isGuideEditing && (
                   <FreeGuideSlotWidthInput
@@ -2465,9 +2884,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
               transition: 'all 0.2s ease',
-              fontSize: '22px',
               color: 'white',
-              fontWeight: 'bold',
               lineHeight: '1',
               animation: 'pulse 0.8s ease-in-out infinite',
               pointerEvents: 'auto'
@@ -2483,7 +2900,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               e.currentTarget.style.animation = 'pulse 0.8s ease-in-out infinite';
             }}
           >
-            +
+            <Plus size={19} strokeWidth={3} style={{ display: 'block' }} aria-hidden="true" />
           </div>
           <style>{`
             @keyframes pulse {
