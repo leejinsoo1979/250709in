@@ -1119,10 +1119,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       : Math.max(0, spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0);
   })();
 
+  const currentGuideSlotTopClearanceMm = (() => {
+    if (!placedModule.guideSlotPlacement) return undefined;
+    if (placedModule.hasTopFrame === false) {
+      return Math.max(0, placedModule.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0);
+    }
+    return Math.max(0, placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 0);
+  })();
+
   const currentGuideSlotYRangeMm = placedModule.guideSlotPlacement
-    && (placedModule.guideSlotZone === 'upper' || placedModule.guideSlotZone === 'lower')
+    && (placedModule.guideSlotZone === 'full' || placedModule.guideSlotZone === 'upper' || placedModule.guideSlotZone === 'lower')
     ? getFreeGuideZoneYRangeMm(placedModule.guideSlotZone, spaceInfo, {
-      bottomClearanceMm: currentGuideSlotBottomClearanceMm
+      bottomClearanceMm: currentGuideSlotBottomClearanceMm,
+      topClearanceMm: currentGuideSlotTopClearanceMm
     })
     : null;
   const currentGuideSlotHeightMm = currentGuideSlotYRangeMm
@@ -1626,7 +1635,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // freeHeight가 있으면 사용하되, 없거나 갱신 안 됐을 때도 올바르게 계산
   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeightMm = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-  if (placedModule.isFreePlacement && isTallCabinetForY) {
+  if (currentGuideSlotHeightMm !== undefined && isTallCabinetForY) {
+    furnitureHeightMm = currentGuideSlotHeightMm;
+  } else if (placedModule.isFreePlacement && isTallCabinetForY) {
     // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
     const baseFreeHeight = placedModule.freeHeight || internalSpace.height;
     const maxFreeHeight = internalSpace.height - floatHeightMm;
@@ -1793,7 +1804,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         y: placedModule.position.y
       };
     } else {
-      if (currentGuideSlotYRangeMm && placedModule.guideSlotZone === 'lower') {
+      if (currentGuideSlotYRangeMm && (placedModule.guideSlotZone === 'full' || placedModule.guideSlotZone === 'lower')) {
         adjustedPosition = {
           ...adjustedPosition,
           y: ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01

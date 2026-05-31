@@ -108,14 +108,10 @@ const getPlainShoeShelfSectionHeights = (
     && module.customSections.length >= 2
     ? module.customSections
     : sections;
-  if (isShelfSplitModuleId(module?.moduleId) && Array.isArray(module?.customSections)) {
-    return [
-      Math.max(0, Math.round(sourceSections[0]?.height || 0)),
-      Math.max(0, Math.round(sourceSections[1]?.height || 0)),
-    ];
-  }
   const { baseAbsorbedMm, floatAbsorbedMm, baseFrameDeltaMm } = getStableShelfSectionOffsets(module, spaceInfo);
-  const lowerH = Math.max(0, Math.round((sourceSections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
+  const lowerH = isShelfSplitModuleId(module?.moduleId)
+    ? Math.max(0, Math.round(sourceSections[0]?.height || 0))
+    : Math.max(0, Math.round((sourceSections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm - baseFrameDeltaMm));
   const remainingUpperH = Math.max(0, Math.round(sectionBasisH - lowerH));
   const hasExplicitShelfSplitSections = isShelfSplitModuleId(module?.moduleId)
     && Array.isArray(module?.customSections);
@@ -123,6 +119,32 @@ const getPlainShoeShelfSectionHeights = (
     ? Math.min(remainingUpperH, Math.max(0, Math.round(sourceSections[1]?.height || 0)))
     : remainingUpperH;
   return [lowerH, upperH];
+};
+
+const getRenderedSectionBasisHeight = (
+  module: any,
+  spaceInfo: any,
+  fallbackBasisH: number
+): number => {
+  if (!module || !spaceInfo) return Math.max(0, Math.round(fallbackBasisH || 0));
+  let effectiveHeight = spaceInfo.height ?? fallbackBasisH ?? 0;
+  if (module.zone === 'dropped') {
+    if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+      effectiveHeight = (spaceInfo.height ?? effectiveHeight) - (spaceInfo.stepCeiling.dropHeight || 0);
+    } else if (spaceInfo.droppedCeiling?.enabled) {
+      effectiveHeight = (spaceInfo.height ?? effectiveHeight) - (spaceInfo.droppedCeiling.dropHeight || 0);
+    }
+  }
+  const topClearance = module.hasTopFrame === false
+    ? Math.max(0, Math.round(module.topFrameGap ?? 0))
+    : Math.max(0, Math.round(module.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30));
+  const bottomClearance = module.hasBase === false
+    ? Math.max(0, Math.round(module.individualFloatHeight ?? 0))
+    : Math.max(0, Math.round(module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)));
+  const floorFinish = spaceInfo.hasFloorFinish && spaceInfo.floorFinish
+    ? Math.max(0, Math.round(spaceInfo.floorFinish.height || 0))
+    : 0;
+  return Math.max(0, Math.round(effectiveHeight - topClearance - bottomClearance - floorFinish));
 };
 
 type RenderedSurroundPanelMod = {
@@ -1773,7 +1795,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
-            const sectionBasisH = Math.max(0, baseBodyHeightForSections + absorbedTopForSections + absorbedBaseForSections);
+            const rawSectionBasisH = Math.max(0, baseBodyHeightForSections + absorbedTopForSections + absorbedBaseForSections);
+            const isStableShelfSectionInit = usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
+            const sectionBasisH = isStableShelfSectionInit
+              ? getRenderedSectionBasisHeight(currentPlacedModule, spaceInfo, rawSectionBasisH)
+              : rawSectionBasisH;
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth
               ?? currentPlacedModule.adjustedWidth
@@ -1793,11 +1819,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const hInputs: Record<number, string> = {};
             const dInputs: Record<number, string> = {};
             const wInputs: Record<number, string> = {};
+            const plainShoeShelfInitHeights = isStableShelfSectionInit
+              ? getPlainShoeShelfSectionHeights(currentPlacedModule, spaceInfo, mcSections, sectionBasisH)
+              : null;
             mcSections.forEach((sec: any, i: number) => {
               const ht = sec.heightType || 'percentage';
               const isLast = i === mcSections.length - 1;
               let sH: number;
-              if (isPullOutOrPantryInit && (Array.isArray(userCustomSections) || sec.heightType === 'absolute')) {
+              if (plainShoeShelfInitHeights) {
+                sH = plainShoeShelfInitHeights[i] ?? 0;
+              } else if (isPullOutOrPantryInit && (Array.isArray(userCustomSections) || sec.heightType === 'absolute')) {
                 sH = sec.height || 0;
               } else if (isLast) {
                 const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
@@ -4742,10 +4773,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
-            const sectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
             const isPlainShoeShelfForSections = !isCustom
               && !!mcSections
               && usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
+            const rawSectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
+            const sectionBasisH = isPlainShoeShelfForSections
+              ? getRenderedSectionBasisHeight(currentPlacedModule, spaceInfo, rawSectionBasisH)
+              : rawSectionBasisH;
             const plainShoeShelfSectionHeights = isPlainShoeShelfForSections && mcSections
               ? getPlainShoeShelfSectionHeights(currentPlacedModule, spaceInfo, mcSections, sectionBasisH)
               : null;
@@ -5855,22 +5889,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
             const isShelfSplitDoorModule = isShelfSplitModuleId(currentPlacedModule.moduleId);
-            const shelfSplitTopFrameMm = (() => {
-              const sections = Array.isArray((currentPlacedModule as any).customSections) ? (currentPlacedModule as any).customSections : [];
-              if (!isShelfSplitDoorModule || sections.length < 2) return null;
-              const baseDistance = currentPlacedModule.hasBase === false
-                ? (currentPlacedModule.individualFloatHeight ?? 0)
-                : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-              const sectionTop = baseDistance + sections
-                .slice(0, 2)
-                .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
-              return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
-            })();
             // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이
             //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
-            const topFrameMm = shelfSplitTopFrameMm !== null
-              ? shelfSplitTopFrameMm
-              : currentPlacedModule.hasTopFrame === false
+            const topFrameMm = currentPlacedModule.hasTopFrame === false
               ? 0
               : (currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
             const baseFrameMm = currentPlacedModule.hasBase === false
@@ -6883,7 +6904,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
             };
             const actualShelfSplitTopSize = computeShelfSplitTopDistance(mod);
-            const topSize = actualShelfSplitTopSize ?? rawTopSize;
+            const topSize = topEnabled ? rawTopSize : (actualShelfSplitTopSize ?? rawTopSize);
             // 서라운드(전체/양쪽 포함) + 상부장일 때 기본 옵셋 23mm
             const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
             const isSurroundForOffset = spaceInfo.surroundType === 'surround';
@@ -6902,7 +6923,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const updates: Record<string, number> = {};
               if ('hasTopFrame' in nextFrameState || 'topFrameThickness' in nextFrameState) {
                 const nextTopEnabled = nextFrameState.hasTopFrame ?? topEnabled;
-                const nextTopSize = nextFrameState.topFrameThickness ?? topSize;
+                const nextTopSize = nextFrameState.topFrameThickness ?? rawTopSize;
                 updates.endPanelTopOffset = nextTopEnabled === false ? 0 : nextTopSize;
               }
               if ('hasBase' in nextFrameState || 'baseFrameHeight' in nextFrameState) {
@@ -6936,7 +6957,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const getUpperShelfGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
               const nextMod = { ...mod, ...nextFrameState } as typeof mod;
               const basicThicknessMm = (spaceInfo as any).panelThickness || 18;
-              const sections = (mod as any).customSections
+              const sections = (nextFrameState as any).customSections
+                ?? (mod as any).customSections
                 ?? (mod as any).customConfig?.sections
                 ?? moduleData?.modelConfig?.sections;
               const hasExplicitCustomSections = Array.isArray((mod as any).customSections);
@@ -7062,8 +7084,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 return nextState;
               }
               const nextHasTopFrame = nextState.hasTopFrame ?? mod.hasTopFrame;
-              const nextTopFrameThickness = nextState.topFrameThickness ?? mod.topFrameThickness ?? topSize;
-              const nextTopGap = nextState.topFrameGap ?? mod.topFrameGap ?? topSize;
+              const nextTopFrameThickness = nextState.topFrameThickness ?? mod.topFrameThickness ?? rawTopSize;
+              const nextTopGap = nextState.topFrameGap ?? mod.topFrameGap ?? actualShelfSplitTopSize ?? rawTopSize;
               const topClearance = nextHasTopFrame === false
                 ? Math.max(0, nextTopGap)
                 : Math.max(0, nextTopFrameThickness);
@@ -7153,10 +7175,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
 	                                e.preventDefault();
 	                                const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const topSizeUpdates = getTopSizeSyncUpdates(next);
 	                                updatePlacedModule(mod.id, {
-	                                  ...getTopSizeSyncUpdates(next),
+	                                  ...topSizeUpdates,
 	                                  ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
-	                                  ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
+	                                  ...getUpperShelfGapSyncUpdates(topSizeUpdates),
 	                                });
 	                              } else if (e.key === 'Enter') {
 	                                (e.target as HTMLInputElement).blur();
@@ -7167,20 +7190,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                              if (v === '' || /^\d+$/.test(v)) {
 	                                const num = v === '' ? 0 : parseInt(v, 10);
 	                                const next = Math.max(0, Math.min(9999, num));
+                                  const topSizeUpdates = getTopSizeSyncUpdates(next);
 	                                updatePlacedModule(mod.id, {
-	                                  ...getTopSizeSyncUpdates(next),
+	                                  ...topSizeUpdates,
 	                                  ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
-	                                  ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
+	                                  ...getUpperShelfGapSyncUpdates(topSizeUpdates),
 	                                });
 	                              }
 	                            }}
 	                            onBlur={(e) => {
 	                              setHighlightedFrame(null);
 	                              const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
+                                const topSizeUpdates = getTopSizeSyncUpdates(clamped);
 	                              updatePlacedModule(mod.id, {
-	                                ...getTopSizeSyncUpdates(clamped),
+	                                ...topSizeUpdates,
 	                                ...getEndPanelGapSyncUpdates({ topFrameThickness: clamped }),
-	                                ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
+	                                ...getUpperShelfGapSyncUpdates(topSizeUpdates),
 	                              });
 	                            }}
 	                            style={inputStyle}

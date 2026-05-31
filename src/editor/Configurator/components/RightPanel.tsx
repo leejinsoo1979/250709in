@@ -1497,7 +1497,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
                 return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
               };
-              const getTopSizeDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? m?.topFrameThickness ?? globalTop;
+              const getTopSizeDisplay = (m: any) => m?.topFrameThickness ?? globalTop;
               const getTopOffGapDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? m?.topFrameGap ?? getTopSizeDisplay(m);
               const getTopGapDisplay = (m: any) => (
                 m?.hasTopFrame === false

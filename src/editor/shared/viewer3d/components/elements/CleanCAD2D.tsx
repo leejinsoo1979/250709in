@@ -5142,7 +5142,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : 0;
                 const displayTopFrame = topRefMod_L?.hasTopFrame === false
                   ? userTopGap
-                  : Math.max(0, Math.round(shelfSplitTopFrameForDim ?? topFrameH));
+                  : Math.max(0, Math.round(actualTopSize));
                 if (displayTopFrame <= 0) return null;
                 const topGapH = topRefMod_L?.hasTopFrame === false
                   ? 0
@@ -5154,7 +5154,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : singleLowerTopRef;
                 const topFrameBottomRef = topRefMod_L?.hasTopFrame === false
                   ? effectiveCeilingY - mmToThreeUnits(userTopGap)
-                  : (hasDualCabinet ? upperCabinetTopY : sectionSplitTopRef);
+                  : (isShelfSplitTopDim ? effectiveCeilingY - mmToThreeUnits(displayTopFrame) : (hasDualCabinet ? upperCabinetTopY : sectionSplitTopRef));
                 const topGapBottomRef = effectiveCeilingY - mmToThreeUnits(topGapH);
                 const topFrameSegments = topGapH > 0
                   ? [
@@ -6120,12 +6120,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 상단몰딩/상단갭 구분 틱 & 치수 — 좌측과 동일하게 표시 */}
               {(() => {
+                const rIsShelfSplitTopDim = !!rightmostMod?.moduleId?.includes('shelf-split') && rSectionHeights.length >= 2;
                 const userTopGap = topRefMod_R?.hasTopFrame === false
                   ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
                   : 0;
                 const displayTopFrame = topRefMod_R?.hasTopFrame === false
                   ? userTopGap
-                  : rTopFrameH;
+                  : Math.max(0, Math.round(rActualTopSize));
                 if (displayTopFrame <= 0) return null;
                 const topGapH = topRefMod_R?.hasTopFrame === false
                   ? 0
@@ -6137,7 +6138,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : rSingleLowerTopRef;
                 const topFrameBottomRef = topRefMod_R?.hasTopFrame === false
                   ? rEffectiveCeilingY - mmToThreeUnits(userTopGap)
-                  : (rHasDualCabinet ? rUpperCabinetTopY : rSectionSplitTopRef);
+                  : (rIsShelfSplitTopDim ? rEffectiveCeilingY - mmToThreeUnits(displayTopFrame) : (rHasDualCabinet ? rUpperCabinetTopY : rSectionSplitTopRef));
                 const topGapBottomRef = rEffectiveCeilingY - mmToThreeUnits(topGapH);
                 const topFrameSegments = topGapH > 0
                   ? [
@@ -8426,11 +8427,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             })();
             const topFrameHeight = isTopFrameOff
               ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, shelfSplitDynamicTopFrame ?? (rawTopFrame - baseFrameAbsorbed));
+              : Math.max(0, rawTopFrame - baseFrameAbsorbed);
             const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
             const topFrameDimensionValue = isTopFrameOff
               ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, Math.round((shelfSplitDynamicTopFrame ?? (hasUpperTopFrameRef ? rawTopFrame : topFrameHeight)) ?? 0));
+              : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
             const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
@@ -8454,8 +8455,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const sideSectionHeights = (() => {
               if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
               const mid = viewMod.moduleId || '';
-              const isSectionedShoe = mid.includes('-entryway-') || mid.includes('-shelf-');
-              if (!isSectionedShoe) return [] as number[];
               const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
               const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
               if (sections.length < 2) return [] as number[];
@@ -8710,7 +8709,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {sideIsFloating && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, lowerSideMeasureStartY, rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ]]}
@@ -8745,7 +8744,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
-                {(!sideIsFloating || isLowerSideMeasure) && !hasSideSectionSplit && (
+                {(!sideIsFloating || isLowerSideMeasure || viewModCategoryForFrame === 'full') && !hasSideSectionSplit && (
                 <group>
                   <Line
                     points={[[0, furnitureMeasuredStartY, rightDimensionZ], [0, furnitureMeasuredTopY, rightDimensionZ]]}
@@ -8815,7 +8814,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {sideIsFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
@@ -8850,7 +8849,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!sideIsFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
+                {!sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
@@ -8884,7 +8883,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* full 신발장/선반장: 측면뷰에서도 실제 상하부 섹션 경계 기준으로 높이 분리 */}
+                {/* full 2섹션 가구: 측면뷰에서도 실제 상하부 섹션 경계 기준으로 높이 분리 */}
                 {hasSideSectionSplit && (
                 <group>
                   {sideSectionHeights.map((secH, idx) => {
@@ -10091,11 +10090,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             })();
             const topFrameHeight = isTopFrameOff
               ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, shelfSplitDynamicTopFrame ?? (rawTopFrame - baseFrameAbsorbed));
+              : Math.max(0, rawTopFrame - baseFrameAbsorbed);
             const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
             const topFrameDimensionValue = isTopFrameOff
               ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, Math.round((shelfSplitDynamicTopFrame ?? (hasUpperTopFrameRef ? rawTopFrame : topFrameHeight)) ?? 0));
+              : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
             const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
@@ -10118,8 +10117,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const sideSectionHeights = (() => {
               if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
               const mid = viewMod.moduleId || '';
-              const isSectionedShoe = mid.includes('-entryway-') || mid.includes('-shelf-');
-              if (!isSectionedShoe) return [] as number[];
               const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
               const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
               if (sections.length < 2) return [] as number[];
@@ -10383,7 +10380,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {sideIsFloating && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, lowerSideMeasureStartY, leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ]]}
@@ -10418,7 +10415,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
-                {(!sideIsFloating || isLowerSideMeasure) && !hasSideSectionSplit && (
+                {(!sideIsFloating || isLowerSideMeasure || viewModCategoryForFrame === 'full') && !hasSideSectionSplit && (
                 <group>
                   <Line
                     points={[[spaceWidth, furnitureMeasuredStartY, leftDimensionZ], [spaceWidth, furnitureMeasuredTopY, leftDimensionZ]]}
@@ -10488,7 +10485,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {sideIsFloating && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
@@ -10523,7 +10520,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!sideIsFloating && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
+                {!sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}
@@ -10557,7 +10554,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* full 신발장/선반장: 측면뷰에서도 실제 상하부 섹션 경계 기준으로 높이 분리 */}
+                {/* full 2섹션 가구: 측면뷰에서도 실제 상하부 섹션 경계 기준으로 높이 분리 */}
                 {hasSideSectionSplit && (
                 <group>
                   {sideSectionHeights.map((secH, idx) => {

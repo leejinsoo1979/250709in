@@ -11,6 +11,7 @@ import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry
 
 // 가구 간 최소 간격 (mm) - 0으로 설정하여 완전 밀착 허용
 const COLLISION_GAP_MM = 0;
+const COLLISION_EPSILON_MM = 0.5;
 
 export interface FurnitureBoundsX {
   left: number;   // 좌측 X (mm)
@@ -20,6 +21,7 @@ export interface FurnitureBoundsX {
 
 export interface FreeGuideZoneYRangeOptions {
   bottomClearanceMm?: number;
+  topClearanceMm?: number;
   lowerHeightMm?: number;
   upperHeightMm?: number;
 }
@@ -29,12 +31,12 @@ export function getFreeGuideZoneYRangeMm(
   spaceInfo: SpaceInfo,
   options: FreeGuideZoneYRangeOptions = {}
 ): { start: number; end: number } | null {
-  if (zone !== 'upper' && zone !== 'lower') return null;
-
   const fullHeightMm = spaceInfo.height || 0;
   const topMoldingMm = spaceInfo.frameSize?.top ?? 0;
   const topGapMm = (spaceInfo.frameSize as any)?.topGap ?? 0;
-  const topClearanceMm = Math.max(0, topMoldingMm > 0 ? topMoldingMm : topGapMm);
+  const topClearanceMm = options.topClearanceMm !== undefined
+    ? Math.max(0, options.topClearanceMm)
+    : Math.max(0, topMoldingMm > 0 ? topMoldingMm : topGapMm);
   const isFloatingBase = spaceInfo.baseConfig?.type === 'stand'
     || (spaceInfo.baseConfig?.height ?? 0) <= 0;
   const defaultBottomClearanceMm = isFloatingBase
@@ -50,6 +52,9 @@ export function getFreeGuideZoneYRangeMm(
   const yMidTop = yLowerTop + midwayMm;
   const yUpperTop = yMidTop + upperMm;
 
+  if (zone === 'full') {
+    return { start: bottomClearanceMm, end: Math.max(bottomClearanceMm, fullHeightMm - topClearanceMm) };
+  }
   if (zone === 'upper') return { start: yMidTop, end: yUpperTop };
   return { start: yBaseTop, end: yLowerTop };
 }
@@ -327,6 +332,9 @@ export function getModuleBoundsX(module: PlacedModule): FurnitureBoundsX {
  * 모듈의 카테고리 추출
  */
 export function getModuleCategory(module: PlacedModule): 'full' | 'upper' | 'lower' {
+  if (module.freePlacementCategory) return module.freePlacementCategory;
+  if (module.guideSlotZone) return module.guideSlotZone;
+
   const id = module.moduleId;
   if (id.startsWith('upper-') || id.includes('-upper-')) return 'upper';
   if (id.startsWith('lower-') || id.includes('-lower-')) return 'lower';
@@ -401,8 +409,8 @@ export function checkFreeCollision(
 
     // X 겹침 체크
     const hasOverlap =
-      newBounds.left < existBounds.right + COLLISION_GAP_MM &&
-      newBounds.right > existBounds.left - COLLISION_GAP_MM;
+      newBounds.left < existBounds.right + COLLISION_GAP_MM - COLLISION_EPSILON_MM &&
+      newBounds.right > existBounds.left - COLLISION_GAP_MM + COLLISION_EPSILON_MM;
 
     if (!hasOverlap) continue;
 
@@ -430,8 +438,8 @@ export function checkColumnCollision(
 
     // X 겹침 체크
     const hasOverlap =
-      newBounds.left < colRight + COLLISION_GAP_MM &&
-      newBounds.right > colLeft - COLLISION_GAP_MM;
+      newBounds.left < colRight + COLLISION_GAP_MM - COLLISION_EPSILON_MM &&
+      newBounds.right > colLeft - COLLISION_GAP_MM + COLLISION_EPSILON_MM;
 
     if (hasOverlap) return true;
   }

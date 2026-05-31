@@ -172,7 +172,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     && Number.isFinite(guideSlotYRange.start)
     && Number.isFinite(guideSlotYRange.end)
     && guideSlotYRange.end > guideSlotYRange.start;
-  if (hasGuideSlotYRange && (moduleData.category === 'upper' || moduleData.category === 'lower')) {
+  if (hasGuideSlotYRange && (moduleData.category === 'full' || moduleData.category === 'upper' || moduleData.category === 'lower')) {
     effectiveHeight = Math.max(0, guideSlotYRange.end - guideSlotYRange.start);
   }
 
@@ -197,7 +197,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   // Y좌표 계산 (카테고리별)
   // 상부장이 단내림 구간에 배치될 때: 천장 기준이 stepCeiling.height여야 함
-  const yPositionThree = hasGuideSlotYRange && (moduleData.category === 'upper' || moduleData.category === 'lower')
+  const yPositionThree = hasGuideSlotYRange && (moduleData.category === 'full' || moduleData.category === 'upper' || moduleData.category === 'lower')
     ? ((guideSlotYRange.start + guideSlotYRange.end) / 2) * 0.01
     : calculateYPosition(
       moduleData.category,
@@ -217,8 +217,11 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   if (!params.skipCollisionCheck) {
     const columns = spaceInfo.columns || [];
-    if (checkFreeCollision(existingModules, newBounds) || checkColumnCollision(columns, newBounds)) {
-      return { success: false, error: '다른 가구 또는 기둥과 겹칩니다' };
+    if (checkFreeCollision(existingModules, newBounds)) {
+      return { success: false, error: '이미 배치된 가구와 겹칩니다' };
+    }
+    if (checkColumnCollision(columns, newBounds)) {
+      return { success: false, error: '기둥과 겹칩니다' };
     }
   }
 
@@ -259,6 +262,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   // 기존 가구의 topFrameGap 우선, 없으면 공간설정의 frameSize.topGap fallback
   const globalTopGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
   const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? globalTopGap;
+  const inheritedTopFrameThickness = topFrameCapableExistingModules.find(module => typeof module.topFrameThickness === 'number')?.topFrameThickness;
   // spaceInfo.frameSize.top === 0 이면 공간설정에서 상단몰딩 OFF로 저장됨
   const topFrameDisabledByGlobal = (spaceInfo.frameSize?.top ?? 30) <= 0;
   const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff && !topFrameDisabledByGlobal;
@@ -289,10 +293,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
     : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
-  const topFrameThickness = spaceInfo.frameSize?.top || 30;
-  const initialTopFrameGap = shouldHaveTopFrame
-    ? 0
-    : clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
+  const topFrameThickness = inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top || 30);
+  const initialTopFrameGap = clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -302,12 +304,13 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     position: { x: xThree, y: yPositionThree, z: zThree },
     rotation: 0,
     isFreePlacement: true,
+    freePlacementCategory: moduleData.category as 'full' | 'upper' | 'lower',
     freeWidth: dimensions.width,
     freeHeight: effectiveHeight,
     freeDepth: effectiveDepth,
     ...(hasGuideSlotYRange ? {
       guideSlotPlacement: true,
-      guideSlotZone: moduleData.category as 'upper' | 'lower',
+      guideSlotZone: moduleData.category as 'full' | 'upper' | 'lower',
     } : {}),
     ...(hasGuideSlotDepth ? {
       customDepth: effectiveDepth,
@@ -329,7 +332,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     hasTopFrame: shouldHaveTopFrame,
     hasBottomFrame: shouldHaveBaseFrame,
     topFrameThickness,
-    ...(shouldHaveTopFrame ? {} : { topFrameGap: initialTopFrameGap }),
+    ...(initialTopFrameGap > 0 ? { topFrameGap: initialTopFrameGap } : {}),
     // ModuleData에 individualFloatHeight 가 정의된 가구
     ...(initialFloatHeight > 0
       ? { individualFloatHeight: initialFloatHeight }

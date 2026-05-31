@@ -769,7 +769,7 @@ const Configurator: React.FC = () => {
     }
 
     const nextHasTopFrame = nextState.hasTopFrame ?? mod.hasTopFrame;
-    const nextTopFrameThickness = nextState.topFrameThickness ?? mod.topFrameThickness ?? computeShelfSplitTopDistance(mod, effectiveHeight) ?? (spaceInfo.frameSize?.top ?? 30);
+    const nextTopFrameThickness = nextState.topFrameThickness ?? mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
     const nextTopGap = nextState.topFrameGap ?? mod.topFrameGap ?? computeShelfSplitTopDistance(mod, effectiveHeight) ?? 0;
     const topClearance = nextHasTopFrame === false
       ? Math.max(0, nextTopGap)
@@ -925,10 +925,7 @@ const Configurator: React.FC = () => {
   //     "가구 상단~천장 거리"는 상단몰딩 두께와 정확히 같음.
   const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
     if (!mod) return { topDistance: 0, bottomDistance: 0 };
-    const shelfSplitTopDistance = computeShelfSplitTopDistance(mod);
-    const topFrameMm = shelfSplitTopDistance !== null
-      ? shelfSplitTopDistance
-      : mod.hasTopFrame === false
+    const topFrameMm = mod.hasTopFrame === false
       ? 0
       : (mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
     const baseFrameMm = mod.hasBase === false
@@ -938,7 +935,7 @@ const Configurator: React.FC = () => {
       topDistance: Math.max(0, topFrameMm),
       bottomDistance: Math.max(0, baseFrameMm)
     };
-  }, [computeShelfSplitTopDistance, spaceInfo]);
+  }, [spaceInfo]);
 
   const computeSplitDoorRefDistances = useCallback((
     mod: any,
@@ -6758,7 +6755,7 @@ const Configurator: React.FC = () => {
                     const globalBaseLocal = spaceInfo.baseConfig?.height ?? 65;
                     const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
                     const unifiedEnabled = topFreeMods.every(m => m.hasTopFrame !== false);
-                    const firstTopFrameSize = computeShelfSplitTopDistance(firstTop) ?? (firstTop.topFrameThickness ?? globalTop);
+                    const firstTopFrameSize = firstTop.topFrameThickness ?? globalTop;
                     const getFreeTopOffGap = (target: typeof firstTop) => {
                       const shelfSplitGap = computeShelfSplitTopDistance(target);
                       if (shelfSplitGap !== null) return shelfSplitGap;
@@ -6884,8 +6881,10 @@ const Configurator: React.FC = () => {
                   const dcDrop = (isDroppedZone && spaceInfo.droppedCeiling?.enabled && !spaceInfo.stepCeiling?.enabled)
                     ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
                   const effectiveSpaceHeight = spaceInfo.height - stepDrop - dcDrop;
-                  const actualTopFrameSize = computeShelfSplitTopDistance(mod, effectiveSpaceHeight)
-                    ?? Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight);
+                  const actualTopFrameSize = mod.hasTopFrame !== false
+                    ? (mod.topFrameThickness ?? globalTop)
+                    : (computeShelfSplitTopDistance(mod, effectiveSpaceHeight)
+                      ?? Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight));
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
@@ -7795,7 +7794,7 @@ const Configurator: React.FC = () => {
                         return renderSlotFrameRow(
                           '전체',
                           unifiedEnabled,
-                          computeShelfSplitTopDistance(firstTop) ?? (firstTop.topFrameThickness ?? globalTop),
+                          firstTop.topFrameThickness ?? globalTop,
                           firstTop.topFrameOffset ?? topOffsetDefaultU,
                           () => {
                             const newVal = !unifiedEnabled;
@@ -7881,7 +7880,7 @@ const Configurator: React.FC = () => {
                         return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
                           `${toAlpha(topNum)}(상)`,
                           mod.hasTopFrame !== false,
-                          computeShelfSplitTopDistance(mod) ?? (mod.topFrameThickness ?? globalTop),
+                          mod.topFrameThickness ?? globalTop,
                           mod.topFrameOffset ?? topOffsetDefault,
                           () => {
                             const newVal = !(mod.hasTopFrame !== false);

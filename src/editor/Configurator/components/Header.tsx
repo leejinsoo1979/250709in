@@ -1271,7 +1271,7 @@ const Header: React.FC<HeaderProps> = ({
                       )}
                     </div>
                   </div>
-                  <NotificationCenter />
+                  <NotificationCenter messageOpenMode="window" />
                 </div>
               ) : (
                 <button

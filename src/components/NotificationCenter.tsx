@@ -15,7 +15,13 @@ import {
 import { useScrollLock } from '@/hooks/useScrollLock';
 import styles from './NotificationCenter.module.css';
 
-export const NotificationCenter: React.FC = () => {
+interface NotificationCenterProps {
+  messageOpenMode?: 'modal' | 'window';
+}
+
+export const NotificationCenter: React.FC<NotificationCenterProps> = ({
+  messageOpenMode = 'modal',
+}) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -53,6 +59,58 @@ export const NotificationCenter: React.FC = () => {
     if (!actionUrl) return null;
     const match = actionUrl.match(/\/dashboard\/messages\/([^/?#]+)/);
     return match?.[1] ? decodeURIComponent(match[1]) : null;
+  };
+
+  const resolveNotificationBody = async (notification: Notification) => {
+    const fallbackBody = getNotificationBody(notification);
+
+    try {
+      if (notification.messageId) {
+        const messageSnap = await getDoc(doc(db, 'messages', notification.messageId));
+        if (messageSnap.exists()) {
+          const messageData = messageSnap.data() as {
+            content?: string;
+            message?: string;
+            text?: string;
+            body?: string;
+          };
+          const body = [
+            messageData.content,
+            messageData.message,
+            messageData.text,
+            messageData.body,
+          ].find(value => typeof value === 'string' && value.trim())?.trim();
+          if (body) return body;
+        }
+      }
+
+      const conversationId = getConversationIdFromActionUrl(notification.actionUrl);
+      if (conversationId) {
+        const messageQuery = query(
+          collection(db, 'conversations', conversationId, 'messages'),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+        const messageSnap = await getDocs(messageQuery);
+        const latestMessage = messageSnap.docs[0]?.data() as {
+          text?: string;
+          content?: string;
+          message?: string;
+          body?: string;
+        } | undefined;
+        const body = [
+          latestMessage?.text,
+          latestMessage?.content,
+          latestMessage?.message,
+          latestMessage?.body,
+        ].find(value => typeof value === 'string' && value.trim())?.trim();
+        if (body) return body;
+      }
+    } catch (err) {
+      console.error('❌ 메시지 본문 로드 실패:', err);
+    }
+
+    return fallbackBody;
   };
 
   // 알림 실시간 구독
@@ -97,51 +155,9 @@ export const NotificationCenter: React.FC = () => {
       const loadFullMessageBody = async () => {
         setIsMessageBodyLoading(true);
         try {
-          if (selectedMessage.messageId) {
-            const messageSnap = await getDoc(doc(db, 'messages', selectedMessage.messageId));
-            if (messageSnap.exists()) {
-              const messageData = messageSnap.data() as {
-                content?: string;
-                message?: string;
-                text?: string;
-                body?: string;
-              };
-              const body = [
-                messageData.content,
-                messageData.message,
-                messageData.text,
-                messageData.body,
-              ].find(value => typeof value === 'string' && value.trim())?.trim();
-              if (body && !cancelled) {
-                setSelectedMessageBody(body);
-              }
-              return;
-            }
-          }
-
-          const conversationId = getConversationIdFromActionUrl(selectedMessage.actionUrl);
-          if (conversationId) {
-            const messageQuery = query(
-              collection(db, 'conversations', conversationId, 'messages'),
-              orderBy('createdAt', 'desc'),
-              limit(1)
-            );
-            const messageSnap = await getDocs(messageQuery);
-            const latestMessage = messageSnap.docs[0]?.data() as {
-              text?: string;
-              content?: string;
-              message?: string;
-              body?: string;
-            } | undefined;
-            const body = [
-              latestMessage?.text,
-              latestMessage?.content,
-              latestMessage?.message,
-              latestMessage?.body,
-            ].find(value => typeof value === 'string' && value.trim())?.trim();
-            if (body && !cancelled) {
-              setSelectedMessageBody(body);
-            }
+          const body = await resolveNotificationBody(selectedMessage);
+          if (body && !cancelled) {
+            setSelectedMessageBody(body);
           }
         } catch (err) {
           console.error('❌ 메시지 본문 로드 실패:', err);
@@ -184,10 +200,36 @@ export const NotificationCenter: React.FC = () => {
     };
   }, [isOpen]);
 
+  const markAsReadIfNeeded = (notification: Notification) => {
+    if (!notification.isRead && notification.id) {
+      markNotificationAsRead(notification.id).catch(err => {
+        console.error('❌ 읽음 처리 실패:', err);
+      });
+    }
+  };
+
+  const openMessageWindow = (notification: Notification) => {
+    if (!notification.id) {
+      setSelectedMessage(notification);
+      return;
+    }
+
+    const url = new URL(`/notification/${encodeURIComponent(notification.id)}`, window.location.origin);
+    window.open(url.toString(), '_blank', 'noopener,noreferrer');
+  };
+
   const handleNotificationClick = (notification: Notification) => {
     console.log('🔔 알림 클릭:', notification);
     console.log('  - type:', notification.type);
     console.log('  - title:', notification.title);
+
+    markAsReadIfNeeded(notification);
+    if (messageOpenMode === 'window' && isMessageNotification(notification)) {
+      console.log('✉️ 메시지 알림 → 새창 열기');
+      openMessageWindow(notification);
+      setIsOpen(false);
+      return;
+    }
 
     console.log('✉️ 알림 내용 팝업 열기');
     setSelectedMessage(notification);
@@ -302,7 +344,7 @@ export const NotificationCenter: React.FC = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             console.log('👁️ 보기 버튼 클릭:', notification);
-                            setSelectedMessage(notification);
+                            handleNotificationClick(notification);
                             setIsOpen(false);
                           }}
                           title="보기"

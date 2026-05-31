@@ -650,6 +650,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // 기존 가구의 topFrameGap 우선, 없으면 공간설정의 frameSize.topGap fallback
   const globalTopGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
   const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? globalTopGap;
+  const inheritedTopFrameThickness = topFrameCapableExistingModules.find(module => typeof module.topFrameThickness === 'number')?.topFrameThickness;
   // spaceInfo.frameSize.top === 0 이면 공간설정에서 상단몰딩 OFF로 저장된 것
   const topFrameDisabledByGlobal = (spaceInfo.frameSize?.top ?? 30) <= 0;
   const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff && !topFrameDisabledByGlobal;
@@ -678,10 +679,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
     : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
-  const topFrameThickness = spaceInfo.frameSize?.top || 30;
-  const initialTopFrameGap = shouldHaveTopFrame
-    ? 0
-    : clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
+  const topFrameThickness = inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top || 30);
+  const initialTopFrameGap = clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -709,7 +708,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     ...(initialBaseFrameHeight !== undefined ? { baseFrameHeight: initialBaseFrameHeight } : {}),
     hasTopFrame: shouldHaveTopFrame,
     topFrameThickness,
-    ...(shouldHaveTopFrame ? {} : { topFrameGap: initialTopFrameGap }),
+    ...(initialTopFrameGap > 0 ? { topFrameGap: initialTopFrameGap } : {}),
     // 서라운드 + 상부장은 상단 몰딩 옵셋 기본 23mm
     ...((moduleData.category === 'upper' && spaceInfo.surroundType === 'surround')
          ? { topFrameOffset: 23 } : {}),

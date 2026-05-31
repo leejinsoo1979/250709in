@@ -101,10 +101,10 @@ const resolveTopFrameDistanceMm = (
   effectiveHeightMm = spaceInfo.height
 ): number => {
   const shelfSplitTopDistance = resolveShelfSplitTopDistanceMm(mod, spaceInfo, effectiveHeightMm);
-  if (shelfSplitTopDistance !== null) return shelfSplitTopDistance;
-  return mod?.hasTopFrame === false
-    ? Math.max(0, Math.round(mod?.topFrameGap ?? 0))
-    : (mod?.topFrameThickness ?? fallbackTopFrameMm);
+  if (mod?.hasTopFrame === false) {
+    return Math.max(0, Math.round(mod?.topFrameGap ?? shelfSplitTopDistance ?? 0));
+  }
+  return mod?.topFrameThickness ?? fallbackTopFrameMm;
 };
 
 const resolveShoeCabinetDoorFrontZ = (

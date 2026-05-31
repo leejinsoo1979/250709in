@@ -483,7 +483,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (hasTopByDefault && module.topFrameOffset === undefined && typeof spaceInfo.frameSize?.topOffset === 'number') {
         module.topFrameOffset = spaceInfo.frameSize.topOffset;
       }
-      if (hasTopByDefault && module.topFrameGap === undefined && typeof spaceInfo.frameSize?.topGap === 'number') {
+      if (hasTopByDefault && module.hasTopFrame === false && module.topFrameGap === undefined && typeof spaceInfo.frameSize?.topGap === 'number') {
         module.topFrameGap = Math.max(0, spaceInfo.frameSize.topGap);
       }
       if (hasTopByDefault && module.hasTopFrame === undefined && (spaceInfo.frameSize?.top ?? 0) <= 0) {
@@ -796,6 +796,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const existingModule = state.placedModules.find(m => m.id === id);
 
     if (existingModule) {
+      if (updates.hasTopFrame === true && updates.topFrameGap === undefined) {
+        finalUpdates = { ...finalUpdates, topFrameGap: 0 };
+      }
+
       const requestedBodyDepth = typeof updates.customDepth === 'number' && updates.customDepth > 0
         ? updates.customDepth
         : (typeof updates.freeDepth === 'number' && updates.freeDepth > 0 ? updates.freeDepth : undefined);

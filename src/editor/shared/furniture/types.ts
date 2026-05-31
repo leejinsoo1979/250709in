@@ -136,6 +136,7 @@ export interface PlacedModule {
   
   // 자유배치 모드 속성
   isFreePlacement?: boolean; // 자유배치 모드로 배치된 가구 여부
+  freePlacementCategory?: 'full' | 'upper' | 'lower'; // 자유배치 충돌 판정용 실제 카테고리
   freeWidth?: number;        // 자유배치 모드에서 사용자 지정 너비 (mm)
   freeHeight?: number;       // 자유배치 모드에서 사용자 지정 높이 (mm)
   freeDepth?: number;        // 자유배치 모드에서 사용자 지정 깊이 (mm)
