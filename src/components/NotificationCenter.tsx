@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { Bell, X, Check } from 'lucide-react';
 import { collection, doc, getDoc, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { useAuth } from '@/auth/AuthProvider';
@@ -15,14 +16,9 @@ import {
 import { useScrollLock } from '@/hooks/useScrollLock';
 import styles from './NotificationCenter.module.css';
 
-interface NotificationCenterProps {
-  messageOpenMode?: 'modal' | 'window';
-}
-
-export const NotificationCenter: React.FC<NotificationCenterProps> = ({
-  messageOpenMode = 'modal',
-}) => {
+export const NotificationCenter: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -208,14 +204,26 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
   };
 
-  const openMessageWindow = (notification: Notification) => {
-    if (!notification.id) {
-      setSelectedMessage(notification);
-      return;
+  const getNotificationActionUrl = (notification: Notification) => {
+    if (notification.actionUrl) return notification.actionUrl;
+    if (notification.projectId) return `/configurator?projectId=${encodeURIComponent(notification.projectId)}`;
+    if (notification.type === 'message' && notification.id) {
+      return `/notification/${encodeURIComponent(notification.id)}`;
     }
+    return null;
+  };
 
-    const url = new URL(`/notification/${encodeURIComponent(notification.id)}`, window.location.origin);
-    window.open(url.toString(), '_blank', 'noopener,noreferrer');
+  const navigateToNotificationTarget = (actionUrl: string) => {
+    try {
+      const url = new URL(actionUrl, window.location.origin);
+      if (url.origin === window.location.origin) {
+        navigate(`${url.pathname}${url.search}${url.hash}`);
+        return;
+      }
+      window.location.href = url.toString();
+    } catch {
+      navigate(actionUrl);
+    }
   };
 
   const handleNotificationClick = (notification: Notification) => {
@@ -224,9 +232,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     console.log('  - title:', notification.title);
 
     markAsReadIfNeeded(notification);
-    if (messageOpenMode === 'window' && isMessageNotification(notification)) {
-      console.log('✉️ 메시지 알림 → 새창 열기');
-      openMessageWindow(notification);
+    const actionUrl = getNotificationActionUrl(notification);
+    if (actionUrl) {
+      console.log('🔗 알림 대상 페이지 이동:', actionUrl);
+      navigateToNotificationTarget(actionUrl);
       setIsOpen(false);
       return;
     }
