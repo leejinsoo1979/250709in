@@ -797,12 +797,23 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     if (!targetSlot) return;
     const targetZone = targetSlot?.guideZone || 'full';
     const targetGroupId = targetSlot?.guideGroupId;
+    const isLegacyMergedFullSlot = targetZone === 'full'
+      && !targetGroupId
+      && sourceSlots.some((slot) => (
+        typeof slot.guideGroupId === 'string'
+        && slot.guideGroupId.startsWith(`${targetSlot.id}-`)
+      ));
+    const effectiveGroupId = isLegacyMergedFullSlot ? targetSlot.id : targetGroupId;
     const targetZoneSlots = sourceSlots
-      .filter((slot) => isSameGuideLine(slot, targetZone, targetGroupId))
+      .filter((slot) => (
+        isLegacyMergedFullSlot
+          ? (slot.id === targetSlot.id || isSameGuideLine(slot, targetZone, effectiveGroupId))
+          : isSameGuideLine(slot, targetZone, effectiveGroupId)
+      ))
       .sort((a, b) => a.x - b.x);
     if (targetZoneSlots.length === 0) return;
     const guideBounds = getFreePlacementGuideBoundsX(spaceInfo);
-    const useLineBounds = targetZone === 'full' || !!targetGroupId;
+    const useLineBounds = targetZone === 'full' || !!effectiveGroupId;
     const groupStartX = useLineBounds
       ? Math.min(...targetZoneSlots.map((slot) => slot.x))
       : guideBounds.startX + (spaceInfo.width || 0) / 2;
@@ -819,7 +830,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       x: groupStartX + nextWidth * (nextCount - 1),
       width: nextWidth,
       guideZone: targetZone,
-      guideGroupId: targetGroupId || undefined,
+      guideGroupId: effectiveGroupId || undefined,
       confirmed: false
     };
     const nextTargetSlots = [...targetZoneSlots, nextSlot].map((slot, index) => ({
@@ -827,10 +838,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       index,
       x: groupStartX + nextWidth * index,
       width: nextWidth,
-      guideGroupId: targetGroupId || undefined,
+      guideGroupId: effectiveGroupId || undefined,
       confirmed: false
     }));
-    const otherSlots = sourceSlots.filter((slot) => !isSameGuideLine(slot, targetZone, targetGroupId));
+    const targetSlotIds = new Set(targetZoneSlots.map((slot) => slot.id));
+    const otherSlots = sourceSlots.filter((slot) => !targetSlotIds.has(slot.id));
 
     setSpaceInfo({
       freePlacementGuides: otherSlots
@@ -1037,6 +1049,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       x: mergedStartX,
       width: mergedWidth,
       guideZone: 'full',
+      guideGroupId: groupSeed,
       confirmed: false
     };
 
