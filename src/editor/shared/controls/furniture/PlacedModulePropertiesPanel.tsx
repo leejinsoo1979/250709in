@@ -1250,6 +1250,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 섹션별 치수 상태 (자유배치 + customConfig 분할 가구용)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
+  const [sectionHeightFocusedIndex, setSectionHeightFocusedIndex] = useState<number | null>(null);
   const [sectionDepthInputs, setSectionDepthInputs] = useState<Record<number, string>>({});
   const [sectionWidthInputs, setSectionWidthInputs] = useState<Record<number, string>>({});
   // 좌우분할(horizontalSplit) 서브박스 치수
@@ -2132,7 +2133,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -4836,7 +4837,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   : (isCustom
                       ? ((sec as any).height + 2 * pt)
                       : getStdSectionHeightMM(sIdx));
-                const displayH = sectionHeightInputs[sIdx] || Math.round(dynamicH).toString();
+                const renderedDisplayH = Math.round(dynamicH).toString();
+                const displayH = plainShoeShelfSectionHeights
+                  ? (sectionHeightFocusedIndex === sIdx ? (sectionHeightInputs[sIdx] ?? renderedDisplayH) : renderedDisplayH)
+                  : (sectionHeightInputs[sIdx] || renderedDisplayH);
                 // 깊이 표시값: 섹션별 저장값 우선, 없으면 customDepth(신발장 380 등), 최후 totalD
                 // 옛 데이터의 stale 값(moduleDim과 일치) 무시
                 const cDepth = currentPlacedModule.customDepth;
@@ -5038,8 +5042,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text" inputMode="numeric"
                             value={displayH}
+                            onFocus={() => {
+                              setSectionHeightFocusedIndex(sIdx);
+                              setSectionHeightInputs(prev => ({ ...prev, [sIdx]: prev[sIdx] ?? renderedDisplayH }));
+                            }}
                             onChange={(e) => setSectionHeightInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
                             onBlur={() => {
+                              setSectionHeightFocusedIndex(null);
                               if (isPlainShoeShelfForSections && mcSections && plainShoeShelfSectionHeights) {
                                 const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
                                 if (isNaN(inputVal) || inputVal < 100) {
