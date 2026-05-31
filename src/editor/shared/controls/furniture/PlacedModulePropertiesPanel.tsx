@@ -1539,6 +1539,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         : baseHeight;
     })()
     : 0;
+  const isAutoBodyHeightInput = !!currentPlacedModule && usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
+  const bodyHeightInputValue = isAutoBodyHeightInput ? Math.round(placedBodyHeight).toString() : freeHeightInput;
 
   const getCountertopThicknessHeightUpdates = React.useCallback((targetModule: any, nextThickness: number) => {
     const targetId = targetModule?.moduleId || '';
@@ -1719,8 +1721,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 105))
           : 0;
         const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH + lowerBaseForDisplay;
-        // 사용자가 H input을 편집 중이면 동기화 skip (입력값 덮어쓰기 방지)
-        if (!freeHeightFocusedRef.current) {
+        // 자동 산정 가구는 상단/하단 프레임 변경에 따라 항상 갱신되어야 한다.
+        if (usesStableShelfSectionBoundary(currentPlacedModule.moduleId) || !freeHeightFocusedRef.current) {
           setFreeHeightInput(Math.round(effectiveHeight).toString());
         }
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
@@ -4467,11 +4469,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={freeHeightInput}
-                      readOnly={false}
+                      value={bodyHeightInputValue}
+                      readOnly={isAutoBodyHeightInput}
                       onFocus={() => { freeHeightFocusedRef.current = true; }}
-                      onChange={(e) => setFreeHeightInput(e.target.value)}
+                      onChange={(e) => {
+                        if (isAutoBodyHeightInput) return;
+                        setFreeHeightInput(e.target.value);
+                      }}
                       onBlur={() => {
+                        if (isAutoBodyHeightInput) {
+                          freeHeightFocusedRef.current = false;
+                          setFreeHeightInput(bodyHeightInputValue);
+                          return;
+                        }
                         freeHeightFocusedRef.current = false;
                         const displayVal = parseInt(freeHeightInput, 10);
 	                        const lowerBaseForInput = moduleData.category === 'lower' && currentPlacedModule?.hasBase !== false && spaceInfo.baseConfig?.type !== 'stand'
@@ -4556,6 +4566,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                       onKeyDown={(e) => {
+                        if (isAutoBodyHeightInput) return;
                         if (e.key === 'Enter') {
                           e.preventDefault();
                           // Enter 시 직접 저장 처리 (blur 시점에 팝업이 닫히면 onBlur가 실행 안 될 수 있음)
@@ -4859,9 +4870,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       ? ((sec as any).height + 2 * pt)
                       : getStdSectionHeightMM(sIdx));
                 const renderedDisplayH = Math.round(dynamicH).toString();
-                const displayH = plainShoeShelfSectionHeights
-                  ? (sectionHeightFocusedIndex === sIdx ? (sectionHeightInputs[sIdx] ?? renderedDisplayH) : renderedDisplayH)
-                  : (sectionHeightInputs[sIdx] || renderedDisplayH);
+                const displayH = sectionHeightFocusedIndex === sIdx
+                  ? (sectionHeightInputs[sIdx] ?? renderedDisplayH)
+                  : renderedDisplayH;
                 // 깊이 표시값: 섹션별 저장값 우선, 없으면 customDepth(신발장 380 등), 최후 totalD
                 // 옛 데이터의 stale 값(moduleDim과 일치) 무시
                 const cDepth = currentPlacedModule.customDepth;
