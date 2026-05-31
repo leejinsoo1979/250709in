@@ -94,6 +94,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const isCustomSlotMode = spaceInfo?.customGuideMode === true
     || (spaceInfo?.freePlacementGuides?.length || 0) > 0
     || placedModules.some(module => module.guideSlotPlacement === true);
+  const hasCustomGuideSlots = (spaceInfo?.freePlacementGuides?.length || 0) > 0;
+  const canShowViewModeToggle = !spaceInfo?.customGuideMode
+    || (hasCustomGuideSlots && !spaceInfo?.freePlacementGuideEditing);
   const isNoWallSpace = spaceInfo?.installType === 'freestanding'
     || (!spaceInfo?.wallConfig?.left && !spaceInfo?.wallConfig?.right);
   const canUsePlacementWallTools = isAllowedUser && !isNoWallSpace;
@@ -692,26 +695,26 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </div>
         )}
 
-        <div className={styles.segmentedControl}>
-          {viewModes.map((mode) => (
-            <button
-              key={mode.id}
-              data-view-mode={mode.id}
-              className={`${styles.segmentButton} ${styles.segmentAccent} ${viewMode === mode.id ? styles.segmentAccentActive : ''}`}
-              disabled={spaceInfo?.freePlacementGuideEditing && mode.id !== '3D'}
-              onClick={() => {
-                if (spaceInfo?.freePlacementGuideEditing && mode.id !== '3D') return;
-                onViewModeChange(mode.id);
-                if (mode.id === '2D') {
-                  // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
-                  requestAnimationFrame(() => {
-                    setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
-                  });
-                }
-              }}
-            >{mode.label}</button>
-          ))}
-        </div>
+        {canShowViewModeToggle && (
+          <div className={styles.segmentedControl}>
+            {viewModes.map((mode) => (
+              <button
+                key={mode.id}
+                data-view-mode={mode.id}
+                className={`${styles.segmentButton} ${styles.segmentAccent} ${viewMode === mode.id ? styles.segmentAccentActive : ''}`}
+                onClick={() => {
+                  onViewModeChange(mode.id);
+                  if (mode.id === '2D') {
+                    // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
+                    requestAnimationFrame(() => {
+                      setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
+                    });
+                  }
+                }}
+              >{mode.label}</button>
+            ))}
+          </div>
+        )}
 
 
         {/* 스캔/줄자 버튼 — 우측 패널 토글 옆 세로 배열로 이동 (Configurator/index.tsx 참조) */}

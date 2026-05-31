@@ -292,9 +292,9 @@
 .leftPanelToggle:hover {
   opacity: 1;
   width: 24px;
-  background: var(--theme-info);
+  background: var(--theme-primary);
   color: #fff;
-  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--theme-primary) 35%, transparent);
 }
 
 /* 우측 패널 컨테이너 */
@@ -339,9 +339,9 @@
 .rightPanelToggle:hover {
   opacity: 1;
   width: 24px;
-  background: var(--theme-info);
+  background: var(--theme-primary);
   color: #fff;
-  box-shadow: 0 2px 12px rgba(59, 130, 246, 0.35);
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--theme-primary) 35%, transparent);
 }
 
 @keyframes fadeIn {
