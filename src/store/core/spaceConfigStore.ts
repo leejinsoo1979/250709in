@@ -155,6 +155,15 @@ export interface FreePlacementGuideSlot {
   lowerDepth?: number; // 병합 슬롯의 하부 섹션 배치 깊이(mm)
   upperDepthGap?: number; // 병합 슬롯의 상부 섹션 뒷벽 갭(mm)
   lowerDepthGap?: number; // 병합 슬롯의 하부 섹션 뒷벽 갭(mm)
+  hasTopFrame?: boolean; // 슬롯별 상단몰딩 사용 여부
+  topFrameThickness?: number; // 슬롯별 상단몰딩 높이(mm)
+  topFrameOffset?: number; // 슬롯별 상단몰딩 옵셋(mm)
+  topFrameGap?: number; // 슬롯별 상단몰딩 갭/상단갭(mm)
+  hasBase?: boolean; // 슬롯별 걸레받이 사용 여부
+  baseFrameHeight?: number; // 슬롯별 걸레받이 높이(mm)
+  baseFrameOffset?: number; // 슬롯별 걸레받이 옵셋(mm)
+  baseFrameGap?: number; // 슬롯별 걸레받이 갭(mm)
+  individualFloatHeight?: number; // 걸레받이 OFF 시 슬롯별 띄움높이(mm)
 }
 
 // 공간 정보 타입
@@ -243,6 +252,9 @@ export interface SpaceInfo {
   freePlacementGuides?: FreePlacementGuideSlot[];
   // 자유배치 와리 가이드 편집 중 여부. true면 + 핫스팟 숨김, 폭 편집만 표시
   freePlacementGuideEditing?: boolean;
+  // 커스텀 슬롯 프레임 전체 설정 모드
+  guideTopFrameAllMode?: boolean;
+  guideBaseFrameAllMode?: boolean;
   // 좌측 아이콘바의 독립 커스텀 가이드 모드. 자유배치 layoutMode와 분리해서 동작한다.
   customGuideMode?: boolean;
   // 가이드 모드 상하분할 시 5단 높이 (mm). 전체 높이 = 몰딩+상부장+미드웨이+하부장+걸레받이 (고정)

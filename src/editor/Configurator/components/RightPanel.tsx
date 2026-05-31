@@ -3,7 +3,7 @@ import styles from './RightPanel.module.css';
 import commonStyles from '@/editor/shared/controls/styles/common.module.css';
 import doorStyles from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel.module.css';
 import { useUIStore } from '@/store/uiStore';
-import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES, type FreePlacementGuideSlot } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
@@ -909,6 +909,144 @@ const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): numbe
 
 const isShelfSplitModuleId = (moduleId?: string): boolean => !!moduleId?.includes('shelf-split');
 
+const GuideSlotFrameRow = React.memo(({
+  label,
+  enabled,
+  type,
+  size,
+  offset,
+  gap,
+  floatHeight = 0,
+  onToggle,
+  onSizeChange,
+  onOffsetChange,
+  onGapChange,
+  onFloatChange,
+}: {
+  label: string;
+  enabled: boolean;
+  type: 'top' | 'base';
+  size: number;
+  offset: number;
+  gap: number;
+  floatHeight?: number;
+  onToggle: () => void;
+  onSizeChange: (v: number) => void;
+  onOffsetChange: (v: number) => void;
+  onGapChange: (v: number) => void;
+  onFloatChange?: (v: number) => void;
+}) => {
+  const visibleSize = Math.max(0, size - gap);
+  const numberBoxStyle: React.CSSProperties = {
+    flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '2px',
+    border: '1px solid var(--theme-border)',
+    borderRadius: '4px',
+    padding: '2px 4px'
+  };
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    border: 'none',
+    outline: 'none',
+    fontSize: '12px',
+    textAlign: 'center',
+    background: 'transparent',
+    color: 'var(--theme-text-primary)'
+  };
+  const commit = (raw: string, cb: (v: number) => void, min = 0, max = 9999) => {
+    const parsed = Math.round(parseFloat(raw));
+    if (!Number.isFinite(parsed)) return;
+    cb(Math.max(min, Math.min(max, parsed)));
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+      <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{label}</span>
+      <button
+        type="button"
+        onClick={onToggle}
+        style={{
+          width: '36px',
+          height: '20px',
+          borderRadius: '10px',
+          border: '1px solid var(--theme-primary, #4a90d9)',
+          cursor: 'pointer',
+          backgroundColor: enabled ? 'var(--theme-primary, #4a90d9)' : 'transparent',
+          position: 'relative',
+          transition: 'background-color 0.2s',
+          flexShrink: 0,
+        }}
+      >
+        <span style={{
+          position: 'absolute',
+          top: '2px',
+          width: '14px',
+          height: '14px',
+          borderRadius: '50%',
+          backgroundColor: enabled ? '#fff' : 'var(--theme-primary, #4a90d9)',
+          transition: 'left 0.2s',
+          left: enabled ? '18px' : '2px',
+        }} />
+      </button>
+      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+        {enabled ? (
+          <>
+            <div style={numberBoxStyle}>
+              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                defaultValue={visibleSize || ''}
+                key={`${label}-${type}-size-${visibleSize}`}
+                onBlur={(e) => commit(e.target.value, (v) => onSizeChange(v + gap))}
+                style={inputStyle}
+              />
+            </div>
+            <div style={numberBoxStyle}>
+              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                defaultValue={offset || ''}
+                key={`${label}-${type}-offset-${offset}`}
+                onBlur={(e) => commit(e.target.value, onOffsetChange, -500, 500)}
+                style={inputStyle}
+              />
+            </div>
+            <div style={numberBoxStyle}>
+              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>갭</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                defaultValue={gap || ''}
+                key={`${label}-${type}-gap-${gap}`}
+                onBlur={(e) => commit(e.target.value, onGapChange, 0, 2000)}
+                style={inputStyle}
+              />
+            </div>
+          </>
+        ) : (
+          <div style={numberBoxStyle}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>
+              {type === 'top' ? '상단갭' : '띄움높이'}
+            </span>
+            <input
+              type="text"
+              inputMode="numeric"
+              defaultValue={(type === 'top' ? gap : floatHeight) || ''}
+              key={`${label}-${type}-off-${type === 'top' ? gap : floatHeight}`}
+              onBlur={(e) => commit(e.target.value, type === 'top' ? onGapChange : (onFloatChange || (() => undefined)), 0, 2000)}
+              style={inputStyle}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+});
+
 const RightPanel: React.FC<RightPanelProps> = ({
   activeTab,
   onTabChange,
@@ -942,12 +1080,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const { t, currentLanguage } = useTranslation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['space', 'layoutMode', 'layout', 'slotFrame'])
+    new Set(['space', 'layoutMode', 'layout', 'slotFrame', 'guideSlotTopFrame', 'guideSlotBaseFrame'])
   );
 
-  // 상부/걸래받이 '전체' 통합 모드 (기본 true: 통합 행 표시)
-  const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
-  const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
+  // 상부/걸래받이 '전체' 통합 모드: 우측바와 슬롯 설정모드가 같은 spaceInfo 값만 사용한다.
+  const topFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+  const baseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+  const setTopFrameAllMode = (next: boolean) => setSpaceInfo({ guideTopFrameAllMode: next });
+  const setBaseFrameAllMode = (next: boolean) => setSpaceInfo({ guideBaseFrameAllMode: next });
 
   // 사용자가 설정한 기본 프레임/받침대 디폴트 (없으면 시스템 폴백)
   const [userDefaults, setUserDefaults] = useState<{ frameTop?: number; baseHeight?: number }>({});
@@ -1467,6 +1607,197 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 />
               </FormControl>
             )}
+
+            {/* 커스텀 슬롯 설정: 상단몰딩/걸레받이 */}
+            {(() => {
+              const guideSlots = spaceInfo.freePlacementGuides || [];
+              const showGuideFrameSettings =
+                spaceInfo.layoutMode === 'free-placement'
+                && spaceInfo.customGuideMode === true
+                && spaceInfo.freePlacementGuideEditing === true
+                && guideSlots.length > 0;
+              if (!showGuideFrameSettings) return null;
+
+              const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+              const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+              const topFrameSlots = guideSlots
+                .filter((slot) => (slot.guideZone || 'full') !== 'lower')
+                .sort((a, b) => a.x - b.x || a.index - b.index);
+              const baseFrameSlots = guideSlots
+                .filter((slot) => (slot.guideZone || 'full') !== 'upper')
+                .sort((a, b) => a.x - b.x || a.index - b.index);
+              const frameSize = (spaceInfo.frameSize || {}) as any;
+              const baseConfig = (spaceInfo.baseConfig || {}) as any;
+              const globalTopRaw = spaceInfo.frameSize?.top ?? userDefaults.frameTop ?? 30;
+              const globalTopGap = Math.max(0, frameSize.topGap ?? 0);
+              const globalTopEnabled = globalTopRaw > 0;
+              const globalTopThickness = globalTopRaw > 0 ? globalTopRaw : Math.max(30, globalTopGap);
+              const globalTopOffset = frameSize.topOffset ?? 0;
+              const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
+              const globalBaseHeight = globalBaseEnabled
+                ? (spaceInfo.baseConfig?.height ?? userDefaults.baseHeight ?? 65)
+                : Math.max(65, spaceInfo.baseConfig?.height || userDefaults.baseHeight || 65);
+              const globalBaseOffset = baseConfig.offset ?? 0;
+              const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? 0) : 0;
+              const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
+              const updateGuideSlotFrame = (slotId: string, updates: Partial<FreePlacementGuideSlot>) => {
+                setSpaceInfo({
+                  freePlacementGuides: guideSlots.map((slot) => (
+                    slot.id === slotId ? { ...slot, ...updates } : slot
+                  ))
+                });
+              };
+              const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? globalTopEnabled;
+              const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
+                slot.topFrameThickness ?? (globalTopRaw > 0 ? globalTopRaw : Math.max(30, slot.topFrameGap ?? globalTopGap))
+              );
+              const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
+                getSlotTopEnabled(slot) ? Math.max(0, slot.topFrameGap ?? 0) : Math.max(0, slot.topFrameGap ?? globalTopGap)
+              );
+              const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
+              const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
+                slot.baseFrameHeight ?? (globalBaseHeight > 0 ? globalBaseHeight : 65)
+              );
+              const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
+                getSlotBaseEnabled(slot) ? Math.max(0, slot.baseFrameGap ?? 0) : 0
+              );
+
+              return (
+                <>
+                  <FormControl
+                    label="상단몰딩"
+                    expanded={expandedSections.has('guideSlotTopFrame')}
+                    onToggle={() => toggleSection('guideSlotTopFrame')}
+                    helpText="커스텀 슬롯의 상단몰딩을 전체 또는 슬롯별로 설정합니다."
+                    headerAccessory={
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={guideTopFrameAllMode}
+                          onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                          style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                        />
+                        <span>전체</span>
+                      </label>
+                    }
+                  >
+                    {guideTopFrameAllMode ? (
+                      <GuideSlotFrameRow
+                        label="전체"
+                        enabled={globalTopEnabled}
+                        type="top"
+                        size={globalTopThickness}
+                        offset={globalTopOffset}
+                        gap={globalTopEnabled ? globalTopGap : Math.max(0, globalTopGap || globalTopThickness)}
+                        onToggle={() => {
+                          setSpaceInfo({
+                            frameSize: globalTopEnabled
+                              ? { ...frameSize, top: 0, topGap: Math.max(0, globalTopGap || globalTopThickness) }
+                              : { ...frameSize, top: Math.max(1, globalTopGap || globalTopThickness || 30), topGap: 0 }
+                          });
+                        }}
+                        onSizeChange={(v) => setSpaceInfo({ frameSize: { ...frameSize, top: v } })}
+                        onOffsetChange={(v) => setSpaceInfo({ frameSize: { ...frameSize, topOffset: v } })}
+                        onGapChange={(v) => setSpaceInfo({ frameSize: { ...frameSize, topGap: Math.max(0, v) } })}
+                      />
+                    ) : (
+                      topFrameSlots.map((slot, idx) => {
+                        const enabled = getSlotTopEnabled(slot);
+                        const gap = getSlotTopGap(slot);
+                        const thickness = getSlotTopThickness(slot);
+                        return (
+                          <GuideSlotFrameRow
+                            key={`guide-top-${slot.id}`}
+                            label={`슬롯 ${idx + 1}`}
+                            enabled={enabled}
+                            type="top"
+                            size={thickness}
+                            offset={slot.topFrameOffset ?? globalTopOffset}
+                            gap={gap}
+                            onToggle={() => updateGuideSlotFrame(slot.id, {
+                              hasTopFrame: !enabled,
+                              topFrameGap: enabled ? thickness : 0,
+                              topFrameThickness: thickness
+                            })}
+                            onSizeChange={(v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v })}
+                            onOffsetChange={(v) => updateGuideSlotFrame(slot.id, { topFrameOffset: v })}
+                            onGapChange={(v) => updateGuideSlotFrame(slot.id, { topFrameGap: Math.max(0, v) })}
+                          />
+                        );
+                      })
+                    )}
+                  </FormControl>
+
+                  <FormControl
+                    label="걸레받이"
+                    expanded={expandedSections.has('guideSlotBaseFrame')}
+                    onToggle={() => toggleSection('guideSlotBaseFrame')}
+                    helpText="커스텀 슬롯의 걸레받이를 전체 또는 슬롯별로 설정합니다."
+                    headerAccessory={
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={guideBaseFrameAllMode}
+                          onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
+                          style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                        />
+                        <span>전체</span>
+                      </label>
+                    }
+                  >
+                    {guideBaseFrameAllMode ? (
+                      <GuideSlotFrameRow
+                        label="전체"
+                        enabled={globalBaseEnabled}
+                        type="base"
+                        size={globalBaseHeight}
+                        offset={globalBaseOffset}
+                        gap={globalBaseGap}
+                        floatHeight={globalFloatHeight}
+                        onToggle={() => {
+                          setSpaceInfo({
+                            baseConfig: globalBaseEnabled
+                              ? { ...baseConfig, type: 'stand', placementType: 'float', height: 0, floatHeight: 0 }
+                              : { ...baseConfig, type: 'floor', placementType: 'ground', height: Math.max(1, globalBaseHeight || 65), floatHeight: 0 }
+                          });
+                        }}
+                        onSizeChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, type: 'floor', placementType: 'ground', height: v } })}
+                        onOffsetChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, offset: v } })}
+                        onGapChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, gap: Math.max(0, v) } })}
+                        onFloatChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, type: 'stand', placementType: 'float', height: 0, floatHeight: v } })}
+                      />
+                    ) : (
+                      baseFrameSlots.map((slot, idx) => {
+                        const enabled = getSlotBaseEnabled(slot);
+                        const gap = getSlotBaseGap(slot);
+                        const baseHeightValue = getSlotBaseHeight(slot);
+                        return (
+                          <GuideSlotFrameRow
+                            key={`guide-base-${slot.id}`}
+                            label={`슬롯 ${idx + 1}`}
+                            enabled={enabled}
+                            type="base"
+                            size={baseHeightValue}
+                            offset={slot.baseFrameOffset ?? globalBaseOffset}
+                            gap={gap}
+                            floatHeight={slot.individualFloatHeight ?? 0}
+                            onToggle={() => updateGuideSlotFrame(slot.id, {
+                              hasBase: !enabled,
+                              individualFloatHeight: enabled ? 0 : slot.individualFloatHeight ?? 0,
+                              baseFrameHeight: baseHeightValue
+                            })}
+                            onSizeChange={(v) => updateGuideSlotFrame(slot.id, { baseFrameHeight: v })}
+                            onOffsetChange={(v) => updateGuideSlotFrame(slot.id, { baseFrameOffset: v })}
+                            onGapChange={(v) => updateGuideSlotFrame(slot.id, { baseFrameGap: Math.max(0, v) })}
+                            onFloatChange={(v) => updateGuideSlotFrame(slot.id, { individualFloatHeight: v })}
+                          />
+                        );
+                      })
+                    )}
+                  </FormControl>
+                </>
+              );
+            })()}
 
             {/* 슬롯배치: 모든 가구의 상,걸래받이 개별 설정 (자유배치와 동일 형태) */}
             {(() => {

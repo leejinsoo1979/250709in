@@ -12,6 +12,7 @@ import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/auth/AuthProvider';
+import { useAlert } from '@/contexts/AlertContext';
 import { viewCubeRequest } from '@/editor/shared/viewer3d/components/base/components/AxisArrowsGizmo';
 import { getFreePlacementGuideBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { isSuperAdmin } from '@/firebase/admins';
@@ -88,7 +89,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const isAllowedUser = isSuperAdmin(user?.email);
   const canCreateFreePlacementGuide = true;
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
+  const { placedModules, isFurniturePlacementMode, clearAllModules, setSelectedFurnitureId, setFurniturePlacementMode, setCurrentDragData } = useFurnitureStore();
+  const { showAlert } = useAlert();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
   const isFreePlacement = spaceInfo?.layoutMode === 'free-placement';
   const isCustomSlotMode = spaceInfo?.customGuideMode === true
@@ -318,6 +320,40 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     openGuideDialog();
   };
 
+  const enterGuideSlotEditMode = () => {
+    useUIStore.getState().setSelectedSlotIndex(null);
+    useUIStore.getState().setSelectedFurnitureId(null);
+    useUIStore.getState().closeAllPopups();
+    setSelectedFurnitureId(null);
+    setFurniturePlacementMode(false);
+    setCurrentDragData(null);
+    setSpaceInfo({
+      freePlacementGuideEditing: true,
+      freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((slot) => ({ ...slot, confirmed: false })),
+    });
+  };
+
+  const handleGuideSlotEditClick = () => {
+    if (spaceInfo?.freePlacementGuideEditing) {
+      void handleGuideButtonClick();
+      return;
+    }
+
+    if (placedModules.length > 0) {
+      showAlert('슬롯을 수정하면 현재 배치된 가구가 모두 사라집니다. 계속하시겠습니까?', {
+        title: '슬롯 수정',
+        showCancel: true,
+        onConfirm: () => {
+          clearAllModules();
+          enterGuideSlotEditMode();
+        }
+      });
+      return;
+    }
+
+    enterGuideSlotEditMode();
+  };
+
   useEffect(() => {
     const handleGuideToggle = () => {
       if (!canCreateFreePlacementGuide) return;
@@ -538,18 +574,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         <button
           type="button"
           className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive} ${styles.guideSlotEditButton}`}
-          onClick={() => {
-            if (spaceInfo?.freePlacementGuideEditing) {
-              // 배치시작: 가이드 확정
-              handleGuideButtonClick();
-            } else {
-              // 슬롯수정: 편집 모드로 + 슬롯 confirmed 해제 → 너비 수정/추가 가능
-              setSpaceInfo({
-                freePlacementGuideEditing: true,
-                freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((s) => ({ ...s, confirmed: false })),
-              });
-            }
-          }}
+          onClick={handleGuideSlotEditClick}
           title={spaceInfo?.freePlacementGuideEditing ? '배치시작' : '슬롯수정'}
         >
           <Grid3X3 size={18} />

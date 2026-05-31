@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Html } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
 import { DoubleSide } from 'three';
 import { Plus } from 'lucide-react';
 import { useSpaceConfigStore, type FreePlacementGuideSlot } from '@/store/core/spaceConfigStore';
@@ -311,6 +312,7 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
  * - 듀얼 가구: 연속된 두 빈 슬롯의 중심에 + 표시
  */
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
+  const { camera } = useThree();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules, updatePlacedModule } = useFurnitureStore();
   const {
@@ -334,6 +336,36 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const isCustomGuideMode = spaceInfo.customGuideMode === true;
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
   const isGuidePlacementMode = isFreePlacement || isCustomGuideMode;
+  const shouldScaleGuideHtml = isCustomGuideMode && spaceInfo.freePlacementGuideEditing === true;
+  const guideHtmlBaseZoomRef = useRef<number | null>(null);
+  const guideHtmlScaleRef = useRef(1);
+  const [guideHtmlScale, setGuideHtmlScale] = useState(1);
+
+  useEffect(() => {
+    guideHtmlBaseZoomRef.current = null;
+    guideHtmlScaleRef.current = 1;
+    setGuideHtmlScale(1);
+  }, [shouldScaleGuideHtml, viewMode, view2DDirection, guideDepthEditMode]);
+
+  useFrame(() => {
+    if (!shouldScaleGuideHtml) return;
+    const currentZoom = typeof camera.zoom === 'number' ? camera.zoom : 1;
+    if (!Number.isFinite(currentZoom) || currentZoom <= 0) return;
+    if (guideHtmlBaseZoomRef.current === null) {
+      guideHtmlBaseZoomRef.current = currentZoom;
+    }
+    const baseZoom = guideHtmlBaseZoomRef.current || currentZoom;
+    const nextScale = Math.max(0.45, Math.min(2.2, currentZoom / baseZoom));
+    if (Math.abs(nextScale - guideHtmlScaleRef.current) < 0.015) return;
+    guideHtmlScaleRef.current = nextScale;
+    setGuideHtmlScale(nextScale);
+  });
+
+  const guideHtmlScaleStyle = useMemo<React.CSSProperties>(() => (
+    shouldScaleGuideHtml
+      ? { transform: `scale(${guideHtmlScale})`, transformOrigin: 'center center' }
+      : {}
+  ), [guideHtmlScale, shouldScaleGuideHtml]);
 
   useEffect(() => {
     if (selectedGuideSlotIds.length === 0) return;
@@ -1031,6 +1063,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     widthValue: number
   ): FreePlacementGuideSlot[] | null => {
     if ((targetSlot.guideZone || 'full') !== 'full') return null;
+    if (getMergedGuideFamilySlots(sourceSlots, targetSlot).length > 1) return null;
     const hasSplitSlots = sourceSlots.some((slot) => {
       const zone = slot.guideZone || 'full';
       return zone === 'upper' || zone === 'lower';
@@ -1110,15 +1143,15 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const targetSlot = sourceSlots.find((slot) => slot.id === slotId);
     if (!targetSlot) return;
 
-    const redistributedFullColumns = redistributeFullGuideSlotWidthAcrossColumns(sourceSlots, targetSlot, widthValue);
-    if (redistributedFullColumns) {
-      setSpaceInfo({ freePlacementGuides: redistributedFullColumns });
-      return;
-    }
-
     const redistributedMergedFamily = redistributeMergedGuideFamilyWidth(sourceSlots, targetSlot, widthValue);
     if (redistributedMergedFamily) {
       setSpaceInfo({ freePlacementGuides: redistributedMergedFamily });
+      return;
+    }
+
+    const redistributedFullColumns = redistributeFullGuideSlotWidthAcrossColumns(sourceSlots, targetSlot, widthValue);
+    if (redistributedFullColumns) {
+      setSpaceInfo({ freePlacementGuides: redistributedFullColumns });
       return;
     }
 
@@ -2080,6 +2113,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       if (zone === 'lower' && hasSplitSlots) return splitLowerWidthLabelY;
       return fullHeight + 0.28;
     };
+    const shouldShowSlotWidthLabel = (slot: FreePlacementGuideSlot) => (
+      !(hasSplitSlots && (slot.guideZone || 'full') === 'full')
+    );
     const unconfirmedSummaryKeys = Array.from(new Set(
       guideSlots
         .filter((slot) => !slot.confirmed)
@@ -2232,6 +2268,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             zIndexRange={[200, 0]}
             style={{ pointerEvents: editable ? 'auto' : 'none', userSelect: 'none', background: 'transparent' }}
           >
+            <div style={guideHtmlScaleStyle}>
             {editable ? (
               <input
                 type="number"
@@ -2262,65 +2299,371 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 {Math.round(tier.value)}
               </div>
             )}
+            </div>
           </Html>
         );
       });
 
-    // 상단몰딩 옵셋 / 걸레받이 옵셋·갭 편집기 (우측바와 연동) — 중앙 상/하단에 표시
-    const offsetGapEditorStyle: React.CSSProperties = {
-      width: 38, padding: '2px 3px', fontSize: 12, fontWeight: 600, textAlign: 'center',
-      border: `1.5px dashed ${guideColor}`, borderRadius: 4, outline: 'none',
-      background: 'rgba(255,255,255,0.95)', color: guideColor, lineHeight: 1.1,
+    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+    const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+    const isGlobalTopFrameEnabled = gTopMolding > 0;
+    const isGlobalBaseFrameEnabled = !isFloatingBase && gBaseboard > 0;
+    const topFrameSlots = guideSlots
+      .filter((slot) => (slot.guideZone || 'full') !== 'lower')
+      .sort((a, b) => a.x - b.x || a.index - b.index);
+    const baseFrameSlots = guideSlots
+      .filter((slot) => (slot.guideZone || 'full') !== 'upper')
+      .sort((a, b) => a.x - b.x || a.index - b.index);
+    const toAlpha = (n: number) => String.fromCharCode(64 + n);
+    const commitNumber = (raw: string, commit: (v: number) => void, min = 0, max = 9999) => {
+      const parsed = Math.round(parseFloat(raw));
+      if (!Number.isFinite(parsed)) return;
+      commit(Math.max(min, Math.min(max, parsed)));
     };
-    const offsetGapField = (labelText: string, val: number, commit: (v: number) => void, kkey: string) => (
-      <div key={kkey} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap' }}>{labelText}</span>
+    const updateGuideSlotFrame = (slotId: string, updates: Partial<FreePlacementGuideSlot>) => {
+      setSpaceInfo({
+        freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((slot) => (
+          slot.id === slotId ? { ...slot, ...updates } : slot
+        ))
+      });
+    };
+    const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? isGlobalTopFrameEnabled;
+    const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
+      slot.topFrameThickness ?? (gTopMolding > 0 ? gTopMolding : Math.max(30, slot.topFrameGap ?? gMoldingGap))
+    );
+    const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
+      getSlotTopEnabled(slot) ? (slot.topFrameGap ?? 0) : (slot.topFrameGap ?? gMoldingGap)
+    );
+    const getSlotTopVisibleSize = (slot: FreePlacementGuideSlot) => (
+      getSlotTopEnabled(slot) ? Math.max(0, getSlotTopThickness(slot) - getSlotTopGap(slot)) : 0
+    );
+    const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? isGlobalBaseFrameEnabled;
+    const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
+      slot.baseFrameHeight ?? (gBaseboard > 0 ? gBaseboard : (spaceInfo.baseConfig?.height || 65))
+    );
+    const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
+      getSlotBaseEnabled(slot) ? (slot.baseFrameGap ?? 0) : 0
+    );
+    const getSlotBaseVisibleSize = (slot: FreePlacementGuideSlot) => (
+      getSlotBaseEnabled(slot) ? Math.max(0, getSlotBaseHeight(slot) - getSlotBaseGap(slot)) : 0
+    );
+    const frameEditorPanelStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      padding: 0,
+      background: 'transparent',
+      boxShadow: 'none'
+    };
+    const frameRowsStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      flexWrap: 'nowrap'
+    };
+    const frameRowStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4,
+      padding: 0,
+      background: 'transparent'
+    };
+    const makeFrameInputStyle = (compact = false): React.CSSProperties => ({
+      width: compact ? 26 : 36,
+      padding: '2px 3px',
+      fontSize: compact ? 10 : 11,
+      fontWeight: 700,
+      textAlign: 'center',
+      border: `1.5px solid ${guideColor}`,
+      borderRadius: 4,
+      outline: 'none',
+      background: 'color-mix(in srgb, var(--theme-background) 88%, transparent)',
+      color: guideColor,
+      lineHeight: 1.1
+    });
+    const frameToggleStyle = (enabled: boolean): React.CSSProperties => ({
+      width: 24,
+      height: 14,
+      padding: 0,
+      borderRadius: 999,
+      border: `1.5px solid ${guideColor}`,
+      background: enabled ? 'color-mix(in srgb, var(--theme-primary) 18%, transparent)' : 'transparent',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: enabled ? 'flex-end' : 'flex-start'
+    });
+    const frameToggleKnobStyle: React.CSSProperties = {
+      width: 8,
+      height: 8,
+      margin: 2,
+      borderRadius: '50%',
+      background: guideColor,
+      boxShadow: '0 1px 2px rgba(15, 23, 42, 0.22)'
+    };
+    const frameField = (labelText: string, value: number, commit: (v: number) => void, keyName: string, min = 0, max = 9999, compact = false) => (
+      <label key={keyName} style={{ display: 'flex', alignItems: 'center', gap: compact ? 1 : 2 }}>
+        {labelText && !compact && <span style={{ fontSize: 9, fontWeight: 800, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap' }}>{labelText}</span>}
         <input
           type="number"
-          defaultValue={Math.round(val)}
-          key={`${kkey}-${Math.round(val)}`}
+          aria-label={labelText || keyName}
+          defaultValue={Math.round(value)}
+          key={`${keyName}-${Math.round(value)}`}
           onPointerDown={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-          onBlur={(e) => { const n = Math.round(parseFloat(e.target.value)); if (Number.isFinite(n)) commit(n); }}
-          style={offsetGapEditorStyle}
+          onBlur={(e) => commitNumber(e.target.value, commit, min, max)}
+          style={makeFrameInputStyle(compact)}
         />
+      </label>
+    );
+    const topAllSize = Math.max(0, gMoldingVisible);
+    const baseAllSize = Math.max(0, gBaseboardVisible);
+    const renderTopFrameEditorRow = (
+      labelText: string,
+      enabled: boolean,
+      size: number,
+      offset: number,
+      gap: number,
+      onToggle: () => void,
+      onSize: (v: number) => void,
+      onOffset: (v: number) => void,
+      onGap: (v: number) => void,
+      compact = false
+    ) => (
+      <div key={`top-frame-row-${labelText}`} style={{ ...frameRowStyle, gap: compact ? 2 : 4 }}>
+        {labelText && <span style={{ minWidth: 28, color: guideColor, fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap' }}>{labelText}</span>}
+        <button type="button" aria-label="상단몰딩 토글" onClick={onToggle} style={frameToggleStyle(enabled)}>
+          <span style={frameToggleKnobStyle} />
+        </button>
+        {enabled ? (
+          <>
+            {frameField('', size, onSize, `${labelText}-top-size`, 0, 9999, compact)}
+            {frameField('옵셋', offset, onOffset, `${labelText}-top-offset`, -500, 500, compact)}
+            {frameField('갭', gap, onGap, `${labelText}-top-gap`, 0, 2000, compact)}
+          </>
+        ) : (
+          frameField(compact ? '갭' : '상단갭', gap, onGap, `${labelText}-top-clearance`, 0, 2000, compact)
+        )}
       </div>
     );
-    const renderOffsetGapEditors = () => (
+    const renderBaseFrameEditorRow = (
+      labelText: string,
+      enabled: boolean,
+      size: number,
+      offset: number,
+      gap: number,
+      floatHeight: number,
+      onToggle: () => void,
+      onSize: (v: number) => void,
+      onOffset: (v: number) => void,
+      onGap: (v: number) => void,
+      onFloat: (v: number) => void,
+      compact = false
+    ) => (
+      <div key={`base-frame-row-${labelText}`} style={{ ...frameRowStyle, gap: compact ? 2 : 4 }}>
+        {labelText && <span style={{ minWidth: 28, color: guideColor, fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap' }}>{labelText}</span>}
+        <button type="button" aria-label="걸레받이 토글" onClick={onToggle} style={frameToggleStyle(enabled)}>
+          <span style={frameToggleKnobStyle} />
+        </button>
+        {enabled ? (
+          <>
+            {frameField('', size, onSize, `${labelText}-base-size`, 0, 9999, compact)}
+            {frameField('옵셋', offset, onOffset, `${labelText}-base-offset`, -500, 500, compact)}
+            {frameField('갭', gap, onGap, `${labelText}-base-gap`, 0, 2000, compact)}
+          </>
+        ) : (
+          frameField(compact ? '띄움' : '띄움높이', floatHeight, onFloat, `${labelText}-base-float`, 0, 2000, compact)
+        )}
+      </div>
+    );
+    const renderFrameSettingEditors = () => (
       <>
-        {/* 상단몰딩 옵셋 — 몰딩 구간 중앙(상단 가까이) */}
-        {gTopMolding > 0 && (
+        {guideTopFrameAllMode ? (
           <Html
-            key="guide-molding-offset"
+            key="guide-top-frame-settings"
             position={[0, ((yUpperTop + fullHeightMm) / 2) * 0.01, guideZ]}
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {offsetGapField('옵셋', gMoldingOffset, (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topOffset: v } }), 'molding-offset')}
-              {offsetGapField('갭', gMoldingGap, (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topGap: v } }), 'molding-gap')}
+            <div style={{ ...frameEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 3, color: guideColor, fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input
+                  type="checkbox"
+                  checked={guideTopFrameAllMode}
+                  onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                  style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
+                />
+                <span>전체</span>
+              </label>
+              <div style={frameRowsStyle}>
+                {renderTopFrameEditorRow(
+                  '',
+                  isGlobalTopFrameEnabled,
+                  topAllSize,
+                  gMoldingOffset,
+                  isGlobalTopFrameEnabled ? gMoldingGap : gTopClearance,
+                  () => {
+                    setSpaceInfo({
+                      frameSize: isGlobalTopFrameEnabled
+                        ? { ...(spaceInfo.frameSize as any), top: 0, topGap: Math.max(0, gTopClearance) }
+                        : { ...(spaceInfo.frameSize as any), top: Math.max(1, gMoldingGap || gTopClearance || 30), topGap: 0 }
+                    });
+                  },
+                  (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), top: v + gMoldingGap } }),
+                  (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topOffset: v } }),
+                  (v) => setSpaceInfo({ frameSize: { ...(spaceInfo.frameSize as any), topGap: Math.max(0, v) } })
+                )}
+              </div>
             </div>
           </Html>
+        ) : (
+          <>
+            <Html
+              key="guide-top-frame-all-toggle"
+              position={[0, fullHeight + 0.52, guideZ]}
+              center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+            >
+              <label style={{ display: 'flex', alignItems: 'center', gap: 3, color: guideColor, fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap', ...guideHtmlScaleStyle }}>
+                <input
+                  type="checkbox"
+                  checked={guideTopFrameAllMode}
+                  onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                  style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
+                />
+                <span>전체</span>
+              </label>
+            </Html>
+            {topFrameSlots.map((slot) => {
+              const enabled = getSlotTopEnabled(slot);
+              const topGap = getSlotTopGap(slot);
+              const thickness = getSlotTopThickness(slot);
+              const [slotStartY, slotEndY] = getSlotYRange(slot);
+              const slotCenterX = (slot.x + slot.width / 2 - spaceHalfWidth) * 0.01;
+              const slotTopControlY = Math.max(slotStartY + 0.4, slotEndY - 0.75);
+              return (
+                <Html
+                  key={`guide-top-frame-slot-${slot.id}`}
+                  position={[slotCenterX, slotTopControlY, guideZ]}
+                  center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+                >
+                  <div style={{ ...frameEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
+                    {renderTopFrameEditorRow(
+                      '',
+                      enabled,
+                      getSlotTopVisibleSize(slot),
+                      slot.topFrameOffset ?? gMoldingOffset,
+                      topGap,
+                      () => updateGuideSlotFrame(slot.id, {
+                        hasTopFrame: !enabled,
+                        topFrameGap: enabled ? thickness : 0,
+                        topFrameThickness: thickness
+                      }),
+                      (v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v + topGap }),
+                      (v) => updateGuideSlotFrame(slot.id, { topFrameOffset: v }),
+                      (v) => updateGuideSlotFrame(slot.id, { topFrameGap: Math.max(0, v) }),
+                      true
+                    )}
+                  </div>
+                </Html>
+              );
+            })}
+          </>
         )}
-        {/* 걸레받이 옵셋·갭 — 걸레받이 구간 중앙(하단 가까이) */}
-        {!isFloatingBase && gBaseboard > 0 && (
+        {guideBaseFrameAllMode ? (
           <Html
-            key="guide-base-offsetgap"
+            key="guide-base-frame-settings"
             position={[0, (yBaseTop / 2) * 0.01, guideZ]}
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {offsetGapField('옵셋', gBaseOffset, (v) => {
-                if (guideBaseReferenceModule) updatePlacedModule(guideBaseReferenceModule.id, { baseFrameOffset: v });
-                setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } });
-              }, 'base-offset')}
-              {offsetGapField('갭', gBaseGap, (v) => {
-                const nextGap = Math.max(0, Math.min(gBaseboard, v));
-                if (guideBaseReferenceModule) updatePlacedModule(guideBaseReferenceModule.id, { baseFrameGap: nextGap });
-                setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: nextGap } });
-              }, 'base-gap')}
+            <div style={{ ...frameEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 3, color: guideColor, fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input
+                  type="checkbox"
+                  checked={guideBaseFrameAllMode}
+                  onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
+                  style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
+                />
+                <span>전체</span>
+              </label>
+              <div style={frameRowsStyle}>
+                {renderBaseFrameEditorRow(
+                  '',
+                  isGlobalBaseFrameEnabled,
+                  baseAllSize,
+                  gBaseOffset,
+                  gBaseGap,
+                  gFloatHeight,
+                  () => {
+                    setSpaceInfo({
+                      baseConfig: isGlobalBaseFrameEnabled
+                        ? { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', height: 0, floatHeight: 0 }
+                        : { ...(spaceInfo.baseConfig as any), type: 'floor', placementType: 'ground', height: Math.max(1, spaceInfo.baseConfig?.height || 65) }
+                    });
+                  },
+                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), type: 'floor', height: v + gBaseGap } }),
+                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } }),
+                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: Math.max(0, v) } }),
+                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', height: 0, floatHeight: v } })
+                )}
+              </div>
             </div>
           </Html>
+        ) : (
+          <>
+            <Html
+              key="guide-base-frame-all-toggle"
+              position={[0, -0.52, guideZ]}
+              center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+            >
+              <label style={{ display: 'flex', alignItems: 'center', gap: 3, color: guideColor, fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap', ...guideHtmlScaleStyle }}>
+                <input
+                  type="checkbox"
+                  checked={guideBaseFrameAllMode}
+                  onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
+                  style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
+                />
+                <span>전체</span>
+              </label>
+            </Html>
+            {baseFrameSlots.map((slot) => {
+              const enabled = getSlotBaseEnabled(slot);
+              const baseGap = getSlotBaseGap(slot);
+              const baseHeight = getSlotBaseHeight(slot);
+              const [slotStartY, slotEndY] = getSlotYRange(slot);
+              const slotCenterX = (slot.x + slot.width / 2 - spaceHalfWidth) * 0.01;
+              const slotBaseControlY = Math.min(slotEndY - 0.4, slotStartY + 0.75);
+              return (
+                <Html
+                  key={`guide-base-frame-slot-${slot.id}`}
+                  position={[slotCenterX, slotBaseControlY, guideZ]}
+                  center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
+                >
+                  <div style={{ ...frameEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
+                    {renderBaseFrameEditorRow(
+                      '',
+                      enabled,
+                      getSlotBaseVisibleSize(slot),
+                      slot.baseFrameOffset ?? gBaseOffset,
+                      baseGap,
+                      slot.individualFloatHeight ?? 0,
+                      () => updateGuideSlotFrame(slot.id, {
+                        hasBase: !enabled,
+                        individualFloatHeight: enabled ? 0 : slot.individualFloatHeight ?? 0,
+                        baseFrameHeight: baseHeight
+                      }),
+                      (v) => updateGuideSlotFrame(slot.id, { baseFrameHeight: v + baseGap }),
+                      (v) => updateGuideSlotFrame(slot.id, { baseFrameOffset: v }),
+                      (v) => updateGuideSlotFrame(slot.id, { baseFrameGap: Math.max(0, v) }),
+                      (v) => updateGuideSlotFrame(slot.id, { individualFloatHeight: v }),
+                      true
+                    )}
+                  </div>
+                </Html>
+              );
+            })}
+          </>
         )}
       </>
     );
@@ -2328,8 +2671,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // 전체 폭 공통 경계(바닥/걸레받이상단/상부장상단/천장): 몰딩·걸레받이는 전체 공통
     const fullWidthBoundaryYmm = [
       0,
-      ...(gBaseGap > 0 ? [yBaseGapTop] : []),
-      yBaseTop,
+      ...(guideBaseFrameAllMode && gBaseGap > 0 ? [yBaseGapTop] : []),
+      ...(guideBaseFrameAllMode ? [yBaseTop] : []),
       yUpperTop,
       ...(gMoldingGap > 0 ? [yMoldingGapBottom] : []),
       fullHeightMm
@@ -2367,10 +2710,112 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         ))
       ),
     ];
+    const renderFrameSectionHorizontalLines = () => {
+      const makeSectionLines = (
+        slots: FreePlacementGuideSlot[],
+        yValuesMm: number[],
+        sectionKey: string
+      ) => slots.flatMap((slot) => {
+        const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
+        const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+        const isSelected = selectedGuideSlotIds.includes(slot.id);
+        const lineProps = {
+          color: guideColor,
+          lineWidth: isSelected ? 2.6 : 1.2,
+          dashed: true,
+          dashSize: 0.08,
+          gapSize: 0.05,
+          opacity: isSelected ? 0.95 : 0.42,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false,
+          renderOrder: 100001,
+        } as const;
+
+        return yValuesMm.map((ymm) => (
+          <NativeLine
+            key={`free-guide-${sectionKey}-boundary-y-${ymm}-${slot.id}`}
+            name="free-placement-guide-line"
+            points={[[leftX, ymm * 0.01, guideZ], [rightX, ymm * 0.01, guideZ]]}
+            {...lineProps}
+          />
+        ));
+      });
+
+      const enabledBaseSlots = baseFrameSlots.filter(getSlotBaseEnabled);
+
+      return [
+        ...(!guideBaseFrameAllMode
+          ? makeSectionLines(
+            enabledBaseSlots,
+            [
+              ...(gBaseGap > 0 ? [yBaseGapTop] : []),
+              yBaseTop
+            ],
+            'base-frame'
+          )
+          : [])
+      ];
+    };
+    const renderFrameSectionVerticalLines = () => {
+      const makeSectionLines = (
+        slots: FreePlacementGuideSlot[],
+        startYmm: number,
+        endYmm: number,
+        sectionKey: string
+      ) => {
+        if (endYmm - startYmm <= 0.5) return [];
+        const visibleSlots = slots.filter((slot) => (
+          sectionKey !== 'base-frame' || getSlotBaseEnabled(slot)
+        ));
+
+        return visibleSlots.flatMap((slot) => {
+          const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
+          const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+          const startY = startYmm * 0.01;
+          const endY = endYmm * 0.01;
+          const isSelected = selectedGuideSlotIds.includes(slot.id);
+          const lineProps = {
+            color: guideColor,
+            lineWidth: isSelected ? 2.6 : 1.2,
+            dashed: true,
+            dashSize: 0.08,
+            gapSize: 0.05,
+            opacity: isSelected ? 0.95 : 0.42,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+            renderOrder: 100001,
+          } as const;
+
+          return [
+            <NativeLine
+              key={`free-guide-${sectionKey}-boundary-left-${slot.id}`}
+              name="free-placement-guide-line"
+              points={[[leftX, startY, guideZ], [leftX, endY, guideZ]]}
+              {...lineProps}
+            />,
+            <NativeLine
+              key={`free-guide-${sectionKey}-boundary-right-${slot.id}`}
+              name="free-placement-guide-line"
+              points={[[rightX, startY, guideZ], [rightX, endY, guideZ]]}
+              {...lineProps}
+            />
+          ];
+        });
+      };
+
+      return [
+        ...(!guideTopFrameAllMode ? makeSectionLines(topFrameSlots, yUpperTop, fullHeightMm, 'top-frame') : []),
+        ...(!guideBaseFrameAllMode ? makeSectionLines(baseFrameSlots, 0, yBaseTop, 'base-frame') : [])
+      ];
+    };
 
     return (
       <>
         {hasSplitSlots && renderTierLines()}
+        {hasSplitSlots && renderFrameSectionHorizontalLines()}
+        {hasSplitSlots && renderFrameSectionVerticalLines()}
         {isGuideEditing && selectedGuideSlotIds.length > 0 && (
           <mesh
             key="free-guide-slot-selection-clear-plane"
@@ -2435,7 +2880,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         ))}
         {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01, isGuideEditing)}
         {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01, isGuideEditing)}
-        {hasSplitSlots && isGuideEditing && renderOffsetGapEditors()}
+        {hasSplitSlots && isGuideEditing && renderFrameSettingEditors()}
         {!isGuideEditing && guideSlots.map((slot) => {
           const canPlaceInSlot = canUseGuideSlot(slot);
           const canShowPlacementSlot = !isGuideSlotOccupied(slot) && (!selectedModuleData || canPlaceInSlot);
@@ -2622,6 +3067,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
         {guideSlots.map((slot) => {
           if (!slot.confirmed) return null;
+          if (!shouldShowSlotWidthLabel(slot)) return null;
           if (!isGuideEditing && isGuideSlotOccupied(slot)) return null;
 
           const centerX = (slot.x + slot.width / 2 - spaceInfo.width / 2) * 0.01;
@@ -2639,6 +3085,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             >
               <div
                 style={{
+                  ...guideHtmlScaleStyle,
                   color: 'var(--theme-text)',
                   fontSize: '11px',
                   fontWeight: 900,
@@ -2768,7 +3215,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                   display: 'grid',
                   justifyItems: 'center',
                   gap: '4px',
-                  pointerEvents: 'auto'
+                  pointerEvents: 'auto',
+                  ...guideHtmlScaleStyle
                 }}
               >
                 {canShowPlacementHotspot && (

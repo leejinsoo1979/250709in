@@ -26,6 +26,13 @@ import { TOP_END_PANEL_FRONT_OFFSET_DEFAULT_MM } from '@/editor/shared/utils/pan
 type FreePlacementModuleFlags = ModuleData & {
   hasBase?: boolean;
   individualFloatHeight?: number;
+  hasTopFrame?: boolean;
+  topFrameThickness?: number;
+  topFrameOffset?: number;
+  topFrameGap?: number;
+  baseFrameHeight?: number;
+  baseFrameOffset?: number;
+  baseFrameGap?: number;
   hasBackPanel?: boolean;
 };
 
@@ -264,8 +271,14 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? globalTopGap;
   const inheritedTopFrameThickness = topFrameCapableExistingModules.find(module => typeof module.topFrameThickness === 'number')?.topFrameThickness;
   // spaceInfo.frameSize.top === 0 이면 공간설정에서 상단몰딩 OFF로 저장됨
-  const topFrameDisabledByGlobal = (spaceInfo.frameSize?.top ?? 30) <= 0;
-  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff && !topFrameDisabledByGlobal;
+  const topFrameDisabledByGlobal = moduleFlags.hasTopFrame === true
+    ? false
+    : (spaceInfo.frameSize?.top ?? 30) <= 0;
+  const shouldHaveTopFrame = moduleData.category !== 'lower'
+    && moduleFlags.hasTopFrame !== false
+    && spaceInfo.frameConfig?.top !== false
+    && !inheritTopFrameOff
+    && !topFrameDisabledByGlobal;
   const baseFrameCapableExistingModules = existingModules
     .filter(module => module.isFreePlacement)
     .filter(isBaseFrameCapablePlacedModule);
@@ -275,8 +288,10 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritedBaseFrameHeight = baseFrameCapableExistingModules.find(module => module.baseFrameHeight !== undefined)?.baseFrameHeight;
   const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
   // 걸레받이 OFF(type=stand) 또는 height=0이면 받침대 없이 배치한다.
-  const baseFrameDisabledByGlobal = spaceInfo.baseConfig?.type === 'stand'
-    || (spaceInfo.baseConfig?.height ?? 65) <= 0;
+  const baseFrameDisabledByGlobal = moduleFlags.hasBase === true
+    ? false
+    : spaceInfo.baseConfig?.type === 'stand'
+      || (spaceInfo.baseConfig?.height ?? 65) <= 0;
   const shouldHaveBaseFrame = moduleFlags.hasBase === false
     ? false
     : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
@@ -287,14 +302,19 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const isKitchenLowerModule = moduleData.category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
   const initialBaseFrameHeight = shouldHaveBaseFrame
     ? (hasGuideSlotYRange
-      ? (inheritedBaseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 0))
-      : (inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60))))
+      ? (moduleFlags.baseFrameHeight ?? inheritedBaseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 0))
+      : (moduleFlags.baseFrameHeight ?? inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60))))
     : undefined;
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
     : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
-  const topFrameThickness = inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-  const initialTopFrameGap = clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
+  const topFrameThickness = moduleFlags.topFrameThickness ?? inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+  const initialTopFrameGap = clampTopFrameGapForModule(
+    moduleData,
+    topFrameThickness,
+    moduleFlags.topFrameGap ?? inheritedTopFrameGap,
+    inheritedAbsorbedBase
+  );
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -332,7 +352,10 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     hasTopFrame: shouldHaveTopFrame,
     hasBottomFrame: shouldHaveBaseFrame,
     topFrameThickness,
+    ...(moduleFlags.topFrameOffset !== undefined ? { topFrameOffset: moduleFlags.topFrameOffset } : {}),
     ...(initialTopFrameGap > 0 ? { topFrameGap: initialTopFrameGap } : {}),
+    ...(moduleFlags.baseFrameOffset !== undefined ? { baseFrameOffset: moduleFlags.baseFrameOffset } : {}),
+    ...(moduleFlags.baseFrameGap !== undefined ? { baseFrameGap: moduleFlags.baseFrameGap } : {}),
     // ModuleData에 individualFloatHeight 가 정의된 가구
     ...(initialFloatHeight > 0
       ? { individualFloatHeight: initialFloatHeight }

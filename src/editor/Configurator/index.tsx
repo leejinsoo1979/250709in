@@ -631,9 +631,11 @@ const Configurator: React.FC = () => {
     return panelClosed !== 'true';
   });
   const [isFrameSectionCollapsed, setIsFrameSectionCollapsed] = useState(false);
-  // 상부/걸래받이 '전체' 통합 모드 (기본 true: 통합 행 표시)
-  const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
-  const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
+  // 상부/걸래받이 '전체' 통합 모드: 우측바와 슬롯 설정모드가 같은 spaceInfo 값만 사용한다.
+  const topFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+  const baseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+  const setTopFrameAllMode = (next: boolean) => setSpaceInfo({ guideTopFrameAllMode: next });
+  const setBaseFrameAllMode = (next: boolean) => setSpaceInfo({ guideBaseFrameAllMode: next });
 
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
