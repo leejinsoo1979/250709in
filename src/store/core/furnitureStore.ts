@@ -1255,6 +1255,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       const updatedModules = state.placedModules.flatMap(module => {
         if (module.slotIndex === undefined) return [module];
+        if (module.isLocked) return [module];
 
         // zone이 있는 경우 글로벌 슬롯 인덱스로 변환
         let globalSlotIndex = module.slotIndex;

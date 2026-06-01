@@ -18,7 +18,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { setSelectedColumnId, activePopup, closeAllPopups } = useUIStore();
+  const { setSelectedColumnId, activePopup, closeAllPopups, setIsDraggingColumn } = useUIStore();
 
   const columns = spaceInfo.columns || [];
   const column = columnId ? columns.find(col => col.id === columnId) : null;
@@ -37,6 +37,9 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
         width: column.width,
         height: column.height,
         depth: column.depth,
+        hasLeftEndPanel: column.hasLeftEndPanel,
+        hasRightEndPanel: column.hasRightEndPanel,
+        endPanelThickness: column.endPanelThickness,
         position: [...column.position]
       });
       setSizeInputs({
@@ -52,15 +55,35 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
   const spaceWidth = spaceInfo.width || 3000;
   const columnX = column ? (editValues.position?.[0] || column.position[0]) * 100 : 0;
   const columnWidth = column ? (editValues.width || column.width) : 0;
+  const columnEpThickness = column ? Math.max(0, editValues.endPanelThickness ?? column.endPanelThickness ?? spaceInfo.panelThickness ?? 18) : 0;
+  const columnLeftEp = column && (editValues.hasLeftEndPanel ?? column.hasLeftEndPanel) ? columnEpThickness : 0;
+  const columnRightEp = column && (editValues.hasRightEndPanel ?? column.hasRightEndPanel) ? columnEpThickness : 0;
   const minGap = 0;
-  const maxGap = Math.max(0, spaceWidth - columnWidth);
-  const leftGap = Math.max(minGap, Math.min(columnX + (spaceWidth / 2) - (columnWidth / 2), maxGap));
-  const rightGap = Math.max(minGap, Math.min((spaceWidth / 2) - columnX - (columnWidth / 2), maxGap));
+  const maxGap = Math.max(0, spaceWidth - columnWidth - columnLeftEp - columnRightEp);
+  const leftGap = Math.max(minGap, Math.min(columnX + (spaceWidth / 2) - (columnWidth / 2) - columnLeftEp, maxGap));
+  const rightGap = Math.max(minGap, Math.min((spaceWidth / 2) - columnX - (columnWidth / 2) - columnRightEp, maxGap));
+
+  const markColumnMoveOnly = useCallback((nextColumns: Column[]) => {
+    (window as any).__columnMoveOnlyActive = true;
+    (window as any).__columnMoveOnlyColumnSignature = JSON.stringify(nextColumns);
+    setIsDraggingColumn(true);
+
+    const existingTimer = (window as any).__columnMoveOnlyTimer;
+    if (existingTimer) {
+      window.clearTimeout(existingTimer);
+    }
+
+    (window as any).__columnMoveOnlyTimer = window.setTimeout(() => {
+      (window as any).__columnMoveOnlyActive = false;
+      useUIStore.getState().setIsDraggingColumn(false);
+      (window as any).__columnMoveOnlyTimer = undefined;
+    }, 500);
+  }, [setIsDraggingColumn]);
 
   const handleLeftGapChange = (value: number) => {
     if (!column) return;
     const safeValue = Math.max(minGap, Math.min(value, maxGap));
-    const newX = safeValue + (columnWidth / 2) - (spaceWidth / 2);
+    const newX = safeValue + (columnWidth / 2) + columnLeftEp - (spaceWidth / 2);
     const newPosition = [...(editValues.position || column.position)] as [number, number, number];
     newPosition[0] = newX / 100;
     setEditValues(prev => {
@@ -73,7 +96,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
   const handleRightGapChange = (value: number) => {
     if (!column) return;
     const safeValue = Math.max(minGap, Math.min(value, maxGap));
-    const newX = (spaceWidth / 2) - safeValue - (columnWidth / 2);
+    const newX = (spaceWidth / 2) - safeValue - (columnWidth / 2) - columnRightEp;
     const newPosition = [...(editValues.position || column.position)] as [number, number, number];
     newPosition[0] = newX / 100;
     setEditValues(prev => {
@@ -149,6 +172,9 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     const updatedColumns = columns.map(col =>
       col.id === column.id ? merged : col
     );
+    if (merged.position?.[0] !== column.position?.[0]) {
+      markColumnMoveOnly(updatedColumns);
+    }
     setSpaceInfo({ columns: updatedColumns });
   };
 
@@ -179,6 +205,14 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
         newValues.position = [currentPosition[0], currentPosition[1], newZ];
       }
       // store에 즉시 반영
+      updateColumnInStore({ ...column, ...newValues });
+      return newValues;
+    });
+  };
+
+  const handleColumnPatch = (patch: Partial<Column>) => {
+    setEditValues(prev => {
+      const newValues = { ...prev, ...patch };
       updateColumnInStore({ ...column, ...newValues });
       return newValues;
     });
@@ -302,6 +336,36 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                   onClick={() => handleInputChange('hasFrontPanelFinish', !column.hasFrontPanelFinish)}
                 >
                   {column.hasFrontPanelFinish ? '있음' : '없음'}
+                </button>
+              </label>
+              <label className={styles.toggleLabel}>
+                <span>좌측 EP</span>
+                <button
+                  className={`${styles.toggleButton} ${column.hasLeftEndPanel ? styles.active : ''}`}
+                  onClick={() => {
+                    const turning = !column.hasLeftEndPanel;
+                    handleColumnPatch({
+                      hasLeftEndPanel: turning,
+                      endPanelThickness: turning ? (column.endPanelThickness ?? spaceInfo.panelThickness ?? 18) : column.endPanelThickness,
+                    });
+                  }}
+                >
+                  {column.hasLeftEndPanel ? '있음' : '없음'}
+                </button>
+              </label>
+              <label className={styles.toggleLabel}>
+                <span>우측 EP</span>
+                <button
+                  className={`${styles.toggleButton} ${column.hasRightEndPanel ? styles.active : ''}`}
+                  onClick={() => {
+                    const turning = !column.hasRightEndPanel;
+                    handleColumnPatch({
+                      hasRightEndPanel: turning,
+                      endPanelThickness: turning ? (column.endPanelThickness ?? spaceInfo.panelThickness ?? 18) : column.endPanelThickness,
+                    });
+                  }}
+                >
+                  {column.hasRightEndPanel ? '있음' : '없음'}
                 </button>
               </label>
             </div>

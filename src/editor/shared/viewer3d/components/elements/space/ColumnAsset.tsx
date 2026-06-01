@@ -31,6 +31,9 @@ interface ColumnAssetProps {
   spaceInfo?: any;
   hasBackPanelFinish?: boolean;
   hasFrontPanelFinish?: boolean;
+  hasLeftEndPanel?: boolean;
+  hasRightEndPanel?: boolean;
+  endPanelThickness?: number;
 }
 
 const ColumnAsset: React.FC<ColumnAssetProps> = ({
@@ -45,7 +48,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   onRemove,
   spaceInfo,
   hasBackPanelFinish = false,
-  hasFrontPanelFinish = false
+  hasFrontPanelFinish = false,
+  hasLeftEndPanel = false,
+  hasRightEndPanel = false,
+  endPanelThickness
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -67,11 +73,35 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, setSelectedFurnitureId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, viewMode: uiViewMode } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, setSelectedFurnitureId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, setIsDraggingColumn, viewMode: uiViewMode } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
   const isLocked = currentColumn?.isLocked ?? false;
+  const columnHasLeftEndPanel = currentColumn?.hasLeftEndPanel ?? hasLeftEndPanel;
+  const columnHasRightEndPanel = currentColumn?.hasRightEndPanel ?? hasRightEndPanel;
+  const columnEndPanelThicknessMm = Math.max(
+    0,
+    currentColumn?.endPanelThickness ?? endPanelThickness ?? spaceConfig.spaceInfo.panelThickness ?? 18
+  );
+  const columnEndPanelThicknessM = columnEndPanelThicknessMm * 0.01;
+
+  const markColumnMoveOnly = React.useCallback((nextColumns?: any[]) => {
+    (window as any).__columnMoveOnlyActive = true;
+    if (nextColumns) {
+      (window as any).__columnMoveOnlyColumnSignature = JSON.stringify(nextColumns);
+    }
+    setIsDraggingColumn(true);
+    const existingTimer = (window as any).__columnMoveOnlyTimer;
+    if (existingTimer) {
+      window.clearTimeout(existingTimer);
+    }
+    (window as any).__columnMoveOnlyTimer = window.setTimeout(() => {
+      (window as any).__columnMoveOnlyActive = false;
+      setIsDraggingColumn(false);
+      (window as any).__columnMoveOnlyTimer = undefined;
+    }, 500);
+  }, [setIsDraggingColumn]);
 
   const { invalidate } = useThree();
   
@@ -81,21 +111,40 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       invalidate();
       tempPositionRef.current = position; // 위치 동기화
     }
-  }, [position, width, height, depth, isDragging, invalidate]);
+  }, [position, width, height, depth, columnHasLeftEndPanel, columnHasRightEndPanel, columnEndPanelThicknessM, isDragging, invalidate]);
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
 
   // 다른 기둥과의 X축 충돌 체크 헬퍼 (Three.js 단위)
+  const getColumnSideExtrasMm = (columnValue: any) => {
+    const thicknessMm = Math.max(0, columnValue?.endPanelThickness ?? spaceConfig.spaceInfo.panelThickness ?? 18);
+    return {
+      left: columnValue?.hasLeftEndPanel ? thicknessMm : 0,
+      right: columnValue?.hasRightEndPanel ? thicknessMm : 0,
+    };
+  };
+
+  const getColumnSideExtrasM = (columnValue: any) => {
+    const extrasMm = getColumnSideExtrasMm(columnValue);
+    return {
+      left: extrasMm.left * 0.01,
+      right: extrasMm.right * 0.01,
+    };
+  };
+
   const wouldCollideWithOtherColumns = (targetX: number, myHalfWidthM: number, myId: string, allCols: any[]) => {
     const EPS = 0.0005; // 0.5mm 허용 오차
+    const me = allCols.find((col: any) => col.id === myId);
+    const myExtras = getColumnSideExtrasM(me);
     for (const other of allCols) {
       if (other.id === myId) continue;
       const otherHalfW = (other.width * 0.01) / 2;
-      const otherLeft = other.position[0] - otherHalfW;
-      const otherRight = other.position[0] + otherHalfW;
-      const myLeft = targetX - myHalfWidthM;
-      const myRight = targetX + myHalfWidthM;
+      const otherExtras = getColumnSideExtrasM(other);
+      const otherLeft = other.position[0] - otherHalfW - otherExtras.left;
+      const otherRight = other.position[0] + otherHalfW + otherExtras.right;
+      const myLeft = targetX - myHalfWidthM - myExtras.left;
+      const myRight = targetX + myHalfWidthM + myExtras.right;
       if (myLeft < otherRight - EPS && myRight > otherLeft + EPS) {
         return true;
       }
@@ -103,25 +152,27 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     return false;
   };
 
-  const getColumnXBounds = (spaceInfoValue: any, columnWidthMm: number) => {
+  const getColumnXBounds = (spaceInfoValue: any, columnWidthMm: number, leftExtraMm = 0, rightExtraMm = 0) => {
     const halfWidth = (columnWidthMm * 0.01) / 2;
+    const leftExtraM = leftExtraMm * 0.01;
+    const rightExtraM = rightExtraMm * 0.01;
     if (spaceInfoValue?.layoutMode === 'free-placement') {
       const { startX, endX } = getInternalSpaceBoundsX(spaceInfoValue);
       return {
-        minX: startX * 0.01 + halfWidth,
-        maxX: endX * 0.01 - halfWidth,
+        minX: startX * 0.01 + halfWidth + leftExtraM,
+        maxX: endX * 0.01 - halfWidth - rightExtraM,
       };
     }
 
     const halfSpace = (spaceInfoValue?.width || 3000) * 0.005;
     return {
-      minX: -halfSpace + halfWidth,
-      maxX: halfSpace - halfWidth,
+      minX: -halfSpace + halfWidth + leftExtraM,
+      maxX: halfSpace - halfWidth - rightExtraM,
     };
   };
 
-  const clampColumnX = (x: number, spaceInfoValue: any, columnWidthMm: number) => {
-    const { minX, maxX } = getColumnXBounds(spaceInfoValue, columnWidthMm);
+  const clampColumnX = (x: number, spaceInfoValue: any, columnWidthMm: number, leftExtraMm = 0, rightExtraMm = 0) => {
+    const { minX, maxX } = getColumnXBounds(spaceInfoValue, columnWidthMm, leftExtraMm, rightExtraMm);
     if (minX > maxX) return (minX + maxX) / 2;
     return Math.max(minX, Math.min(maxX, x));
   };
@@ -140,7 +191,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       if (!col || col.isLocked) return;
       const isFree = spaceInfoNow.layoutMode === 'free-placement';
       const hw = (col.width * 0.01) / 2;
-      const { minX, maxX } = getColumnXBounds(spaceInfoNow, col.width);
+      const myExtrasMm = getColumnSideExtrasMm(col);
+      const myExtrasM = getColumnSideExtrasM(col);
+      const { minX, maxX } = getColumnXBounds(spaceInfoNow, col.width, myExtrasMm.left, myExtrasMm.right);
       let newX: number;
       if (isFree) {
         // 자유배치: 1mm씩 (Shift 10mm) - 다른 기둥 만나면 그 반대편으로 건너뛰기
@@ -150,11 +203,17 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           // 충돌한 기둥을 건너뛰어 반대편으로 이동
           const EPS = 0.0005;
           const blockers = cols.filter((c: any) => c.id !== id)
-            .map((c: any) => ({ left: c.position[0] - (c.width * 0.01) / 2, right: c.position[0] + (c.width * 0.01) / 2 }));
+            .map((c: any) => {
+              const extras = getColumnSideExtrasM(c);
+              return {
+                left: c.position[0] - (c.width * 0.01) / 2 - extras.left,
+                right: c.position[0] + (c.width * 0.01) / 2 + extras.right,
+              };
+            });
           // 후보 위치 겹치는 기둥 찾기
-          const blocker = blockers.find(b => candidate - hw < b.right - EPS && candidate + hw > b.left + EPS);
+          const blocker = blockers.find(b => candidate - hw - myExtrasM.left < b.right - EPS && candidate + hw + myExtrasM.right > b.left + EPS);
           if (!blocker) return;
-          newX = event.key === 'ArrowRight' ? blocker.right + hw : blocker.left - hw;
+          newX = event.key === 'ArrowRight' ? blocker.right + hw + myExtrasM.left : blocker.left - hw - myExtrasM.right;
         } else {
           newX = candidate;
         }
@@ -165,8 +224,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         const EPS = 0.005;
         const candidates: number[] = [minX, maxX];
         for (let i = 0; i < boundaries.length - 1; i++) {
-          const left = boundaries[i] + hw;
-          const right = boundaries[i + 1] - hw;
+          const left = boundaries[i] + hw + myExtrasM.left;
+          const right = boundaries[i + 1] - hw - myExtrasM.right;
           if (left < right - EPS) candidates.push(left, right);
           else candidates.push((boundaries[i] + boundaries[i + 1]) / 2);
         }
@@ -181,17 +240,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         newX = found;
       }
       // 벽 경계 체크
-      newX = clampColumnX(newX, spaceInfoNow, col.width);
+      newX = clampColumnX(newX, spaceInfoNow, col.width, myExtrasMm.left, myExtrasMm.right);
       // 최종 충돌 체크 (방어)
       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
       const updated = cols.map((c: any) =>
         c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
       );
+      markColumnMoveOnly(updated);
       useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isSelected, isLocked, id]);
+  }, [isSelected, isLocked, id, markColumnMoveOnly]);
 
   // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
   const noCollision = (currentColumn as any)?.noCollision ?? false;
@@ -369,7 +429,15 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     // 드래그 시작 시 필요한 값들 미리 계산
     const spaceWidthHalf = (spaceInfo?.width || 3000) * 0.005;
-    const { minX, maxX } = getColumnXBounds(spaceInfo, width);
+    const dragColumn = currentColumn ?? {
+      width,
+      hasLeftEndPanel: columnHasLeftEndPanel,
+      hasRightEndPanel: columnHasRightEndPanel,
+      endPanelThickness: columnEndPanelThicknessMm,
+    };
+    const dragExtrasMm = getColumnSideExtrasMm(dragColumn);
+    const dragExtrasM = getColumnSideExtrasM(dragColumn);
+    const { minX, maxX } = getColumnXBounds(spaceInfo, width, dragExtrasMm.left, dragExtrasMm.right);
     
     // Canvas 찾기 (한 번만)
     if (!canvasRef.current) {
@@ -388,6 +456,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         setIsDragging(true);
         isDraggingRef.current = true;
         setFurnitureDragging(true); // 기둥 드래그 시작 시 화면 회전 비활성화
+        setIsDraggingColumn(true);
         
         // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋 이벤트 발생
         if (uiViewMode === '3D') {
@@ -429,16 +498,17 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const EPS_DRAG = 0.0005;
       for (const other of otherColsForDrag) {
         const otherHalfW = (other.width * 0.01) / 2;
-        const otherLeft = other.position[0] - otherHalfW;
-        const otherRight = other.position[0] + otherHalfW;
-        const myLeft = newX - myHalfW;
-        const myRight = newX + myHalfW;
+        const otherExtras = getColumnSideExtrasM(other);
+        const otherLeft = other.position[0] - otherHalfW - otherExtras.left;
+        const otherRight = other.position[0] + otherHalfW + otherExtras.right;
+        const myLeft = newX - myHalfW - dragExtrasM.left;
+        const myRight = newX + myHalfW + dragExtrasM.right;
         if (myLeft < otherRight - EPS_DRAG && myRight > otherLeft + EPS_DRAG) {
           // 충돌 방향에 따라 바로 옆에 붙임
           if (tempPositionRef.current[0] < other.position[0]) {
-            newX = otherLeft - myHalfW;
+            newX = otherLeft - myHalfW - dragExtrasM.right;
           } else {
-            newX = otherRight + myHalfW;
+            newX = otherRight + myHalfW + dragExtrasM.left;
           }
           break;
         }
@@ -447,6 +517,11 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       tempPositionRef.current = [newX, position[1], position[2]];
       
       if (onPositionChange && !isNaN(newX)) {
+        const nextColumns = (useSpaceConfigStore.getState().spaceInfo.columns || []).map((column: any) =>
+          column.id === id ? { ...column, position: tempPositionRef.current } : column
+        );
+        markColumnMoveOnly(nextColumns);
+
         // 애니메이션 프레임 취소 및 새로 요청
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
@@ -463,6 +538,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       // 드래그 중이었다면 화면 회전 다시 활성화
       if (isDraggingRef.current) {
         setFurnitureDragging(false);
+        markColumnMoveOnly(useSpaceConfigStore.getState().spaceInfo.columns || []);
         
         // 기둥 드래그 종료 이벤트 발생
         window.dispatchEvent(new CustomEvent('column-drag-end'));
@@ -548,6 +624,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, depth * 0.01)]} />
             <lineBasicMaterial color={isSelected ? "#4CAF50" : "#999999"} />
           </lineSegments>
+
+          {columnHasLeftEndPanel && columnEndPanelThicknessM > 0 && (
+            <lineSegments position={[-(width * 0.01) / 2 - columnEndPanelThicknessM / 2, 0, 0]}>
+              <edgesGeometry args={[new THREE.BoxGeometry(columnEndPanelThicknessM, height * 0.01, depth * 0.01)]} />
+              <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.interiorColor || "#999999")} />
+            </lineSegments>
+          )}
+
+          {columnHasRightEndPanel && columnEndPanelThicknessM > 0 && (
+            <lineSegments position={[(width * 0.01) / 2 + columnEndPanelThicknessM / 2, 0, 0]}>
+              <edgesGeometry args={[new THREE.BoxGeometry(columnEndPanelThicknessM, height * 0.01, depth * 0.01)]} />
+              <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.interiorColor || "#999999")} />
+            </lineSegments>
+          )}
 
           {/* 빗살무늬 (뷰별 적절한 면에 표시) */}
           {(() => {
@@ -691,6 +781,20 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, depth * 0.01)]} />
             <primitive object={wireframeMaterial} />
           </lineSegments>
+
+          {columnHasLeftEndPanel && columnEndPanelThicknessM > 0 && (
+            <lineSegments position={[-(width * 0.01) / 2 - columnEndPanelThicknessM / 2, 0, 0]}>
+              <edgesGeometry args={[new THREE.BoxGeometry(columnEndPanelThicknessM, height * 0.01, depth * 0.01)]} />
+              <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.interiorColor || "#333333")} />
+            </lineSegments>
+          )}
+
+          {columnHasRightEndPanel && columnEndPanelThicknessM > 0 && (
+            <lineSegments position={[(width * 0.01) / 2 + columnEndPanelThicknessM / 2, 0, 0]}>
+              <edgesGeometry args={[new THREE.BoxGeometry(columnEndPanelThicknessM, height * 0.01, depth * 0.01)]} />
+              <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.interiorColor || "#333333")} />
+            </lineSegments>
+          )}
           
           {/* X자 대각선 */}
           <Line
@@ -745,7 +849,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             onContextMenu={handleContextMenu}
             position={[0, (height * 0.01) / 2, 0]} // 기둥 mesh를 위로 올려서 바닥에 맞춤
             userData={{ isColumn: true, columnId: id }}
-            scale={isDragging ? [0.95, 0.95, 0.95] : [1, 1, 1]}
           >
             <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
           </mesh>
@@ -788,6 +891,42 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
             return null;
           })()}
+
+          {columnHasLeftEndPanel && columnEndPanelThicknessM > 0 && (
+            <mesh
+              position={[-(width * 0.01) / 2 - columnEndPanelThicknessM / 2, (height * 0.01) / 2, 0]}
+              receiveShadow={viewMode === '3D'}
+              castShadow={viewMode === '3D'}
+              material={frontPanelMaterial}
+              onClick={handleClick}
+              onDoubleClick={handleDoubleClick}
+              onPointerDown={handlePointerDown}
+              onPointerEnter={() => setIsHovered(true)}
+              onPointerLeave={() => setIsHovered(false)}
+              onContextMenu={handleContextMenu}
+              userData={{ isColumn: true, columnId: id, isColumnEndPanel: true, side: 'left' }}
+            >
+              <boxGeometry args={[columnEndPanelThicknessM, height * 0.01, depth * 0.01]} />
+            </mesh>
+          )}
+
+          {columnHasRightEndPanel && columnEndPanelThicknessM > 0 && (
+            <mesh
+              position={[(width * 0.01) / 2 + columnEndPanelThicknessM / 2, (height * 0.01) / 2, 0]}
+              receiveShadow={viewMode === '3D'}
+              castShadow={viewMode === '3D'}
+              material={frontPanelMaterial}
+              onClick={handleClick}
+              onDoubleClick={handleDoubleClick}
+              onPointerDown={handlePointerDown}
+              onPointerEnter={() => setIsHovered(true)}
+              onPointerLeave={() => setIsHovered(false)}
+              onContextMenu={handleContextMenu}
+              userData={{ isColumn: true, columnId: id, isColumnEndPanel: true, side: 'right' }}
+            >
+              <boxGeometry args={[columnEndPanelThicknessM, height * 0.01, depth * 0.01]} />
+            </mesh>
+          )}
         </>
       )}
 
@@ -927,17 +1066,22 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         if (!isSelected || isLocked) return null;
         const spaceWidthM = (spaceConfig.spaceInfo.width || 3000) * 0.01;
         const halfW = (width * 0.01) / 2;
+        const sideExtrasM = {
+          left: columnHasLeftEndPanel ? columnEndPanelThicknessM : 0,
+          right: columnHasRightEndPanel ? columnEndPanelThicknessM : 0,
+        };
         const tolerance = 0.001;
-        const atLeftWall = position[0] <= -spaceWidthM / 2 + halfW + tolerance;
-        const atRightWall = position[0] >= spaceWidthM / 2 - halfW - tolerance;
+        const atLeftWall = position[0] <= -spaceWidthM / 2 + halfW + sideExtrasM.left + tolerance;
+        const atRightWall = position[0] >= spaceWidthM / 2 - halfW - sideExtrasM.right - tolerance;
         const midY = (height * 0.01) / 2;
-        const arrowOffset = halfW + 0.2; // 기둥 측면에서 20cm 바깥
+        const leftArrowOffset = halfW + sideExtrasM.left + 0.2; // 기둥/EP 측면에서 20cm 바깥
+        const rightArrowOffset = halfW + sideExtrasM.right + 0.2;
         return (
           <>
             {/* 좌측 화살표 (기둥 왼쪽 바깥) */}
             {!atLeftWall && (
               <Html
-                position={[-arrowOffset, midY, 0]}
+                position={[-leftArrowOffset, midY, 0]}
                 center
                 zIndexRange={[100, 0]}
                 style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
@@ -956,7 +1100,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     if (!col || col.isLocked) return;
                     const isFree = spaceInfoNow.layoutMode === 'free-placement';
                     const hw = (col.width * 0.01) / 2;
-                    const { minX } = getColumnXBounds(spaceInfoNow, col.width);
+                    const myExtrasMm = getColumnSideExtrasMm(col);
+                    const myExtrasM = getColumnSideExtrasM(col);
+                    const { minX } = getColumnXBounds(spaceInfoNow, col.width, myExtrasMm.left, myExtrasMm.right);
                     let newX: number;
                     if (isFree) {
                       // 자유배치: 좌측 벽 끝까지 이동 (다른 기둥에 막히면 바로 앞까지)
@@ -964,21 +1110,23 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                       // 이동 경로상 다른 기둥에 부딪히면 그 기둥 우측면 + hw에서 멈춤
                       for (const other of cols) {
                         if (other.id === id) continue;
-                        const otherRight = other.position[0] + (other.width * 0.01) / 2;
-                        if (otherRight <= col.position[0] - hw && otherRight + hw > candidate) {
-                          candidate = otherRight + hw;
+                        const otherExtras = getColumnSideExtrasM(other);
+                        const otherRight = other.position[0] + (other.width * 0.01) / 2 + otherExtras.right;
+                        if (otherRight <= col.position[0] - hw - myExtrasM.left && otherRight + hw + myExtrasM.left > candidate) {
+                          candidate = otherRight + hw + myExtrasM.left;
                         }
                       }
                       newX = candidate;
                     } else {
                       // 슬롯배치: 1mm씩 좌측 이동
-                      newX = clampColumnX(col.position[0] - 0.01, spaceInfoNow, col.width);
+                      newX = clampColumnX(col.position[0] - 0.01, spaceInfoNow, col.width, myExtrasMm.left, myExtrasMm.right);
                       // 충돌 체크 → 충돌하면 이동 안 함
                       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
                     }
                     const updated = cols.map((c: any) =>
                       c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
                     );
+                    markColumnMoveOnly(updated);
                     useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
@@ -1002,7 +1150,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             {/* 우측 화살표 (기둥 오른쪽 바깥) */}
             {!atRightWall && (
               <Html
-                position={[arrowOffset, midY, 0]}
+                position={[rightArrowOffset, midY, 0]}
                 center
                 zIndexRange={[100, 0]}
                 style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
@@ -1021,27 +1169,31 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     if (!col || col.isLocked) return;
                     const isFree = spaceInfoNow.layoutMode === 'free-placement';
                     const hw = (col.width * 0.01) / 2;
-                    const { maxX } = getColumnXBounds(spaceInfoNow, col.width);
+                    const myExtrasMm = getColumnSideExtrasMm(col);
+                    const myExtrasM = getColumnSideExtrasM(col);
+                    const { maxX } = getColumnXBounds(spaceInfoNow, col.width, myExtrasMm.left, myExtrasMm.right);
                     let newX: number;
                     if (isFree) {
                       // 자유배치: 우측 벽 끝까지 이동 (다른 기둥에 막히면 바로 앞까지)
                       let candidate = maxX;
                       for (const other of cols) {
                         if (other.id === id) continue;
-                        const otherLeft = other.position[0] - (other.width * 0.01) / 2;
-                        if (otherLeft >= col.position[0] + hw && otherLeft - hw < candidate) {
-                          candidate = otherLeft - hw;
+                        const otherExtras = getColumnSideExtrasM(other);
+                        const otherLeft = other.position[0] - (other.width * 0.01) / 2 - otherExtras.left;
+                        if (otherLeft >= col.position[0] + hw + myExtrasM.right && otherLeft - hw - myExtrasM.right < candidate) {
+                          candidate = otherLeft - hw - myExtrasM.right;
                         }
                       }
                       newX = candidate;
                     } else {
                       // 슬롯배치: 1mm씩 우측 이동
-                      newX = clampColumnX(col.position[0] + 0.01, spaceInfoNow, col.width);
+                      newX = clampColumnX(col.position[0] + 0.01, spaceInfoNow, col.width, myExtrasMm.left, myExtrasMm.right);
                       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
                     }
                     const updated = cols.map((c: any) =>
                       c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
                     );
+                    markColumnMoveOnly(updated);
                     useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
@@ -1082,6 +1234,9 @@ export default React.memo(ColumnAsset, (prevProps, nextProps) => {
     prevProps.renderMode === nextProps.renderMode &&
     prevProps.hasBackPanelFinish === nextProps.hasBackPanelFinish &&
     prevProps.hasFrontPanelFinish === nextProps.hasFrontPanelFinish &&
+    prevProps.hasLeftEndPanel === nextProps.hasLeftEndPanel &&
+    prevProps.hasRightEndPanel === nextProps.hasRightEndPanel &&
+    prevProps.endPanelThickness === nextProps.endPanelThickness &&
     prevProps.spaceInfo?.width === nextProps.spaceInfo?.width &&
     prevProps.spaceInfo?.depth === nextProps.spaceInfo?.depth &&
     prevProps.spaceInfo?.height === nextProps.spaceInfo?.height

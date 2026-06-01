@@ -150,9 +150,15 @@ export interface PlacedModule {
   hasBottomFrame?: boolean;  // 자유배치 걸래받이 표시 여부 (기본: full/lower=true, upper=false)
   topFrameOffset?: number;   // 자유배치 상단몰딩 Z축 옵셋 (mm, 양수=앞, 음수=뒤)
   topFrameGap?: number;      // 상단몰딩 천장 갭 (mm) — 천장 쪽에서 갭만큼 프레임 높이가 줄고 떠 있음
+  topFrameWidthAdjustEnabled?: boolean; // 상단몰딩 좌우 폭 확장/축소 사용 여부
+  topFrameLeftAdjustMm?: number; // 상단몰딩 좌측 폭 보정(mm, +확장/-축소)
+  topFrameRightAdjustMm?: number; // 상단몰딩 우측 폭 보정(mm, +확장/-축소)
   baseFrameOffset?: number;  // 자유배치 걸래받이 Z축 옵셋 (mm, 양수=앞, 음수=뒤)
   baseFrameGap?: number;     // 걸래받이 바닥 갭 (mm) — 바닥 쪽에서 갭만큼 프레임 높이가 줄고 떠 있음
   baseFrameHeight?: number;  // 가구별 걸래받이(받침대) 높이 (mm, undefined = 공간 설정값 사용)
+  baseFrameWidthAdjustEnabled?: boolean; // 걸레받이 좌우 폭 확장/축소 사용 여부
+  baseFrameLeftAdjustMm?: number; // 걸레받이 좌측 폭 보정(mm, +확장/-축소)
+  baseFrameRightAdjustMm?: number; // 걸레받이 우측 폭 보정(mm, +확장/-축소)
   removeUpperSafetyShelf?: boolean; // 상부 섹션 안전선반 제거 (코트장/붙박이장B/D) — 옷봉이 상판 하단에 직접 부착
   glassDrawerOffsetMm?: number; // 유리장 서랍 영역(측판+바닥판+서랍2단)의 가구 바닥 기준 위치 (mm, 기본 242)
   insertFrontInsetMm?: number; // 키큰장찬넬 전면 프레임 안쪽 들임 (mm, 0=가구 측면과 라인 일치, 기본 18)

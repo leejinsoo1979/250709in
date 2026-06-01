@@ -355,7 +355,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
-  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore();
+  const { isFurnitureDragging, isDraggingColumn, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore();
+  const isColumnMoveOnlyActive = typeof window !== 'undefined' && (window as any).__columnMoveOnlyActive === true;
+  const currentColumnMoveSignature = React.useMemo(() => JSON.stringify(spaceInfo.columns || []), [spaceInfo.columns]);
+  const isColumnMoveOnlySignature = typeof window !== 'undefined'
+    && (window as any).__columnMoveOnlyColumnSignature === currentColumnMoveSignature;
+  const isPlacementStructureDragging = isFurnitureDragging || isDraggingColumn || isColumnMoveOnlyActive || isColumnMoveOnlySignature;
+  const shouldApplyColumnAdjustment = !placedModule.isLocked && !isPlacementStructureDragging;
   // 3D 측면뷰(L/R)일 때 카메라 쪽 가구는 숨겨야 하지만 early return은 hook 위반 → visible flag로 처리
   const sideViewHiddenByCamera = (() => {
     if (viewMode !== '3D') return false;
@@ -1387,7 +1393,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const columnActionSlotInfo = columnActionContext?.slotInfo;
   const columnActionModule = columnActionContext?.module;
   const usesGroupedColumnAction = !!columnActionContext && columnActionModule?.id !== placedModule.id;
-  const shouldRenderColumnActionControls = !placedModule.isLocked && (
+  const shouldRenderColumnActionControls = (
     isSelected ||
     (isGroupSelected && isLeftmostGroupedFurniture && !!columnActionSlotInfo?.hasColumn && !!columnActionSlotInfo.column)
   );
@@ -1443,7 +1449,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     let result = moduleData;
     if (moduleData) {
       // isDualSlot이 true이면 듀얼 가구 유지 (키보드 이동 등으로 명시적으로 배치된 경우)
-      if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC && !placedModule.isDualSlot) {
+      if (!isPlacementStructureDragging && slotInfo && slotInfo.hasColumn && !isColumnC && !placedModule.isDualSlot) {
         const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
         if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
           result = conversionResult.convertedModuleData;
@@ -1452,7 +1458,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
       // isDualSlot이 true이면 듀얼 가구 유지
-      if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-') && !placedModule.isDualSlot) {
+      if (!isPlacementStructureDragging && isColumnC && moduleData.id.includes('dual-') && !placedModule.isDualSlot) {
         result = {
           ...moduleData,
           id: moduleData.id.replace('dual-', 'single-'),
@@ -1469,7 +1475,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
     return result;
-  }, [moduleData, isFurnitureDragging, slotInfo, isColumnC, spaceInfo, placedModule.subSlotPosition, indexing.columnWidth]);
+  }, [moduleData, isPlacementStructureDragging, slotInfo, isColumnC, spaceInfo, placedModule.subSlotPosition, indexing.columnWidth]);
 
   // 듀얼 가구인지 확인 (가장 먼저 계산)
   // placedModule.isDualSlot이 있으면 그것을 사용, 없으면 모듈 ID로 판단
@@ -1519,12 +1525,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // adjustedPosition 계산을 useMemo로 최적화 (초기값만 설정)
   const initialAdjustedPosition = React.useMemo(() => {
     const basePosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
-    if (isLastSlot && !isFurnitureDragging) {
+    if (isLastSlot && !isPlacementStructureDragging) {
       // 마지막 슬롯은 originalSlotCenterX를 나중에 계산하므로 여기서는 position 사용
       return { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
     }
     return basePosition;
-  }, [placedModule.position, isLastSlot, isFurnitureDragging]);
+  }, [placedModule.position, isLastSlot, isPlacementStructureDragging]);
 
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
   // category 기반 체크 (moduleId 패턴 매칭 대신 actualModuleData.category 사용)
@@ -1902,7 +1908,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureWidthMm = placedModule.slotCustomWidth;
   } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
     // customWidth가 있지만 기둥도 있으면 기둥 조정 우선
-    if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+    if (shouldApplyColumnAdjustment && slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
       const originalSlotBounds = {
         left: slotBoundaries.left,
         right: slotBoundaries.right,
@@ -1920,7 +1926,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기본값 사용 전에 기둥이 있는지 확인
 
     // 기둥이 있으면 calculateFurnitureBounds로 조정된 너비 계산
-    if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+    if (shouldApplyColumnAdjustment && slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
       const slotWidthM = indexing.columnWidth * 0.01;
       const originalSlotBounds = {
         left: slotBoundaries.left,
@@ -1956,7 +1962,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장
   // customWidth가 있어도 기둥이 있으면 깊이 조정 필요
   let autoAdjustedDepthMm: number | null = null;
-  if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+  if (shouldApplyColumnAdjustment && slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
     const columnDepth = slotInfo.column.depth;
     // Column C (300mm)의 경우 깊이 조정 필요
     if (columnDepth === 300 && furnitureWidthMm === indexing.columnWidth) {
@@ -2769,7 +2775,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const widthReductionBeforeColumn = Math.max(0, originalFurnitureWidthMm - furnitureWidthMm);
 
   // 기둥이 있는 모든 슬롯 처리 (단내림 구간 포함)
-  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && slotInfo.column) {
+  if (shouldApplyColumnAdjustment && slotInfo && slotInfo.hasColumn && slotInfo.column) {
     // 기둥 타입에 따른 처리 방식 확인
     const columnProcessingMethod = slotInfo.columnProcessingMethod || 'width-adjustment';
 
@@ -2866,7 +2872,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
 
         // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
-        if (!isFurnitureDragging && (
+        if (shouldApplyColumnAdjustment && (
           placedModule.adjustedWidth !== furnitureWidthMm ||
           placedModule.position.x !== adjustedPosition.x
         )) {
@@ -2962,18 +2968,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 기둥이 슬롯을 벗어났을 때만 customDepth 제거 (사용자가 직접 설정한 깊이는 유지)
-  const shouldResetCustomDepth = !isFurnitureDragging && slotInfo && !slotInfo.hasColumn && !!placedModule.customDepth && !!placedModule.columnSlotInfo;
+  const shouldResetCustomDepth = shouldApplyColumnAdjustment && slotInfo && !slotInfo.hasColumn && !!placedModule.customDepth && !!placedModule.columnSlotInfo;
 
-  if (slotInfo && !slotInfo.hasColumn && placedModule.customDepth && placedModule.columnSlotInfo) {
+  if (shouldApplyColumnAdjustment && slotInfo && !slotInfo.hasColumn && placedModule.customDepth && placedModule.columnSlotInfo) {
     // 기둥이 슬롯을 벗어났을 때 customDepth 제거
     // 깊이를 원래대로 복구
     adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
   }
 
-  const shouldResetWidth = !isFurnitureDragging && slotInfo && !slotInfo.hasColumn &&
+  const shouldResetWidth = shouldApplyColumnAdjustment && slotInfo && !slotInfo.hasColumn &&
     (placedModule.adjustedWidth !== undefined || placedModule.columnSlotInfo !== undefined);
 
-  if (slotInfo && !slotInfo.hasColumn && (placedModule.adjustedWidth || placedModule.columnSlotInfo)) {
+  if (shouldApplyColumnAdjustment && slotInfo && !slotInfo.hasColumn && (placedModule.adjustedWidth || placedModule.columnSlotInfo)) {
     // 기둥이 슬롯을 벗어났을 때 폭도 원상복구
     // 폭을 원래대로 복구
     furnitureWidthMm = actualModuleData?.dimensions.width || 0;
@@ -3159,7 +3165,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // console.log('🔴 Z', ...); // 진단용 로그 제거 (성능)
 
   const furnitureGroupPosition: [number, number, number] = [
-    isSideWallFurniture ? placedModule.position.x : adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
+    (placedModule.isLocked || isSideWallFurniture)
+      ? placedModule.position.x
+      : adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
     furnitureZ
   ];
@@ -3270,7 +3278,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         optimalHingePosition = 'left';
       }
     }
-  } else if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn) {
+  } else if (shouldApplyColumnAdjustment && slotInfo && slotInfo.hasColumn) {
     // 기둥 침범 상황에 따른 힌지 조정
     optimalHingePosition = calculateOptimalHingePosition(slotInfo);
   }
@@ -3397,8 +3405,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return;
     }
 
-    // 잠긴 가구는 드래그 불가
+    // 잠긴 가구는 이동만 막고 선택/잠금해제 UI는 살아 있어야 한다.
     if (placedModule.isLocked) {
+      e.stopPropagation();
+      e.nativeEvent.stopImmediatePropagation?.();
+      (window as any).__r3fClickHandled = true;
+      (window as any).__r3fFurnitureClicked = true;
+      useUIStore.getState().setSelectedColumnId(null);
+      useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
+      useFurnitureStore.getState().setSelectedPlacedModuleId(placedModule.id);
+      useUIStore.getState().setSelectedFurnitureId(placedModule.id);
+      useUIStore.getState().setSelectedFurnitureIds([placedModule.id]);
       return;
     }
 
@@ -3829,6 +3846,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             }
           }
 
+          // 잠긴 가구는 클릭으로 잠금 해제
+          if (placedModule.isLocked) {
+            e.stopPropagation();
+            useUIStore.getState().setSelectedColumnId(null);
+            useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
+            useFurnitureStore.getState().setSelectedPlacedModuleId(placedModule.id);
+            useUIStore.getState().setSelectedFurnitureId(placedModule.id);
+            useUIStore.getState().setSelectedFurnitureIds([placedModule.id]);
+            const updateModule = useFurnitureStore.getState().updateModule;
+            updateModule(placedModule.id, { isLocked: false });
+            return;
+          }
+
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
@@ -3838,12 +3868,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             useUIStore.getState().setSelectedFurnitureId(placedModule.id);
             onFurnitureClick(placedModule.id, placedModule.slotIndex);
             return;
-          }
-          // 잠긴 가구는 클릭으로 잠금 해제
-          if (placedModule.isLocked) {
-            e.stopPropagation();
-            const updateModule = useFurnitureStore.getState().updateModule;
-            updateModule(placedModule.id, { isLocked: false });
           } else if (isEditMode) {
             // 편집 모드 중 가구 재클릭 → 이동 모드 진입
             e.stopPropagation();
@@ -4790,7 +4814,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           <group
             userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
             position={[
-              originalSlotCenterX + doorXOffset, // 도어 중심에 오프셋 적용
+              (placedModule.isLocked ? placedModule.position.x : originalSlotCenterX) + doorXOffset, // 도어 중심에 오프셋 적용
               finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
               (() => {
                 // 상/하부 섹션 depth가 있으면 도어 Z를 "덜 줄어든 쪽"(max) 기준 + direction 반영

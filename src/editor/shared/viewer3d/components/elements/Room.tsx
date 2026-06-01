@@ -200,6 +200,34 @@ interface FrameRenderSegment {
   behindCeiling?: boolean; // 천장 뒤로 보낼 프레임 (커튼박스 구간)
 }
 
+const applyFrameWidthAdjustMm = (
+  leftMm: number,
+  rightMm: number,
+  module: any,
+  frameType: 'top' | 'base'
+) => {
+  const enabled = frameType === 'top'
+    ? module.topFrameWidthAdjustEnabled === true
+    : module.baseFrameWidthAdjustEnabled === true;
+  if (!enabled) return { leftMm, rightMm };
+
+  const leftAdjust = frameType === 'top'
+    ? (module.topFrameLeftAdjustMm ?? 0)
+    : (module.baseFrameLeftAdjustMm ?? 0);
+  const rightAdjust = frameType === 'top'
+    ? (module.topFrameRightAdjustMm ?? 0)
+    : (module.baseFrameRightAdjustMm ?? 0);
+
+  const nextLeft = leftMm - leftAdjust;
+  const nextRight = rightMm + rightAdjust;
+  if (nextRight - nextLeft < 1) {
+    const center = (leftMm + rightMm) / 2;
+    return { leftMm: center - 0.5, rightMm: center + 0.5 };
+  }
+
+  return { leftMm: nextLeft, rightMm: nextRight };
+};
+
 // 같은 Z축 위치의 프레임들을 좌측부터 2410mm 이내로 병합하는 유틸 함수
 function mergeFrameSegments(
   segments: FrameRenderSegment[],
@@ -5192,8 +5220,14 @@ const Room: React.FC<RoomProps> = ({
                       if (mod.hasLeftEndPanel && shouldInsetForEpCollision) leftEpAdj = endPanelRenderThickness;
                       if (mod.hasRightEndPanel && shouldInsetForEpCollision) rightEpAdj = endPanelRenderThickness;
                     }
-                    const modWidthMM = (modRight - modLeft) - leftEpAdj - rightEpAdj;
-                    const modCenterXmm = (modLeft + leftEpAdj + modRight - rightEpAdj) / 2;
+                    const adjustedTopBounds = applyFrameWidthAdjustMm(
+                      modLeft + leftEpAdj,
+                      modRight - rightEpAdj,
+                      mod,
+                      'top'
+                    );
+                    const modWidthMM = adjustedTopBounds.rightMm - adjustedTopBounds.leftMm;
+                    const modCenterXmm = (adjustedTopBounds.leftMm + adjustedTopBounds.rightMm) / 2;
                     const modCategory = getModuleCategory(mod);
                     let modFreeHeight: number;
                     if (modCategory === 'full') {
@@ -6158,6 +6192,15 @@ const Room: React.FC<RoomProps> = ({
                     if (mod.hasLeftEndPanel && shouldInsetForEpCollision) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                     if (mod.hasRightEndPanel && shouldInsetForEpCollision) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   }
+                  const adjustedSlotTopBounds = applyFrameWidthAdjustMm(
+                    modCenterXmm - modWidthMM / 2,
+                    modCenterXmm + modWidthMM / 2,
+                    mod,
+                    'top'
+                  );
+                  modWidthMM = adjustedSlotTopBounds.rightMm - adjustedSlotTopBounds.leftMm;
+                  modCenterXmm = (adjustedSlotTopBounds.leftMm + adjustedSlotTopBounds.rightMm) / 2;
+
                   const rawTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                   // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
                   const slotTopFrameGapMm = Math.max(0, Math.min(rawTopThickness - 1, mod.topFrameGap ?? 0));
@@ -7292,8 +7335,9 @@ const Room: React.FC<RoomProps> = ({
               return true;
             }).forEach((mod) => {
               const bounds = getBaseFrameBoundsX(mod);
-              const modWidthMM = bounds.right - bounds.left;
-              const modCenterXmm = (bounds.left + bounds.right) / 2;
+              const adjustedBaseBounds = applyFrameWidthAdjustMm(bounds.left, bounds.right, mod, 'base');
+              const modWidthMM = adjustedBaseBounds.rightMm - adjustedBaseBounds.leftMm;
+              const modCenterXmm = (adjustedBaseBounds.leftMm + adjustedBaseBounds.rightMm) / 2;
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
               const modBaseZInset = mmToThreeUnits(mod.baseFrameOffset ?? (freeIsLower ? 65 : 0));
@@ -7659,6 +7703,14 @@ const Room: React.FC<RoomProps> = ({
                       const shouldInsetForBottomEpCollision = epBottomGapMm === undefined || epBottomGapMm > 0;
                       if (mod.hasLeftEndPanel && shouldInsetForBottomEpCollision) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                       if (mod.hasRightEndPanel && shouldInsetForBottomEpCollision) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                      const adjustedSlotBaseBounds = applyFrameWidthAdjustMm(
+                        modCenterXmm - modWidthMM / 2,
+                        modCenterXmm + modWidthMM / 2,
+                        mod,
+                        'base'
+                      );
+                      modWidthMM = adjustedSlotBaseBounds.rightMm - adjustedSlotBaseBounds.leftMm;
+                      modCenterXmm = (adjustedSlotBaseBounds.leftMm + adjustedSlotBaseBounds.rightMm) / 2;
                       const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                       // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
                       const baseFrameGapMm = Math.max(0, Math.min(rawBaseHeight - 1, mod.baseFrameGap ?? 0));

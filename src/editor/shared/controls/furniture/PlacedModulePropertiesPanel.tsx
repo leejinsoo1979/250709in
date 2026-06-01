@@ -2211,8 +2211,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   );
   const isTwoSectionFurniture = sections.length === 2 || (isPullOutOrPantry && sections.length >= 2);
 
-  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 slotCustomWidth → customWidth → 기본 너비)
-  const doorOriginalWidth = currentPlacedModule?.slotCustomWidth ?? currentPlacedModule?.customWidth ?? moduleData?.dimensions.width;
+  const coverDoorBodyWidthMm = currentPlacedModule && moduleData
+    ? (
+      currentPlacedModule.adjustedWidth
+      ?? currentPlacedModule.freeWidth
+      ?? currentPlacedModule.slotCustomWidth
+      ?? currentPlacedModule.customWidth
+      ?? moduleData.dimensions.width
+    )
+    : 0;
+  const autoCoverDoorSlotWidthMm = (() => {
+    if (!currentPlacedModule || !moduleData || currentPlacedModule.isFreePlacement) return undefined;
+    if (!currentPlacedModule.hasDoor || !slotInfo?.hasColumn) return undefined;
+    if (currentPlacedModule.adjustedWidth === undefined || currentPlacedModule.adjustedWidth === null) return undefined;
+    if (typeof slotInfo.doorWidth === 'number' && slotInfo.doorWidth > 0) {
+      return slotInfo.doorWidth + 3;
+    }
+    return currentPlacedModule.slotCustomWidth ?? currentPlacedModule.customWidth ?? moduleData.dimensions.width;
+  })();
+  const autoCoverDoorWidthAdjustMm = autoCoverDoorSlotWidthMm && coverDoorBodyWidthMm > 0
+    ? Math.max(0, Math.round(((autoCoverDoorSlotWidthMm - 3) - coverDoorBodyWidthMm) * 10) / 10)
+    : 0;
+
+  // 도어용 원래 너비 계산. 기둥 커버도어는 렌더링과 동일하게 원 슬롯폭을 도어 기준으로 쓴다.
+  const doorOriginalWidth = autoCoverDoorSlotWidthMm
+    ?? currentPlacedModule?.slotCustomWidth
+    ?? currentPlacedModule?.customWidth
+    ?? moduleData?.dimensions.width;
 
   // 프레임 높이 계산 (상단몰딩, 걸래받이)
   const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
@@ -2278,8 +2303,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       placedModule: currentPlacedModule,
       moduleWidthMm: doorOriginalWidth ?? customWidth
     });
+    const rawDoorWidthAdjustEnabled = !!(currentPlacedModule as any)?.doorWidthAdjustEnabled;
+    const panelDoorOriginalWidth = autoCoverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
+      ? undefined
+      : doorOriginalWidth;
     return calculatePanelDetails(
-      moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth,
+      moduleData, customWidth, customDepth, hasDoor, t, panelDoorOriginalWidth,
       currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
@@ -2321,12 +2350,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.maidaWidthAdjustMm ?? -1.5,
       currentPlacedModule?.leftEndPanelOffset ?? 0,
       currentPlacedModule?.rightEndPanelOffset ?? 0,
-      !!(currentPlacedModule as any)?.doorWidthAdjustEnabled,
+      rawDoorWidthAdjustEnabled,
       (currentPlacedModule as any)?.doorWidthAdjustMm ?? -1.5,
       baseFrameGapMm,
-      topFrameGapMm
+      topFrameGapMm,
+      !!(currentPlacedModule as any)?.topFrameWidthAdjustEnabled,
+      (currentPlacedModule as any)?.topFrameLeftAdjustMm ?? 0,
+      (currentPlacedModule as any)?.topFrameRightAdjustMm ?? 0,
+      !!(currentPlacedModule as any)?.baseFrameWidthAdjustEnabled,
+      (currentPlacedModule as any)?.baseFrameLeftAdjustMm ?? 0,
+      (currentPlacedModule as any)?.baseFrameRightAdjustMm ?? 0
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -5548,7 +5583,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const bodyWidth = (() => {
               const v = parseInt(freeWidthInput, 10);
               if (!isNaN(v) && v > 0) return v;
-              return currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
+              return currentPlacedModule.freeWidth || currentPlacedModule.adjustedWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
             })();
             // 실제 3D 렌더링과 동일한 공식 (DoorModule.tsx 의 doorGap=3)
             // 슬롯(도어 1장이 차지하는 너비) - 3mm = 좌우 1.5mm씩 안쪽 갭
@@ -5609,12 +5644,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const NOSURROUND_DEFAULT_OFFSET_MM = -1.5;
             const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
             const userExtensionRaw = (currentPlacedModule as any).doorWidthAdjustMm;
-            const effectiveUserExtension = userExtensionRaw ?? (insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
+            const effectiveDoorWidthAdjustEnabled = doorWidthAdjustEnabled || autoCoverDoorWidthAdjustMm > 0;
+            const effectiveUserExtension = userExtensionRaw
+              ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
             // 싱글: 도어 1장 → 도어 너비 = 몸통 + v
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
-              : (doorWidthAdjustEnabled
+              : (effectiveDoorWidthAdjustEnabled
                 ? Math.max(0, bodyWidth + effectiveUserExtension)
                 : Math.max(0, bodyWidth - 3));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
@@ -5719,19 +5756,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
                     <input
                       type="checkbox"
-                      checked={!!(currentPlacedModule as any).doorWidthAdjustEnabled}
+                      checked={effectiveDoorWidthAdjustEnabled}
                       onChange={(e) => {
                         const enabled = e.target.checked;
                         // 토글 ON 시 초기값: 키큰장 찬넬 인접 시 자동값(insertExtensionMm), 그 외엔 노서라운드 기본 -1.5
                         // 토글 OFF 시 사용자 입력값 제거(자동값 복귀)
                         if (enabled) {
-                          const autoInitial = insertExtensionMm > 0 ? insertExtensionMm : -1.5;
+                          const autoInitial = autoCoverDoorWidthAdjustMm > 0
+                            ? autoCoverDoorWidthAdjustMm
+                            : insertExtensionMm > 0
+                              ? insertExtensionMm
+                              : -1.5;
                           const initial = (currentPlacedModule as any).doorWidthAdjustMm ?? autoInitial;
                           updatePlacedModule(currentPlacedModule.id, {
                             doorWidthAdjustEnabled: true,
                             doorWidthAdjustMm: initial,
                           } as any);
                         } else {
+                          if (autoCoverDoorWidthAdjustMm > 0) return;
                           updatePlacedModule(currentPlacedModule.id, {
                             doorWidthAdjustEnabled: false,
                           } as any);
@@ -5741,14 +5783,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     />
                     <span>도어 확장/축소</span>
                   </label>
-                  {!!(currentPlacedModule as any).doorWidthAdjustEnabled && (
+                  {effectiveDoorWidthAdjustEnabled && (
                     <>
                       {/* 도어 확장량 mm 입력 (현재 적용 절대값, +확장 / -축소). 경첩 반대 방향으로 적용 */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <input
                           type="text"
                           inputMode="decimal"
-                          value={(currentPlacedModule as any).doorWidthAdjustMm ?? (insertExtensionMm > 0 ? insertExtensionMm : -1.5)}
+                          value={(currentPlacedModule as any).doorWidthAdjustMm ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : -1.5)}
                           onChange={(e) => {
                             const v = e.target.value;
                             // 정수/소수/음수 모두 허용 (직접입력 ex. -1.5, 50, 0.3)
@@ -5757,18 +5799,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (!isNaN(num)) {
                                 // 0.1mm 단위로 반올림
                                 const rounded = Math.round(num * 10) / 10;
-                                updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, rounded)) } as any);
+                                updatePlacedModule(currentPlacedModule.id, {
+                                  doorWidthAdjustEnabled: true,
+                                  doorWidthAdjustMm: Math.max(-500, Math.min(500, rounded))
+                                } as any);
                               }
                             }
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? (insertExtensionMm > 0 ? insertExtensionMm : -1.5);
+                              const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : -1.5);
                               // 0.1mm 단위 증감 (Shift 누르면 1.0mm 단위)
                               const step = e.shiftKey ? 1 : 0.1;
                               const next = Math.round((cur + (e.key === 'ArrowUp' ? step : -step)) * 10) / 10;
-                              updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, next)) } as any);
+                              updatePlacedModule(currentPlacedModule.id, {
+                                doorWidthAdjustEnabled: true,
+                                doorWidthAdjustMm: Math.max(-500, Math.min(500, next))
+                              } as any);
                             }
                           }}
                           style={{ width: '70px', padding: '2px 4px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '12px', textAlign: 'right' }}
@@ -6999,6 +7047,77 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             };
             const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' };
             const labelStyle: React.CSSProperties = { minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 };
+            const renderFrameWidthAdjustControls = (
+              frameType: 'top' | 'base',
+              title: string
+            ) => {
+              const enabledField = frameType === 'top' ? 'topFrameWidthAdjustEnabled' : 'baseFrameWidthAdjustEnabled';
+              const leftField = frameType === 'top' ? 'topFrameLeftAdjustMm' : 'baseFrameLeftAdjustMm';
+              const rightField = frameType === 'top' ? 'topFrameRightAdjustMm' : 'baseFrameRightAdjustMm';
+              const enabled = !!(mod as any)[enabledField];
+              const leftValue = (mod as any)[leftField] ?? 0;
+              const rightValue = (mod as any)[rightField] ?? 0;
+              const clampAdjust = (value: number) => Math.max(-500, Math.min(500, value));
+              const commitAdjust = (field: string, value: number) => {
+                updatePlacedModule(mod.id, {
+                  [enabledField]: true,
+                  [field]: clampAdjust(value),
+                } as any);
+              };
+              const renderAdjustInput = (field: string, value: number, label: string) => (
+                <div style={cellStyle}>
+                  <span style={cellLabelStyle}>{label}</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={value !== 0 ? value : ''}
+                    placeholder="0"
+                    onFocus={() => setHighlightedFrame(`${frameType}-${mod.id}` as any)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        commitAdjust(field, value + (e.key === 'ArrowUp' ? 1 : -1));
+                      } else if (e.key === 'Enter') {
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                        commitAdjust(field, v === '' || v === '-' ? 0 : parseInt(v, 10));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      setHighlightedFrame(null);
+                      commitAdjust(field, parseInt(e.target.value, 10) || 0);
+                    }}
+                    style={inputStyle}
+                  />
+                </div>
+              );
+
+              return (
+                <div style={{ marginTop: '4px', paddingLeft: '56px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', flexShrink: 0 }}>
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={(e) => updatePlacedModule(mod.id, { [enabledField]: e.target.checked } as any)}
+                        style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                      />
+                      <span>{title}</span>
+                    </label>
+                    {enabled && (
+                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                        {renderAdjustInput(leftField, leftValue, '좌')}
+                        {renderAdjustInput(rightField, rightValue, '우')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            };
             const getUpperShelfGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
               const nextMod = { ...mod, ...nextFrameState } as typeof mod;
               const basicThicknessMm = (spaceInfo as any).panelThickness || 18;
@@ -7328,6 +7447,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                  </div>
                 </div>
 
+                {topEnabled && renderFrameWidthAdjustControls('top', '폭확장')}
+
               </div>
               )}
 
@@ -7496,6 +7617,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                     )}
                   </div>
+                  {baseEnabled && renderFrameWidthAdjustControls('base', '폭확장')}
                 </div>
                 )}
               </>

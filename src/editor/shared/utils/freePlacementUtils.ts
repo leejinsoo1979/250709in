@@ -511,9 +511,12 @@ export function getColumnObstacleBoundsX(columns: Column[]): FurnitureBoundsX[] 
     .map(col => {
       const colCenterXmm = col.position[0] * 100;
       const colHalfWidth = col.width / 2;
+      const epThickness = Math.max(0, col.endPanelThickness ?? 18);
+      const leftEp = col.hasLeftEndPanel ? epThickness : 0;
+      const rightEp = col.hasRightEndPanel ? epThickness : 0;
       return {
-        left: colCenterXmm - colHalfWidth,
-        right: colCenterXmm + colHalfWidth,
+        left: colCenterXmm - colHalfWidth - leftEp,
+        right: colCenterXmm + colHalfWidth + rightEp,
         category: 'full' as const,
       };
     });

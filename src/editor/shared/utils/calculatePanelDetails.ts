@@ -87,7 +87,13 @@ export const calculatePanelDetails = (
   doorWidthAdjustEnabled: boolean = false,
   doorWidthAdjustMm: number = -1.5,
   baseFrameGapMm: number = 0,
-  topFrameGapMm: number = 0
+  topFrameGapMm: number = 0,
+  topFrameWidthAdjustEnabled: boolean = false,
+  topFrameLeftAdjustMm: number = 0,
+  topFrameRightAdjustMm: number = 0,
+  baseFrameWidthAdjustEnabled: boolean = false,
+  baseFrameLeftAdjustMm: number = 0,
+  baseFrameRightAdjustMm: number = 0
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -101,6 +107,12 @@ export const calculatePanelDetails = (
   const visibleTopFrameHeightMm = topFrameHeightMm && topFrameHeightMm > 0
     ? Math.max(0, topFrameHeightMm - Math.max(0, Math.min(topFrameHeightMm, topFrameGapMm)))
     : 0;
+  const topFramePanelWidthMm = Math.max(1, customWidth + (
+    topFrameWidthAdjustEnabled ? (topFrameLeftAdjustMm + topFrameRightAdjustMm) : 0
+  ));
+  const baseFramePanelWidthMm = Math.max(1, customWidth + (
+    baseFrameWidthAdjustEnabled ? (baseFrameLeftAdjustMm + baseFrameRightAdjustMm) : 0
+  ));
 
   // === 키큰장찬넬(insert-frame) 전용 패널 처리 ===
   // 3D BoxModule.tsx Insert 분기와 동일: 전면 프레임(136×H×18) + 좌EP(18×H×40) + 우EP(18×H×40)
@@ -2845,7 +2857,7 @@ export const calculatePanelDetails = (
   if (!isLowerCabinetModule && hasTopFrame !== false && visibleTopFrameHeightMm > 0) {
     panels.frame.push({
       name: '상단몰딩',
-      width: customWidth,
+      width: topFramePanelWidthMm,
       height: visibleTopFrameHeightMm,
       thickness: PET_THICKNESS,
       material: 'PET',
@@ -2856,7 +2868,7 @@ export const calculatePanelDetails = (
   if (!isUpperCabinet && hasBase !== false && visibleBaseFrameHeightMm > 0) {
     panels.frame.push({
       name: '걸래받이',
-      width: customWidth,
+      width: baseFramePanelWidthMm,
       height: visibleBaseFrameHeightMm,
       thickness: PET_THICKNESS,
       material: 'PET',

@@ -603,7 +603,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules, updatePlacedModule } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId, setSelectedFurnitureId, showFrame } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId, setSelectedFurnitureId, showFrame, setIsDraggingColumn } = useUIStore();
   const view2DTheme = useUIStore(s => s.view2DTheme);
   const equalDistributionUpper = useUIStore(s => s.equalDistributionUpper);
   const equalDistributionLower = useUIStore(s => s.equalDistributionLower);
@@ -1581,8 +1581,24 @@ const Configurator: React.FC = () => {
             newX = Math.min((spaceWidthM / 2) - (columnWidthM / 2), currentX + moveStep);
           }
 
+          (window as any).__columnMoveOnlyActive = true;
+          setIsDraggingColumn(true);
+          const existingTimer = (window as any).__columnMoveOnlyTimer;
+          if (existingTimer) {
+            window.clearTimeout(existingTimer);
+          }
+          const updatedColumns = (spaceInfo.columns || []).map(col =>
+            col.id === activePopup.id ? { ...col, position: [newX, targetColumn.position[1], targetColumn.position[2]] as [number, number, number] } : col
+          );
+          (window as any).__columnMoveOnlyColumnSignature = JSON.stringify(updatedColumns);
+          (window as any).__columnMoveOnlyTimer = window.setTimeout(() => {
+            (window as any).__columnMoveOnlyActive = false;
+            useUIStore.getState().setIsDraggingColumn(false);
+            (window as any).__columnMoveOnlyTimer = undefined;
+          }, 500);
+
           // 컬럼 위치 업데이트
-          updateColumn(activePopup.id, { position: [newX, targetColumn.position[1], targetColumn.position[2]] });
+          setSpaceInfo({ columns: updatedColumns });
 
 // console.log('⌨️ 컬럼 키보드 이동:', {
             // columnId: activePopup.id,
@@ -1601,7 +1617,7 @@ const Configurator: React.FC = () => {
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedColumnId, openColumnEditModal, activePopup, spaceInfo.columns, spaceInfo.width, updateColumn]);
+  }, [selectedColumnId, openColumnEditModal, activePopup, spaceInfo.columns, spaceInfo.width, updateColumn, setIsDraggingColumn, setSpaceInfo]);
 
   // 파일 시작 시 3D 정면뷰로 초기화 (컴포넌트 마운트 시 1회만)
   useEffect(() => {

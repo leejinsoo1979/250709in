@@ -2044,7 +2044,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode, closePanelSimulation } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode, closePanelSimulation, isDraggingColumn } = useUIStore();
+  const lastHandledColumnSignatureRef = useRef<string>('');
   const activePlacementWall = useUIStore(state => state.activePlacementWall);
   const guideDepthEditMode = useUIStore(state => state.guideDepthEditMode);
   const { ready: panelSimulationAccessReady, canUsePanelSimulation } = usePanelSimulationAccess();
@@ -2526,6 +2527,20 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   // 기둥 변경 감지하여 즉시 리렌더링 및 가구 업데이트
   useEffect(() => {
+    const columnSignature = JSON.stringify(spaceInfo?.columns || []);
+    const isColumnMoveOnlyActive = typeof window !== 'undefined' && (window as any).__columnMoveOnlyActive === true;
+    const isColumnMoveOnlySignature = typeof window !== 'undefined'
+      && (window as any).__columnMoveOnlyColumnSignature === columnSignature;
+    const isColumnMoving = isDraggingColumn || useUIStore.getState().isDraggingColumn || isColumnMoveOnlyActive || isColumnMoveOnlySignature;
+    if (isColumnMoving) {
+      lastHandledColumnSignatureRef.current = columnSignature;
+      return;
+    }
+    if (lastHandledColumnSignatureRef.current === columnSignature) {
+      return;
+    }
+    lastHandledColumnSignatureRef.current = columnSignature;
+
     if (spaceInfo) {
       console.log('🔄 Space3DView - 기둥 상태 변경 감지:', {
         columnsCount: spaceInfo.columns?.length || 0,
@@ -2536,7 +2551,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       updateFurnitureForColumns(spaceInfo);
     }
     // Three.js 씬 강제 업데이트는 ThreeCanvas에서 자동으로 처리됨
-  }, [spaceInfo?.columns]); // updateFurnitureForColumns는 dependency에서 제외 (무한 루프 방지)
+  }, [spaceInfo?.columns, isDraggingColumn]); // updateFurnitureForColumns는 dependency에서 제외 (무한 루프 방지)
 
   // 가구 배치 시에도 adjustedWidth 업데이트
   useEffect(() => {
@@ -2545,7 +2560,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       spaceInfo: !!spaceInfo,
       columns: spaceInfo?.columns?.length || 0
     });
-    if (spaceInfo) {
+    const columnSignature = JSON.stringify(spaceInfo?.columns || []);
+    const isColumnMoveOnlyActive = typeof window !== 'undefined' && (window as any).__columnMoveOnlyActive === true;
+    const isColumnMoveOnlySignature = typeof window !== 'undefined'
+      && (window as any).__columnMoveOnlyColumnSignature === columnSignature;
+    const isColumnMoving = useUIStore.getState().isDraggingColumn || isColumnMoveOnlyActive || isColumnMoveOnlySignature;
+    if (spaceInfo && !isColumnMoving) {
+      lastHandledColumnSignatureRef.current = JSON.stringify(spaceInfo.columns || []);
       console.log('🔄 [Space3DView] updateFurnitureForColumns 호출');
       updateFurnitureForColumns(spaceInfo);
     }
@@ -4130,6 +4151,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                       color={column.color}
                       hasBackPanelFinish={column.hasBackPanelFinish}
                       hasFrontPanelFinish={column.hasFrontPanelFinish}
+                      hasLeftEndPanel={column.hasLeftEndPanel}
+                      hasRightEndPanel={column.hasRightEndPanel}
+                      endPanelThickness={column.endPanelThickness}
                       spaceInfo={spaceInfo}
                       renderMode={effectiveRenderMode}
                       onPositionChange={(id, newPosition) => {

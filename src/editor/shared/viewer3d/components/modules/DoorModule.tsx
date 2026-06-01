@@ -3572,7 +3572,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = 3;
     const outerLeftGapCompensationMm = openOuterDoorSides.left ? 1.5 : 0;
     const outerRightGapCompensationMm = openOuterDoorSides.right ? 1.5 : 0;
-    let doorWidth = actualDoorWidth - doorGap + outerLeftGapCompensationMm + outerRightGapCompensationMm; // 슬롯사이즈 - 적용 갭
+    const doorAdjEnabled = !!(storePlacedModule as any)?.doorWidthAdjustEnabled;
+    const widthBaseForDoorAdjust = doorAdjEnabled
+      && typeof adjustedWidth === 'number'
+      && adjustedWidth > 0
+      && typeof originalSlotWidth === 'number'
+      && originalSlotWidth > adjustedWidth
+        ? adjustedWidth
+        : actualDoorWidth;
+    let doorWidth = widthBaseForDoorAdjust - doorGap + outerLeftGapCompensationMm + outerRightGapCompensationMm; // 슬롯사이즈 - 적용 갭
     const openOuterShiftX = mmToThreeUnits(outerRightGapCompensationMm - outerLeftGapCompensationMm) / 2;
 
     // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금
@@ -3608,7 +3616,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // Insert 프레임 인접 시 도어 확장 (해당 쪽으로)
     // 도어 확장/축소 토글: ON 시 입력값 v(mm)는 몸통 대비 도어 전체 폭 증감값이다.
     // 기본 도어 폭이 몸통-3mm에서 시작하므로 v=0이 몸통과 같아지도록 +3mm를 보정한다.
-    const doorAdjEnabled = !!(storePlacedModule as any)?.doorWidthAdjustEnabled;
     const userDoorExtendMm = (storePlacedModule as any)?.doorWidthAdjustMm;
     const autoLeftMm = insertFrameAdjacency.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
     const autoRightMm = insertFrameAdjacency.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;

@@ -48,9 +48,12 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     const columnOccupiedBounds = columns.map((column) => {
       const centerXmm = column.position[0] * 100;
       const halfWidth = column.width / 2;
+      const epThickness = Math.max(0, column.endPanelThickness ?? spaceInfo.panelThickness ?? 18);
+      const leftEp = column.hasLeftEndPanel ? epThickness : 0;
+      const rightEp = column.hasRightEndPanel ? epThickness : 0;
       return {
-        left: centerXmm - halfWidth,
-        right: centerXmm + halfWidth,
+        left: centerXmm - halfWidth - leftEp,
+        right: centerXmm + halfWidth + rightEp,
         category: 'full' as const
       };
     });
