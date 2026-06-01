@@ -147,6 +147,34 @@ export default function TallEpContextMenu() {
           color: '#1a1a1a',
         }}
       >
+        {/* 내치/외치 토글 — EP가 하나라도 켜졌을 때 (내치: EP만큼 본체 줄임=전체폭 유지 / 외치: 본체 유지+EP 추가) */}
+        {(cur.hasLeftEndPanel || cur.hasRightEndPanel) && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 14px 8px' }}>
+            <span style={{ fontSize: 12, color: '#888', whiteSpace: 'nowrap' }}>내/외치</span>
+            {(['inside', 'outside'] as const).map((mode) => {
+              const modeActive = (cur.endPanelMode ?? 'inside') === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => updatePlacedModule(placedModule.id, { endPanelMode: mode } as any)}
+                  style={{
+                    flex: 1,
+                    padding: '5px 0',
+                    fontSize: 12,
+                    fontWeight: modeActive ? 700 : 500,
+                    cursor: 'pointer',
+                    borderRadius: 6,
+                    border: `1px solid ${modeActive ? 'var(--theme-primary, #7269ef)' : '#d0d0d0'}`,
+                    background: modeActive ? 'var(--theme-primary, #7269ef)' : 'transparent',
+                    color: modeActive ? '#fff' : '#1a1a1a',
+                  }}
+                >
+                  {mode === 'inside' ? '내치' : '외치'}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {items.map((opt) => {
           const active =
             (opt.id === 'left' && cur.hasLeftEndPanel && !cur.hasRightEndPanel) ||
