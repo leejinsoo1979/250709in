@@ -32,6 +32,8 @@ import { useHistoryTracking } from './hooks/useHistoryTracking';
 import { use3DExport, type ExportFormat } from '@/editor/shared/hooks/use3DExport';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 
+const COLUMN_MOVE_RELEASE_DELAY_MS = 60;
+
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
 import TallEpContextMenu from './components/TallEpContextMenu';
@@ -1595,7 +1597,7 @@ const Configurator: React.FC = () => {
             (window as any).__columnMoveOnlyActive = false;
             useUIStore.getState().setIsDraggingColumn(false);
             (window as any).__columnMoveOnlyTimer = undefined;
-          }, 500);
+          }, COLUMN_MOVE_RELEASE_DELAY_MS);
 
           // 컬럼 위치 업데이트
           setSpaceInfo({ columns: updatedColumns });

@@ -2043,7 +2043,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick, islandViewSide, showViewCubeGizmo = true } = props;
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
-  const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
+  const { placedModules, updateFurnitureForColumns, restoreFurnitureForColumnMove } = useFurnitureStore();
   const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode, closePanelSimulation, isDraggingColumn } = useUIStore();
   const lastHandledColumnSignatureRef = useRef<string>('');
   const activePlacementWall = useUIStore(state => state.activePlacementWall);
@@ -2532,6 +2532,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     // 기둥 이동 후 가구 폭(adjustedWidth) 보정이 정상 반영되도록 한다.
     const isColumnMoving = isDraggingColumn || useUIStore.getState().isDraggingColumn;
     if (isColumnMoving) {
+      if (spaceInfo) {
+        restoreFurnitureForColumnMove(spaceInfo);
+      }
       return;
     }
     if (lastHandledColumnSignatureRef.current === columnSignature) {

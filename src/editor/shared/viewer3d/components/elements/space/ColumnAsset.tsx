@@ -16,6 +16,7 @@ import {
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
+const COLUMN_MOVE_RELEASE_DELAY_MS = 60;
 
 interface ColumnAssetProps {
   position: [number, number, number];
@@ -100,7 +101,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       (window as any).__columnMoveOnlyActive = false;
       setIsDraggingColumn(false);
       (window as any).__columnMoveOnlyTimer = undefined;
-    }, 500);
+    }, COLUMN_MOVE_RELEASE_DELAY_MS);
   }, [setIsDraggingColumn]);
 
   const { invalidate } = useThree();

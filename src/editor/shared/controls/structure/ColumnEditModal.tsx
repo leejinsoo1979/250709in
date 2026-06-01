@@ -5,6 +5,8 @@ import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './ColumnEditModal.module.css';
 
+const COLUMN_MOVE_RELEASE_DELAY_MS = 60;
+
 interface ColumnEditModalProps {
   columnId: string | null;
   isOpen: boolean;
@@ -77,7 +79,7 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
       (window as any).__columnMoveOnlyActive = false;
       useUIStore.getState().setIsDraggingColumn(false);
       (window as any).__columnMoveOnlyTimer = undefined;
-    }, 500);
+    }, COLUMN_MOVE_RELEASE_DELAY_MS);
   }, [setIsDraggingColumn]);
 
   const handleLeftGapChange = (value: number) => {

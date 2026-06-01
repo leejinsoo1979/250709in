@@ -60,6 +60,7 @@ interface FurnitureDataState {
 
   // 기둥 변경 시 가구 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => void;
+  restoreFurnitureForColumnMove: (spaceInfo: any) => void;
 
   // 슬롯 모드 가구 너비 조정 → 나머지 슬롯 재분할
   adjustSlotWidth: (moduleId: string, newWidth: number) => void;
@@ -124,6 +125,49 @@ const notifyR3F = (modules: PlacedModule[]) => {
     storeRef?.setState({ placedModules: [...modules] });
   }, 0);
 };
+
+const getGlobalSlotIndexForModule = (module: PlacedModule, spaceInfo: any): number | undefined => {
+  if (module.slotIndex === undefined) return undefined;
+
+  let globalSlotIndex = module.slotIndex;
+  if (module.zone && spaceInfo.droppedCeiling?.enabled) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    if (module.zone === 'dropped' && zoneInfo.dropped) {
+      globalSlotIndex = zoneInfo.normal.columnCount + module.slotIndex;
+    }
+  }
+
+  return globalSlotIndex;
+};
+
+const isSameColumnStillAdjacent = (module: PlacedModule, slotInfo: any): boolean =>
+  !!(
+    slotInfo?.hasColumn &&
+    module.columnSlotInfo?.hasColumn &&
+    (!module.columnSlotInfo.columnId || slotInfo.column?.id === module.columnSlotInfo.columnId) &&
+    (!module.columnSlotInfo.intrusionDirection || slotInfo.intrusionDirection === module.columnSlotInfo.intrusionDirection) &&
+    (!module.columnSlotInfo.furniturePosition || slotInfo.furniturePosition === module.columnSlotInfo.furniturePosition)
+  );
+
+const hasColumnRelatedAdjust = (module: PlacedModule): boolean =>
+  module.adjustedWidth !== undefined ||
+  module.columnSlotInfo !== undefined ||
+  (module as any).adjustedPosition !== undefined ||
+  module.topFrameWidthAdjustEnabled === true ||
+  module.baseFrameWidthAdjustEnabled === true;
+
+const clearColumnRelatedAdjust = (module: PlacedModule): PlacedModule => ({
+  ...module,
+  adjustedWidth: undefined,
+  adjustedPosition: undefined,
+  columnSlotInfo: undefined,
+  topFrameWidthAdjustEnabled: false,
+  topFrameLeftAdjustMm: 0,
+  topFrameRightAdjustMm: 0,
+  baseFrameWidthAdjustEnabled: false,
+  baseFrameLeftAdjustMm: 0,
+  baseFrameRightAdjustMm: 0
+} as PlacedModule);
 
 const getGroupedMovementUpdates = (
   module: PlacedModule,
@@ -1266,26 +1310,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         if (module.slotIndex === undefined) return [module];
         if (module.isLocked) return [module];
 
-        // zone이 있는 경우 글로벌 슬롯 인덱스로 변환
-        let globalSlotIndex = module.slotIndex;
-        if (module.zone && spaceInfo.droppedCeiling?.enabled) {
-          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-          if (module.zone === 'dropped' && zoneInfo.dropped) {
-            globalSlotIndex = zoneInfo.normal.columnCount + module.slotIndex;
-          }
-        }
+        const globalSlotIndex = getGlobalSlotIndexForModule(module, spaceInfo);
+        if (globalSlotIndex === undefined) return [module];
 
         const slotInfo = columnSlots[globalSlotIndex];
-        const sameColumnStillAdjacent =
-          slotInfo?.hasColumn &&
-          module.columnSlotInfo?.hasColumn &&
-          (!module.columnSlotInfo.columnId || slotInfo.column?.id === module.columnSlotInfo.columnId) &&
-          (!module.columnSlotInfo.intrusionDirection || slotInfo.intrusionDirection === module.columnSlotInfo.intrusionDirection) &&
-          (!module.columnSlotInfo.furniturePosition || slotInfo.furniturePosition === module.columnSlotInfo.furniturePosition);
 
         // 기둥과 함께 배치된 가구만 폭 보정을 유지한다.
         // 기둥이 나중에 들어오거나, 가구 옆을 벗어나면 보정/확장 체크를 원복한다.
-        if (sameColumnStillAdjacent) {
+        if (isSameColumnStillAdjacent(module, slotInfo)) {
           const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
           const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
           if (module.adjustedWidth === newAdjustedWidth) return [module];
@@ -1295,25 +1327,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           }];
         } else {
           // 기둥이 없는 슬롯인 경우 폭/위치 보정을 제거한다. 기둥 이동으로 가구 좌표를 바꾸면 안 된다.
-          const hasColumnRelatedAdjust =
-            module.adjustedWidth !== undefined ||
-            module.columnSlotInfo !== undefined ||
-            module.adjustedPosition !== undefined ||
-            module.topFrameWidthAdjustEnabled === true ||
-            module.baseFrameWidthAdjustEnabled === true;
-          if (hasColumnRelatedAdjust) {
-            return [{
-              ...module,
-              adjustedWidth: undefined,
-              adjustedPosition: undefined,
-              columnSlotInfo: undefined,
-              topFrameWidthAdjustEnabled: false,
-              topFrameLeftAdjustMm: 0,
-              topFrameRightAdjustMm: 0,
-              baseFrameWidthAdjustEnabled: false,
-              baseFrameLeftAdjustMm: 0,
-              baseFrameRightAdjustMm: 0
-            }];
+          if (hasColumnRelatedAdjust(module)) {
+            return [clearColumnRelatedAdjust(module)];
           }
           return [module];
         }
@@ -1323,6 +1338,31 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         placedModules: updatedModules
       };
     });
+  },
+
+  restoreFurnitureForColumnMove: (spaceInfo: any) => {
+    const state = get();
+    const columnSlots = analyzeColumnSlots(spaceInfo);
+    let changed = false;
+
+    const updatedModules = state.placedModules.map(module => {
+      if (module.slotIndex === undefined || module.isLocked || !hasColumnRelatedAdjust(module)) {
+        return module;
+      }
+
+      const globalSlotIndex = getGlobalSlotIndexForModule(module, spaceInfo);
+      const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
+      if (isSameColumnStillAdjacent(module, slotInfo)) {
+        return module;
+      }
+
+      changed = true;
+      return clearColumnRelatedAdjust(module);
+    });
+
+    if (!changed) return;
+    set({ placedModules: updatedModules });
+    notifyR3F(updatedModules);
   },
 
   // Mark as saved
