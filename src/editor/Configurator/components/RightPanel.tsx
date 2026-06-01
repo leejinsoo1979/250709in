@@ -1661,6 +1661,21 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
                 getSlotBaseEnabled(slot) ? Math.max(0, slot.baseFrameGap ?? 0) : 0
               );
+              const guideAllCheckboxStyle: React.CSSProperties = {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                width: 'fit-content',
+                marginBottom: '4px',
+                fontSize: '11px',
+                color: 'var(--theme-text-secondary)',
+                cursor: 'pointer'
+              };
+              const guideAllCheckboxBottomStyle: React.CSSProperties = {
+                ...guideAllCheckboxStyle,
+                marginTop: '4px',
+                marginBottom: 0
+              };
 
               return (
                 <>
@@ -1669,18 +1684,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     expanded={expandedSections.has('guideSlotTopFrame')}
                     onToggle={() => toggleSection('guideSlotTopFrame')}
                     helpText="커스텀 슬롯의 상단몰딩을 전체 또는 슬롯별로 설정합니다."
-                    headerAccessory={
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={guideTopFrameAllMode}
-                          onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
-                          style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                        />
-                        <span>전체</span>
-                      </label>
-                    }
                   >
+                    <label style={guideAllCheckboxStyle}>
+                      <input
+                        type="checkbox"
+                        checked={guideTopFrameAllMode}
+                        onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                        style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                      />
+                      <span>전체</span>
+                    </label>
                     {guideTopFrameAllMode ? (
                       <GuideSlotFrameRow
                         label="전체"
@@ -1733,17 +1746,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     expanded={expandedSections.has('guideSlotBaseFrame')}
                     onToggle={() => toggleSection('guideSlotBaseFrame')}
                     helpText="커스텀 슬롯의 걸레받이를 전체 또는 슬롯별로 설정합니다."
-                    headerAccessory={
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
-                          checked={guideBaseFrameAllMode}
-                          onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
-                          style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                        />
-                        <span>전체</span>
-                      </label>
-                    }
                   >
                     {guideBaseFrameAllMode ? (
                       <GuideSlotFrameRow
@@ -1794,6 +1796,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         );
                       })
                     )}
+                    <label style={guideAllCheckboxBottomStyle}>
+                      <input
+                        type="checkbox"
+                        checked={guideBaseFrameAllMode}
+                        onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
+                        style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                      />
+                      <span>전체</span>
+                    </label>
                   </FormControl>
                 </>
               );

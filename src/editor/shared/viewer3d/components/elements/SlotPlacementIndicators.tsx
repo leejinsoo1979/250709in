@@ -2105,8 +2105,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const lastSlotEndX = Math.max(...guideSlots.map((slot) => slot.x + slot.width));
     const remainingFreeWidth = Math.max(0, guideEndX - lastSlotEndX);
     const remainingFreeLabelX = lastSlotEndX + remainingFreeWidth / 2;
-    const splitUpperWidthLabelY = fullHeight + 1.2;
-    const splitLowerWidthLabelY = -1.2;
+    const splitUpperWidthLabelY = fullHeight + 1.5;
+    const splitLowerWidthLabelY = -1.75;
     const getSlotLabelY = (slot: FreePlacementGuideSlot) => {
       const zone = slot.guideZone || 'full';
       if (zone === 'upper' && hasSplitSlots) return splitUpperWidthLabelY;
@@ -2306,6 +2306,31 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
     const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+    const getSlotFrameControlY = (slot: FreePlacementGuideSlot, frame: 'top' | 'base') => {
+      const [startY, endY] = getSlotYRange(slot);
+      const centerY = (startY + endY) / 2;
+      const hasTopEditor = !guideTopFrameAllMode && (slot.guideZone || 'full') !== 'lower';
+      const hasBaseEditor = !guideBaseFrameAllMode && (slot.guideZone || 'full') !== 'upper';
+      const halfHeight = Math.max(0, (endY - startY) / 2);
+      const desiredOffset = hasTopEditor && hasBaseEditor ? 2.8 : 2.1;
+      const offset = Math.min(desiredOffset, Math.max(0.35, halfHeight - 0.18));
+      const y = frame === 'top' ? centerY + offset : centerY - offset;
+      return Math.max(startY + 0.12, Math.min(endY - 0.12, y));
+    };
+    const getSlotWidthEditorY = (slot: FreePlacementGuideSlot) => {
+      const [startY, endY] = getSlotYRange(slot);
+      const centerY = (startY + endY) / 2;
+      const hasTopEditor = !guideTopFrameAllMode && (slot.guideZone || 'full') !== 'lower';
+      const hasBaseEditor = !guideBaseFrameAllMode && (slot.guideZone || 'full') !== 'upper';
+      const halfHeight = Math.max(0, (endY - startY) / 2);
+      const offset = Math.min(1.05, Math.max(0.35, halfHeight - 0.45));
+
+      if (hasTopEditor && hasBaseEditor) return centerY;
+      if (hasTopEditor) return Math.max(startY + 0.22, Math.min(endY - 0.22, centerY - offset));
+      if (hasBaseEditor) return Math.max(startY + 0.22, Math.min(endY - 0.22, centerY + offset));
+
+      return centerY;
+    };
     const isGlobalTopFrameEnabled = gTopMolding > 0;
     const isGlobalBaseFrameEnabled = !isFloatingBase && gBaseboard > 0;
     const topFrameSlots = guideSlots
@@ -2356,6 +2381,29 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       background: 'transparent',
       boxShadow: 'none'
     };
+    const frameAllEditorPanelStyle: React.CSSProperties = {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+      padding: 0,
+      background: 'transparent',
+      boxShadow: 'none'
+    };
+    const frameAllCheckboxStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 3,
+      color: guideColor,
+      fontSize: 10,
+      fontWeight: 900,
+      cursor: 'pointer',
+      whiteSpace: 'nowrap'
+    };
+    const topFrameEditorY = Math.min(fullHeight + 0.38, ((yUpperTop + fullHeightMm) / 2) * 0.01 + 0.46);
+    const baseFrameEditorY = Math.max(-0.38, (yBaseTop / 2) * 0.01 - 0.46);
     const frameRowsStyle: React.CSSProperties = {
       display: 'flex',
       alignItems: 'center',
@@ -2384,25 +2432,28 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       lineHeight: 1.1
     });
     const frameToggleStyle = (enabled: boolean): React.CSSProperties => ({
-      width: 24,
-      height: 14,
+      width: 28,
+      height: 16,
       padding: 0,
-      borderRadius: 999,
-      border: `1.5px solid ${guideColor}`,
-      background: enabled ? 'color-mix(in srgb, var(--theme-primary) 18%, transparent)' : 'transparent',
+      borderRadius: 8,
+      border: `1px solid ${guideColor}`,
+      background: enabled ? guideColor : 'transparent',
       cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: enabled ? 'flex-end' : 'flex-start'
+      position: 'relative',
+      flexShrink: 0,
+      transition: 'background-color 0.2s'
     });
-    const frameToggleKnobStyle: React.CSSProperties = {
-      width: 8,
-      height: 8,
-      margin: 2,
+    const frameToggleKnobStyle = (enabled: boolean): React.CSSProperties => ({
+      position: 'absolute',
+      top: 2,
+      left: enabled ? 16 : 2,
+      width: 10,
+      height: 10,
       borderRadius: '50%',
-      background: guideColor,
-      boxShadow: '0 1px 2px rgba(15, 23, 42, 0.22)'
-    };
+      background: enabled ? '#fff' : guideColor,
+      transition: 'left 0.2s',
+      boxShadow: enabled ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.22)'
+    });
     const frameField = (labelText: string, value: number, commit: (v: number) => void, keyName: string, min = 0, max = 9999, compact = false) => (
       <label key={keyName} style={{ display: 'flex', alignItems: 'center', gap: compact ? 1 : 2 }}>
         {labelText && !compact && <span style={{ fontSize: 9, fontWeight: 800, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap' }}>{labelText}</span>}
@@ -2432,23 +2483,41 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       onOffset: (v: number) => void,
       onGap: (v: number) => void,
       compact = false
-    ) => (
-      <div key={`top-frame-row-${labelText}`} style={{ ...frameRowStyle, gap: compact ? 2 : 4 }}>
-        {labelText && <span style={{ minWidth: 28, color: guideColor, fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap' }}>{labelText}</span>}
+    ) => {
+      const toggle = (
         <button type="button" aria-label="상단몰딩 토글" onClick={onToggle} style={frameToggleStyle(enabled)}>
-          <span style={frameToggleKnobStyle} />
+          <span style={frameToggleKnobStyle(enabled)} />
         </button>
-        {enabled ? (
-          <>
-            {frameField('', size, onSize, `${labelText}-top-size`, 0, 9999, compact)}
-            {frameField('옵셋', offset, onOffset, `${labelText}-top-offset`, -500, 500, compact)}
-            {frameField('갭', gap, onGap, `${labelText}-top-gap`, 0, 2000, compact)}
-          </>
-        ) : (
-          frameField(compact ? '갭' : '상단갭', gap, onGap, `${labelText}-top-clearance`, 0, 2000, compact)
-        )}
-      </div>
-    );
+      );
+      const fields = enabled ? (
+        <>
+          {frameField('', size, onSize, `${labelText}-top-size`, 0, 9999, compact)}
+          {frameField('옵셋', offset, onOffset, `${labelText}-top-offset`, -500, 500, compact)}
+          {frameField('갭', gap, onGap, `${labelText}-top-gap`, 0, 2000, compact)}
+        </>
+      ) : (
+        frameField(compact ? '갭' : '상단갭', gap, onGap, `${labelText}-top-clearance`, 0, 2000, compact)
+      );
+
+      if (compact) {
+        return (
+          <div key={`top-frame-row-${labelText}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: 0, background: 'transparent' }}>
+            {toggle}
+            <div style={{ ...frameRowStyle, gap: 2 }}>
+              {fields}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div key={`top-frame-row-${labelText}`} style={{ ...frameRowStyle, gap: 4 }}>
+          {labelText && <span style={{ minWidth: 28, color: guideColor, fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap' }}>{labelText}</span>}
+          {toggle}
+          {fields}
+        </div>
+      );
+    };
     const renderBaseFrameEditorRow = (
       labelText: string,
       enabled: boolean,
@@ -2462,33 +2531,51 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       onGap: (v: number) => void,
       onFloat: (v: number) => void,
       compact = false
-    ) => (
-      <div key={`base-frame-row-${labelText}`} style={{ ...frameRowStyle, gap: compact ? 2 : 4 }}>
-        {labelText && <span style={{ minWidth: 28, color: guideColor, fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap' }}>{labelText}</span>}
+    ) => {
+      const toggle = (
         <button type="button" aria-label="걸레받이 토글" onClick={onToggle} style={frameToggleStyle(enabled)}>
-          <span style={frameToggleKnobStyle} />
+          <span style={frameToggleKnobStyle(enabled)} />
         </button>
-        {enabled ? (
-          <>
-            {frameField('', size, onSize, `${labelText}-base-size`, 0, 9999, compact)}
-            {frameField('옵셋', offset, onOffset, `${labelText}-base-offset`, -500, 500, compact)}
-            {frameField('갭', gap, onGap, `${labelText}-base-gap`, 0, 2000, compact)}
-          </>
-        ) : (
-          frameField(compact ? '띄움' : '띄움높이', floatHeight, onFloat, `${labelText}-base-float`, 0, 2000, compact)
-        )}
-      </div>
-    );
+      );
+      const fields = enabled ? (
+        <>
+          {frameField('', size, onSize, `${labelText}-base-size`, 0, 9999, compact)}
+          {frameField('옵셋', offset, onOffset, `${labelText}-base-offset`, -500, 500, compact)}
+          {frameField('갭', gap, onGap, `${labelText}-base-gap`, 0, 2000, compact)}
+        </>
+      ) : (
+        frameField(compact ? '띄움' : '띄움높이', floatHeight, onFloat, `${labelText}-base-float`, 0, 2000, compact)
+      );
+
+      if (compact) {
+        return (
+          <div key={`base-frame-row-${labelText}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: 0, background: 'transparent' }}>
+            {toggle}
+            <div style={{ ...frameRowStyle, gap: 2 }}>
+              {fields}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div key={`base-frame-row-${labelText}`} style={{ ...frameRowStyle, gap: 4 }}>
+          {labelText && <span style={{ minWidth: 28, color: guideColor, fontSize: 10, fontWeight: 900, whiteSpace: 'nowrap' }}>{labelText}</span>}
+          {toggle}
+          {fields}
+        </div>
+      );
+    };
     const renderFrameSettingEditors = () => (
       <>
         {guideTopFrameAllMode ? (
           <Html
             key="guide-top-frame-settings"
-            position={[0, ((yUpperTop + fullHeightMm) / 2) * 0.01, guideZ]}
+            position={[0, topFrameEditorY, guideZ]}
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
-            <div style={{ ...frameEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 3, color: guideColor, fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <div style={{ ...frameAllEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
+              <label style={frameAllCheckboxStyle}>
                 <input
                   type="checkbox"
                   checked={guideTopFrameAllMode}
@@ -2539,9 +2626,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               const enabled = getSlotTopEnabled(slot);
               const topGap = getSlotTopGap(slot);
               const thickness = getSlotTopThickness(slot);
-              const [slotStartY, slotEndY] = getSlotYRange(slot);
               const slotCenterX = (slot.x + slot.width / 2 - spaceHalfWidth) * 0.01;
-              const slotTopControlY = Math.max(slotStartY + 0.4, slotEndY - 0.75);
+              const slotTopControlY = getSlotFrameControlY(slot, 'top');
               return (
                 <Html
                   key={`guide-top-frame-slot-${slot.id}`}
@@ -2574,19 +2660,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         {guideBaseFrameAllMode ? (
           <Html
             key="guide-base-frame-settings"
-            position={[0, (yBaseTop / 2) * 0.01, guideZ]}
+            position={[0, baseFrameEditorY, guideZ]}
             center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
           >
-            <div style={{ ...frameEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 3, color: guideColor, fontSize: 10, fontWeight: 900, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                <input
-                  type="checkbox"
-                  checked={guideBaseFrameAllMode}
-                  onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
-                  style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
-                />
-                <span>전체</span>
-              </label>
+            <div style={{ ...frameAllEditorPanelStyle, ...guideHtmlScaleStyle }} onPointerDown={(e) => e.stopPropagation()}>
               <div style={frameRowsStyle}>
                 {renderBaseFrameEditorRow(
                   '',
@@ -2608,6 +2685,15 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                   (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', height: 0, floatHeight: v } })
                 )}
               </div>
+              <label style={frameAllCheckboxStyle}>
+                <input
+                  type="checkbox"
+                  checked={guideBaseFrameAllMode}
+                  onChange={(e) => setSpaceInfo({ guideBaseFrameAllMode: e.target.checked })}
+                  style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
+                />
+                <span>전체</span>
+              </label>
             </div>
           </Html>
         ) : (
@@ -2631,9 +2717,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               const enabled = getSlotBaseEnabled(slot);
               const baseGap = getSlotBaseGap(slot);
               const baseHeight = getSlotBaseHeight(slot);
-              const [slotStartY, slotEndY] = getSlotYRange(slot);
               const slotCenterX = (slot.x + slot.width / 2 - spaceHalfWidth) * 0.01;
-              const slotBaseControlY = Math.min(slotEndY - 0.4, slotStartY + 0.75);
+              const slotBaseControlY = getSlotFrameControlY(slot, 'base');
               return (
                 <Html
                   key={`guide-base-frame-slot-${slot.id}`}
@@ -3181,7 +3266,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           return (
             <Html
               key={slot.id}
-              position={[centerX, getSlotControlY(slot), 0]}
+              position={[centerX, getSlotWidthEditorY(slot), 0]}
               center
               style={{
                 pointerEvents: 'none',
