@@ -806,10 +806,10 @@ export function useLivePanelData() {
         const coverDoorSlotInfo = !placedModule.isFreePlacement && placedModule.slotIndex !== undefined
           ? analyzeColumnSlots(effectiveSpaceInfo)[placedModule.slotIndex]
           : undefined;
-        const coverDoorSlotWidthMm = coverDoorSlotInfo?.hasColumn && typeof (placedModule as any).adjustedWidth === 'number'
+        const coverDoorSlotWidthMm = coverDoorSlotInfo?.hasColumn
           ? (
             typeof coverDoorSlotInfo.doorWidth === 'number' && coverDoorSlotInfo.doorWidth > 0
-              ? coverDoorSlotInfo.doorWidth + 3
+              ? Math.round(coverDoorSlotInfo.doorWidth + 3)
               : ((placedModule as any).slotCustomWidth ?? (placedModule as any).customWidth ?? moduleData.dimensions.width)
           )
           : undefined;
@@ -817,9 +817,16 @@ export function useLivePanelData() {
           ? Math.max(0, Math.round(((coverDoorSlotWidthMm - 3) - width) * 10) / 10)
           : 0;
         const rawDoorWidthAdjustEnabled = !!(placedModule as any).doorWidthAdjustEnabled;
-        const panelDoorOriginalWidth = coverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
+        const coverDoorMatchesManual = coverDoorSlotWidthMm !== undefined
+          && Math.round((placedModule as any).doorWidthAdjustMm ?? coverDoorWidthAdjustMm) === Math.round(coverDoorWidthAdjustMm);
+        const panelDoorOriginalWidth = coverDoorSlotWidthMm !== undefined && coverDoorMatchesManual
+          ? coverDoorSlotWidthMm
+          : coverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
           ? undefined
           : coverDoorSlotWidthMm;
+        const panelDoorWidthAdjustEnabled = coverDoorSlotWidthMm !== undefined && coverDoorMatchesManual
+          ? false
+          : rawDoorWidthAdjustEnabled;
         const depth = placedModule.customDepth || moduleData.dimensions.depth;
         const hasDoor = placedModule.hasDoor || false;
         const material = placedModule.material || 'PB';
@@ -961,7 +968,7 @@ export function useLivePanelData() {
           (placedModule as any).maidaWidthAdjustMm ?? -1.5,
           (placedModule as any).leftEndPanelOffset ?? 0,
           (placedModule as any).rightEndPanelOffset ?? 0,
-          rawDoorWidthAdjustEnabled,
+          panelDoorWidthAdjustEnabled,
           (placedModule as any).doorWidthAdjustMm ?? -1.5,
           baseFrameGapH,
           topFrameGapH
@@ -1776,10 +1783,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const coverDoorSlotInfo2 = !placedModule.isFreePlacement && placedModule.slotIndex !== undefined
         ? analyzeColumnSlots(effectiveSpaceInfo2)[placedModule.slotIndex]
         : undefined;
-      const coverDoorSlotWidthMm2 = coverDoorSlotInfo2?.hasColumn && typeof (placedModule as any).adjustedWidth === 'number'
+      const coverDoorSlotWidthMm2 = coverDoorSlotInfo2?.hasColumn
         ? (
           typeof coverDoorSlotInfo2.doorWidth === 'number' && coverDoorSlotInfo2.doorWidth > 0
-            ? coverDoorSlotInfo2.doorWidth + 3
+            ? Math.round(coverDoorSlotInfo2.doorWidth + 3)
             : ((placedModule as any).slotCustomWidth ?? (placedModule as any).customWidth ?? moduleData.dimensions.width)
         )
         : undefined;
@@ -1787,9 +1794,16 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         ? Math.max(0, Math.round(((coverDoorSlotWidthMm2 - 3) - width) * 10) / 10)
         : 0;
       const rawDoorWidthAdjustEnabled2 = !!(placedModule as any).doorWidthAdjustEnabled;
-      const panelDoorOriginalWidth2 = coverDoorWidthAdjustMm2 > 0 && rawDoorWidthAdjustEnabled2
+      const coverDoorMatchesManual2 = coverDoorSlotWidthMm2 !== undefined
+        && Math.round((placedModule as any).doorWidthAdjustMm ?? coverDoorWidthAdjustMm2) === Math.round(coverDoorWidthAdjustMm2);
+      const panelDoorOriginalWidth2 = coverDoorSlotWidthMm2 !== undefined && coverDoorMatchesManual2
+        ? coverDoorSlotWidthMm2
+        : coverDoorWidthAdjustMm2 > 0 && rawDoorWidthAdjustEnabled2
         ? undefined
         : coverDoorSlotWidthMm2;
+      const panelDoorWidthAdjustEnabled2 = coverDoorSlotWidthMm2 !== undefined && coverDoorMatchesManual2
+        ? false
+        : rawDoorWidthAdjustEnabled2;
       const depth = placedModule.customDepth || moduleData.dimensions.depth;
       const hasDoor = placedModule.hasDoor || false;
       const material = placedModule.material || 'PB';
@@ -1929,7 +1943,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         (placedModule as any).maidaWidthAdjustMm ?? -1.5,
         (placedModule as any).leftEndPanelOffset ?? 0,
         (placedModule as any).rightEndPanelOffset ?? 0,
-        rawDoorWidthAdjustEnabled2,
+        panelDoorWidthAdjustEnabled2,
         (placedModule as any).doorWidthAdjustMm ?? -1.5,
         baseFrameGapH2,
         topFrameGapH2

@@ -2878,7 +2878,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         )) {
           updatePlacedModule(placedModule.id, {
             adjustedWidth: furnitureWidthMm,
-            position: adjustedPosition,
             columnSlotInfo: {
               hasColumn: true,
               columnId: slotInfo.column?.id,
@@ -3330,10 +3329,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!shouldResetWidth) return null;
     return {
       adjustedWidth: undefined,
-      columnSlotInfo: undefined,
-      position: memoizedAdjustedPosition
+      columnSlotInfo: undefined
     };
-  }, [shouldResetWidth, memoizedAdjustedPosition]);
+  }, [shouldResetWidth]);
 
   React.useEffect(() => {
     if (!widthResetPayload) return;

@@ -2223,9 +2223,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const autoCoverDoorSlotWidthMm = (() => {
     if (!currentPlacedModule || !moduleData || currentPlacedModule.isFreePlacement) return undefined;
     if (!currentPlacedModule.hasDoor || !slotInfo?.hasColumn) return undefined;
-    if (currentPlacedModule.adjustedWidth === undefined || currentPlacedModule.adjustedWidth === null) return undefined;
     if (typeof slotInfo.doorWidth === 'number' && slotInfo.doorWidth > 0) {
-      return slotInfo.doorWidth + 3;
+      return Math.round(slotInfo.doorWidth + 3);
     }
     return currentPlacedModule.slotCustomWidth ?? currentPlacedModule.customWidth ?? moduleData.dimensions.width;
   })();
@@ -2304,9 +2303,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       moduleWidthMm: doorOriginalWidth ?? customWidth
     });
     const rawDoorWidthAdjustEnabled = !!(currentPlacedModule as any)?.doorWidthAdjustEnabled;
-    const panelDoorOriginalWidth = autoCoverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
+    const autoCoverDoorMatchesManual = autoCoverDoorSlotWidthMm !== undefined
+      && Math.round((currentPlacedModule as any)?.doorWidthAdjustMm ?? autoCoverDoorWidthAdjustMm) === Math.round(autoCoverDoorWidthAdjustMm);
+    const panelDoorOriginalWidth = autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
+      ? autoCoverDoorSlotWidthMm
+      : autoCoverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
       ? undefined
       : doorOriginalWidth;
+    const panelDoorWidthAdjustEnabled = autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
+      ? false
+      : rawDoorWidthAdjustEnabled;
     return calculatePanelDetails(
       moduleData, customWidth, customDepth, hasDoor, t, panelDoorOriginalWidth,
       currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
@@ -2350,7 +2356,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.maidaWidthAdjustMm ?? -1.5,
       currentPlacedModule?.leftEndPanelOffset ?? 0,
       currentPlacedModule?.rightEndPanelOffset ?? 0,
-      rawDoorWidthAdjustEnabled,
+      panelDoorWidthAdjustEnabled,
       (currentPlacedModule as any)?.doorWidthAdjustMm ?? -1.5,
       baseFrameGapMm,
       topFrameGapMm,
@@ -5649,11 +5655,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
             // 싱글: 도어 1장 → 도어 너비 = 몸통 + v
-            const doorW = isDualSlot
+            const rawDoorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
               : (effectiveDoorWidthAdjustEnabled
                 ? Math.max(0, bodyWidth + effectiveUserExtension)
                 : Math.max(0, bodyWidth - 3));
+            const doorW = Math.max(0, Math.round(rawDoorW));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)

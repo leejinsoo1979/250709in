@@ -1594,11 +1594,13 @@ export const calculatePanelDetails = (
       customPositionsMm?: number[],
       insideFaceHingeSide?: 'left' | 'right'
     ) => {
-      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm, insideFaceHingeSide);
+      const panelWidthMm = Math.max(0, Math.round(widthMm));
+      const panelHeightMm = Math.max(0, Math.round(heightMm));
+      const doorBoring = createDoorBoringData(panelWidthMm, panelHeightMm, isLeftHinge, fixedHingeCount, customPositionsMm, insideFaceHingeSide);
       panels.door.push({
         name,
-        width: widthMm,
-        height: heightMm,
+        width: panelWidthMm,
+        height: panelHeightMm,
         thickness: PET_PANEL_THICKNESS_MM,
         material: 'PET',
         boringPositions: doorBoring.boringPositions,

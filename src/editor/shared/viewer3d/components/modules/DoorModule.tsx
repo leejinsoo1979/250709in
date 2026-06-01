@@ -3644,6 +3644,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
       doorWidth += insertExtendLeft + insertExtendRight;
     }
+    doorWidth = Math.max(0, Math.round(doorWidth));
     // 좌측 확장은 도어를 좌측으로(-X), 우측 확장은 우측으로(+X) 시프트
     const insertExtendShiftX = mmToThreeUnits(insertExtendRight - insertExtendLeft) / 2;
 

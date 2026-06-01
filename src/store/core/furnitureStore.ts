@@ -1276,45 +1276,18 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             adjustedWidth: newAdjustedWidth
           }];
         } else {
-          // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
+          // 기둥이 없는 슬롯인 경우 폭 보정만 제거한다. 기둥 이동으로 가구 좌표를 바꾸면 안 된다.
           if (module.adjustedWidth !== undefined) {
-
-            // 원래 슬롯 중심 위치로 복원
-            const indexing = calculateSpaceIndexing(spaceInfo);
-            let originalX = module.position.x;
-
-            // zone이 있는 경우 zone별 위치 사용
-            if (module.zone && spaceInfo.droppedCeiling?.enabled) {
-              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-              const targetZone = module.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-
-              if (module.slotIndex !== undefined && module.slotIndex < targetZone.columnCount) {
-                // zone별 indexing 정보 사용
-                const zoneIndexing = module.zone === 'dropped' && indexing.zones?.dropped
-                  ? indexing.zones.dropped
-                  : (module.zone === 'normal' && indexing.zones?.normal ? indexing.zones.normal : indexing);
-
-                if (zoneIndexing.threeUnitPositions && zoneIndexing.threeUnitPositions[module.slotIndex] !== undefined) {
-                  originalX = zoneIndexing.threeUnitPositions[module.slotIndex];
-                }
-              }
-            } else if (module.slotIndex !== undefined && indexing.threeUnitPositions[module.slotIndex] !== undefined) {
-              // zone이 없는 경우 전체 indexing 사용
-              originalX = indexing.threeUnitPositions[module.slotIndex];
-            }
-
             return [{
               ...module,
               adjustedWidth: undefined,
-              position: {
-                ...module.position,
-                x: originalX
-              }
+              columnSlotInfo: undefined
             }];
           }
           return [{
             ...module,
-            adjustedWidth: undefined
+            adjustedWidth: undefined,
+            columnSlotInfo: undefined
           }];
         }
       });
