@@ -7728,6 +7728,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             return (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>엔드패널</h5>
+              {/* EP 내치/외치 토글 — EP 장착보다 먼저 선택 (내치: EP만큼 본체 줄임=전체폭 유지 / 외치: 본체 유지+EP 추가) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 0 8px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap' }}>내/외치</span>
+                {(['inside', 'outside'] as const).map((mode) => {
+                  const active = (currentPlacedModule.endPanelMode ?? 'inside') === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => updatePlacedModule(currentPlacedModule.id, { endPanelMode: mode } as any)}
+                      style={{
+                        flex: 1,
+                        padding: '5px 0',
+                        fontSize: '12px',
+                        fontWeight: active ? 700 : 400,
+                        cursor: 'pointer',
+                        borderRadius: '6px',
+                        border: `1px solid ${active ? 'var(--theme-primary)' : 'var(--theme-border, #d0d0d0)'}`,
+                        background: active ? 'var(--theme-primary)' : 'transparent',
+                        color: active ? '#fff' : 'var(--theme-text)',
+                      }}
+                    >
+                      {mode === 'inside' ? '내치' : '외치'}
+                    </button>
+                  );
+                })}
+              </div>
               {/* 좌/우 EP 체크박스 */}
               <div className={styles.epCheckboxRow}>
                 <label className={styles.epCheckboxLabel}>

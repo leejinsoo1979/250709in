@@ -896,7 +896,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 자유배치 EP 역보정: 부모 group이 freeEpOffsetX만큼 밀렸으므로 도어는 반대로 되돌림
   // (도어는 원래 freeWidth 크기 그대로, 가구 중심에 위치해야 함)
   let freeEpReverseX = 0;
-  if (isFree && storePlacedModule && !storePlacedModule.customConfig) {
+  // 외치(outside) EP는 본체가 안 움직이므로(부모 epOffsetX=0) 도어 역보정도 불필요.
+  if (isFree && storePlacedModule && !storePlacedModule.customConfig && storePlacedModule.endPanelMode !== 'outside') {
     const epThk = resolvePetPanelThicknessMm(storePlacedModule.endPanelThickness) * 0.01; // mm → Three.js
     const leftEp = storePlacedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = storePlacedModule.hasRightEndPanel ? epThk : 0;

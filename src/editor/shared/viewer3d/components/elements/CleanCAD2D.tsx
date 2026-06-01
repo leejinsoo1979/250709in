@@ -6710,9 +6710,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const stepDownWidthLocal = isFreePlacement
           ? (spaceInfo.stepCeiling?.width || 0)
           : (spaceInfo.droppedCeiling?.width || 0);
-        const moduleWidth = mmToThreeUnits(actualWidth);
-        const leftX = actualPositionX - moduleWidth / 2;
-        const rightX = actualPositionX + moduleWidth / 2;
+        // 외치(outside) EP: 본체 폭은 그대로지만 EP가 좌/우 바깥에 추가되므로
+        // 폭 치수가이드는 본체폭 + EP두께(좌/우 각각)만큼 늘어나야 한다. (내치는 전체폭 유지 → 보정 없음)
+        const epDimThkMm = (module.endPanelMode === 'outside')
+          ? resolvePetPanelThicknessMm(module.endPanelThickness) : 0;
+        const leftEpDimMm = (epDimThkMm && module.hasLeftEndPanel) ? epDimThkMm : 0;
+        const rightEpDimMm = (epDimThkMm && module.hasRightEndPanel) ? epDimThkMm : 0;
+        const dimWidthMm = actualWidth + leftEpDimMm + rightEpDimMm; // 치수 표시용 전체폭
+        const epDimCenterShift = mmToThreeUnits((rightEpDimMm - leftEpDimMm) / 2); // 좌우 비대칭 시 외곽 중심 이동
+        const moduleWidth = mmToThreeUnits(dimWidthMm);
+        const leftX = actualPositionX + epDimCenterShift - moduleWidth / 2;
+        const rightX = actualPositionX + epDimCenterShift + moduleWidth / 2;
 	        // 가구 카테고리: 하부장은 하부장 바로 위에, 상부장/키큰장은 공간 상단에 너비 치수 표시
 	        const moduleCategoryForDim = moduleData.category
 	          ?? (module.moduleId?.includes('upper') ? 'upper'
@@ -6905,7 +6913,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }}
                 >
                   {(() => {
-                    const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
+                    const r = Math.round(dimWidthMm * 2) / 2; // 0.5mm 단위 (외치 EP 포함 전체폭)
                     return r % 1 === 0 ? String(r) : r.toFixed(1);
                   })()}
                 </div>
@@ -6921,7 +6929,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthTest={false}
               >
                 {(() => {
-                    const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
+                    const r = Math.round(dimWidthMm * 2) / 2; // 0.5mm 단위 (외치 EP 포함 전체폭)
                     return r % 1 === 0 ? String(r) : r.toFixed(1);
                 })()}
               </Text>

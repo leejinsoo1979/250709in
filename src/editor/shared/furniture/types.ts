@@ -174,6 +174,7 @@ export interface PlacedModule {
   // 엔드패널(EP) 설정
   hasLeftEndPanel?: boolean;     // 좌측 EP 표시 여부
   hasRightEndPanel?: boolean;    // 우측 EP 표시 여부
+  endPanelMode?: 'inside' | 'outside'; // EP 내치/외치 (inside: EP만큼 본체 줄임=전체폭 유지, outside: 본체 유지+EP 추가=전체폭 증가, 기본: 'inside')
   endPanelThickness?: number;    // EP 두께 (mm, 기본값: 18)
   endPanelDepth?: number;        // EP 깊이 (mm, 기본값: 가구 깊이)
   endPanelDepthDirection?: 'front' | 'back'; // EP 깊이 확장 방향 (front: 앞으로, back: 뒤로, 기본: 'front')

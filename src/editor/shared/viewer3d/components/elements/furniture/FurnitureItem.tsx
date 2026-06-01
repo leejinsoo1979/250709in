@@ -1974,7 +1974,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let originalFurnitureWidthMm = furnitureWidthMm;
 
   // 표준 모듈: EP 물리적 두께(PET 18mm)만큼 가구 본체 너비 축소
-  if (!placedModule.customConfig) {
+  // 내치(inside, 기본): EP만큼 본체를 줄여 전체 외곽 폭 유지.
+  // 외치(outside): 본체를 줄이지 않음 → 본체 바깥에 EP가 붙어 전체 폭이 EP만큼 늘어남.
+  if (!placedModule.customConfig && placedModule.endPanelMode !== 'outside') {
     const epThk = resolvePetPanelThicknessMm(placedModule.endPanelThickness) || END_PANEL_RENDER_THICKNESS;
     if (placedModule.hasLeftEndPanel) furnitureWidthMm -= epThk;
     if (placedModule.hasRightEndPanel) furnitureWidthMm -= epThk;
@@ -3159,7 +3161,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어는 본체 그룹 안에서 렌더링되므로 자동으로 따라감
   // + EP 18.5mm일 때 EP방향으로 0.5mm 추가 이동 (슬롯 기준 18mm와의 차이)
   let epOffsetX = 0;
-  if (!placedModule.customConfig) {
+  // 외치(outside)에서는 본체 폭이 안 줄고 EP가 바깥에 추가되므로 본체 중심 보정 불필요(본체 고정).
+  if (!placedModule.customConfig && placedModule.endPanelMode !== 'outside') {
     const epThk = mmToThreeUnits(placedModule.endPanelThickness || END_PANEL_RENDER_THICKNESS);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;

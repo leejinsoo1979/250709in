@@ -5208,8 +5208,10 @@ const Room: React.FC<RoomProps> = ({
                     const modTopOffsetMM = mod.topFrameOffset ?? 0;
                     const hasTopFrameOffset = Math.abs(modTopOffsetMM) > 0.001;
                     // EP 상단 갭이 0/음수이면 상단몰딩이 EP 자리까지 X 확장 → leftEpAdj/rightEpAdj 0 처리
+                    // 외치(outside) EP: 본체가 안 줄고 EP가 바깥에 추가되므로 상단몰딩도 본체폭 그대로(축소 X)
                     const epTopGapMm = (mod as any).endPanelTopOffset;
-                    const shouldInsetForEpCollision = epTopGapMm === undefined || epTopGapMm > 0;
+                    const shouldInsetForEpCollision = (mod.endPanelMode !== 'outside')
+                      && (epTopGapMm === undefined || epTopGapMm > 0);
                     let leftEpAdj = 0;
                     let rightEpAdj = 0;
                     if (isFullSurround) {
@@ -7699,8 +7701,10 @@ const Room: React.FC<RoomProps> = ({
                       }
                       const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
                       // EP 하단 갭이 0/음수이면 걸레받이가 EP 자리까지 X 확장 → 축소 안 함
+                      // 외치(outside) EP: 본체가 안 줄고 EP가 바깥에 추가되므로 걸레받이도 본체폭 그대로(축소 X)
                       const epBottomGapMm = (mod as any).endPanelBottomOffset;
-                      const shouldInsetForBottomEpCollision = epBottomGapMm === undefined || epBottomGapMm > 0;
+                      const shouldInsetForBottomEpCollision = (mod.endPanelMode !== 'outside')
+                        && (epBottomGapMm === undefined || epBottomGapMm > 0);
                       if (mod.hasLeftEndPanel && shouldInsetForBottomEpCollision) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                       if (mod.hasRightEndPanel && shouldInsetForBottomEpCollision) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       const adjustedSlotBaseBounds = applyFrameWidthAdjustMm(

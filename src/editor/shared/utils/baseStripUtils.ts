@@ -51,7 +51,9 @@ export function getBaseFrameBoundsX(module: PlacedModule): { left: number; right
   const hasLeft = module.hasLeftEndPanel;
   const hasRight = module.hasRightEndPanel;
   const bottomGapMm = (module as any).endPanelBottomOffset;
-  const shouldInsetForBottomEpCollision = bottomGapMm === undefined || bottomGapMm > 0;
+  // 외치(outside) EP: 본체가 안 줄고 EP가 바깥에 추가되므로 걸레받이도 본체폭 그대로(축소 X)
+  const shouldInsetForBottomEpCollision = (module.endPanelMode !== 'outside')
+    && (bottomGapMm === undefined || bottomGapMm > 0);
   if ((hasLeft || hasRight) && shouldInsetForBottomEpCollision) {
     const epThk = resolvePetPanelThicknessMm(module.endPanelThickness);
     const leftEpMM = hasLeft ? epThk : 0;
