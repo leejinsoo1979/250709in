@@ -410,6 +410,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         x: guideStartX + slotWidth * index,
         width: slotWidth,
         guideZone,
+        ...(guideZone === 'lower' ? { baseFrameHeight: 105 } : {}),
         confirmed: false
       }));
     };

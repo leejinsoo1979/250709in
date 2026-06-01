@@ -1402,7 +1402,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const lowerSlot: FreePlacementGuideSlot = {
       ...baseSlot,
       id: `${targetSlot.id}-lower-${Date.now()}`,
-      guideZone: 'lower'
+      guideZone: 'lower',
+      baseFrameHeight: targetSlot.baseFrameHeight ?? 105
     };
     const nextSlots = sourceSlots
       .filter((slot) => slot.id !== slotId)
@@ -1990,6 +1991,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       getGuideModuleCategory(module) === 'full'
     ));
     const guideBaseReferenceModule = guideSelectedBaseModule ?? guideLowerBaseModule ?? guideFullBaseModule;
+    const guideLowerBaseSlot = guideSlots.find((slot) => (slot.guideZone || 'full') === 'lower');
+    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+    const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
     const resolveGuideBaseHeight = (module: typeof placedModules[number] | undefined) => {
       if (!module) {
         return spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0;
@@ -2014,10 +2018,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const isFloatingBase = guideBaseReferenceModule
       ? guideBaseReferenceModule.hasBase === false
       : globalFloatingBase;
-    const gBaseboard = guideBaseReferenceModule
+    const gBaseboard = guideBaseReferenceModule && guideBaseFrameAllMode
       ? resolveGuideBaseHeight(guideBaseReferenceModule)
       : (spaceInfo.baseConfig?.type === 'floor'
-        ? (spaceInfo.baseConfig?.height ?? 0)
+        ? (guideBaseFrameAllMode
+          ? (guideLowerBaseSlot?.baseFrameHeight ?? (hasSplitSlots ? 105 : (spaceInfo.baseConfig?.height ?? 0)))
+          : (hasSplitSlots ? 105 : (spaceInfo.baseConfig?.height ?? 0)))
         : 0);
     const gFloatHeight = isFloatingBase
       ? Math.max(0, guideBaseReferenceModule?.individualFloatHeight ?? spaceInfo.baseConfig?.floatHeight ?? 0)
@@ -2026,7 +2032,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // 우측바 옵셋/갭과 연동되는 값
     const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
     const gBaseOffset = guideBaseReferenceModule?.baseFrameOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 0;
-    const gBaseGap = isFloatingBase ? 0 : Math.max(0, Math.min(gBaseboard, guideBaseReferenceModule?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0));
+    const gBaseGap = isFloatingBase || !guideBaseFrameAllMode ? 0 : Math.max(0, Math.min(gBaseboard, guideBaseReferenceModule?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0));
     const gMoldingVisible = gTopMolding > 0 ? Math.max(0, gTopMolding - gMoldingGap) : gMoldingGap;
     const gBaseboardVisible = isFloatingBase ? gFloatHeight : Math.max(0, gBaseboard - gBaseGap);
     const gLower = resolveGuideLowerBodyHeight(guideLowerBaseModule);
@@ -2050,20 +2056,38 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const upperStartY = yMidTop * 0.01;
     const upperEndY = yUpperTop * 0.01;
     const splitY = (yLowerTop + yMidTop) / 2 * 0.01; // 미드웨이 중앙 (분할선 표시용)
+    const isGlobalTopFrameEnabled = gTopMolding > 0;
+    const isGlobalBaseFrameEnabled = spaceInfo.baseConfig?.type === 'floor' && (spaceInfo.baseConfig?.height ?? 0) > 0;
+    const resolveSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? isGlobalBaseFrameEnabled;
+
+    const resolveSlotBaseHeightMm = (slot: FreePlacementGuideSlot) => (
+      slot.baseFrameHeight ?? ((slot.guideZone || 'full') === 'lower' ? 105 : (gBaseboard > 0 ? gBaseboard : (spaceInfo.baseConfig?.height || 65)))
+    );
+    const resolveSlotBaseGapMm = (slot: FreePlacementGuideSlot) => (
+      Math.max(0, Math.min(resolveSlotBaseHeightMm(slot), slot.baseFrameGap ?? 0))
+    );
+    const resolveSlotBaseTopMm = (slot: FreePlacementGuideSlot) => (
+      resolveSlotBaseEnabled(slot) ? resolveSlotBaseHeightMm(slot) : Math.max(0, slot.individualFloatHeight ?? gFloatHeight)
+    );
+    const resolveSlotBaseGapTopMm = (slot: FreePlacementGuideSlot) => (
+      Math.min(resolveSlotBaseGapMm(slot), resolveSlotBaseTopMm(slot))
+    );
 
     const getSlotYRange = (slot: FreePlacementGuideSlot): [number, number] => {
       const zone = slot.guideZone || 'full';
-      const baseAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
       const globalBaseEnabled = spaceInfo.baseConfig?.type === 'floor' && (spaceInfo.baseConfig?.height ?? 0) > 0;
-      const slotBaseEnabled = baseAllMode
+      const slotBaseEnabled = guideBaseFrameAllMode
         ? globalBaseEnabled
         : (slot.hasBase ?? globalBaseEnabled);
       const slotBaseClearanceMm = slotBaseEnabled
-        ? yBaseTop
+        ? (guideBaseFrameAllMode ? yBaseTop : resolveSlotBaseHeightMm(slot))
         : Math.max(0, slot.individualFloatHeight ?? gFloatHeight);
       const slotLowerStartY = slotBaseClearanceMm * 0.01;
+      const slotLowerEndY = guideBaseFrameAllMode
+        ? lowerEndY
+        : (slotBaseClearanceMm + gLower) * 0.01;
       if (zone === 'upper') return [upperStartY, upperEndY];
-      if (zone === 'lower') return [slotLowerStartY, lowerEndY];
+      if (zone === 'lower') return [slotLowerStartY, slotLowerEndY];
       if (hasSplitSlots) return [slotLowerStartY, upperEndY];
       return [0, fullHeight];
     };
@@ -2310,8 +2334,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         );
       });
 
-    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
-    const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
     const getSlotFrameControlY = (slot: FreePlacementGuideSlot, frame: 'top' | 'base') => {
       const [startY, endY] = getSlotYRange(slot);
       const centerY = (startY + endY) / 2;
@@ -2337,8 +2359,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
       return centerY;
     };
-    const isGlobalTopFrameEnabled = gTopMolding > 0;
-    const isGlobalBaseFrameEnabled = spaceInfo.baseConfig?.type === 'floor' && (spaceInfo.baseConfig?.height ?? 0) > 0;
     const topFrameSlots = guideSlots
       .filter((slot) => (slot.guideZone || 'full') !== 'lower')
       .sort((a, b) => a.x - b.x || a.index - b.index);
@@ -2368,12 +2388,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const getSlotTopVisibleSize = (slot: FreePlacementGuideSlot) => (
       getSlotTopEnabled(slot) ? Math.max(0, getSlotTopThickness(slot) - getSlotTopGap(slot)) : 0
     );
-    const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? isGlobalBaseFrameEnabled;
+    const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => resolveSlotBaseEnabled(slot);
     const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
-      slot.baseFrameHeight ?? (gBaseboard > 0 ? gBaseboard : (spaceInfo.baseConfig?.height || 65))
+      resolveSlotBaseHeightMm(slot)
     );
     const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
-      getSlotBaseEnabled(slot) ? (slot.baseFrameGap ?? 0) : 0
+      getSlotBaseEnabled(slot) ? resolveSlotBaseGapMm(slot) : 0
     );
     const getSlotBaseVisibleSize = (slot: FreePlacementGuideSlot) => (
       getSlotBaseEnabled(slot) ? Math.max(0, getSlotBaseHeight(slot) - getSlotBaseGap(slot)) : 0
@@ -2804,11 +2824,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const renderFrameSectionHorizontalLines = () => {
       const makeSectionLines = (
         slots: FreePlacementGuideSlot[],
-        yValuesMm: number[],
+        yValuesMm: number[] | ((slot: FreePlacementGuideSlot) => number[]),
         sectionKey: string
       ) => slots.flatMap((slot) => {
         const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
         const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
+        const slotYValuesMm = typeof yValuesMm === 'function' ? yValuesMm(slot) : yValuesMm;
         const isSelected = selectedGuideSlotIds.includes(slot.id);
         const lineProps = {
           color: guideColor,
@@ -2823,7 +2844,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           renderOrder: 100001,
         } as const;
 
-        return yValuesMm.map((ymm) => (
+        return slotYValuesMm.map((ymm) => (
           <NativeLine
             key={`free-guide-${sectionKey}-boundary-y-${ymm}-${slot.id}`}
             name="free-placement-guide-line"
@@ -2839,9 +2860,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         ...(!guideBaseFrameAllMode
           ? makeSectionLines(
             enabledBaseSlots,
-            [
-              ...(gBaseGap > 0 ? [yBaseGapTop] : []),
-              yBaseTop
+            (slot) => [
+              ...(resolveSlotBaseGapMm(slot) > 0 ? [resolveSlotBaseGapTopMm(slot)] : []),
+              resolveSlotBaseTopMm(slot)
             ],
             'base-frame'
           )
@@ -2851,16 +2872,16 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const renderFrameSectionVerticalLines = () => {
       const makeSectionLines = (
         slots: FreePlacementGuideSlot[],
-        startYmm: number,
-        endYmm: number,
+        yRangeMm: [number, number] | ((slot: FreePlacementGuideSlot) => [number, number]),
         sectionKey: string
       ) => {
-        if (endYmm - startYmm <= 0.5) return [];
         const visibleSlots = slots.filter((slot) => (
           sectionKey !== 'base-frame' || getSlotBaseEnabled(slot)
         ));
 
         return visibleSlots.flatMap((slot) => {
+          const [startYmm, endYmm] = typeof yRangeMm === 'function' ? yRangeMm(slot) : yRangeMm;
+          if (endYmm - startYmm <= 0.5) return [];
           const leftX = (slot.x - spaceInfo.width / 2) * 0.01;
           const rightX = (slot.x + slot.width - spaceInfo.width / 2) * 0.01;
           const startY = startYmm * 0.01;
@@ -2897,8 +2918,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       };
 
       return [
-        ...(!guideTopFrameAllMode ? makeSectionLines(topFrameSlots, yUpperTop, fullHeightMm, 'top-frame') : []),
-        ...(!guideBaseFrameAllMode ? makeSectionLines(baseFrameSlots, 0, yBaseTop, 'base-frame') : [])
+        ...(!guideTopFrameAllMode ? makeSectionLines(topFrameSlots, [yUpperTop, fullHeightMm], 'top-frame') : []),
+        ...(!guideBaseFrameAllMode ? makeSectionLines(baseFrameSlots, (slot) => [0, resolveSlotBaseTopMm(slot)], 'base-frame') : [])
       ];
     };
 

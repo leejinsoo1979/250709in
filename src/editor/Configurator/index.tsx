@@ -6563,7 +6563,7 @@ const Configurator: React.FC = () => {
             );
             const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
             const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
-              slot.baseFrameHeight ?? (globalBaseHeight > 0 ? globalBaseHeight : 65)
+              slot.baseFrameHeight ?? ((slot.guideZone || 'full') === 'lower' ? 105 : (globalBaseHeight > 0 ? globalBaseHeight : 65))
             );
             const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
               getSlotBaseEnabled(slot) ? Math.max(0, slot.baseFrameGap ?? 0) : 0

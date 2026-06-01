@@ -156,6 +156,7 @@ export function applyFreeGuideSlotToPlacement<TDimensions extends { width: numbe
   const globalTopOffset = Math.round((spaceInfo.frameSize as any)?.topOffset ?? 0);
   const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
   const globalBaseHeight = Math.max(0, Math.round(spaceInfo.baseConfig?.height ?? 65));
+  const defaultSlotBaseHeight = slotZone === 'lower' ? 105 : globalBaseHeight;
   const globalBaseGap = globalBaseEnabled ? Math.max(0, Math.round((spaceInfo.baseConfig as any)?.gap ?? 0)) : 0;
   const globalBaseOffset = Math.round((spaceInfo.baseConfig as any)?.offset ?? 0);
   const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, Math.round(spaceInfo.baseConfig?.floatHeight ?? 0));
@@ -181,7 +182,7 @@ export function applyFreeGuideSlotToPlacement<TDimensions extends { width: numbe
     ...(canApplyTopFrame ? { topFrameOffset: Math.round(slot.topFrameOffset ?? globalTopOffset) } : {}),
     ...(canApplyTopFrame ? { topFrameGap: Math.max(0, Math.round(slot.topFrameGap ?? globalTopGap)) } : {}),
     ...(canApplyBaseFrame ? { hasBase: slot.hasBase ?? globalBaseEnabled } : {}),
-    ...(canApplyBaseFrame ? { baseFrameHeight: Math.max(0, Math.round(slot.baseFrameHeight ?? globalBaseHeight)) } : {}),
+    ...(canApplyBaseFrame ? { baseFrameHeight: Math.max(0, Math.round(slot.baseFrameHeight ?? defaultSlotBaseHeight)) } : {}),
     ...(canApplyBaseFrame ? { baseFrameOffset: Math.round(slot.baseFrameOffset ?? globalBaseOffset) } : {}),
     ...(canApplyBaseFrame ? { baseFrameGap: Math.max(0, Math.round(slot.baseFrameGap ?? globalBaseGap)) } : {}),
     ...(canApplyBaseFrame ? { individualFloatHeight: Math.max(0, Math.round(slot.individualFloatHeight ?? globalFloatHeight)) } : {}),
