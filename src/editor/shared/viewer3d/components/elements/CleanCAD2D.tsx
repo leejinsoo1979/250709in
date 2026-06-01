@@ -7159,7 +7159,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       onPointerUp={stopAll}
                       style={{
                         width: '32px', height: '40px',
-                        background: '#2196F3',
+                        background: 'var(--theme-primary, #2196F3)',
                         borderRadius: '6px 0 0 6px',
                         cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -7168,8 +7168,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         pointerEvents: 'auto',
                         userSelect: 'none',
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#1976D2'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#2196F3'; }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'color-mix(in srgb, var(--theme-primary, #2196F3) 85%, black 15%)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--theme-primary, #2196F3)'; }}
                     >
                       <svg width="14" height="18" viewBox="0 0 10 14" fill="none" style={{ pointerEvents: 'none' }}><path d="M8 1L2 7L8 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
@@ -7209,7 +7209,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       onPointerUp={stopAll}
                       style={{
                         width: '32px', height: '40px',
-                        background: '#2196F3',
+                        background: 'var(--theme-primary, #2196F3)',
                         borderRadius: '0 6px 6px 0',
                         cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -7218,8 +7218,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         pointerEvents: 'auto',
                         userSelect: 'none',
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#1976D2'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#2196F3'; }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'color-mix(in srgb, var(--theme-primary, #2196F3) 85%, black 15%)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'var(--theme-primary, #2196F3)'; }}
                     >
                       <svg width="14" height="18" viewBox="0 0 10 14" fill="none" style={{ pointerEvents: 'none' }}><path d="M2 1L8 7L2 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
