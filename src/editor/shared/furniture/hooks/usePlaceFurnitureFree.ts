@@ -274,11 +274,14 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const topFrameDisabledByGlobal = moduleFlags.hasTopFrame === true
     ? false
     : (spaceInfo.frameSize?.top ?? 30) <= 0;
-  const shouldHaveTopFrame = moduleData.category !== 'lower'
-    && moduleFlags.hasTopFrame !== false
-    && spaceInfo.frameConfig?.top !== false
-    && !inheritTopFrameOff
-    && !topFrameDisabledByGlobal;
+  const shouldHaveTopFrame = moduleFlags.hasTopFrame === false
+    ? false
+    : moduleFlags.hasTopFrame === true
+      ? moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false
+      : moduleData.category !== 'lower'
+        && spaceInfo.frameConfig?.top !== false
+        && !inheritTopFrameOff
+        && !topFrameDisabledByGlobal;
   const baseFrameCapableExistingModules = existingModules
     .filter(module => module.isFreePlacement)
     .filter(isBaseFrameCapablePlacedModule);
@@ -294,7 +297,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
       || (spaceInfo.baseConfig?.height ?? 65) <= 0;
   const shouldHaveBaseFrame = moduleFlags.hasBase === false
     ? false
-    : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
+    : moduleFlags.hasBase === true
+      ? moduleData.category !== 'upper'
+      : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
   const globalFloatHeight = (spaceInfo.baseConfig?.type === 'stand' || (spaceInfo.baseConfig?.height ?? 0) <= 0)
     ? Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0)
     : 0;

@@ -154,12 +154,9 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
           alignItems: 'center',
           gap: '5px',
           height: '22px',
-          padding: '0 7px',
-          borderRadius: '6px',
-          border: '1px solid color-mix(in srgb, var(--theme-primary) 36%, transparent)',
-          background: 'color-mix(in srgb, var(--theme-primary) 12%, var(--theme-background) 88%)',
+          padding: 0,
+          background: 'transparent',
           color: 'var(--theme-text)',
-          boxShadow: '0 1px 4px rgba(15, 23, 42, 0.14)',
           fontSize: '11px',
           fontWeight: 700,
           whiteSpace: 'nowrap'
@@ -2056,9 +2053,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     const getSlotYRange = (slot: FreePlacementGuideSlot): [number, number] => {
       const zone = slot.guideZone || 'full';
+      const baseAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+      const globalBaseEnabled = spaceInfo.baseConfig?.type === 'floor' && (spaceInfo.baseConfig?.height ?? 0) > 0;
+      const slotBaseEnabled = baseAllMode
+        ? globalBaseEnabled
+        : (slot.hasBase ?? globalBaseEnabled);
+      const slotBaseClearanceMm = slotBaseEnabled
+        ? yBaseTop
+        : Math.max(0, slot.individualFloatHeight ?? gFloatHeight);
+      const slotLowerStartY = slotBaseClearanceMm * 0.01;
       if (zone === 'upper') return [upperStartY, upperEndY];
-      if (zone === 'lower') return [lowerStartY, lowerEndY];
-      if (hasSplitSlots) return [lowerStartY, upperEndY];
+      if (zone === 'lower') return [slotLowerStartY, lowerEndY];
+      if (hasSplitSlots) return [slotLowerStartY, upperEndY];
       return [0, fullHeight];
     };
     const getSlotControlY = (slot: FreePlacementGuideSlot) => {
@@ -2332,7 +2338,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       return centerY;
     };
     const isGlobalTopFrameEnabled = gTopMolding > 0;
-    const isGlobalBaseFrameEnabled = !isFloatingBase && gBaseboard > 0;
+    const isGlobalBaseFrameEnabled = spaceInfo.baseConfig?.type === 'floor' && (spaceInfo.baseConfig?.height ?? 0) > 0;
     const topFrameSlots = guideSlots
       .filter((slot) => (slot.guideZone || 'full') !== 'lower')
       .sort((a, b) => a.x - b.x || a.index - b.index);
@@ -2735,7 +2741,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                       slot.individualFloatHeight ?? 0,
                       () => updateGuideSlotFrame(slot.id, {
                         hasBase: !enabled,
-                        individualFloatHeight: enabled ? 0 : slot.individualFloatHeight ?? 0,
+                        individualFloatHeight: enabled ? baseGap : slot.individualFloatHeight ?? baseGap,
                         baseFrameHeight: baseHeight
                       }),
                       (v) => updateGuideSlotFrame(slot.id, { baseFrameHeight: v + baseGap }),

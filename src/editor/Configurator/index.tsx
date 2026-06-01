@@ -6761,7 +6761,7 @@ const Configurator: React.FC = () => {
                           slot.individualFloatHeight ?? 0,
                           () => updateGuideSlotFrame(slot.id, {
                             hasBase: !enabled,
-                            individualFloatHeight: enabled ? 0 : slot.individualFloatHeight ?? 0,
+                            individualFloatHeight: enabled ? gap : slot.individualFloatHeight ?? gap,
                             baseFrameHeight: baseHeightValue
                           }),
                           (v) => updateGuideSlotFrame(slot.id, { baseFrameHeight: v }),
@@ -7211,7 +7211,7 @@ const Configurator: React.FC = () => {
                         sizeMM={firstBase.baseFrameHeight ?? globalBaseLocal}
                         offset={firstBase.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
                         gap={(firstBase as any).baseFrameGap ?? 0}
-                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: 0, doorBottomGap: -5 })))}
+                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: (m as any).baseFrameGap ?? 0, doorBottomGap: -5 })))}
                         onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)))}
                         onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
                         onGapChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
@@ -7269,7 +7269,7 @@ const Configurator: React.FC = () => {
                           updatePlacedModule(mod.id, {
                             hasBase: !freeBaseEnabled,
                             doorBottomGap: !freeBaseEnabled ? 25 : -5,
-                            ...(freeBaseEnabled ? { individualFloatHeight: 0 } : {}),
+                            ...(freeBaseEnabled ? { individualFloatHeight: (mod as any).baseFrameGap ?? 0 } : {}),
                           });
                         }}
                         className={`${styles.miniToggle} ${freeBaseEnabled ? styles.miniToggleActive : ''}`}
@@ -7726,7 +7726,7 @@ const Configurator: React.FC = () => {
                     updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                       hasBase: !enabled,
                       doorBottomGap: !enabled ? 25 : -5,
-                      ...(enabled ? { individualFloatHeight: 0 } : {}),
+                      ...(enabled ? { individualFloatHeight: baseGap } : {}),
                     }));
                   }}
                   className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
@@ -7972,7 +7972,7 @@ const Configurator: React.FC = () => {
                             updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
-                              ...(newVal ? {} : { individualFloatHeight: 0 }),
+                              ...(newVal ? {} : { individualFloatHeight: (target as any)?.baseFrameGap ?? 0 }),
                             }) : {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
@@ -8198,7 +8198,7 @@ const Configurator: React.FC = () => {
                                 // 하부 OFF (상단몰딩 건드리지 않음)
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                                   hasBase: false,
-                                  individualFloatHeight: 0,
+                                  individualFloatHeight: (m as any).baseFrameGap ?? 0,
                                   doorBottomGap: -5,
                                 })));
                               },

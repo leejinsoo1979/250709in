@@ -63,7 +63,32 @@ export function getFreeGuideSlotYRangeMm(
   slot: FreePlacementGuideSlot,
   spaceInfo: SpaceInfo
 ): { start: number; end: number } | null {
-  return getFreeGuideZoneYRangeMm(slot.guideZone || 'full', spaceInfo);
+  const zone = slot.guideZone || 'full';
+  const fullHeightMm = spaceInfo.height || 0;
+  const topAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+  const globalTopEnabled = (spaceInfo.frameSize?.top ?? 0) > 0;
+  const globalTopClearance = globalTopEnabled
+    ? Math.max(0, spaceInfo.frameSize?.top ?? 0)
+    : Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
+  const slotTopEnabled = topAllMode ? globalTopEnabled : (slot.hasTopFrame ?? globalTopEnabled);
+  const slotTopClearance = slotTopEnabled
+    ? Math.max(0, slot.topFrameThickness ?? globalTopClearance)
+    : Math.max(0, slot.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0);
+
+  const globalRange = getFreeGuideZoneYRangeMm(zone, spaceInfo);
+  if (!globalRange) return null;
+
+  if (zone === 'upper') {
+    return { start: globalRange.start, end: Math.max(globalRange.start, fullHeightMm - slotTopClearance) };
+  }
+
+  if (zone === 'lower') return globalRange;
+  if (zone === 'full') return globalRange;
+
+  return {
+    start: globalRange.start,
+    end: Math.max(globalRange.start, fullHeightMm - slotTopClearance)
+  };
 }
 
 export function applyFreeGuideSlotToPlacement<TDimensions extends { width: number; height: number; depth: number }, TModuleData extends { dimensions?: Partial<TDimensions> }>(
@@ -125,6 +150,15 @@ export function applyFreeGuideSlotToPlacement<TDimensions extends { width: numbe
   ));
   const canApplyTopFrame = slotZone !== 'lower' && category !== 'lower';
   const canApplyBaseFrame = slotZone !== 'upper' && category !== 'upper';
+  const globalTopEnabled = (spaceInfo.frameSize?.top ?? 30) > 0;
+  const globalTopThickness = spaceInfo.frameSize?.top ?? 30;
+  const globalTopGap = Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
+  const globalTopOffset = Math.round((spaceInfo.frameSize as any)?.topOffset ?? 0);
+  const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
+  const globalBaseHeight = Math.max(0, Math.round(spaceInfo.baseConfig?.height ?? 65));
+  const globalBaseGap = globalBaseEnabled ? Math.max(0, Math.round((spaceInfo.baseConfig as any)?.gap ?? 0)) : 0;
+  const globalBaseOffset = Math.round((spaceInfo.baseConfig as any)?.offset ?? 0);
+  const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, Math.round(spaceInfo.baseConfig?.floatHeight ?? 0));
   const nextDimensions = {
     ...dimensions,
     width: placementWidth,
@@ -142,15 +176,15 @@ export function applyFreeGuideSlotToPlacement<TDimensions extends { width: numbe
         guideSlotLowerDepthMm: Math.max(1, Math.round(lowerDepth)),
       }
       : {}),
-    ...(canApplyTopFrame && slot.hasTopFrame !== undefined ? { hasTopFrame: slot.hasTopFrame } : {}),
-    ...(canApplyTopFrame && slot.topFrameThickness !== undefined ? { topFrameThickness: Math.max(0, Math.round(slot.topFrameThickness)) } : {}),
-    ...(canApplyTopFrame && slot.topFrameOffset !== undefined ? { topFrameOffset: Math.round(slot.topFrameOffset) } : {}),
-    ...(canApplyTopFrame && slot.topFrameGap !== undefined ? { topFrameGap: Math.max(0, Math.round(slot.topFrameGap)) } : {}),
-    ...(canApplyBaseFrame && slot.hasBase !== undefined ? { hasBase: slot.hasBase } : {}),
-    ...(canApplyBaseFrame && slot.baseFrameHeight !== undefined ? { baseFrameHeight: Math.max(0, Math.round(slot.baseFrameHeight)) } : {}),
-    ...(canApplyBaseFrame && slot.baseFrameOffset !== undefined ? { baseFrameOffset: Math.round(slot.baseFrameOffset) } : {}),
-    ...(canApplyBaseFrame && slot.baseFrameGap !== undefined ? { baseFrameGap: Math.max(0, Math.round(slot.baseFrameGap)) } : {}),
-    ...(canApplyBaseFrame && slot.individualFloatHeight !== undefined ? { individualFloatHeight: Math.max(0, Math.round(slot.individualFloatHeight)) } : {}),
+    ...(canApplyTopFrame ? { hasTopFrame: slot.hasTopFrame ?? globalTopEnabled } : {}),
+    ...(canApplyTopFrame ? { topFrameThickness: Math.max(0, Math.round(slot.topFrameThickness ?? globalTopThickness)) } : {}),
+    ...(canApplyTopFrame ? { topFrameOffset: Math.round(slot.topFrameOffset ?? globalTopOffset) } : {}),
+    ...(canApplyTopFrame ? { topFrameGap: Math.max(0, Math.round(slot.topFrameGap ?? globalTopGap)) } : {}),
+    ...(canApplyBaseFrame ? { hasBase: slot.hasBase ?? globalBaseEnabled } : {}),
+    ...(canApplyBaseFrame ? { baseFrameHeight: Math.max(0, Math.round(slot.baseFrameHeight ?? globalBaseHeight)) } : {}),
+    ...(canApplyBaseFrame ? { baseFrameOffset: Math.round(slot.baseFrameOffset ?? globalBaseOffset) } : {}),
+    ...(canApplyBaseFrame ? { baseFrameGap: Math.max(0, Math.round(slot.baseFrameGap ?? globalBaseGap)) } : {}),
+    ...(canApplyBaseFrame ? { individualFloatHeight: Math.max(0, Math.round(slot.individualFloatHeight ?? globalFloatHeight)) } : {}),
     dimensions: {
       ...(moduleData.dimensions || {}),
       width: placementWidth,

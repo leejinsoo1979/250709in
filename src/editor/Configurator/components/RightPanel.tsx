@@ -1785,7 +1785,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             floatHeight={slot.individualFloatHeight ?? 0}
                             onToggle={() => updateGuideSlotFrame(slot.id, {
                               hasBase: !enabled,
-                              individualFloatHeight: enabled ? 0 : slot.individualFloatHeight ?? 0,
+                              individualFloatHeight: enabled ? gap : slot.individualFloatHeight ?? gap,
                               baseFrameHeight: baseHeightValue
                             })}
                             onSizeChange={(v) => updateGuideSlotFrame(slot.id, { baseFrameHeight: v })}

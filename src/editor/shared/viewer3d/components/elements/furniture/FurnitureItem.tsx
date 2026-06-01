@@ -1142,10 +1142,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     && placedModule.customHeight
     ? placedModule.customHeight
     : undefined;
-  const validFreeHeight = currentGuideSlotHeightMm ?? (placedModule.freeHeight
+  const validFreeHeight = (placedModule.freeHeight
     && !isStaleUpperTotalHeight(placedModule.freeHeight)
     ? placedModule.freeHeight
-    : undefined);
+    : undefined) ?? currentGuideSlotHeightMm;
   const directModuleHeight = moduleData?.category === 'upper'
     ? (validUpperCustomHeight ?? validFreeHeight)
     : validFreeHeight;
@@ -1579,11 +1579,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
-      const upperCabinetHeight = currentGuideSlotHeightMm ?? ((placedModule.customHeight && !autoDroppedUpperHeight.customHeight)
+      const upperCabinetHeight = (placedModule.customHeight && !autoDroppedUpperHeight.customHeight)
         ? placedModule.customHeight
         : (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight)
           ? placedModule.freeHeight
-          : (actualModuleData?.dimensions.height || 0))); // 상부장 높이
+          : (currentGuideSlotHeightMm ?? (actualModuleData?.dimensions.height || 0))); // 상부장 높이
 
       if (currentGuideSlotYRangeMm && placedModule.guideSlotZone === 'upper') {
         adjustedPosition = {
@@ -1661,7 +1661,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatH = placedModule.individualFloatHeight ?? 0;
       furnitureHeightMm += (absorbedBase - floatH);
     }
-  } else if (currentGuideSlotHeightMm !== undefined && (isUpperCabinetForY || isLowerCabinetForY)) {
+  } else if (currentGuideSlotHeightMm !== undefined && !placedModule.freeHeight && (isUpperCabinetForY || isLowerCabinetForY)) {
     furnitureHeightMm = currentGuideSlotHeightMm;
   } else if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight) {
     furnitureHeightMm = placedModule.customHeight;
@@ -1805,9 +1805,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       };
     } else {
       if (currentGuideSlotYRangeMm && (placedModule.guideSlotZone === 'full' || placedModule.guideSlotZone === 'lower')) {
+        const hasUserHeight = placedModule.isFreePlacement
+          && typeof placedModule.freeHeight === 'number'
+          && placedModule.freeHeight > 0;
+        const centerY = hasUserHeight
+          ? (currentGuideSlotYRangeMm.start + furnitureHeightMm / 2) * 0.01
+          : ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01;
         adjustedPosition = {
           ...adjustedPosition,
-          y: ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01
+          y: centerY
         };
       } else {
         // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
