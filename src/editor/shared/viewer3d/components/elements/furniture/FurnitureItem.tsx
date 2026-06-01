@@ -2872,10 +2872,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
 
         // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
-        if (shouldApplyColumnAdjustment && (
-          placedModule.adjustedWidth !== furnitureWidthMm ||
-          placedModule.position.x !== adjustedPosition.x
-        )) {
+        if (shouldApplyColumnAdjustment && placedModule.adjustedWidth !== furnitureWidthMm) {
           updatePlacedModule(placedModule.id, {
             adjustedWidth: furnitureWidthMm,
             columnSlotInfo: {
@@ -3163,8 +3160,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 🔴 Z축 디버그
   // console.log('🔴 Z', ...); // 진단용 로그 제거 (성능)
 
+  const shouldKeepFurnitureXFixedForColumn = !placedModule.isFreePlacement
+    && !!slotInfo?.hasColumn
+    && !!slotInfo.column;
+
   const furnitureGroupPosition: [number, number, number] = [
-    (placedModule.isLocked || isSideWallFurniture)
+    (placedModule.isLocked || isSideWallFurniture || shouldKeepFurnitureXFixedForColumn)
       ? placedModule.position.x
       : adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
