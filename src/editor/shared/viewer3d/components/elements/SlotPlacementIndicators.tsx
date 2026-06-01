@@ -33,6 +33,7 @@ interface FreeGuideSlotWidthInputProps {
   onRemove: (slotId: string) => void;
   onSplit: (slotId: string) => void;
   onToggleMergeSelect: (slotId: string) => void;
+  onSelect: (slotId: string, range: boolean) => void;
   canRemove: boolean;
   canSplit: boolean;
   canMergeSelect: boolean;
@@ -47,6 +48,7 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
   onRemove,
   onSplit,
   onToggleMergeSelect,
+  onSelect,
   canRemove,
   canSplit,
   canMergeSelect,
@@ -76,7 +78,10 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
           gap: '3px'
         }}
         onClick={(e) => e.stopPropagation()}
-        onPointerDown={(e) => e.stopPropagation()}
+        onPointerDown={(e) => {
+          onSelect(slot.id, e.shiftKey === true);
+          e.stopPropagation();
+        }}
       >
         <div
           style={{
@@ -146,7 +151,10 @@ const FreeGuideSlotWidthInput: React.FC<FreeGuideSlotWidthInputProps> = ({
         gap: '3px'
       }}
       onClick={(e) => e.stopPropagation()}
-      onPointerDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => {
+        onSelect(slot.id, e.shiftKey === true);
+        e.stopPropagation();
+      }}
     >
       <label
         style={{
@@ -389,14 +397,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const anchorGroupId = anchorSlot.guideGroupId || '';
     const targetGroupId = targetSlot.guideGroupId || '';
 
-    if (anchorZone !== targetZone || (anchorZone !== 'full' && anchorGroupId !== targetGroupId)) {
+    if (anchorZone !== targetZone) {
       return [targetSlotId];
     }
 
     const lineSlots = guideSlots
       .filter((slot) => (
         (slot.guideZone || 'full') === anchorZone
-        && (anchorZone === 'full' || (slot.guideGroupId || '') === anchorGroupId)
+        && (anchorZone !== 'full' || (slot.guideGroupId || '') === anchorGroupId)
       ))
       .sort((a, b) => a.x - b.x || a.index - b.index);
     const anchorIndex = lineSlots.findIndex((slot) => slot.id === anchorSlotId);
@@ -452,11 +460,48 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         || a.index - b.index
       ));
     };
+    const guideBounds = getFreePlacementGuideBoundsX(spaceInfo);
+    const guideStartX = guideBounds.startX + (spaceInfo.width || 0) / 2;
+    const guideEndX = guideBounds.endX + (spaceInfo.width || 0) / 2;
+    const getEditableLineBounds = (lineSlots: FreePlacementGuideSlot[]) => {
+      if (lineSlots.length === 0) return { startX: guideStartX, endX: guideEndX };
+
+      const tolerance = 0.5;
+      const lineZone = lineSlots[0]?.guideZone || 'full';
+      const lineSlotIds = new Set(lineSlots.map((slot) => slot.id));
+      const lineStartX = Math.min(...lineSlots.map((slot) => slot.x));
+      const lineEndX = Math.max(...lineSlots.map((slot) => slot.x + slot.width));
+      const blocksLine = (slot: FreePlacementGuideSlot) => {
+        if (lineSlotIds.has(slot.id)) return false;
+        const zone = slot.guideZone || 'full';
+        if (lineZone === 'full') return true;
+        return zone === 'full' || zone === lineZone;
+      };
+
+      const leftBarrierEnd = sourceSlots
+        .filter(blocksLine)
+        .map((slot) => slot.x + slot.width)
+        .filter((endX) => endX <= lineStartX + tolerance)
+        .reduce((max, endX) => Math.max(max, endX), guideStartX);
+      const rightBarrierStart = sourceSlots
+        .filter(blocksLine)
+        .map((slot) => slot.x)
+        .filter((startX) => startX >= lineEndX - tolerance)
+        .reduce((min, startX) => Math.min(min, startX), guideEndX);
+
+      return {
+        startX: Math.max(guideStartX, leftBarrierEnd),
+        endX: Math.min(guideEndX, rightBarrierStart)
+      };
+    };
 
     if (hasSplitSlots && selectedFullSlots.length > 0) {
       const epsilon = 0.5;
       const selectionStartX = Math.min(...selectedFullSlots.map((slot) => slot.x));
       const selectionEndX = Math.max(...selectedFullSlots.map((slot) => slot.x + slot.width));
+      const editableBounds = getEditableLineBounds(selectedFullSlots);
+      const layoutStartX = editableBounds.startX;
+      const layoutEndX = editableBounds.endX;
       const selectedFullIds = new Set(selectedFullSlots.map((slot) => slot.id));
       const leftNeighbors = sourceSlots
         .filter((slot) => !selectedFullIds.has(slot.id))
@@ -475,8 +520,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       const lastSelected = selectedRangeSlots[selectedRangeSlots.length - 1];
 
       if (firstSelected && lastSelected && selectedRangeSlots.length > 0) {
-        if (action === 'move-left' && leftNeighbors.length > 0 && rightNeighbors.length > 0) {
-          const delta = Math.min(step, ...leftNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+        const leftFreeWidth = Math.max(0, selectionStartX - layoutStartX);
+        const rightFreeWidth = Math.max(0, layoutEndX - selectionEndX);
+        const leftCapacity = leftNeighbors.length > 0
+          ? Math.min(...leftNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)))
+          : leftFreeWidth;
+        const rightCapacity = rightNeighbors.length > 0
+          ? Math.min(...rightNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)))
+          : rightFreeWidth;
+
+        if (action === 'move-left') {
+          const delta = Math.min(step, leftCapacity);
           if (delta > 0) {
             leftNeighbors.forEach((slot) => {
               slot.width -= delta;
@@ -489,8 +543,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               slot.width += delta;
             });
           }
-        } else if (action === 'move-right' && leftNeighbors.length > 0 && rightNeighbors.length > 0) {
-          const delta = Math.min(step, ...rightNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+        } else if (action === 'move-right') {
+          const delta = Math.min(step, rightCapacity);
           if (delta > 0) {
             leftNeighbors.forEach((slot) => {
               slot.width += delta;
@@ -505,7 +559,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           }
         } else if (action === 'grow') {
           if (rightNeighbors.length > 0) {
-            const delta = Math.min(step, ...rightNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+            const delta = Math.min(step, rightCapacity);
             if (delta > 0) {
               lastSelected.width += delta;
               rightNeighbors.forEach((slot) => {
@@ -513,8 +567,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 slot.width -= delta;
               });
             }
+          } else if (rightFreeWidth > 0) {
+            const delta = Math.min(step, rightFreeWidth);
+            if (delta > 0) lastSelected.width += delta;
           } else if (leftNeighbors.length > 0) {
-            const delta = Math.min(step, ...leftNeighbors.map((slot) => Math.max(0, slot.width - minSlotWidth)));
+            const delta = Math.min(step, leftCapacity);
             if (delta > 0) {
               leftNeighbors.forEach((slot) => {
                 slot.width -= delta;
@@ -522,12 +579,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               firstSelected.x -= delta;
               firstSelected.width += delta;
             }
+          } else if (leftFreeWidth > 0) {
+            const delta = Math.min(step, leftFreeWidth);
+            if (delta > 0) {
+              firstSelected.x -= delta;
+              firstSelected.width += delta;
+            }
           }
         } else if (action === 'shrink') {
-          if (rightNeighbors.length > 0) {
-            const delta = Math.min(step, Math.max(0, lastSelected.width - minSlotWidth));
-            if (delta > 0) {
-              lastSelected.width -= delta;
+          const delta = Math.min(step, Math.max(0, lastSelected.width - minSlotWidth));
+          if (delta > 0) {
+            lastSelected.width -= delta;
+            if (rightNeighbors.length > 0) {
               rightNeighbors.forEach((slot) => {
                 slot.x -= delta;
                 slot.width += delta;
@@ -552,7 +615,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const lineGroups = new Map<string, FreePlacementGuideSlot[]>();
 
     sourceSlots.forEach((slot) => {
-      const lineKey = `${slot.guideZone || 'full'}|${slot.guideGroupId || ''}`;
+      const zone = slot.guideZone || 'full';
+      const lineKey = zone === 'full' ? `${zone}|${slot.guideGroupId || ''}` : zone;
       const lineSlots = lineGroups.get(lineKey) || [];
       lineSlots.push(slot);
       lineGroups.set(lineKey, lineSlots);
@@ -567,6 +631,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
       const startIndex = Math.min(...selectedIndexes);
       const endIndex = Math.max(...selectedIndexes);
+      const editableBounds = getEditableLineBounds(sortedLineSlots);
+      const lineStartX = editableBounds.startX;
+      const lineEndX = editableBounds.endX;
+      const lineActualStartX = Math.min(...sortedLineSlots.map((slot) => slot.x));
+      const lineActualEndX = Math.max(...sortedLineSlots.map((slot) => slot.x + slot.width));
       const leftNeighbor = startIndex > 0 ? nextSlotsById.get(sortedLineSlots[startIndex - 1].id) : null;
       const rightNeighbor = endIndex < sortedLineSlots.length - 1 ? nextSlotsById.get(sortedLineSlots[endIndex + 1].id) : null;
       const firstSelected = nextSlotsById.get(sortedLineSlots[startIndex].id);
@@ -577,38 +646,72 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         .filter((slot): slot is FreePlacementGuideSlot => !!slot);
 
       if (!firstSelected || !lastSelected || selectedRangeSlots.length === 0) return;
+      const movableLineSlots = sortedLineSlots
+        .map((slot) => nextSlotsById.get(slot.id))
+        .filter((slot): slot is FreePlacementGuideSlot => !!slot);
+      const lineLeftFreeWidth = Math.max(0, lineActualStartX - lineStartX);
+      const lineRightFreeWidth = Math.max(0, lineEndX - lineActualEndX);
+
+      if (action === 'move-left' && lineLeftFreeWidth > 0) {
+        const delta = Math.min(step, lineLeftFreeWidth);
+        movableLineSlots.forEach((slot) => {
+          slot.x -= delta;
+        });
+        return;
+      }
+
+      if (action === 'move-right' && lineRightFreeWidth > 0) {
+        const delta = Math.min(step, lineRightFreeWidth);
+        movableLineSlots.forEach((slot) => {
+          slot.x += delta;
+        });
+        return;
+      }
+
+      const selectionStartX = firstSelected.x;
+      const selectionEndX = lastSelected.x + lastSelected.width;
+      const leftFreeWidth = Math.max(0, selectionStartX - lineStartX);
+      const rightFreeWidth = Math.max(0, lineEndX - selectionEndX);
+      const leftCapacity = leftNeighbor
+        ? Math.max(0, leftNeighbor.width - minSlotWidth)
+        : leftFreeWidth;
+      const rightCapacity = rightNeighbor
+        ? Math.max(0, rightNeighbor.width - minSlotWidth)
+        : rightFreeWidth;
 
       if (action === 'move-left') {
-        if (!leftNeighbor || !rightNeighbor) return;
-        const delta = Math.min(step, Math.max(0, leftNeighbor.width - minSlotWidth));
+        const delta = Math.min(step, leftCapacity);
         if (delta <= 0) return;
 
-        leftNeighbor.width -= delta;
+        if (leftNeighbor) leftNeighbor.width -= delta;
         selectedRangeSlots.forEach((slot) => {
           slot.x -= delta;
         });
-        rightNeighbor.x -= delta;
-        rightNeighbor.width += delta;
+        if (rightNeighbor) {
+          rightNeighbor.x -= delta;
+          rightNeighbor.width += delta;
+        }
         return;
       }
 
       if (action === 'move-right') {
-        if (!leftNeighbor || !rightNeighbor) return;
-        const delta = Math.min(step, Math.max(0, rightNeighbor.width - minSlotWidth));
+        const delta = Math.min(step, rightCapacity);
         if (delta <= 0) return;
 
-        leftNeighbor.width += delta;
+        if (leftNeighbor) leftNeighbor.width += delta;
         selectedRangeSlots.forEach((slot) => {
           slot.x += delta;
         });
-        rightNeighbor.x += delta;
-        rightNeighbor.width -= delta;
+        if (rightNeighbor) {
+          rightNeighbor.x += delta;
+          rightNeighbor.width -= delta;
+        }
         return;
       }
 
       if (action === 'grow') {
         if (rightNeighbor) {
-          const delta = Math.min(step, Math.max(0, rightNeighbor.width - minSlotWidth));
+          const delta = Math.min(step, rightCapacity);
           if (delta <= 0) return;
 
           lastSelected.width += delta;
@@ -617,33 +720,38 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           return;
         }
 
-        if (!leftNeighbor) return;
-        const delta = Math.min(step, Math.max(0, leftNeighbor.width - minSlotWidth));
+        if (rightFreeWidth > 0) {
+          const delta = Math.min(step, rightFreeWidth);
+          if (delta <= 0) return;
+          lastSelected.width += delta;
+          return;
+        }
+
+        const delta = Math.min(step, leftCapacity);
         if (delta <= 0) return;
 
-        leftNeighbor.width -= delta;
+        if (leftNeighbor) leftNeighbor.width -= delta;
         firstSelected.x -= delta;
         firstSelected.width += delta;
         return;
       }
 
-      if (rightNeighbor) {
-        const delta = Math.min(step, Math.max(0, lastSelected.width - minSlotWidth));
-        if (delta <= 0) return;
-
+      const delta = Math.min(step, Math.max(0, lastSelected.width - minSlotWidth));
+      if (delta > 0) {
         lastSelected.width -= delta;
+        if (!rightNeighbor) return;
         rightNeighbor.x -= delta;
         rightNeighbor.width += delta;
         return;
       }
 
       if (!leftNeighbor) return;
-      const delta = Math.min(step, Math.max(0, firstSelected.width - minSlotWidth));
-      if (delta <= 0) return;
+      const leftDelta = Math.min(step, Math.max(0, firstSelected.width - minSlotWidth));
+      if (leftDelta <= 0) return;
 
-      leftNeighbor.width += delta;
-      firstSelected.x += delta;
-      firstSelected.width -= delta;
+      leftNeighbor.width += leftDelta;
+      firstSelected.x += leftDelta;
+      firstSelected.width -= leftDelta;
     });
 
     setSpaceInfo({
@@ -2108,7 +2216,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         if (!selectedIds.has(slot.id)) return;
 
         const zone = slot.guideZone || 'full';
-        const lineKey = zone === 'full' ? 'full' : `${zone}|${slot.guideGroupId || ''}`;
+        const lineKey = zone === 'full' ? `full|${slot.guideGroupId || ''}` : zone;
         const lineSlots = selectedLineGroups.get(lineKey) || [];
         lineSlots.push(slot);
         selectedLineGroups.set(lineKey, lineSlots);
@@ -2956,37 +3064,69 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               position={[range.leftX - 0.08, range.centerY, guideZ + 0.012]}
               center
               zIndexRange={[180, 0]}
-              style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}
+              style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
             >
-              <span
+              <button
+                type="button"
+                aria-label="선택 슬롯 왼쪽으로 이동"
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  applySelectedGuideSlotKeyboardEdit('move-left', event.shiftKey ? 10 : 1);
+                }}
                 style={{
                   color: guideColor,
+                  width: 26,
+                  height: 26,
+                  padding: 0,
+                  border: 'none',
+                  borderRadius: 999,
+                  background: 'transparent',
                   fontSize: '18px',
                   fontWeight: 900,
                   lineHeight: 1,
-                  textShadow: '0 1px 2px rgba(15, 23, 42, 0.22)'
+                  textShadow: '0 1px 2px rgba(15, 23, 42, 0.22)',
+                  cursor: 'pointer'
                 }}
               >
                 ‹
-              </span>
+              </button>
             </Html>
             <Html
               position={[range.rightX + 0.08, range.centerY, guideZ + 0.012]}
               center
               zIndexRange={[180, 0]}
-              style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}
+              style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
             >
-              <span
+              <button
+                type="button"
+                aria-label="선택 슬롯 오른쪽으로 이동"
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  applySelectedGuideSlotKeyboardEdit('move-right', event.shiftKey ? 10 : 1);
+                }}
                 style={{
                   color: guideColor,
+                  width: 26,
+                  height: 26,
+                  padding: 0,
+                  border: 'none',
+                  borderRadius: 999,
+                  background: 'transparent',
                   fontSize: '18px',
                   fontWeight: 900,
                   lineHeight: 1,
-                  textShadow: '0 1px 2px rgba(15, 23, 42, 0.22)'
+                  textShadow: '0 1px 2px rgba(15, 23, 42, 0.22)',
+                  cursor: 'pointer'
                 }}
               >
                 ›
-              </span>
+              </button>
             </Html>
           </React.Fragment>
         ))}
@@ -3388,6 +3528,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                     onRemove={removeFreeGuideSlot}
                     onSplit={splitFreeGuideSlot}
                     onToggleMergeSelect={toggleMergeSelect}
+                    onSelect={selectGuideSlot}
                     canRemove={sameAreaSlotCount > 1}
                     canSplit={(slot.guideZone || 'full') === 'full'}
                     canMergeSelect={canMergeWithAnotherSlot}
