@@ -865,7 +865,9 @@ export const useUIStore = create<UIState>()(
         set({ 
           activePopup: { type: 'furnitureEdit', id: moduleId },
           highlightedCompartment: moduleId,
-          selectedFurnitureId: moduleId // 가구 편집 시 해당 가구도 강조
+          selectedFurnitureId: moduleId, // 가구 편집 시 해당 가구도 강조
+          selectedFurnitureIds: [moduleId],
+          selectedColumnId: null
         });
       },
       
@@ -874,6 +876,8 @@ export const useUIStore = create<UIState>()(
         set({
           activePopup: { type: 'customizableEdit', id: moduleId, sectionIndex, areaSide, subPart, screenX, screenY },
           selectedFurnitureId: moduleId,
+          selectedFurnitureIds: [moduleId],
+          selectedColumnId: null
         });
       },
 
@@ -887,7 +891,9 @@ export const useUIStore = create<UIState>()(
       openColumnEditModal: (columnId) =>
         set({ 
           activePopup: { type: 'columnEdit', id: columnId },
-          selectedColumnId: columnId
+          selectedColumnId: columnId,
+          selectedFurnitureId: null,
+          selectedFurnitureIds: []
         }),
       
       // 가벽 팝업 열기 (다른 모든 팝업 닫기)
@@ -936,7 +942,10 @@ export const useUIStore = create<UIState>()(
         set({ isColumnCreationMode: isEnabled }),
       
       setSelectedColumnId: (columnId) =>
-        set({ selectedColumnId: columnId }),
+        set(columnId
+          ? { selectedColumnId: columnId, selectedFurnitureId: null, selectedFurnitureIds: [] }
+          : { selectedColumnId: null }
+        ),
       
       setWallCreationMode: (isEnabled) =>
         set({ isWallCreationMode: isEnabled }),
@@ -1011,10 +1020,17 @@ export const useUIStore = create<UIState>()(
         set((state) => ({ showBorings: !state.showBorings })),
 
       setSelectedFurnitureId: (id) =>
-        set({ selectedFurnitureId: id, selectedFurnitureIds: id ? [id] : [] }),
+        set(id
+          ? { selectedFurnitureId: id, selectedFurnitureIds: [id], selectedColumnId: null }
+          : { selectedFurnitureId: null, selectedFurnitureIds: [] }
+        ),
 
       setSelectedFurnitureIds: (ids) =>
-        set({ selectedFurnitureIds: ids, selectedFurnitureId: ids[ids.length - 1] ?? null }),
+        set({
+          selectedFurnitureIds: ids,
+          selectedFurnitureId: ids[ids.length - 1] ?? null,
+          selectedColumnId: ids.length > 0 ? null : get().selectedColumnId
+        }),
 
       toggleSelectedFurnitureId: (id) => {
         const state = get();
@@ -1026,7 +1042,11 @@ export const useUIStore = create<UIState>()(
         }
         const exists = base.includes(id);
         const next = exists ? base.filter(x => x !== id) : [...base, id];
-        set({ selectedFurnitureIds: next, selectedFurnitureId: next[next.length - 1] ?? null });
+        set({
+          selectedFurnitureIds: next,
+          selectedFurnitureId: next[next.length - 1] ?? null,
+          selectedColumnId: next.length > 0 ? null : state.selectedColumnId
+        });
       },
 
       clearSelectedFurnitureIds: () =>

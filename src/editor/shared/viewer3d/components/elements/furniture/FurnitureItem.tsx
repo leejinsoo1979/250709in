@@ -168,7 +168,8 @@ const checkAdjacentUpperLowerToFull = (
   }
 
   // slotCustomWidth 재분할이 반영된 indexing 사용
-  const baseIndexing = calculateSpaceIndexing(spaceInfo);
+  // 메모이제이션: calculateSpaceIndexing는 무거운 계산인데 매 렌더 실행되면 기둥 드래그 중 렉을 유발한다.
+  const baseIndexing = useMemo(() => calculateSpaceIndexing(spaceInfo), [spaceInfo]);
   const indexing = useMemo(() => {
     const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
     return hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, placedModules) : baseIndexing;
@@ -356,11 +357,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
   const { isFurnitureDragging, isDraggingColumn, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore();
-  const isColumnMoveOnlyActive = typeof window !== 'undefined' && (window as any).__columnMoveOnlyActive === true;
-  const currentColumnMoveSignature = React.useMemo(() => JSON.stringify(spaceInfo.columns || []), [spaceInfo.columns]);
-  const isColumnMoveOnlySignature = typeof window !== 'undefined'
-    && (window as any).__columnMoveOnlyColumnSignature === currentColumnMoveSignature;
-  const isPlacementStructureDragging = isFurnitureDragging || isDraggingColumn || isColumnMoveOnlyActive || isColumnMoveOnlySignature;
+  // 기둥 이동(columnMoveOnly) 가드는 폭 보정 차단에서 제외한다.
+  // 기둥을 가구 슬롯으로 밀어넣어도 가구 폭은 기둥 침범분만큼 줄어들어야 하기 때문.
+  // (위치 점프는 아래 shouldKeepFurnitureXFixedForColumn 이 슬롯 중심으로 고정하므로 발생하지 않음)
+  const isPlacementStructureDragging = isFurnitureDragging || isDraggingColumn;
   const shouldApplyColumnAdjustment = !placedModule.isLocked && !isPlacementStructureDragging;
   // 3D 측면뷰(L/R)일 때 카메라 쪽 가구는 숨겨야 하지만 early return은 hook 위반 → visible flag로 처리
   const sideViewHiddenByCamera = (() => {
@@ -2871,10 +2871,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           positionAdjustmentForEndPanel = targetCenter - furnitureBounds.center;
         }
 
-        // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
-        if (shouldApplyColumnAdjustment && placedModule.adjustedWidth !== furnitureWidthMm) {
+        // 기둥 변경으로 인한 폭 조정 store 반영.
+        // adjustedPosition(기둥 회피로 밀린 중심)도 저장해야 걸레받이·상부몰딩·치수가 본체 중심을 따라간다.
+        // 성능: (1) 드래그 진행 중에는 store write 생략(로컬 렌더만) → 매 프레임 write/리렌더 폭주 방지.
+        //      (2) 값은 1mm 단위로 양자화 비교·저장 → 부동소수 미세 차이로 인한 불필요한 write/피드백 루프 차단.
+        const quantTargetCenter = Math.round(targetCenter * 100) / 100; // 0.01 three-unit = 1mm
+        const prevAdjPosX = placedModule.adjustedPosition?.x;
+        const widthChanged = placedModule.adjustedWidth !== furnitureWidthMm;
+        const posChanged = prevAdjPosX === undefined
+          || Math.round(prevAdjPosX * 100) !== Math.round(quantTargetCenter * 100);
+        if (shouldApplyColumnAdjustment && !isDraggingColumn && (widthChanged || posChanged)) {
           updatePlacedModule(placedModule.id, {
             adjustedWidth: furnitureWidthMm,
+            adjustedPosition: { x: quantTargetCenter, y: placedModule.position.y, z: placedModule.position.z },
             columnSlotInfo: {
               hasColumn: true,
               columnId: slotInfo.column?.id,
@@ -3160,12 +3169,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 🔴 Z축 디버그
   // console.log('🔴 Z', ...); // 진단용 로그 제거 (성능)
 
-  const shouldKeepFurnitureXFixedForColumn = !placedModule.isFreePlacement
-    && !!slotInfo?.hasColumn
-    && !!slotInfo.column;
-
+  // 기둥 침범 시에는 adjustedPosition.x(기둥 회피 정렬 위치)를 그대로 사용해야
+  // 가구가 기둥 반대쪽으로 밀려 한쪽 방향으로만 줄어든다 (중심 고정 시 양쪽으로 줄어 기둥과 겹침).
+  // 슬롯 점프는 store의 slotIndex/position.x 가 바뀌지 않으므로 발생하지 않는다.
   const furnitureGroupPosition: [number, number, number] = [
-    (placedModule.isLocked || isSideWallFurniture || shouldKeepFurnitureXFixedForColumn)
+    (placedModule.isLocked || isSideWallFurniture)
       ? placedModule.position.x
       : adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
@@ -3330,6 +3338,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!shouldResetWidth) return null;
     return {
       adjustedWidth: undefined,
+      adjustedPosition: undefined,
       columnSlotInfo: undefined
     };
   }, [shouldResetWidth]);

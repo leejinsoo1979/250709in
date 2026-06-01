@@ -2528,12 +2528,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 기둥 변경 감지하여 즉시 리렌더링 및 가구 업데이트
   useEffect(() => {
     const columnSignature = JSON.stringify(spaceInfo?.columns || []);
-    const isColumnMoveOnlyActive = typeof window !== 'undefined' && (window as any).__columnMoveOnlyActive === true;
-    const isColumnMoveOnlySignature = typeof window !== 'undefined'
-      && (window as any).__columnMoveOnlyColumnSignature === columnSignature;
-    const isColumnMoving = isDraggingColumn || useUIStore.getState().isDraggingColumn || isColumnMoveOnlyActive || isColumnMoveOnlySignature;
+    // 드래그 진행 중에만 skip(떨림 방지). columnMoveOnly 가드는 제외 →
+    // 기둥 이동 후 가구 폭(adjustedWidth) 보정이 정상 반영되도록 한다.
+    const isColumnMoving = isDraggingColumn || useUIStore.getState().isDraggingColumn;
     if (isColumnMoving) {
-      lastHandledColumnSignatureRef.current = columnSignature;
       return;
     }
     if (lastHandledColumnSignatureRef.current === columnSignature) {
@@ -2560,11 +2558,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       spaceInfo: !!spaceInfo,
       columns: spaceInfo?.columns?.length || 0
     });
-    const columnSignature = JSON.stringify(spaceInfo?.columns || []);
-    const isColumnMoveOnlyActive = typeof window !== 'undefined' && (window as any).__columnMoveOnlyActive === true;
-    const isColumnMoveOnlySignature = typeof window !== 'undefined'
-      && (window as any).__columnMoveOnlyColumnSignature === columnSignature;
-    const isColumnMoving = useUIStore.getState().isDraggingColumn || isColumnMoveOnlyActive || isColumnMoveOnlySignature;
+    // 드래그 진행 중에만 skip(떨림 방지). columnMoveOnly 가드는 제외 →
+    // 기둥 이동 후 가구 폭(adjustedWidth) 보정이 정상 반영되도록 한다.
+    const isColumnMoving = useUIStore.getState().isDraggingColumn;
     if (spaceInfo && !isColumnMoving) {
       lastHandledColumnSignatureRef.current = JSON.stringify(spaceInfo.columns || []);
       console.log('🔄 [Space3DView] updateFurnitureForColumns 호출');

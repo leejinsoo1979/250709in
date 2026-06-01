@@ -777,6 +777,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // get() + non-callback set() 방식 사용 (R3F Canvas 내부 리렌더 보장)
     const state = get();
     const targetModule = state.placedModules.find(module => module.id === id);
+    if (targetModule?.isLocked) return;
     const newModules = state.placedModules.map(module =>
       applyModuleAndGroupedMovement(module, id, targetModule, { position })
     );
@@ -796,6 +797,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const existingModule = state.placedModules.find(m => m.id === id);
 
     if (existingModule) {
+      if (existingModule.isLocked) {
+        const lockedSafeUpdates = { ...updates };
+        delete lockedSafeUpdates.position;
+        delete lockedSafeUpdates.slotIndex;
+        delete lockedSafeUpdates.zone;
+        finalUpdates = lockedSafeUpdates;
+      }
+
       if (updates.hasTopFrame === true && updates.topFrameGap === undefined) {
         finalUpdates = { ...finalUpdates, topFrameGap: 0 };
       }
@@ -869,7 +878,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         finalUpdates = depthSyncUpdates;
       }
     }
-    if (existingModule?.isFreePlacement && updates.position) {
+    if (existingModule?.isFreePlacement && finalUpdates.position) {
       const spaceState = useSpaceConfigStore.getState();
       const lockedWallGaps = spaceState.spaceInfo.lockedWallGaps;
 
@@ -881,7 +890,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         const merged = { ...existingModule, ...updates };
         const widthMm = merged.freeWidth || merged.moduleWidth || 450;
         const halfFW = widthMm / 2;
-        let posX = (updates.position as any).x as number;
+        let posX = (finalUpdates.position as any).x as number;
 
         // 잠긴 영역 경계 계산
         const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
@@ -893,7 +902,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         const clampedPosX = Math.max(minPosX, Math.min(maxPosX, posX));
 
         if (clampedPosX !== posX) {
-          finalUpdates = { ...updates, position: { ...(updates.position as any), x: clampedPosX } };
+          finalUpdates = { ...finalUpdates, position: { ...(finalUpdates.position as any), x: clampedPosX } };
         }
       }
     }
@@ -901,19 +910,19 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
     const checkTarget = existingModule || state.placedModules.find(m => m.id === id);
     const oldSlotIndex = checkTarget?.slotIndex;
-    const isSlotChanging = (updates.slotIndex !== undefined && updates.slotIndex !== oldSlotIndex) || (updates.zone !== undefined && updates.zone !== checkTarget?.zone);
-    if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
+    const isSlotChanging = (finalUpdates.slotIndex !== undefined && finalUpdates.slotIndex !== oldSlotIndex) || (finalUpdates.zone !== undefined && finalUpdates.zone !== checkTarget?.zone);
+    if ((finalUpdates.slotIndex !== undefined || finalUpdates.zone !== undefined) && !checkTarget?.isFreePlacement) {
       const targetModule = checkTarget;
       if (targetModule) {
-        const newSlotIndex = updates.slotIndex !== undefined ? updates.slotIndex : targetModule.slotIndex;
-        const newZone = updates.zone !== undefined ? updates.zone : targetModule.zone;
+        const newSlotIndex = finalUpdates.slotIndex !== undefined ? finalUpdates.slotIndex : targetModule.slotIndex;
+        const newZone = finalUpdates.zone !== undefined ? finalUpdates.zone : targetModule.zone;
         const movingGroupId = targetModule.groupId;
 
         // 이동하는 모듈의 카테고리 확인
         const spaceInfo = useSpaceConfigStore.getState();
         const internalSpace = calculateInternalSpace(spaceInfo);
         // updates.moduleId가 있으면 그걸 우선 사용 (모듈 타입이 변경되는 경우를 위해)
-        const moduleIdToCheck = updates.moduleId || targetModule.moduleId;
+        const moduleIdToCheck = finalUpdates.moduleId || targetModule.moduleId;
         const targetModuleData = getModuleById(moduleIdToCheck, internalSpace, spaceInfo);
         const targetCategory = targetModuleData?.category;
         const isTargetUpper = targetCategory === 'upper';
@@ -1267,28 +1276,46 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
 
         const slotInfo = columnSlots[globalSlotIndex];
-        // 기둥이 있는 슬롯 → adjustedWidth 설정 (가구가 기둥 회피하여 폭 축소)
-        if (slotInfo?.hasColumn) {
+        const sameColumnStillAdjacent =
+          slotInfo?.hasColumn &&
+          module.columnSlotInfo?.hasColumn &&
+          (!module.columnSlotInfo.columnId || slotInfo.column?.id === module.columnSlotInfo.columnId) &&
+          (!module.columnSlotInfo.intrusionDirection || slotInfo.intrusionDirection === module.columnSlotInfo.intrusionDirection) &&
+          (!module.columnSlotInfo.furniturePosition || slotInfo.furniturePosition === module.columnSlotInfo.furniturePosition);
+
+        // 기둥과 함께 배치된 가구만 폭 보정을 유지한다.
+        // 기둥이 나중에 들어오거나, 가구 옆을 벗어나면 보정/확장 체크를 원복한다.
+        if (sameColumnStillAdjacent) {
           const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
           const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
+          if (module.adjustedWidth === newAdjustedWidth) return [module];
           return [{
             ...module,
             adjustedWidth: newAdjustedWidth
           }];
         } else {
-          // 기둥이 없는 슬롯인 경우 폭 보정만 제거한다. 기둥 이동으로 가구 좌표를 바꾸면 안 된다.
-          if (module.adjustedWidth !== undefined) {
+          // 기둥이 없는 슬롯인 경우 폭/위치 보정을 제거한다. 기둥 이동으로 가구 좌표를 바꾸면 안 된다.
+          const hasColumnRelatedAdjust =
+            module.adjustedWidth !== undefined ||
+            module.columnSlotInfo !== undefined ||
+            module.adjustedPosition !== undefined ||
+            module.topFrameWidthAdjustEnabled === true ||
+            module.baseFrameWidthAdjustEnabled === true;
+          if (hasColumnRelatedAdjust) {
             return [{
               ...module,
               adjustedWidth: undefined,
-              columnSlotInfo: undefined
+              adjustedPosition: undefined,
+              columnSlotInfo: undefined,
+              topFrameWidthAdjustEnabled: false,
+              topFrameLeftAdjustMm: 0,
+              topFrameRightAdjustMm: 0,
+              baseFrameWidthAdjustEnabled: false,
+              baseFrameLeftAdjustMm: 0,
+              baseFrameRightAdjustMm: 0
             }];
           }
-          return [{
-            ...module,
-            adjustedWidth: undefined,
-            columnSlotInfo: undefined
-          }];
+          return [module];
         }
       });
 

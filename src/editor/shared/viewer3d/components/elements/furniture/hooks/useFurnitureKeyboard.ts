@@ -51,6 +51,17 @@ export const useFurnitureKeyboard = ({
         return;
       }
 
+      // 기둥이 선택/편집 중이면 방향키는 기둥 이동 전용 → 가구 키보드 이동 무시
+      // (기둥을 방향키로 옮길 때 가구가 같이 움직이는 문제 방지)
+      {
+        const uiState = useUIStore.getState();
+        const isColumnActive = !!uiState.selectedColumnId
+          || (uiState.activePopup?.type === 'columnEdit' && !!uiState.activePopup?.id);
+        if (isColumnActive && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+          return;
+        }
+      }
+
       const getAdjacentAvailableSlot = (
         currentSlot: number,
         direction: 'left' | 'right',
