@@ -1116,6 +1116,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       || moduleId.includes('-4drawer-shelf-')
       || moduleId.includes('-2drawer-shelf-')
       || moduleId.includes('glass-cabinet');
+    // 키큰장찬넬(insert-frame): 도어 없이 가구 전면에 정렬되는 채움재.
+    // 실제 3D 본체 전면 = furnitureZOffset + furnitureDepth/2 + baseDepthOffset (도어 두께 차감 없음).
+    // → 폭 치수 전면 Z를 본체 전면에 맞춤 (기존엔 뒤로 밀려 찬넬과 어긋남).
+    const isInsertFrame = moduleId.includes('insert-frame');
+
+    if (isInsertFrame) {
+      const frontZ = furnitureZOffsetValue + furnitureDepthValue / 2 + baseDepthOffsetValue + backWallGapZValue;
+      return {
+        backZ: frontZ - mmToThreeUnits(depthMm),
+        frontZ,
+        depthMm,
+      };
+    }
 
     if (isStandaloneUpper) {
       const backZ = furnitureZOffsetValue - furnitureDepthValue / 2 - doorThicknessValue + backWallGapZValue;
