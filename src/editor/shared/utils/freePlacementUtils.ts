@@ -857,6 +857,13 @@ export function calcInsertFrameResizedPositionX(
       : oldBounds.right - halfNew;
     let forcedClampedMm = clampToSpaceBoundsX(forcedCenterMm, newWidthMm, spaceInfo);
     forcedClampedMm = Math.max(effStart + halfNew, Math.min(effEnd - halfNew, forcedClampedMm));
+    console.log('🟩[calcInsertFrame anchor]', {
+      anchorOverride,
+      oldLeft: oldBounds.left, oldRight: oldBounds.right, oldCenterMm: currentCenterMm,
+      newWidthMm, halfNew,
+      forcedCenterMm, forcedClampedMm,
+      returnX: forcedClampedMm * 0.01,
+    });
     return forcedClampedMm * 0.01;
   }
 
