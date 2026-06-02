@@ -7,7 +7,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { useSpaceConfigStore } from './spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
-import { calcInsertFrameResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcInsertFrameResizedPositionX, resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
 
 const isCornerCabinetModuleId = (moduleId?: string): boolean =>
   !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
@@ -941,15 +941,21 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       if (isInsertFrameWidthChanging) {
         const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        const resolvedHingePosition = resolveInsertFrameResizeHingePosition(existingModule, state.placedModules, spaceInfo);
+        const insertFrameForResize = {
+          ...existingModule,
+          hingePosition: resolvedHingePosition,
+        };
         finalUpdates = {
           ...finalUpdates,
           freeWidth: requestedBodyWidth,
           moduleWidth: requestedBodyWidth,
           customWidth: requestedBodyWidth,
+          hingePosition: resolvedHingePosition,
           userResizedWidth: true,
           position: {
             ...existingModule.position,
-            x: calcInsertFrameResizedPositionX(existingModule, requestedBodyWidth, state.placedModules, spaceInfo),
+            x: calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo),
           },
         };
       }

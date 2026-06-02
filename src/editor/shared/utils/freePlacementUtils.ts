@@ -396,6 +396,70 @@ export function getModuleCategory(module: PlacedModule): 'full' | 'upper' | 'low
   return 'full';
 }
 
+export function resolveInsertFrameResizeHingePosition(
+  module: PlacedModule,
+  allModules: PlacedModule[],
+  spaceInfo: SpaceInfo
+): 'left' | 'right' {
+  if (module.hingePosition === 'left' || module.hingePosition === 'right') {
+    return module.hingePosition;
+  }
+
+  const oldBounds = getModuleBoundsX(module);
+  const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+  const lockedGaps = spaceInfo.lockedWallGaps;
+  const effStart = lockedGaps?.left != null ? startX + lockedGaps.left : startX;
+  const effEnd = lockedGaps?.right != null ? endX - lockedGaps.right : endX;
+  const SNAP_MM = 10;
+  const NEAR_MM = 80;
+  const currentCenterMm = module.position.x * 100;
+  const spaceMidMm = (startX + endX) / 2;
+
+  let leftGap: number | null = null;
+  let rightGap: number | null = null;
+
+  const rememberLeftGap = (gap: number) => {
+    leftGap = leftGap == null ? gap : Math.min(leftGap, gap);
+  };
+  const rememberRightGap = (gap: number) => {
+    rightGap = rightGap == null ? gap : Math.min(rightGap, gap);
+  };
+
+  for (const other of allModules) {
+    if (other.id === module.id || other.isSurroundPanel) continue;
+    const otherBounds = getModuleBoundsX(other);
+
+    const gapToLeft = oldBounds.left - otherBounds.right;
+    if (gapToLeft >= -SNAP_MM && gapToLeft <= NEAR_MM) {
+      rememberLeftGap(Math.max(0, gapToLeft));
+    }
+
+    const gapToRight = otherBounds.left - oldBounds.right;
+    if (gapToRight >= -SNAP_MM && gapToRight <= NEAR_MM) {
+      rememberRightGap(Math.max(0, gapToRight));
+    }
+  }
+
+  const leftWallGap = oldBounds.left - effStart;
+  if (leftWallGap >= -SNAP_MM && leftWallGap <= NEAR_MM) {
+    rememberLeftGap(Math.max(0, leftWallGap));
+  }
+
+  const rightWallGap = effEnd - oldBounds.right;
+  if (rightWallGap >= -SNAP_MM && rightWallGap <= NEAR_MM) {
+    rememberRightGap(Math.max(0, rightWallGap));
+  }
+
+  if (leftGap != null || rightGap != null) {
+    if (leftGap == null) return 'right';
+    if (rightGap == null) return 'left';
+    if (leftGap < rightGap) return 'left';
+    if (rightGap < leftGap) return 'right';
+  }
+
+  return currentCenterMm <= spaceMidMm ? 'left' : 'right';
+}
+
 /**
  * 자유배치 가이드 슬롯 중 아직 점유되지 않은 슬롯을 좌측부터 찾는다.
  * upper/lower는 기존 자유배치 규칙처럼 같은 X 슬롯에 서로 공존할 수 있다.
@@ -820,8 +884,9 @@ export function calcInsertFrameResizedPositionX(
   let newCenterMm: number;
   const leftAttached = !!leftAnchor && leftAnchor.gap <= SNAP_MM;
   const rightAttached = !!rightAnchor && rightAnchor.gap <= SNAP_MM;
-  const keepLeftForOpening = module.hingePosition === 'left';
-  const keepRightForOpening = module.hingePosition === 'right';
+  const resizeHingePosition = resolveInsertFrameResizeHingePosition(module, allModules, spaceInfo);
+  const keepLeftForOpening = resizeHingePosition === 'left';
+  const keepRightForOpening = resizeHingePosition === 'right';
 
   if (leftAttached && rightAttached) {
     const keepLeft = keepLeftForOpening
@@ -836,10 +901,10 @@ export function calcInsertFrameResizedPositionX(
     newCenterMm = leftAnchor!.x + halfNew;
   } else if (rightAttached) {
     newCenterMm = rightAnchor!.x - halfNew;
-  } else if (module.hingePosition === 'left') {
+  } else if (resizeHingePosition === 'left') {
     // 좌측 힌지 = 오른쪽 열림. 배치된 좌측면을 고정하고 열림방향으로 확장한다.
     newCenterMm = oldBounds.left + halfNew;
-  } else if (module.hingePosition === 'right') {
+  } else if (resizeHingePosition === 'right') {
     // 우측 힌지 = 왼쪽 열림. 배치된 우측면을 고정하고 열림방향으로 확장한다.
     newCenterMm = oldBounds.right - halfNew;
   } else if (leftAnchor && rightAnchor) {

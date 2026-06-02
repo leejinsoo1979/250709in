@@ -17,6 +17,7 @@ import {
   getCategoryDefaultFurnitureDepth,
   getDefaultFurnitureDepth as resolveDefaultFurnitureDepth
 } from '@/editor/shared/utils/furnitureDepthDefaults';
+import { resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
 
 const isTopFrameCapablePlacedModule = (module: PlacedModule): boolean => {
   if (module.isSurroundPanel) return false;
@@ -728,6 +729,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     // 키큰장찬넬(insert-frame): 전면 프레임 안쪽 들임 기본 18mm
     ...(furnitureId.includes('insert-frame') ? { insertFrontInsetMm: 18 } : {}),
   };
+
+  if (furnitureId.includes('insert-frame')) {
+    newModule.hingePosition = resolveInsertFrameResizeHingePosition(
+      newModule,
+      useFurnitureStore.getState().placedModules,
+      spaceInfo
+    );
+  }
 
   // My캐비넷 배치 데이터 초기화
   if (params.pendingPlacement) {

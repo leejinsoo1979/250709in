@@ -12,6 +12,7 @@ import {
   checkColumnCollision,
   detectDroppedZone,
   FurnitureBoundsX,
+  resolveInsertFrameResizeHingePosition,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { v4 as uuidv4 } from 'uuid';
 import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
@@ -382,6 +383,14 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     // 키큰장찬넬(insert-frame): 전면 프레임 안쪽 들임 기본 18mm
     ...(moduleId.includes('insert-frame') ? { insertFrontInsetMm: 18 } : {}),
   };
+
+  if (moduleId.includes('insert-frame')) {
+    newModule.hingePosition = resolveInsertFrameResizeHingePosition(
+      newModule,
+      useFurnitureStore.getState().placedModules,
+      spaceInfo
+    );
+  }
 
   // 배치 완료 후 pendingPlacement 초기화
   if (pp) {

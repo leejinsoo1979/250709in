@@ -13,7 +13,7 @@ import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/
 import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
-import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcInsertFrameResizedPositionX, calcResizedPositionX, resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
@@ -4286,6 +4286,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           let newX: number;
                           let insertMoveTargets: any[] = [];
                           let insertDelta = 0;
+                          let insertFrameHingePosition: 'left' | 'right' | undefined;
+                          let insertFrameModuleForResize = freshModule;
                           if (isInsertFrameWidth) {
                             const oldW = (freshModule.freeWidth ?? freshModule.customWidth ?? freshModule.moduleWidth ?? moduleData.dimensions.width);
                             const oldCenter = freshModule.position.x;
@@ -4321,15 +4323,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             });
                             const delta = val - oldW; // 확장량 (음수면 축소)
                             insertDelta = delta;
-                            // 공간 중앙 기준으로 가구 위치 판단
-                            const isOnLeftSide = oldCenter < 0;
-                            const keepLeftForOpening = freshModule.hingePosition === 'left';
-                            const keepRightForOpening = freshModule.hingePosition === 'right';
-                            const shouldKeepLeft = keepLeftForOpening
-                              ? true
-                              : keepRightForOpening
-                                ? false
-                                : isOnLeftSide;
+                            const resizeHingePosition = resolveInsertFrameResizeHingePosition(freshModule, freshAll, freshSI);
+                            insertFrameHingePosition = resizeHingePosition;
+                            insertFrameModuleForResize = { ...freshModule, hingePosition: resizeHingePosition };
+                            const shouldKeepLeft = resizeHingePosition === 'left';
                             const leftBlockerRight = freshAll.reduce<number | null>((best, m: any) => {
                               if (m.id === freshModule.id || m.isSurroundPanel) return best;
                               const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
@@ -4421,12 +4418,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               : freshModule.position.x;
                           }
                           if (isInsertFrameWidth && !Number.isFinite(newX)) {
-                            newX = calcInsertFrameResizedPositionX(freshModule, appliedWidth, freshAll, freshSI);
+                            newX = calcInsertFrameResizedPositionX(insertFrameModuleForResize, appliedWidth, freshAll, freshSI);
                           }
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: appliedWidth,
                             moduleWidth: appliedWidth,
                             customWidth: appliedWidth,
+                            ...(isInsertFrameWidth && insertFrameHingePosition ? { hingePosition: insertFrameHingePosition } : {}),
                             position: { ...freshModule.position, x: newX },
                             userResizedWidth: true, // 사용자가 직접 폭 변경 → 이동 시 자동 리사이즈 차단
                           } as any);
@@ -4504,6 +4502,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               let newX: number;
                               let insertMoveTargets: any[] = [];
                               let insertDelta = 0;
+                              let insertFrameHingePosition: 'left' | 'right' | undefined;
+                              let insertFrameModuleForResize = freshMod;
                               if (isInsertFrameKey) {
                                 // 키큰장찬넬: 옆 가구 위치에 따라 반대쪽으로만 확장
                                 const oldCenter = freshMod.position.x;
@@ -4534,14 +4534,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
                                   return mLeft >= oldRightMm - SNAP;
                                 });
-                                const isOnLeftSide = oldCenter < 0;
-                                const keepLeftForOpening = freshMod.hingePosition === 'left';
-                                const keepRightForOpening = freshMod.hingePosition === 'right';
-                                const shouldKeepLeft = keepLeftForOpening
-                                  ? true
-                                  : keepRightForOpening
-                                    ? false
-                                    : isOnLeftSide;
+                                const resizeHingePosition = resolveInsertFrameResizeHingePosition(freshMod, freshAll, freshSI);
+                                insertFrameHingePosition = resizeHingePosition;
+                                insertFrameModuleForResize = { ...freshMod, hingePosition: resizeHingePosition };
+                                const shouldKeepLeft = resizeHingePosition === 'left';
                                 const leftBlockerRight = freshAll.reduce<number | null>((best, m: any) => {
                                   if (m.id === freshMod.id || m.isSurroundPanel) return best;
                                   const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
@@ -4602,13 +4598,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   : freshMod.position.x;
                               }
                               if (isInsertFrameKey && !Number.isFinite(newX)) {
-                                newX = calcInsertFrameResizedPositionX(freshMod, appliedWidth, freshAll, freshSI);
+                                newX = calcInsertFrameResizedPositionX(insertFrameModuleForResize, appliedWidth, freshAll, freshSI);
                               }
                               setFreeWidthInput(appliedWidth.toString());
                               updatePlacedModule(currentPlacedModule.id, {
                                 freeWidth: appliedWidth,
                                 moduleWidth: appliedWidth,
                                 customWidth: appliedWidth,
+                                ...(isInsertFrameKey && insertFrameHingePosition ? { hingePosition: insertFrameHingePosition } : {}),
                                 position: { ...freshMod.position, x: newX },
                                 userResizedWidth: true,
                               });
