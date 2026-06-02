@@ -946,6 +946,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           ...existingModule,
           hingePosition: resolvedHingePosition,
         };
+        // 사용자가 좌고정/우고정을 선택한 경우 그 면을 우선 고정한다 (기본 좌고정).
+        // updates에 anchor가 함께 넘어오면 그것을, 아니면 기존 모듈 값을 사용.
+        const anchorOverride = (updates.insertFrameWidthAnchor ?? existingModule.insertFrameWidthAnchor ?? 'left') as 'left' | 'right';
         finalUpdates = {
           ...finalUpdates,
           freeWidth: requestedBodyWidth,
@@ -955,7 +958,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           userResizedWidth: true,
           position: {
             ...existingModule.position,
-            x: calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo),
+            x: calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo, anchorOverride),
           },
         };
       }
