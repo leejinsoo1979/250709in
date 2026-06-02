@@ -7,6 +7,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { useSpaceConfigStore } from './spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
+import { calcInsertFrameResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 
 const isCornerCabinetModuleId = (moduleId?: string): boolean =>
   !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
@@ -920,6 +921,37 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
 
         finalUpdates = depthSyncUpdates;
+      }
+
+      const requestedBodyWidth = typeof updates.freeWidth === 'number' && updates.freeWidth > 0
+        ? updates.freeWidth
+        : (typeof updates.customWidth === 'number' && updates.customWidth > 0
+          ? updates.customWidth
+          : (typeof updates.moduleWidth === 'number' && updates.moduleWidth > 0 ? updates.moduleWidth : undefined));
+      const currentBodyWidth = typeof existingModule.freeWidth === 'number' && existingModule.freeWidth > 0
+        ? existingModule.freeWidth
+        : (typeof existingModule.customWidth === 'number' && existingModule.customWidth > 0
+          ? existingModule.customWidth
+          : (typeof existingModule.moduleWidth === 'number' && existingModule.moduleWidth > 0 ? existingModule.moduleWidth : undefined));
+      const isInsertFrameWidthChanging = existingModule.isFreePlacement
+        && typeof existingModule.moduleId === 'string'
+        && existingModule.moduleId.includes('insert-frame')
+        && requestedBodyWidth !== undefined
+        && (currentBodyWidth === undefined || Math.abs(requestedBodyWidth - currentBodyWidth) >= 0.5);
+
+      if (isInsertFrameWidthChanging) {
+        const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+        finalUpdates = {
+          ...finalUpdates,
+          freeWidth: requestedBodyWidth,
+          moduleWidth: requestedBodyWidth,
+          customWidth: requestedBodyWidth,
+          userResizedWidth: true,
+          position: {
+            ...existingModule.position,
+            x: calcInsertFrameResizedPositionX(existingModule, requestedBodyWidth, state.placedModules, spaceInfo),
+          },
+        };
       }
     }
     if (existingModule?.isFreePlacement && finalUpdates.position) {
