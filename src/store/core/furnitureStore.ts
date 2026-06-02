@@ -479,22 +479,42 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	      const isDoorLift = module.moduleId?.includes('lower-door-lift-');
 	      const isTopDown = module.moduleId?.includes('lower-top-down-');
 	      const isShelfSplit = module.moduleId?.includes('shelf-split');
-	      const userDoorTopGap = typeof spaceInfo.doorTopGap === 'number' ? spaceInfo.doorTopGap : undefined;
-	      const userDoorBottomGap = typeof spaceInfo.doorBottomGap === 'number' ? spaceInfo.doorBottomGap : undefined;
+	      let configuredDoorTopGap: number | undefined;
+	      let configuredDoorBottomGap: number | undefined;
+	      if (isTopDown) {
+	        configuredDoorTopGap = typeof spaceInfo.doorTopGapLowerTopDown === 'number' ? spaceInfo.doorTopGapLowerTopDown : undefined;
+	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapLowerTopDown === 'number' ? spaceInfo.doorBottomGapLowerTopDown : undefined;
+	      } else if (isDoorLift) {
+	        configuredDoorTopGap = typeof spaceInfo.doorTopGapLowerDoorLift === 'number' ? spaceInfo.doorTopGapLowerDoorLift : undefined;
+	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapLowerDoorLift === 'number' ? spaceInfo.doorBottomGapLowerDoorLift : undefined;
+	      } else if (isBasicLowerCabinet || newCategory === 'lower') {
+	        configuredDoorTopGap = typeof spaceInfo.doorTopGapLower === 'number' ? spaceInfo.doorTopGapLower : undefined;
+	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapLower === 'number' ? spaceInfo.doorBottomGapLower : undefined;
+	      } else if (newCategory === 'upper') {
+	        configuredDoorTopGap = typeof spaceInfo.doorTopGapUpper === 'number' ? spaceInfo.doorTopGapUpper : undefined;
+	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapUpper === 'number' ? spaceInfo.doorBottomGapUpper : undefined;
+	      } else {
+	        configuredDoorTopGap = typeof spaceInfo.doorTopGapTall === 'number'
+	          ? spaceInfo.doorTopGapTall
+	          : (typeof spaceInfo.doorTopGap === 'number' ? spaceInfo.doorTopGap : undefined);
+	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapTall === 'number'
+	          ? spaceInfo.doorBottomGapTall
+	          : (typeof spaceInfo.doorBottomGap === 'number' ? spaceInfo.doorBottomGap : undefined);
+	      }
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
-          module.doorBottomGap = userDoorBottomGap ?? 28;
+          module.doorBottomGap = configuredDoorBottomGap ?? 28;
         } else if (isBasicLowerCabinet || isDoorLift || isTopDown) {
           // 기본하부장/서랍장/도어올림/상판내림: 하단 5mm 확장
-          module.doorBottomGap = userDoorBottomGap ?? 5;
+          module.doorBottomGap = configuredDoorBottomGap ?? 5;
         } else if (newCategory === 'lower') {
           // 기타 하부장: 캐비넷 하단에서 2mm 아래로 확장
-          module.doorBottomGap = userDoorBottomGap ?? 2;
+          module.doorBottomGap = configuredDoorBottomGap ?? 2;
         } else {
           const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-          module.doorBottomGap = userDoorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
+          module.doorBottomGap = configuredDoorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
         }
       }
 
@@ -502,20 +522,20 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (module.doorTopGap === undefined) {
         if (isTopDown) {
           // 상판내림: 10T=-90, 20T=-80, 30T=-70
-          module.doorTopGap = userDoorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);
+          module.doorTopGap = configuredDoorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);
         } else if (isDoorLift) {
           // 도어올림: 상단 30mm (마이다가 위로 올라감)
-          module.doorTopGap = userDoorTopGap ?? 30;
+          module.doorTopGap = configuredDoorTopGap ?? 30;
         } else if (isBasicLowerCabinet) {
           // 기본하부장 반통/한통/서랍장: 상단 -20mm (도어가 캐비넷보다 20mm 짧음)
-          module.doorTopGap = userDoorTopGap ?? -20;
+          module.doorTopGap = configuredDoorTopGap ?? -20;
         } else if (newCategory === 'lower') {
           // 기타 하부장: 캐비넷 상단에서 20mm 내려옴
-          module.doorTopGap = userDoorTopGap ?? 20;
+          module.doorTopGap = configuredDoorTopGap ?? 20;
         } else {
           const isFullSurround = spaceInfo.surroundType === 'surround'
             && spaceInfo.frameConfig?.top !== false;
-	          module.doorTopGap = userDoorTopGap ?? (isFullSurround ? -3 : 5);
+	          module.doorTopGap = configuredDoorTopGap ?? (isFullSurround ? -3 : 5);
 	        }
 	      }
 	      if (isShelfSplit) {
