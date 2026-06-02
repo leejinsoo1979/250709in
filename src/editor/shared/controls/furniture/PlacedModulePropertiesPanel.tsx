@@ -4282,143 +4282,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const freshAll = useFurnitureStore.getState().placedModules;
                           const freshSI = useSpaceConfigStore.getState().spaceInfo;
                           let appliedWidth = val;
-                          // 키큰장찬넬(insert-frame): 인접가구 반대로 확장 + 양쪽 인접 시 우측 가구 이동
                           let newX: number;
-                          let insertMoveTargets: any[] = [];
-                          let insertDelta = 0;
                           let insertFrameHingePosition: 'left' | 'right' | undefined;
-                          let insertFrameModuleForResize = freshModule;
                           if (isInsertFrameWidth) {
-                            const oldW = (freshModule.freeWidth ?? freshModule.customWidth ?? freshModule.moduleWidth ?? moduleData.dimensions.width);
-                            const oldCenter = freshModule.position.x;
-                            const oldLeftMm = oldCenter * 100 - oldW / 2;
-                            const oldRightMm = oldCenter * 100 + oldW / 2;
-                            const SNAP = 10;
-                            // SNAP 인접 (붙어있는) 좌/우 가구 탐색
-                            const leftAdj = freshAll.find((m: any) => {
-                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                              const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
-                              return Math.abs(mRight - oldLeftMm) <= SNAP;
-                            });
-                            const rightAdj = freshAll.find((m: any) => {
-                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                              const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
-                              return Math.abs(mLeft - oldRightMm) <= SNAP;
-                            });
-                            // 인접하지 않아도 좌/우에 가구가 있는지 광범위 탐색 (양쪽 확장 방지)
-                            //  - 키큰장찬넬은 채움재라 옆에 가구가 있으면 그 반대로만 확장되어야 함
-                            const hasLeftNeighbor = freshAll.some((m: any) => {
-                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                              const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
-                              return mRight <= oldLeftMm + SNAP;
-                            });
-                            const hasRightNeighbor = freshAll.some((m: any) => {
-                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                              const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
-                              return mLeft >= oldRightMm - SNAP;
-                            });
-                            const delta = val - oldW; // 확장량 (음수면 축소)
-                            insertDelta = delta;
                             const resizeHingePosition = resolveInsertFrameResizeHingePosition(freshModule, freshAll, freshSI);
                             insertFrameHingePosition = resizeHingePosition;
-                            insertFrameModuleForResize = { ...freshModule, hingePosition: resizeHingePosition };
-                            const shouldKeepLeft = resizeHingePosition === 'left';
-                            const leftBlockerRight = freshAll.reduce<number | null>((best, m: any) => {
-                              if (m.id === freshModule.id || m.isSurroundPanel) return best;
-                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                              const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
-                              if (mRight > oldLeftMm + SNAP) return best;
-                              return best == null ? mRight : Math.max(best, mRight);
-                            }, null);
-                            const rightBlockerLeft = freshAll.reduce<number | null>((best, m: any) => {
-                              if (m.id === freshModule.id || m.isSurroundPanel) return best;
-                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                              const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
-                              if (mLeft < oldRightMm - SNAP) return best;
-                              return best == null ? mLeft : Math.min(best, mLeft);
-                            }, null);
-                            if (appliedWidth > oldW) {
-                              const maxWidth = shouldKeepLeft
-                                ? (rightBlockerLeft == null ? appliedWidth : Math.max(minWidth, rightBlockerLeft - oldLeftMm))
-                                : (leftBlockerRight == null ? appliedWidth : Math.max(minWidth, oldRightMm - leftBlockerRight));
-                              appliedWidth = Math.min(appliedWidth, maxWidth);
-                            }
-                            const appliedDelta = appliedWidth - oldW;
-                            insertDelta = appliedDelta;
-                            if (leftAdj && rightAdj) {
-                              // 양쪽 인접: 열림방향 반대쪽 anchor를 유지하고 반대편 가구를 이동
-                              if (shouldKeepLeft) {
-                                // 좌측 영역: 좌측 anchor 유지, 우측 인접 가구 이동
-                                const newCenterMm = oldLeftMm + appliedWidth / 2;
-                                newX = newCenterMm / 100;
-                                insertMoveTargets = appliedDelta < 0 ? freshAll.filter((m: any) => {
-                                  if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                                  const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
-                                  return mLeft >= oldRightMm - SNAP;
-                                }) : [];
-                              } else {
-                                // 우측 영역: 우측 anchor 유지, 좌측 인접 가구 이동
-                                const newCenterMm = oldRightMm - appliedWidth / 2;
-                                newX = newCenterMm / 100;
-                                insertMoveTargets = appliedDelta < 0 ? freshAll.filter((m: any) => {
-                                  if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                                  const mRight = (m.position?.x ?? 0) * 100 + (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
-                                  return mRight <= oldLeftMm + SNAP;
-                                }) : [];
-                                // 좌측 가구들은 delta만큼 *왼쪽으로* 이동 (delta가 음수=축소면 오른쪽으로)
-                                insertMoveTargets = insertMoveTargets.map((m: any) => ({
-                                  ...m,
-                                  __moveDirection: -1, // 마커: 좌측 가구는 반대 방향
-                                }));
-                              }
-                            } else if (leftAdj && !rightAdj) {
-                              // 좌측만 인접: 좌측 anchor 유지, 우측으로 확장
-                              const newCenterMm = oldLeftMm + appliedWidth / 2;
-                              newX = newCenterMm / 100;
-                            } else if (!leftAdj && rightAdj) {
-                              // 우측만 인접: 우측 anchor 유지, 좌측으로 확장
-                              const newCenterMm = oldRightMm - appliedWidth / 2;
-                              newX = newCenterMm / 100;
-                            } else if (hasLeftNeighbor && !hasRightNeighbor) {
-                              // SNAP 안 됐지만 좌측에 가구 있음 → 좌측면 고정, 우측으로 확장
-                              const newCenterMm = oldLeftMm + appliedWidth / 2;
-                              newX = newCenterMm / 100;
-                            } else if (!hasLeftNeighbor && hasRightNeighbor) {
-                              // 우측에 가구 있음 → 우측면 고정, 좌측으로 확장
-                              const newCenterMm = oldRightMm - appliedWidth / 2;
-                              newX = newCenterMm / 100;
-                            } else if (hasLeftNeighbor && hasRightNeighbor) {
-                              // 양쪽에 가구 있음: 가구 위치에 따라 한쪽 면 고정 (양쪽 확장 방지)
-                              if (shouldKeepLeft) {
-                                const newCenterMm = oldLeftMm + appliedWidth / 2;
-                                newX = newCenterMm / 100;
-                              } else {
-                                const newCenterMm = oldRightMm - appliedWidth / 2;
-                                newX = newCenterMm / 100;
-                              }
-                            } else {
-                              // 좌우 어디에도 가구 없음: 공간 중앙 기준으로 가구 위치에 따라 한쪽 벽 고정
-                              //  - 가구가 공간 좌측이면 좌측 벽 anchor (우측으로만 확장)
-                              //  - 가구가 공간 우측이면 우측 벽 anchor (좌측으로만 확장)
-                              if (shouldKeepLeft) {
-                                const newCenterMm = oldLeftMm + appliedWidth / 2;
-                                newX = newCenterMm / 100;
-                              } else {
-                                const newCenterMm = oldRightMm - appliedWidth / 2;
-                                newX = newCenterMm / 100;
-                              }
-                            }
+                            newX = calcInsertFrameResizedPositionX(
+                              { ...freshModule, hingePosition: resizeHingePosition },
+                              appliedWidth,
+                              freshAll,
+                              freshSI
+                            );
                           } else {
                             newX = freshModule.isFreePlacement
                               ? calcResizedPositionX(freshModule, val, freshAll, freshSI)
                               : freshModule.position.x;
-                          }
-                          if (isInsertFrameWidth && !Number.isFinite(newX)) {
-                            newX = calcInsertFrameResizedPositionX(insertFrameModuleForResize, appliedWidth, freshAll, freshSI);
                           }
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: appliedWidth,
@@ -4428,17 +4306,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             position: { ...freshModule.position, x: newX },
                             userResizedWidth: true, // 사용자가 직접 폭 변경 → 이동 시 자동 리사이즈 차단
                           } as any);
-                          // 키큰장찬넬 양쪽 인접: 본인 업데이트 직후 인접 가구 일괄 이동
-                          //  (본인 update와 같은 micro-task 안에서 처리되어 다음 onBlur에서 정상적인 freshModule을 받을 수 있도록 함)
-                          if (isInsertFrameWidth && insertMoveTargets.length > 0) {
-                            insertMoveTargets.forEach((m: any) => {
-                              // 좌측 가구는 반대 방향(__moveDirection=-1), 우측 가구는 정방향(default +1)
-                              const dir = m.__moveDirection === -1 ? -1 : 1;
-                              updatePlacedModule(m.id, {
-                                position: { ...m.position, x: m.position.x + (insertDelta * dir) / 100 },
-                              } as any);
-                            });
-                          }
                           setFreeWidthInput(appliedWidth.toString());
                           const store = useFurnitureStore.getState();
                           const dims = {
@@ -4500,105 +4367,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const freshSI = useSpaceConfigStore.getState().spaceInfo;
                               let appliedWidth = next;
                               let newX: number;
-                              let insertMoveTargets: any[] = [];
-                              let insertDelta = 0;
                               let insertFrameHingePosition: 'left' | 'right' | undefined;
-                              let insertFrameModuleForResize = freshMod;
                               if (isInsertFrameKey) {
-                                // 키큰장찬넬: 옆 가구 위치에 따라 반대쪽으로만 확장
-                                const oldCenter = freshMod.position.x;
-                                const oldLeftMm = oldCenter * 100 - curW / 2;
-                                const oldRightMm = oldCenter * 100 + curW / 2;
-                                const SNAP = 10;
-                                const leftAdj = freshAll.find((m: any) => {
-                                  if (m.id === freshMod.id || m.isSurroundPanel) return false;
-                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                                  const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
-                                  return Math.abs(mRight - oldLeftMm) <= SNAP;
-                                });
-                                const rightAdj = freshAll.find((m: any) => {
-                                  if (m.id === freshMod.id || m.isSurroundPanel) return false;
-                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                                  const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
-                                  return Math.abs(mLeft - oldRightMm) <= SNAP;
-                                });
-                                const hasLeftNeighbor = freshAll.some((m: any) => {
-                                  if (m.id === freshMod.id || m.isSurroundPanel) return false;
-                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                                  const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
-                                  return mRight <= oldLeftMm + SNAP;
-                                });
-                                const hasRightNeighbor = freshAll.some((m: any) => {
-                                  if (m.id === freshMod.id || m.isSurroundPanel) return false;
-                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                                  const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
-                                  return mLeft >= oldRightMm - SNAP;
-                                });
                                 const resizeHingePosition = resolveInsertFrameResizeHingePosition(freshMod, freshAll, freshSI);
                                 insertFrameHingePosition = resizeHingePosition;
-                                insertFrameModuleForResize = { ...freshMod, hingePosition: resizeHingePosition };
-                                const shouldKeepLeft = resizeHingePosition === 'left';
-                                const leftBlockerRight = freshAll.reduce<number | null>((best, m: any) => {
-                                  if (m.id === freshMod.id || m.isSurroundPanel) return best;
-                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                                  const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
-                                  if (mRight > oldLeftMm + SNAP) return best;
-                                  return best == null ? mRight : Math.max(best, mRight);
-                                }, null);
-                                const rightBlockerLeft = freshAll.reduce<number | null>((best, m: any) => {
-                                  if (m.id === freshMod.id || m.isSurroundPanel) return best;
-                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
-                                  const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
-                                  if (mLeft < oldRightMm - SNAP) return best;
-                                  return best == null ? mLeft : Math.min(best, mLeft);
-                                }, null);
-                                if (appliedWidth > curW) {
-                                  const maxWidth = shouldKeepLeft
-                                    ? (rightBlockerLeft == null ? appliedWidth : Math.max(minWidth, rightBlockerLeft - oldLeftMm))
-                                    : (leftBlockerRight == null ? appliedWidth : Math.max(minWidth, oldRightMm - leftBlockerRight));
-                                  appliedWidth = Math.min(appliedWidth, maxWidth);
-                                }
-                                const delta = appliedWidth - curW;
-                                insertDelta = delta;
-                                if (leftAdj && rightAdj) {
-                                  if (shouldKeepLeft) {
-                                    newX = (oldLeftMm + appliedWidth / 2) / 100;
-                                    insertMoveTargets = delta < 0 ? freshAll.filter((m: any) => {
-                                      if (m.id === freshMod.id || m.isSurroundPanel) return false;
-                                      const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
-                                      return mLeft >= oldRightMm - SNAP;
-                                    }) : [];
-                                  } else {
-                                    newX = (oldRightMm - appliedWidth / 2) / 100;
-                                    insertMoveTargets = delta < 0 ? freshAll
-                                      .filter((m: any) => {
-                                        if (m.id === freshMod.id || m.isSurroundPanel) return false;
-                                        const mRight = (m.position?.x ?? 0) * 100 + (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
-                                        return mRight <= oldLeftMm + SNAP;
-                                      })
-                                      .map((m: any) => ({ ...m, __moveDirection: -1 })) : [];
-                                  }
-                                } else if (hasLeftNeighbor && !hasRightNeighbor) {
-                                  newX = (oldLeftMm + appliedWidth / 2) / 100;
-                                } else if (!hasLeftNeighbor && hasRightNeighbor) {
-                                  newX = (oldRightMm - appliedWidth / 2) / 100;
-                                } else if (hasLeftNeighbor && hasRightNeighbor) {
-                                  newX = shouldKeepLeft
-                                    ? (oldLeftMm + appliedWidth / 2) / 100
-                                    : (oldRightMm - appliedWidth / 2) / 100;
-                                } else {
-                                  // 양쪽 모두 가구 없음: 공간 좌/우 위치에 따라 한쪽 면 고정 (양쪽 확장 방지)
-                                  newX = shouldKeepLeft
-                                    ? (oldLeftMm + appliedWidth / 2) / 100
-                                    : (oldRightMm - appliedWidth / 2) / 100;
-                                }
+                                newX = calcInsertFrameResizedPositionX(
+                                  { ...freshMod, hingePosition: resizeHingePosition },
+                                  appliedWidth,
+                                  freshAll,
+                                  freshSI
+                                );
                               } else {
                                 newX = freshMod.isFreePlacement
                                   ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
                                   : freshMod.position.x;
-                              }
-                              if (isInsertFrameKey && !Number.isFinite(newX)) {
-                                newX = calcInsertFrameResizedPositionX(insertFrameModuleForResize, appliedWidth, freshAll, freshSI);
                               }
                               setFreeWidthInput(appliedWidth.toString());
                               updatePlacedModule(currentPlacedModule.id, {
@@ -4609,14 +4391,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 position: { ...freshMod.position, x: newX },
                                 userResizedWidth: true,
                               });
-                              if (isInsertFrameKey && insertMoveTargets.length > 0) {
-                                insertMoveTargets.forEach((m: any) => {
-                                  const dir = m.__moveDirection === -1 ? -1 : 1;
-                                  updatePlacedModule(m.id, {
-                                    position: { ...m.position, x: m.position.x + (insertDelta * dir) / 100 },
-                                  } as any);
-                                });
-                              }
                             } else {
                               setFreeWidthInput(next.toString());
                             }
