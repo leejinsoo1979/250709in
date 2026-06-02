@@ -1919,6 +1919,10 @@ const FreePlacementDropZone: React.FC = () => {
         return;
       }
 
+      // 여기서부터는 화살표 이동 로직 전용. Enter(배치 확정/입력 확정)는 가구를 이동시키면 안 된다.
+      // (W 입력칸에서 Enter→blur 후 document keydown이 도는 케이스에서 위치가 되돌려지는 버그 방지)
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+
       // 이동할 가구: movingModuleId > 편집 중인 자유배치 가구 > 다중 선택 > 단순 선택된 가구
       const uiSelectedId = useUIStore.getState().selectedFurnitureId;
       const uiSelectedIds = useUIStore.getState().selectedFurnitureIds || [];

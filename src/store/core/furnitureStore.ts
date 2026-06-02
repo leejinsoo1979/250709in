@@ -841,20 +841,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     let finalUpdates = updates;
     const existingModule = state.placedModules.find(m => m.id === id);
 
-    if (existingModule && typeof existingModule.moduleId === 'string' && existingModule.moduleId.includes('insert-frame')) {
-      const __keys = Object.keys(updates);
-      // freeWidth 없는 position 덮어쓰기(폭 되돌림 의심)일 때만 호출 스택 출력
-      const __suspicious = (updates as any).position !== undefined && (updates as any).freeWidth === undefined;
-      console.log('🟧[updatePlacedModule@insert-frame] CALLED', {
-        id, updateKeys: __keys,
-        posX: (updates as any).position?.x,
-        freeWidth: (updates as any).freeWidth,
-        suspicious: __suspicious,
-      });
-      if (__suspicious) {
-        console.log('🟥[insert-frame position 덮어쓰기 호출 스택]\n' + new Error().stack);
-      }
-    }
 
     if (existingModule) {
       if (existingModule.isLocked) {
@@ -965,20 +951,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         // 사용자가 좌고정/우고정을 선택한 경우 그 면을 우선 고정한다 (기본 좌고정).
         // updates에 anchor가 함께 넘어오면 그것을, 아니면 기존 모듈 값을 사용.
         const anchorOverride = (updates.insertFrameWidthAnchor ?? existingModule.insertFrameWidthAnchor ?? 'left') as 'left' | 'right';
-        const __newX = calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo, anchorOverride);
-        console.log('🔧[insert-frame resize@store]', {
-          id: existingModule.id,
-          isFreePlacement: existingModule.isFreePlacement,
-          guideSlotPlacement: (existingModule as any).guideSlotPlacement,
-          slotIndex: existingModule.slotIndex,
-          anchorFromUpdates: updates.insertFrameWidthAnchor,
-          anchorFromExisting: existingModule.insertFrameWidthAnchor,
-          anchorUsed: anchorOverride,
-          oldWidth: currentBodyWidth,
-          newWidth: requestedBodyWidth,
-          oldPosX: existingModule.position.x,
-          newPosX: __newX,
-        });
         finalUpdates = {
           ...finalUpdates,
           freeWidth: requestedBodyWidth,
@@ -988,7 +960,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           userResizedWidth: true,
           position: {
             ...existingModule.position,
-            x: __newX,
+            x: calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo, anchorOverride),
           },
         };
       }

@@ -3044,19 +3044,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구 치수를 Three.js 단위로 변환
   const width = mmToThreeUnits(furnitureWidthMm);
 
-  if (placedModule.moduleId?.includes('insert-frame')) {
-    console.log('🟦[insert-frame render]', {
-      id: placedModule.id,
-      isFreePlacement: placedModule.isFreePlacement,
-      guideSlotPlacement: (placedModule as any).guideSlotPlacement,
-      slotIndex: placedModule.slotIndex,
-      anchor: (placedModule as any).insertFrameWidthAnchor,
-      storePosX: placedModule.position.x,
-      renderPosX: adjustedPosition.x,
-      furnitureWidthMm,
-    });
-  }
-
   // 가구 높이 계산: actualModuleData.dimensions.height가 이미 올바른 높이를 가지고 있음
   // generateShelvingModules에서 internalSpace.height를 기반으로 가구를 생성했기 때문
   // 추가 조정 불필요
