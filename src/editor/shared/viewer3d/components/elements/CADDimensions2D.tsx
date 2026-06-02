@@ -10,12 +10,13 @@ import { calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometr
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
-import { getSideViewGuideSlotGroups } from '@/editor/shared/utils/sideViewModuleFilter';
+import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
@@ -881,107 +882,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const leftDimOffset = mmToThreeUnits(400);
   const rightDimOffset = mmToThreeUnits(400);
 
-  // 측면뷰에서 표시할 가구 필터링 (PlacedFurnitureContainer.tsx와 동일한 로직)
+  // 측면뷰에서 표시할 가구 필터링 (PlacedFurnitureContainer.tsx와 동일한 유틸 사용)
   const getVisibleFurnitureForSideView = () => {
     if (placedModules.length === 0) return [];
-
-    const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
-    if (nonSurroundModules.length === 0) return [];
-
-    const sideWallModules = nonSurroundModules.filter(module => (module as any).placementWall === currentViewDirection);
-    if (sideWallModules.length > 0) {
-      return sideWallModules;
-    }
-
-    let filteredBySlot = nonSurroundModules;
-
-    if (selectedSlotIndex !== null) {
-      if (isFreePlacementMode) {
-        // 자유배치/커스텀슬롯 모드: X좌표 기반 슬롯 그룹핑
-        const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
-        const guideCenters = spaceInfo.customGuideMode === true
-          ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []).map(group => (
-            (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
-          ))
-          : [];
-        const xGroups: number[][] = guideCenters.length > 0
-          ? guideCenters.map(centerX => sortedByX
-            .map((m, idx) => ({ idx, x: m.position?.x ?? 0 }))
-            .filter(item => Math.abs(item.x - centerX) < 0.015)
-            .map(item => item.idx))
-          : [];
-        if (xGroups.length === 0) {
-          let lastX: number | null = null;
-          sortedByX.forEach((m, idx) => {
-            const mx = m.position?.x ?? 0;
-            if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-              xGroups.push([idx]);
-              lastX = mx;
-            } else {
-              xGroups[xGroups.length - 1].push(idx);
-            }
-          });
-        }
-
-        if (selectedSlotIndex < xGroups.length) {
-          const selectedIds = new Set(
-            xGroups[selectedSlotIndex].map(idx => sortedByX[idx].id)
-          );
-          filteredBySlot = nonSurroundModules.filter(m => selectedIds.has(m.id));
-        }
-      } else {
-        // 슬롯 기반 배치: slotIndex로 직접 필터링 (PlacedFurnitureContainer와 동일)
-        const hasDropCeiling = spaceInfo.droppedCeiling?.enabled || false;
-        const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
-
-        filteredBySlot = nonSurroundModules.filter(module => {
-          if (module.slotIndex === undefined) return false;
-
-          let moduleGlobalSlotIndex = module.slotIndex;
-          let isInDroppedZone = module.zone === 'dropped';
-
-          if (hasDropCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
-            const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
-            const moduleXMm = module.position.x * 100;
-            const normalWidth = zones.normal.width;
-            const droppedWidth = zones.dropped.width;
-
-            if (droppedPosition === 'left') {
-              isInDroppedZone = moduleXMm < droppedWidth;
-            } else {
-              isInDroppedZone = moduleXMm >= normalWidth;
-            }
-          }
-
-          if (hasDropCeiling && isInDroppedZone) {
-            moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
-          }
-
-          return module.isDualSlot
-            ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
-            : (moduleGlobalSlotIndex === selectedSlotIndex);
-        });
-      }
-    }
-
-    if (filteredBySlot.length === 0) return [];
-
-    // 슬롯 기반 모드: slotIndex로 이미 정확히 필터링됨 → 그대로 반환
-    // (듀얼슬롯 하부장 + 상부장처럼 X좌표가 다를 수 있어 X필터 불필요)
-    if (!isFreePlacementMode) {
-      return filteredBySlot;
-    }
-
-    // 자유배치 모드: 같은 X 위치에 있는 모든 모듈을 반환 (상부장+하부장 동시 표시용)
-    if (currentViewDirection === 'left') {
-      const target = filteredBySlot.reduce((a, b) => a.position.x < b.position.x ? a : b);
-      return filteredBySlot.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
-    } else if (currentViewDirection === 'right') {
-      const target = filteredBySlot.reduce((a, b) => a.position.x > b.position.x ? a : b);
-      return filteredBySlot.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
-    }
-
-    return [];
+    return filterSideViewModules({
+      placedModules: placedModules as PlacedModule[],
+      viewDirection: currentViewDirection,
+      selectedSlotIndex,
+      isFreePlacement: isFreePlacementMode,
+      spaceInfo,
+      zones,
+      excludeSurroundPanels: true,
+    });
   };
 
   const visibleFurniture = getVisibleFurnitureForSideView();
@@ -2146,8 +2058,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const hasTwoSections = (Array.isArray(cfgSections) && cfgSections.length >= 2)
             || (Array.isArray(mdSections) && mdSections.length >= 2);
           const isShoeTwoSection = isShoeCategory
-            || (module.upperSectionDepth !== undefined && module.lowerSectionDepth !== undefined)
-            || hasTwoSections;
+            || (!isLowerMod && module.upperSectionDepth !== undefined && module.lowerSectionDepth !== undefined)
+            || (!isLowerMod && hasTwoSections);
 
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
@@ -2208,7 +2120,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 신발장은 실제 가구 기본 depth 380 기준 (의류장은 600)
           const baseModuleDepthMm = isShoeSide
             ? (module.customDepth || 380)
-            : depthModuleData.dimensions.depth;
+            : (getCategoryDefaultFurnitureDepth(
+              spaceInfo.depth || 600,
+              mod.moduleId || '',
+              spaceInfo.furnitureDepthDefaults
+            ) ?? depthModuleData.dimensions.depth);
           const baseModuleDepth = mmToThreeUnits(baseModuleDepthMm);
           const moduleBackWallGapZ = mmToThreeUnits((module as any).backWallGap ?? 0);
           const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2 + moduleBackWallGapZ;
@@ -2216,10 +2132,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 상부섹션/단일 섹션 Z
           const upperDir = (mod.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
+          const lowerDir = (mod.lowerSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
           const upperDiff = baseModuleDepth - moduleDepth;
           const upperOffset = upperDiff === 0 ? 0 : upperDir === 'back' ? upperDiff / 2 : -upperDiff / 2;
+          // 하부장 단일 본체는 기준 깊이와 현재 깊이가 같으면 토글해도 같은 위치여야 하고,
+          // 깊이가 줄었을 때만 앞고정(back)=앞면 고정 / 뒤고정(front)=뒷면 고정을 적용한다.
+          const isLowerSingleBackAligned = isLowerMod && !isShoeSide;
           let furnitureZ: number;
-          if (isUpperMod || isShoeSide) {
+          if (isLowerSingleBackAligned) {
+            const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + moduleBackWallGapZ;
+            const baseFrontZEdge = fixedBackZ + baseModuleDepth;
+            furnitureZ = lowerDir === 'back'
+              ? baseFrontZEdge - moduleDepth / 2
+              : fixedBackZ + moduleDepth / 2;
+          } else if (isUpperMod || isShoeSide) {
             // 뒷면 정렬 기준: 중심 = baseBack + directionOffset
             furnitureZ = baseBackZ + upperOffset;
           } else {
@@ -2227,8 +2153,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             furnitureZ = baseFrontZ + upperOffset;
           }
 
-          // 하부 섹션 Z
-          const lowerDir = (mod.lowerSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
+          // 하부 섹션 Z (하부장 단일은 뒷면 정렬 → 방향 무관)
           const lowerDiff = baseModuleDepth - moduleDepthLower;
           const lowerOffset = lowerDiff === 0 ? 0 : lowerDir === 'back' ? lowerDiff / 2 : -lowerDiff / 2;
           const furnitureZLower = isShoeTwoSection
@@ -2239,8 +2164,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 걸래받이 옵셋 깊이
           const shouldShowBaseFrameOffset = isLowerMod || modCategory === 'full';
+          const globalBaseFrameOffsetMm = spaceInfo.baseConfig?.offset ?? (isLowerMod ? 65 : 0);
+          const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
           const baseFrameOffsetMm = shouldShowBaseFrameOffset
-            ? (mod.baseFrameOffset ?? (isLowerMod ? 65 : (spaceInfo.baseConfig?.offset ?? 0)))
+            ? (useGlobalBaseFrameOffset
+              ? globalBaseFrameOffsetMm
+              : (mod.baseFrameOffset ?? globalBaseFrameOffsetMm))
             : 0;
           const baseFrameOffsetDepth = mmToThreeUnits(baseFrameOffsetMm);
           const baseOffsetDimEdge = isLowerMod ? depthDimEdge : furnitureBottomEdge;
@@ -3562,28 +3491,47 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 신발장 실제 기본 깊이 (380) 또는 의류장/일반 (600) 기준
           const baseModuleDepthMm_d2 = isShoeSide_d2
             ? (module.customDepth || 380)
-            : moduleData.dimensions.depth;
+            : (getCategoryDefaultFurnitureDepth(
+              spaceInfo.depth || 600,
+              module.moduleId || '',
+              spaceInfo.furnitureDepthDefaults
+            ) ?? moduleData.dimensions.depth);
           const baseModuleDepth_d2 = mmToThreeUnits(baseModuleDepthMm_d2);
           const moduleBackWallGapZ_d2 = mmToThreeUnits((module as any).backWallGap ?? 0);
           const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
           const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
           // 상부 방향 오프셋
+          // 하부장 단일 본체는 기준 깊이와 현재 깊이가 같으면 토글해도 같은 위치여야 하고,
+          // 깊이가 줄었을 때만 앞고정(back)=앞면 고정 / 뒤고정(front)=뒷면 고정을 적용한다.
+          const isLowerSingleBackAligned_d2 = isLowerMod_d2 && !isShoeSide_d2;
           const upperDir_d2 = (module.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
+          const lowerDir_d2 = (module.lowerSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
           const upperDiff_d2 = baseModuleDepth_d2 - moduleDepth;
           const upperOffset_d2 = upperDiff_d2 === 0 ? 0 : upperDir_d2 === 'back' ? upperDiff_d2/2 : -upperDiff_d2/2;
-          const furnitureZ = (isUpperMod_d2 || isBackAlign_d2)
-            ? (baseBackZ_d2 + upperOffset_d2)
-            : (baseFrontZ_d2 + upperOffset_d2);
+          const furnitureZ = isLowerSingleBackAligned_d2
+            ? (() => {
+              const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + moduleBackWallGapZ_d2;
+              const baseFrontZEdge = fixedBackZ + baseModuleDepth_d2;
+              return lowerDir_d2 === 'back'
+                ? baseFrontZEdge - moduleDepth / 2
+                : fixedBackZ + moduleDepth / 2;
+            })()
+            : (isUpperMod_d2 || isBackAlign_d2)
+              ? (baseBackZ_d2 + upperOffset_d2)
+              : (baseFrontZ_d2 + upperOffset_d2);
           // 현관장 하부섹션 Z (하부 섹션 direction 반영)
-          const lowerDir_d2 = (module.lowerSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
           const lowerDiff_d2 = baseModuleDepth_d2 - moduleDepthLower_d2;
           const lowerOffset_d2 = lowerDiff_d2 === 0 ? 0 : lowerDir_d2 === 'back' ? lowerDiff_d2/2 : -lowerDiff_d2/2;
           const furnitureZLower_d2 = isShoeSide_d2
             ? (baseBackZ_d2 + lowerOffset_d2)
             : furnitureZ;
           const shouldShowBaseFrameOffset_d2 = isLowerMod_d2 || modCategory_d2 === 'full';
+          const globalBaseFrameOffsetMm_d2 = spaceInfo.baseConfig?.offset ?? (isLowerMod_d2 ? 65 : 0);
+          const useGlobalBaseFrameOffset_d2 = spaceInfo.guideBaseFrameAllMode ?? true;
           const baseFrameOffsetMm_d2 = shouldShowBaseFrameOffset_d2
-            ? ((module as PlacedModule).baseFrameOffset ?? (isLowerMod_d2 ? 65 : (spaceInfo.baseConfig?.offset ?? 0)))
+            ? (useGlobalBaseFrameOffset_d2
+              ? globalBaseFrameOffsetMm_d2
+              : ((module as PlacedModule).baseFrameOffset ?? globalBaseFrameOffsetMm_d2))
             : 0;
           const baseFrameOffsetDepth_d2 = mmToThreeUnits(baseFrameOffsetMm_d2);
           const installedFrontExtensionMm_d2 = getInstalledFrontExtensionMm(module);

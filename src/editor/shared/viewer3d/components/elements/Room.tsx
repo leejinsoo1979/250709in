@@ -21,6 +21,7 @@ import {
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { getModuleById } from '@/data/modules';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import NativeLine from './NativeLine';
@@ -836,8 +837,12 @@ const Room: React.FC<RoomProps> = ({
       const dir = sectionDirArr?.[idx] || 'front';
       return dir === 'back' ? 0 : -mmToThreeUnits(diff);
     }
-    // 기타 가구: 섹션 depth가 없으면 카테고리 기본 깊이로 저장된 customDepth를 같은 축소 깊이로 본다.
-    const baseDepth = getModBaseDepthMm(mid);
+    // 기타 가구: 카테고리 기본 깊이를 기준으로 실제 축소분만 반영한다.
+    const baseDepth = getCategoryDefaultFurnitureDepth(
+      spaceInfo.depth || SPACE_BASE_DEPTH_MM,
+      mid,
+      spaceInfo.furnitureDepthDefaults
+    ) ?? getModBaseDepthMm(mid);
     let curDepth: number | undefined;
     if (useSection === 'upper') curDepth = mod.upperSectionDepth ?? mod.customDepth;
     else if (useSection === 'lower') curDepth = mod.lowerSectionDepth ?? mod.customDepth;
@@ -7368,8 +7373,13 @@ const Room: React.FC<RoomProps> = ({
                 baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - modBaseZInset;
               } else {
                 const modDepthMm = mod.customDepth ?? mod.freeDepth ?? getModBaseDepthMm(baseShoeMid);
-                const depthBaseMm = Math.min(spaceInfo.depth || 600, 600);
-                const freeDepthInsetMm = Math.max(0, depthBaseMm - modDepthMm);
+                const depthBaseMm = getCategoryDefaultFurnitureDepth(
+                  spaceInfo.depth || 600,
+                  baseShoeMid,
+                  spaceInfo.furnitureDepthDefaults
+                ) ?? Math.min(spaceInfo.depth || 600, getModBaseDepthMm(baseShoeMid));
+                const freeDepthDir = mod.lowerSectionDepthDirection || mod.upperSectionDepthDirection || 'front';
+                const freeDepthInsetMm = freeDepthDir === 'back' ? 0 : Math.max(0, depthBaseMm - modDepthMm);
                 baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM + freeDepthInsetMm) - modBaseZInset;
               }
               console.log('🟪[자유배치 걸레받이 옵셋]', {
@@ -7757,7 +7767,7 @@ const Room: React.FC<RoomProps> = ({
                       // 신발장 걸래받이 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
-                      // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
+                      // 모든 가구 공통: 실제 하부 섹션 depth 변화만 기준 방향대로 반영
                       const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
                       // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
                       const slotBaseBackWallGapMm = mod.backWallGap ?? 0;

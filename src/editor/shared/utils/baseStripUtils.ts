@@ -35,8 +35,8 @@ export function getLowerDepthZOffsetMM(module: PlacedModule): number {
   if (!lowerDepth || lowerDepth >= fullDepth) return 0;
   const diff = fullDepth - lowerDepth;
   const dir = module.lowerSectionDepthDirection || 'front';
-  // front: 앞에서 줄어듦 → 걸래받이도 뒤로 이동 (양수 Z offset)
-  // back: 뒤에서 줄어듦 → 걸래받이도 앞으로 이동 (음수 Z offset은 불필요, 앞면 유지)
+  // front(뒤고정): 앞에서 줄어듦 -> 걸레받이도 뒤로 이동
+  // back(앞고정): 뒤에서 줄어듦 -> 가구 앞면 유지, 걸레받이도 유지
   return dir === 'front' ? diff : 0;
 }
 
