@@ -298,12 +298,18 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       const furnitureState = useFurnitureStore.getState();
       furnitureState.placedModules
         .forEach((module) => {
-          if (module.isSurroundPanel || module.hasBase === false) return;
+          if (module.isSurroundPanel) return;
           const isLower = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('-lower-');
+          const currentTopGap = module.topFrameGap;
           const currentOffset = module.baseFrameOffset;
           const currentGap = module.baseFrameGap;
+          const previousTopGap = (curFrameSize as any)?.topGap ?? 0;
           const previousSpaceOffset = (curBaseConfig as any)?.offset ?? 0;
           const previousSpaceGap = (curBaseConfig as any)?.gap ?? 0;
+          const wasUsingDefaultTopGap =
+            currentTopGap === undefined ||
+            currentTopGap === previousTopGap ||
+            currentTopGap === 0;
           const wasUsingDefaultOffset =
             currentOffset === undefined ||
             currentOffset === previousSpaceOffset ||
@@ -315,12 +321,15 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             currentGap === 0;
 
           const updates: Record<string, number> = {};
-          if (wasUsingDefaultOffset) {
+          if (module.hasTopFrame !== false && wasUsingDefaultTopGap) {
+            updates.topFrameGap = synced.topMoldingGap ?? 0;
+          }
+          if (module.hasBase !== false && wasUsingDefaultOffset) {
             updates.baseFrameOffset = isLower
               ? (lowerBaseFrameOffset ?? synced.baseFrameOffset)
               : synced.baseFrameOffset;
           }
-          if (wasUsingDefaultGap) {
+          if (module.hasBase !== false && wasUsingDefaultGap) {
             updates.baseFrameGap = isLower
               ? (lowerBaseFrameGap ?? synced.baseFrameGap)
               : synced.baseFrameGap;

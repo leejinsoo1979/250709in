@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
 import { PiHandTapThin } from 'react-icons/pi';
-import { TbBorderOuter, TbZoomScan } from 'react-icons/tb';
+import { TbZoomScan } from 'react-icons/tb';
 import { Edit3, Eye, EyeOff, Grid3X3, Ruler, RulerDimensionLine, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -76,8 +76,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorsToggle,
   hasDoorsInstalled = false,
   onDoorInstallationToggle,
-  surroundGenerated = false,
-  onSurroundGenerate,
   frameMergeEnabled = false,
   onFrameMergeToggle,
   onStartGuideSetupInNewTab,
@@ -773,18 +771,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         )}
 
         {/* Close/Open → 뷰어 캔버스 상단 중앙에 별도 배치 (Configurator/index.tsx) */}
-
-        {isFreePlacement && hasFurniture && !isFurniturePlacementMode && onSurroundGenerate && (
-          <div className={styles.segmentedControl}>
-            <button
-              className={`${styles.segmentButton} ${styles.segmentIconText} ${surroundGenerated ? styles.segmentAccentActive : ''}`}
-              onClick={onSurroundGenerate}
-            >
-              <TbBorderOuter size={13} />
-              서라운드
-            </button>
-          </div>
-        )}
 
         {/* 프레임분절/병합 버튼 숨김 — CNC 옵티마이저 진입 시 팝업으로 대체 */}
       </div>

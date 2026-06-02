@@ -215,6 +215,13 @@ const FrameOffsetRow: React.FC<{
   const commitDisplaySize = (nextDisplaySize: number) => {
     onSizeChange(splitGapFromSize ? nextDisplaySize + gapMM : nextDisplaySize);
   };
+  const commitGap = (nextGap: number) => {
+    const clampedGap = Math.max(0, Math.min(2000, nextGap));
+    if (splitGapFromSize) {
+      setSizeText(String(Math.max(0, sizeMM - clampedGap) || ''));
+    }
+    onGapChange?.(clampedGap);
+  };
   const [sizeText, setSizeText] = useState(String(displaySizeMM || ''));
   const [offsetText, setOffsetText] = useState(offset !== 0 ? String(offset) : '');
   const [gapText, setGapText] = useState((gap ?? 0) !== 0 ? String(gap) : '');
@@ -230,7 +237,7 @@ const FrameOffsetRow: React.FC<{
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-      <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(num)}{label}</span>
+      <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{num > 0 ? toAlpha(num) : ''}{label}</span>
       <button onClick={onToggle} className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`} />
       {enabled ? (
         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
@@ -275,11 +282,11 @@ const FrameOffsetRow: React.FC<{
                   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                     e.preventDefault();
                     const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                    setGapText(String(next)); onGapChange?.(next);
+                    setGapText(String(next)); commitGap(next);
                   } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                 }}
                 onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
-                onBlur={(e) => { gapFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(c)); onGapChange?.(c); }}
+                onBlur={(e) => { gapFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(c)); commitGap(c); }}
                 className={styles.frameNumberInput}
               />
             </div>
@@ -774,7 +781,7 @@ const Configurator: React.FC = () => {
 
     const nextHasTopFrame = nextState.hasTopFrame ?? mod.hasTopFrame;
     const nextTopFrameThickness = nextState.topFrameThickness ?? mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-    const nextTopGap = nextState.topFrameGap ?? mod.topFrameGap ?? computeShelfSplitTopDistance(mod, effectiveHeight) ?? 0;
+    const nextTopGap = nextState.topFrameGap ?? mod.topFrameGap ?? computeShelfSplitTopDistance(mod, effectiveHeight) ?? ((spaceInfo.frameSize as any)?.topGap ?? 0);
     const topClearance = nextHasTopFrame === false
       ? Math.max(0, nextTopGap)
       : Math.max(0, nextTopFrameThickness);
@@ -799,6 +806,7 @@ const Configurator: React.FC = () => {
     computeShelfSplitTopDistance,
     spaceInfo.baseConfig?.height,
     spaceInfo.baseConfig?.type,
+    (spaceInfo.frameSize as any)?.topGap,
     spaceInfo.frameSize?.top,
     spaceInfo.height,
   ]);
@@ -6379,7 +6387,6 @@ const Configurator: React.FC = () => {
           const middleGaps = fs.middle || [];
           const isNoSurround = spaceInfo.surroundType === 'no-surround';
 
-          // 서라운드 목록: 노서라운드면 좌/우/중간 모두, 전체/양쪽이면 중간만
           type SurroundItem =
             | { kind: 'left' }
             | { kind: 'right' }
@@ -6391,7 +6398,6 @@ const Configurator: React.FC = () => {
           });
           if (isNoSurround && fs.right.enabled) surroundItems.push({ kind: 'right' });
 
-          // 활성된 서라운드 항목이 없으면 섹션 자체를 숨김
           if (surroundItems.length === 0) return null;
 
           const droppedPos = spaceInfo.droppedCeiling?.enabled ? spaceInfo.droppedCeiling.position : null;
@@ -6562,6 +6568,9 @@ const Configurator: React.FC = () => {
             const globalBaseOffset = baseConfig.offset ?? 0;
             const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? 0) : 0;
             const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
+            const defaultIfZero = (value: number | undefined, fallback: number) => (
+              value === undefined ? fallback : value
+            );
             const numCellStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' };
             const numInputStyle: React.CSSProperties = { width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent' };
             const numLabelStyle: React.CSSProperties = { fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 };
@@ -6574,17 +6583,17 @@ const Configurator: React.FC = () => {
             };
             const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? globalTopEnabled;
             const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
-              slot.topFrameThickness ?? (globalTopRaw > 0 ? globalTopRaw : Math.max(30, slot.topFrameGap ?? globalTopGap))
+              slot.topFrameThickness ?? (globalTopRaw > 0 ? globalTopRaw : Math.max(30, defaultIfZero(slot.topFrameGap, globalTopGap)))
             );
             const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-              getSlotTopEnabled(slot) ? Math.max(0, slot.topFrameGap ?? 0) : Math.max(0, slot.topFrameGap ?? globalTopGap)
+              Math.max(0, defaultIfZero(slot.topFrameGap, globalTopGap))
             );
             const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
             const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
               slot.baseFrameHeight ?? ((slot.guideZone || 'full') === 'lower' ? 105 : (globalBaseHeight > 0 ? globalBaseHeight : 65))
             );
             const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
-              getSlotBaseEnabled(slot) ? Math.max(0, slot.baseFrameGap ?? 0) : 0
+              getSlotBaseEnabled(slot) ? Math.max(0, defaultIfZero(slot.baseFrameGap, globalBaseGap)) : 0
             );
             const parseUnsigned = (value: string) => (value === '' ? 0 : parseInt(value, 10));
 
@@ -6619,16 +6628,21 @@ const Configurator: React.FC = () => {
                       </div>
                       <div style={numCellStyle}>
                         <span style={numLabelStyle}>갭</span>
-                        <input type="text" inputMode="numeric" value={gap || ''}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onGap(parseUnsigned(v)); }}
+                        <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-gap-${label}-${gap || 0}`}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          onBlur={(e) => {
+                            const nextGap = Math.max(0, Math.min(2000, parseUnsigned(e.target.value)));
+                            onGap(nextGap);
+                          }}
                           style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                       </div>
                     </>
                   ) : (
                     <div style={numCellStyle}>
                       <span style={numLabelStyle}>상단갭</span>
-                      <input type="text" inputMode="numeric" value={gap || ''}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onGap(parseUnsigned(v)); }}
+                      <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-off-gap-${label}-${gap || 0}`}
+                        onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                        onBlur={(e) => onGap(Math.max(0, Math.min(2000, parseUnsigned(e.target.value))))}
                         style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                     </div>
                   )}
@@ -6657,8 +6671,8 @@ const Configurator: React.FC = () => {
                     <>
                       <div style={numCellStyle}>
                         <span style={numLabelStyle}>size</span>
-                        <input type="text" inputMode="numeric" value={size || ''}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onSize(parseUnsigned(v)); }}
+                        <input type="text" inputMode="numeric" value={Math.max(0, size - gap) || ''}
+                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onSize(parseUnsigned(v) + gap); }}
                           style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                       </div>
                       <div style={numCellStyle}>
@@ -6669,8 +6683,9 @@ const Configurator: React.FC = () => {
                       </div>
                       <div style={numCellStyle}>
                         <span style={numLabelStyle}>갭</span>
-                        <input type="text" inputMode="numeric" value={gap || ''}
-                          onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onGap(parseUnsigned(v)); }}
+                        <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-base-gap-${label}-${gap || 0}`}
+                          onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          onBlur={(e) => onGap(Math.max(0, Math.min(2000, parseUnsigned(e.target.value))))}
                           style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                       </div>
                     </>
@@ -6774,7 +6789,7 @@ const Configurator: React.FC = () => {
                           `슬롯${idx + 1}`,
                           enabled,
                           baseHeightValue,
-                          slot.baseFrameOffset ?? globalBaseOffset,
+                          defaultIfZero(slot.baseFrameOffset, globalBaseOffset),
                           gap,
                           slot.individualFloatHeight ?? 0,
                           () => updateGuideSlotFrame(slot.id, {
@@ -7008,6 +7023,9 @@ const Configurator: React.FC = () => {
               doorBottomGap: 25,
             })));
           };
+          const defaultIfZeroFree = (value: number | undefined, fallback: number) => (
+            value === undefined ? fallback : value
+          );
           return (
             <>
             {/* 상단몰딩 섹션 */}
@@ -7032,6 +7050,7 @@ const Configurator: React.FC = () => {
                     const firstTop = topFreeMods[0];
                     const catFirst = getModuleCategory(firstTop);
                     const globalTop = spaceInfo.frameSize?.top ?? 30;
+                    const globalTopGapLocal = Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
                     const globalBaseLocal = spaceInfo.baseConfig?.height ?? 65;
                     const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
                     const unifiedEnabled = topFreeMods.every(m => m.hasTopFrame !== false);
@@ -7057,7 +7076,7 @@ const Configurator: React.FC = () => {
                         enabled={true}
                         sizeMM={firstTopFrameSize}
                         offset={firstTop.topFrameOffset ?? topOffsetDefaultU}
-                        gap={firstTop.topFrameGap ?? 0}
+                        gap={defaultIfZeroFree(firstTop.topFrameGap, globalTopGapLocal)}
                         onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                           hasTopFrame: false,
                           topFrameGap: getFreeTopOffGap(m),
@@ -7120,6 +7139,7 @@ const Configurator: React.FC = () => {
                   topNum++;
                   const tn = topNum;
                   const globalTop = spaceInfo.frameSize?.top ?? 30;
+                  const globalTopGapLocal = Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
                   // 상부장(upper)은 상단몰딩 = topFrameThickness (캐비넷 위 작은 띠)
                   // 키큰장(full)은 상단몰딩 = 공간높이 - 받침대 - 가구높이
                   if (cat === 'upper') {
@@ -7128,7 +7148,7 @@ const Configurator: React.FC = () => {
                     return <FrameOffsetRow key={`top-${mod.id}`}
                       num={tn} label="(상)"
                       enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? upperOffsetDefault}
-                      gap={mod.topFrameGap ?? 0}
+                      gap={defaultIfZeroFree(mod.topFrameGap, globalTopGapLocal)}
                       onToggle={() => {
                         const newVal = !(mod.hasTopFrame !== false);
                         updatePlacedModule(mod.id, {
@@ -7168,7 +7188,7 @@ const Configurator: React.FC = () => {
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
-                    gap={mod.hasTopFrame === false ? (mod.topFrameGap ?? actualTopFrameSize) : (mod.topFrameGap ?? 0)}
+                    gap={mod.hasTopFrame === false ? defaultIfZeroFree(mod.topFrameGap, actualTopFrameSize) : defaultIfZeroFree(mod.topFrameGap, globalTopGapLocal)}
                     onToggle={() => {
                       const newVal = !(mod.hasTopFrame !== false);
                       updatePlacedModule(mod.id, {
@@ -7219,17 +7239,18 @@ const Configurator: React.FC = () => {
                 {allBaseOnFree && baseFreeMods.length > 0 ? (
                   (() => {
                     const firstBase = baseFreeMods[0];
-                    const isLowerFirst = firstBase.moduleId?.startsWith('lower-') || firstBase.moduleId?.includes('-lower-');
                     const globalBaseLocal = spaceInfo.baseConfig?.height ?? 65;
+                    const globalBaseOffsetLocal = (spaceInfo.baseConfig as any)?.offset ?? 0;
+                    const globalBaseGapLocal = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
                     const unifiedEnabled = baseFreeMods.every(m => m.hasBase !== false);
                     if (unifiedEnabled) {
                       return <FrameOffsetRow key="base-all-free"
                         num={1} label="전체"
                         enabled={true}
                         sizeMM={firstBase.baseFrameHeight ?? globalBaseLocal}
-                        offset={firstBase.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
-                        gap={(firstBase as any).baseFrameGap ?? 0}
-                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: (m as any).baseFrameGap ?? 0, doorBottomGap: -5 })))}
+                        offset={defaultIfZeroFree(firstBase.baseFrameOffset, globalBaseOffsetLocal)}
+                        gap={defaultIfZeroFree((firstBase as any).baseFrameGap, globalBaseGapLocal)}
+                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: defaultIfZeroFree((m as any).baseFrameGap, globalBaseGapLocal), doorBottomGap: -5 })))}
                         onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)))}
                         onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
                         onGapChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
@@ -7276,9 +7297,11 @@ const Configurator: React.FC = () => {
                   baseNum++;
                   const bn = baseNum;
                   const freeBaseEnabled = mod.hasBase !== false;
-                  const baseGap = Math.max(0, (mod as any).baseFrameGap ?? 0);
+                  const globalBaseGapLocal = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
+                  const baseGap = Math.max(0, defaultIfZeroFree((mod as any).baseFrameGap, globalBaseGapLocal));
                   const rawBaseHeight = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height || 65);
                   const visibleBaseHeight = Math.max(0, rawBaseHeight - baseGap);
+                  const baseOffsetDefault = (spaceInfo.baseConfig as any)?.offset ?? 0;
                   return (
                     <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(bn)}(하)</span>
@@ -7287,7 +7310,7 @@ const Configurator: React.FC = () => {
                           updatePlacedModule(mod.id, {
                             hasBase: !freeBaseEnabled,
                             doorBottomGap: !freeBaseEnabled ? 25 : -5,
-                            ...(freeBaseEnabled ? { individualFloatHeight: (mod as any).baseFrameGap ?? 0 } : {}),
+                            ...(freeBaseEnabled ? { individualFloatHeight: defaultIfZeroFree((mod as any).baseFrameGap, globalBaseGapLocal) } : {}),
                           });
                         }}
                         className={`${styles.miniToggle} ${freeBaseEnabled ? styles.miniToggleActive : ''}`}
@@ -7315,17 +7338,17 @@ const Configurator: React.FC = () => {
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                             <input
                               type="text" inputMode="numeric"
-                              value={mod.baseFrameOffset ?? (cat === 'lower' ? 65 : 0)} placeholder={String(cat === 'lower' ? 65 : 0)}
+                              value={defaultIfZeroFree(mod.baseFrameOffset, baseOffsetDefault)} placeholder={String(baseOffsetDefault)}
                               onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = mod.baseFrameOffset ?? (cat === 'lower' ? 65 : 0);
+                                  const cur = defaultIfZeroFree(mod.baseFrameOffset, baseOffsetDefault);
                                   updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                                 }
                               }}
                               onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || (cat === 'lower' ? 65 : 0))) }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || baseOffsetDefault)) }); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -7622,107 +7645,38 @@ const Configurator: React.FC = () => {
           const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
           const globalTop = spaceInfo.frameSize?.top ?? 30;
+          const globalTopGap = Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
           const globalBase = spaceInfo.baseConfig?.height ?? 65;
+          const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
+          const globalBaseGap = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
+          const defaultIfZeroSlot = (value: number | undefined, fallback: number) => (
+            value === undefined ? fallback : value
+          );
 
           const renderSlotFrameRow = (
             label: string, enabled: boolean, sizeMM: number, offset: number,
             onToggle: () => void, onSizeChange: (v: number) => void, onOffsetChange: (v: number) => void, hlKey: string,
             gap?: number, onGapChange?: (v: number) => void,
             splitGapFromSize = false,
-          ) => {
-            const gapMM = Math.max(0, gap ?? 0);
-            const displaySizeMM = splitGapFromSize ? Math.max(0, sizeMM - gapMM) : sizeMM;
-            const commitDisplaySize = (nextDisplaySize: number) => {
-              onSizeChange(splitGapFromSize ? nextDisplaySize + gapMM : nextDisplaySize);
-            };
-            return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-              <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
-              <button
-                onClick={onToggle}
-                className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
-              />
-              {enabled ? (
-                <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={displaySizeMM || ''} placeholder="0"
-                      onFocus={() => setHighlightedFrame(hlKey)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          commitDisplaySize(Math.max(0, Math.min(9999, (displaySizeMM || 0) + delta)));
-                        }
-                      }}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) commitDisplaySize(v === '' ? 0 : parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        commitDisplaySize(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                  <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                    <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
-                    <input
-                      type="text" inputMode="numeric"
-                      value={offset} placeholder="0"
-                      onFocus={() => setHighlightedFrame(hlKey)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onOffsetChange(Math.max(-200, Math.min(200, (offset || 0) + delta)));
-                        }
-                      }}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
-                      }}
-                      onBlur={(e) => {
-                        setHighlightedFrame(null);
-                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)));
-                      }}
-                      className={styles.frameNumberInput}
-                    />
-                  </div>
-                  {typeof onGapChange === 'function' && (
-                    <div className={styles.frameItemInput} style={{ flex: 1 }}>
-                      <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>갭</span>
-                      <input
-                        type="text" inputMode="numeric"
-                        value={(gap ?? 0) !== 0 ? gap : ''} placeholder="0"
-                        onFocus={() => setHighlightedFrame(hlKey)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                            e.preventDefault();
-                            const delta = e.key === 'ArrowUp' ? 1 : -1;
-                            onGapChange(Math.max(0, Math.min(2000, (gap || 0) + delta)));
-                          }
-                        }}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (v === '' || /^\d+$/.test(v)) onGapChange(v === '' ? 0 : parseInt(v, 10));
-                        }}
-                        onBlur={(e) => {
-                          setHighlightedFrame(null);
-                          onGapChange(Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)));
-                        }}
-                        className={styles.frameNumberInput}
-                      />
-                    </div>
-                  )}
-                </div>
-              ) : null}
-            </div>
-            );
-          };
+          ) => (
+            <FrameOffsetRow
+              num={0}
+              label={label}
+              enabled={enabled}
+              sizeMM={sizeMM}
+              offset={offset}
+              onToggle={onToggle}
+              onSizeChange={onSizeChange}
+              onOffsetChange={onOffsetChange}
+              highlightKey={hlKey}
+              gap={gap}
+              onGapChange={onGapChange}
+              splitGapFromSize={splitGapFromSize}
+              toAlpha={toAlpha}
+              styles={styles}
+              setHighlightedFrame={setHighlightedFrame}
+            />
+          );
 
           const renderSlotBaseFrameRow = (
             mod: typeof sorted[0],
@@ -7733,7 +7687,7 @@ const Configurator: React.FC = () => {
             const bfMin = isLower ? 60 : 40;
             const bfMax = isLower ? 150 : 100;
             const bfDefault = isLower ? 105 : 60;
-            const baseGap = Math.max(0, (mod as any).baseFrameGap ?? 0);
+            const baseGap = Math.max(0, defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap));
             const rawBaseHeight = mod.baseFrameHeight ?? bfDefault;
             const visibleBaseHeight = Math.max(0, rawBaseHeight - baseGap);
             return (
@@ -7772,17 +7726,17 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={mod.baseFrameOffset ?? (isLower ? 65 : 0)} placeholder={String(isLower ? 65 : 0)}
+                        value={defaultIfZeroSlot(mod.baseFrameOffset, globalBaseOffset)} placeholder={String(globalBaseOffset)}
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = mod.baseFrameOffset ?? (isLower ? 65 : 0);
+                            const cur = defaultIfZeroSlot(mod.baseFrameOffset, globalBaseOffset);
                             updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || (isLower ? 65 : 0))) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBaseOffset)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -7790,17 +7744,24 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>갭</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={((mod as any).baseFrameGap ?? 0) || ''} placeholder="0"
+                        defaultValue={defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap) || ''}
+                        key={`base-gap-${mod.id}-${defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap) || 0}`}
+                        placeholder={String(globalBaseGap)}
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = (mod as any).baseFrameGap ?? 0;
+                            const cur = defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap);
                             updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(2000, cur + (e.key === 'ArrowUp' ? 1 : -1))) } as any);
+                          } else if (e.key === 'Enter') {
+                            (e.target as HTMLInputElement).blur();
                           }
                         }}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameGap: v === '' ? 0 : parseInt(v, 10) } as any); }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)) } as any); }}
+                        onBlur={(e) => {
+                          setHighlightedFrame(null);
+                          const nextGap = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                          updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(2000, Number.isFinite(nextGap) ? nextGap : 0)) } as any);
+                        }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -7892,7 +7853,7 @@ const Configurator: React.FC = () => {
                     <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
-                      value={offset} placeholder={String(isLowerCategory ? 65 : 0)}
+                      value={offset} placeholder={String(globalBaseOffset)}
                       onFocus={() => setHighlightedFrame(hlKey)}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -7907,7 +7868,7 @@ const Configurator: React.FC = () => {
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || (isLowerCategory ? 65 : 0))));
+                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBaseOffset)));
                       }}
                       className={styles.frameNumberInput}
                     />
@@ -7952,7 +7913,7 @@ const Configurator: React.FC = () => {
                             const target = sorted.find(m => m.id === id);
                             updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
                               hasTopFrame: newVal,
-                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(target) ?? target.topFrameGap ?? 0),
+                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap)),
                               doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal),
                             }) : { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
                           });
@@ -7982,7 +7943,7 @@ const Configurator: React.FC = () => {
                         allEnabled,
                         group.totalWidthMm,
                         firstMod?.baseFrameHeight ?? globalBase,
-                        firstMod?.baseFrameOffset ?? (isLowerGroup ? 65 : 0),
+                        defaultIfZeroSlot(firstMod?.baseFrameOffset, globalBaseOffset),
                         () => {
                           const newVal = !allEnabled;
                           group.moduleIds.forEach(id => {
@@ -7990,7 +7951,7 @@ const Configurator: React.FC = () => {
                             updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
-                              ...(newVal ? {} : { individualFloatHeight: (target as any)?.baseFrameGap ?? 0 }),
+                            ...(newVal ? {} : { individualFloatHeight: defaultIfZeroSlot((target as any)?.baseFrameGap, globalBaseGap) }),
                             }) : {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
@@ -8081,7 +8042,7 @@ const Configurator: React.FC = () => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                               hasTopFrame: newVal,
                               doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal),
-                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(m) ?? m.topFrameGap ?? 0),
+                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap)),
                             })));
                           },
                           (v) => {
@@ -8091,7 +8052,7 @@ const Configurator: React.FC = () => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
                           },
                           'top-all',
-                          firstTop.topFrameGap ?? 0,
+                          defaultIfZeroSlot(firstTop.topFrameGap, globalTopGap),
                           (v) => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: Math.max(0, v) })));
                           },
@@ -8166,14 +8127,14 @@ const Configurator: React.FC = () => {
                             const newVal = !(mod.hasTopFrame !== false);
                             updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                               hasTopFrame: newVal,
-                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(mod) ?? mod.topFrameGap ?? 0),
+                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap)),
                               doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
                             }));
                           },
                           (v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v)),
                           (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                           `top-${mod.id}`,
-                          mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? mod.topFrameGap ?? 0) : (mod.topFrameGap ?? 0),
+                          mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap)) : defaultIfZeroSlot(mod.topFrameGap, globalTopGap),
                           (v) => updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { topFrameGap: Math.max(0, v) })),
                           mod.hasTopFrame !== false,
                         )}</React.Fragment>;
@@ -8204,19 +8165,18 @@ const Configurator: React.FC = () => {
                         // 전체 ON: 통합 행 1개만 표시 — OFF 시 띄움 높이 필드 표시
                         (() => {
                           const first = baseSortedMods[0];
-                          const firstOffsetDefault = ((first.moduleId?.startsWith('lower-') || first.moduleId?.includes('-lower-')) ? 65 : 0);
                           const unifiedEnabled = baseSortedMods.every(m => m.hasBase !== false);
                           if (unifiedEnabled) {
                             return renderSlotFrameRow(
                               '전체',
                               unifiedEnabled,
                               first.baseFrameHeight ?? globalBase,
-                              first.baseFrameOffset ?? firstOffsetDefault,
+                              defaultIfZeroSlot(first.baseFrameOffset, globalBaseOffset),
                               () => {
                                 // 하부 OFF (상단몰딩 건드리지 않음)
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                                   hasBase: false,
-                                  individualFloatHeight: (m as any).baseFrameGap ?? 0,
+                                  individualFloatHeight: defaultIfZeroSlot((m as any).baseFrameGap, globalBaseGap),
                                   doorBottomGap: -5,
                                 })));
                               },
@@ -8227,7 +8187,7 @@ const Configurator: React.FC = () => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
                               },
                               'base-all',
-                              (first as any).baseFrameGap ?? 0,
+                              defaultIfZeroSlot((first as any).baseFrameGap, globalBaseGap),
                               (v) => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any));
                               },

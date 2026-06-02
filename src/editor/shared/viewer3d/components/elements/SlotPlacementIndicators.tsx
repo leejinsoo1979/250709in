@@ -2063,9 +2063,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const fullHeightMm = spaceInfo.height;
     const fullHeight = fullHeightMm * 0.01;
     const hasSplitSlots = guideSlots.some((slot) => slot.guideZone === 'upper' || slot.guideZone === 'lower');
+    const isGuideEditing = spaceInfo.freePlacementGuideEditing === true;
+    const showGuideHeightSections = isGuideEditing || hasSplitSlots;
 
-    // ── 가이드 상하분할 5단 높이 (mm) ──
-    // 전체 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 하단 구간(걸레받이 또는 띄움) (전체 고정)
+    // ── 가이드 높이 구간 (mm) ──
+    // 분할 슬롯 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 하단 구간(걸레받이 또는 띄움)
+    // 비분할 키큰장 슬롯 = 몰딩 + 상부섹션 + 하부섹션 + 하단 구간(걸레받이 또는 띄움)
     // 상단몰딩/하단 구간은 우측바와 연동되도록 frameSize.top / baseConfig 사용
     const gTopMolding = spaceInfo.frameSize?.top ?? 0;
     const gMoldingGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
@@ -2143,11 +2146,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const gBaseGap = isFloatingBase || !guideBaseFrameAllMode ? 0 : Math.max(0, Math.min(gBaseboard, guideBaseReferenceModule?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0));
     const gMoldingVisible = gTopMolding > 0 ? Math.max(0, gTopMolding - gMoldingGap) : gMoldingGap;
     const gBaseboardVisible = isFloatingBase ? gFloatHeight : Math.max(0, gBaseboard - gBaseGap);
-    const gLower = resolveGuideLowerBodyHeight(guideLowerBaseModule);
+    const availableSectionHeight = Math.max(0, Math.round(fullHeightMm - gTopClearance - gBottomClearance));
+    const gLower = Math.min(resolveGuideLowerBodyHeight(guideLowerBaseModule), availableSectionHeight);
     const gUpperRaw = spaceInfo.guideUpperHeight ?? 700;
-    // 미드웨이 = 전체 - 몰딩 - 상부장 - 하부장 - 하단 구간 (나머지 흡수)
-    const gMidway = Math.max(0, Math.round(fullHeightMm - gTopClearance - gUpperRaw - gLower - gBottomClearance));
-    const gUpper = gUpperRaw;
+    const gUpper = hasSplitSlots
+      ? gUpperRaw
+      : Math.max(0, availableSectionHeight - gLower);
+    // 상하분할 슬롯은 기존처럼 미드웨이 구간을 유지한다.
+    // 비분할 키큰장 가이드는 몰딩 + 상부섹션 + 하부섹션 + 걸레받이 4단만 표시한다.
+    const gMidway = hasSplitSlots
+      ? Math.max(0, Math.round(fullHeightMm - gTopClearance - gUpper - gLower - gBottomClearance))
+      : 0;
 
     // 바닥(0)부터의 누적 경계 (mm): 하단 구간→하부장→미드웨이→상부장→몰딩
     const yBaseTop = gBottomClearance;            // 걸레받이/띄움 상단
@@ -2197,6 +2206,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       if (zone === 'upper') return [upperStartY, upperEndY];
       if (zone === 'lower') return [slotLowerStartY, slotLowerEndY];
       if (hasSplitSlots) return [slotLowerStartY, upperEndY];
+      if (showGuideHeightSections) return [slotLowerStartY, upperEndY];
       return [0, fullHeight];
     };
     const getSlotControlY = (slot: FreePlacementGuideSlot) => {
@@ -2205,7 +2215,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     };
     const guideZ = 0.006;
     const guideColor = colors.primary || '#3b82f6';
-    const isGuideEditing = spaceInfo.freePlacementGuideEditing === true;
     const selectedGuideSlotRanges = (() => {
       if (!isGuideEditing || selectedGuideSlotIds.length === 0) return [];
 
@@ -2311,6 +2320,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         return mergedSegments;
       }, []);
     })() : [];
+    const heightSectionLineSegments = hasSplitSlots
+      ? splitLineSegments
+      : [{
+        startX: Math.min(...guideSlots.map((slot) => slot.x)),
+        endX: Math.max(...guideSlots.map((slot) => slot.x + slot.width))
+      }];
     const canUseGuideSlot = (slot: FreePlacementGuideSlot) => {
       const zone = slot.guideZone || 'full';
       if (zone === 'full') return true;
@@ -2341,20 +2356,23 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       const matchesTier = (slot: FreePlacementGuideSlot) => {
         const zone = slot.guideZone || 'full';
         if (zone === 'full') return true;
-        if (key === 'upper' || key === 'molding') return zone === 'upper';
+        if (key === 'upper' || key === 'molding' || key === 'moldingGap') return zone === 'upper';
         if (key === 'lower' || key === 'baseboard') return zone === 'lower';
         return false;
       };
       return guideSlots.some((slot) => matchesTier(slot) && isGuideSlotOccupied(slot));
     };
 
-    // ── 상하분할 5단 높이 치수 편집기 (좌/우 가장자리) ──
+    // ── 가이드 높이 치수 편집기 (좌/우 가장자리) ──
     const spaceHalfWidth = spaceInfo.width / 2;
     const heightTiers = [
       { key: 'molding', label: gTopMolding > 0 ? '상단몰딩' : '상단갭', value: gMoldingVisible, centerYmm: gTopMolding > 0 ? (yUpperTop + yMoldingGapBottom) / 2 : (yUpperTop + fullHeightMm) / 2 },
-      { key: 'upper', label: '상부장', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
-      { key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 },
-      { key: 'lower', label: '하부장', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
+      ...(gTopMolding > 0 && gMoldingGap > 0
+        ? [{ key: 'moldingGap', label: '상단갭', value: gMoldingGap, centerYmm: (yMoldingGapBottom + fullHeightMm) / 2 }]
+        : []),
+      { key: 'upper', label: '상부섹션', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
+      ...(hasSplitSlots ? [{ key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 }] : []),
+      { key: 'lower', label: '하부섹션', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
       { key: 'baseboard', label: isFloatingBase ? '띄움높이' : '걸레받이', value: gBaseboardVisible, centerYmm: isFloatingBase ? yBaseTop / 2 : (yBaseGapTop + yBaseTop) / 2 },
     ];
     const commitTier = (key: string, raw: string) => {
@@ -2367,7 +2385,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             : { ...(spaceInfo.frameSize as any), top: 0, topGap: v }
         });
       }
-      else if (key === 'lower') setSpaceInfo({ guideLowerHeight: v });
+      else if (key === 'moldingGap') {
+        setSpaceInfo({
+          frameSize: { ...(spaceInfo.frameSize as any), topGap: v }
+        });
+      }
+      else if (key === 'lower') {
+        setSpaceInfo({ guideLowerHeight: hasSplitSlots ? v : Math.min(v, availableSectionHeight) });
+      }
       else if (key === 'baseboard') {
         const nextBaseHeight = isFloatingBase ? v : v + gBaseGap;
         if (guideBaseReferenceModule) {
@@ -2382,7 +2407,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             : { ...(spaceInfo.baseConfig as any), type: 'floor', height: nextBaseHeight }
         });
       }
-      else if (key === 'upper') setSpaceInfo({ guideUpperHeight: v });
+      else if (key === 'upper') {
+        if (hasSplitSlots) setSpaceInfo({ guideUpperHeight: v });
+        else setSpaceInfo({ guideLowerHeight: Math.max(0, availableSectionHeight - v) });
+      }
       else if (key === 'midway') {
         // 미드웨이 변경 → 상부장이 흡수
         const newUpper = Math.max(0, Math.round(fullHeightMm - gTopClearance - v - gLower - gBottomClearance));
@@ -2396,12 +2424,15 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     };
     const renderHeightTiers = (sideX: number, editable: boolean) =>
       heightTiers.map((tier) => {
-        if (!editable && isHeightTierOccupied(tier.key)) return null;
+        if (!editable && tier.key !== 'moldingGap' && isHeightTierOccupied(tier.key)) return null;
+        const labelX = tier.key === 'moldingGap'
+          ? sideX + (sideX > 0 ? 0.48 : -0.48)
+          : sideX;
 
         return (
           <Html
             key={`guide-tier-${tier.key}-${sideX > 0 ? 'r' : 'l'}-${editable ? 'edit' : 'read'}`}
-            position={[sideX, tier.centerYmm * 0.01, guideZ]}
+            position={[labelX, tier.centerYmm * 0.01, guideZ]}
             center
             zIndexRange={[200, 0]}
             style={{ pointerEvents: editable ? 'auto' : 'none', userSelect: 'none', background: 'transparent' }}
@@ -2896,8 +2927,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       ...(gMoldingGap > 0 ? [yMoldingGapBottom] : []),
       fullHeightMm
     ];
-    // 미드웨이 경계(하부장상단/미드웨이상단): 분할(upper/lower) 슬롯 구간에만 — 병합(full)은 제외
-    const midwayBoundaryYmm = [yLowerTop, yMidTop];
+    const sectionBoundaryYmm = hasSplitSlots ? [yLowerTop, yMidTop] : [yLowerTop];
     const tierLineLeftX = -spaceHalfWidth * 0.01;
     const tierLineRightX = spaceHalfWidth * 0.01;
     const tierLineProps = {
@@ -2914,9 +2944,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           {...tierLineProps}
         />
       )),
-      // 미드웨이 경계 — 분할 슬롯 X구간(splitLineSegments)에만
-      ...midwayBoundaryYmm.flatMap((ymm, yi) =>
-        splitLineSegments.map((segment, si) => (
+      // 섹션 경계 — 분할 슬롯은 미드웨이 위/아래, 비분할 슬롯은 상부/하부 경계만 표시
+      ...sectionBoundaryYmm.flatMap((ymm, yi) =>
+        heightSectionLineSegments.map((segment, si) => (
           <NativeLine
             key={`guide-tier-mid-${yi}-${si}`}
             name="free-placement-guide-line"
@@ -3033,9 +3063,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     return (
       <>
-        {hasSplitSlots && renderTierLines()}
-        {hasSplitSlots && renderFrameSectionHorizontalLines()}
-        {hasSplitSlots && renderFrameSectionVerticalLines()}
+        {showGuideHeightSections && renderTierLines()}
+        {showGuideHeightSections && renderFrameSectionHorizontalLines()}
+        {showGuideHeightSections && renderFrameSectionVerticalLines()}
         {isGuideEditing && selectedGuideSlotIds.length > 0 && (
           <mesh
             key="free-guide-slot-selection-clear-plane"
@@ -3130,9 +3160,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             </Html>
           </React.Fragment>
         ))}
-        {hasSplitSlots && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01, isGuideEditing)}
-        {hasSplitSlots && renderHeightTiers((spaceHalfWidth + 120) * 0.01, isGuideEditing)}
-        {hasSplitSlots && isGuideEditing && renderFrameSettingEditors()}
+        {showGuideHeightSections && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01, isGuideEditing)}
+        {showGuideHeightSections && renderHeightTiers((spaceHalfWidth + 120) * 0.01, isGuideEditing)}
+        {isGuideEditing && renderFrameSettingEditors()}
         {!isGuideEditing && guideSlots.map((slot) => {
           const canPlaceInSlot = canUseGuideSlot(slot);
           const canShowPlacementSlot = !isGuideSlotOccupied(slot) && (!selectedModuleData || canPlaceInSlot);

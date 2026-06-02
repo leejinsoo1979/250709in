@@ -34,6 +34,13 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
   const commitDisplaySize = (nextDisplaySize: number) => {
     onSizeChange(splitGapFromSize ? nextDisplaySize + gapMM : nextDisplaySize);
   };
+  const commitGap = (nextGap: number) => {
+    const clampedGap = Math.max(0, Math.min(2000, nextGap));
+    if (splitGapFromSize) {
+      setSizeText(String(Math.max(0, sizeMM - clampedGap) || ''));
+    }
+    onGapChange?.(clampedGap);
+  };
   const [sizeText, setSizeText] = React.useState(String(displaySizeMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const [gapText, setGapText] = React.useState((gap ?? 0) !== 0 ? String(gap) : '');
@@ -141,13 +148,13 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
                   e.preventDefault();
                   const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                   setGapText(String(next));
-                  onGapChange?.(next);
+                  commitGap(next);
                 } else if (e.key === 'Enter') {
                   (e.target as HTMLInputElement).blur();
                 }
               }}
               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
-              onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); onGapChange?.(clamped); }}
+              onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); commitGap(clamped); }}
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: enabled ? 'var(--theme-text-primary)' : 'var(--theme-text-secondary)', cursor: enabled ? 'text' : 'not-allowed' }}
             />
           </div>
@@ -172,6 +179,13 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
   const displayHeightMM = splitGapFromSize ? Math.max(0, heightMM - gapMM) : heightMM;
   const commitDisplayHeight = (nextDisplayHeight: number) => {
     onHeightChange(splitGapFromSize ? nextDisplayHeight + gapMM : nextDisplayHeight);
+  };
+  const commitGap = (nextGap: number) => {
+    const clampedGap = Math.max(0, Math.min(2000, nextGap));
+    if (splitGapFromSize) {
+      setHeightText(String(Math.max(0, heightMM - clampedGap) || ''));
+    }
+    onGapChange?.(clampedGap);
   };
   const [heightText, setHeightText] = React.useState(String(displayHeightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
@@ -279,13 +293,13 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
                   e.preventDefault();
                   const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                   setGapText(String(next));
-                  onGapChange?.(next);
+                  commitGap(next);
                 } else if (e.key === 'Enter') {
                   (e.target as HTMLInputElement).blur();
                 }
               }}
               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
-              onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); onGapChange?.(clamped); }}
+              onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); commitGap(clamped); }}
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
             />
           </div>
@@ -960,6 +974,12 @@ const GuideSlotFrameRow = React.memo(({
     if (!Number.isFinite(parsed)) return;
     cb(Math.max(min, Math.min(max, parsed)));
   };
+  const commitGap = (raw: string) => {
+    const parsed = Math.round(parseFloat(raw));
+    if (!Number.isFinite(parsed)) return;
+    const nextGap = Math.max(0, Math.min(2000, parsed));
+    onGapChange(nextGap);
+  };
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
@@ -1022,7 +1042,7 @@ const GuideSlotFrameRow = React.memo(({
                 inputMode="numeric"
                 defaultValue={gap || ''}
                 key={`${label}-${type}-gap-${gap}`}
-                onBlur={(e) => commit(e.target.value, onGapChange, 0, 2000)}
+                onBlur={(e) => commitGap(e.target.value)}
                 style={inputStyle}
               />
             </div>
@@ -1090,17 +1110,50 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const setBaseFrameAllMode = (next: boolean) => setSpaceInfo({ guideBaseFrameAllMode: next });
 
   // 사용자가 설정한 기본 프레임/받침대 디폴트 (없으면 시스템 폴백)
-  const [userDefaults, setUserDefaults] = useState<{ frameTop?: number; baseHeight?: number }>({});
+  const [userDefaults, setUserDefaults] = useState<{
+    frameTop?: number;
+    topGap?: number;
+    baseHeight?: number;
+    baseOffset?: number;
+    baseLowerOffset?: number;
+    baseGap?: number;
+    baseLowerGap?: number;
+  }>({});
   useEffect(() => {
     let cancelled = false;
-    getSpaceConfigDefaults().then((d) => {
+    const applyDefaults = (d: Awaited<ReturnType<typeof getSpaceConfigDefaults>>) => {
       if (cancelled || !d) return;
+      const baseOffset = d.baseboardOffset ?? d.baseFrameOffset;
+      const baseLowerOffset = d.baseboardLowerOffset === 0 && (baseOffset ?? 0) !== 0
+        ? baseOffset
+        : (d.baseboardLowerOffset ?? baseOffset);
+      const baseGap = d.baseboardGap ?? d.baseFrameGap;
+      const baseLowerGap = d.baseboardLowerGap === 0 && (baseGap ?? 0) !== 0
+        ? baseGap
+        : (d.baseboardLowerGap ?? baseGap);
       setUserDefaults({
-        frameTop: d.topMoldingSize ?? d.frameTop,
-        baseHeight: d.baseboardSize ?? d.baseHeight
+        frameTop: d.topMoldingEnabled === false ? 0 : (d.topMoldingSize ?? d.frameTop),
+        topGap: d.topMoldingGap,
+        baseHeight: d.baseboardEnabled === false ? 0 : (d.baseboardSize ?? d.baseHeight),
+        baseOffset,
+        baseLowerOffset,
+        baseGap,
+        baseLowerGap
       });
-    }).catch(() => { /* noop */ });
-    return () => { cancelled = true; };
+    };
+    const reloadDefaults = () => {
+      getSpaceConfigDefaults().then(applyDefaults).catch(() => { /* noop */ });
+    };
+    const handleDefaultsUpdated = (event: Event) => {
+      applyDefaults((event as CustomEvent).detail);
+    };
+
+    reloadDefaults();
+    window.addEventListener('space-defaults-updated', handleDefaultsUpdated);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('space-defaults-updated', handleDefaultsUpdated);
+    };
   }, []);
 
   // 초기 렌더링 시 UIStore 동기화
@@ -1640,6 +1693,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalBaseOffset = baseConfig.offset ?? 0;
               const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? 0) : 0;
               const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
+              const defaultIfZero = (value: number | undefined, fallback: number) => (
+                value === undefined ? fallback : value
+              );
               const updateGuideSlotFrame = (slotId: string, updates: Partial<FreePlacementGuideSlot>) => {
                 setSpaceInfo({
                   freePlacementGuides: guideSlots.map((slot) => (
@@ -1649,17 +1705,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
               };
               const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? globalTopEnabled;
               const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
-                slot.topFrameThickness ?? (globalTopRaw > 0 ? globalTopRaw : Math.max(30, slot.topFrameGap ?? globalTopGap))
+                slot.topFrameThickness ?? (globalTopRaw > 0 ? globalTopRaw : Math.max(30, defaultIfZero(slot.topFrameGap, globalTopGap)))
               );
               const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-                getSlotTopEnabled(slot) ? Math.max(0, slot.topFrameGap ?? 0) : Math.max(0, slot.topFrameGap ?? globalTopGap)
+                Math.max(0, defaultIfZero(slot.topFrameGap, globalTopGap))
               );
               const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
               const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
                 slot.baseFrameHeight ?? ((slot.guideZone || 'full') === 'lower' ? 105 : (globalBaseHeight > 0 ? globalBaseHeight : 65))
               );
               const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
-                getSlotBaseEnabled(slot) ? Math.max(0, slot.baseFrameGap ?? 0) : 0
+                getSlotBaseEnabled(slot) ? Math.max(0, defaultIfZero(slot.baseFrameGap, globalBaseGap)) : 0
               );
               const guideAllCheckboxStyle: React.CSSProperties = {
                 display: 'flex',
@@ -1780,7 +1836,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             enabled={enabled}
                             type="base"
                             size={baseHeightValue}
-                            offset={slot.baseFrameOffset ?? globalBaseOffset}
+                            offset={defaultIfZero(slot.baseFrameOffset, globalBaseOffset)}
                             gap={gap}
                             floatHeight={slot.individualFloatHeight ?? 0}
                             onToggle={() => updateGuideSlotFrame(slot.id, {
@@ -1821,7 +1877,23 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
               const toAlpha = (n: number) => String.fromCharCode(64 + n);
               const globalTop = spaceInfo.frameSize?.top ?? userDefaults.frameTop ?? 30;
+              const globalTopGap = (spaceInfo.frameSize as any)?.topGap ?? userDefaults.topGap ?? 0;
               const globalBase = spaceInfo.baseConfig?.height ?? userDefaults.baseHeight ?? 65;
+              const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? userDefaults.baseOffset ?? 0;
+              const globalBaseGap = (spaceInfo.baseConfig as any)?.gap ?? userDefaults.baseGap ?? 0;
+              const defaultIfZero = (value: number | undefined, fallback: number) => (
+                value === undefined ? fallback : value
+              );
+              const getBaseOffsetDefault = (module?: any) => {
+                const isLower = module?.moduleId?.startsWith('lower-') || module?.moduleId?.includes('-lower-');
+                return isLower ? (userDefaults.baseLowerOffset ?? globalBaseOffset) : globalBaseOffset;
+              };
+              const getBaseGapDefault = (module?: any) => {
+                const isLower = module?.moduleId?.startsWith('lower-') || module?.moduleId?.includes('-lower-');
+                return isLower ? (userDefaults.baseLowerGap ?? globalBaseGap) : globalBaseGap;
+              };
+              const getBaseOffsetDisplay = (module?: any) => defaultIfZero(module?.baseFrameOffset, getBaseOffsetDefault(module));
+              const getBaseGapDisplay = (module?: any) => defaultIfZero(module?.baseFrameGap, getBaseGapDefault(module));
               const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
               const indexing = calculateSpaceIndexing(spaceInfo);
               const slotColWidth = indexing.columnWidth || 0;
@@ -1840,11 +1912,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
               };
               const getTopSizeDisplay = (m: any) => m?.topFrameThickness ?? globalTop;
-              const getTopOffGapDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? m?.topFrameGap ?? getTopSizeDisplay(m);
+              const getTopOffGapDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? defaultIfZero(m?.topFrameGap, getTopSizeDisplay(m));
               const getTopGapDisplay = (m: any) => (
                 m?.hasTopFrame === false
                   ? getTopOffGapDisplay(m)
-                  : Math.max(0, m?.topFrameGap ?? 0)
+                  : Math.max(0, defaultIfZero(m?.topFrameGap, globalTopGap))
               );
               const getTopFrameSizeUpdates = (m: any, nextSize: number) => {
                 const clampedSize = Math.max(0, nextSize);
@@ -2003,8 +2075,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 enabled={allEnabled}
                                 widthMM={group.totalWidthMm}
                                 heightMM={firstMod?.baseFrameHeight ?? globalBase}
-                                offset={firstMod?.baseFrameOffset ?? 0}
-                                gap={(firstMod as any)?.baseFrameGap ?? 0}
+                                offset={getBaseOffsetDisplay(firstMod)}
+                                gap={getBaseGapDisplay(firstMod)}
+                                splitGapFromSize={allEnabled}
                                 userBaseHeightDefault={userDefaults.baseHeight}
                                 onToggle={() => {
                                   const newVal = !allEnabled;
@@ -2041,8 +2114,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 enabled={baseEnabled}
                                 widthMM={baseModWidthMM}
                                 sizeMM={mod.baseFrameHeight ?? bfDefault}
-                                offset={mod.baseFrameOffset ?? (isLowerMod ? 65 : 0)}
-                                gap={(mod as any).baseFrameGap ?? 0}
+                                offset={getBaseOffsetDisplay(mod)}
+                                gap={getBaseGapDisplay(mod)}
+                                splitGapFromSize={baseEnabled}
                                 onToggle={() => updatePlacedModule(mod.id, {
                                   hasBase: !baseEnabled,
                                   doorBottomGap: !baseEnabled ? 25 : -5,
@@ -2185,15 +2259,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                      const first = baseSortedMods[0];
 	                      const totalWidthMM = baseSortedMods.reduce((sum, m) => sum + (m.isDualSlot ? slotColWidth * 2 : slotColWidth), 0);
 	                      const unifiedEnabled = baseSortedMods.every(m => m.hasBase !== false);
-	                      const isLowerFirst = first.moduleId?.startsWith('lower-') || first.moduleId?.includes('-lower-');
 	                      return (
 	                        <FrameRow key="base-all"
 	                          label="전체"
 	                          enabled={unifiedEnabled}
 	                          widthMM={Math.round(totalWidthMM * 10) / 10}
 	                          sizeMM={first.baseFrameHeight ?? globalBase}
-	                          offset={first.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
-	                          gap={(first as any).baseFrameGap ?? 0}
+	                          offset={getBaseOffsetDisplay(first)}
+	                          gap={getBaseGapDisplay(first)}
+	                          splitGapFromSize={unifiedEnabled}
 	                          onToggle={() => {
 	                            const newVal = !unifiedEnabled;
 	                            baseSortedMods.forEach(m => updatePlacedModule(m.id, {
@@ -2220,64 +2294,26 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     // 일반 가구 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
                     const bfDefault = isLowerMod ? 105 : (userDefaults.baseHeight ?? 60);
                     return (
-                      <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
-                        <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
-                        <button
-                          onClick={() => updatePlacedModule(mod.id, {
-                            hasBase: !baseEnabled,
-                            doorBottomGap: !baseEnabled ? 25 : -5,
-                            ...( baseEnabled
-                              ? { individualFloatHeight: 0 }  // OFF: 띄움높이 초기화
-                              : {}),
-                          })}
-                          style={{
-                            width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                            backgroundColor: baseEnabled ? 'var(--theme-primary, #4a90d9)' : '#ccc',
-                            position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
-                          }}
-                        >
-                          <span style={{
-                            position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
-                            backgroundColor: '#fff', transition: 'left 0.2s',
-                            left: baseEnabled ? '18px' : '2px',
-                          }} />
-                        </button>
-                        <div style={{ display: 'flex', flex: 1, gap: '4px', opacity: baseEnabled ? 1 : 0.5 }}>
-                          {/* 너비 - 읽기전용 */}
-                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
-                            <input type="text" inputMode="numeric"
-                              value={baseModWidthMM ? (Number.isInteger(baseModWidthMM) ? baseModWidthMM : Number(baseModWidthMM.toFixed(1))) : ''} readOnly
-                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                              onBlur={() => setHighlightedFrame(null)}
-                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
-                            />
-                          </div>
-                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
-                            <input type="text" inputMode="numeric"
-                              value={(mod.baseFrameHeight ?? bfDefault) || ''} placeholder="0"
-                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? bfDefault; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
-                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) }); }}
-                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                            />
-                          </div>
-                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
-                            <input type="text" inputMode="numeric"
-                              value={(mod.baseFrameOffset ?? 0) !== 0 ? (mod.baseFrameOffset ?? 0) : ''} placeholder="0"
-                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameOffset ?? 0; updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
-                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                            />
-                          </div>
-                        </div>
-	                      </div>
-	                    );
+                      <FrameRow key={`base-${mod.id}`}
+                        label={`${toAlpha(baseNum)}(하)`}
+                        enabled={baseEnabled}
+                        widthMM={baseModWidthMM}
+                        sizeMM={mod.baseFrameHeight ?? bfDefault}
+                        offset={getBaseOffsetDisplay(mod)}
+                        gap={getBaseGapDisplay(mod)}
+                        splitGapFromSize={baseEnabled}
+                        onToggle={() => updatePlacedModule(mod.id, {
+                          hasBase: !baseEnabled,
+                          doorBottomGap: !baseEnabled ? 25 : -5,
+                          ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
+                        })}
+                        onSizeChange={(v) => updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, v)) })}
+                        onOffsetChange={(v) => updatePlacedModule(mod.id, { baseFrameOffset: v })}
+                        onGapChange={(v) => updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, v) } as any)}
+                        hlKey={`base-${mod.id}`}
+                        setHighlightedFrame={setHighlightedFrame}
+                      />
+                    );
 	                  })}
                   </FormControl>
                   )}
