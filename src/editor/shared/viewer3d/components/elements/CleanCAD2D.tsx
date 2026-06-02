@@ -1711,7 +1711,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       && !!getExternalMaidaDimensionSide(module);
     return !!moduleData?.hasDoor || hasExternalMaidaDimension;
   });
-  const doorVerticalGuideExpansionMm = hasInstalledDoorForVerticalGuides ? 160 : 0;
+  // 세로 치수선 바깥 여유: 도어 설치 여부와 무관하게 항상 고정.
+  // (이전엔 도어 설치 시에만 160을 더해, 상부장(도어 有)을 나중에 배치하면
+  //  하부장 도어높이 치수까지 통째로 우측으로 밀려나는 문제가 있었음)
+  void hasInstalledDoorForVerticalGuides;
+  const doorVerticalGuideExpansionMm = 160;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
