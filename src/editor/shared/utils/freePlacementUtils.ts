@@ -764,7 +764,7 @@ export function calcResizedPositionX(
 /**
  * 키큰장찬넬 전용 너비 변경 위치 보정.
  *
- * 찬넬은 채움재이므로 가장 가까운 가구 쪽 면을 고정하고 반대쪽으로만 확장/축소한다.
+ * 찬넬은 채움재이므로 붙어 있는 가구 쪽 면을 우선 고정하고 반대쪽으로만 확장/축소한다.
  * 일반 자유배치 리사이즈처럼 중심 기준으로 양쪽을 동시에 움직이면 옆 가구와 겹치기 쉽다.
  */
 export function calcInsertFrameResizedPositionX(
@@ -818,7 +818,25 @@ export function calcInsertFrameResizedPositionX(
   }
 
   let newCenterMm: number;
-  if (module.hingePosition === 'left') {
+  const leftAttached = !!leftAnchor && leftAnchor.gap <= SNAP_MM;
+  const rightAttached = !!rightAnchor && rightAnchor.gap <= SNAP_MM;
+  const keepLeftForOpening = module.hingePosition === 'left';
+  const keepRightForOpening = module.hingePosition === 'right';
+
+  if (leftAttached && rightAttached) {
+    const keepLeft = keepLeftForOpening
+      ? true
+      : keepRightForOpening
+        ? false
+        : currentCenterMm < spaceMidMm;
+    newCenterMm = keepLeft
+      ? leftAnchor!.x + halfNew
+      : rightAnchor!.x - halfNew;
+  } else if (leftAttached) {
+    newCenterMm = leftAnchor!.x + halfNew;
+  } else if (rightAttached) {
+    newCenterMm = rightAnchor!.x - halfNew;
+  } else if (module.hingePosition === 'left') {
     // 좌측 힌지 = 오른쪽 열림. 배치된 좌측면을 고정하고 열림방향으로 확장한다.
     newCenterMm = oldBounds.left + halfNew;
   } else if (module.hingePosition === 'right') {
