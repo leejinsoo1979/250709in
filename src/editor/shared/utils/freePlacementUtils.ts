@@ -835,7 +835,8 @@ export function calcInsertFrameResizedPositionX(
   module: PlacedModule,
   newWidthMm: number,
   allModules: PlacedModule[],
-  spaceInfo: SpaceInfo
+  spaceInfo: SpaceInfo,
+  anchorOverride?: 'left' | 'right'
 ): number {
   const oldBounds = getModuleBoundsX(module);
   const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
@@ -846,6 +847,18 @@ export function calcInsertFrameResizedPositionX(
   const lockedGaps = spaceInfo.lockedWallGaps;
   const effStart = lockedGaps?.left != null ? startX + lockedGaps.left : startX;
   const effEnd = lockedGaps?.right != null ? endX - lockedGaps.right : endX;
+
+  // 사용자가 좌고정/우고정을 명시한 경우: 자동 anchor 탐색을 건너뛰고 해당 면을 고정한다.
+  //  - 좌고정: 좌측면(oldBounds.left)을 유지하고 우측으로 확장/축소
+  //  - 우고정: 우측면(oldBounds.right)을 유지하고 좌측으로 확장/축소
+  if (anchorOverride === 'left' || anchorOverride === 'right') {
+    const forcedCenterMm = anchorOverride === 'left'
+      ? oldBounds.left + halfNew
+      : oldBounds.right - halfNew;
+    let forcedClampedMm = clampToSpaceBoundsX(forcedCenterMm, newWidthMm, spaceInfo);
+    forcedClampedMm = Math.max(effStart + halfNew, Math.min(effEnd - halfNew, forcedClampedMm));
+    return forcedClampedMm * 0.01;
+  }
 
   const SNAP_MM = 10;
   const NEAR_MM = 80;

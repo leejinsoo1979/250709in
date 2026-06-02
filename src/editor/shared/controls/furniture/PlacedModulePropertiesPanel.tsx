@@ -3149,7 +3149,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     // 키큰장찬넬(insert-frame)은 채움재 → 한쪽 면 고정 리사이즈 (뷰어 상단 입력창과 동일)
     const isInsertFrameSecBlur = typeof fm.moduleId === 'string' && fm.moduleId.includes('insert-frame');
     const newX = isInsertFrameSecBlur
-      ? calcInsertFrameResizedPositionX(fm, val, fa, freshSpaceInfo)
+      ? calcInsertFrameResizedPositionX(fm, val, fa, freshSpaceInfo, fm.insertFrameWidthAnchor ?? 'left')
       : calcResizedPositionX(fm, val, fa, freshSpaceInfo);
     updatePlacedModule(currentPlacedModule.id, {
       customConfig: newConfig,
@@ -4285,13 +4285,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           let newX: number;
                           let insertFrameHingePosition: 'left' | 'right' | undefined;
                           if (isInsertFrameWidth) {
+                            // 사용자가 선택한 좌고정/우고정(기본 좌고정)을 우선 적용
+                            const anchor = freshModule.insertFrameWidthAnchor ?? 'left';
                             const resizeHingePosition = resolveInsertFrameResizeHingePosition(freshModule, freshAll, freshSI);
                             insertFrameHingePosition = resizeHingePosition;
                             newX = calcInsertFrameResizedPositionX(
-                              { ...freshModule, hingePosition: resizeHingePosition },
+                              freshModule,
                               appliedWidth,
                               freshAll,
-                              freshSI
+                              freshSI,
+                              anchor
                             );
                           } else {
                             newX = freshModule.isFreePlacement
@@ -4369,13 +4372,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               let newX: number;
                               let insertFrameHingePosition: 'left' | 'right' | undefined;
                               if (isInsertFrameKey) {
+                                // 사용자가 선택한 좌고정/우고정(기본 좌고정)을 우선 적용
+                                const anchor = freshMod.insertFrameWidthAnchor ?? 'left';
                                 const resizeHingePosition = resolveInsertFrameResizeHingePosition(freshMod, freshAll, freshSI);
                                 insertFrameHingePosition = resizeHingePosition;
                                 newX = calcInsertFrameResizedPositionX(
-                                  { ...freshMod, hingePosition: resizeHingePosition },
+                                  freshMod,
                                   appliedWidth,
                                   freshAll,
-                                  freshSI
+                                  freshSI,
+                                  anchor
                                 );
                               } else {
                                 newX = freshMod.isFreePlacement
@@ -4403,6 +4409,35 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
+                  {/* 키큰장찬넬(insert-frame): 폭 변경 시 좌고정/우고정 (기본 좌고정) */}
+                  {(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
+                    const anchor = currentPlacedModule.insertFrameWidthAnchor ?? 'left';
+                    const setAnchor = (a: 'left' | 'right') => updatePlacedModule(currentPlacedModule.id, { insertFrameWidthAnchor: a } as any);
+                    return (
+                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                        <button
+                          type="button"
+                          style={{
+                            flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                            background: anchor === 'left' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                            color: anchor === 'left' ? '#fff' : 'var(--theme-text-secondary)',
+                            fontSize: '10px', cursor: 'pointer',
+                          }}
+                          onClick={() => setAnchor('left')}
+                        >좌고정</button>
+                        <button
+                          type="button"
+                          style={{
+                            flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                            background: anchor === 'right' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                            color: anchor === 'right' ? '#fff' : 'var(--theme-text-secondary)',
+                            fontSize: '10px', cursor: 'pointer',
+                          }}
+                          onClick={() => setAnchor('right')}
+                        >우고정</button>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                 {/* 높이 — 2단서랍장은 '몸통 높이'로만 조절, H는 읽기전용 */}
@@ -4890,10 +4925,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                                 const fa = useFurnitureStore.getState().placedModules;
                                 const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                                // 키큰장찬넬(insert-frame)은 채움재 → 한쪽 면 고정 리사이즈 (뷰어 상단 입력창과 동일)
+                                // 키큰장찬넬(insert-frame)은 채움재 → 좌고정/우고정(기본 좌고정) 면 고정 리사이즈
                                 const isInsertFrameSec = typeof fm.moduleId === 'string' && fm.moduleId.includes('insert-frame');
                                 const newX = isInsertFrameSec
-                                  ? calcInsertFrameResizedPositionX(fm, val, fa, freshSI)
+                                  ? calcInsertFrameResizedPositionX(fm, val, fa, freshSI, fm.insertFrameWidthAnchor ?? 'left')
                                   : calcResizedPositionX(fm, val, fa, freshSI);
                                 const updates: any = {
                                   freeWidth: val,
@@ -4906,7 +4941,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   updates.customConfig = { ...cc!, sections: newSecs };
                                 }
                                 updatePlacedModule(currentPlacedModule.id, updates);
-                          setFreeWidthInput(appliedWidth.toString());
+                          setFreeWidthInput(val.toString());
                                 const wInputs: Record<number, string> = {};
                                 for (let i = 0; i < sectionCount; i++) wInputs[i] = val.toString();
                                 setSectionWidthInputs(wInputs);
@@ -4931,10 +4966,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setSectionWidthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
                                 const fa2 = useFurnitureStore.getState().placedModules;
                                 const freshSI2 = useSpaceConfigStore.getState().spaceInfo;
-                                // 키큰장찬넬(insert-frame)은 채움재 → 한쪽 면 고정 리사이즈 (뷰어 상단 입력창과 동일)
+                                // 키큰장찬넬(insert-frame)은 채움재 → 좌고정/우고정(기본 좌고정) 면 고정 리사이즈
                                 const isInsertFrameSec2 = typeof fm2.moduleId === 'string' && fm2.moduleId.includes('insert-frame');
                                 const newX = isInsertFrameSec2
-                                  ? calcInsertFrameResizedPositionX(fm2, next, fa2, freshSI2)
+                                  ? calcInsertFrameResizedPositionX(fm2, next, fa2, freshSI2, fm2.insertFrameWidthAnchor ?? 'left')
                                   : calcResizedPositionX(fm2, next, fa2, freshSI2);
                                 const updates: any = { freeWidth: next, moduleWidth: next, position: { ...fm2.position, x: newX }, userResizedWidth: true };
                                 if (isCustom) {

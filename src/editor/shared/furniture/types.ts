@@ -228,6 +228,8 @@ export interface PlacedModule {
   upperSectionWidth?: number; // 상부 섹션 너비 (mm)
   lowerSectionWidthDirection?: 'left' | 'right'; // 하부 섹션 너비 줄이는 방향 (left: 좌고정, right: 우고정, 기본: left)
   upperSectionWidthDirection?: 'left' | 'right'; // 상부 섹션 너비 줄이는 방향 (left: 좌고정, right: 우고정, 기본: left)
+  insertFrameWidthAnchor?: 'left' | 'right'; // 키큰장찬넬(insert-frame) 폭 변경 시 고정 면 (left: 좌고정, right: 우고정, 기본: left)
+  userResizedWidth?: boolean; // 사용자가 직접 폭을 변경함 (화살표 이동 시 자동 리사이즈 차단)
 
   // 하부 섹션 칸막이 좌/우 독립 깊이 (칸막이가 있을 때만 사용)
   lowerLeftSectionDepth?: number;  // 하부 좌측 영역 깊이 (mm)
