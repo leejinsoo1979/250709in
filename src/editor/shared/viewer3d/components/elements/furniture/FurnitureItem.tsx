@@ -827,6 +827,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isLowerCabinet = placedModule.moduleId.includes('lower-');
   const isDualCabinet = placedModule.moduleId.includes('dual-');
 
+  // 카테고리별(키큰장/상부장/하부장) 글로벌 도어 갭 폴백 해석
+  // DoorModule과 동일한 우선순위: 개별 가구 값 → 카테고리 글로벌 → 공통 글로벌
+  const globalDoorTopGapForCategory = isUpperCabinet
+    ? (spaceInfo.doorTopGapUpper ?? spaceInfo.doorTopGap)
+    : isLowerCabinet
+      ? (spaceInfo.doorTopGapLower ?? spaceInfo.doorTopGap)
+      : (spaceInfo.doorTopGapTall ?? spaceInfo.doorTopGap);
+  const globalDoorBottomGapForCategory = isUpperCabinet
+    ? (spaceInfo.doorBottomGapUpper ?? spaceInfo.doorBottomGap)
+    : isLowerCabinet
+      ? (spaceInfo.doorBottomGapLower ?? spaceInfo.doorBottomGap)
+      : (spaceInfo.doorBottomGapTall ?? spaceInfo.doorBottomGap);
+
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
     debugLog('🔍 싱글 상하부장 처리 시작:', {
       original: placedModule.moduleId,
@@ -4489,8 +4502,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   customSections={adjustedCustomSections} // 사용자 정의 섹션 설정 (단내림 구간에서 조정됨)
                   showFurniture={showFurniture} // 가구 본체 표시 여부
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
-                  doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap} // store 우선 → prop → 글로벌 폴백
-                  doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap} // store 우선 → prop → 글로벌 폴백
+                  doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? globalDoorTopGapForCategory} // store 우선 → prop → 카테고리 글로벌 폴백
+                  doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? globalDoorBottomGapForCategory} // store 우선 → prop → 카테고리 글로벌 폴백
                   lowerSectionDepth={effectiveLowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={effectiveUpperSectionDepth} // 상부 섹션 깊이 (mm)
                   lowerSectionDepthDirection={placedModule.lowerSectionDepthDirection} // 하부 깊이 줄이는 방향
@@ -4891,8 +4904,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? (spaceInfo.baseConfig?.floatHeight || 0)
                   : 0
               }
-              doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap}
-              doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap}
+              doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? globalDoorTopGapForCategory}
+              doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? globalDoorBottomGapForCategory}
               slotWidths={undefined}
               furnitureId={placedModule.id}
               hingePositionsMm={placedModule.hingePositionsMm}

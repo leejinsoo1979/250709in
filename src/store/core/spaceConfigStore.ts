@@ -236,9 +236,16 @@ export interface SpaceInfo {
 
   // 자유배치 도어 셋업 방식 (글로벌)
   doorSetupMode?: 'default' | 'frame-cover' | 'furniture-fit' | 'space-fit';
-  // 공간 레벨 도어 이격거리
+  // 공간 레벨 도어 이격거리 (기존: 키큰장 기준 + 카테고리 미지정 시 폴백)
   doorTopGap?: number;
   doorBottomGap?: number;
+  // 카테고리별 도어 이격거리 (키큰장/상부장/하부장 각각)
+  doorTopGapTall?: number;
+  doorBottomGapTall?: number;
+  doorTopGapUpper?: number;
+  doorBottomGapUpper?: number;
+  doorTopGapLower?: number;
+  doorBottomGapLower?: number;
 
   // 자유배치 벽 이격거리 잠금 (공간 레벨)
   // left: 왼쪽 벽에서의 잠금 이격거리 (mm), undefined면 잠금 안 됨

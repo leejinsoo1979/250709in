@@ -259,7 +259,8 @@ const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurro
     const topFrameMm = module.hasTopFrame === false ? 0 : (module.topFrameThickness ?? (spaceInfo.frameSize?.top || 30));
     const bodyTopMm = topMm - topFrameMm;
     const bodyBottomMm = bodyTopMm - cabHeight;
-    const doorBottomGapMm = module.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+    // 상부장 카테고리 글로벌 도어 갭 우선, 없으면 공통 폴백
+    const doorBottomGapMm = module.doorBottomGap ?? spaceInfo.doorBottomGapUpper ?? spaceInfo.doorBottomGap ?? 0;
 
     return {
       sideHeightMm: cabHeight,

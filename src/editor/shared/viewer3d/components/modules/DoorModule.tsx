@@ -1121,8 +1121,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // doorTopGap/doorBottomGap: 몸통(cabinet) 기준 (EP와 동일)
   // 상단갭 = 몸통 상단에서 위로 확장, 하단갭 = 몸통 하단에서 아래로 확장 (0이면 도어=몸통)
-  const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 0;
-  const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 0;
+  // 카테고리별(키큰장/상부장/하부장) 글로벌 갭이 설정되어 있으면 우선 사용,
+  // 없으면 기존 공통 doorTopGap/doorBottomGap으로 폴백. (개별 가구 값이 최우선)
+  // ※ 카테고리 판별 플래그(isUpperCabinet/isLowerCabinet)는 아래에서 정의되므로 여기서 직접 계산.
+  const doorCategory: 'upper' | 'lower' | 'tall' =
+    (moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet'))
+      ? 'upper'
+      : (moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet') || moduleData?.category === 'lower')
+        ? 'lower'
+        : 'tall';
+  const categoryTopGap =
+    doorCategory === 'upper' ? originalSpaceInfo.doorTopGapUpper
+      : doorCategory === 'lower' ? originalSpaceInfo.doorTopGapLower
+        : originalSpaceInfo.doorTopGapTall;
+  const categoryBottomGap =
+    doorCategory === 'upper' ? originalSpaceInfo.doorBottomGapUpper
+      : doorCategory === 'lower' ? originalSpaceInfo.doorBottomGapLower
+        : originalSpaceInfo.doorBottomGapTall;
+  const doorTopGap = doorTopGapProp ?? categoryTopGap ?? originalSpaceInfo.doorTopGap ?? 0;
+  const doorBottomGap = doorBottomGapProp ?? categoryBottomGap ?? originalSpaceInfo.doorBottomGap ?? 0;
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용 + slotCustomWidth 재분할 반영
   const allPlacedModules = useFurnitureStore(state => state.placedModules);

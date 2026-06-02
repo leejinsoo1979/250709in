@@ -506,6 +506,13 @@ const SimpleDashboard: React.FC = () => {
             ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
             ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
             ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
+            // 카테고리별 도어 갭 (키큰장/상부장/하부장)
+            ...(defaults.doorTopGapTall !== undefined && { doorTopGapTall: defaults.doorTopGapTall }),
+            ...(defaults.doorBottomGapTall !== undefined && { doorBottomGapTall: defaults.doorBottomGapTall }),
+            ...(defaults.doorTopGapUpper !== undefined && { doorTopGapUpper: defaults.doorTopGapUpper }),
+            ...(defaults.doorBottomGapUpper !== undefined && { doorBottomGapUpper: defaults.doorBottomGapUpper }),
+            ...(defaults.doorTopGapLower !== undefined && { doorTopGapLower: defaults.doorTopGapLower }),
+            ...(defaults.doorBottomGapLower !== undefined && { doorBottomGapLower: defaults.doorBottomGapLower }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'

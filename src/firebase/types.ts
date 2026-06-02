@@ -242,6 +242,16 @@ export interface UserProfile {
     doorGapMode?: 'body' | 'cf';
     doorTopGap?: number;
     doorBottomGap?: number;
+    // 도어 셋팅 — 카테고리별 (키큰장/상부장/하부장)
+    doorSettingTallEnabled?: boolean;
+    doorTopGapTall?: number;
+    doorBottomGapTall?: number;
+    doorSettingUpperEnabled?: boolean;
+    doorTopGapUpper?: number;
+    doorBottomGapUpper?: number;
+    doorSettingLowerEnabled?: boolean;
+    doorTopGapLower?: number;
+    doorBottomGapLower?: number;
   };
 
   createdAt: Timestamp;

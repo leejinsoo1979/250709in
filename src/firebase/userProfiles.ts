@@ -771,13 +771,23 @@ export type SpaceConfigDefaults = {
   baseboardLowerSize?: number;
   baseboardLowerOffset?: number;
   baseboardLowerGap?: number;
-  // 도어 셋팅
+  // 도어 셋팅 (기존: 키큰장 기준 + 카테고리 미지정 시 폴백)
   doorSettingEnabled?: boolean;
   doorGapMode?: 'body' | 'cf';
   doorTopGap?: number;       // 몸통 기준 상단갭
   doorBottomGap?: number;    // 몸통 기준 하단갭
   doorTopGapCf?: number;     // 천장·바닥 기준 상단갭
   doorBottomGapCf?: number;  // 천장·바닥 기준 하단갭
+  // 도어 셋팅 — 카테고리별 (키큰장/상부장/하부장 각각)
+  doorSettingTallEnabled?: boolean;
+  doorTopGapTall?: number;
+  doorBottomGapTall?: number;
+  doorSettingUpperEnabled?: boolean;
+  doorTopGapUpper?: number;
+  doorBottomGapUpper?: number;
+  doorSettingLowerEnabled?: boolean;
+  doorTopGapLower?: number;
+  doorBottomGapLower?: number;
   // 가구재/백패널 두께
   panelThickness?: number;       // 가구재 두께 (mm) — 15, 15.5, 18, 18.5
   backPanelThickness?: number;   // 백패널 두께 (mm) — 3, 3.5, 5, 5.5, 6, 9, 9.5
