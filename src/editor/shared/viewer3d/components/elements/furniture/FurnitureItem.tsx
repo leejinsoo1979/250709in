@@ -3822,8 +3822,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
         onContextMenu={(e) => {
-          // 키큰장(full) 카테고리만 우클릭 메뉴 표시
-          if (actualModuleData?.category !== 'full') return;
+          // EP 컨텍스트 메뉴는 키큰장/상부장/하부장 모두에서 사용한다.
+          if (!['full', 'upper', 'lower'].includes(actualModuleData?.category ?? '')) return;
           e.stopPropagation();
           const native = e.nativeEvent as MouseEvent;
           native.preventDefault?.();
