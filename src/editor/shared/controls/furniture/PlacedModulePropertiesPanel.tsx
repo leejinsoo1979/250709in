@@ -4276,6 +4276,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                           const freshAll = useFurnitureStore.getState().placedModules;
                           const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                          let appliedWidth = val;
                           // 키큰장찬넬(insert-frame): 인접가구 반대로 확장 + 양쪽 인접 시 우측 가구 이동
                           let newX: number;
                           let insertMoveTargets: any[] = [];
@@ -4324,26 +4325,48 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               : keepRightForOpening
                                 ? false
                                 : isOnLeftSide;
+                            const leftBlockerRight = freshAll.reduce<number | null>((best, m: any) => {
+                              if (m.id === freshModule.id || m.isSurroundPanel) return best;
+                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                              const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
+                              if (mRight > oldLeftMm + SNAP) return best;
+                              return best == null ? mRight : Math.max(best, mRight);
+                            }, null);
+                            const rightBlockerLeft = freshAll.reduce<number | null>((best, m: any) => {
+                              if (m.id === freshModule.id || m.isSurroundPanel) return best;
+                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                              const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
+                              if (mLeft < oldRightMm - SNAP) return best;
+                              return best == null ? mLeft : Math.min(best, mLeft);
+                            }, null);
+                            if (appliedWidth > oldW) {
+                              const maxWidth = shouldKeepLeft
+                                ? (rightBlockerLeft == null ? appliedWidth : Math.max(minWidth, rightBlockerLeft - oldLeftMm))
+                                : (leftBlockerRight == null ? appliedWidth : Math.max(minWidth, oldRightMm - leftBlockerRight));
+                              appliedWidth = Math.min(appliedWidth, maxWidth);
+                            }
+                            const appliedDelta = appliedWidth - oldW;
+                            insertDelta = appliedDelta;
                             if (leftAdj && rightAdj) {
                               // 양쪽 인접: 열림방향 반대쪽 anchor를 유지하고 반대편 가구를 이동
                               if (shouldKeepLeft) {
                                 // 좌측 영역: 좌측 anchor 유지, 우측 인접 가구 이동
-                                const newCenterMm = oldLeftMm + val / 2;
+                                const newCenterMm = oldLeftMm + appliedWidth / 2;
                                 newX = newCenterMm / 100;
-                                insertMoveTargets = freshAll.filter((m: any) => {
+                                insertMoveTargets = appliedDelta < 0 ? freshAll.filter((m: any) => {
                                   if (m.id === freshModule.id || m.isSurroundPanel) return false;
                                   const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
                                   return mLeft >= oldRightMm - SNAP;
-                                });
+                                }) : [];
                               } else {
                                 // 우측 영역: 우측 anchor 유지, 좌측 인접 가구 이동
-                                const newCenterMm = oldRightMm - val / 2;
+                                const newCenterMm = oldRightMm - appliedWidth / 2;
                                 newX = newCenterMm / 100;
-                                insertMoveTargets = freshAll.filter((m: any) => {
+                                insertMoveTargets = appliedDelta < 0 ? freshAll.filter((m: any) => {
                                   if (m.id === freshModule.id || m.isSurroundPanel) return false;
                                   const mRight = (m.position?.x ?? 0) * 100 + (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
                                   return mRight <= oldLeftMm + SNAP;
-                                });
+                                }) : [];
                                 // 좌측 가구들은 delta만큼 *왼쪽으로* 이동 (delta가 음수=축소면 오른쪽으로)
                                 insertMoveTargets = insertMoveTargets.map((m: any) => ({
                                   ...m,
@@ -4352,27 +4375,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               }
                             } else if (leftAdj && !rightAdj) {
                               // 좌측만 인접: 좌측 anchor 유지, 우측으로 확장
-                              const newCenterMm = oldLeftMm + val / 2;
+                              const newCenterMm = oldLeftMm + appliedWidth / 2;
                               newX = newCenterMm / 100;
                             } else if (!leftAdj && rightAdj) {
                               // 우측만 인접: 우측 anchor 유지, 좌측으로 확장
-                              const newCenterMm = oldRightMm - val / 2;
+                              const newCenterMm = oldRightMm - appliedWidth / 2;
                               newX = newCenterMm / 100;
                             } else if (hasLeftNeighbor && !hasRightNeighbor) {
                               // SNAP 안 됐지만 좌측에 가구 있음 → 좌측면 고정, 우측으로 확장
-                              const newCenterMm = oldLeftMm + val / 2;
+                              const newCenterMm = oldLeftMm + appliedWidth / 2;
                               newX = newCenterMm / 100;
                             } else if (!hasLeftNeighbor && hasRightNeighbor) {
                               // 우측에 가구 있음 → 우측면 고정, 좌측으로 확장
-                              const newCenterMm = oldRightMm - val / 2;
+                              const newCenterMm = oldRightMm - appliedWidth / 2;
                               newX = newCenterMm / 100;
                             } else if (hasLeftNeighbor && hasRightNeighbor) {
                               // 양쪽에 가구 있음: 가구 위치에 따라 한쪽 면 고정 (양쪽 확장 방지)
                               if (shouldKeepLeft) {
-                                const newCenterMm = oldLeftMm + val / 2;
+                                const newCenterMm = oldLeftMm + appliedWidth / 2;
                                 newX = newCenterMm / 100;
                               } else {
-                                const newCenterMm = oldRightMm - val / 2;
+                                const newCenterMm = oldRightMm - appliedWidth / 2;
                                 newX = newCenterMm / 100;
                               }
                             } else {
@@ -4380,10 +4403,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               //  - 가구가 공간 좌측이면 좌측 벽 anchor (우측으로만 확장)
                               //  - 가구가 공간 우측이면 우측 벽 anchor (좌측으로만 확장)
                               if (shouldKeepLeft) {
-                                const newCenterMm = oldLeftMm + val / 2;
+                                const newCenterMm = oldLeftMm + appliedWidth / 2;
                                 newX = newCenterMm / 100;
                               } else {
-                                const newCenterMm = oldRightMm - val / 2;
+                                const newCenterMm = oldRightMm - appliedWidth / 2;
                                 newX = newCenterMm / 100;
                               }
                             }
@@ -4393,12 +4416,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               : freshModule.position.x;
                           }
                           if (isInsertFrameWidth && !Number.isFinite(newX)) {
-                            newX = calcInsertFrameResizedPositionX(freshModule, val, freshAll, freshSI);
+                            newX = calcInsertFrameResizedPositionX(freshModule, appliedWidth, freshAll, freshSI);
                           }
                           updatePlacedModule(currentPlacedModule.id, {
-                            freeWidth: val,
-                            moduleWidth: val,
-                            customWidth: val,
+                            freeWidth: appliedWidth,
+                            moduleWidth: appliedWidth,
+                            customWidth: appliedWidth,
                             position: { ...freshModule.position, x: newX },
                             userResizedWidth: true, // 사용자가 직접 폭 변경 → 이동 시 자동 리사이즈 차단
                           } as any);
@@ -4413,10 +4436,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               } as any);
                             });
                           }
-                          setFreeWidthInput(val.toString());
+                          setFreeWidthInput(appliedWidth.toString());
                           const store = useFurnitureStore.getState();
                           const dims = {
-                            width: val,
+                            width: appliedWidth,
                             height: placedBodyHeight,
                             depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
                           };
@@ -4424,25 +4447,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const key = getCustomDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(key, dims);
                             if (key === 'full-dual') {
-                              store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(val / 2) });
+                              store.setLastCustomDimensions('full-single', { ...dims, width: Math.round(appliedWidth / 2) });
                             } else if (key === 'full-single') {
-                              store.setLastCustomDimensions('full-dual', { ...dims, width: val * 2 });
+                              store.setLastCustomDimensions('full-dual', { ...dims, width: appliedWidth * 2 });
                             }
                           } else {
                             const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(stdKey, dims);
                             if (stdKey === 'std-dual-full') {
-                              store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(val / 2) });
+                              store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(appliedWidth / 2) });
                             } else if (stdKey === 'std-single-full') {
-                              store.setLastCustomDimensions('std-dual-full', { ...dims, width: val * 2 });
+                              store.setLastCustomDimensions('std-dual-full', { ...dims, width: appliedWidth * 2 });
                             } else if (stdKey === 'std-dual-upper') {
-                              store.setLastCustomDimensions('std-single-upper', { ...dims, width: Math.round(val / 2) });
+                              store.setLastCustomDimensions('std-single-upper', { ...dims, width: Math.round(appliedWidth / 2) });
                             } else if (stdKey === 'std-single-upper') {
-                              store.setLastCustomDimensions('std-dual-upper', { ...dims, width: val * 2 });
+                              store.setLastCustomDimensions('std-dual-upper', { ...dims, width: appliedWidth * 2 });
                             } else if (stdKey === 'std-dual-lower') {
-                              store.setLastCustomDimensions('std-single-lower', { ...dims, width: Math.round(val / 2) });
+                              store.setLastCustomDimensions('std-single-lower', { ...dims, width: Math.round(appliedWidth / 2) });
                             } else if (stdKey === 'std-single-lower') {
-                              store.setLastCustomDimensions('std-dual-lower', { ...dims, width: val * 2 });
+                              store.setLastCustomDimensions('std-dual-lower', { ...dims, width: appliedWidth * 2 });
                             }
                           }
                         }
@@ -4469,10 +4492,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const curW = freshMod?.freeWidth || freshMod?.customWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
                             const minWidth = isInsertFrameKey ? 30 : 100;
                             const next = Math.max(minWidth, Math.min(3000, curW + (e.key === 'ArrowUp' ? 1 : -1)));
-                            setFreeWidthInput(next.toString());
                             if (currentPlacedModule && freshMod) {
                               const freshAll = useFurnitureStore.getState().placedModules;
                               const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                              let appliedWidth = next;
                               let newX: number;
                               let insertMoveTargets: any[] = [];
                               let insertDelta = 0;
@@ -4514,39 +4537,59 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   : keepRightForOpening
                                     ? false
                                     : isOnLeftSide;
-                                const delta = next - curW;
+                                const leftBlockerRight = freshAll.reduce<number | null>((best, m: any) => {
+                                  if (m.id === freshMod.id || m.isSurroundPanel) return best;
+                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                                  const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
+                                  if (mRight > oldLeftMm + SNAP) return best;
+                                  return best == null ? mRight : Math.max(best, mRight);
+                                }, null);
+                                const rightBlockerLeft = freshAll.reduce<number | null>((best, m: any) => {
+                                  if (m.id === freshMod.id || m.isSurroundPanel) return best;
+                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                                  const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
+                                  if (mLeft < oldRightMm - SNAP) return best;
+                                  return best == null ? mLeft : Math.min(best, mLeft);
+                                }, null);
+                                if (appliedWidth > curW) {
+                                  const maxWidth = shouldKeepLeft
+                                    ? (rightBlockerLeft == null ? appliedWidth : Math.max(minWidth, rightBlockerLeft - oldLeftMm))
+                                    : (leftBlockerRight == null ? appliedWidth : Math.max(minWidth, oldRightMm - leftBlockerRight));
+                                  appliedWidth = Math.min(appliedWidth, maxWidth);
+                                }
+                                const delta = appliedWidth - curW;
                                 insertDelta = delta;
                                 if (leftAdj && rightAdj) {
                                   if (shouldKeepLeft) {
-                                    newX = (oldLeftMm + next / 2) / 100;
-                                    insertMoveTargets = freshAll.filter((m: any) => {
+                                    newX = (oldLeftMm + appliedWidth / 2) / 100;
+                                    insertMoveTargets = delta < 0 ? freshAll.filter((m: any) => {
                                       if (m.id === freshMod.id || m.isSurroundPanel) return false;
                                       const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
                                       return mLeft >= oldRightMm - SNAP;
-                                    });
+                                    }) : [];
                                   } else {
-                                    newX = (oldRightMm - next / 2) / 100;
-                                    insertMoveTargets = freshAll
+                                    newX = (oldRightMm - appliedWidth / 2) / 100;
+                                    insertMoveTargets = delta < 0 ? freshAll
                                       .filter((m: any) => {
                                         if (m.id === freshMod.id || m.isSurroundPanel) return false;
                                         const mRight = (m.position?.x ?? 0) * 100 + (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
                                         return mRight <= oldLeftMm + SNAP;
                                       })
-                                      .map((m: any) => ({ ...m, __moveDirection: -1 }));
+                                      .map((m: any) => ({ ...m, __moveDirection: -1 })) : [];
                                   }
                                 } else if (hasLeftNeighbor && !hasRightNeighbor) {
-                                  newX = (oldLeftMm + next / 2) / 100;
+                                  newX = (oldLeftMm + appliedWidth / 2) / 100;
                                 } else if (!hasLeftNeighbor && hasRightNeighbor) {
-                                  newX = (oldRightMm - next / 2) / 100;
+                                  newX = (oldRightMm - appliedWidth / 2) / 100;
                                 } else if (hasLeftNeighbor && hasRightNeighbor) {
                                   newX = shouldKeepLeft
-                                    ? (oldLeftMm + next / 2) / 100
-                                    : (oldRightMm - next / 2) / 100;
+                                    ? (oldLeftMm + appliedWidth / 2) / 100
+                                    : (oldRightMm - appliedWidth / 2) / 100;
                                 } else {
                                   // 양쪽 모두 가구 없음: 공간 좌/우 위치에 따라 한쪽 면 고정 (양쪽 확장 방지)
                                   newX = shouldKeepLeft
-                                    ? (oldLeftMm + next / 2) / 100
-                                    : (oldRightMm - next / 2) / 100;
+                                    ? (oldLeftMm + appliedWidth / 2) / 100
+                                    : (oldRightMm - appliedWidth / 2) / 100;
                                 }
                               } else {
                                 newX = freshMod.isFreePlacement
@@ -4554,12 +4597,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   : freshMod.position.x;
                               }
                               if (isInsertFrameKey && !Number.isFinite(newX)) {
-                                newX = calcInsertFrameResizedPositionX(freshMod, next, freshAll, freshSI);
+                                newX = calcInsertFrameResizedPositionX(freshMod, appliedWidth, freshAll, freshSI);
                               }
+                              setFreeWidthInput(appliedWidth.toString());
                               updatePlacedModule(currentPlacedModule.id, {
-                                freeWidth: next,
-                                moduleWidth: next,
-                                customWidth: next,
+                                freeWidth: appliedWidth,
+                                moduleWidth: appliedWidth,
+                                customWidth: appliedWidth,
                                 position: { ...freshMod.position, x: newX },
                                 userResizedWidth: true,
                               });
@@ -4571,6 +4615,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   } as any);
                                 });
                               }
+                            } else {
+                              setFreeWidthInput(next.toString());
                             }
                           }
                         }
@@ -5079,7 +5125,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   updates.customConfig = { ...cc!, sections: newSecs };
                                 }
                                 updatePlacedModule(currentPlacedModule.id, updates);
-                                setFreeWidthInput(val.toString());
+                          setFreeWidthInput(appliedWidth.toString());
                                 const wInputs: Record<number, string> = {};
                                 for (let i = 0; i < sectionCount; i++) wInputs[i] = val.toString();
                                 setSectionWidthInputs(wInputs);
