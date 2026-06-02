@@ -1398,6 +1398,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     );
     return { left, right };
   }, [allPlacedModules, storePlacedModule]);
+  const insertFrameDoorExtensionSide = useMemo(() => {
+    if (!insertFrameAdjacency.left && !insertFrameAdjacency.right) {
+      return { left: false, right: false };
+    }
+    if (insertFrameAdjacency.left && !insertFrameAdjacency.right) {
+      return { left: true, right: false };
+    }
+    if (insertFrameAdjacency.right && !insertFrameAdjacency.left) {
+      return { left: false, right: true };
+    }
+
+    // 양쪽에 찬넬이 있어도 도어는 힌지 반대방향 한쪽으로만 확장한다.
+    const hingeSide = (storePlacedModule?.hingePosition ?? hingePosition ?? 'right') as 'left' | 'right';
+    const oppositeSide = resolveHingeOppositeDoorWidthAdjustment(1, hingeSide);
+    return {
+      left: oppositeSide.leftMm > 0,
+      right: oppositeSide.rightMm > 0
+    };
+  }, [hingePosition, insertFrameAdjacency.left, insertFrameAdjacency.right, storePlacedModule?.hingePosition]);
 
   const effectiveFurnitureWidth = actualDoorWidth;
   const openOuterDoorSides = useMemo(() => resolveDoorOuterOpenSides({
@@ -2605,8 +2624,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 기본 도어 폭이 몸통-3mm에서 시작하므로 v=0이 몸통과 같아지도록 +3mm를 보정한다.
     const doorAdjEnabledDual = !!(storePlacedModule as any)?.doorWidthAdjustEnabled;
     const userDoorExtendMmDual = (storePlacedModule as any)?.doorWidthAdjustMm;
-    const autoExtendLeftMm = insertFrameAdjacency.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
-    const autoExtendRightMm = insertFrameAdjacency.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    const autoExtendLeftMm = insertFrameDoorExtensionSide.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    const autoExtendRightMm = insertFrameDoorExtensionSide.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
     let leftExtendMm = 0;
     let rightExtendMm = 0;
     if (doorAdjEnabledDual) {
@@ -3645,8 +3664,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어 확장/축소 토글: ON 시 입력값 v(mm)는 몸통 대비 도어 전체 폭 증감값이다.
     // 기본 도어 폭이 몸통-3mm에서 시작하므로 v=0이 몸통과 같아지도록 +3mm를 보정한다.
     const userDoorExtendMm = (storePlacedModule as any)?.doorWidthAdjustMm;
-    const autoLeftMm = insertFrameAdjacency.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
-    const autoRightMm = insertFrameAdjacency.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    const autoLeftMm = insertFrameDoorExtensionSide.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    const autoRightMm = insertFrameDoorExtensionSide.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
     let insertExtendLeft = 0;
     let insertExtendRight = 0;
     if (doorAdjEnabled) {

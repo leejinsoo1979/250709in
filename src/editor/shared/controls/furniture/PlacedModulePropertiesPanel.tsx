@@ -21,6 +21,7 @@ import {
   normalizeDoorHingePositionsMm,
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
+  resolveHingeOppositeDoorWidthAdjustment,
   resolveSideAnchoredDoorHingePositionsMm,
   type DoorCabinetCategory,
   type DoorHingeMode
@@ -5521,6 +5522,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isCurrentInsert = isInsertMod(currentPlacedModule);
             let insertExtensionMm = 0;
             if (!isCurrentInsert) {
+              let hasLeftInsertFrame = false;
+              let hasRightInsertFrame = false;
               if (currentPlacedModule.isFreePlacement) {
                 // 자유배치: 위치 기반 인접성 (DoorModule.tsx insertFrameAdjacency 동일 식)
                 const myX = currentPlacedModule.position?.x ?? 0;
@@ -5534,11 +5537,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   const mw = (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) * 0.01;
                   // 좌측 인접
                   if (mx < myX && Math.abs((mx + mw / 2) - myLeft) <= TOL) {
-                    insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                    hasLeftInsertFrame = true;
                   }
                   // 우측 인접
                   if (mx > myX && Math.abs((mx - mw / 2) - myRight) <= TOL) {
-                    insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                    hasRightInsertFrame = true;
                   }
                 });
               } else {
@@ -5553,12 +5556,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     if ((m.zone || 'normal') !== myZone || m.isFreePlacement) return;
                     if (!isInsertMod(m)) return;
                     if (m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2)) {
-                      insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                      hasLeftInsertFrame = true;
                     }
                     if (m.slotIndex === rightEdge + 1) {
-                      insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                      hasRightInsertFrame = true;
                     }
                   });
+                }
+              }
+              if (hasLeftInsertFrame || hasRightInsertFrame) {
+                const hingeSide = ((currentPlacedModule as any).hingePosition ?? 'right') as 'left' | 'right';
+                const oppositeSide = resolveHingeOppositeDoorWidthAdjustment(1, hingeSide);
+                const canExtendLeft = hasLeftInsertFrame && (!hasRightInsertFrame || oppositeSide.leftMm > 0);
+                const canExtendRight = hasRightInsertFrame && (!hasLeftInsertFrame || oppositeSide.rightMm > 0);
+                if (canExtendLeft || canExtendRight) {
+                  insertExtensionMm = INSERT_FRAME_DOOR_EXTENSION_MM;
                 }
               }
             }
