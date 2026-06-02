@@ -5280,8 +5280,8 @@ const Room: React.FC<RoomProps> = ({
                     const renderFrameHeight = modFrameHeight;
                     const modFrameCenterY = effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
-                    // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
-                    const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
+                    // 상부몰딩 옵셋은 걸레받이와 동일하게 양수일수록 뒤로 들어간다.
+                    const modTopZOffset = modTopOffsetMM ? -mmToThreeUnits(modTopOffsetMM) : 0;
                     const DOOR_THICKNESS_MM = PET_PANEL_THICKNESS_MM;
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
@@ -6226,8 +6226,8 @@ const Room: React.FC<RoomProps> = ({
                   const slotModMid = mod.moduleId || '';
                   const slotRenderTopHeight = modTopHeight;
                   const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
-                  // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
-                  const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
+                  // 상부몰딩 옵셋은 걸레받이와 동일하게 양수일수록 뒤로 들어간다.
+                  const modTopZOffset = modTopOffsetMM ? -mmToThreeUnits(modTopOffsetMM) : 0;
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   let slotFrameZ = topZPos;
@@ -7342,7 +7342,15 @@ const Room: React.FC<RoomProps> = ({
               const modCenterXmm = (adjustedBaseBounds.leftMm + adjustedBaseBounds.rightMm) / 2;
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
-              const modBaseZInset = mmToThreeUnits(mod.baseFrameOffset ?? (freeIsLower ? 65 : 0));
+              const globalBaseFrameOffsetMm = (spaceInfo.baseConfig as any)?.offset;
+              const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
+              const defaultBaseFrameOffsetMm = typeof globalBaseFrameOffsetMm === 'number'
+                ? globalBaseFrameOffsetMm
+                : (freeIsLower ? 65 : 0);
+              const effectiveBaseFrameOffsetMm = useGlobalBaseFrameOffset
+                ? defaultBaseFrameOffsetMm
+                : (mod.baseFrameOffset ?? defaultBaseFrameOffsetMm);
+              const modBaseZInset = mmToThreeUnits(effectiveBaseFrameOffsetMm);
               // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
               const baseShoeMid = mod.moduleId || '';
               const isShoeBase = (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-') || baseShoeMid.includes('glass-cabinet'));
@@ -7361,6 +7369,16 @@ const Room: React.FC<RoomProps> = ({
               } else {
                 baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               }
+              console.log('🟪[자유배치 걸레받이 옵셋]', {
+                modId: mod.id,
+                guideBaseFrameAllMode: spaceInfo.guideBaseFrameAllMode,
+                useGlobalBaseFrameOffset,
+                globalOffset: globalBaseFrameOffsetMm,
+                modBaseFrameOffset: mod.baseFrameOffset,
+                effectiveBaseFrameOffsetMm,
+                modBaseZInset,
+                baseZPosition,
+              });
               // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
               const modBaseBackWallGapMm = mod.backWallGap ?? 0;
               if (modBaseBackWallGapMm > 0) {
@@ -7724,7 +7742,15 @@ const Room: React.FC<RoomProps> = ({
                       const modBaseYCenter = panelStartY + floatHeight + baseGapThreeUnits + modBaseH / 2;
                       const modCategory = getModuleCategory(mod);
                       const isLowerMod = modCategory === 'lower';
-                      const modBaseZInset = mmToThreeUnits(mod.baseFrameOffset ?? (isLowerMod ? 65 : 0));
+                      const globalBaseFrameOffsetMm = (spaceInfo.baseConfig as any)?.offset;
+                      const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
+                      const defaultBaseFrameOffsetMm = typeof globalBaseFrameOffsetMm === 'number'
+                        ? globalBaseFrameOffsetMm
+                        : (isLowerMod ? 65 : 0);
+                      const effectiveBaseFrameOffsetMm = useGlobalBaseFrameOffset
+                        ? defaultBaseFrameOffsetMm
+                        : (mod.baseFrameOffset ?? defaultBaseFrameOffsetMm);
+                      const modBaseZInset = mmToThreeUnits(effectiveBaseFrameOffsetMm);
                       // 신발장 걸래받이 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
