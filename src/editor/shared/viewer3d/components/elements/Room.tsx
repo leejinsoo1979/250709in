@@ -7379,8 +7379,12 @@ const Room: React.FC<RoomProps> = ({
           if (stripGroups.length === 0) return null;
 
           // 걸래받이 옵셋은 실제 가구 앞단과 걸래받이 앞면 사이 거리다.
+          // 가구 본체 측판(FurnitureItem)과 동일하게 baseConfig.depth도 차감해야
+          // 본체 앞면과 걸래받이 앞면이 같은 기준에 정렬된다. (이 차감이 빠져
+          // baseConfig.depth(=옵셋과 별개)만큼 걸래받이가 어긋나던 문제)
           const baseZBase = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
+            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
+            mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
 
           const allBaseSegments: (FrameRenderSegment & { key: string })[] = [];
           const rawBaseMat = baseFrameMaterial ?? createFrameMaterial('base');
