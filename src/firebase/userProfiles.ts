@@ -785,9 +785,16 @@ export type SpaceConfigDefaults = {
   doorSettingUpperEnabled?: boolean;
   doorTopGapUpper?: number;
   doorBottomGapUpper?: number;
-  doorSettingLowerEnabled?: boolean;
+  // 하부장 = 기본장 / 도어올림 / 상판내림 3종 분리
+  doorSettingLowerEnabled?: boolean;          // 기본 하부장
   doorTopGapLower?: number;
   doorBottomGapLower?: number;
+  doorSettingLowerDoorLiftEnabled?: boolean;  // 도어올림 하부장
+  doorTopGapLowerDoorLift?: number;
+  doorBottomGapLowerDoorLift?: number;
+  doorSettingLowerTopDownEnabled?: boolean;   // 상판내림 하부장
+  doorTopGapLowerTopDown?: number;
+  doorBottomGapLowerTopDown?: number;
   // 가구재/백패널 두께
   panelThickness?: number;       // 가구재 두께 (mm) — 15, 15.5, 18, 18.5
   backPanelThickness?: number;   // 백패널 두께 (mm) — 3, 3.5, 5, 5.5, 6, 9, 9.5

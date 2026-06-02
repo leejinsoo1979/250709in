@@ -252,6 +252,12 @@ export interface UserProfile {
     doorSettingLowerEnabled?: boolean;
     doorTopGapLower?: number;
     doorBottomGapLower?: number;
+    doorSettingLowerDoorLiftEnabled?: boolean;
+    doorTopGapLowerDoorLift?: number;
+    doorBottomGapLowerDoorLift?: number;
+    doorSettingLowerTopDownEnabled?: boolean;
+    doorTopGapLowerTopDown?: number;
+    doorBottomGapLowerTopDown?: number;
   };
 
   createdAt: Timestamp;

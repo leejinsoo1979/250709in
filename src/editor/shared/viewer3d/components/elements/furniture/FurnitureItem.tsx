@@ -827,17 +827,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isLowerCabinet = placedModule.moduleId.includes('lower-');
   const isDualCabinet = placedModule.moduleId.includes('dual-');
 
-  // 카테고리별(키큰장/상부장/하부장) 글로벌 도어 갭 폴백 해석
+  // 카테고리별(키큰장/상부장/하부장 3종) 글로벌 도어 갭 폴백 해석
   // DoorModule과 동일한 우선순위: 개별 가구 값 → 카테고리 글로벌 → 공통 글로벌
+  // 하부장은 기본장/도어올림(lower-door-lift-)/상판내림(lower-top-down-) 3종 분리
+  const isLowerDoorLift = placedModule.moduleId.includes('lower-door-lift-');
+  const isLowerTopDown = placedModule.moduleId.includes('lower-top-down-');
   const globalDoorTopGapForCategory = isUpperCabinet
     ? (spaceInfo.doorTopGapUpper ?? spaceInfo.doorTopGap)
     : isLowerCabinet
-      ? (spaceInfo.doorTopGapLower ?? spaceInfo.doorTopGap)
+      ? (isLowerDoorLift ? (spaceInfo.doorTopGapLowerDoorLift ?? spaceInfo.doorTopGap)
+        : isLowerTopDown ? (spaceInfo.doorTopGapLowerTopDown ?? spaceInfo.doorTopGap)
+          : (spaceInfo.doorTopGapLower ?? spaceInfo.doorTopGap))
       : (spaceInfo.doorTopGapTall ?? spaceInfo.doorTopGap);
   const globalDoorBottomGapForCategory = isUpperCabinet
     ? (spaceInfo.doorBottomGapUpper ?? spaceInfo.doorBottomGap)
     : isLowerCabinet
-      ? (spaceInfo.doorBottomGapLower ?? spaceInfo.doorBottomGap)
+      ? (isLowerDoorLift ? (spaceInfo.doorBottomGapLowerDoorLift ?? spaceInfo.doorBottomGap)
+        : isLowerTopDown ? (spaceInfo.doorBottomGapLowerTopDown ?? spaceInfo.doorBottomGap)
+          : (spaceInfo.doorBottomGapLower ?? spaceInfo.doorBottomGap))
       : (spaceInfo.doorBottomGapTall ?? spaceInfo.doorBottomGap);
 
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
@@ -2565,7 +2572,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const shouldFitLowerDoorWithManualEndPanel = actualModuleData?.category === 'lower'
       && hasFrontOffsetEndPanel;
     const hasManualEndPanel = placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel;
-    if (widthDifference > 20 && (!hasManualEndPanel || shouldFitLowerDoorWithManualEndPanel) && (!isEditMode || shouldFitLowerDoorWithManualEndPanel) && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
+    const hasSlotOutsideEpTrim = !placedModule.isFreePlacement
+      && placedModule.slotCustomWidth === undefined
+      && typeof placedModule.customWidth === 'number'
+      && originalSlotWidthMm > furnitureWidthMm
+      && Math.abs(placedModule.customWidth - furnitureWidthMm) < 0.5;
+    if ((widthDifference > 20 || hasSlotOutsideEpTrim) && (!hasManualEndPanel || shouldFitLowerDoorWithManualEndPanel) && (!isEditMode || shouldFitLowerDoorWithManualEndPanel) && !isDraggingThis && !(slotInfo && slotInfo.hasColumn) && !needsEndPanelAdjustment) {
       // 기둥 커버도어가 아니면 furnitureWidthMm(customWidth/EP 반영)이 실제 가구 크기이므로 도어를 가구에 맞춤
       originalSlotWidthMm = furnitureWidthMm;
     }
@@ -2692,7 +2704,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 본체는 epOffsetX로 이동하지만 도어는 원래 슬롯 중앙에 있어야 하므로 역방향 오프셋
   if (placedModule.hasLeftEndPanel || placedModule.hasRightEndPanel) {
     doorWidthExpansion = 0;
-    if (!placedModule.isFreePlacement && !placedModule.customConfig) {
+    if (!placedModule.isFreePlacement && !placedModule.customConfig && placedModule.endPanelMode !== 'outside') {
       // 슬롯 모드: 본체가 epOffsetX만큼 이동하므로 도어를 역방향으로 되돌림
       const epThkDoor = mmToThreeUnits(resolvePetPanelThicknessMm(placedModule.endPanelThickness));
       const leftEpDoor = placedModule.hasLeftEndPanel ? epThkDoor : 0;
@@ -3244,6 +3256,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     || (spaceInfo.materialConfig as any)?.frameColor
     || '#D4C5A9';
   const sideFrameThickness = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
+  const globalBaseFrameOffsetMm = (spaceInfo.baseConfig as any)?.offset;
+  const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
+  const effectiveBaseFrameOffsetMm = useGlobalBaseFrameOffset && typeof globalBaseFrameOffsetMm === 'number'
+    ? globalBaseFrameOffsetMm
+    : (placedModule.baseFrameOffset ?? globalBaseFrameOffsetMm ?? 0);
   const shouldRenderSideWallFrames = isSideWallFurniture
     && !placedModule.moduleId?.includes('insert-frame')
     && !placedModule.isSurroundPanel;
@@ -3261,7 +3278,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return {
       height: mmToThreeUnits(visibleHeightMm),
       y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
-      z: depth / 2 - sideFrameThickness / 2 + mmToThreeUnits(placedModule.topFrameOffset ?? 0)
+      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits(placedModule.topFrameOffset ?? 0)
     };
   })();
   const sideBaseFrame = (() => {
@@ -3282,7 +3299,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return {
       height: mmToThreeUnits(visibleHeightMm),
       y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
-      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits((spaceInfo.baseConfig?.depth ?? 0) + (placedModule.baseFrameOffset ?? 0))
+      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits((spaceInfo.baseConfig?.depth ?? 0) + effectiveBaseFrameOffsetMm)
     };
   })();
 
@@ -4573,7 +4590,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   hasTopFrame={placedModule.hasTopFrame}
                   hasBase={placedModule.hasBase}
                   baseFrameHeight={placedModule.baseFrameHeight}
-                  baseFrameOffset={placedModule.baseFrameOffset}
+                  baseFrameOffset={effectiveBaseFrameOffsetMm}
                   baseFrameGap={(placedModule as any).baseFrameGap}
                   individualFloatHeight={placedModule.individualFloatHeight}
                   isCustomizable={placedModule.isCustomizable}

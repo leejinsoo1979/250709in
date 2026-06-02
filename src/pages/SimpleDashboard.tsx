@@ -513,6 +513,10 @@ const SimpleDashboard: React.FC = () => {
             ...(defaults.doorBottomGapUpper !== undefined && { doorBottomGapUpper: defaults.doorBottomGapUpper }),
             ...(defaults.doorTopGapLower !== undefined && { doorTopGapLower: defaults.doorTopGapLower }),
             ...(defaults.doorBottomGapLower !== undefined && { doorBottomGapLower: defaults.doorBottomGapLower }),
+            ...(defaults.doorTopGapLowerDoorLift !== undefined && { doorTopGapLowerDoorLift: defaults.doorTopGapLowerDoorLift }),
+            ...(defaults.doorBottomGapLowerDoorLift !== undefined && { doorBottomGapLowerDoorLift: defaults.doorBottomGapLowerDoorLift }),
+            ...(defaults.doorTopGapLowerTopDown !== undefined && { doorTopGapLowerTopDown: defaults.doorTopGapLowerTopDown }),
+            ...(defaults.doorBottomGapLowerTopDown !== undefined && { doorBottomGapLowerTopDown: defaults.doorBottomGapLowerTopDown }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'

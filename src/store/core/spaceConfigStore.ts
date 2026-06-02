@@ -244,8 +244,13 @@ export interface SpaceInfo {
   doorBottomGapTall?: number;
   doorTopGapUpper?: number;
   doorBottomGapUpper?: number;
-  doorTopGapLower?: number;
+  // 하부장 = 기본장(Lower) / 도어올림(LowerDoorLift) / 상판내림(LowerTopDown) 3종 분리
+  doorTopGapLower?: number;          // 기본 하부장
   doorBottomGapLower?: number;
+  doorTopGapLowerDoorLift?: number;  // 도어올림 하부장
+  doorBottomGapLowerDoorLift?: number;
+  doorTopGapLowerTopDown?: number;   // 상판내림 하부장
+  doorBottomGapLowerTopDown?: number;
 
   // 자유배치 벽 이격거리 잠금 (공간 레벨)
   // left: 왼쪽 벽에서의 잠금 이격거리 (mm), undefined면 잠금 안 됨

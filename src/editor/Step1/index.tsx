@@ -114,6 +114,10 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           ...(defaults.doorBottomGapUpper !== undefined && { doorBottomGapUpper: defaults.doorBottomGapUpper }),
           ...(defaults.doorTopGapLower !== undefined && { doorTopGapLower: defaults.doorTopGapLower }),
           ...(defaults.doorBottomGapLower !== undefined && { doorBottomGapLower: defaults.doorBottomGapLower }),
+          ...(defaults.doorTopGapLowerDoorLift !== undefined && { doorTopGapLowerDoorLift: defaults.doorTopGapLowerDoorLift }),
+          ...(defaults.doorBottomGapLowerDoorLift !== undefined && { doorBottomGapLowerDoorLift: defaults.doorBottomGapLowerDoorLift }),
+          ...(defaults.doorTopGapLowerTopDown !== undefined && { doorTopGapLowerTopDown: defaults.doorTopGapLowerTopDown }),
+          ...(defaults.doorBottomGapLowerTopDown !== undefined && { doorBottomGapLowerTopDown: defaults.doorBottomGapLowerTopDown }),
           // 프레임 설정 (surroundMode)
           ...(defaults.surroundMode ? {
             surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,

@@ -1919,7 +1919,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const isLowerCategory = moduleData?.category === 'lower';
       const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
         && spaceInfo.frameConfig?.top !== false;
-      const defaultTopGap = isDoorLift
+      // 카테고리별 글로벌 도어 갭 (공간설정 모달에서 셋팅한 값) — 하부장 3종/상부장/키큰장
+      const isUpperCategory = moduleData?.category === 'upper' || modId.includes('upper-cabinet');
+      const catTopGap = isUpperCategory
+        ? spaceInfo.doorTopGapUpper
+        : isLowerCategory
+          ? (isDoorLift ? spaceInfo.doorTopGapLowerDoorLift
+            : isTopDown ? spaceInfo.doorTopGapLowerTopDown
+              : spaceInfo.doorTopGapLower)
+          : spaceInfo.doorTopGapTall;
+      const catBottomGap = isUpperCategory
+        ? spaceInfo.doorBottomGapUpper
+        : isLowerCategory
+          ? (isDoorLift ? spaceInfo.doorBottomGapLowerDoorLift
+            : isTopDown ? spaceInfo.doorBottomGapLowerTopDown
+              : spaceInfo.doorBottomGapLower)
+          : spaceInfo.doorBottomGapTall;
+      const defaultTopGap = catTopGap ?? (isDoorLift
         ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
         : isTopDown
           ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, currentPlacedModule.hasTopEndPanel === true)
@@ -1927,17 +1943,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
             : isLowerCategory
               ? 20
-              : (isFullSurroundForDoorDefaults ? -3 : 5);
-      const defaultBottomGap = isTopDown || isDoorLift || isBasicLowerDoorGap
+              : (isFullSurroundForDoorDefaults ? -3 : 5));
+      const defaultBottomGap = catBottomGap ?? (isTopDown || isDoorLift || isBasicLowerDoorGap
         ? 5
         : isLowerCategory
           ? 2
-          : 25;
-      const rawTopGap = currentPlacedModule.doorTopGap;
+          : 25);
+      // 카테고리 글로벌(모달 셋팅)이 존재하면 개별값보다 우선한다.
+      // (사용자가 공간설정 모달에서 카테고리별로 셋팅한 값이 배치된 가구에 반영되도록)
+      const rawTopGap = catTopGap ?? currentPlacedModule.doorTopGap;
       const topDownNoEpDefaultGap = isTopDown
         ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, false)
         : undefined;
-      const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
+      // 카테고리 글로벌이 설정돼 있으면 매직넘버 치환을 건너뛰고 그 값을 그대로 사용한다.
+      const initialTopGap = (catTopGap !== undefined)
+        ? catTopGap
+        : !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
         : (isBasicLowerDoorGap && rawTopGap === 20)
           ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
@@ -1946,7 +1967,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           : (isTopDown && currentPlacedModule.hasTopEndPanel === true && rawTopGap === topDownNoEpDefaultGap)
             ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
-      const rawBotGap = currentPlacedModule.doorBottomGap;
+      const rawBotGap = catBottomGap ?? currentPlacedModule.doorBottomGap;
       const initialBottomGap = rawBotGap ?? defaultBottomGap;
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;

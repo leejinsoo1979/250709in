@@ -1125,20 +1125,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 카테고리별(키큰장/상부장/하부장) 글로벌 갭이 설정되어 있으면 우선 사용,
   // 없으면 기존 공통 doorTopGap/doorBottomGap으로 폴백. (개별 가구 값이 최우선)
   // ※ 카테고리 판별 플래그(isUpperCabinet/isLowerCabinet)는 아래에서 정의되므로 여기서 직접 계산.
-  const doorCategory: 'upper' | 'lower' | 'tall' =
-    (moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet'))
+  // 하부장은 기본장/도어올림(lower-door-lift-)/상판내림(lower-top-down-) 3종으로 세분화하여 각자 글로벌 갭을 따른다.
+  const __doorMid = moduleData?.id || '';
+  const __isLowerDoor = __doorMid.includes('lower-cabinet') || __doorMid.includes('dual-lower-cabinet')
+    || __doorMid.includes('lower-') || moduleData?.category === 'lower';
+  const doorCategory: 'upper' | 'lowerBasic' | 'lowerDoorLift' | 'lowerTopDown' | 'tall' =
+    (__doorMid.includes('upper-cabinet') || __doorMid.includes('dual-upper-cabinet'))
       ? 'upper'
-      : (moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet') || moduleData?.category === 'lower')
-        ? 'lower'
+      : __isLowerDoor
+        ? (__doorMid.includes('lower-door-lift-') ? 'lowerDoorLift'
+          : __doorMid.includes('lower-top-down-') ? 'lowerTopDown'
+            : 'lowerBasic')
         : 'tall';
   const categoryTopGap =
     doorCategory === 'upper' ? originalSpaceInfo.doorTopGapUpper
-      : doorCategory === 'lower' ? originalSpaceInfo.doorTopGapLower
-        : originalSpaceInfo.doorTopGapTall;
+      : doorCategory === 'lowerDoorLift' ? originalSpaceInfo.doorTopGapLowerDoorLift
+        : doorCategory === 'lowerTopDown' ? originalSpaceInfo.doorTopGapLowerTopDown
+          : doorCategory === 'lowerBasic' ? originalSpaceInfo.doorTopGapLower
+            : originalSpaceInfo.doorTopGapTall;
   const categoryBottomGap =
     doorCategory === 'upper' ? originalSpaceInfo.doorBottomGapUpper
-      : doorCategory === 'lower' ? originalSpaceInfo.doorBottomGapLower
-        : originalSpaceInfo.doorBottomGapTall;
+      : doorCategory === 'lowerDoorLift' ? originalSpaceInfo.doorBottomGapLowerDoorLift
+        : doorCategory === 'lowerTopDown' ? originalSpaceInfo.doorBottomGapLowerTopDown
+          : doorCategory === 'lowerBasic' ? originalSpaceInfo.doorBottomGapLower
+            : originalSpaceInfo.doorBottomGapTall;
   const doorTopGap = doorTopGapProp ?? categoryTopGap ?? originalSpaceInfo.doorTopGap ?? 0;
   const doorBottomGap = doorBottomGapProp ?? categoryBottomGap ?? originalSpaceInfo.doorBottomGap ?? 0;
 
@@ -1254,6 +1264,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 듀얼 가구인지 판단: moduleData ID 또는 PlacedModule.isDualSlot (커스텀 가구 지원)
   const isDualByModuleId = !isRightCornerSideDoor && (moduleData?.id?.startsWith('dual-') || storePlacedModule?.isDualSlot || false);
 
+  // 도어 폭 계산용 슬롯 정보 (기둥 침범 여부 판정). DoorModule 스코프엔 별도 slotInfo가 없으므로
+  // 배치 모듈에 저장된 columnSlotInfo를 사용한다. (없으면 undefined → 기둥 없음으로 취급)
+  const slotInfo = (storePlacedModule as any)?.columnSlotInfo;
+
   // 도어 크기 계산 — 가구 본체와 동일한 slotWidths(Math.floor) 기준 사용
   // columnWidth는 소수점이 유지되지만, 가구 본체는 slotWidths(정수 내림)를 사용하므로
   // 도어도 slotWidths 기준을 사용해야 doorGap이 정확히 3mm가 됨
@@ -1270,6 +1284,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else if (storePlacedModule?.slotCustomWidth !== undefined) {
     // slotCustomWidth가 있으면 최우선 사용 (사용자가 슬롯 너비를 조정한 경우)
     actualDoorWidth = storePlacedModule.slotCustomWidth;
+  } else if (
+    typeof storePlacedModule?.customWidth === 'number'
+    && storePlacedModule.customWidth > 0
+    && !(slotInfo && slotInfo.hasColumn)
+    && !(storePlacedModule.hasLeftEndPanel || storePlacedModule.hasRightEndPanel)
+  ) {
+    // 외측 EP 옆 슬롯 가구는 본체 폭이 customWidth로 줄어든다.
+    // 도어도 같은 기준을 써야 본체보다 원 슬롯 폭만큼 튀어나오지 않는다.
+    actualDoorWidth = storePlacedModule.customWidth;
   } else {
     // 슬롯 배치: slotWidths(가구 본체와 동일 기준) 우선, 없으면 effectiveColumnWidth fallback
     const storeSlotIndex = storePlacedModule?.slotIndex;
@@ -1307,7 +1330,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     && (storePlacedModule.hasLeftEndPanel || storePlacedModule.hasRightEndPanel)
     && typeof originalSlotWidth === 'number'
     && originalSlotWidth > 0;
-  if (shouldUseProvidedLowerDoorWidth) {
+  const shouldUseProvidedAdjustedDoorWidth = !isFree
+    && typeof originalSlotWidth === 'number'
+    && originalSlotWidth > 0
+    && originalSlotWidth < actualDoorWidth
+    && !(slotInfo && slotInfo.hasColumn);
+  if (shouldUseProvidedLowerDoorWidth || shouldUseProvidedAdjustedDoorWidth) {
     actualDoorWidth = originalSlotWidth;
   }
 

@@ -75,6 +75,12 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   doorSettingLowerEnabled: true,
   doorTopGapLower: 5,
   doorBottomGapLower: 25,
+  doorSettingLowerDoorLiftEnabled: true,
+  doorTopGapLowerDoorLift: 30,
+  doorBottomGapLowerDoorLift: 5,
+  doorSettingLowerTopDownEnabled: true,
+  doorTopGapLowerTopDown: 5,
+  doorBottomGapLowerTopDown: 5,
   // 가구재/백패널 두께
   panelThickness: 18,
   backPanelThickness: 9,
@@ -171,6 +177,7 @@ const Toggle: React.FC<{ options: { id: string; label: string }[]; selected: str
 /* ── Main Modal ── */
 const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSaved }) => {
   const [values, setValues] = useState<Required<SpaceConfigDefaults>>(SYSTEM_DEFAULTS);
+  const [loadedDefaults, setLoadedDefaults] = useState<Required<SpaceConfigDefaults>>(SYSTEM_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -191,15 +198,24 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
         if (defaults.doorBottomGapUpper === undefined && fallbackBottom !== undefined) categoryBackfill.doorBottomGapUpper = fallbackBottom;
         if (defaults.doorTopGapLower === undefined && fallbackTop !== undefined) categoryBackfill.doorTopGapLower = fallbackTop;
         if (defaults.doorBottomGapLower === undefined && fallbackBottom !== undefined) categoryBackfill.doorBottomGapLower = fallbackBottom;
-        setValues(prev => ({
-          ...prev,
+        // 하부장 도어올림/상판내림: 신규 필드는 기본 하부장 값으로 백필
+        const lowerTop = defaults.doorTopGapLower ?? fallbackTop;
+        const lowerBottom = defaults.doorBottomGapLower ?? fallbackBottom;
+        if (defaults.doorTopGapLowerDoorLift === undefined && lowerTop !== undefined) categoryBackfill.doorTopGapLowerDoorLift = lowerTop;
+        if (defaults.doorBottomGapLowerDoorLift === undefined && lowerBottom !== undefined) categoryBackfill.doorBottomGapLowerDoorLift = lowerBottom;
+        if (defaults.doorTopGapLowerTopDown === undefined && lowerTop !== undefined) categoryBackfill.doorTopGapLowerTopDown = lowerTop;
+        if (defaults.doorBottomGapLowerTopDown === undefined && lowerBottom !== undefined) categoryBackfill.doorBottomGapLowerTopDown = lowerBottom;
+        const nextValues = {
+          ...SYSTEM_DEFAULTS,
           ...cleanDefaults,
           ...categoryBackfill,
           furnitureDepthDefaults: {
-            ...prev.furnitureDepthDefaults,
+            ...SYSTEM_DEFAULTS.furnitureDepthDefaults,
             ...defaults.furnitureDepthDefaults,
           },
-        }));
+        } as Required<SpaceConfigDefaults>;
+        setValues(nextValues);
+        setLoadedDefaults(nextValues);
       }
       setLoading(false);
     };
@@ -230,6 +246,10 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     // → 모든 컴포넌트가 어느 필드를 읽든 같은 값 반영됨
     const topFrameHeight = values.topMoldingEnabled ? values.topMoldingSize : 0;
     const baseFrameHeight = values.baseboardEnabled ? values.baseboardSize : 0;
+    const lowerBaseFrameHeight = values.baseboardLowerEnabled ? values.baseboardLowerSize : 0;
+    const previousTopFrameHeight = loadedDefaults.topMoldingEnabled ? loadedDefaults.topMoldingSize : 0;
+    const previousBaseFrameHeight = loadedDefaults.baseboardEnabled ? loadedDefaults.baseboardSize : 0;
+    const previousLowerBaseFrameHeight = loadedDefaults.baseboardLowerEnabled ? loadedDefaults.baseboardLowerSize : 0;
     const baseFrameOffset = values.baseboardOffset;
     const lowerBaseFrameOffset = values.baseboardLowerOffset === 0 && baseFrameOffset !== 0
       ? baseFrameOffset
@@ -256,6 +276,12 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       const spaceState = useSpaceConfigStore.getState();
       const curFrameSize = spaceState.spaceInfo.frameSize ?? { top: 30, left: 18, right: 18 };
       const curBaseConfig = spaceState.spaceInfo.baseConfig ?? { type: 'floor', height: 65 };
+      const isDefaultNumber = (current: number | undefined, defaults: Array<number | undefined>) => (
+        current === undefined || defaults.some(defaultValue => defaultValue !== undefined && current === defaultValue)
+      );
+      const isLowerModule = (moduleId?: string) => (
+        moduleId?.startsWith('lower-') || moduleId?.includes('-lower-')
+      );
       const nextFrameSize = {
         ...curFrameSize,
         top: topFrameHeight,
@@ -293,34 +319,72 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
         doorBottomGapUpper: values.doorSettingUpperEnabled ? synced.doorBottomGapUpper : undefined,
         doorTopGapLower: values.doorSettingLowerEnabled ? synced.doorTopGapLower : undefined,
         doorBottomGapLower: values.doorSettingLowerEnabled ? synced.doorBottomGapLower : undefined,
+        // 하부장 도어올림/상판내림 (체크 OFF면 undefined → 공통 폴백)
+        doorTopGapLowerDoorLift: values.doorSettingLowerDoorLiftEnabled ? synced.doorTopGapLowerDoorLift : undefined,
+        doorBottomGapLowerDoorLift: values.doorSettingLowerDoorLiftEnabled ? synced.doorBottomGapLowerDoorLift : undefined,
+        doorTopGapLowerTopDown: values.doorSettingLowerTopDownEnabled ? synced.doorTopGapLowerTopDown : undefined,
+        doorBottomGapLowerTopDown: values.doorSettingLowerTopDownEnabled ? synced.doorBottomGapLowerTopDown : undefined,
         furnitureDepthDefaults: values.furnitureDepthDefaults,
       });
       const furnitureState = useFurnitureStore.getState();
       furnitureState.placedModules
         .forEach((module) => {
           if (module.isSurroundPanel) return;
-          const isLower = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('-lower-');
+          const isLower = isLowerModule(module.moduleId);
+          const currentTopHeight = module.topFrameThickness;
+          const currentBaseHeight = module.baseFrameHeight;
           const currentTopGap = module.topFrameGap;
           const currentOffset = module.baseFrameOffset;
           const currentGap = module.baseFrameGap;
+          const previousSpaceTopHeight = curFrameSize.top ?? 30;
+          const previousSpaceBaseHeight = curBaseConfig.height ?? 65;
           const previousTopGap = (curFrameSize as any)?.topGap ?? 0;
           const previousSpaceOffset = (curBaseConfig as any)?.offset ?? 0;
           const previousSpaceGap = (curBaseConfig as any)?.gap ?? 0;
+          const wasUsingDefaultTopHeight = isDefaultNumber(currentTopHeight, [
+            previousTopFrameHeight,
+            previousSpaceTopHeight,
+            SYSTEM_DEFAULTS.topMoldingSize,
+            SYSTEM_DEFAULTS.frameTop,
+          ]);
+          const wasUsingDefaultBaseHeight = isDefaultNumber(currentBaseHeight, isLower ? [
+            previousLowerBaseFrameHeight,
+            previousSpaceBaseHeight,
+            SYSTEM_DEFAULTS.baseboardLowerSize,
+            105,
+          ] : [
+            previousBaseFrameHeight,
+            previousSpaceBaseHeight,
+            SYSTEM_DEFAULTS.baseboardSize,
+            SYSTEM_DEFAULTS.baseHeight,
+          ]);
           const wasUsingDefaultTopGap =
             currentTopGap === undefined ||
             currentTopGap === previousTopGap ||
+            currentTopGap === loadedDefaults.topMoldingGap ||
             currentTopGap === 0;
           const wasUsingDefaultOffset =
             currentOffset === undefined ||
             currentOffset === previousSpaceOffset ||
+            currentOffset === loadedDefaults.baseboardOffset ||
+            currentOffset === loadedDefaults.baseFrameOffset ||
+            (isLower && currentOffset === loadedDefaults.baseboardLowerOffset) ||
             currentOffset === 0 ||
             (isLower && currentOffset === 65);
           const wasUsingDefaultGap =
             currentGap === undefined ||
             currentGap === previousSpaceGap ||
+            currentGap === loadedDefaults.baseboardGap ||
+            (isLower && currentGap === loadedDefaults.baseboardLowerGap) ||
             currentGap === 0;
 
           const updates: Record<string, number> = {};
+          if (module.hasTopFrame !== false && wasUsingDefaultTopHeight) {
+            updates.topFrameThickness = topFrameHeight;
+          }
+          if (module.hasBase !== false && wasUsingDefaultBaseHeight) {
+            updates.baseFrameHeight = isLower ? lowerBaseFrameHeight : baseFrameHeight;
+          }
           if (module.hasTopFrame !== false && wasUsingDefaultTopGap) {
             updates.topFrameGap = synced.topMoldingGap ?? 0;
           }
@@ -335,8 +399,79 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               : synced.baseFrameGap;
           }
 
+          // 도어 셋팅 — 카테고리별 갭을 배치된 가구 개별값에 덮어쓴다.
+          // (모달에서 셋팅하면 이미 배치된 가구도 새 값으로 갱신되어야 함)
+          {
+            const mid = module.moduleId || '';
+            const isUpperMod = mid.includes('upper-cabinet') || mid.includes('dual-upper-cabinet');
+            if (isUpperMod) {
+              if (values.doorSettingUpperEnabled) {
+                updates.doorTopGap = synced.doorTopGapUpper;
+                updates.doorBottomGap = synced.doorBottomGapUpper;
+              }
+            } else if (isLower) {
+              const isDoorLift = mid.includes('lower-door-lift-');
+              const isTopDown = mid.includes('lower-top-down-');
+              if (isDoorLift) {
+                if (values.doorSettingLowerDoorLiftEnabled) {
+                  updates.doorTopGap = synced.doorTopGapLowerDoorLift;
+                  updates.doorBottomGap = synced.doorBottomGapLowerDoorLift;
+                }
+              } else if (isTopDown) {
+                if (values.doorSettingLowerTopDownEnabled) {
+                  updates.doorTopGap = synced.doorTopGapLowerTopDown;
+                  updates.doorBottomGap = synced.doorBottomGapLowerTopDown;
+                }
+              } else {
+                if (values.doorSettingLowerEnabled) {
+                  updates.doorTopGap = synced.doorTopGapLower;
+                  updates.doorBottomGap = synced.doorBottomGapLower;
+                }
+              }
+            } else {
+              // 키큰장(full)
+              if (values.doorSettingTallEnabled) {
+                updates.doorTopGap = synced.doorTopGapTall;
+                updates.doorBottomGap = synced.doorBottomGapTall;
+              }
+            }
+          }
+
           if (Object.keys(updates).length > 0) furnitureState.updatePlacedModule(module.id, updates);
         });
+      const guides = spaceState.spaceInfo.freePlacementGuides ?? [];
+      if (guides.length > 0) {
+        const nextGuides = guides.map((slot) => {
+          const isLower = (slot.guideZone || 'full') === 'lower';
+          const isUpper = (slot.guideZone || 'full') === 'upper';
+          const updates: Record<string, number> = {};
+          if (!isLower && slot.hasTopFrame !== false && isDefaultNumber(slot.topFrameThickness, [
+            previousTopFrameHeight,
+            curFrameSize.top,
+            SYSTEM_DEFAULTS.topMoldingSize,
+            SYSTEM_DEFAULTS.frameTop,
+          ])) {
+            updates.topFrameThickness = topFrameHeight;
+          }
+          if (!isUpper && slot.hasBase !== false && isDefaultNumber(slot.baseFrameHeight, isLower ? [
+            previousLowerBaseFrameHeight,
+            curBaseConfig.height,
+            SYSTEM_DEFAULTS.baseboardLowerSize,
+            105,
+          ] : [
+            previousBaseFrameHeight,
+            curBaseConfig.height,
+            SYSTEM_DEFAULTS.baseboardSize,
+            SYSTEM_DEFAULTS.baseHeight,
+          ])) {
+            updates.baseFrameHeight = isLower ? lowerBaseFrameHeight : baseFrameHeight;
+          }
+          return Object.keys(updates).length > 0 ? { ...slot, ...updates } : slot;
+        });
+        if (nextGuides.some((slot, index) => slot !== guides[index])) {
+          spaceState.setSpaceInfo({ freePlacementGuides: nextGuides });
+        }
+      }
       window.dispatchEvent(new CustomEvent('space-defaults-updated', { detail: synced }));
       console.log('[SpaceDefaultsModal] saved & applied:', {
         topMoldingEnabled: values.topMoldingEnabled,
@@ -653,8 +788,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             </div>
             {values.doorSettingTallEnabled && (
               <div className={styles.row}>
-                <NumberInput label="상단갭" value={values.doorTopGapTall} onChange={h('doorTopGapTall')} min={0} max={200} step={1} />
-                <NumberInput label="하단갭" value={values.doorBottomGapTall} onChange={h('doorBottomGapTall')} min={0} max={200} step={1} />
+                <NumberInput label="상단갭" value={values.doorTopGapTall} onChange={h('doorTopGapTall')} min={-200} max={200} step={1} />
+                <NumberInput label="하단갭" value={values.doorBottomGapTall} onChange={h('doorBottomGapTall')} min={-200} max={200} step={1} />
               </div>
             )}
           </div>
@@ -675,32 +810,54 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             </div>
             {values.doorSettingUpperEnabled && (
               <div className={styles.row}>
-                <NumberInput label="상단갭" value={values.doorTopGapUpper} onChange={h('doorTopGapUpper')} min={0} max={200} step={1} />
-                <NumberInput label="하단갭" value={values.doorBottomGapUpper} onChange={h('doorBottomGapUpper')} min={0} max={200} step={1} />
+                <NumberInput label="상단갭" value={values.doorTopGapUpper} onChange={h('doorTopGapUpper')} min={-200} max={200} step={1} />
+                <NumberInput label="하단갭" value={values.doorBottomGapUpper} onChange={h('doorBottomGapUpper')} min={-200} max={200} step={1} />
               </div>
             )}
           </div>
 
-          {/* 도어 셋팅 — 하부장 (몸통 기준) */}
+          {/* 도어 셋팅 — 하부장 (기본장/도어올림/상판내림 3종 압축) */}
           <div className={styles.section}>
             <div className={styles.sectionLabel}>
               <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
                 <input
                   type="checkbox"
-                  checked={!!values.doorSettingLowerEnabled}
-                  onChange={(e) => set('doorSettingLowerEnabled', e.target.checked)}
+                  checked={!!(values.doorSettingLowerEnabled || values.doorSettingLowerDoorLiftEnabled || values.doorSettingLowerTopDownEnabled)}
+                  onChange={(e) => {
+                    set('doorSettingLowerEnabled', e.target.checked);
+                    set('doorSettingLowerDoorLiftEnabled', e.target.checked);
+                    set('doorSettingLowerTopDownEnabled', e.target.checked);
+                  }}
                   style={{ accentColor: 'var(--theme-primary)' }}
                 />
                 도어 셋팅 — 하부장
                 <span style={{ marginLeft: 6, fontSize: 11, color: 'var(--theme-text-muted)' }}>(몸통기준)</span>
               </label>
             </div>
-            {values.doorSettingLowerEnabled && (
-              <div className={styles.row}>
-                <NumberInput label="상단갭" value={values.doorTopGapLower} onChange={h('doorTopGapLower')} min={0} max={200} step={1} />
-                <NumberInput label="하단갭" value={values.doorBottomGapLower} onChange={h('doorBottomGapLower')} min={0} max={200} step={1} />
-              </div>
-            )}
+            {(values.doorSettingLowerEnabled || values.doorSettingLowerDoorLiftEnabled || values.doorSettingLowerTopDownEnabled) && (() => {
+              const rows: { label: string; top: keyof SpaceConfigDefaults; bottom: keyof SpaceConfigDefaults }[] = [
+                { label: '기본장', top: 'doorTopGapLower', bottom: 'doorBottomGapLower' },
+                { label: '도어올림', top: 'doorTopGapLowerDoorLift', bottom: 'doorBottomGapLowerDoorLift' },
+                { label: '상판내림', top: 'doorTopGapLowerTopDown', bottom: 'doorBottomGapLowerTopDown' },
+              ];
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {/* 헤더 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr', alignItems: 'center', gap: 8, fontSize: 11, color: 'var(--theme-text-secondary, #7a7f9a)' }}>
+                    <span />
+                    <span>상단갭</span>
+                    <span>하단갭</span>
+                  </div>
+                  {rows.map((r) => (
+                    <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '64px 1fr 1fr', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, color: 'var(--theme-text)' }}>{r.label}</span>
+                      <NumberInput label="" value={values[r.top] as number} onChange={h(r.top)} min={-200} max={200} step={1} />
+                      <NumberInput label="" value={values[r.bottom] as number} onChange={h(r.bottom)} min={-200} max={200} step={1} />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
 
           {/* 가구 배치 기본 너비 (자유배치일 때만) */}
