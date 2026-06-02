@@ -3126,7 +3126,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 앞 공간 가구인지 확인 (isColumnCFront는 나중에 정의되므로 직접 체크)
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
   const isSideWallFurniture = placedModule.placementWall === 'left' || placedModule.placementWall === 'right';
-  const defaultModuleDepthMm = actualModuleData?.dimensions?.depth || actualDepthMm;
+  const defaultModuleDepthMm = categoryDefaultDepth
+    ?? (actualModuleData as any)?.defaultDepth
+    ?? actualModuleData?.dimensions?.depth
+    ?? actualDepthMm;
   const resolveSectionDepthForRender = (sectionDepth?: number) => {
     if (sectionDepth === undefined || sectionDepth === null) return actualDepthMm;
     return Math.abs(sectionDepth - defaultModuleDepthMm) < 0.5
@@ -3162,15 +3165,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     || midForZ.startsWith('lower-')
     || midForZ.includes('dual-lower-');
   let furnitureZ: number;
-  if (placedModule.guideDepthPlacement || isFrontSpaceFurniture || isSideWallFurniture) {
+  if (isFrontSpaceFurniture || isSideWallFurniture) {
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
     // 상부장: 뒷면을 하부장 뒷면에 정렬
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
   } else if (isKitchenTallCabinet || isBackAlignedTallCabinet) {
-    // 주방 키큰장(full): 뒷벽이격 0이면 모두 뒷라인이 같아야 한다.
-    // 앞면 정렬을 쓰면 모듈별 깊이 차이만큼 뒷벽에서 떠 보인다.
-    furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
+    const baseDepth = mmToThreeUnits(defaultModuleDepthMm);
+    const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset;
+    const fixedFrontZ = fixedBackZ + baseDepth;
+    furnitureZ = usesUnifiedSectionDepthDirection && lowerSectionDir === 'back'
+      ? fixedFrontZ - depth / 2
+      : fixedBackZ + depth / 2;
   } else if (isLowerForZ) {
     const lowerBaseDepth = mmToThreeUnits(categoryDefaultDepth ?? defaultModuleDepthMm);
     const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset;
@@ -3208,7 +3214,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 뒷벽과 이격: 기본 위치 유지(0=앞면정렬). 양수면 앞으로 이동.
   // (키큰장찬넬은 insertFrontInsetMm으로 내부 프레임만 들이고 가구 위치는 이동 안 함)
   const backWallGapMm = placedModule.backWallGap ?? 0;
-  if (!placedModule.guideDepthPlacement && !isFrontSpaceFurniture && backWallGapMm > 0) {
+  if (!isFrontSpaceFurniture && backWallGapMm > 0) {
     furnitureZ += mmToThreeUnits(backWallGapMm);
   }
 
@@ -3266,11 +3272,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     || (spaceInfo.materialConfig as any)?.frameColor
     || '#D4C5A9';
   const sideFrameThickness = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
+  const globalTopFrameOffsetMm = (spaceInfo.frameSize as any)?.topOffset;
+  const useGlobalTopFrameOffset = spaceInfo.guideTopFrameAllMode ?? true;
+  const effectiveTopFrameOffsetMm = typeof placedModule.topFrameOffset === 'number'
+    ? placedModule.topFrameOffset
+    : (useGlobalTopFrameOffset && typeof globalTopFrameOffsetMm === 'number'
+      ? globalTopFrameOffsetMm
+      : (globalTopFrameOffsetMm ?? 0));
   const globalBaseFrameOffsetMm = (spaceInfo.baseConfig as any)?.offset;
   const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
-  const effectiveBaseFrameOffsetMm = useGlobalBaseFrameOffset && typeof globalBaseFrameOffsetMm === 'number'
-    ? globalBaseFrameOffsetMm
-    : (placedModule.baseFrameOffset ?? globalBaseFrameOffsetMm ?? 0);
+  const effectiveBaseFrameOffsetMm = typeof placedModule.baseFrameOffset === 'number'
+    ? placedModule.baseFrameOffset
+    : (useGlobalBaseFrameOffset && typeof globalBaseFrameOffsetMm === 'number'
+      ? globalBaseFrameOffsetMm
+      : (globalBaseFrameOffsetMm ?? 0));
   const shouldRenderSideWallFrames = isSideWallFurniture
     && !placedModule.moduleId?.includes('insert-frame')
     && !placedModule.isSurroundPanel;
@@ -3280,7 +3295,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (actualModuleData?.category === 'lower') return null;
 
     const rawHeightMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm, placedModule.topFrameGap ?? 0)) : 0;
+    const gapMm = rawHeightMm > 0
+      ? Math.max(0, Math.min(rawHeightMm, placedModule.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0))
+      : 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
     if (visibleHeightMm <= 0.5) return null;
 
@@ -3288,7 +3305,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return {
       height: mmToThreeUnits(visibleHeightMm),
       y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
-      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits(placedModule.topFrameOffset ?? 0)
+      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits(effectiveTopFrameOffsetMm)
     };
   })();
   const sideBaseFrame = (() => {
@@ -3309,7 +3326,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return {
       height: mmToThreeUnits(visibleHeightMm),
       y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
-      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits((spaceInfo.baseConfig?.depth ?? 0) + effectiveBaseFrameOffsetMm)
+      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits(20 + (spaceInfo.baseConfig?.depth ?? 0) + effectiveBaseFrameOffsetMm)
     };
   })();
 
@@ -4595,7 +4612,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
                   topFrameThickness={placedModule.topFrameThickness}
-                  topFrameOffset={placedModule.topFrameOffset}
+                  topFrameOffset={effectiveTopFrameOffsetMm}
                   topFrameGap={placedModule.topFrameGap}
                   hasTopFrame={placedModule.hasTopFrame}
                   hasBase={placedModule.hasBase}

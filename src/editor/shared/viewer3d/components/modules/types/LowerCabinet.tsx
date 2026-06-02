@@ -1281,6 +1281,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   adjustedWidth,
   slotWidths, // 듀얼 가구의 개별 슬롯 너비들
   showFurniture = true,
+  lowerSectionDepth,
+  upperSectionDepth,
+  lowerSectionDepthDirection = 'front',
+  upperSectionDepthDirection = 'front',
   lowerSectionTopOffset,
   placedFurnitureId,
   panelGrainDirections,
@@ -1437,6 +1441,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
+    lowerSectionDepth,
+    upperSectionDepth,
     backPanelThicknessMm: backPanelThickness
   });
   const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
@@ -2013,6 +2019,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               spaceInfo={spaceInfo}
               moduleData={moduleData}
               placedFurnitureId={placedFurnitureId}
+              lowerSectionDepthMm={baseFurniture.lowerSectionDepthMm}
+              upperSectionDepthMm={baseFurniture.upperSectionDepthMm}
+              lowerSectionDepthDirection={lowerSectionDepthDirection}
+              upperSectionDepthDirection={upperSectionDepthDirection}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
               renderMode={renderMode}
               isFloating={isFloating}
@@ -2288,6 +2298,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     - sideBaseFrameDepth / 2
                     - mmToUnits(spaceInfo?.baseConfig?.depth ?? 0)
                     - mmToUnits(sideBaseFrameOffsetMm);
+                  if (typeof window !== 'undefined' && (window as any).__FRAME_OFFSET_DEBUG__) {
+                    console.log('[FRAME_OFFSET_DEBUG][LowerCabinet/side-base]', {
+                      placedFurnitureId,
+                      sidePlacedFurnitureId,
+                      sideCabinetDepth,
+                      sideBaseFrameDepth,
+                      baseConfigDepth: spaceInfo?.baseConfig?.depth ?? 0,
+                      sideBaseFrameOffsetMm,
+                      sideBaseFrameZ,
+                      guideBaseFrameAllMode: spaceInfo?.guideBaseFrameAllMode,
+                    });
+                  }
                   const sideBaseFrameY = sideCabinetBottomY - sideBaseFrameHeight / 2;
                   const shouldRenderSideBaseFrame = hasBase !== false
                     && sideBaseFrameHeightMm > 0

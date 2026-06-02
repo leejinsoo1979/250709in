@@ -1124,15 +1124,14 @@ const Configurator: React.FC = () => {
     setRenderMode('solid');
   }, []);
 
-  // 상부장 topFrameOffset 자동 동기화: surroundType 변경 시에만 1회 동기화
-  // (placedModules deps 제거 — 사용자가 옵셋 0 등으로 변경 시 자동 23으로 되돌리는 문제 방지)
+  // 서라운드 변경 시 도어 상단갭만 보정한다.
+  // 상단몰딩 옵셋은 사용자가 설정한 값을 보존한다.
   useEffect(() => {
     if (isLoadingProjectRef.current) return;
 	    const isSurround = spaceInfo.surroundType === 'surround';
 	    const isFullSurroundDoorDefault = isSurround && spaceInfo.frameConfig?.top !== false;
 	    placedModules.forEach(m => {
 	      const isShelfSplit = m.moduleId?.includes('shelf-split');
-	      const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
 	      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
 	      if (isShelfSplit && m.hasDoor) {
 	        const targetTopGap = isFullSurroundDoorDefault && m.hasTopFrame !== false ? -3 : 5;
@@ -1150,22 +1149,39 @@ const Configurator: React.FC = () => {
 	      if (!isShelfSplit && isFullSurroundDoorDefault && m.hasDoor && !isLower && m.hasTopFrame !== false && (m.doorTopGap === undefined || m.doorTopGap === 5)) {
 	        updatePlacedModule(m.id, { doorTopGap: -3 });
 	      }
-      if (!isUpper) return;
-      // 옵셋이 명시적으로 설정 안 된 경우(undefined)에만 기본값 적용
-      if (isSurround) {
-        if (m.topFrameOffset === undefined) {
-          updatePlacedModule(m.id, { topFrameOffset: 23 });
-        }
-      } else {
-        // 노서라운드 전환 시에만 잔재값 0으로 리셋 (이후 사용자 입력은 보존)
-        if (m.topFrameOffset !== undefined && m.topFrameOffset !== 0) {
-          updatePlacedModule(m.id, { topFrameOffset: 0 });
-        }
-      }
     });
     // surroundType / frameConfig.top 변경 시에만 실행 (placedModules 제외)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spaceInfo.surroundType, spaceInfo.frameConfig?.top]);
+
+  useEffect(() => {
+    if (isLoadingProjectRef.current) return;
+    const topAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+    const baseAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+    const globalTopOffset = (spaceInfo.frameSize as any)?.topOffset;
+    const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset;
+    placedModules.forEach(m => {
+      if (m.isSurroundPanel || m.moduleId?.includes('insert-frame')) return;
+      const category = getModuleCategory(m);
+      const updates: any = {};
+      if (topAllMode && typeof globalTopOffset === 'number' && (category === 'upper' || category === 'full') && m.topFrameOffset !== globalTopOffset) {
+        updates.topFrameOffset = globalTopOffset;
+      }
+      if (baseAllMode && typeof globalBaseOffset === 'number' && (category === 'lower' || category === 'full') && m.baseFrameOffset !== globalBaseOffset) {
+        updates.baseFrameOffset = globalBaseOffset;
+      }
+      if (Object.keys(updates).length > 0) {
+        updatePlacedModule(m.id, updates);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    spaceInfo.guideTopFrameAllMode,
+    spaceInfo.guideBaseFrameAllMode,
+    (spaceInfo.frameSize as any)?.topOffset,
+    (spaceInfo.baseConfig as any)?.offset,
+    placedModules
+  ]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
@@ -1971,6 +1987,11 @@ const Configurator: React.FC = () => {
             if (defaults) {
               const defLeft = defaults.gapLeft ?? 1.5;
               const defRight = defaults.gapRight ?? 1.5;
+              const defTopOffset = defaults.topMoldingOffset ?? defaults.frameTopOffset;
+              const defBaseOffset = defaults.baseboardOffset ?? defaults.baseFrameOffset;
+              const defBaseLowerOffset = defaults.baseboardLowerOffset === 0 && (defBaseOffset ?? 0) !== 0
+                ? defBaseOffset
+                : (defaults.baseboardLowerOffset ?? defBaseOffset);
               const savedLeft = spaceConfig.gapConfig?.left;
               const savedRight = spaceConfig.gapConfig?.right;
               spaceConfig.gapConfig = {
@@ -1978,6 +1999,27 @@ const Configurator: React.FC = () => {
                 left: spaceConfig.wallConfig?.left ? (savedLeft ?? defLeft) : (savedLeft ?? 0),
                 right: spaceConfig.wallConfig?.right ? (savedRight ?? defRight) : (savedRight ?? 0),
               };
+              if (typeof defTopOffset === 'number' && defTopOffset !== 0) {
+                const savedTopOffset = (spaceConfig.frameSize as any)?.topOffset;
+                if (savedTopOffset === undefined || savedTopOffset === 0) {
+                  spaceConfig.frameSize = {
+                    ...(spaceConfig.frameSize || { left: 50, right: 50, top: 30 }),
+                    topOffset: defTopOffset
+                  } as any;
+                }
+              }
+              if (typeof defBaseOffset === 'number' && defBaseOffset !== 0) {
+                const savedBaseOffset = (spaceConfig.baseConfig as any)?.offset;
+                if (savedBaseOffset === undefined || savedBaseOffset === 0) {
+                  spaceConfig.baseConfig = {
+                    ...(spaceConfig.baseConfig || { type: 'floor', placementType: 'ground' }),
+                    offset: defBaseOffset
+                  } as any;
+                }
+              }
+              if (typeof defBaseLowerOffset === 'number' && defBaseLowerOffset !== 0 && (spaceConfig.baseboardLowerOffset === undefined || spaceConfig.baseboardLowerOffset === 0)) {
+                spaceConfig.baseboardLowerOffset = defBaseLowerOffset;
+              }
             }
           } catch { /* noop */ }
         }
@@ -1989,20 +2031,21 @@ const Configurator: React.FC = () => {
         resetSpaceInfo();
         setSpaceInfo(normalizedSpaceConfig);
         setPreviousSpaceInfo(normalizedSpaceConfig);
-        // 상부장 topFrameOffset 마이그레이션:
-        // - 서라운드: 미설정/0 → 23
-        // - 노서라운드: 23 등 잔재값이 남아있으면 → 0 (UI/렌더와 데이터 일치)
-        const isSurroundLoaded = normalizedSpaceConfig.surroundType === 'surround';
+        const loadedTopOffset = (normalizedSpaceConfig.frameSize as any)?.topOffset;
+        const loadedBaseOffset = (normalizedSpaceConfig.baseConfig as any)?.offset;
+        const loadedTopAllMode = normalizedSpaceConfig.guideTopFrameAllMode ?? true;
+        const loadedBaseAllMode = normalizedSpaceConfig.guideBaseFrameAllMode ?? true;
         const migratedModules = (project.furniture?.placedModules || []).map((m: any) => {
-          const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
-          if (!isUpper) return m;
-          if (isSurroundLoaded && (m.topFrameOffset === undefined || m.topFrameOffset === 0)) {
-            return { ...m, topFrameOffset: 23 };
+          if (m.isSurroundPanel || m.moduleId?.includes('insert-frame')) return m;
+          const category = getModuleCategory(m);
+          const updates: any = {};
+          if (loadedTopAllMode && typeof loadedTopOffset === 'number' && (category === 'upper' || category === 'full')) {
+            updates.topFrameOffset = loadedTopOffset;
           }
-          if (!isSurroundLoaded && m.topFrameOffset !== undefined && m.topFrameOffset !== 0) {
-            return { ...m, topFrameOffset: 0 };
+          if (loadedBaseAllMode && typeof loadedBaseOffset === 'number' && (category === 'lower' || category === 'full')) {
+            updates.baseFrameOffset = loadedBaseOffset;
           }
-          return m;
+          return Object.keys(updates).length > 0 ? { ...m, ...updates } : m;
         });
         if (!isLatestDesignLoad(loadKey)) {
           return;
@@ -7359,7 +7402,8 @@ const Configurator: React.FC = () => {
                   // 키큰장(full)은 상단몰딩 = 공간높이 - 받침대 - 가구높이
                   if (cat === 'upper') {
                     const upperTopFrame = mod.topFrameThickness ?? globalTop;
-                    const upperOffsetDefault = spaceInfo.surroundType === 'surround' ? 23 : 0;
+                    const globalTopOffsetLocal = (spaceInfo.frameSize as any)?.topOffset;
+                    const upperOffsetDefault = globalTopOffsetLocal ?? (spaceInfo.surroundType === 'surround' ? 23 : 0);
                     return <FrameOffsetRow key={`top-${mod.id}`}
                       num={tn} label="(상)"
                       enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? upperOffsetDefault}
@@ -7405,7 +7449,7 @@ const Configurator: React.FC = () => {
                       ?? Math.max(0, effectiveSpaceHeight - baseH - floatH - modHeight));
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
-                    enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
+                    enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? ((spaceInfo.frameSize as any)?.topOffset ?? 0)}
                     gap={mod.hasTopFrame === false ? defaultIfZeroFree(mod.topFrameGap, actualTopFrameSize) : defaultIfZeroFree(mod.topFrameGap, globalTopGapLocal)}
                     onToggle={() => {
                       const newVal = !(mod.hasTopFrame !== false);
@@ -8174,7 +8218,7 @@ const Configurator: React.FC = () => {
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
                       const firstIsUpper = firstMod?.moduleId?.includes('upper-cabinet') || firstMod?.moduleId?.startsWith('upper-');
-                      const topOffsetDefault = (firstIsUpper && spaceInfo.surroundType === 'surround') ? 23 : 0;
+                      const topOffsetDefault = (spaceInfo.frameSize as any)?.topOffset ?? ((firstIsUpper && spaceInfo.surroundType === 'surround') ? 23 : 0);
                       return <React.Fragment key={`merged-top-${gIdx}`}>{renderMergedFrameRow(
                         group.label,
                         allEnabled,
@@ -8407,7 +8451,7 @@ const Configurator: React.FC = () => {
                         const cat = getModuleCategory(mod);
                         if (cat === 'lower') return null;
                         topNum++;
-                        const topOffsetDefault = (cat === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
+                        const topOffsetDefault = (spaceInfo.frameSize as any)?.topOffset ?? ((cat === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0);
                         return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
                           `${toAlpha(topNum)}(상)`,
                           mod.hasTopFrame !== false,

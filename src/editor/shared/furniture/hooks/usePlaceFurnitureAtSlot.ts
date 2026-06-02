@@ -731,9 +731,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     hasTopFrame: shouldHaveTopFrame,
     topFrameThickness,
     ...(initialTopFrameGap > 0 ? { topFrameGap: initialTopFrameGap } : {}),
-    // 서라운드 + 상부장은 상단 몰딩 옵셋 기본 23mm
+    // 서라운드 + 상부장은 공간 설정의 상단 몰딩 옵셋을 기본값으로 사용
     ...((moduleData.category === 'upper' && spaceInfo.surroundType === 'surround')
-         ? { topFrameOffset: 23 } : {}),
+         ? { topFrameOffset: typeof spaceInfo.frameSize?.topOffset === 'number' ? spaceInfo.frameSize.topOffset : 23 } : {}),
     zone: targetSlot.zone,
     ...(customConfig !== undefined && { customConfig }),
     ...(isCustomizable !== undefined && { isCustomizable }),

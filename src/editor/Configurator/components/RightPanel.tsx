@@ -1104,6 +1104,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   // 사용자가 설정한 기본 프레임/받침대 디폴트 (없으면 시스템 폴백)
   const [userDefaults, setUserDefaults] = useState<{
     frameTop?: number;
+    topOffset?: number;
     topGap?: number;
     baseHeight?: number;
     baseOffset?: number;
@@ -1134,6 +1135,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	        frameTop: d.topMoldingEnabled === false ? 0 : (
 	          d.topMoldingSize !== undefined ? d.topMoldingSize : d.frameTop
 	        ),
+	        topOffset: d.topMoldingOffset ?? d.frameTopOffset,
 	        topGap: d.topMoldingGap,
 	        baseHeight: d.baseboardEnabled === false ? 0 : (
 	          d.baseboardSize !== undefined ? d.baseboardSize : d.baseHeight
@@ -1688,13 +1690,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalTopRaw = resolveDefaultBackedRawSize(spaceInfo.frameSize?.top, userDefaults.frameTop ?? 30, globalTopGap);
               const globalTopEnabled = globalTopRaw > 0;
               const globalTopThickness = globalTopRaw > 0 ? globalTopRaw : Math.max(30, globalTopGap);
-              const globalTopOffset = frameSize.topOffset ?? 0;
+              const globalTopOffset = frameSize.topOffset ?? userDefaults.topOffset ?? 0;
               const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
               const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? userDefaults.baseGap ?? 0) : 0;
               const globalBaseHeight = globalBaseEnabled
                 ? resolveDefaultBackedRawSize(spaceInfo.baseConfig?.height, userDefaults.baseHeight ?? 65, globalBaseGap)
                 : Math.max(65, spaceInfo.baseConfig?.height || userDefaults.baseHeight || 65);
-              const globalBaseOffset = baseConfig.offset ?? 0;
+              const globalBaseOffset = baseConfig.offset ?? userDefaults.baseOffset ?? 0;
               const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
               const defaultIfZero = (value: number | undefined, fallback: number) => (
                 value === undefined ? fallback : value
@@ -1904,7 +1906,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                const frameSize = (spaceInfo.frameSize || {}) as any;
 	                const baseConfig = (spaceInfo.baseConfig || {}) as any;
 	                const topEnabled = (spaceInfo.frameSize?.top ?? userDefaults.frameTop ?? 0) > 0;
-	                const topOffset = frameSize.topOffset ?? 0;
+	                const topOffset = frameSize.topOffset ?? userDefaults.topOffset ?? 0;
 	                const topGap = Math.max(0, frameSize.topGap ?? userDefaults.topGap ?? 0);
 	                const topSize = topEnabled ? resolveDefaultBackedRawSize(spaceInfo.frameSize?.top, userDefaults.frameTop ?? 30, topGap) : 0;
 	                const baseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? userDefaults.baseHeight ?? 0) > 0;

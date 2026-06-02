@@ -2680,8 +2680,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (Array.isArray((currentPlacedModule as any).sectionDepths)) {
       updates.sectionDepths = (currentPlacedModule as any).sectionDepths.map(() => newDepth);
     }
+    const latestPlacedModule = useFurnitureStore.getState().placedModules.find(module => module.id === currentPlacedModule.id);
+    const bodyDepthDirection = latestPlacedModule?.lowerSectionDepthDirection
+      ?? latestPlacedModule?.upperSectionDepthDirection
+      ?? currentPlacedModule.lowerSectionDepthDirection
+      ?? currentPlacedModule.upperSectionDepthDirection
+      ?? lowerDepthDirection
+      ?? 'front';
+    updates.lowerSectionDepthDirection = bodyDepthDirection;
+    updates.upperSectionDepthDirection = bodyDepthDirection;
+
     if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
-      updates.sectionDepthDirections = [...(currentPlacedModule as any).sectionDepthDirections];
+      updates.sectionDepthDirections = (currentPlacedModule as any).sectionDepthDirections.map(() => bodyDepthDirection);
     }
 
     if (currentPlacedModule.customConfig) {
@@ -2795,10 +2805,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const applyLowerCabinetDepthDirection = (direction: 'front' | 'back') => {
     if (!currentPlacedModule) return;
 
-    updatePlacedModule(currentPlacedModule.id, {
+    const updates: Record<string, any> = {
       lowerSectionDepthDirection: direction,
       upperSectionDepthDirection: direction,
-    });
+    };
+    if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
+      updates.sectionDepthDirections = (currentPlacedModule as any).sectionDepthDirections.map(() => direction);
+    }
+
+    updatePlacedModule(currentPlacedModule.id, updates);
     setLowerDepthDirection(direction);
     setUpperDepthDirection(direction);
   };
@@ -3051,6 +3066,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
 // console.log('✅✅✅ [하부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
+      if (moduleData?.category === 'lower' && !isTwoSectionFurniture) {
+        applyLowerCabinetDepth(numValue);
+        return;
+      }
       setLowerSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: numValue });
 // console.log('💾 [updatePlacedModule 호출 완료]');
@@ -3135,6 +3154,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       return;
     }
     if (sIdx === 0) {
+      if (moduleData?.category === 'lower' && !isTwoSectionFurniture) {
+        applyLowerCabinetDepth(val);
+        setLowerDepthInput(val.toString());
+        return;
+      }
       setLowerSectionDepth(val);
       updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: val });
       setLowerDepthInput(val.toString());
@@ -4665,8 +4689,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const minDepth = isLowerDrawer ? 400 : 100;
                         if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
                           applyBodyDepthChange(val, true);
-                          // 깊이 변경 시 상/하부 섹션 direction도 현재 선택된 방향으로 통일
-                          applyLowerCabinetDepthDirection(lowerDepthDirection);
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
@@ -6963,7 +6985,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               && spaceInfo.frameConfig?.top !== false;
             const topDoorGapOn = isFullSurroundForDoorGap ? -3 : 5;
             const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
-            const topOffset = mod.topFrameOffset ?? topOffsetDefault;
+            const globalTopOffset = (spaceInfo.frameSize as any)?.topOffset;
+            const topOffset = mod.topFrameOffset ?? globalTopOffset ?? topOffsetDefault;
             const topGap = topEnabled ? (mod.topFrameGap ?? 0) : (mod.topFrameGap ?? topSize);
             const guideBaseSlotForModule = (() => {
               const guideSlots = spaceInfo.freePlacementGuides || [];
@@ -7004,6 +7027,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   return slot;
                 })
               });
+            };
+            const commitTopOffset = (nextOffset: number) => {
+              if (spaceInfo.guideTopFrameAllMode !== false) {
+                setSpaceInfo({ frameSize: { ...spaceInfo.frameSize, topOffset: nextOffset } as any });
+              }
+              updatePlacedModule(mod.id, { topFrameOffset: nextOffset });
+            };
+            const commitBaseOffset = (nextOffset: number) => {
+              if (spaceInfo.guideBaseFrameAllMode !== false) {
+                setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, offset: nextOffset } as any });
+              }
+              syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
+              updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
             };
             const baseSize = spaceInfo.guideBaseFrameAllMode !== false
               ? (spaceInfo.baseConfig?.height ?? mod.baseFrameHeight ?? bfDefault)
@@ -7387,7 +7423,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
 	                                e.preventDefault();
 	                                const next = Math.max(-200, Math.min(200, (topOffset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-	                                updatePlacedModule(mod.id, { topFrameOffset: next });
+	                                commitTopOffset(next);
 	                              } else if (e.key === 'Enter') {
 	                                (e.target as HTMLInputElement).blur();
 	                              }
@@ -7395,13 +7431,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                            onChange={(e) => {
 	                              const v = e.target.value;
 	                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-	                                updatePlacedModule(mod.id, { topFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
+	                                commitTopOffset(v === '' || v === '-' ? 0 : parseInt(v, 10));
 	                              }
 	                            }}
 	                            onBlur={(e) => {
 	                              setHighlightedFrame(null);
 	                              const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
-	                              updatePlacedModule(mod.id, { topFrameOffset: clamped });
+	                              commitTopOffset(clamped);
 	                            }}
 	                            style={inputStyle}
 	                          />
@@ -7536,10 +7572,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onKeyDown={(e) => {
 	                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
 	                                e.preventDefault();
-	                                const cur = mod.baseFrameOffset ?? 0;
-	                                const nextOffset = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-	                                syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
-	                                updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+	                                const nextOffset = Math.max(-200, Math.min(200, (baseOffset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+	                                commitBaseOffset(nextOffset);
 	                              } else if (e.key === 'Enter') {
 	                                (e.target as HTMLInputElement).blur();
 	                              }
@@ -7548,15 +7582,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                              const v = e.target.value;
 	                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
 	                                const nextOffset = v === '' || v === '-' ? 0 : parseInt(v, 10);
-	                                syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
-	                                updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+	                                commitBaseOffset(nextOffset);
 	                              }
 	                            }}
 	                            onBlur={(e) => {
 	                              setHighlightedFrame(null);
 	                              const nextOffset = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
-	                              syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
-	                              updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+	                              commitBaseOffset(nextOffset);
 	                            }}
                             style={inputStyle}
                           />

@@ -26,6 +26,13 @@ const resolveGuideBaseFrameOffsetMm = (
   fallbackOffsetMm: number
 ): number => {
   const baseDefault = spaceInfo.baseConfig?.offset ?? fallbackOffsetMm;
+  if (typeof module.baseFrameOffset === 'number') {
+    return module.baseFrameOffset;
+  }
+  const useGlobalBase = spaceInfo.guideBaseFrameAllMode ?? true;
+  if (useGlobalBase && typeof spaceInfo.baseConfig?.offset === 'number') {
+    return spaceInfo.baseConfig.offset;
+  }
   const guides = spaceInfo.freePlacementGuides || [];
   const category = getModuleCategory(module);
   const isGuideModule = module.guideSlotPlacement === true
@@ -105,6 +112,127 @@ const INSTALLED_FRONT_EXTENSION_MM = 20;
 
 const getInstalledFrontExtensionMm = (mod: any): number => {
   return mod?.hasDoor === true ? INSTALLED_FRONT_EXTENSION_MM : 0;
+};
+
+const getBaseFrameReferenceFrontZ = (furnitureFrontZ: number): number => {
+  return furnitureFrontZ;
+};
+
+const resolveFurnitureDepthDimensionLayout = (
+  module: PlacedModule,
+  moduleData: any,
+  spaceInfo: SpaceInfo
+) => {
+  const moduleId = module.moduleId || '';
+  const category = getModuleCategory(module);
+  const panelDepthMm = spaceInfo.depth || 600;
+  const furnitureDepthMm = Math.min(panelDepthMm, 600);
+  const panelDepth = mmToThreeUnits(panelDepthMm);
+  const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+  const doorThickness = mmToThreeUnits(20);
+  const zOffset = -panelDepth / 2;
+  const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+  const categoryDefaultDepth = getCategoryDefaultFurnitureDepth(
+    spaceInfo.depth || 600,
+    moduleId,
+    spaceInfo.furnitureDepthDefaults
+  );
+  const hasCustomDepth = typeof module.customDepth === 'number' && module.customDepth > 0;
+  const defaultDepthMm = categoryDefaultDepth
+    ?? (moduleData as any)?.defaultDepth
+    ?? moduleData?.dimensions?.depth
+    ?? 600;
+  const rawActualDepthMm = hasCustomDepth ? module.customDepth! : defaultDepthMm;
+  const actualDepthMm = moduleId.includes('-entryway-') && Math.abs(rawActualDepthMm - 400) < 0.5
+    ? 380
+    : rawActualDepthMm;
+  const moduleDimDepthMm = moduleData?.dimensions?.depth ?? defaultDepthMm;
+  const resolveSectionDepthMm = (sectionDepth?: number) => {
+    if (typeof sectionDepth !== 'number' || sectionDepth <= 0) return actualDepthMm;
+    return Math.abs(sectionDepth - moduleDimDepthMm) < 0.5
+      ? actualDepthMm
+      : sectionDepth;
+  };
+  const lowerDepthMm = resolveSectionDepthMm(module.lowerSectionDepth);
+  const upperDepthMm = resolveSectionDepthMm(module.upperSectionDepth);
+  const lowerDir = module.lowerSectionDepthDirection || 'front';
+  const upperDir = module.upperSectionDepthDirection || 'front';
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+  const backWallGapZ = mmToThreeUnits(module.backWallGap ?? 0);
+  const isFrontSpaceFurniture = module.columnSlotInfo?.spaceType === 'front';
+  const isSideWallFurniture = module.placementWall === 'left' || module.placementWall === 'right';
+  const isUpper = category === 'upper' || moduleId.includes('upper-cabinet');
+  const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
+  const isShoe = moduleId.includes('-entryway-')
+    || moduleId.includes('-shelf-')
+    || moduleId.includes('-4drawer-shelf-')
+    || moduleId.includes('-2drawer-shelf-')
+    || moduleId.includes('glass-cabinet');
+  const isKitchenTall = moduleId.includes('pull-out-cabinet')
+    || moduleId.includes('pantry-cabinet')
+    || moduleId.includes('fridge-cabinet')
+    || moduleId.includes('built-in-fridge');
+  const isBackAlignedFull = category === 'full'
+    && !isShoe
+    && !moduleId.includes('insert-frame');
+  const fixedBackWithBase = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset + backWallGapZ;
+  const fixedBackWithoutBase = furnitureZOffset - furnitureDepth / 2 - doorThickness + backWallGapZ;
+  const fixedFrontWithBase = fixedBackWithBase + mmToThreeUnits(defaultDepthMm);
+  const actualDepth = mmToThreeUnits(actualDepthMm);
+
+  let bodyCenterZ: number;
+  if (isFrontSpaceFurniture || isSideWallFurniture) {
+    bodyCenterZ = module.position.z;
+  } else if (isUpper) {
+    bodyCenterZ = fixedBackWithoutBase + actualDepth / 2;
+  } else if (isKitchenTall || isBackAlignedFull) {
+    bodyCenterZ = lowerDir === 'back'
+      ? fixedFrontWithBase - actualDepth / 2
+      : fixedBackWithBase + actualDepth / 2;
+  } else if (isLower) {
+    const lowerBaseDepth = mmToThreeUnits(defaultDepthMm);
+    const baseFrontZ = fixedBackWithBase + lowerBaseDepth;
+    bodyCenterZ = lowerDir === 'back'
+      ? baseFrontZ - actualDepth / 2
+      : fixedBackWithBase + actualDepth / 2;
+  } else if (isShoe) {
+    const sameSectionDepth = Math.abs(lowerDepthMm - upperDepthMm) < 0.5;
+    bodyCenterZ = sameSectionDepth && lowerDir === upperDir && lowerDir === 'back'
+      ? fixedFrontWithBase - actualDepth / 2
+      : fixedBackWithBase + actualDepth / 2;
+  } else {
+    bodyCenterZ = fixedFrontWithBase - actualDepth / 2;
+    const usesUnifiedSectionDepthDirection = lowerDir === upperDir
+      && Math.abs(lowerDepthMm - actualDepthMm) < 0.5
+      && Math.abs(upperDepthMm - actualDepthMm) < 0.5;
+    if (usesUnifiedSectionDepthDirection && lowerDir === 'front') {
+      const isUsingCategoryDefaultDepth = categoryDefaultDepth !== undefined
+        && Math.abs(actualDepthMm - categoryDefaultDepth) < 0.5;
+      const baseDepthMm = isUsingCategoryDefaultDepth ? actualDepthMm : moduleDimDepthMm;
+      bodyCenterZ -= mmToThreeUnits(baseDepthMm - actualDepthMm);
+    }
+  }
+
+  const resolveSpan = (depthMm: number, direction: 'front' | 'back') => {
+    const depth = mmToThreeUnits(depthMm);
+    const depthDiff = actualDepth - depth;
+    const localZ = depthDiff === 0 ? 0 : direction === 'back' ? depthDiff / 2 : -depthDiff / 2;
+    const centerZ = bodyCenterZ + localZ;
+    return {
+      backZ: centerZ - depth / 2,
+      frontZ: centerZ + depth / 2,
+      centerZ,
+      depthMm,
+    };
+  };
+
+  return {
+    bodyCenterZ,
+    actualDepthMm,
+    upper: resolveSpan(upperDepthMm, upperDir),
+    lower: resolveSpan(lowerDepthMm, lowerDir),
+  };
 };
 
 const isShoeCabinetDimensionModuleId = (moduleId?: string): boolean => {
@@ -1374,12 +1502,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부장/키큰장(full): 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
             if (modCat_l2 === 'upper' || modCat_l2 === 'full') {
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_l2);
-              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
-              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal);
+              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0)));
+              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
               if (visibleTopFrameVal > 0) {
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(effectiveH_l2),
+                  topY: mmToThreeUnits(effectiveH_l2 - topGapVal),
                   heightMm: Math.round(visibleTopFrameVal),
                   key: `upper-topframe-${moduleIndex}`
                 });
@@ -2072,7 +2200,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // - 신발장: customDepth가 설정되어 있고 섹션이 dimensions.depth(600 초기값)면
           //   customDepth 우선(잘못 저장된 600 무시). 섹션이 다른 값이면 사용자 설정 존중.
           const hasCustomDepth = typeof module.customDepth === 'number' && module.customDepth > 0;
-          const baseFallback = isShoeCategory ? 380 : depthModuleData.dimensions.depth;
+          const categoryDefaultDepth = getCategoryDefaultFurnitureDepth(
+            spaceInfo.depth || 600,
+            module.moduleId || '',
+            spaceInfo.furnitureDepthDefaults
+          );
+          const baseFallback = isShoeCategory ? 380 : (categoryDefaultDepth ?? depthModuleData.dimensions.depth);
           const modDimDepth = depthModuleData.dimensions.depth;
           const resolveSectionDepth = (sectionVal: number | undefined): number => {
             if (isShoeCategory && hasCustomDepth && sectionVal === modDimDepth) {
@@ -2151,8 +2284,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorThickness = mmToThreeUnits(20);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+          const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+          const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
           const midSide = mod.moduleId || '';
           const isShoeSide = midSide.includes('-entryway-') || midSide.includes('-shelf-') || midSide.includes('-4drawer-shelf-') || midSide.includes('-2drawer-shelf-');
+          const isKitchenTallCabinet = (
+            midSide.includes('pull-out-cabinet') ||
+            midSide.includes('pantry-cabinet') ||
+            midSide.includes('fridge-cabinet') ||
+            midSide.includes('built-in-fridge')
+          );
+          const isBackAlignedTallCabinet = modCategory === 'full'
+            && !isShoeSide
+            && !midSide.includes('insert-frame');
           // 가구 기본 공간 기준 깊이로 섹션 중심 Z 기본 공식 계산 후
           // direction에 따라 추가 오프셋을 적용 (SectionsRenderer 로직과 일치)
           // - 앞면 정렬(의류장/하부장 기본): frontZ 고정, depth 줄이면 중심이 앞쪽 부근 유지
@@ -2160,15 +2304,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 신발장은 실제 가구 기본 depth 380 기준 (의류장은 600)
           const baseModuleDepthMm = isShoeSide
             ? (module.customDepth || 380)
-            : (getCategoryDefaultFurnitureDepth(
-              spaceInfo.depth || 600,
-              mod.moduleId || '',
-              spaceInfo.furnitureDepthDefaults
-            ) ?? depthModuleData.dimensions.depth);
+            : (categoryDefaultDepth ?? depthModuleData.dimensions.depth);
           const baseModuleDepth = mmToThreeUnits(baseModuleDepthMm);
           const moduleBackWallGapZ = mmToThreeUnits((module as any).backWallGap ?? 0);
-          const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2 + moduleBackWallGapZ;
-          const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2 + moduleBackWallGapZ;
+          const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset + moduleBackWallGapZ;
+          const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2 + baseDepthOffset + moduleBackWallGapZ;
+          const baseBackZ = fixedBackZ + baseModuleDepth / 2;
 
           // 상부섹션/단일 섹션 Z
           const upperDir = (mod.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
@@ -2185,6 +2326,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             furnitureZ = lowerDir === 'back'
               ? baseFrontZEdge - moduleDepth / 2
               : fixedBackZ + moduleDepth / 2;
+          } else if (isKitchenTallCabinet || isBackAlignedTallCabinet) {
+            furnitureZ = fixedBackZ + moduleDepth / 2;
           } else if (isUpperMod || isShoeSide) {
             // 뒷면 정렬 기준: 중심 = baseBack + directionOffset
             furnitureZ = baseBackZ + upperOffset;
@@ -2199,7 +2342,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZLower = isShoeTwoSection
             ? (isShoeSide
                 ? baseBackZ + lowerOffset  // 신발장 하부: 뒷면 정렬
-                : baseFrontZ + lowerOffset) // 의류장 하부: 앞면 정렬
+                : furnitureZ + lowerOffset) // 의류장/키큰장 하부: 실제 본체 기준
             : furnitureZ;
 
 	          // 걸래받이 옵셋 깊이
@@ -2211,16 +2354,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const baseFrameOffsetDepth = mmToThreeUnits(baseFrameOffsetMm);
           const baseOffsetDimEdge = isLowerMod ? depthDimEdge : furnitureBottomEdge;
           const baseOffsetDimY = isLowerMod ? depthDimY : depthDimYLower;
-          const installedFrontExtensionMm = getInstalledFrontExtensionMm(module);
+          const installedFrontExtensionMm = getInstalledFrontExtensionMm(mod);
           const installedFrontExtension = mmToThreeUnits(installedFrontExtensionMm);
-          const upperBackZ = furnitureZ - moduleDepth / 2;
-          const upperFrontZ = furnitureZ + moduleDepth / 2 + installedFrontExtension;
+          const depthLayout = resolveFurnitureDepthDimensionLayout(mod, depthModuleData, spaceInfo);
+          const upperBackZ = depthLayout.upper.backZ;
+          const upperFrontZ = depthLayout.upper.frontZ + installedFrontExtension;
           const upperDepthTextZ = (upperBackZ + upperFrontZ) / 2;
-          const upperDisplayDepth = Math.round(customDepth + installedFrontExtensionMm);
-          const lowerBackZ = furnitureZLower - moduleDepthLower / 2;
-          const lowerFrontZ = furnitureZLower + moduleDepthLower / 2 + installedFrontExtension;
+          const upperDisplayDepth = Math.round(depthLayout.upper.depthMm + installedFrontExtensionMm);
+          const lowerBackZ = depthLayout.lower.backZ;
+          const lowerFrontZ = depthLayout.lower.frontZ + installedFrontExtension;
           const lowerDepthTextZ = (lowerBackZ + lowerFrontZ) / 2;
-          const lowerDisplayDepth = Math.round(lowerDepth + installedFrontExtensionMm);
+          const lowerDisplayDepth = Math.round(depthLayout.lower.depthMm + installedFrontExtensionMm);
 
           return (
             <group key={`furniture-depth-${index}`}>
@@ -2404,7 +2548,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {shouldShowBaseFrameOffset && baseFrameOffsetMm > 0 && mod.hasBase !== false && (() => {
                 // 걸래받이는 실제 하부장 앞면에서 옵셋만큼 뒤로 들어간다.
                 // 뒤고정 상태로 깊이를 줄이면 furnitureZ가 같이 이동하므로 치수선도 같은 기준을 따라야 한다.
-                const frontZ = furnitureZ + moduleDepth / 2;
+                const furnitureFrontZ = depthLayout.lower.frontZ;
+                const frontZ = getBaseFrameReferenceFrontZ(furnitureFrontZ);
                 const offsetBackZ = frontZ - baseFrameOffsetDepth;
 
                 return (
@@ -2927,12 +3072,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부장/키큰장(full) 상단몰딩: 몸통 섹션 치수와 같은 연장선 기준으로 표시
             if (modCat_rl2 === 'upper' || modCat_rl2 === 'full') {
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_rl2);
-              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
-              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal);
+              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0)));
+              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
               if (visibleTopFrameVal > 0) {
                 segments_rl2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(effectiveH_rl2),
+                  topY: mmToThreeUnits(effectiveH_rl2 - topGapVal),
                   heightMm: Math.round(visibleTopFrameVal),
                   key: `upper-topframe-${moduleIndex}`
                 });
@@ -3493,12 +3638,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 우선순위: customDepth > upperSection/lowerSection > 기본값
           const hasCustomDepth_d2 = typeof module.customDepth === 'number' && module.customDepth > 0;
+          const categoryDefaultDepth_d2 = getCategoryDefaultFurnitureDepth(
+            spaceInfo.depth || 600,
+            module.moduleId || '',
+            spaceInfo.furnitureDepthDefaults
+          );
           const upperDepthRaw_d2 = hasCustomDepth_d2
             ? module.customDepth!
-            : (module.upperSectionDepth || moduleData.dimensions.depth);
+            : (module.upperSectionDepth || categoryDefaultDepth_d2 || moduleData.dimensions.depth);
           const lowerDepthRaw_d2 = hasCustomDepth_d2
             ? module.customDepth!
-            : (module.lowerSectionDepth ?? (isShoeCategory_d2 ? SHOE_LOWER_DEFAULT_MM_D2 : moduleData.dimensions.depth));
+            : (module.lowerSectionDepth ?? (isShoeCategory_d2 ? SHOE_LOWER_DEFAULT_MM_D2 : (categoryDefaultDepth_d2 ?? moduleData.dimensions.depth)));
           const upperDepth = (!hasCustomDepth_d2 && isEntrywayH_d2) ? Math.max(0, upperDepthRaw_d2 - DOOR_THK_MM_D2) : upperDepthRaw_d2;
           const lowerDepth_d2 = (!hasCustomDepth_d2 && isEntrywayH_d2) ? Math.max(0, lowerDepthRaw_d2 - DOOR_THK_MM_D2) : lowerDepthRaw_d2;
           // 신발장 계열이면 항상 상/하부 분리 표시
@@ -3521,22 +3671,30 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorThickness = mmToThreeUnits(20);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+          const isFloating_d2 = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+          const baseDepthOffset_d2 = isFloating_d2 ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
           // 상부장/신발장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
           const modCategory_d2 = getModuleCategory(module as PlacedModule);
           const isUpperMod_d2 = modCategory_d2 === 'upper';
           const isLowerMod_d2 = modCategory_d2 === 'lower';
+          const isKitchenTallCabinet_d2 = (
+            midSide_d2.includes('pull-out-cabinet') ||
+            midSide_d2.includes('pantry-cabinet') ||
+            midSide_d2.includes('fridge-cabinet') ||
+            midSide_d2.includes('built-in-fridge')
+          );
+          const isBackAlignedTallCabinet_d2 = modCategory_d2 === 'full'
+            && !isShoeSide_d2
+            && !midSide_d2.includes('insert-frame');
           // 신발장 실제 기본 깊이 (380) 또는 의류장/일반 (600) 기준
           const baseModuleDepthMm_d2 = isShoeSide_d2
             ? (module.customDepth || 380)
-            : (getCategoryDefaultFurnitureDepth(
-              spaceInfo.depth || 600,
-              module.moduleId || '',
-              spaceInfo.furnitureDepthDefaults
-            ) ?? moduleData.dimensions.depth);
+            : (categoryDefaultDepth_d2 ?? moduleData.dimensions.depth);
           const baseModuleDepth_d2 = mmToThreeUnits(baseModuleDepthMm_d2);
           const moduleBackWallGapZ_d2 = mmToThreeUnits((module as any).backWallGap ?? 0);
-          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
-          const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
+          const fixedBackZ_d2 = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset_d2 + moduleBackWallGapZ_d2;
+          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth_d2 / 2 + baseDepthOffset_d2 + moduleBackWallGapZ_d2;
+          const baseBackZ_d2 = fixedBackZ_d2 + baseModuleDepth_d2 / 2;
           // 상부 방향 오프셋
           // 하부장 단일 본체는 기준 깊이와 현재 깊이가 같으면 토글해도 같은 위치여야 하고,
           // 깊이가 줄었을 때만 앞고정(back)=앞면 고정 / 뒤고정(front)=뒷면 고정을 적용한다.
@@ -3553,6 +3711,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? baseFrontZEdge - moduleDepth / 2
                 : fixedBackZ + moduleDepth / 2;
             })()
+            : (isKitchenTallCabinet_d2 || isBackAlignedTallCabinet_d2)
+              ? (fixedBackZ_d2 + moduleDepth / 2)
             : (isUpperMod_d2 || isBackAlign_d2)
               ? (baseBackZ_d2 + upperOffset_d2)
               : (baseFrontZ_d2 + upperOffset_d2);
@@ -3570,14 +3730,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const baseFrameOffsetDepth_d2 = mmToThreeUnits(baseFrameOffsetMm_d2);
           const installedFrontExtensionMm_d2 = getInstalledFrontExtensionMm(module);
           const installedFrontExtension_d2 = mmToThreeUnits(installedFrontExtensionMm_d2);
-          const upperBackZ_d2 = furnitureZ - moduleDepth / 2;
-          const upperFrontZ_d2 = furnitureZ + moduleDepth / 2 + installedFrontExtension_d2;
+          const depthLayout_d2 = resolveFurnitureDepthDimensionLayout(module as PlacedModule, moduleData, spaceInfo);
+          const upperBackZ_d2 = depthLayout_d2.upper.backZ;
+          const upperFrontZ_d2 = depthLayout_d2.upper.frontZ + installedFrontExtension_d2;
           const upperDepthTextZ_d2 = (upperBackZ_d2 + upperFrontZ_d2) / 2;
-          const upperDisplayDepth_d2 = Math.round(customDepth + installedFrontExtensionMm_d2);
-          const lowerBackZ_d2 = furnitureZLower_d2 - moduleDepthLower_d2 / 2;
-          const lowerFrontZ_d2 = furnitureZLower_d2 + moduleDepthLower_d2 / 2 + installedFrontExtension_d2;
+          const upperDisplayDepth_d2 = Math.round(depthLayout_d2.upper.depthMm + installedFrontExtensionMm_d2);
+          const lowerBackZ_d2 = depthLayout_d2.lower.backZ;
+          const lowerFrontZ_d2 = depthLayout_d2.lower.frontZ + installedFrontExtension_d2;
           const lowerDepthTextZ_d2 = (lowerBackZ_d2 + lowerFrontZ_d2) / 2;
-          const lowerDisplayDepth_d2 = Math.round(lowerDepth_d2 + installedFrontExtensionMm_d2);
+          const lowerDisplayDepth_d2 = Math.round(depthLayout_d2.lower.depthMm + installedFrontExtensionMm_d2);
 
           return (
             <group key={`furniture-depth-${index}`}>
@@ -3632,7 +3793,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 걸래받이 옵셋 깊이 치수 — 우측뷰 하단 */}
               {shouldShowBaseFrameOffset_d2 && baseFrameOffsetMm_d2 > 0 && (module as PlacedModule).hasBase !== false && (() => {
-                const frontZ = furnitureZ + moduleDepth / 2;
+                const furnitureFrontZ = depthLayout_d2.lower.frontZ;
+                const frontZ = getBaseFrameReferenceFrontZ(furnitureFrontZ);
                 const offsetBackZ = frontZ - baseFrameOffsetDepth_d2;
                 const offsetDimY = (furnitureBaseY + furnitureBottomDimY_d2) / 2;
 

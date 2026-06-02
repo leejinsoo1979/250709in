@@ -393,21 +393,21 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             currentGap === 0;
 
           const updates: Record<string, number> = {};
-          if (module.hasTopFrame !== false && (topFrameAllMode || wasUsingDefaultTopHeight)) {
+          if (module.hasTopFrame !== false && wasUsingDefaultTopHeight) {
             updates.topFrameThickness = topFrameHeight;
           }
-          if (module.hasBase !== false && (baseFrameAllMode || wasUsingDefaultBaseHeight)) {
+          if (module.hasBase !== false && wasUsingDefaultBaseHeight) {
             updates.baseFrameHeight = isLower ? lowerBaseFrameHeight : baseFrameHeight;
           }
-          if (module.hasTopFrame !== false && (topFrameAllMode || wasUsingDefaultTopGap)) {
+          if (module.hasTopFrame !== false && wasUsingDefaultTopGap) {
             updates.topFrameGap = synced.topMoldingGap ?? 0;
           }
-          if (module.hasBase !== false && (baseFrameAllMode || wasUsingDefaultOffset)) {
+          if (module.hasBase !== false && wasUsingDefaultOffset) {
             updates.baseFrameOffset = isLower
               ? (lowerBaseFrameOffset ?? synced.baseFrameOffset)
               : synced.baseFrameOffset;
           }
-          if (module.hasBase !== false && (baseFrameAllMode || wasUsingDefaultGap)) {
+          if (module.hasBase !== false && wasUsingDefaultGap) {
             updates.baseFrameGap = isLower
               ? (lowerBaseFrameGap ?? synced.baseFrameGap)
               : synced.baseFrameGap;

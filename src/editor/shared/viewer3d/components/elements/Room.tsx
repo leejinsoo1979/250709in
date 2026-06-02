@@ -851,6 +851,38 @@ const Room: React.FC<RoomProps> = ({
     if (moduleId.includes('fridge-cabinet') && !moduleId.includes('built-in-fridge')) return 600;
     return 600;
   };
+
+  const getPlacedModuleDepthMm = (mod: any): number => {
+    const mid = mod?.moduleId || '';
+    const moduleData = mid
+      ? getModuleById(mid, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo)
+      : undefined;
+    return mod?.customDepth
+      ?? mod?.freeDepth
+      ?? mod?.depth
+      ?? getCategoryDefaultFurnitureDepth(
+        spaceInfo.depth || SPACE_BASE_DEPTH_MM,
+        mid,
+        spaceInfo.furnitureDepthDefaults
+      )
+      ?? moduleData?.dimensions?.depth
+      ?? (moduleData as any)?.defaultDepth
+      ?? getModBaseDepthMm(mid);
+  };
+
+  const getFrontPlacedModuleFrameCenterZ = (mod: any): number => {
+    const panelDepthMm = spaceInfo.depth || 1500;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const panelDepthUnits = mmToThreeUnits(panelDepthMm);
+    const furnitureDepthUnits = mmToThreeUnits(furnitureDepthMm);
+    const furnitureOffsetZ = -panelDepthUnits / 2 + (panelDepthUnits - furnitureDepthUnits) / 2;
+    const moduleDepthUnits = mmToThreeUnits(getPlacedModuleDepthMm(mod));
+    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+    const baseDepthOffset = isFloatPlacement ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+    const moduleFrontZ = furnitureOffsetZ - furnitureDepthUnits / 2 - mmToThreeUnits(20) + moduleDepthUnits + baseDepthOffset;
+    return moduleFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+  };
+
   // 해당 가구의 프레임 Z 이동량 계산 (공간 기본 깊이 600 기준)
   // - 신발장: 뒷벽 정렬 기본 380 → 무조건 220mm 뒤로 (customDepth 더 줄이면 그만큼 더)
   // - 기타 가구: 섹션 depth 줄인 만큼 뒤로 (direction=back이면 0, front이면 -diff)
@@ -5387,6 +5419,9 @@ const Room: React.FC<RoomProps> = ({
                         nSectionFrameZ = nFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                       }
                     }
+                    const fullModuleFrameZ = modCategory === 'full'
+                      ? getFrontPlacedModuleFrameCenterZ(mod)
+                      : null;
                     const generalFrameZ = topZPosition;
                     // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
                     const modTopBackWallGapMm = (mod as any).backWallGap ?? 0;
@@ -5394,7 +5429,7 @@ const Room: React.FC<RoomProps> = ({
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : generalFrameZ))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : (fullModuleFrameZ !== null ? fullModuleFrameZ : generalFrameZ)))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
                       height: renderFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -6302,6 +6337,8 @@ const Room: React.FC<RoomProps> = ({
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                  } else if (slotModCategory === 'full' && !isShoeSlot && !slotModMid.includes('pull-out-cabinet') && !slotModMid.includes('pantry-cabinet') && !slotModMid.includes('fridge-cabinet') && !slotModMid.includes('built-in-fridge')) {
+                    slotFrameZ = getFrontPlacedModuleFrameCenterZ(mod);
                   } else {
                     slotFrameZ = topZPos;
                   }
@@ -7424,10 +7461,10 @@ const Room: React.FC<RoomProps> = ({
                 // 신발장도 사용자 입력 baseFrameOffset(modBaseZInset) 반영
                 baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - modBaseZInset;
               } else {
-                // 걸래받이 Z는 조절발과 동일하게 depthZOffsetMM + baseFrameOffset(modBaseZInset)만 반영.
-                // (freeDepthInsetMm을 추가로 빼면 옵셋 20 입력 시 걸래받이만 20 더 들어가 40에 위치 →
-                //  조절발(옵셋 20)과 어긋나던 문제 제거)
-                baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
+                const baseModuleFrameZ = getModuleCategory(mod) === 'full'
+                  ? getFrontPlacedModuleFrameCenterZ(mod)
+                  : baseZBase;
+                baseZPosition = baseModuleFrameZ - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               }
               // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
               const modBaseBackWallGapMm = mod.backWallGap ?? 0;
@@ -7798,7 +7835,17 @@ const Room: React.FC<RoomProps> = ({
                       // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
                       const slotBaseBackWallGapMm = mod.backWallGap ?? 0;
                       const slotBaseBackWallGapZ = slotBaseBackWallGapMm > 0 ? mmToThreeUnits(slotBaseBackWallGapMm) : 0;
-                      const effectiveBaseZ = baseZPos + unifiedBaseZOffset + slotBaseBackWallGapZ;
+                      const slotBaseCategory = getModuleCategory(mod);
+                      const isRegularFullSlotBase = slotBaseCategory === 'full'
+                        && !isShoeSlotBase
+                        && !slotBaseShoeMid.includes('pull-out-cabinet')
+                        && !slotBaseShoeMid.includes('pantry-cabinet')
+                        && !slotBaseShoeMid.includes('fridge-cabinet')
+                        && !slotBaseShoeMid.includes('built-in-fridge');
+                      const baseFrameReferenceZ = isRegularFullSlotBase
+                        ? getFrontPlacedModuleFrameCenterZ(mod)
+                        : baseZPos;
+                      const effectiveBaseZ = baseFrameReferenceZ + (isRegularFullSlotBase ? 0 : unifiedBaseZOffset) + slotBaseBackWallGapZ;
 
                       // 커스터마이즈 가구 좌우분할: 무조건 걸래받이도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];

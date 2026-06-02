@@ -917,9 +917,28 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
+      const depthSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      const depthModuleData = getModuleById(
+        existingModule.moduleId,
+        calculateInternalSpace(depthSpaceInfo),
+        depthSpaceInfo
+      );
+      const depthSections = depthModuleData?.modelConfig?.sections;
+      const isSingleBodyLowerDepth = depthModuleData?.category === 'lower'
+        && !existingModule.customConfig
+        && (!Array.isArray(depthSections) || depthSections.length <= 1);
+      const sectionBodyDepth = isSingleBodyLowerDepth
+        && typeof updates.lowerSectionDepth === 'number'
+        && updates.lowerSectionDepth > 0
+        && updates.customDepth === undefined
+        && updates.freeDepth === undefined
+        ? updates.lowerSectionDepth
+        : undefined;
       const requestedBodyDepth = typeof updates.customDepth === 'number' && updates.customDepth > 0
         ? updates.customDepth
-        : (typeof updates.freeDepth === 'number' && updates.freeDepth > 0 ? updates.freeDepth : undefined);
+        : (typeof updates.freeDepth === 'number' && updates.freeDepth > 0
+          ? updates.freeDepth
+          : sectionBodyDepth);
       const currentBodyDepth = typeof existingModule.customDepth === 'number' && existingModule.customDepth > 0
         ? existingModule.customDepth
         : (typeof existingModule.freeDepth === 'number' && existingModule.freeDepth > 0 ? existingModule.freeDepth : undefined);
@@ -941,6 +960,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
         if (Array.isArray((existingModule as any).sectionDepths)) {
           depthSyncUpdates.sectionDepths = (existingModule as any).sectionDepths.map(() => requestedBodyDepth);
+        }
+
+        if (Array.isArray((existingModule as any).sectionDepthDirections)) {
+          const bodyDepthDirection = (updates as any).lowerSectionDepthDirection
+            ?? (updates as any).upperSectionDepthDirection
+            ?? (existingModule as any).lowerSectionDepthDirection
+            ?? (existingModule as any).upperSectionDepthDirection
+            ?? 'front';
+          depthSyncUpdates.sectionDepthDirections = (existingModule as any).sectionDepthDirections.map(() => bodyDepthDirection);
         }
 
         if ((existingModule as any).customConfig?.sections) {

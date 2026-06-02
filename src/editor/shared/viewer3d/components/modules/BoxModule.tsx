@@ -1281,6 +1281,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        lowerSectionDepthDirection={lowerSectionDepthDirection}
+        upperSectionDepthDirection={upperSectionDepthDirection}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
@@ -1412,7 +1416,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         ?? 65)
       : 0;
     const topFrameGapMmIF = rawTopFrameMmIF > 0
-      ? Math.max(0, Math.min(rawTopFrameMmIF, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? 0))
+      ? Math.max(0, Math.min(rawTopFrameMmIF, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0))
       : 0;
     const baseFrameGapMmIF = rawBaseFrameMmIF > 0
       ? Math.max(0, Math.min(rawBaseFrameMmIF, baseFrameGap ?? (_pmIF as any)?.baseFrameGap ?? 0))
@@ -1454,7 +1458,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const topFrameRefZMm = isFullSurroundIF
       ? (-END_PANEL_THK_MM / 2 + 3)
       : (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM);
-    const topFrameOffsetMmIF = topFrameOffset ?? (_pmIF as any)?.topFrameOffset ?? 0;
+    const topFrameOffsetMmIF = topFrameOffset ?? (_pmIF as any)?.topFrameOffset ?? (spaceInfo.frameSize as any)?.topOffset ?? 0;
     const baseFrameOffsetMmIF = baseFrameOffset ?? (_pmIF as any)?.baseFrameOffset ?? 0;
     const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF - topFrameOffsetMmIF);
     // 걸레받이 Z: 노서라운드 산식 고정 + baseConfig.depth만큼 추가로 뒤로
