@@ -4552,8 +4552,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
           let sectionHeights: number[] = []; // 각 섹션의 mm 높이
-          // 측면뷰 기준 가구는 sideViewMod 우선 (사용자가 선택/표시 중인 모듈)
-          const leftViewMod = sideViewMod || leftmostMod;
+          // 우측(rSectionHeights)과 대칭: 항상 가장 좌측 가구 기준으로 섹션 높이 계산.
+          // (이전엔 sideViewMod 우선이라, 가구를 클릭(선택)하기 전엔 좌측 도어/섹션 높이
+          //  치수가 표시되지 않던 비대칭 문제가 있었음)
+          const leftViewMod = leftmostMod;
           if (leftViewMod && !hasDualCabinet) {
             const modData = getModuleById(
               leftViewMod.moduleId,
