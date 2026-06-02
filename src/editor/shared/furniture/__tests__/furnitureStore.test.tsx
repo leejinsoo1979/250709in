@@ -1,12 +1,16 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '../types';
 
 // 테스트용 샘플 모듈 데이터
 const sampleModule: PlacedModule = {
   id: 'test-module-1',
-  moduleId: 'box-shelf-single-400',
+  moduleId: 'single-shelf-500',
+  moduleWidth: 500,
+  freeWidth: 500,
+  customWidth: 500,
   position: { x: 0, y: 0, z: 0 },
   rotation: 0,
   hasDoor: false
@@ -22,6 +26,17 @@ describe('Furniture Store Tests', () => {
     // 각 테스트 시작 전 상태 초기화
     act(() => {
       store.clearAllModules();
+      useSpaceConfigStore.getState().setSpaceInfo({
+        width: 3000,
+        height: 2400,
+        depth: 600,
+        installType: 'builtin',
+        wallConfig: { left: true, right: true },
+        hasFloorFinish: false,
+        surroundType: 'no-surround',
+        layoutMode: 'free-placement',
+        gapConfig: { left: 0, right: 0 }
+      });
     });
   });
 
@@ -30,8 +45,9 @@ describe('Furniture Store Tests', () => {
       store.addModule(sampleModule);
     });
 
-    expect(store.placedModules).toHaveLength(1);
-    expect(store.placedModules[0]).toEqual(sampleModule);
+    const modules = useFurnitureStore.getState().placedModules;
+    expect(modules).toHaveLength(1);
+    expect(modules[0]).toMatchObject(sampleModule);
   });
 
   it('should remove module correctly', () => {
@@ -40,7 +56,7 @@ describe('Furniture Store Tests', () => {
       store.removeModule(sampleModule.id);
     });
 
-    expect(store.placedModules).toHaveLength(0);
+    expect(useFurnitureStore.getState().placedModules).toHaveLength(0);
   });
 
   it('should clear all modules', () => {
@@ -50,7 +66,53 @@ describe('Furniture Store Tests', () => {
       store.clearAllModules();
     });
 
-    expect(store.placedModules).toHaveLength(0);
+    expect(useFurnitureStore.getState().placedModules).toHaveLength(0);
+  });
+
+  it('keeps an insert-frame fixed to the placed side when popup width changes', () => {
+    const leftNeighbor: PlacedModule = {
+      id: 'left-neighbor',
+      moduleId: 'single-shelf-500',
+      moduleWidth: 500,
+      freeWidth: 500,
+      customWidth: 500,
+      position: { x: -3.18, y: 0, z: 0 },
+      rotation: 0,
+      isFreePlacement: true,
+      freePlacementCategory: 'full'
+    };
+    const insertFrame: PlacedModule = {
+      id: 'insert-frame',
+      moduleId: 'insert-frame-136',
+      moduleWidth: 136,
+      freeWidth: 136,
+      customWidth: 136,
+      position: { x: 0, y: 0, z: 0 },
+      rotation: 0,
+      isFreePlacement: true,
+      freePlacementCategory: 'full'
+    };
+
+    act(() => {
+      store.addModule(leftNeighbor);
+      store.addModule(insertFrame);
+      store.updatePlacedModule(insertFrame.id, {
+        customWidth: 236,
+        isSplit: true
+      } as any);
+    });
+
+    const updated = useFurnitureStore.getState().placedModules.find(m => m.id === insertFrame.id)!;
+    const oldLeftMm = insertFrame.position.x * 100 - 136 / 2;
+    const nextLeftMm = updated.position.x * 100 - 236 / 2;
+    const nextRightMm = updated.position.x * 100 + 236 / 2;
+
+    expect(updated.hingePosition).toBe('left');
+    expect(updated.freeWidth).toBe(236);
+    expect(updated.moduleWidth).toBe(236);
+    expect(updated.customWidth).toBe(236);
+    expect(nextLeftMm).toBeCloseTo(oldLeftMm, 5);
+    expect(nextRightMm).toBeCloseTo(oldLeftMm + 236, 5);
   });
 });
 
