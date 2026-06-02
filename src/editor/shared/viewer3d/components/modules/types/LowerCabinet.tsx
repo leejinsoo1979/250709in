@@ -2272,10 +2272,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   const rawSideBaseFrameHeightMm = (placedModuleForSideBase as any)?.baseFrameHeight
                     ?? spaceInfo?.baseConfig?.height
                     ?? 65;
-                  const sideBaseFrameGapMm = Math.max(
-                    0,
-                    Math.min(rawSideBaseFrameHeightMm - 1, (placedModuleForSideBase as any)?.baseFrameGap ?? 0)
-                  );
+                  const sideBaseFrameGapMm = rawSideBaseFrameHeightMm > 0
+                    ? Math.max(0, Math.min(rawSideBaseFrameHeightMm, (placedModuleForSideBase as any)?.baseFrameGap ?? 0))
+                    : 0;
                   const sideBaseFrameHeightMm = Math.max(0, rawSideBaseFrameHeightMm - sideBaseFrameGapMm);
                   const sideBaseFrameHeight = mmToUnits(sideBaseFrameHeightMm);
                   const sideBaseFrameGap = mmToUnits(sideBaseFrameGapMm);

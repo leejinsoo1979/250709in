@@ -966,9 +966,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // per-furniture 받침대/치수 변수
   const baseFrameHeightMm = isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm);
   const baseFrameGapMm = (!isFloating && !modHasBaseOff && baseFrameHeightMm > 0)
-    ? Math.max(0, Math.min(baseFrameHeightMm, selectedMod?.baseFrameGap ?? 0))
+    ? Math.max(0, Math.min(baseFrameHeightMm, selectedMod?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0))
     : 0;
-  // 걸래받이 표시값: 바닥마감재와 별개로 표시 (바닥마감재는 별도 치수선으로 표시)
   const baseFrameDisplayMm = Math.max(0, baseFrameHeightMm - baseFrameGapMm);
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floorFinishY = isFloating ? 0 : mmToThreeUnits(floorFinishHeightMm);
@@ -1376,11 +1375,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (modCat_l2 === 'upper' || modCat_l2 === 'full') {
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_l2);
               const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
-              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
+              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal);
               if (visibleTopFrameVal > 0) {
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(effectiveH_l2 - topGapVal),
+                  topY: mmToThreeUnits(effectiveH_l2),
                   heightMm: Math.round(visibleTopFrameVal),
                   key: `upper-topframe-${moduleIndex}`
                 });
@@ -1926,7 +1925,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             좌측 65 = 조절발(받침대 본체) 높이 / 우측 = 걸레받이 = baseFrameGap 사용자 입력값
             사용자가 baseFrameGap 입력 안 하면 표시 안함 */}
         {(() => {
-          const baseGapMm = (selectedMod?.baseFrameGap ?? 0);
+          const baseGapMm = baseFrameGapMm;
           if (!baseGapMm || baseGapMm <= 0) return null;
           if (selectedModCategory === 'lower' || selectedModCategory === 'upper') return null;
           // 걸레받이 = 바닥마감재 상단 ~ baseGapMm 만큼 위
@@ -2929,11 +2928,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (modCat_rl2 === 'upper' || modCat_rl2 === 'full') {
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_rl2);
               const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
-              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
+              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal);
               if (visibleTopFrameVal > 0) {
                 segments_rl2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(effectiveH_rl2 - topGapVal),
+                  topY: mmToThreeUnits(effectiveH_rl2),
                   heightMm: Math.round(visibleTopFrameVal),
                   key: `upper-topframe-${moduleIndex}`
                 });

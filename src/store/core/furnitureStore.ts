@@ -620,18 +620,27 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
       const hasBaseByDefault = newCategory === 'lower' || newCategory === 'full' || isLowerById;
       const baseConfig = spaceInfo.baseConfig;
+      const lowerBaseFrameHeight = spaceInfo.baseboardLowerSize ?? 105;
+      const lowerBaseFrameOffset = spaceInfo.baseboardLowerOffset ?? baseConfig?.offset;
+      const lowerBaseFrameGap = spaceInfo.baseboardLowerGap ?? baseConfig?.gap;
       if (module.baseFrameHeight === undefined) {
         if (newCategory === 'lower' || isLowerById) {
-          module.baseFrameHeight = 105;
+          module.baseFrameHeight = lowerBaseFrameHeight;
         } else if (newCategory === 'full') {
           module.baseFrameHeight = baseConfig?.height ?? 60;
         }
       }
-      if (hasBaseByDefault && module.baseFrameOffset === undefined && typeof baseConfig?.offset === 'number') {
-        module.baseFrameOffset = baseConfig.offset;
+      if (hasBaseByDefault && module.baseFrameOffset === undefined) {
+        const defaultOffset = (newCategory === 'lower' || isLowerById)
+          ? lowerBaseFrameOffset
+          : baseConfig?.offset;
+        if (typeof defaultOffset === 'number') module.baseFrameOffset = defaultOffset;
       }
-      if (hasBaseByDefault && module.baseFrameGap === undefined && typeof baseConfig?.gap === 'number') {
-        module.baseFrameGap = Math.max(0, baseConfig.gap);
+      if (hasBaseByDefault && module.baseFrameGap === undefined) {
+        const defaultGap = (newCategory === 'lower' || isLowerById)
+          ? lowerBaseFrameGap
+          : baseConfig?.gap;
+        if (typeof defaultGap === 'number') module.baseFrameGap = Math.max(0, defaultGap);
       }
       if (hasBaseByDefault && module.hasBase === undefined && (baseConfig?.height ?? 0) <= 0) {
         module.hasBase = false;

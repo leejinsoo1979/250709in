@@ -276,6 +276,9 @@ export interface SpaceInfo {
   guideMidway?: number;       // 미드웨이 (상부장↔하부장 빈 공간)
   guideLowerHeight?: number;  // 하부장
   guideBaseboard?: number;    // 걸레받이
+  baseboardLowerSize?: number;
+  baseboardLowerOffset?: number;
+  baseboardLowerGap?: number;
   // 가이드 깊이 모드(탑뷰) 공통 앞/뒤 고정 기준
   guideDepthAnchor?: 'front' | 'back';
   // 카테고리별 가구 기본 깊이 (mm)

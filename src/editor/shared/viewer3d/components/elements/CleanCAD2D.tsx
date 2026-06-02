@@ -8966,7 +8966,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
                   const topGapMm = Math.min(totalMm, Math.max(0, Math.round((epRefMod as any)?.topFrameGap ?? 0)));
-                  const visibleTopMm = Math.max(0, totalMm - topGapMm);
+                  const visibleTopMm = Math.max(0, totalMm);
                   const topGapBottomY = topFrameTopY - mmToThreeUnits(topGapMm);
                   const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
 
@@ -10636,7 +10636,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
                   const topGapMm = Math.min(totalMm, Math.max(0, Math.round((epRefMod as any)?.topFrameGap ?? 0)));
-                  const visibleTopMm = Math.max(0, totalMm - topGapMm);
+                  const visibleTopMm = Math.max(0, totalMm);
                   const topGapBottomY = topFrameLineTopY - mmToThreeUnits(topGapMm);
                   const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
 

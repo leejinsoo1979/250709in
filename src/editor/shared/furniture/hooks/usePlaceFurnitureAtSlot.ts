@@ -648,10 +648,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     .filter(isTopFrameCapablePlacedModule);
   const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
     && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
-  // 기존 가구의 topFrameGap 우선, 없으면 공간설정의 frameSize.topGap fallback
+  const useGlobalTopFrame = spaceInfo.guideTopFrameAllMode ?? true;
+  const useGlobalBaseFrame = spaceInfo.guideBaseFrameAllMode ?? true;
+  // 전체 모드에서는 기존 가구 값보다 공간설정/우측바 값을 우선한다.
   const globalTopGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
-  const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? globalTopGap;
-  const inheritedTopFrameThickness = topFrameCapableExistingModules.find(module => typeof module.topFrameThickness === 'number')?.topFrameThickness;
+  const inheritedTopFrameGap = useGlobalTopFrame ? globalTopGap : (topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? globalTopGap);
+  const inheritedTopFrameThickness = useGlobalTopFrame ? undefined : topFrameCapableExistingModules.find(module => typeof module.topFrameThickness === 'number')?.topFrameThickness;
   // spaceInfo.frameSize.top === 0 이면 공간설정에서 상단몰딩 OFF로 저장된 것
   const topFrameDisabledByGlobal = (spaceInfo.frameSize?.top ?? 30) <= 0;
   const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff && !topFrameDisabledByGlobal;
@@ -665,7 +667,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const inheritBaseFrameOff = baseFrameCapableExistingModules.length > 0
     && baseFrameCapableExistingModules.every(module => module.hasBase === false);
   const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
-  const inheritedBaseFrameHeight = baseFrameCapableExistingModules.find(module => module.baseFrameHeight !== undefined)?.baseFrameHeight;
+  const inheritedBaseFrameHeight = useGlobalBaseFrame ? undefined : baseFrameCapableExistingModules.find(module => module.baseFrameHeight !== undefined)?.baseFrameHeight;
+  const inheritedBaseFrameOffset = useGlobalBaseFrame ? undefined : baseFrameCapableExistingModules.find(module => module.baseFrameOffset !== undefined)?.baseFrameOffset;
+  const inheritedBaseFrameGap = useGlobalBaseFrame ? undefined : baseFrameCapableExistingModules.find(module => module.baseFrameGap !== undefined)?.baseFrameGap;
   const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
   // spaceInfo.baseConfig.height === 0 이면 공간설정에서 걸레받이 OFF로 저장된 것
   const baseFrameDisabledByGlobal = (spaceInfo.baseConfig?.height ?? 65) <= 0;
@@ -674,14 +678,29 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     : moduleData.category !== 'upper' && !inheritBaseFrameOff && !baseFrameDisabledByGlobal;
   const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
   const isKitchenLowerModule = moduleData.category === 'lower' || furnitureId.startsWith('lower-') || furnitureId.includes('dual-lower-');
+  const globalBaseFrameHeight = isKitchenLowerModule
+    ? (spaceInfo.baseboardLowerSize ?? 105)
+    : (spaceInfo.baseConfig?.height ?? 60);
+  const globalBaseFrameOffset = isKitchenLowerModule
+    ? (spaceInfo.baseboardLowerOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 65)
+    : ((spaceInfo.baseConfig as any)?.offset ?? 0);
+  const globalBaseFrameGap = isKitchenLowerModule
+    ? (spaceInfo.baseboardLowerGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0)
+    : ((spaceInfo.baseConfig as any)?.gap ?? 0);
   const initialBaseFrameHeight = shouldHaveBaseFrame
-    ? (inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60)))
+    ? ((useGlobalBaseFrame ? globalBaseFrameHeight : inheritedBaseFrameHeight) ?? globalBaseFrameHeight)
+    : undefined;
+  const initialBaseFrameOffset = shouldHaveBaseFrame
+    ? ((useGlobalBaseFrame ? globalBaseFrameOffset : inheritedBaseFrameOffset) ?? globalBaseFrameOffset)
+    : undefined;
+  const initialBaseFrameGap = shouldHaveBaseFrame
+    ? Math.max(0, (useGlobalBaseFrame ? globalBaseFrameGap : inheritedBaseFrameGap) ?? globalBaseFrameGap)
     : undefined;
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
     : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
-  const topFrameThickness = inheritedTopFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-  const initialTopFrameGap = clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
+  const topFrameThickness = (useGlobalTopFrame ? spaceInfo.frameSize?.top : inheritedTopFrameThickness) ?? (spaceInfo.frameSize?.top ?? 30);
+  const initialTopFrameGap = clampTopFrameGapForModule(moduleData, topFrameThickness, useGlobalTopFrame ? globalTopGap : inheritedTopFrameGap, inheritedAbsorbedBase);
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -707,6 +726,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     hasBase: shouldHaveBaseFrame,
     hasBottomFrame: shouldHaveBaseFrame,
     ...(initialBaseFrameHeight !== undefined ? { baseFrameHeight: initialBaseFrameHeight } : {}),
+    ...(initialBaseFrameOffset !== undefined ? { baseFrameOffset: initialBaseFrameOffset } : {}),
+    ...(initialBaseFrameGap !== undefined ? { baseFrameGap: initialBaseFrameGap } : {}),
     hasTopFrame: shouldHaveTopFrame,
     topFrameThickness,
     ...(initialTopFrameGap > 0 ? { topFrameGap: initialTopFrameGap } : {}),

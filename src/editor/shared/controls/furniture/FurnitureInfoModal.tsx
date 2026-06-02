@@ -380,10 +380,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   const topFrameGapMm = Math.max(0, Math.min(topFrameHeightMm, placedModule?.topFrameGap ?? 0));
   const baseFrameHeightMm = placedModule?.baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
   const baseFrameGapMm = Math.max(0, Math.min(baseFrameHeightMm, placedModule?.baseFrameGap ?? 0));
-  const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
-  const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
-    ? Math.max(0, baseFrameHeightMm - floorFinishH)
-    : baseFrameHeightMm;
+  const visualBaseFrameHeightMm = baseFrameHeightMm;
 
   // EP ㄷ자 프레임: 인접 가구 판단
   const mySlot = placedModule?.slotIndex;

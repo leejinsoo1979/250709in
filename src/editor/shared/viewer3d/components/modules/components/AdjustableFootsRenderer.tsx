@@ -70,16 +70,15 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
     return mod?.hasBase !== false;
   });
-  // 개별 가구 걸래받이 높이 (설정되어 있으면 글로벌 baseConfig.height 대신 사용)
+  // 개별 가구 걸래받이 높이/갭 (설정되어 있으면 글로벌 baseConfig 대신 사용)
   const individualBaseFrameHeight = useFurnitureStore(state => {
     if (!placedFurnitureId) return undefined;
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
     return mod?.baseFrameHeight;
   });
-
   // Store 값 우선, prop은 폴백
   const effectiveBaseDepth = storeBaseDepth;
-  // 개별 가구 baseFrameHeight > prop 지정값 > 글로벌 baseConfig.height
+  // 조절발 높이는 걸레받이 기준 높이만 따른다. gap은 걸레받이 하단 cut에만 사용한다.
   const effectiveBaseHeight = individualBaseFrameHeight ?? baseHeight ?? storeBaseHeight;
   const effectiveIsFloating = storeIsFloating || isFloating;
 

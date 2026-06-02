@@ -7005,10 +7005,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 })
               });
             };
-            const baseSize = guideBaseSlotForModule?.baseFrameHeight ?? mod.baseFrameHeight ?? bfDefault;
-            const baseOffset = guideBaseSlotForModule?.baseFrameOffset ?? mod.baseFrameOffset ?? 0;
-            const baseGap = guideBaseSlotForModule?.baseFrameGap ?? mod.baseFrameGap ?? 0;
-            const visibleBaseSize = Math.max(0, baseSize - baseGap);
+            const baseSize = spaceInfo.guideBaseFrameAllMode !== false
+              ? (spaceInfo.baseConfig?.height ?? mod.baseFrameHeight ?? bfDefault)
+              : (guideBaseSlotForModule?.baseFrameHeight ?? mod.baseFrameHeight ?? bfDefault);
+            const baseOffset = spaceInfo.guideBaseFrameAllMode !== false
+              ? ((spaceInfo.baseConfig as any)?.offset ?? mod.baseFrameOffset ?? 0)
+              : (guideBaseSlotForModule?.baseFrameOffset ?? mod.baseFrameOffset ?? 0);
+            const baseGap = spaceInfo.guideBaseFrameAllMode !== false
+              ? ((spaceInfo.baseConfig as any)?.gap ?? mod.baseFrameGap ?? 0)
+              : (guideBaseSlotForModule?.baseFrameGap ?? mod.baseFrameGap ?? 0);
             const getEndPanelGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
               if (!mod.hasLeftEndPanel && !mod.hasRightEndPanel) return {};
               const updates: Record<string, number> = {};
@@ -7481,14 +7486,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div style={cellStyle}>
                           <span style={cellLabelStyle}>높이</span>
                           <input type="text" inputMode="numeric"
-                            value={visibleBaseSize || ''} placeholder="0"
+                            value={baseSize || ''} placeholder="0"
                             onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
                             onKeyDown={(e) => {
-	                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-	                              e.preventDefault();
-	                                const next = Math.max(bfMin, Math.min(bfMax, visibleBaseSize + (e.key === 'ArrowUp' ? 1 : -1))) + baseGap;
-	                                syncGuideBaseSlotForModule({ baseFrameHeight: next });
-	                                updatePlacedModule(mod.id, {
+		                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+		                              e.preventDefault();
+		                                const next = Math.max(bfMin, Math.min(bfMax, baseSize + (e.key === 'ArrowUp' ? 1 : -1)));
+		                                syncGuideBaseSlotForModule({ baseFrameHeight: next });
+		                                updatePlacedModule(mod.id, {
 	                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
 	                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getBaseSizeSyncUpdates(next),
@@ -7499,11 +7504,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onChange={(e) => {
                               const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-	                                const num = v === '' ? 0 : parseInt(v, 10);
-	                                const next = (num > bfMax ? bfMax : num) + baseGap;
-	                                syncGuideBaseSlotForModule({ baseFrameHeight: next });
-	                                updatePlacedModule(mod.id, {
+	                              if (v === '' || /^\d+$/.test(v)) {
+		                                const num = v === '' ? 0 : parseInt(v, 10);
+		                                const next = num > bfMax ? bfMax : num;
+		                                syncGuideBaseSlotForModule({ baseFrameHeight: next });
+		                                updatePlacedModule(mod.id, {
 	                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
 	                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getBaseSizeSyncUpdates(next),
@@ -7511,9 +7516,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               }
                             }}
                             onBlur={(e) => {
-	                              setHighlightedFrame(null);
-	                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) + baseGap;
-	                              syncGuideBaseSlotForModule({ baseFrameHeight: next });
+		                              setHighlightedFrame(null);
+		                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault));
+		                              syncGuideBaseSlotForModule({ baseFrameHeight: next });
 	                              updatePlacedModule(mod.id, {
 	                                ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
 	                                ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),

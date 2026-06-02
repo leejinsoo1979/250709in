@@ -71,6 +71,8 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
       const defaults = await getSpaceConfigDefaults();
       if (defaults) {
         const current = useSpaceConfigStore.getState().spaceInfo;
+        const topFrameGap = defaults.topMoldingGap ?? 0;
+        const baseFrameGap = defaults.baseboardGap ?? defaults.baseFrameGap ?? 0;
         setSpaceInfo({
           ...current,
           width: defaults.width ?? current.width,
@@ -81,7 +83,9 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           },
           frameSize: {
             ...current.frameSize!,
-            top: defaults.topMoldingSize ?? defaults.frameTop ?? current.frameSize?.top ?? 30,
+            top: defaults.topMoldingSize !== undefined
+              ? defaults.topMoldingSize
+              : defaults.frameTop ?? current.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? current.frameSize?.left ?? 18,
             right: defaults.frameRight ?? current.frameSize?.right ?? 18,
             ...((defaults.topMoldingOffset !== undefined || defaults.frameTopOffset !== undefined) && {
@@ -91,7 +95,9 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           },
           baseConfig: {
             ...current.baseConfig!,
-            height: defaults.baseboardSize ?? defaults.baseHeight ?? current.baseConfig?.height ?? 60,
+            height: defaults.baseboardSize !== undefined
+              ? defaults.baseboardSize
+              : defaults.baseHeight ?? current.baseConfig?.height ?? 60,
             ...((defaults.baseboardOffset !== undefined || defaults.baseFrameOffset !== undefined) && {
               offset: defaults.baseboardOffset ?? defaults.baseFrameOffset
             }),

@@ -3280,7 +3280,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (actualModuleData?.category === 'lower') return null;
 
     const rawHeightMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm - 1, placedModule.topFrameGap ?? 0)) : 0;
+    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm, placedModule.topFrameGap ?? 0)) : 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
     if (visibleHeightMm <= 0.5) return null;
 
@@ -3300,7 +3300,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const rawHeightMm = placedModule.guideSlotPlacement
       ? (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65)
       : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65));
-    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm - 1, (placedModule as any).baseFrameGap ?? 0)) : 0;
+    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm, (placedModule as any).baseFrameGap ?? 0)) : 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
     if (visibleHeightMm <= 0.5) return null;
 

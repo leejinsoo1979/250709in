@@ -1412,10 +1412,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         ?? 65)
       : 0;
     const topFrameGapMmIF = rawTopFrameMmIF > 0
-      ? Math.max(0, Math.min(rawTopFrameMmIF - 1, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? 0))
+      ? Math.max(0, Math.min(rawTopFrameMmIF, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? 0))
       : 0;
     const baseFrameGapMmIF = rawBaseFrameMmIF > 0
-      ? Math.max(0, Math.min(rawBaseFrameMmIF - 1, baseFrameGap ?? (_pmIF as any)?.baseFrameGap ?? 0))
+      ? Math.max(0, Math.min(rawBaseFrameMmIF, baseFrameGap ?? (_pmIF as any)?.baseFrameGap ?? 0))
       : 0;
     const topFrameMmIF = Math.max(0, rawTopFrameMmIF - topFrameGapMmIF);
     const baseFrameMmIF = Math.max(0, rawBaseFrameMmIF - baseFrameGapMmIF);

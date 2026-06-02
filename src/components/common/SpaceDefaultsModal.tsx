@@ -244,20 +244,29 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     setSaving(true);
     // 새 필드(topMoldingSize/baseboardSize)를 옛 필드(frameTop/baseHeight)에도 동기화
     // → 모든 컴포넌트가 어느 필드를 읽든 같은 값 반영됨
-    const topFrameHeight = values.topMoldingEnabled ? values.topMoldingSize : 0;
-    const baseFrameHeight = values.baseboardEnabled ? values.baseboardSize : 0;
-    const lowerBaseFrameHeight = values.baseboardLowerEnabled ? values.baseboardLowerSize : 0;
-    const previousTopFrameHeight = loadedDefaults.topMoldingEnabled ? loadedDefaults.topMoldingSize : 0;
-    const previousBaseFrameHeight = loadedDefaults.baseboardEnabled ? loadedDefaults.baseboardSize : 0;
-    const previousLowerBaseFrameHeight = loadedDefaults.baseboardLowerEnabled ? loadedDefaults.baseboardLowerSize : 0;
-    const baseFrameOffset = values.baseboardOffset;
-    const lowerBaseFrameOffset = values.baseboardLowerOffset === 0 && baseFrameOffset !== 0
-      ? baseFrameOffset
-      : values.baseboardLowerOffset;
+    const topFrameGap = values.topMoldingGap ?? 0;
     const baseFrameGap = values.baseboardGap;
     const lowerBaseFrameGap = values.baseboardLowerGap === 0 && baseFrameGap !== 0
       ? baseFrameGap
       : values.baseboardLowerGap;
+    const topFrameHeight = values.topMoldingEnabled ? values.topMoldingSize : 0;
+    const baseFrameHeight = values.baseboardEnabled ? values.baseboardSize : 0;
+    const lowerBaseFrameHeight = values.baseboardLowerEnabled ? values.baseboardLowerSize : 0;
+    const previousTopFrameGap = loadedDefaults.topMoldingGap ?? 0;
+    const previousBaseFrameGap = loadedDefaults.baseboardGap ?? loadedDefaults.baseFrameGap ?? 0;
+    const previousLowerBaseFrameGap = loadedDefaults.baseboardLowerGap === 0 && previousBaseFrameGap !== 0
+      ? previousBaseFrameGap
+      : (loadedDefaults.baseboardLowerGap ?? previousBaseFrameGap);
+    const previousVisibleTopFrameHeight = loadedDefaults.topMoldingSize ?? (loadedDefaults.frameTop ?? 0);
+    const previousVisibleBaseFrameHeight = loadedDefaults.baseboardSize ?? (loadedDefaults.baseHeight ?? 0);
+    const previousVisibleLowerBaseFrameHeight = loadedDefaults.baseboardLowerSize ?? Math.max(0, previousVisibleBaseFrameHeight);
+    const previousTopFrameHeight = loadedDefaults.topMoldingEnabled ? previousVisibleTopFrameHeight : 0;
+    const previousBaseFrameHeight = loadedDefaults.baseboardEnabled ? previousVisibleBaseFrameHeight : 0;
+    const previousLowerBaseFrameHeight = loadedDefaults.baseboardLowerEnabled ? previousVisibleLowerBaseFrameHeight : 0;
+    const baseFrameOffset = values.baseboardOffset;
+    const lowerBaseFrameOffset = values.baseboardLowerOffset === 0 && baseFrameOffset !== 0
+      ? baseFrameOffset
+      : values.baseboardLowerOffset;
     const synced = {
       ...values,
       baseboardLowerOffset: lowerBaseFrameOffset,
@@ -276,6 +285,8 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       const spaceState = useSpaceConfigStore.getState();
       const curFrameSize = spaceState.spaceInfo.frameSize ?? { top: 30, left: 18, right: 18 };
       const curBaseConfig = spaceState.spaceInfo.baseConfig ?? { type: 'floor', height: 65 };
+      const topFrameAllMode = spaceState.spaceInfo.guideTopFrameAllMode ?? true;
+      const baseFrameAllMode = spaceState.spaceInfo.guideBaseFrameAllMode ?? true;
       const isDefaultNumber = (current: number | undefined, defaults: Array<number | undefined>) => (
         current === undefined || defaults.some(defaultValue => defaultValue !== undefined && current === defaultValue)
       );
@@ -325,6 +336,9 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
         doorTopGapLowerTopDown: values.doorSettingLowerTopDownEnabled ? synced.doorTopGapLowerTopDown : undefined,
         doorBottomGapLowerTopDown: values.doorSettingLowerTopDownEnabled ? synced.doorBottomGapLowerTopDown : undefined,
         furnitureDepthDefaults: values.furnitureDepthDefaults,
+        baseboardLowerSize: lowerBaseFrameHeight,
+        baseboardLowerOffset: lowerBaseFrameOffset,
+        baseboardLowerGap: lowerBaseFrameGap,
       });
       const furnitureState = useFurnitureStore.getState();
       furnitureState.placedModules
@@ -379,21 +393,21 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             currentGap === 0;
 
           const updates: Record<string, number> = {};
-          if (module.hasTopFrame !== false && wasUsingDefaultTopHeight) {
+          if (module.hasTopFrame !== false && (topFrameAllMode || wasUsingDefaultTopHeight)) {
             updates.topFrameThickness = topFrameHeight;
           }
-          if (module.hasBase !== false && wasUsingDefaultBaseHeight) {
+          if (module.hasBase !== false && (baseFrameAllMode || wasUsingDefaultBaseHeight)) {
             updates.baseFrameHeight = isLower ? lowerBaseFrameHeight : baseFrameHeight;
           }
-          if (module.hasTopFrame !== false && wasUsingDefaultTopGap) {
+          if (module.hasTopFrame !== false && (topFrameAllMode || wasUsingDefaultTopGap)) {
             updates.topFrameGap = synced.topMoldingGap ?? 0;
           }
-          if (module.hasBase !== false && wasUsingDefaultOffset) {
+          if (module.hasBase !== false && (baseFrameAllMode || wasUsingDefaultOffset)) {
             updates.baseFrameOffset = isLower
               ? (lowerBaseFrameOffset ?? synced.baseFrameOffset)
               : synced.baseFrameOffset;
           }
-          if (module.hasBase !== false && wasUsingDefaultGap) {
+          if (module.hasBase !== false && (baseFrameAllMode || wasUsingDefaultGap)) {
             updates.baseFrameGap = isLower
               ? (lowerBaseFrameGap ?? synced.baseFrameGap)
               : synced.baseFrameGap;
@@ -445,15 +459,15 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
           const isLower = (slot.guideZone || 'full') === 'lower';
           const isUpper = (slot.guideZone || 'full') === 'upper';
           const updates: Record<string, number> = {};
-          if (!isLower && slot.hasTopFrame !== false && isDefaultNumber(slot.topFrameThickness, [
+          if (!isLower && slot.hasTopFrame !== false && (topFrameAllMode || isDefaultNumber(slot.topFrameThickness, [
             previousTopFrameHeight,
             curFrameSize.top,
             SYSTEM_DEFAULTS.topMoldingSize,
             SYSTEM_DEFAULTS.frameTop,
-          ])) {
+          ]))) {
             updates.topFrameThickness = topFrameHeight;
           }
-          if (!isUpper && slot.hasBase !== false && isDefaultNumber(slot.baseFrameHeight, isLower ? [
+          if (!isUpper && slot.hasBase !== false && (baseFrameAllMode || isDefaultNumber(slot.baseFrameHeight, isLower ? [
             previousLowerBaseFrameHeight,
             curBaseConfig.height,
             SYSTEM_DEFAULTS.baseboardLowerSize,
@@ -463,7 +477,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             curBaseConfig.height,
             SYSTEM_DEFAULTS.baseboardSize,
             SYSTEM_DEFAULTS.baseHeight,
-          ])) {
+          ]))) {
             updates.baseFrameHeight = isLower ? lowerBaseFrameHeight : baseFrameHeight;
           }
           const slotCurrentOffset = slot.baseFrameOffset;
@@ -483,12 +497,12 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             slotCurrentGap === loadedDefaults.baseboardGap ||
             (isLower && slotCurrentGap === loadedDefaults.baseboardLowerGap) ||
             slotCurrentGap === 0;
-          if (!isUpper && slot.hasBase !== false && slotWasUsingDefaultOffset) {
+          if (!isUpper && slot.hasBase !== false && (baseFrameAllMode || slotWasUsingDefaultOffset)) {
             updates.baseFrameOffset = isLower
               ? (lowerBaseFrameOffset ?? synced.baseFrameOffset)
               : synced.baseFrameOffset;
           }
-          if (!isUpper && slot.hasBase !== false && slotWasUsingDefaultGap) {
+          if (!isUpper && slot.hasBase !== false && (baseFrameAllMode || slotWasUsingDefaultGap)) {
             updates.baseFrameGap = isLower
               ? (lowerBaseFrameGap ?? synced.baseFrameGap)
               : synced.baseFrameGap;

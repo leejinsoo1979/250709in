@@ -5277,10 +5277,8 @@ const Room: React.FC<RoomProps> = ({
                     } else {
                       totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
                     }
-                    // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
-                    const modTopFrameGapMM = Math.max(0, Math.min(totalFrameHeightMM - 1, mod.topFrameGap ?? 0));
-                    const effectiveTotalFrameHeightMM = Math.max(0, totalFrameHeightMM - modTopFrameGapMM);
-                    const modFrameHeight = mmToThreeUnits(effectiveTotalFrameHeightMM);
+                    const modTopFrameGapMM = totalFrameHeightMM > 0 ? Math.max(0, Math.min(totalFrameHeightMM, mod.topFrameGap ?? 0)) : 0;
+                    const modFrameHeight = mmToThreeUnits(Math.max(0, totalFrameHeightMM - modTopFrameGapMM));
                     const modTopGapThreeUnits = mmToThreeUnits(modTopFrameGapMM);
                     const renderFrameHeight = modFrameHeight;
                     const modFrameCenterY = effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
@@ -6209,8 +6207,7 @@ const Room: React.FC<RoomProps> = ({
                   modCenterXmm = (adjustedSlotTopBounds.leftMm + adjustedSlotTopBounds.rightMm) / 2;
 
                   const rawTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
-                  // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
-                  const slotTopFrameGapMm = Math.max(0, Math.min(rawTopThickness - 1, mod.topFrameGap ?? 0));
+                  const slotTopFrameGapMm = rawTopThickness > 0 ? Math.max(0, Math.min(rawTopThickness, mod.topFrameGap ?? 0)) : 0;
                   const modTopThickness = Math.max(0, rawTopThickness - slotTopFrameGapMm);
                   const modTopHeight = mmToThreeUnits(modTopThickness);
                   const slotTopGapThreeUnits = mmToThreeUnits(slotTopFrameGapMm);
@@ -7398,12 +7395,11 @@ const Room: React.FC<RoomProps> = ({
                 baseZPosition += mmToThreeUnits(modBaseBackWallGapMm);
               }
               const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 105 : 60));
-              // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
-              const modBaseFrameGapMm = Math.max(0, Math.min(rawBaseHeightMm - 1, mod.baseFrameGap ?? 0));
+              const modBaseFrameGapMm = rawBaseHeightMm > 0 ? Math.max(0, Math.min(rawBaseHeightMm, mod.baseFrameGap ?? 0)) : 0;
               const modBaseHeightMm = Math.max(0, rawBaseHeightMm - modBaseFrameGapMm);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
               const modBaseGapThreeUnits = mmToThreeUnits(modBaseFrameGapMm);
-              // 중심 Y: panelStartY + floatHeight + gap + H/2
+              // gap은 걸레받이 하단 cut이다. 높이를 줄이고 중심만 gap만큼 보정해 윗선은 고정한다.
               const modBaseYCenter = panelStartY + floatHeight + modBaseGapThreeUnits + modBaseH / 2;
 
               // 커스터마이즈 가구 좌우분할: 무조건 걸래받이도 영역별 분할
@@ -7747,8 +7743,7 @@ const Room: React.FC<RoomProps> = ({
                       modWidthMM = adjustedSlotBaseBounds.rightMm - adjustedSlotBaseBounds.leftMm;
                       modCenterXmm = (adjustedSlotBaseBounds.leftMm + adjustedSlotBaseBounds.rightMm) / 2;
                       const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
-                      // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
-                      const baseFrameGapMm = Math.max(0, Math.min(rawBaseHeight - 1, mod.baseFrameGap ?? 0));
+                      const baseFrameGapMm = rawBaseHeight > 0 ? Math.max(0, Math.min(rawBaseHeight, mod.baseFrameGap ?? 0)) : 0;
                       const modBaseHeight = Math.max(0, rawBaseHeight - baseFrameGapMm);
                       const modBaseH = mmToThreeUnits(modBaseHeight);
                       const baseGapThreeUnits = mmToThreeUnits(baseFrameGapMm);
