@@ -290,6 +290,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     && baseFrameCapableExistingModules.every(module => module.hasBase === false);
   const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
   const inheritedBaseFrameHeight = baseFrameCapableExistingModules.find(module => module.baseFrameHeight !== undefined)?.baseFrameHeight;
+  const inheritedBaseFrameOffset = baseFrameCapableExistingModules.find(module => module.baseFrameOffset !== undefined)?.baseFrameOffset;
+  const inheritedBaseFrameGap = baseFrameCapableExistingModules.find(module => module.baseFrameGap !== undefined)?.baseFrameGap;
   const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
   // 걸레받이 OFF(type=stand) 또는 height=0이면 받침대 없이 배치한다.
   const baseFrameDisabledByGlobal = moduleFlags.hasBase === true
@@ -310,6 +312,12 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     ? (hasGuideSlotYRange
       ? (moduleFlags.baseFrameHeight ?? inheritedBaseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 0))
       : (moduleFlags.baseFrameHeight ?? inheritedBaseFrameHeight ?? (isKitchenLowerModule ? 105 : (spaceInfo.baseConfig?.height ?? 60))))
+    : undefined;
+  const initialBaseFrameOffset = shouldHaveBaseFrame
+    ? (moduleFlags.baseFrameOffset ?? inheritedBaseFrameOffset ?? (spaceInfo.baseConfig as any)?.offset ?? (isKitchenLowerModule ? 65 : 0))
+    : undefined;
+  const initialBaseFrameGap = shouldHaveBaseFrame
+    ? Math.max(0, moduleFlags.baseFrameGap ?? inheritedBaseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0)
     : undefined;
   const inheritedAbsorbedBase = shouldHaveBaseFrame
     ? 0
@@ -360,8 +368,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     topFrameThickness,
     ...(moduleFlags.topFrameOffset !== undefined ? { topFrameOffset: moduleFlags.topFrameOffset } : {}),
     ...(initialTopFrameGap > 0 ? { topFrameGap: initialTopFrameGap } : {}),
-    ...(moduleFlags.baseFrameOffset !== undefined ? { baseFrameOffset: moduleFlags.baseFrameOffset } : {}),
-    ...(moduleFlags.baseFrameGap !== undefined ? { baseFrameGap: moduleFlags.baseFrameGap } : {}),
+    ...(initialBaseFrameOffset !== undefined ? { baseFrameOffset: initialBaseFrameOffset } : {}),
+    ...(initialBaseFrameGap !== undefined ? { baseFrameGap: initialBaseFrameGap } : {}),
     // ModuleData에 individualFloatHeight 가 정의된 가구
     ...(initialFloatHeight > 0
       ? { individualFloatHeight: initialFloatHeight }

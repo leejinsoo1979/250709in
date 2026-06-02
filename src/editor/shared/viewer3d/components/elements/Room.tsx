@@ -7367,7 +7367,10 @@ const Room: React.FC<RoomProps> = ({
                 // 신발장도 사용자 입력 baseFrameOffset(modBaseZInset) 반영
                 baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - modBaseZInset;
               } else {
-                baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
+                const modDepthMm = mod.customDepth ?? mod.freeDepth ?? getModBaseDepthMm(baseShoeMid);
+                const depthBaseMm = Math.min(spaceInfo.depth || 600, 600);
+                const freeDepthInsetMm = Math.max(0, depthBaseMm - modDepthMm);
+                baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM + freeDepthInsetMm) - modBaseZInset;
               }
               console.log('🟪[자유배치 걸레받이 옵셋]', {
                 modId: mod.id,

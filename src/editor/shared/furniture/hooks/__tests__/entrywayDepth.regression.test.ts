@@ -114,4 +114,58 @@ describe('entryway shoe cabinet depth regression', () => {
     expect(result.module?.freeDepth).toBe(380)
     expect(result.module?.moduleWidth).toBe(moduleData?.dimensions.width)
   })
+
+  it('자유배치 생성 시 걸레받이 옵셋과 갭을 공간 기본값에서 복사한다', () => {
+    const spaceInfo = {
+      ...createSpaceInfo(),
+      baseConfig: { type: 'floor' as const, height: 65, offset: 80, gap: 12 }
+    }
+    const internalSpace = calculateInternalSpace(spaceInfo)
+    const moduleData = getModuleById('single-entryway-h-500', internalSpace, spaceInfo)
+
+    expect(moduleData).toBeDefined()
+
+    const result = placeFurnitureFree({
+      moduleId: 'single-entryway-h-500',
+      xPositionMM: 0,
+      spaceInfo,
+      dimensions: {
+        width: moduleData?.dimensions.width ?? 500,
+        height: moduleData?.dimensions.height ?? 2200,
+        depth: moduleData?.dimensions.depth ?? 380
+      },
+      existingModules: [],
+      moduleData,
+      skipCollisionCheck: true
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.module?.baseFrameOffset).toBe(80)
+    expect(result.module?.baseFrameGap).toBe(12)
+  })
+
+  it('자유배치 하부장은 공간 옵셋이 없으면 걸레받이 기본 옵셋 65mm를 사용한다', () => {
+    const spaceInfo = createSpaceInfo()
+    const internalSpace = calculateInternalSpace(spaceInfo)
+    const moduleData = getModuleById('lower-half-cabinet-500', internalSpace, spaceInfo)
+
+    expect(moduleData).toBeDefined()
+
+    const result = placeFurnitureFree({
+      moduleId: 'lower-half-cabinet-500',
+      xPositionMM: 0,
+      spaceInfo,
+      dimensions: {
+        width: moduleData?.dimensions.width ?? 500,
+        height: moduleData?.dimensions.height ?? 805,
+        depth: moduleData?.dimensions.depth ?? 580
+      },
+      existingModules: [],
+      moduleData,
+      skipCollisionCheck: true
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.module?.baseFrameOffset).toBe(65)
+  })
 })
