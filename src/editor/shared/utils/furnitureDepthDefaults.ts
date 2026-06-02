@@ -44,16 +44,21 @@ export const resolveFurnitureDepthDefaultKey = (
   }
 
   if (
+    classification.isPantry ||
+    classification.isFridge ||
+    moduleId.includes('pull-out-cabinet') ||
+    moduleId.includes('built-in-fridge')
+  ) {
+    return 'tall'
+  }
+
+  if (
     moduleId.includes('hanging') ||
     moduleId.includes('pantshanger') ||
     moduleId.includes('styler') ||
     classification.family === 'full'
   ) {
     return 'wardrobe'
-  }
-
-  if (classification.isPantry || classification.isFridge) {
-    return 'tall'
   }
 
   return undefined

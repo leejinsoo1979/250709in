@@ -3142,18 +3142,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     && Math.abs(effectiveLowerSectionDepth - effectiveUpperSectionDepth) < 0.5;
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
-  // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
-  // 하부장/키큰장: 앞면(도어 뒷면) 정렬
+  // 상부장/하부장/키큰장: backWallGap 0 기준 뒷벽 라인을 맞춘다.
   const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
   // 신발장 카테고리 + 유리장: 뒷벽에 뒷면 정렬 (앞면 맞추는 로직 제거)
   const midForZ = placedModule.moduleId || '';
   const isShoeCabinet = (midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-') || midForZ.includes('glass-cabinet'));
+  const isKitchenTallCabinet = (
+    midForZ.includes('pull-out-cabinet') ||
+    midForZ.includes('pantry-cabinet') ||
+    midForZ.includes('fridge-cabinet') ||
+    midForZ.includes('built-in-fridge')
+  );
+  const isBackAlignedTallCabinet = actualModuleData?.category === 'full'
+    && !isShoeCabinet
+    && !midForZ.includes('insert-frame');
+  const isLowerForZ = actualModuleData?.category === 'lower'
+    || midForZ.startsWith('lower-')
+    || midForZ.includes('dual-lower-');
   let furnitureZ: number;
   if (placedModule.guideDepthPlacement || isFrontSpaceFurniture || isSideWallFurniture) {
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
     // 상부장: 뒷면을 하부장 뒷면에 정렬
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
+  } else if (isKitchenTallCabinet || isBackAlignedTallCabinet || isLowerForZ) {
+    // 주방 하부장/키큰장(full): 뒷벽이격 0이면 모두 뒷라인이 같아야 한다.
+    // 앞면 정렬을 쓰면 모듈별 깊이 차이만큼 뒷벽에서 떠 보인다.
+    furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
   } else if (isShoeCabinet) {
     // 신발장: 기본은 뒷벽 기준, 앞고정 선택 시 앞면 기준으로 깊이를 줄인다.
     // 도어 안쪽 밀림은 각 도어 렌더러의 로컬 Z에서 처리하고, 본체 기준은 임의로 띄우지 않는다.
@@ -3165,8 +3180,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
     // 뒤고정(lowerSectionDepthDirection='front'): 뒷면 고정, 깊이 감소 시 앞면이 뒤로 이동
     // → 중심 Z를 감소량만큼 뒤로 이동
+    // 카테고리 기본 깊이로 자동 보정된 값은 현재 기준 깊이로 취급한다.
+    // 그렇지 않으면 주방 특수 키큰장처럼 모듈 원 깊이와 기본 깊이가 다른 가구가
+    // 기본 깊이를 적용받는 순간 앞/뒤로 한 번 더 밀린다.
     if (usesUnifiedSectionDepthDirection && lowerSectionDir === 'front') {
-      const baseDepthMm = actualModuleData?.dimensions.depth || actualDepthMm;
+      const isUsingCategoryDefaultDepth = categoryDefaultDepth !== undefined
+        && Math.abs(actualDepthMm - categoryDefaultDepth) < 0.5;
+      const baseDepthMm = isUsingCategoryDefaultDepth
+        ? actualDepthMm
+        : (actualModuleData?.dimensions.depth || actualDepthMm);
       const depthDiffMm = baseDepthMm - actualDepthMm;
       if (depthDiffMm !== 0) {
         furnitureZ -= mmToThreeUnits(depthDiffMm);
