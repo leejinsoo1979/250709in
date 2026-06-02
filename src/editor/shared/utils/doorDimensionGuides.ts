@@ -11,6 +11,22 @@ export interface DoorHeightDimensionSides {
   right: boolean
 }
 
+export const isDoorDimensionCandidate = (
+  placedHasDoor: boolean | undefined
+): boolean => placedHasDoor === true
+
+export type DoorDimensionCategory = 'upper' | 'lower' | 'tall' | 'other'
+
+export const resolveDoorDimensionCategory = (
+  moduleId?: string,
+  moduleCategory?: string
+): DoorDimensionCategory => {
+  if (moduleCategory === 'upper' || moduleId?.includes('upper-') || moduleId?.includes('dual-upper-')) return 'upper'
+  if (moduleCategory === 'lower' || moduleId?.includes('lower-') || moduleId?.includes('dual-lower-')) return 'lower'
+  if (moduleCategory === 'tall' || moduleId?.includes('tall-') || moduleId?.includes('pantry-')) return 'tall'
+  return 'other'
+}
+
 export const resolveDoorHeightDimensionSides = (
   modules: DoorDimensionModulePlacement[],
   furnitureId?: string

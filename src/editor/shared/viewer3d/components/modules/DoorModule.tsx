@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { ThreeEvent } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing, recalculateWithCustomWidths } from '../../../utils/indexing';
+import { calculateInternalSpace, calculateSpaceIndexing, recalculateWithCustomWidths } from '../../../utils/indexing';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
@@ -15,6 +15,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line, Html } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { Hinge } from '../Hinge';
+import { getModuleById } from '@/data/modules';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
@@ -28,7 +29,7 @@ import {
   resolveSidePanelMatchedHingePositions
 } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
-import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
+import { isDoorDimensionCandidate, resolveDoorDimensionCategory, resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import {
@@ -1154,8 +1155,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
       return originalSpaceInfo.customColumnCount || calculateSpaceIndexing(originalSpaceInfo).slotWidths?.length || 0;
     })();
+    const internalSpace = calculateInternalSpace(originalSpaceInfo);
+    const currentDimensionCategory = resolveDoorDimensionCategory(moduleData?.id, moduleData?.category);
     const visibleModules = allPlacedModules
-      .filter(module => !module.isSurroundPanel && module.hasDoor === true)
+      .filter(module => {
+        if (module.isSurroundPanel) return false;
+        const candidateModuleData = module.id === furnitureId
+          ? moduleData
+          : getModuleById(module.moduleId, internalSpace, originalSpaceInfo);
+        if (!isDoorDimensionCandidate(module.hasDoor)) return false;
+        return resolveDoorDimensionCategory(module.moduleId, candidateModuleData?.category) === currentDimensionCategory;
+      })
       .map((module, index) => {
         const isPositionPlacedModule = usePositionBasedDoorDimension
           || module.isFreePlacement === true
@@ -1176,7 +1186,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       });
 
     return resolveDoorHeightDimensionSides(visibleModules, furnitureId);
-  }, [allPlacedModules, furnitureId, originalSpaceInfo]);
+  }, [allPlacedModules, furnitureId, moduleData, originalSpaceInfo]);
   const baseDoorHeightDimensionSides = storePlacedModule?.placementWall === 'right'
     ? {
       left: doorHeightDimensionSides.right,

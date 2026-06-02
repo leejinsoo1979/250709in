@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useSpring, animated } from '@react-spring/three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { ModuleData } from '@/data/modules/shelving';
+import { getModuleById } from '@/data/modules';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -23,13 +24,13 @@ import LegraSideRail from '../components/LegraSideRail';
 import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateInternalSpace, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
-import { resolveDoorHeightDimensionSides } from '@/editor/shared/utils/doorDimensionGuides';
+import { isDoorDimensionCandidate, resolveDoorDimensionCategory, resolveDoorHeightDimensionSides } from '@/editor/shared/utils/doorDimensionGuides';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -1316,8 +1317,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         if (!spaceInfo) return 0;
         return spaceInfo.customColumnCount || calculateSpaceIndexing(spaceInfo).slotWidths?.length || 0;
       })();
+      const internalSpaceForDoorDimensions = spaceInfo ? calculateInternalSpace(spaceInfo) : undefined;
+      const currentDimensionCategory = resolveDoorDimensionCategory(moduleData.id, moduleData.category);
       const visibleModules = placedModulesForDoorDimensions
-        .filter(module => !module.isSurroundPanel && module.hasDoor === true)
+        .filter(module => {
+          if (module.isSurroundPanel) return false;
+          const candidateModuleData = module.id === placedFurnitureId
+            ? moduleData
+            : getModuleById(module.moduleId, internalSpaceForDoorDimensions, spaceInfo);
+          if (!isDoorDimensionCandidate(module.hasDoor)) return false;
+          return resolveDoorDimensionCategory(module.moduleId, candidateModuleData?.category) === currentDimensionCategory;
+        })
         .map((module, index) => {
           const isPositionPlacedModule = isFreeOrCustomPlacement
             || module.isFreePlacement === true
@@ -1373,8 +1383,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (placedModuleForCorner?.placementWall === 'left') return 'left';
 
     const x = placedModuleForCorner?.position?.x ?? slotCenterX ?? 0;
+    const internalSpaceForDoorDimensions = spaceInfo ? calculateInternalSpace(spaceInfo) : undefined;
+    const currentDimensionCategory = resolveDoorDimensionCategory(moduleData.id, moduleData.category);
     const visibleDoorXs = placedModulesForDoorDimensions
-      .filter(module => !module.isSurroundPanel && module.hasDoor === true)
+      .filter(module => {
+        if (module.isSurroundPanel) return false;
+        const candidateModuleData = module.id === placedFurnitureId
+          ? moduleData
+          : getModuleById(module.moduleId, internalSpaceForDoorDimensions, spaceInfo);
+        if (!isDoorDimensionCandidate(module.hasDoor)) return false;
+        return resolveDoorDimensionCategory(module.moduleId, candidateModuleData?.category) === currentDimensionCategory;
+      })
       .map(module => module.position?.x ?? 0);
     if (visibleDoorXs.length > 0) {
       const leftmostX = Math.min(...visibleDoorXs);

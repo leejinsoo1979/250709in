@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  isDoorDimensionCandidate,
+  resolveDoorDimensionCategory,
   resolveDoorHeightDimensionSides,
   shouldRenderDoorDimensionGuides
 } from '../doorDimensionGuides'
@@ -83,5 +85,19 @@ describe('doorDimensionGuides', () => {
     expect(shouldRenderDoorDimensionGuides(true, false, '2D', 'left')).toBe(false)
     expect(shouldRenderDoorDimensionGuides(false, false, '2D', 'front')).toBe(false)
     expect(shouldRenderDoorDimensionGuides(true, true, '2D', 'front')).toBe(false)
+  })
+
+  it('실제 설치된 도어만 치수 후보에 포함한다', () => {
+    expect(isDoorDimensionCandidate(true)).toBe(true)
+    expect(isDoorDimensionCandidate(false)).toBe(false)
+    expect(isDoorDimensionCandidate(undefined)).toBe(false)
+  })
+
+  it('도어 치수 후보를 상부장과 하부장 카테고리로 분리한다', () => {
+    expect(resolveDoorDimensionCategory('upper-cabinet-600')).toBe('upper')
+    expect(resolveDoorDimensionCategory('dual-upper-cabinet-1200')).toBe('upper')
+    expect(resolveDoorDimensionCategory('lower-cabinet-600')).toBe('lower')
+    expect(resolveDoorDimensionCategory('dual-lower-drawer-1200')).toBe('lower')
+    expect(resolveDoorDimensionCategory('anything', 'tall')).toBe('tall')
   })
 })
