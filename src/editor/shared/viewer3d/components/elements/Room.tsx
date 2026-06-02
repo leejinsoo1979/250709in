@@ -7420,11 +7420,10 @@ const Room: React.FC<RoomProps> = ({
                 // 신발장도 사용자 입력 baseFrameOffset(modBaseZInset) 반영
                 baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - modBaseZInset;
               } else {
-                const modDepthMm = mod.customDepth ?? mod.freeDepth ?? getModBaseDepthMm(baseShoeMid);
-                const depthBaseMm = Math.min(spaceInfo.depth || 600, 600);
-                const freeDepthDir = mod.lowerSectionDepthDirection || mod.upperSectionDepthDirection || 'front';
-                const freeDepthInsetMm = freeDepthDir === 'back' ? 0 : Math.max(0, depthBaseMm - modDepthMm);
-                baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM + freeDepthInsetMm) - modBaseZInset;
+                // 걸래받이 Z는 조절발과 동일하게 depthZOffsetMM + baseFrameOffset(modBaseZInset)만 반영.
+                // (freeDepthInsetMm을 추가로 빼면 옵셋 20 입력 시 걸래받이만 20 더 들어가 40에 위치 →
+                //  조절발(옵셋 20)과 어긋나던 문제 제거)
+                baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               }
               // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
               const modBaseBackWallGapMm = mod.backWallGap ?? 0;
@@ -7985,6 +7984,7 @@ const Room: React.FC<RoomProps> = ({
                 // 프레임 범위는 이미 엔드패널이 조정되어 있음
                 const adjustedFrameStartXCalc = frameStartX;
                 const adjustedFrameEndXCalc = frameEndX;
+                const zoneBaseFrameOffset = mmToThreeUnits(spaceInfo.baseConfig?.offset ?? 0);
 
 // console.log('🔧 걸래받이 분절 엔드패널 조정:', {
                   // 조정된시작: adjustedFrameStartXCalc,
@@ -8045,11 +8045,9 @@ const Room: React.FC<RoomProps> = ({
                       position={[
                         frameX, // 중앙 정렬
                         panelStartY + floatHeight + baseFrameHeight / 2, // 바닥마감재 위 + 원래 높이
-                        // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                        // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                         mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
-                        mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
+                        zoneBaseFrameOffset
                       ]}
                       material={zoneMaterial}
                       renderMode={renderMode}
@@ -8091,10 +8089,8 @@ const Room: React.FC<RoomProps> = ({
                       position={[
                         segment.x, // 분절된 위치
                         panelStartY + floatHeight + baseFrameHeight / 2, // 바닥마감재 위 + 원래 높이
-                        // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
-                        // 받침대 깊이만큼 뒤로 이동
                         furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(END_PANEL_THICKNESS) -
-                        mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
+                        zoneBaseFrameOffset
                       ]}
                       material={zoneMaterial}
                       renderMode={renderMode}
