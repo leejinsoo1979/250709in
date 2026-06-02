@@ -950,6 +950,20 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         // 사용자가 좌고정/우고정을 선택한 경우 그 면을 우선 고정한다 (기본 좌고정).
         // updates에 anchor가 함께 넘어오면 그것을, 아니면 기존 모듈 값을 사용.
         const anchorOverride = (updates.insertFrameWidthAnchor ?? existingModule.insertFrameWidthAnchor ?? 'left') as 'left' | 'right';
+        const __newX = calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo, anchorOverride);
+        console.log('🔧[insert-frame resize@store]', {
+          id: existingModule.id,
+          isFreePlacement: existingModule.isFreePlacement,
+          guideSlotPlacement: (existingModule as any).guideSlotPlacement,
+          slotIndex: existingModule.slotIndex,
+          anchorFromUpdates: updates.insertFrameWidthAnchor,
+          anchorFromExisting: existingModule.insertFrameWidthAnchor,
+          anchorUsed: anchorOverride,
+          oldWidth: currentBodyWidth,
+          newWidth: requestedBodyWidth,
+          oldPosX: existingModule.position.x,
+          newPosX: __newX,
+        });
         finalUpdates = {
           ...finalUpdates,
           freeWidth: requestedBodyWidth,
@@ -959,7 +973,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           userResizedWidth: true,
           position: {
             ...existingModule.position,
-            x: calcInsertFrameResizedPositionX(insertFrameForResize, requestedBodyWidth, state.placedModules, spaceInfo, anchorOverride),
+            x: __newX,
           },
         };
       }
