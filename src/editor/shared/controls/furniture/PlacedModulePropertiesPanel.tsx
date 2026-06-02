@@ -3146,12 +3146,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
     const fa = useFurnitureStore.getState().placedModules;
     const freshSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
-    const newX = calcResizedPositionX(fm, val, fa, freshSpaceInfo);
+    // 키큰장찬넬(insert-frame)은 채움재 → 한쪽 면 고정 리사이즈 (뷰어 상단 입력창과 동일)
+    const isInsertFrameSecBlur = typeof fm.moduleId === 'string' && fm.moduleId.includes('insert-frame');
+    const newX = isInsertFrameSecBlur
+      ? calcInsertFrameResizedPositionX(fm, val, fa, freshSpaceInfo)
+      : calcResizedPositionX(fm, val, fa, freshSpaceInfo);
     updatePlacedModule(currentPlacedModule.id, {
       customConfig: newConfig,
       freeWidth: val,
       moduleWidth: val,
       position: { ...fm.position, x: newX },
+      ...(isInsertFrameSecBlur ? { userResizedWidth: true } : {}),
     });
     setFreeWidthInput(val.toString());
     // 모든 섹션 너비 입력 동기화
@@ -5114,11 +5119,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const fm = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                                 const fa = useFurnitureStore.getState().placedModules;
                                 const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                                const newX = calcResizedPositionX(fm, val, fa, freshSI);
+                                // 키큰장찬넬(insert-frame)은 채움재 → 한쪽 면 고정 리사이즈 (뷰어 상단 입력창과 동일)
+                                const isInsertFrameSec = typeof fm.moduleId === 'string' && fm.moduleId.includes('insert-frame');
+                                const newX = isInsertFrameSec
+                                  ? calcInsertFrameResizedPositionX(fm, val, fa, freshSI)
+                                  : calcResizedPositionX(fm, val, fa, freshSI);
                                 const updates: any = {
                                   freeWidth: val,
                                   moduleWidth: val,
                                   position: { ...fm.position, x: newX },
+                                  userResizedWidth: true,
                                 };
                                 if (isCustom) {
                                   const newSecs = cc!.sections.map((s: any) => ({ ...s, width: val }));
@@ -5150,8 +5160,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setSectionWidthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
                                 const fa2 = useFurnitureStore.getState().placedModules;
                                 const freshSI2 = useSpaceConfigStore.getState().spaceInfo;
-                                const newX = calcResizedPositionX(fm2, next, fa2, freshSI2);
-                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...fm2.position, x: newX } };
+                                // 키큰장찬넬(insert-frame)은 채움재 → 한쪽 면 고정 리사이즈 (뷰어 상단 입력창과 동일)
+                                const isInsertFrameSec2 = typeof fm2.moduleId === 'string' && fm2.moduleId.includes('insert-frame');
+                                const newX = isInsertFrameSec2
+                                  ? calcInsertFrameResizedPositionX(fm2, next, fa2, freshSI2)
+                                  : calcResizedPositionX(fm2, next, fa2, freshSI2);
+                                const updates: any = { freeWidth: next, moduleWidth: next, position: { ...fm2.position, x: newX }, userResizedWidth: true };
                                 if (isCustom) {
                                   const newSecs = cc!.sections.map((s: any) => ({ ...s, width: next }));
                                   updates.customConfig = { ...cc!, sections: newSecs };
