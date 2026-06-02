@@ -2101,10 +2101,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const guideFullBaseModule = guideBaseCandidateModules.find((module) => (
       getGuideModuleCategory(module) === 'full'
     ));
-    const guideBaseReferenceModule = guideSelectedBaseModule ?? guideLowerBaseModule ?? guideFullBaseModule;
-    const guideLowerBaseSlot = guideSlots.find((slot) => (slot.guideZone || 'full') === 'lower');
-    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
-    const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+	    const guideBaseReferenceModule = guideSelectedBaseModule ?? guideLowerBaseModule ?? guideFullBaseModule;
+	    const guideLowerBaseSlot = guideSlots.find((slot) => (slot.guideZone || 'full') === 'lower');
+	    const guideBaseFrameSlot = guideLowerBaseSlot ?? guideSlots.find((slot) => (slot.guideZone || 'full') === 'full');
+	    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+	    const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
     const resolveGuideBaseHeight = (module: typeof placedModules[number] | undefined) => {
       if (!module) {
         return spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 0) : 0;
@@ -2129,21 +2130,27 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const isFloatingBase = guideBaseReferenceModule
       ? guideBaseReferenceModule.hasBase === false
       : globalFloatingBase;
-    const gBaseboard = guideBaseReferenceModule && guideBaseFrameAllMode
-      ? resolveGuideBaseHeight(guideBaseReferenceModule)
-      : (spaceInfo.baseConfig?.type === 'floor'
-        ? (guideBaseFrameAllMode
-          ? (guideLowerBaseSlot?.baseFrameHeight ?? (hasSplitSlots ? 105 : (spaceInfo.baseConfig?.height ?? 0)))
-          : (hasSplitSlots ? 105 : (spaceInfo.baseConfig?.height ?? 0)))
-        : 0);
+	    const gBaseboard = guideBaseFrameAllMode
+	      ? (
+	        guideBaseFrameSlot?.baseFrameHeight
+	        ?? (guideBaseReferenceModule ? resolveGuideBaseHeight(guideBaseReferenceModule) : undefined)
+	        ?? (hasSplitSlots ? 105 : (spaceInfo.baseConfig?.height ?? 0))
+	      )
+	      : (spaceInfo.baseConfig?.type === 'floor'
+	        ? (hasSplitSlots ? 105 : (spaceInfo.baseConfig?.height ?? 0))
+	        : 0);
     const gFloatHeight = isFloatingBase
       ? Math.max(0, guideBaseReferenceModule?.individualFloatHeight ?? spaceInfo.baseConfig?.floatHeight ?? 0)
       : 0;
     const gBottomClearance = isFloatingBase ? gFloatHeight : gBaseboard;
-    // 우측바 옵셋/갭과 연동되는 값
-    const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
-    const gBaseOffset = guideBaseReferenceModule?.baseFrameOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 0;
-    const gBaseGap = isFloatingBase || !guideBaseFrameAllMode ? 0 : Math.max(0, Math.min(gBaseboard, guideBaseReferenceModule?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0));
+	    // 우측바 옵셋/갭과 연동되는 값
+	    const gMoldingOffset = (spaceInfo.frameSize as any)?.topOffset ?? 0;
+	    const gBaseOffset = guideBaseFrameAllMode
+	      ? (guideBaseFrameSlot?.baseFrameOffset ?? guideBaseReferenceModule?.baseFrameOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 0)
+	      : (guideBaseReferenceModule?.baseFrameOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 0);
+	    const gBaseGap = isFloatingBase || !guideBaseFrameAllMode
+	      ? 0
+	      : Math.max(0, Math.min(gBaseboard, guideBaseFrameSlot?.baseFrameGap ?? guideBaseReferenceModule?.baseFrameGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0));
     const gMoldingVisible = gTopMolding > 0 ? Math.max(0, gTopMolding - gMoldingGap) : gMoldingGap;
     const gBaseboardVisible = isFloatingBase ? gFloatHeight : Math.max(0, gBaseboard - gBaseGap);
     const availableSectionHeight = Math.max(0, Math.round(fullHeightMm - gTopClearance - gBottomClearance));
@@ -2356,8 +2363,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       const matchesTier = (slot: FreePlacementGuideSlot) => {
         const zone = slot.guideZone || 'full';
         if (zone === 'full') return true;
-        if (key === 'upper' || key === 'molding' || key === 'moldingGap') return zone === 'upper';
-        if (key === 'lower' || key === 'baseboard') return zone === 'lower';
+        if (key === 'upper' || key === 'molding') return zone === 'upper';
+	        if (key === 'lower' || key === 'baseboard') return zone === 'lower';
         return false;
       };
       return guideSlots.some((slot) => matchesTier(slot) && isGuideSlotOccupied(slot));
@@ -2366,15 +2373,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // ── 가이드 높이 치수 편집기 (좌/우 가장자리) ──
     const spaceHalfWidth = spaceInfo.width / 2;
     const heightTiers = [
-      { key: 'molding', label: gTopMolding > 0 ? '상단몰딩' : '상단갭', value: gMoldingVisible, centerYmm: gTopMolding > 0 ? (yUpperTop + yMoldingGapBottom) / 2 : (yUpperTop + fullHeightMm) / 2 },
-      ...(gTopMolding > 0 && gMoldingGap > 0
-        ? [{ key: 'moldingGap', label: '상단갭', value: gMoldingGap, centerYmm: (yMoldingGapBottom + fullHeightMm) / 2 }]
-        : []),
+      { key: 'molding', label: gTopMolding > 0 ? '상단몰딩' : '상단갭', value: gTopMolding > 0 ? gTopMolding : gMoldingGap, centerYmm: (yUpperTop + fullHeightMm) / 2 },
       { key: 'upper', label: '상부섹션', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
-      ...(hasSplitSlots ? [{ key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 }] : []),
-      { key: 'lower', label: '하부섹션', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
-      { key: 'baseboard', label: isFloatingBase ? '띄움높이' : '걸레받이', value: gBaseboardVisible, centerYmm: isFloatingBase ? yBaseTop / 2 : (yBaseGapTop + yBaseTop) / 2 },
-    ];
+	      ...(hasSplitSlots ? [{ key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 }] : []),
+	      { key: 'lower', label: '하부섹션', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
+	      { key: 'baseboard', label: isFloatingBase ? '띄움높이' : '걸레받이', value: isFloatingBase ? gFloatHeight : gBaseboard, centerYmm: yBaseTop / 2 },
+	    ];
     const commitTier = (key: string, raw: string) => {
       const v = Math.round(parseFloat(raw));
       if (!Number.isFinite(v) || v < 0) return;
@@ -2385,28 +2389,23 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             : { ...(spaceInfo.frameSize as any), top: 0, topGap: v }
         });
       }
-      else if (key === 'moldingGap') {
-        setSpaceInfo({
-          frameSize: { ...(spaceInfo.frameSize as any), topGap: v }
-        });
-      }
       else if (key === 'lower') {
         setSpaceInfo({ guideLowerHeight: hasSplitSlots ? v : Math.min(v, availableSectionHeight) });
       }
-      else if (key === 'baseboard') {
-        const nextBaseHeight = isFloatingBase ? v : v + gBaseGap;
-        if (guideBaseReferenceModule) {
-          updatePlacedModule(guideBaseReferenceModule.id, isFloatingBase
+	      else if (key === 'baseboard') {
+	        const nextBaseHeight = isFloatingBase ? v : v + gBaseGap;
+	        syncGuideBaseFrameAll(
+	          isFloatingBase
+            ? { type: 'stand', placementType: 'float', height: 0, floatHeight: v }
+            : { type: 'floor', placementType: 'ground', height: nextBaseHeight },
+          isFloatingBase
             ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: v }
-            : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextBaseHeight }
-          );
-        }
-        setSpaceInfo({
-          baseConfig: isFloatingBase
-            ? { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', floatHeight: v }
-            : { ...(spaceInfo.baseConfig as any), type: 'floor', height: nextBaseHeight }
-        });
-      }
+            : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextBaseHeight, baseFrameOffset: gBaseOffset, baseFrameGap: gBaseGap },
+          isFloatingBase
+            ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: v }
+            : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextBaseHeight, baseFrameOffset: gBaseOffset, baseFrameGap: gBaseGap }
+	        );
+	      }
       else if (key === 'upper') {
         if (hasSplitSlots) setSpaceInfo({ guideUpperHeight: v });
         else setSpaceInfo({ guideLowerHeight: Math.max(0, availableSectionHeight - v) });
@@ -2424,10 +2423,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     };
     const renderHeightTiers = (sideX: number, editable: boolean) =>
       heightTiers.map((tier) => {
-        if (!editable && tier.key !== 'moldingGap' && isHeightTierOccupied(tier.key)) return null;
-        const labelX = tier.key === 'moldingGap'
-          ? sideX + (sideX > 0 ? 0.48 : -0.48)
-          : sideX;
+        if (!editable && isHeightTierOccupied(tier.key)) return null;
+	        const labelX = sideX;
 
         return (
           <Html
@@ -2515,6 +2512,32 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         freePlacementGuides: (spaceInfo.freePlacementGuides || []).map((slot) => (
           slot.id === slotId ? { ...slot, ...updates } : slot
         ))
+      });
+    };
+    const syncGuideBaseFrameAll = (
+      baseConfigUpdates: Record<string, any>,
+      slotUpdates: Partial<FreePlacementGuideSlot>,
+      moduleUpdates: Record<string, any>
+    ) => {
+      const nextSpaceInfo: Record<string, any> = {
+        baseConfig: {
+          ...(spaceInfo.baseConfig as any),
+          ...baseConfigUpdates
+        }
+      };
+      const currentGuides = spaceInfo.freePlacementGuides || [];
+      if (currentGuides.length > 0) {
+        nextSpaceInfo.freePlacementGuides = currentGuides.map((slot) => (
+          (slot.guideZone || 'full') === 'upper'
+            ? slot
+            : { ...slot, ...slotUpdates }
+        ));
+      }
+      setSpaceInfo(nextSpaceInfo);
+      guideBaseCandidateModules.forEach((module) => {
+        const category = getGuideModuleCategory(module);
+        if (category !== 'lower' && category !== 'full') return;
+        updatePlacedModule(module.id, moduleUpdates);
       });
     };
     const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? isGlobalTopFrameEnabled;
@@ -2838,16 +2861,46 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                   gBaseGap,
                   gFloatHeight,
                   () => {
-                    setSpaceInfo({
-                      baseConfig: isGlobalBaseFrameEnabled
-                        ? { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', height: 0, floatHeight: 0 }
-                        : { ...(spaceInfo.baseConfig as any), type: 'floor', placementType: 'ground', height: Math.max(1, spaceInfo.baseConfig?.height || 65) }
-                    });
+                    const nextEnabled = !isGlobalBaseFrameEnabled;
+                    const nextBaseHeight = nextEnabled ? Math.max(1, spaceInfo.baseConfig?.height || 65) : 0;
+                    syncGuideBaseFrameAll(
+                      isGlobalBaseFrameEnabled
+                        ? { type: 'stand', placementType: 'float', height: 0, floatHeight: 0 }
+                        : { type: 'floor', placementType: 'ground', height: nextBaseHeight },
+                      isGlobalBaseFrameEnabled
+                        ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: 0 }
+                        : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextBaseHeight },
+                      isGlobalBaseFrameEnabled
+                        ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: 0 }
+                        : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextBaseHeight }
+                    );
                   },
-                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), type: 'floor', height: v + gBaseGap } }),
-                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), offset: v } }),
-                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), gap: Math.max(0, v) } }),
-                  (v) => setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig as any), type: 'stand', placementType: 'float', height: 0, floatHeight: v } })
+                  (v) => {
+                      const nextHeight = v + gBaseGap;
+                      syncGuideBaseFrameAll(
+                        { type: 'floor', placementType: 'ground', height: nextHeight },
+                        { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextHeight, baseFrameOffset: gBaseOffset, baseFrameGap: gBaseGap },
+                        { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextHeight, baseFrameOffset: gBaseOffset, baseFrameGap: gBaseGap }
+                      );
+                    },
+                  (v) => syncGuideBaseFrameAll(
+                    { offset: v },
+                    { baseFrameOffset: v },
+                    { baseFrameOffset: v }
+                  ),
+                  (v) => {
+                    const nextGap = Math.max(0, v);
+                    syncGuideBaseFrameAll(
+                      { gap: nextGap },
+                      { baseFrameGap: nextGap },
+                      { baseFrameGap: nextGap }
+                    );
+                  },
+                  (v) => syncGuideBaseFrameAll(
+                    { type: 'stand', placementType: 'float', height: 0, floatHeight: v },
+                    { hasBase: false, hasBottomFrame: false, individualFloatHeight: v },
+                    { hasBase: false, hasBottomFrame: false, individualFloatHeight: v }
+                  )
                 )}
               </div>
               <label style={frameAllCheckboxStyle}>
@@ -2924,7 +2977,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       ...(guideBaseFrameAllMode && gBaseGap > 0 ? [yBaseGapTop] : []),
       ...(guideBaseFrameAllMode ? [yBaseTop] : []),
       yUpperTop,
-      ...(gMoldingGap > 0 ? [yMoldingGapBottom] : []),
       fullHeightMm
     ];
     const sectionBoundaryYmm = hasSplitSlots ? [yLowerTop, yMidTop] : [yLowerTop];

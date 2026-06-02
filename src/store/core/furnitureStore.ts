@@ -8,6 +8,7 @@ import { useSpaceConfigStore } from './spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { calcInsertFrameResizedPositionX, resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
+import { applySlotOutsideEpAdjustments } from '@/editor/shared/utils/slotOutsideEpAdjustment';
 
 const isCornerCabinetModuleId = (moduleId?: string): boolean =>
   !!moduleId && (moduleId.includes('left-corner') || moduleId.includes('right-corner'));
@@ -17,6 +18,11 @@ const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boole
   if (stoneTopThickness === 10) return -90;
   if (stoneTopThickness === 30) return -70;
   return -80;
+};
+
+const applyCurrentSlotOutsideEpAdjustments = (modules: PlacedModule[]): PlacedModule[] => {
+  const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+  return applySlotOutsideEpAdjustments(modules, spaceInfo);
 };
 
 const getRequiredCornerStartSlot = (
@@ -648,7 +654,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       // 자유배치 가구는 슬롯 충돌 체크 불필요 (X 좌표 기반 충돌 검사는 배치 시점에 이미 완료됨)
       if (module.isFreePlacement) {
-        const newModules = [...state.placedModules, module];
+        const newModules = applyCurrentSlotOutsideEpAdjustments([...state.placedModules, module]);
         notifyR3F(newModules);
         return {
           placedModules: newModules
@@ -762,10 +768,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 교체될 가구들의 ID 목록
           const replaceIds = modulesToReplace.map(m => m.id);
 
-          const newModules = [
+          const newModules = applyCurrentSlotOutsideEpAdjustments([
             ...state.placedModules.filter(m => !replaceIds.includes(m.id)),
             module
-          ];
+          ]);
           notifyR3F(newModules);
           return {
             placedModules: newModules
@@ -773,14 +779,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
 
         // 모든 기존 가구와 공존 가능하면 추가
-        const newModules2 = [...state.placedModules, module];
+        const newModules2 = applyCurrentSlotOutsideEpAdjustments([...state.placedModules, module]);
         notifyR3F(newModules2);
         return {
           placedModules: newModules2
         };
       }
 
-      const newModules3 = [...state.placedModules, module];
+      const newModules3 = applyCurrentSlotOutsideEpAdjustments([...state.placedModules, module]);
       notifyR3F(newModules3);
       return {
         placedModules: newModules3
@@ -809,11 +815,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
     // 그룹 모듈 (예: 듀얼 빌트인 냉장고장 세트): 같은 groupId 가진 모든 모듈 함께 삭제
     const groupId = module?.groupId;
-    set((state) => ({
-      placedModules: state.placedModules.filter(m =>
+    set((state) => {
+      const nextModules = applyCurrentSlotOutsideEpAdjustments(state.placedModules.filter(m =>
         m.id !== id && (!groupId || m.groupId !== groupId)
-      )
-    }));
+      ));
+      notifyR3F(nextModules);
+      return { placedModules: nextModules };
+    });
 
     // 삭제 후 인접 키큰장 EP 해제 (비동기: 삭제 set과 분리하여 리렌더 충돌 방지)
     if (module) {
@@ -843,9 +851,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const state = get();
     const targetModule = state.placedModules.find(module => module.id === id);
     if (targetModule?.isLocked) return;
-    const newModules = state.placedModules.map(module =>
+    const newModules = applyCurrentSlotOutsideEpAdjustments(state.placedModules.map(module =>
       applyModuleAndGroupedMovement(module, id, targetModule, { position })
-    );
+    ));
     set({ placedModules: newModules });
     notifyR3F(newModules);
   },
@@ -1142,9 +1150,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
           // 모든 기존 가구와 공존 가능하면 그냥 업데이트
           if (modulesToReplace.length === 0) {
-            const newModules = state.placedModules.map(module =>
+            const newModules = applyCurrentSlotOutsideEpAdjustments(state.placedModules.map(module =>
               applyModuleAndGroupedMovement(module, id, existingModule, finalUpdates)
-            );
+            ));
             set({ placedModules: newModules });
             notifyR3F(newModules);
             // 슬롯 변경 시 EP 재계산
@@ -1162,9 +1170,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           if (modulesToReplace.length > 0) {
             const replaceIds = modulesToReplace.map(m => m.id);
             const filteredModules = state.placedModules.filter(m => !replaceIds.includes(m.id));
-            const newModules = filteredModules.map(module =>
+            const newModules = applyCurrentSlotOutsideEpAdjustments(filteredModules.map(module =>
               applyModuleAndGroupedMovement(module, id, existingModule, finalUpdates)
-            );
+            ));
             set({ placedModules: newModules });
             notifyR3F(newModules);
             // 슬롯 변경 시 EP 재계산
@@ -1182,9 +1190,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     }
 
     // 충돌이 없으면 일반 업데이트
-    const newModules = state.placedModules.map(module => {
+    const newModules = applyCurrentSlotOutsideEpAdjustments(state.placedModules.map(module => {
       return applyModuleAndGroupedMovement(module, id, existingModule, finalUpdates);
-    });
+    }));
 
     set({ placedModules: newModules });
     notifyR3F(newModules);
@@ -1211,7 +1219,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const state = get();
     const resolved = typeof modules === 'function' ? modules(state.placedModules) : modules;
     // 도어갭 기본값은 undefined일 때만 채운다. 0/양수/음수는 사용자 입력값이다.
-    const newModules = resolved.map(m => {
+    const newModules = applyCurrentSlotOutsideEpAdjustments(resolved.map(m => {
       const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
       if (isBasic) {
         const needsTopFix = m.doorTopGap === undefined;
@@ -1251,7 +1259,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
       return m;
-    });
+    }));
     set({ placedModules: newModules });
     notifyR3F(newModules);
   },

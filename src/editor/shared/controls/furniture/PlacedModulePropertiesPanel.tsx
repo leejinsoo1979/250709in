@@ -13,7 +13,7 @@ import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/
 import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
-import { calcInsertFrameResizedPositionX, calcResizedPositionX, resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
+import { calcInsertFrameResizedPositionX, calcResizedPositionX, getModuleBoundsX, getModuleCategory, resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
@@ -1949,16 +1949,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         : isLowerCategory
           ? 2
           : 25);
-      // 카테고리 글로벌(모달 셋팅)이 존재하면 개별값보다 우선한다.
-      // (사용자가 공간설정 모달에서 카테고리별로 셋팅한 값이 배치된 가구에 반영되도록)
-      const rawTopGap = catTopGap ?? currentPlacedModule.doorTopGap;
+      // 개별 가구값이 최우선. 카테고리 글로벌은 개별값이 없을 때의 폴백(defaultTopGap)에만 반영한다.
+      // (catTopGap을 개별값보다 우선하면 카테고리 판별이 어긋날 때 키큰장 값으로 되돌아가는 버그)
+      const rawTopGap = currentPlacedModule.doorTopGap;
       const topDownNoEpDefaultGap = isTopDown
         ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, false)
         : undefined;
-      // 카테고리 글로벌이 설정돼 있으면 매직넘버 치환을 건너뛰고 그 값을 그대로 사용한다.
-      const initialTopGap = (catTopGap !== undefined)
-        ? catTopGap
-        : !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
+      const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
         : (isBasicLowerDoorGap && rawTopGap === 20)
           ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
@@ -1967,7 +1964,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           : (isTopDown && currentPlacedModule.hasTopEndPanel === true && rawTopGap === topDownNoEpDefaultGap)
             ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
-      const rawBotGap = catBottomGap ?? currentPlacedModule.doorBottomGap;
+      const rawBotGap = currentPlacedModule.doorBottomGap;
       const initialBottomGap = rawBotGap ?? defaultBottomGap;
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
@@ -6968,9 +6965,49 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
             const topOffset = mod.topFrameOffset ?? topOffsetDefault;
             const topGap = topEnabled ? (mod.topFrameGap ?? 0) : (mod.topFrameGap ?? topSize);
-            const baseSize = mod.baseFrameHeight ?? bfDefault;
-            const baseOffset = mod.baseFrameOffset ?? 0;
-            const baseGap = mod.baseFrameGap ?? 0;
+            const guideBaseSlotForModule = (() => {
+              const guideSlots = spaceInfo.freePlacementGuides || [];
+              if (guideSlots.length === 0) return undefined;
+              const category = getModuleCategory(mod as any);
+              if (category === 'upper') return undefined;
+              const isGuideModule = mod.guideSlotPlacement === true
+                || mod.guideDepthPlacement === true
+                || (spaceInfo.customGuideMode === true && mod.isFreePlacement === true);
+              if (!isGuideModule) return undefined;
+              if (spaceInfo.guideBaseFrameAllMode !== false) {
+                return guideSlots.find((slot: any) => (slot.guideZone || 'full') === 'lower')
+                  ?? guideSlots.find((slot: any) => (slot.guideZone || 'full') === 'full');
+              }
+              const moduleBounds = getModuleBoundsX(mod as any);
+              const targetZone = mod.guideSlotZone || category;
+              return guideSlots.find((slot: any) => {
+                const zone = slot.guideZone || 'full';
+                if (zone === 'upper') return false;
+                if (targetZone !== 'full' && zone !== targetZone) return false;
+                const slotLeft = slot.x - spaceInfo.width / 2;
+                const slotRight = slot.x + slot.width - spaceInfo.width / 2;
+                return moduleBounds.left < slotRight - 0.5 && moduleBounds.right > slotLeft + 0.5;
+              }) ?? guideSlots.find((slot: any) => (slot.guideZone || 'full') === 'lower')
+                ?? guideSlots.find((slot: any) => (slot.guideZone || 'full') === 'full');
+            })();
+            const syncGuideBaseSlotForModule = (updates: Record<string, any>) => {
+              if (!guideBaseSlotForModule) return;
+              const guideSlots = spaceInfo.freePlacementGuides || [];
+              const syncAllBaseSlots = spaceInfo.guideBaseFrameAllMode !== false;
+              setSpaceInfo({
+                freePlacementGuides: guideSlots.map((slot: any) => {
+                  const zone = slot.guideZone || 'full';
+                  if (zone === 'upper') return slot;
+                  if (syncAllBaseSlots || slot.id === guideBaseSlotForModule.id) {
+                    return { ...slot, ...updates };
+                  }
+                  return slot;
+                })
+              });
+            };
+            const baseSize = guideBaseSlotForModule?.baseFrameHeight ?? mod.baseFrameHeight ?? bfDefault;
+            const baseOffset = guideBaseSlotForModule?.baseFrameOffset ?? mod.baseFrameOffset ?? 0;
+            const baseGap = guideBaseSlotForModule?.baseFrameGap ?? mod.baseFrameGap ?? 0;
             const visibleBaseSize = Math.max(0, baseSize - baseGap);
             const getEndPanelGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
               if (!mod.hasLeftEndPanel && !mod.hasRightEndPanel) return {};
@@ -7233,7 +7270,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             };
             const getBaseSizeSyncUpdates = (nextSize: number) => {
               const clampedSize = Math.max(0, nextSize);
-              const currentBase = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+              const currentBase = baseSize ?? (spaceInfo.baseConfig?.height ?? 65);
               const baseDelta = currentBase - clampedSize;
               const sections = Array.isArray((mod as any).customSections) ? (mod as any).customSections : [];
 
@@ -7419,16 +7456,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <h5 className={styles.sectionTitle}>걸레받이</h5>
                   <div style={rowStyle}>
                     <span style={labelStyle}>전체</span>
-                    <button
-                      onClick={() => {
-                        const nextHasBase = !baseEnabled;
-                        const nextFrameState = {
-                          hasBase: nextHasBase,
-                          ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
-                        };
-                        updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates({
-                          ...nextFrameState,
-                          doorBottomGap: nextHasBase ? 25 : -5,
+	                    <button
+	                      onClick={() => {
+	                        const nextHasBase = !baseEnabled;
+	                        const nextFrameState = {
+	                          hasBase: nextHasBase,
+	                          ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
+	                        };
+	                        syncGuideBaseSlotForModule(nextFrameState);
+	                        updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates({
+	                          ...nextFrameState,
+	                          doorBottomGap: nextHasBase ? 25 : -5,
                           ...getEndPanelGapSyncUpdates(nextFrameState),
                           ...getUpperShelfGapSyncUpdates(nextFrameState),
                         }));
@@ -7446,12 +7484,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             value={visibleBaseSize || ''} placeholder="0"
                             onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
                             onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                                const next = Math.max(bfMin, Math.min(bfMax, visibleBaseSize + (e.key === 'ArrowUp' ? 1 : -1))) + baseGap;
-                                updatePlacedModule(mod.id, {
-                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
-                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+	                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+	                              e.preventDefault();
+	                                const next = Math.max(bfMin, Math.min(bfMax, visibleBaseSize + (e.key === 'ArrowUp' ? 1 : -1))) + baseGap;
+	                                syncGuideBaseSlotForModule({ baseFrameHeight: next });
+	                                updatePlacedModule(mod.id, {
+	                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
+	                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getBaseSizeSyncUpdates(next),
                                 });
                               } else if (e.key === 'Enter') {
@@ -7461,21 +7500,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : parseInt(v, 10);
-                                const next = (num > bfMax ? bfMax : num) + baseGap;
-                                updatePlacedModule(mod.id, {
-                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
-                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+	                                const num = v === '' ? 0 : parseInt(v, 10);
+	                                const next = (num > bfMax ? bfMax : num) + baseGap;
+	                                syncGuideBaseSlotForModule({ baseFrameHeight: next });
+	                                updatePlacedModule(mod.id, {
+	                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
+	                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getBaseSizeSyncUpdates(next),
                                 });
                               }
                             }}
                             onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) + baseGap;
-                              updatePlacedModule(mod.id, {
-                                ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
-                                ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+	                              setHighlightedFrame(null);
+	                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) + baseGap;
+	                              syncGuideBaseSlotForModule({ baseFrameHeight: next });
+	                              updatePlacedModule(mod.id, {
+	                                ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
+	                                ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                 ...getBaseSizeSyncUpdates(next),
                               });
                             }}
@@ -7488,24 +7529,30 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             value={baseOffset !== 0 ? baseOffset : ''} placeholder="0"
                             onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
                             onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = mod.baseFrameOffset ?? 0;
-                                updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
+	                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+	                                e.preventDefault();
+	                                const cur = mod.baseFrameOffset ?? 0;
+	                                const nextOffset = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+	                                syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
+	                                updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+	                              } else if (e.key === 'Enter') {
+	                                (e.target as HTMLInputElement).blur();
+	                              }
                             }}
                             onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) });
-                            }}
+	                              const v = e.target.value;
+	                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+	                                const nextOffset = v === '' || v === '-' ? 0 : parseInt(v, 10);
+	                                syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
+	                                updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+	                              }
+	                            }}
+	                            onBlur={(e) => {
+	                              setHighlightedFrame(null);
+	                              const nextOffset = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
+	                              syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
+	                              updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+	                            }}
                             style={inputStyle}
                           />
                         </div>
@@ -7516,28 +7563,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const maxGap = Math.max(0, baseSize - 1);
-                                const next = Math.max(0, Math.min(maxGap, (baseGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(mod.id, { baseFrameGap: next });
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
+	                                e.preventDefault();
+	                                const maxGap = Math.max(0, baseSize - 1);
+	                                const next = Math.max(0, Math.min(maxGap, (baseGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+	                                syncGuideBaseSlotForModule({ baseFrameGap: next });
+	                                updatePlacedModule(mod.id, { baseFrameGap: next });
+	                              } else if (e.key === 'Enter') {
+	                                (e.target as HTMLInputElement).blur();
                               }
                             }}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : parseInt(v, 10);
-                                const maxGap = Math.max(0, baseSize - 1);
-                                updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(maxGap, num)) });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              const maxGap = Math.max(0, baseSize - 1);
-                              const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
-                              updatePlacedModule(mod.id, { baseFrameGap: clamped });
-                            }}
+	                                const num = v === '' ? 0 : parseInt(v, 10);
+	                                const maxGap = Math.max(0, baseSize - 1);
+	                                const nextGap = Math.max(0, Math.min(maxGap, num));
+	                                syncGuideBaseSlotForModule({ baseFrameGap: nextGap });
+	                                updatePlacedModule(mod.id, { baseFrameGap: nextGap });
+	                              }
+	                            }}
+	                            onBlur={(e) => {
+	                              setHighlightedFrame(null);
+	                              const maxGap = Math.max(0, baseSize - 1);
+	                              const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
+	                              syncGuideBaseSlotForModule({ baseFrameGap: clamped });
+	                              updatePlacedModule(mod.id, { baseFrameGap: clamped });
+	                            }}
                             style={inputStyle}
                           />
                         </div>
@@ -7551,11 +7602,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = mod.individualFloatHeight ?? 0;
-                                const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates({
-                                  individualFloatHeight: nv,
-                                  ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
+	                                const cur = mod.individualFloatHeight ?? 0;
+	                                const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+	                                syncGuideBaseSlotForModule({ individualFloatHeight: nv });
+	                                updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates({
+	                                  individualFloatHeight: nv,
+	                                  ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
                                 }));
                               } else if (e.key === 'Enter') {
                                 (e.target as HTMLInputElement).blur();
@@ -7563,11 +7615,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onChange={(e) => {
                               const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const nv = v === '' ? 0 : parseInt(v, 10);
-                                updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates({
-                                  individualFloatHeight: nv,
-                                  ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
+	                              if (v === '' || /^\d+$/.test(v)) {
+	                                const nv = v === '' ? 0 : parseInt(v, 10);
+	                                syncGuideBaseSlotForModule({ individualFloatHeight: nv });
+	                                updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates({
+	                                  individualFloatHeight: nv,
+	                                  ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
                                 }));
                               }
                             }}

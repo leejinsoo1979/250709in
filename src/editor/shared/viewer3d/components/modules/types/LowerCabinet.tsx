@@ -2280,7 +2280,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   const sideBaseFrameHeight = mmToUnits(sideBaseFrameHeightMm);
                   const sideBaseFrameGap = mmToUnits(sideBaseFrameGapMm);
                   const sideBaseFrameDepth = frameWidth;
-                  const sideBaseFrameOffsetMm = (placedModuleForSideBase as any)?.baseFrameOffset ?? 65;
+                  const globalSideBaseFrameOffsetMm = (spaceInfo?.baseConfig as any)?.offset;
+                  const useGlobalSideBaseFrameOffset = spaceInfo?.guideBaseFrameAllMode ?? true;
+                  const sideBaseFrameOffsetMm = useGlobalSideBaseFrameOffset && typeof globalSideBaseFrameOffsetMm === 'number'
+                    ? globalSideBaseFrameOffsetMm
+                    : ((placedModuleForSideBase as any)?.baseFrameOffset ?? globalSideBaseFrameOffsetMm ?? 65);
                   const sideBaseFrameZ = sideCabinetDepth / 2
                     - sideBaseFrameDepth / 2
                     - mmToUnits(spaceInfo?.baseConfig?.depth ?? 0)

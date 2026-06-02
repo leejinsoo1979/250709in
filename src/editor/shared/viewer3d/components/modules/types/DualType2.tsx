@@ -36,6 +36,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   slotWidths,
   adjustedWidth, // adjustedWidth 추가
+  slotInfo,
   customSections, // 사용자 정의 섹션 설정 (자유배치 freeHeight 조정)
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
@@ -710,8 +711,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           internalHeight={internalHeight}
           originalSlotWidth={originalSlotWidth}
+          adjustedWidth={adjustedWidth}
           slotCenterX={slotCenterX || 0}
           slotWidths={slotWidths}
+          slotInfo={slotInfo}
           isDragging={isDragging}
           isEditMode={isEditMode}
           slotIndex={slotIndex}

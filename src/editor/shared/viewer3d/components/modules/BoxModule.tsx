@@ -1456,7 +1456,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       : (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM);
     const topFrameOffsetMmIF = topFrameOffset ?? (_pmIF as any)?.topFrameOffset ?? 0;
     const baseFrameOffsetMmIF = baseFrameOffset ?? (_pmIF as any)?.baseFrameOffset ?? 0;
-    const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF + topFrameOffsetMmIF);
+    const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF - topFrameOffsetMmIF);
     // 걸레받이 Z: 노서라운드 산식 고정 + baseConfig.depth만큼 추가로 뒤로
     const baseFrameZ = mmTo(moduleD_mm / 2 + (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM) - baseConfigDepthMmIF - baseDepthOffsetMmIF - baseFrameOffsetMmIF);
     const frontFrameTopY = spaceTopY - mmTo(rawTopFrameMmIF);

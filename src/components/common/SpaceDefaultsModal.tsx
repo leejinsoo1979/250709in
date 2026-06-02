@@ -466,6 +466,33 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
           ])) {
             updates.baseFrameHeight = isLower ? lowerBaseFrameHeight : baseFrameHeight;
           }
+          const slotCurrentOffset = slot.baseFrameOffset;
+          const slotCurrentGap = slot.baseFrameGap;
+          const previousSpaceOffset = (curBaseConfig as any)?.offset ?? 0;
+          const previousSpaceGap = (curBaseConfig as any)?.gap ?? 0;
+          const slotWasUsingDefaultOffset =
+            slotCurrentOffset === undefined ||
+            slotCurrentOffset === previousSpaceOffset ||
+            slotCurrentOffset === loadedDefaults.baseboardOffset ||
+            slotCurrentOffset === loadedDefaults.baseFrameOffset ||
+            (isLower && slotCurrentOffset === loadedDefaults.baseboardLowerOffset) ||
+            slotCurrentOffset === 0;
+          const slotWasUsingDefaultGap =
+            slotCurrentGap === undefined ||
+            slotCurrentGap === previousSpaceGap ||
+            slotCurrentGap === loadedDefaults.baseboardGap ||
+            (isLower && slotCurrentGap === loadedDefaults.baseboardLowerGap) ||
+            slotCurrentGap === 0;
+          if (!isUpper && slot.hasBase !== false && slotWasUsingDefaultOffset) {
+            updates.baseFrameOffset = isLower
+              ? (lowerBaseFrameOffset ?? synced.baseFrameOffset)
+              : synced.baseFrameOffset;
+          }
+          if (!isUpper && slot.hasBase !== false && slotWasUsingDefaultGap) {
+            updates.baseFrameGap = isLower
+              ? (lowerBaseFrameGap ?? synced.baseFrameGap)
+              : synced.baseFrameGap;
+          }
           return Object.keys(updates).length > 0 ? { ...slot, ...updates } : slot;
         });
         if (nextGuides.some((slot, index) => slot !== guides[index])) {

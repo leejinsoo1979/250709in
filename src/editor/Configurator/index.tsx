@@ -6548,6 +6548,18 @@ const Configurator: React.FC = () => {
           if (isCustomGuideFrameEditing) {
             const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
             const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
+            const hasSplitGuideSlots = guideSlots.some((slot) => (slot.guideZone || 'full') === 'upper' || (slot.guideZone || 'full') === 'lower');
+            const guideGlobalBaseSlot = guideSlots.find((slot) => (slot.guideZone || 'full') === 'lower')
+              ?? guideSlots.find((slot) => (slot.guideZone || 'full') === 'full');
+            const guideBaseCandidateModules = freeMods.filter((module) => (
+              !module.isSurroundPanel
+              && (
+                module.guideSlotPlacement === true
+                || module.guideDepthPlacement === true
+                || spaceInfo.customGuideMode === true
+              )
+              && (getModuleCategory(module) === 'lower' || getModuleCategory(module) === 'full')
+            ));
             const topFrameSlots = guideSlots
               .filter((slot) => (slot.guideZone || 'full') !== 'lower')
               .sort((a, b) => a.x - b.x || a.index - b.index);
@@ -6563,10 +6575,10 @@ const Configurator: React.FC = () => {
             const globalTopOffset = frameSize.topOffset ?? 0;
             const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
             const globalBaseHeight = globalBaseEnabled
-              ? (spaceInfo.baseConfig?.height ?? 65)
+              ? (guideGlobalBaseSlot?.baseFrameHeight ?? (hasSplitGuideSlots ? 105 : (spaceInfo.baseConfig?.height ?? 65)))
               : Math.max(65, spaceInfo.baseConfig?.height || 65);
-            const globalBaseOffset = baseConfig.offset ?? 0;
-            const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? 0) : 0;
+            const globalBaseOffset = guideGlobalBaseSlot?.baseFrameOffset ?? baseConfig.offset ?? 0;
+            const globalBaseGap = globalBaseEnabled ? Math.max(0, guideGlobalBaseSlot?.baseFrameGap ?? baseConfig.gap ?? 0) : 0;
             const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
             const defaultIfZero = (value: number | undefined, fallback: number) => (
               value === undefined ? fallback : value
@@ -6579,6 +6591,27 @@ const Configurator: React.FC = () => {
                 freePlacementGuides: guideSlots.map((slot) => (
                   slot.id === slotId ? { ...slot, ...updates } : slot
                 ))
+              });
+            };
+            const syncGuideBaseFrameAll = (
+              baseConfigUpdates: Record<string, any>,
+              slotUpdates: Partial<FreePlacementGuideSlot>,
+              moduleUpdates: Record<string, any>
+            ) => {
+              const nextSpaceInfo: Record<string, any> = {
+                baseConfig: {
+                  ...baseConfig,
+                  ...baseConfigUpdates
+                },
+                freePlacementGuides: guideSlots.map((slot) => (
+                  (slot.guideZone || 'full') === 'upper'
+                    ? slot
+                    : { ...slot, ...slotUpdates }
+                ))
+              };
+              setSpaceInfo(nextSpaceInfo);
+              guideBaseCandidateModules.forEach((module) => {
+                updatePlacedModule(module.id, moduleUpdates);
               });
             };
             const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? globalTopEnabled;
@@ -6771,15 +6804,43 @@ const Configurator: React.FC = () => {
                         globalBaseOffset,
                         globalBaseGap,
                         globalFloatHeight,
-                        () => handleSpaceInfoUpdate({
-                          baseConfig: globalBaseEnabled
-                            ? { ...baseConfig, type: 'stand', placementType: 'float', height: 0, floatHeight: 0 }
-                            : { ...baseConfig, type: 'floor', placementType: 'ground', height: Math.max(1, globalBaseHeight || 65), floatHeight: 0 }
-                        }),
-                        (v) => handleSpaceInfoUpdate({ baseConfig: { ...baseConfig, type: 'floor', placementType: 'ground', height: v } }),
-                        (v) => handleSpaceInfoUpdate({ baseConfig: { ...baseConfig, offset: v } }),
-                        (v) => handleSpaceInfoUpdate({ baseConfig: { ...baseConfig, gap: Math.max(0, v) } }),
-                        (v) => handleSpaceInfoUpdate({ baseConfig: { ...baseConfig, type: 'stand', placementType: 'float', height: 0, floatHeight: v } })
+                        () => {
+                          const nextHeight = Math.max(1, globalBaseHeight || 65);
+                          syncGuideBaseFrameAll(
+                            globalBaseEnabled
+                              ? { type: 'stand', placementType: 'float', height: 0, floatHeight: 0 }
+                              : { type: 'floor', placementType: 'ground', height: nextHeight, floatHeight: 0 },
+                            globalBaseEnabled
+                              ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: 0 }
+                              : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextHeight },
+                            globalBaseEnabled
+                              ? { hasBase: false, hasBottomFrame: false, individualFloatHeight: 0 }
+                              : { hasBase: true, hasBottomFrame: true, baseFrameHeight: nextHeight }
+                          );
+                        },
+                        (v) => syncGuideBaseFrameAll(
+                          { type: 'floor', placementType: 'ground', height: v },
+                          { hasBase: true, hasBottomFrame: true, baseFrameHeight: v },
+                          { hasBase: true, hasBottomFrame: true, baseFrameHeight: v }
+                        ),
+                        (v) => syncGuideBaseFrameAll(
+                          { offset: v },
+                          { baseFrameOffset: v },
+                          { baseFrameOffset: v }
+                        ),
+                        (v) => {
+                          const nextGap = Math.max(0, v);
+                          syncGuideBaseFrameAll(
+                            { gap: nextGap },
+                            { baseFrameGap: nextGap },
+                            { baseFrameGap: nextGap }
+                          );
+                        },
+                        (v) => syncGuideBaseFrameAll(
+                          { type: 'stand', placementType: 'float', height: 0, floatHeight: v },
+                          { hasBase: false, hasBottomFrame: false, individualFloatHeight: v },
+                          { hasBase: false, hasBottomFrame: false, individualFloatHeight: v }
+                        )
                       )
                       : baseFrameSlots.map((slot, idx) => {
                         const enabled = getSlotBaseEnabled(slot);
@@ -7252,7 +7313,10 @@ const Configurator: React.FC = () => {
                         gap={defaultIfZeroFree((firstBase as any).baseFrameGap, globalBaseGapLocal)}
                         onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: defaultIfZeroFree((m as any).baseFrameGap, globalBaseGapLocal), doorBottomGap: -5 })))}
                         onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)))}
-                        onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
+                        onOffsetChange={(v) => {
+                          handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v } as any });
+                          baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
+                        }}
                         onGapChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
                         splitGapFromSize
                         highlightKey="base-all-free"

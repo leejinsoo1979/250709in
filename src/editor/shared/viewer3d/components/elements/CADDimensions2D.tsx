@@ -9,7 +9,7 @@ import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/
 import { calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
-import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
@@ -19,6 +19,47 @@ import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
+
+const resolveGuideBaseFrameOffsetMm = (
+  module: PlacedModule,
+  spaceInfo: SpaceInfo,
+  fallbackOffsetMm: number
+): number => {
+  const baseDefault = spaceInfo.baseConfig?.offset ?? fallbackOffsetMm;
+  const guides = spaceInfo.freePlacementGuides || [];
+  const category = getModuleCategory(module);
+  const isGuideModule = module.guideSlotPlacement === true
+    || module.guideDepthPlacement === true
+    || (spaceInfo.customGuideMode === true && module.isFreePlacement === true);
+
+  if (isGuideModule && guides.length > 0 && category !== 'upper') {
+    const useAllGuideBase = spaceInfo.guideBaseFrameAllMode ?? true;
+    const guideSlot = useAllGuideBase
+      ? (
+        guides.find((slot) => (slot.guideZone || 'full') === 'lower')
+        ?? guides.find((slot) => (slot.guideZone || 'full') === 'full')
+      )
+      : (() => {
+        const bounds = getModuleBoundsX(module);
+        const targetZone = module.guideSlotZone || category;
+        return guides.find((slot) => {
+          const zone = slot.guideZone || 'full';
+          if (zone === 'upper') return false;
+          if (targetZone !== 'full' && zone !== targetZone) return false;
+          const slotLeft = slot.x - spaceInfo.width / 2;
+          const slotRight = slot.x + slot.width - spaceInfo.width / 2;
+          return bounds.left < slotRight - 0.5 && bounds.right > slotLeft + 0.5;
+        }) ?? guides.find((slot) => (slot.guideZone || 'full') === 'lower')
+          ?? guides.find((slot) => (slot.guideZone || 'full') === 'full');
+      })();
+
+    if (typeof guideSlot?.baseFrameOffset === 'number') {
+      return guideSlot.baseFrameOffset;
+    }
+  }
+
+  return module.baseFrameOffset ?? baseDefault;
+};
 
 // 상판 실효 두께 계산 — 하부장 상판설치는 인조대리석 선택값만 사용
 const getStoneTopThicknessMm = (mod: any): number => {
@@ -2162,15 +2203,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 : baseFrontZ + lowerOffset) // 의류장 하부: 앞면 정렬
             : furnitureZ;
 
-          // 걸래받이 옵셋 깊이
-          const shouldShowBaseFrameOffset = isLowerMod || modCategory === 'full';
-          const globalBaseFrameOffsetMm = spaceInfo.baseConfig?.offset ?? (isLowerMod ? 65 : 0);
-          const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
-          const baseFrameOffsetMm = shouldShowBaseFrameOffset
-            ? (useGlobalBaseFrameOffset
-              ? globalBaseFrameOffsetMm
-              : (mod.baseFrameOffset ?? globalBaseFrameOffsetMm))
-            : 0;
+	          // 걸래받이 옵셋 깊이
+	          const shouldShowBaseFrameOffset = isLowerMod || modCategory === 'full';
+	          const globalBaseFrameOffsetMm = spaceInfo.baseConfig?.offset ?? (isLowerMod ? 65 : 0);
+	          const baseFrameOffsetMm = shouldShowBaseFrameOffset
+	            ? resolveGuideBaseFrameOffsetMm(mod, spaceInfo, globalBaseFrameOffsetMm)
+	            : 0;
           const baseFrameOffsetDepth = mmToThreeUnits(baseFrameOffsetMm);
           const baseOffsetDimEdge = isLowerMod ? depthDimEdge : furnitureBottomEdge;
           const baseOffsetDimY = isLowerMod ? depthDimY : depthDimYLower;
@@ -3525,14 +3563,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZLower_d2 = isShoeSide_d2
             ? (baseBackZ_d2 + lowerOffset_d2)
             : furnitureZ;
-          const shouldShowBaseFrameOffset_d2 = isLowerMod_d2 || modCategory_d2 === 'full';
-          const globalBaseFrameOffsetMm_d2 = spaceInfo.baseConfig?.offset ?? (isLowerMod_d2 ? 65 : 0);
-          const useGlobalBaseFrameOffset_d2 = spaceInfo.guideBaseFrameAllMode ?? true;
-          const baseFrameOffsetMm_d2 = shouldShowBaseFrameOffset_d2
-            ? (useGlobalBaseFrameOffset_d2
-              ? globalBaseFrameOffsetMm_d2
-              : ((module as PlacedModule).baseFrameOffset ?? globalBaseFrameOffsetMm_d2))
-            : 0;
+	          const shouldShowBaseFrameOffset_d2 = isLowerMod_d2 || modCategory_d2 === 'full';
+	          const globalBaseFrameOffsetMm_d2 = spaceInfo.baseConfig?.offset ?? (isLowerMod_d2 ? 65 : 0);
+	          const baseFrameOffsetMm_d2 = shouldShowBaseFrameOffset_d2
+	            ? resolveGuideBaseFrameOffsetMm(module as PlacedModule, spaceInfo, globalBaseFrameOffsetMm_d2)
+	            : 0;
           const baseFrameOffsetDepth_d2 = mmToThreeUnits(baseFrameOffsetMm_d2);
           const installedFrontExtensionMm_d2 = getInstalledFrontExtensionMm(module);
           const installedFrontExtension_d2 = mmToThreeUnits(installedFrontExtensionMm_d2);
