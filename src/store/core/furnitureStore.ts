@@ -841,6 +841,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     let finalUpdates = updates;
     const existingModule = state.placedModules.find(m => m.id === id);
 
+    if (existingModule && typeof existingModule.moduleId === 'string' && existingModule.moduleId.includes('insert-frame')) {
+      console.log('🟧[updatePlacedModule@insert-frame] CALLED', { id, updateKeys: Object.keys(updates), updates });
+    }
+
     if (existingModule) {
       if (existingModule.isLocked) {
         const lockedSafeUpdates = { ...updates };
