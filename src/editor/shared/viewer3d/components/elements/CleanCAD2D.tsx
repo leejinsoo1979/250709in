@@ -4853,10 +4853,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
                     {bottomFrameGapH > 0 && (
-                      <NativeLine name="dimension_line"
-                        points={[[innerX - mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L]]}
-                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(20), bottomFrameGapTopY, baseExtZ_L], [leftOffset, bottomFrameGapTopY, baseExtZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                      </>
                     )}
                     {bottomFrameSegments.map(seg => (
                       <Text key={`left-dual-base-${seg.key}`} renderOrder={100001} depthTest={false}
@@ -4895,10 +4901,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
                     {bottomFrameGapH > 0 && (
-                      <NativeLine name="dimension_line"
-                        points={[[innerX - mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L]]}
-                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L], [innerX + mmToThreeUnits(15), bottomFrameGapTopY, baseDimZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(20), bottomFrameGapTopY, baseExtZ_L], [leftOffset, bottomFrameGapTopY, baseExtZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                      </>
                     )}
                     {bottomFrameSegments.map(seg => (
                       <Text key={`left-base-${seg.key}`} renderOrder={100001} depthTest={false}
@@ -5190,10 +5202,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
                     {topGapH > 0 && (
-                      <NativeLine name="dimension_line"
-                        points={[[innerX - mmToThreeUnits(15), topGapBottomRef, topDimZ_L], [innerX + mmToThreeUnits(15), topGapBottomRef, topDimZ_L]]}
-                        color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(15), topGapBottomRef, topDimZ_L], [innerX + mmToThreeUnits(15), topGapBottomRef, topDimZ_L]]}
+                          color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[leftOffset, topGapBottomRef, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)], [innerX - mmToThreeUnits(20), topGapBottomRef, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)]]}
+                          color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
+                        />
+                      </>
                     )}
                     <NativeLine name="dimension_line"
                       points={[[leftOffset, effectiveCeilingY, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)], [innerX - mmToThreeUnits(20), effectiveCeilingY, frontViewLocalZ(upperFrontZ_L ?? lowerFrontZ_L, 0.003)]]}
@@ -5858,10 +5876,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
                     {rBottomFrameGapH > 0 && (
-                      <NativeLine name="dimension_line"
-                        points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R]]}
-                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[rightWallX, rBottomFrameGapTopY, baseExtZ_R], [rightInnerX + mmToThreeUnits(20), rBottomFrameGapTopY, baseExtZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                      </>
                     )}
                     {rBottomFrameSegments.map(seg => (
                       <Text key={`right-dual-base-${seg.key}`} renderOrder={100001} depthTest={false}
@@ -5900,10 +5924,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                     />
                     {rBottomFrameGapH > 0 && (
-                      <NativeLine name="dimension_line"
-                        points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R]]}
-                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R], [rightInnerX + mmToThreeUnits(15), rBottomFrameGapTopY, baseDimZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[rightWallX, rBottomFrameGapTopY, baseExtZ_R], [rightInnerX + mmToThreeUnits(20), rBottomFrameGapTopY, baseExtZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                      </>
                     )}
                     {rBottomFrameSegments.map(seg => (
                       <Text key={`right-base-${seg.key}`} renderOrder={100001} depthTest={false}
