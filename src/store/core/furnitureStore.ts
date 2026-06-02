@@ -933,8 +933,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         : (typeof existingModule.customWidth === 'number' && existingModule.customWidth > 0
           ? existingModule.customWidth
           : (typeof existingModule.moduleWidth === 'number' && existingModule.moduleWidth > 0 ? existingModule.moduleWidth : undefined));
-      const isInsertFrameWidthChanging = existingModule.isFreePlacement
-        && typeof existingModule.moduleId === 'string'
+      // 키큰장찬넬은 배치 모드(자유/가이드슬롯/슬롯)와 무관하게 채움재이므로
+      // 폭 변경 시 항상 한쪽 면(좌고정/우고정)을 고정한다.
+      const isInsertFrameWidthChanging = typeof existingModule.moduleId === 'string'
         && existingModule.moduleId.includes('insert-frame')
         && requestedBodyWidth !== undefined
         && (currentBodyWidth === undefined || Math.abs(requestedBodyWidth - currentBodyWidth) >= 0.5);
