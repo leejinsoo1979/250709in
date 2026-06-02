@@ -4265,28 +4265,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? spaceInfo.stepCeiling!.position === 'left'
             : spaceInfo.droppedCeiling!.position === 'left');
           // 단내림이 좌측이면 단내림 구간 가구 기준, 아니면 가장 좌측 가구
-          // x가 같으면(상하부장 동시배치) 하부장/키큰장을 우선 — 높이 치수 기준이 되어야 함.
-          // (상부장이 leftmostMod로 잡히면 하부장 도어높이 치수가 사라지는 문제 방지)
-          const catRankForLeftmost = (m: PlacedModule) => {
-            const cat = getModuleById(m.moduleId)?.category
-              ?? (m.moduleId.includes('upper') ? 'upper'
-                : m.moduleId.includes('lower') ? 'lower' : 'full');
-            return cat === 'upper' ? 1 : 0; // 상부장은 후순위
-          };
-          const pickLeftmost = (l: PlacedModule, m: PlacedModule) => {
-            if (m.position.x < l.position.x - 0.001) return m;
-            if (m.position.x > l.position.x + 0.001) return l;
-            // 거의 같은 x → 상부장보다 하부장/키큰장 우선
-            return catRankForLeftmost(m) < catRankForLeftmost(l) ? m : l;
-          };
           const leftmostMod = (() => {
             if (isLeftDrop_pre) {
               // 슬롯: zone='dropped', 자유배치: zone='stepCeiling'
               const dropZoneName = isFreePlacement ? 'stepCeiling' : 'dropped';
               const droppedMods = allMods.filter(m => m.zone === dropZoneName);
-              if (droppedMods.length > 0) return droppedMods.reduce(pickLeftmost);
+              if (droppedMods.length > 0) return droppedMods.reduce((l, m) => m.position.x < l.position.x ? m : l);
             }
-            return allMods.length > 0 ? allMods.reduce(pickLeftmost) : null;
+            return allMods.length > 0 ? allMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
           })();
 
           // 같은 슬롯/위치에 상부장+하부장 동시 배치 시 companion 모듈 찾기
@@ -5315,26 +5301,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? spaceInfo.stepCeiling!.position === 'right'
             : spaceInfo.droppedCeiling!.position === 'right');
           // 단내림이 우측이면 단내림 구간 가구 기준, 아니면 가장 우측 가구
-          // x가 같으면(상하부장 동시배치) 하부장/키큰장을 우선 — 좌측과 대칭.
-          const catRankForRightmost = (m: PlacedModule) => {
-            const cat = getModuleById(m.moduleId)?.category
-              ?? (m.moduleId.includes('upper') ? 'upper'
-                : m.moduleId.includes('lower') ? 'lower' : 'full');
-            return cat === 'upper' ? 1 : 0; // 상부장은 후순위
-          };
-          const pickRightmost = (r: PlacedModule, m: PlacedModule) => {
-            if (m.position.x > r.position.x + 0.001) return m;
-            if (m.position.x < r.position.x - 0.001) return r;
-            return catRankForRightmost(m) < catRankForRightmost(r) ? m : r;
-          };
           const rightmostMod = (() => {
             if (isRightDrop_pre) {
               // 슬롯: zone='dropped', 자유배치: zone='stepCeiling'
               const dropZoneName = isFreePlacement ? 'stepCeiling' : 'dropped';
               const droppedMods = allMods_R.filter(m => m.zone === dropZoneName);
-              if (droppedMods.length > 0) return droppedMods.reduce(pickRightmost);
+              if (droppedMods.length > 0) return droppedMods.reduce((r, m) => m.position.x > r.position.x ? m : r);
             }
-            return allMods_R.length > 0 ? allMods_R.reduce(pickRightmost) : null;
+            return allMods_R.length > 0 ? allMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
           })();
 
           // 같은 슬롯/위치에 상부장+하부장 동시 배치 시 companion 모듈 찾기
