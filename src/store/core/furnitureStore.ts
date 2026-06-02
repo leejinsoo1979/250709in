@@ -842,7 +842,18 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const existingModule = state.placedModules.find(m => m.id === id);
 
     if (existingModule && typeof existingModule.moduleId === 'string' && existingModule.moduleId.includes('insert-frame')) {
-      console.log('🟧[updatePlacedModule@insert-frame] CALLED', { id, updateKeys: Object.keys(updates), updates });
+      const __keys = Object.keys(updates);
+      // freeWidth 없는 position 덮어쓰기(폭 되돌림 의심)일 때만 호출 스택 출력
+      const __suspicious = (updates as any).position !== undefined && (updates as any).freeWidth === undefined;
+      console.log('🟧[updatePlacedModule@insert-frame] CALLED', {
+        id, updateKeys: __keys,
+        posX: (updates as any).position?.x,
+        freeWidth: (updates as any).freeWidth,
+        suspicious: __suspicious,
+      });
+      if (__suspicious) {
+        console.log('🟥[insert-frame position 덮어쓰기 호출 스택]\n' + new Error().stack);
+      }
     }
 
     if (existingModule) {
