@@ -2164,22 +2164,35 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const gMidway = hasSplitSlots
       ? Math.max(0, Math.round(fullHeightMm - gTopClearance - gUpper - gLower - gBottomClearance))
       : 0;
+    const gFloorFinish = spaceInfo.hasFloorFinish && spaceInfo.floorFinish
+      ? Math.max(0, Math.round(spaceInfo.floorFinish.height || 0))
+      : 0;
 
     // 바닥(0)부터의 누적 경계 (mm): 하단 구간→하부장→미드웨이→상부장→몰딩
     const yBaseTop = gBottomClearance;            // 걸레받이/띄움 상단
     const yBaseGapTop = Math.min(gBaseGap, yBaseTop);
     const yLowerTop = yBaseTop + gLower;          // 하부장 상단 (= 하부 슬롯 영역 상단)
+    const ySplitLowerBaseTop = yBaseTop + gFloorFinish;
+    const ySplitLowerTop = yLowerTop + gFloorFinish;
     const yMidTop = yLowerTop + gMidway;          // 미드웨이 상단 (= 상부 슬롯 영역 하단)
     const yUpperTop = yMidTop + gUpper;           // 상부장 상단 (= 몰딩 하단)
     const yMoldingGapBottom = gTopMolding > 0
       ? Math.max(yUpperTop, fullHeightMm - gMoldingGap)
       : yUpperTop;
+    const yLowerVisualTop = ySplitLowerTop;
+    const yMidwayVisualTop = yMidTop;
+    const gMidwayVisible = hasSplitSlots
+      ? Math.max(0, yMidwayVisualTop - yLowerVisualTop)
+      : 0;
+    const gUpperVisible = hasSplitSlots
+      ? gUpper
+      : Math.max(0, yUpperTop - yLowerVisualTop);
     // mm → three units
-    const lowerStartY = yBaseTop * 0.01;
-    const lowerEndY = yLowerTop * 0.01;
+    const lowerStartY = ySplitLowerBaseTop * 0.01;
+    const lowerEndY = yLowerVisualTop * 0.01;
     const upperStartY = yMidTop * 0.01;
     const upperEndY = yUpperTop * 0.01;
-    const splitY = (yLowerTop + yMidTop) / 2 * 0.01; // 미드웨이 중앙 (분할선 표시용)
+    const splitY = (yLowerVisualTop + yMidTop) / 2 * 0.01; // 미드웨이 중앙 (분할선 표시용)
     const isGlobalTopFrameEnabled = gTopMolding > 0;
     const isGlobalBaseFrameEnabled = spaceInfo.baseConfig?.type === 'floor' && (spaceInfo.baseConfig?.height ?? 0) > 0;
     const resolveSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? isGlobalBaseFrameEnabled;
@@ -2204,12 +2217,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         ? globalBaseEnabled
         : (slot.hasBase ?? globalBaseEnabled);
       const slotBaseClearanceMm = slotBaseEnabled
-        ? (guideBaseFrameAllMode ? yBaseTop : resolveSlotBaseHeightMm(slot))
+        ? (guideBaseFrameAllMode ? ySplitLowerBaseTop : resolveSlotBaseHeightMm(slot) + gFloorFinish)
         : Math.max(0, slot.individualFloatHeight ?? gFloatHeight);
       const slotLowerStartY = slotBaseClearanceMm * 0.01;
       const slotLowerEndY = guideBaseFrameAllMode
         ? lowerEndY
-        : (slotBaseClearanceMm + gLower) * 0.01;
+        : Math.min(slotBaseClearanceMm + gLower, yMidTop) * 0.01;
       if (zone === 'upper') return [upperStartY, upperEndY];
       if (zone === 'lower') return [slotLowerStartY, slotLowerEndY];
       if (hasSplitSlots) return [slotLowerStartY, upperEndY];
@@ -2374,10 +2387,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const spaceHalfWidth = spaceInfo.width / 2;
     const heightTiers = [
       { key: 'molding', label: gTopMolding > 0 ? '상단몰딩' : '상단갭', value: gTopMolding > 0 ? gTopMolding : gMoldingGap, centerYmm: (yUpperTop + fullHeightMm) / 2 },
-      { key: 'upper', label: '상부섹션', value: gUpper, centerYmm: (yMidTop + yUpperTop) / 2 },
-	      ...(hasSplitSlots ? [{ key: 'midway', label: '미드웨이', value: gMidway, centerYmm: (yLowerTop + yMidTop) / 2 }] : []),
-	      { key: 'lower', label: '하부섹션', value: gLower, centerYmm: (yBaseTop + yLowerTop) / 2 },
-	      { key: 'baseboard', label: isFloatingBase ? '띄움높이' : '걸레받이', value: isFloatingBase ? gFloatHeight : gBaseboard, centerYmm: yBaseTop / 2 },
+      { key: 'upper', label: '상부섹션', value: gUpperVisible, centerYmm: (yMidTop + yUpperTop) / 2 },
+	      ...(hasSplitSlots ? [{ key: 'midway', label: '미드웨이', value: gMidwayVisible, centerYmm: (yLowerVisualTop + yMidTop) / 2 }] : []),
+	      { key: 'lower', label: '하부섹션', value: gLower, centerYmm: (ySplitLowerBaseTop + yLowerVisualTop) / 2 },
+	      { key: 'baseboard', label: isFloatingBase ? '띄움높이' : '걸레받이', value: isFloatingBase ? gFloatHeight : gBaseboard, centerYmm: (gFloorFinish + ySplitLowerBaseTop) / 2 },
 	    ];
     const commitTier = (key: string, raw: string) => {
       const v = Math.round(parseFloat(raw));
@@ -2971,15 +2984,57 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       </>
     );
 
+    const renderFloorFinishGuideLayer = () => {
+      if (gFloorFinish <= 0) return null;
+      const bounds = getFreePlacementGuideBoundsX(spaceInfo);
+      const leftX = bounds.startX * 0.01;
+      const rightX = bounds.endX * 0.01;
+      const width = Math.max(0.001, rightX - leftX);
+      const height = Math.max(0.001, gFloorFinish * 0.01);
+      const centerX = (leftX + rightX) / 2;
+      const centerY = height / 2;
+
+      return (
+        <group key="free-guide-floor-finish-layer">
+          <mesh position={[centerX, centerY, guideZ - 0.003]} renderOrder={99997}>
+            <planeGeometry args={[width, height]} />
+            <meshBasicMaterial
+              color="#94a3b8"
+              transparent
+              opacity={0.18}
+              side={DoubleSide}
+              depthTest={false}
+              depthWrite={false}
+            />
+          </mesh>
+          <NativeLine
+            name="free-placement-guide-line"
+            points={[[leftX, gFloorFinish * 0.01, guideZ + 0.001], [rightX, gFloorFinish * 0.01, guideZ + 0.001]]}
+            color="#64748b"
+            lineWidth={1.4}
+            dashed
+            dashSize={0.06}
+            gapSize={0.04}
+            opacity={0.75}
+            transparent
+            depthTest={false}
+            depthWrite={false}
+            renderOrder={100002}
+          />
+        </group>
+      );
+    };
+
     // 전체 폭 공통 경계(바닥/걸레받이상단/상부장상단/천장): 몰딩·걸레받이는 전체 공통
     const fullWidthBoundaryYmm = [
       0,
-      ...(guideBaseFrameAllMode && gBaseGap > 0 ? [yBaseGapTop] : []),
-      ...(guideBaseFrameAllMode ? [yBaseTop] : []),
+      ...(gFloorFinish > 0 ? [gFloorFinish] : []),
+      ...(guideBaseFrameAllMode && gBaseGap > 0 ? [yBaseGapTop + gFloorFinish] : []),
+      ...(guideBaseFrameAllMode ? [ySplitLowerBaseTop] : []),
       yUpperTop,
       fullHeightMm
     ];
-    const sectionBoundaryYmm = hasSplitSlots ? [yLowerTop, yMidTop] : [yLowerTop];
+    const sectionBoundaryYmm = hasSplitSlots ? [yLowerVisualTop, yMidTop] : [yLowerVisualTop];
     const tierLineLeftX = -spaceHalfWidth * 0.01;
     const tierLineRightX = spaceHalfWidth * 0.01;
     const tierLineProps = {
@@ -3214,6 +3269,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         ))}
         {showGuideHeightSections && renderHeightTiers(-(spaceHalfWidth + 120) * 0.01, isGuideEditing)}
         {showGuideHeightSections && renderHeightTiers((spaceHalfWidth + 120) * 0.01, isGuideEditing)}
+        {renderFloorFinishGuideLayer()}
         {isGuideEditing && renderFrameSettingEditors()}
         {!isGuideEditing && guideSlots.map((slot) => {
           const canPlaceInSlot = canUseGuideSlot(slot);

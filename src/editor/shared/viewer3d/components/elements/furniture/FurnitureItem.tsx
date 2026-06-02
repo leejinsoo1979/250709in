@@ -1743,7 +1743,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   {
     const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
       ? spaceInfo.floorFinish.height : 0;
-    if (floorFinishForHeight > 0 && isTallCabinetForY) {
+    const guideSlotAlreadyIncludesFloorFinish = !!currentGuideSlotYRangeMm
+      && placedModule.guideSlotPlacement === true
+      && placedModule.guideSlotZone === 'full';
+    if (floorFinishForHeight > 0 && isTallCabinetForY && !guideSlotAlreadyIncludesFloorFinish) {
       furnitureHeightMm -= floorFinishForHeight;
     }
   }

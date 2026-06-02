@@ -46,17 +46,23 @@ export function getFreeGuideZoneYRangeMm(
   const lowerMm = options.lowerHeightMm ?? spaceInfo.guideLowerHeight ?? 800;
   const upperMm = options.upperHeightMm ?? spaceInfo.guideUpperHeight ?? 700;
   const midwayMm = Math.max(0, Math.round(fullHeightMm - topClearanceMm - upperMm - lowerMm - bottomClearanceMm));
+  const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish
+    ? Math.max(0, Math.round(spaceInfo.floorFinish.height || 0))
+    : 0;
 
   const yBaseTop = bottomClearanceMm;
   const yLowerTop = yBaseTop + lowerMm;
+  const ySplitLowerBaseTop = yBaseTop + floorFinishMm;
+  const ySplitLowerTop = yLowerTop + floorFinishMm;
   const yMidTop = yLowerTop + midwayMm;
   const yUpperTop = yMidTop + upperMm;
 
   if (zone === 'full') {
-    return { start: bottomClearanceMm, end: Math.max(bottomClearanceMm, fullHeightMm - topClearanceMm) };
+    const start = bottomClearanceMm + floorFinishMm;
+    return { start, end: Math.max(start, fullHeightMm - topClearanceMm) };
   }
   if (zone === 'upper') return { start: yMidTop, end: yUpperTop };
-  return { start: yBaseTop, end: yLowerTop };
+  return { start: ySplitLowerBaseTop, end: Math.max(ySplitLowerBaseTop, Math.min(ySplitLowerTop, yMidTop)) };
 }
 
 export function getFreeGuideSlotYRangeMm(
