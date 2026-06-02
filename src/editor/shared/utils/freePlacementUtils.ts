@@ -818,7 +818,13 @@ export function calcInsertFrameResizedPositionX(
   }
 
   let newCenterMm: number;
-  if (leftAnchor && rightAnchor) {
+  if (module.hingePosition === 'left') {
+    // 좌측 힌지 = 오른쪽 열림. 배치된 좌측면을 고정하고 열림방향으로 확장한다.
+    newCenterMm = oldBounds.left + halfNew;
+  } else if (module.hingePosition === 'right') {
+    // 우측 힌지 = 왼쪽 열림. 배치된 우측면을 고정하고 열림방향으로 확장한다.
+    newCenterMm = oldBounds.right - halfNew;
+  } else if (leftAnchor && rightAnchor) {
     const useLeftAnchor = leftAnchor.gap < rightAnchor.gap
       || (leftAnchor.gap === rightAnchor.gap && currentCenterMm < spaceMidMm);
     newCenterMm = useLeftAnchor
