@@ -29,9 +29,11 @@ const usesDrawerFrontInsteadOfHingedDoor = (moduleId?: string) => {
   if (!moduleId) return false;
 
   return moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-1tier')
     || moduleId.includes('lower-door-lift-2tier')
     || moduleId.includes('lower-door-lift-3tier')
     || moduleId.includes('lower-door-lift-touch-')
+    || moduleId.includes('lower-top-down-1tier')
     || moduleId.includes('lower-top-down-2tier')
     || moduleId.includes('lower-top-down-3tier')
     || moduleId.includes('lower-top-down-touch-')

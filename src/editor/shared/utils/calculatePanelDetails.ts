@@ -204,9 +204,11 @@ export const calculatePanelDetails = (
   const isDummyModule = isDummyModuleId(moduleId);
   const isNoDoorModule =
     moduleId.includes('lower-drawer-') ||          // 서랍전용 (싱글/듀얼)
+    moduleId.includes('lower-door-lift-1tier') ||  // 도어올림 1단
     moduleId.includes('lower-door-lift-2tier') ||   // 도어올림 2단
     moduleId.includes('lower-door-lift-3tier') ||   // 도어올림 3단
     moduleId.includes('lower-door-lift-touch-') ||  // 도어올림 터치
+    moduleId.includes('lower-top-down-1tier') ||    // 상판내림 1단
     moduleId.includes('lower-top-down-2tier') ||    // 상판내림 2단
     moduleId.includes('lower-top-down-3tier') ||    // 상판내림 3단
     moduleId.includes('lower-top-down-touch-') ||   // 상판내림 터치
@@ -2367,9 +2369,10 @@ export const calculatePanelDetails = (
 
   // === 하부장 외부서랍 패널 (ExternalDrawerRenderer 기준) ===
   const extDrawerPanels: any[] = [];
-  if (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half')))) {
+  if (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half')))) {
+    const is1TierExt = moduleData.id.includes('lower-drawer-1tier') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-top-down-1tier');
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
-    const extDrawerCount = is3TierExt ? 3 : 2;
+    const extDrawerCount = is3TierExt ? 3 : is1TierExt ? 1 : 2;
     // ExternalDrawerRenderer 기준 치수
     const extSideDepthMm = Math.min(customDepth - 50, 453); // 서랍 깊이 = 캐비넷깊이 - 50, 최대 453
     const sideGapMm = 6; // 좌우 갭
@@ -2379,15 +2382,43 @@ export const calculatePanelDetails = (
     // === 마이다 높이 계산 (ExternalDrawerRenderer + LowerCabinet.tsx 동일 로직) ===
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
+    const isDoorLift1Tier = moduleData.id.includes('lower-door-lift-1tier');
     const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
     const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
+    const isTopDown1Tier = moduleData.id.includes('lower-top-down-1tier');
 
     let notchFromBottoms: number[];
     let notchHeightsArr: number[];
     let hideTopNotch = false;
     let fixedMaidaHeights: number[] | undefined;
+    let fixedSideHeightMm: number | undefined;
+    let hasDrawerFrontPanel = false;
 
-    if (is3TierExt) {
+    if (is1TierExt) {
+      const isBasicOneTier = moduleData.id.includes('lower-drawer-1tier');
+      const topDownOneTierStretcher = stoneTopThickness === 10 ? 65 : stoneTopThickness === 30 ? 45 : 55;
+      const topDownOneTierChannelBottom = height - (topDownOneTierStretcher + 65);
+      const drawerSideBottomMm = basicThickness + 15;
+      const tvDrawerSideTopGapMm = 21;
+      notchFromBottoms = isTopDown1Tier ? [topDownOneTierChannelBottom] : [];
+      notchHeightsArr = isTopDown1Tier ? [65] : [];
+      hideTopNotch = !isBasicOneTier;
+      fixedMaidaHeights = isDoorLift1Tier
+        ? [height]
+        : isBasicOneTier
+          ? [Math.max(0, height - 55)]
+          : isTopDown1Tier
+            ? [Math.max(0, topDownOneTierChannelBottom + 5)]
+            : undefined;
+      fixedSideHeightMm = isBasicOneTier
+        ? Math.max(0, height - 60 - tvDrawerSideTopGapMm - drawerSideBottomMm)
+        : isDoorLift1Tier
+          ? Math.max(0, height - basicThickness - tvDrawerSideTopGapMm - drawerSideBottomMm)
+        : isTopDown1Tier
+          ? Math.max(0, topDownOneTierChannelBottom - tvDrawerSideTopGapMm - drawerSideBottomMm)
+          : undefined;
+      hasDrawerFrontPanel = isBasicOneTier || isDoorLift1Tier;
+    } else if (is3TierExt) {
       if (moduleData.id.includes('lower-drawer-3tier')) {
         notchFromBottoms = [295, 510]; notchHeightsArr = [65, 65];
       } else if (isDoorLift3Tier) {
@@ -2398,9 +2429,15 @@ export const calculatePanelDetails = (
         hideTopNotch = true;
       }
     } else {
-      if (isDoorLift2Tier) {
+      if (isDoorLift1Tier) {
+        notchFromBottoms = []; notchHeightsArr = [];
+        hideTopNotch = true; fixedMaidaHeights = [height];
+      } else if (isDoorLift2Tier) {
         notchFromBottoms = [355]; notchHeightsArr = [65];
         hideTopNotch = true; fixedMaidaHeights = [400, 400];
+      } else if (isTopDown1Tier) {
+        notchFromBottoms = [height - (65 + 65)]; notchHeightsArr = [65];
+        hideTopNotch = true; fixedMaidaHeights = [height];
       } else if (isTopDown2Tier) {
         const topDown2TierGeometry = resolveTopDown2TierGeometry(height, stoneTopThickness);
         notchFromBottoms = topDown2TierGeometry.notches.map(notch => notch.fromBottom);
@@ -2444,7 +2481,7 @@ export const calculatePanelDetails = (
 
     // 측판 높이: 1단 250mm, 2단이상 130mm (3단서랍), 2단서랍은 모두 250mm
     for (let di = 0; di < extDrawerCount; di++) {
-      const extSideHMm = extDrawerCount >= 3 ? (di === 0 ? 250 : 130) : 250;
+      const extSideHMm = fixedSideHeightMm ?? (extDrawerCount >= 3 ? (di === 0 ? 250 : 130) : 250);
       const extBackHMm = extSideHMm - 15 - backPanelThickness; // 뒷판높이 = 측판 - 15 - 바닥판두께
       const drawerNum = di + 1;
 
@@ -2486,6 +2523,7 @@ export const calculatePanelDetails = (
           boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,
           groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 7.5 }] },
         { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
+        ...(hasDrawerFrontPanel ? [{ name: `서랍${drawerNum} 앞판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' }] : []),
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
@@ -2595,7 +2633,8 @@ export const calculatePanelDetails = (
 
   // === 인덕션장 레그라박스 서랍 패널 (바닥판 + 뒷판만, 측판은 기성품) ===
   if (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
-    const drawerThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+    const drawerPanelThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+    const drawerBottomThickness = backPanelThickness;
     const bottomSideGap = 17; // 바닥판: 양쪽 17mm 갭
     const backSideGap = 18.5; // 뒷판: 양쪽 18.5mm 갭
     const drawerBottomWidth = customWidth - basicThickness * 2 - bottomSideGap * 2; // 내경 - 양쪽 17mm
@@ -2609,15 +2648,15 @@ export const calculatePanelDetails = (
       name: '인덕션 1단서랍 바닥판',
       width: drawerBottomWidth,
       depth: drawerDepth,
-      thickness: drawerThickness,
-      material: 'PB',
+      thickness: drawerBottomThickness,
+      material: 'MDF',
       rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
     });
     extDrawerPanels.push({
       name: '인덕션 1단서랍 뒷판',
       width: drawerBackWidth,
-      height: 228 - drawerThickness, // 총높이 - 바닥판두께
-      thickness: drawerThickness,
+      height: 228 - drawerBottomThickness, // 총높이 - 바닥판두께
+      thickness: drawerPanelThickness,
       material: 'PB',
     });
     // 2단 서랍: 총 높이 164mm
@@ -2625,15 +2664,15 @@ export const calculatePanelDetails = (
       name: '인덕션 2단서랍 바닥판',
       width: drawerBottomWidth,
       depth: drawerDepth,
-      thickness: drawerThickness,
-      material: 'PB',
+      thickness: drawerBottomThickness,
+      material: 'MDF',
       rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
     });
     extDrawerPanels.push({
       name: '인덕션 2단서랍 뒷판',
       width: drawerBackWidth,
-      height: 164 - drawerThickness, // 총높이 - 바닥판두께
-      thickness: drawerThickness,
+      height: 164 - drawerBottomThickness, // 총높이 - 바닥판두께
+      thickness: drawerPanelThickness,
       material: 'PB',
     });
     // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)

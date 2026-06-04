@@ -165,6 +165,12 @@ const formatThumbnailName = (module: ModuleData): string => {
   return `${name}(반통)`;
 };
 
+const getTextThumbnailLabel = (moduleId: string): string | null => {
+  if (moduleId.includes('lower-drawer-1tier')) return 'TV장기본';
+  if (moduleId.includes('lower-door-lift-1tier')) return 'TV장도어올림';
+  return null;
+};
+
 // 썸네일 아이�� 컴포넌트
 interface ThumbnailItemProps {
   module: ModuleData;
@@ -1066,6 +1072,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   };
 
   // ThumbnailItem 컴포넌트 내부 계속...
+  const textThumbnailLabel = getTextThumbnailLabel(module.id);
 
   return (
     <>
@@ -1080,7 +1087,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
         <div className={styles.thumbnailImage}>
-          {iconPath ? (
+          {textThumbnailLabel ? (
+            <div className={styles.textThumbnail}>
+              {textThumbnailLabel}
+            </div>
+          ) : iconPath ? (
             <img
               src={iconPath}
               alt={module.name}
@@ -1093,7 +1104,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               }}
             />
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '11px', color: 'var(--theme-primary)', backgroundColor: 'color-mix(in srgb, var(--theme-primary) 20%, transparent)', textAlign: 'center', padding: '4px', wordBreak: 'keep-all', borderRadius: '4px' }}>
+            <div className={styles.textThumbnail}>
               {module.name.replace(/\s*[\d.]+mm$/, '')}
             </div>
           )}

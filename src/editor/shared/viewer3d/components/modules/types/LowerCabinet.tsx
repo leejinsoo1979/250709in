@@ -430,6 +430,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   furnitureDepth,
   furnitureMaterial,
   doorMaterial,
+  backPanelThicknessProp,
   renderMode,
   cabinetYPosition,
   placedFurnitureId,
@@ -482,7 +483,15 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const cabinetHeight = adjustedHeight;
   const cabinetBottomY = -cabinetHeight / 2;
   const basicThicknessMm = basicThickness / 0.01;
-  const drawerThicknessMm = 15;
+  const rawBackPanelThicknessMm = backPanelThicknessProp ?? 9;
+  const drawerBottomThicknessMm = rawBackPanelThicknessMm === 9.5
+    ? 9
+    : rawBackPanelThicknessMm === 5 || rawBackPanelThicknessMm === 5.5
+      ? 6
+      : rawBackPanelThicknessMm === 3.5
+        ? 3
+        : rawBackPanelThicknessMm;
+  const drawerPanelThicknessMm = 15;
   const bottomSideGapMm = 17;
   const backSideGapMm = 18.5;
   const widthMm = adjustedWidth;
@@ -492,18 +501,19 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const bottomGapMm = 28;
   const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
   const drawer1TotalH = 228;
-  const drawer1BackH = drawer1TotalH - drawerThicknessMm;
+  const drawer1BackH = drawer1TotalH - drawerBottomThicknessMm;
   const drawer2TotalH = 164;
-  const drawer2BackH = drawer2TotalH - drawerThicknessMm;
+  const drawer2BackH = drawer2TotalH - drawerBottomThicknessMm;
   // drawer2는 상단 마이다(maida2)와 연동되어야 하므로 maida2 계산 이후에 위치 결정 (아래 참조)
 
   const drawerBottomWidth = mmToThreeUnits(drawerBottomWidthMm);
   const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
   const drawerDepth = mmToThreeUnits(drawerDepthMm);
-  const drawerThickness = mmToThreeUnits(drawerThicknessMm);
+  const drawerBottomThickness = mmToThreeUnits(drawerBottomThicknessMm);
+  const drawerPanelThickness = mmToThreeUnits(drawerPanelThicknessMm);
   const drawerFrontZ = furnitureDepth / 2;
   const drawerZ = drawerFrontZ - drawerDepth / 2;
-  const drawerBackZ = drawerFrontZ - drawerDepth + drawerThickness / 2;
+  const drawerBackZ = drawerFrontZ - drawerDepth + drawerPanelThickness / 2;
   const rebateWidth = mmToThreeUnits(38);
   const rebateHeight = mmToThreeUnits(7.5);
 
@@ -636,8 +646,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
         <animated.group position-z={spring.z}>
           {/* 1단 서랍 바닥판 */}
           <BoxWithEdges
-            args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-            position={[0, drawer1BottomY + drawerThickness / 2, drawerZ]}
+            args={[drawerBottomWidth, drawerBottomThickness, drawerDepth]}
+            position={[0, drawer1BottomY + drawerBottomThickness / 2, drawerZ]}
             material={furnitureMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -647,8 +657,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
           {/* 1단 서랍 뒷판 */}
           <BoxWithEdges
-            args={[drawerBackWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
-            position={[0, drawer1BottomY + drawerThickness + mmToThreeUnits(drawer1BackH) / 2, drawerBackZ]}
+            args={[drawerBackWidth, mmToThreeUnits(drawer1BackH), drawerPanelThickness]}
+            position={[0, drawer1BottomY + drawerBottomThickness + mmToThreeUnits(drawer1BackH) / 2, drawerBackZ]}
             material={furnitureMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -657,8 +667,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
           {/* 2단 서랍 바닥판 */}
           <BoxWithEdges
-            args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-            position={[0, drawer2BottomY + drawerThickness / 2, drawerZ]}
+            args={[drawerBottomWidth, drawerBottomThickness, drawerDepth]}
+            position={[0, drawer2BottomY + drawerBottomThickness / 2, drawerZ]}
             material={furnitureMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -668,8 +678,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           />
           {/* 2단 서랍 뒷판 */}
           <BoxWithEdges
-            args={[drawerBackWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}
-            position={[0, drawer2BottomY + drawerThickness + mmToThreeUnits(drawer2BackH) / 2, drawerBackZ]}
+            args={[drawerBackWidth, mmToThreeUnits(drawer2BackH), drawerPanelThickness]}
+            position={[0, drawer2BottomY + drawerBottomThickness + mmToThreeUnits(drawer2BackH) / 2, drawerBackZ]}
             material={furnitureMaterial}
             renderMode={renderMode}
             isHighlighted={false}
@@ -680,7 +690,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           <LegraSideRail
             drawerTier={1}
             drawerBottomY={drawer1BottomY}
-            drawerBottomThickness={drawerThickness}
+            drawerBottomThickness={drawerBottomThickness}
             backPanelHeight={mmToThreeUnits(drawer1BackH)}
             drawerFrontZ={drawerFrontZ}
             sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
@@ -691,7 +701,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           <LegraSideRail
             drawerTier={2}
             drawerBottomY={drawer2BottomY}
-            drawerBottomThickness={drawerThickness}
+            drawerBottomThickness={drawerBottomThickness}
             backPanelHeight={mmToThreeUnits(drawer2BackH)}
             drawerFrontZ={drawerFrontZ}
             sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
@@ -2567,18 +2577,28 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
       
       {/* 외부서랍 렌더링 (하부 서랍장 전용) */}
-      {showFurniture && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-2tier') || moduleData.id.includes('lower-top-down-3tier')) && (() => {
+      {showFurniture && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-1tier') || moduleData.id.includes('lower-top-down-2tier') || moduleData.id.includes('lower-top-down-3tier')) && (() => {
+        const is1Tier = moduleData.id.includes('lower-drawer-1tier');
         const is3Tier = moduleData.id.includes('lower-drawer-3tier');
         const is2Tier = moduleData.id.includes('lower-drawer-2tier');
         const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
+        const isDoorLift1Tier = moduleData.id.includes('lower-door-lift-1tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
         const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
+        const isTopDown1Tier = moduleData.id.includes('lower-top-down-1tier');
         // 상판내림 2/3단: 상부 EP 기본 -82, 일반 stoneThk별 10→-90, 20→-80, 30→-70
         const topDownDefaultTopGapLR = placedModuleForCorner?.hasTopEndPanel === true ? -82 : stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
-        const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? topDownDefaultTopGapLR : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
+        const isTvOneDrawer = is1Tier || isDoorLift1Tier;
+        const defaultDrawerTopGap = isTvOneDrawer
+          ? 0
+          : (isTopDown1Tier || isTopDown2Tier || isTopDown3Tier)
+            ? topDownDefaultTopGapLR
+            : (isDoorLift2Tier || isDoorLift3Tier)
+              ? 30
+              : -20;
         const defaultDrawerBottomGap = 5;
-        const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
+        const effectiveDrawerTopGap = (isTopDown1Tier || isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
           ? defaultDrawerTopGap
           : (doorTopGap ?? defaultDrawerTopGap);
         const effectiveDrawerBottomGap = doorBottomGap ?? defaultDrawerBottomGap;
@@ -2608,15 +2628,26 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const drawer3TierDelta = currentCabinetHmm - 785;
         const td3StretcherForNotch = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
         const td3StretcherDeltaForNotch = td3StretcherForNotch - 55;
+        const basicOneTierMaidaH = Math.max(0, currentCabinetHmm - 55);
+        const topDownOneTierChannelBottom = currentCabinetHmm - (td3StretcherForNotch + 65);
+        const topDownOneTierMaidaH = Math.max(0, topDownOneTierChannelBottom + 5);
+        const drawerSideBottomMm = (baseFurniture.basicThickness / 0.01) + 15;
+        const tvDrawerSideTopGapMm = 21;
+        const basicOneTierSideH = Math.max(0, currentCabinetHmm - 60 - tvDrawerSideTopGapMm - drawerSideBottomMm);
+        const doorLiftOneTierSideH = Math.max(0, currentCabinetHmm - (baseFurniture.basicThickness / 0.01) - tvDrawerSideTopGapMm - drawerSideBottomMm);
+        const topDownOneTierSideH = Math.max(0, topDownOneTierChannelBottom - tvDrawerSideTopGapMm - drawerSideBottomMm);
         const notchFromBottoms = is3Tier
           ? [295 + drawer3TierDelta, 510 + drawer3TierDelta]
           : isDoorLift3Tier ? [315, doorLift3TierNotch2]
           : isDoorLift2Tier ? [doorLift2TierNotch]
+          : isDoorLift1Tier ? []
           : isTopDown3Tier ? [225 + drawer3TierDelta - td3StretcherDeltaForNotch, 445 + drawer3TierDelta - td3StretcherDeltaForNotch, 665 + drawer3TierDelta - td3StretcherDeltaForNotch]
           : isTopDown2Tier ? [Math.round((currentCabinetHmm + stoneThickness - 20 - 185) / 2), currentCabinetHmm - (td3StretcherForNotch + 65)]
+          : isTopDown1Tier ? [currentCabinetHmm - (td3StretcherForNotch + 65)]
+          : is1Tier ? []
           : [drawer2TierFromBottom];
-        const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
-        const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
+        const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : isTopDown1Tier ? [65] : [];
+        const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : (is1Tier || isDoorLift1Tier || isTopDown1Tier) ? 1 : 2;
 
         return (
           <group position={[0, cabinetYPosition, 0]}>
@@ -2640,10 +2671,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               notchFromBottoms={notchFromBottoms}
               notchHeights={notchHeights}
               isEditMode={isEditMode}
-              hideTopNotch={isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier}
-              maidaHeightsMm={isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined}
+              hideTopNotch={isDoorLift1Tier || isDoorLift2Tier || isDoorLift3Tier || isTopDown1Tier || isTopDown2Tier || isTopDown3Tier}
+              maidaHeightsMm={isDoorLift1Tier ? [currentCabinetHmm] : is1Tier ? [basicOneTierMaidaH] : isTopDown1Tier ? [topDownOneTierMaidaH] : isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined}
               sideHeightOverrides={
-                isTopDown2Tier ? { all: 240 }
+                is1Tier ? { all: basicOneTierSideH }
+                : isTopDown1Tier ? { all: topDownOneTierSideH }
+                : isDoorLift1Tier ? { all: doorLiftOneTierSideH }
+                : isTopDown2Tier ? { all: 240 }
                 : isTopDown3Tier ? { first: 180, rest: 130 }
                 : isDoorLift3Tier ? { first: 240, rest: 130 } // 특대서랍 측판 높이 240
                 : isDoorLift2Tier
@@ -2659,10 +2693,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               doorBottomGap={effectiveDrawerBottomGap}
               defaultDoorTopGap={defaultDrawerTopGap}
               defaultDoorBottomGap={defaultDrawerBottomGap}
+              backPanelThicknessOverride={backPanelThickness}
               floorY={lowerCabinetFloorY - cabinetYPosition}
               maidaDimensionSide={maidaDimensionSide}
               maidaFrontWidthMm={maidaFrontWidthMm}
               maidaXOffset={maidaXOffset}
+              showDrawerFrontPanel={is1Tier || isDoorLift1Tier}
+              showMaidaGapDimensions={!isTvOneDrawer}
             />
           </group>
         );
@@ -2878,7 +2915,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
-      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-top-down-touch-') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
+      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-1tier') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-1tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-top-down-touch-') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}

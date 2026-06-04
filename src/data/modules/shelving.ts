@@ -2500,6 +2500,62 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
   } as ModuleData;
 };
 
+const LOWER_ONE_DRAWER_CABINET_HEIGHT = 230;
+
+const createLowerOneDrawerModule = (
+  id: string,
+  name: string,
+  width: number,
+  color: string,
+  slotWidths?: number[]
+): ModuleData => {
+  const widthForId = Math.round(width * 100) / 100;
+  const base = createFurnitureBase(
+    `${id}-${widthForId}`,
+    `${name} ${widthForId}mm`,
+    width,
+    LOWER_ONE_DRAWER_CABINET_HEIGHT,
+    600,
+    color,
+    `${name} W${widthForId}xH${LOWER_ONE_DRAWER_CABINET_HEIGHT}xD600 (조절발 제외)`,
+    600,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 600,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+const createLowerDrawer1Tier = (columnWidth: number): ModuleData =>
+  createLowerOneDrawerModule('lower-drawer-1tier', 'TV장기본 반통', columnWidth, '#e3f2fd');
+
+const createDualLowerDrawer1Tier = (dualWidth: number, slotWidths?: number[]): ModuleData =>
+  createLowerOneDrawerModule('dual-lower-drawer-1tier', 'TV장기본 한통', dualWidth, '#e3f2fd', slotWidths);
+
+const createLowerDoorLift1Tier = (columnWidth: number): ModuleData =>
+  createLowerOneDrawerModule('lower-door-lift-1tier', 'TV장도어올림 반통', columnWidth, '#e8f5e9');
+
+const createDualLowerDoorLift1Tier = (dualWidth: number, slotWidths?: number[]): ModuleData =>
+  createLowerOneDrawerModule('dual-lower-door-lift-1tier', 'TV장도어올림 한통', dualWidth, '#e8f5e9', slotWidths);
+
 // ============================================================================
 // 도어올림 하부장 가구 생성 함수
 // ============================================================================
@@ -3858,11 +3914,13 @@ export const generateShelvingModules = (
     modules.push(createRightCornerLowerCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerSinkCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerInductionCabinet(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerDrawer1Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer2Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer3Tier(dualWidth, dualSlotWidths));
 
     // === 듀얼 도어올림 하부장 가구 생성 ===
     modules.push(createDualLowerDoorLiftHalf(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerDoorLift1Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDoorLift2Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDoorLift3Tier(dualWidth, dualSlotWidths));
 
@@ -3897,11 +3955,13 @@ export const generateShelvingModules = (
   modules.push(createLowerHalfCabinet(columnWidth));
   modules.push(createLowerSinkCabinet(columnWidth));
   modules.push(createLowerInductionCabinet(columnWidth));
+  modules.push(createLowerDrawer1Tier(columnWidth));
   modules.push(createLowerDrawer2Tier(columnWidth));
   modules.push(createLowerDrawer3Tier(columnWidth));
 
   // === 도어올림 하부장 가구 생성 ===
   modules.push(createLowerDoorLiftHalf(columnWidth));
+  modules.push(createLowerDoorLift1Tier(columnWidth));
   modules.push(createLowerDoorLift2Tier(columnWidth));
   modules.push(createLowerDoorLift3Tier(columnWidth));
 

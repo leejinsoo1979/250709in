@@ -83,6 +83,7 @@ interface SingleDrawerProps {
   isTopDrawer?: boolean;
   isBottomDrawer?: boolean;
   maidaXOffset?: number;
+  showDrawerFrontPanel?: boolean;
 }
 
 const SingleDrawer: React.FC<SingleDrawerProps> = ({
@@ -106,6 +107,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   isTopDrawer = false,
   isBottomDrawer = false,
   maidaXOffset = 0,
+  showDrawerFrontPanel = false,
 }) => {
   // Z축 슬라이드 애니메이션
   const spring = useSpring({
@@ -249,6 +251,24 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
         );
       })()}
 
+      {/* 서랍 앞판: TV장처럼 서랍 본체 전면판이 필요한 경우에만 렌더링 */}
+      {showDrawerFrontPanel && (() => {
+        const panelName = sectionName ? `${sectionName}서랍${i + 1} 앞판` : `서랍${i + 1} 앞판`;
+        return (
+          <BoxWithEdges
+            args={[backWidth, backHeight, drawerSideThickness]}
+            position={[cX, backY, drawerBodyCenterZ + drawerBodyDepth / 2 - drawerSideThickness / 2]}
+            material={getPanelMaterial(panelName)}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            panelName={panelName}
+            textureUrl={textureUrl}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })()}
+
       {/* 마이다 (도어면) + 2D overlay/대각선 */}
       {showMaida && (() => {
         const panelName = sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`;
@@ -363,6 +383,8 @@ interface ExternalDrawerRendererProps {
   maidaDimensionSide?: 'left' | 'right' | null;
   maidaFrontWidthMm?: number;
   maidaXOffset?: number;
+  showDrawerFrontPanel?: boolean;
+  showMaidaGapDimensions?: boolean;
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -398,6 +420,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   maidaDimensionSide = null,
   maidaFrontWidthMm,
   maidaXOffset = 0,
+  showDrawerFrontPanel = false,
+  showMaidaGapDimensions = true,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -627,7 +651,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       valueMm: range.valueMm,
       key: range.key,
     }];
-    if (i >= maidaRanges.length - 1) return current;
+    if (!showMaidaGapDimensions || i >= maidaRanges.length - 1) return current;
 
     const gapMm = maidaRanges[i + 1].bottomMm - range.topMm;
     if (gapMm <= 0) return current;
@@ -644,7 +668,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       },
     ];
   });
-  if (maidaRanges.length > 0) {
+  if (showMaidaGapDimensions && maidaRanges.length > 0) {
     const firstMaida = maidaRanges[0];
     const bottomGapMm = Math.abs((firstMaida.bottomY - floorLineY) / 0.01);
     if (bottomGapMm > 0) {
@@ -715,6 +739,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           defaultDoorBottomGap={defaultDoorBottomGap}
           isTopDrawer={i === drawerCount - 1}
           isBottomDrawer={i === 0}
+          showDrawerFrontPanel={showDrawerFrontPanel}
         />
       ))}
 
