@@ -4385,6 +4385,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const topRefMod_L = leftUpperMod ?? leftmostMod;
           const actualBottomSize = baseRefMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
           const actualTopSize = topRefMod_L?.hasTopFrame === false ? 0 : (topRefMod_L?.topFrameThickness !== undefined ? topRefMod_L.topFrameThickness : globalTopFrame);
+          const actualTopClearance = topRefMod_L?.hasTopFrame === false
+            ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
+            : actualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let furnitureH: number;
@@ -4429,10 +4432,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               furnitureH = leftmostMod.customHeight;
             } else {
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
-                furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+                furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopClearance);
               } else {
                 // 키큰장(full): 공간 - 걸래받이 - 상단몰딩
-                furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+                furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopClearance);
               }
             }
           } else {
@@ -4661,7 +4664,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 본체 가이드는 EP 켜진 경우에만 하부마감판(18mm) 포함, 끄면 본체만
             const singleUpperHasBottomEP = (leftmostMod as any)?.hasBottomEndPanel !== false;
             const singleUpperFinishMm = singleUpperHasBottomEP ? UPPER_BOTTOM_FINISH_MM : 0;
-            furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상단몰딩 하단 = 가구 상단
+            furnitureTopY = mmToThreeUnits(effectiveH - actualTopClearance); // 상단몰딩/상단갭 하단 = 가구 상단
             bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH + singleUpperFinishMm); // 가구 하단 + (EP 시 하부마감판)
             lowerCabinetBodyTopY = furnitureTopY;
             singleLowerCountertopTopY = furnitureTopY;
@@ -4672,12 +4675,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             singleLowerCountertopTopY = furnitureTopY + mmToThreeUnits(singleLowerCountertopH);
           }
           // 상하부장 동시배치 시 상부장 Y 좌표
-          const upperCabinetBottomY = hasDualCabinet ? mmToThreeUnits(effectiveH - actualTopSize - upperCabinetH) : 0;
+          const upperCabinetBottomY = hasDualCabinet ? mmToThreeUnits(effectiveH - actualTopClearance - upperCabinetH) : 0;
           const upperCabinetBodyBottomY = hasDualCabinet ? upperCabinetBottomY + mmToThreeUnits(upperCabinetBottomEpH) : 0;
-          const upperCabinetTopY = hasDualCabinet ? mmToThreeUnits(effectiveH - actualTopSize) : 0;
+          const upperCabinetTopY = hasDualCabinet ? mmToThreeUnits(effectiveH - actualTopClearance) : 0;
           // 중간 빈공간 높이
           const middleGapH = hasDualCabinet
-            ? Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - lowerCabinetH - lowerCountertopH - upperCabinetH - actualTopSize)
+            ? Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - lowerCabinetH - lowerCountertopH - upperCabinetH - actualTopClearance)
             : 0;
           const lowerFrontZ_L = resolveFrontDimensionFrontZ(baseRefMod ?? leftmostMod, 'lower');
           const upperFrontZ_L = resolveFrontDimensionFrontZ(topRefMod_L ?? leftmostMod, 'upper');
@@ -4888,7 +4891,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                       outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                     >
-                      {Math.round(effectiveH - actualTopSize - furnitureH - floorFinishForHeight)}
+                      {Math.round(effectiveH - actualTopClearance - furnitureH - floorFinishForHeight)}
                     </Text>
                   </>
                 )
@@ -5436,6 +5439,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const topRefMod_R = rightUpperMod ?? rightmostMod;
           const rActualBottomSize = rightLowerMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
           const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame);
+          const rActualTopClearance = topRefMod_R?.hasTopFrame === false
+            ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
+            : rActualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let rFurnitureH: number;
@@ -5479,9 +5485,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               rFurnitureH = rightmostMod.customHeight;
             } else {
               if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
-                rFurnitureH = rightModDataForCat?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+                rFurnitureH = rightModDataForCat?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopClearance);
               } else {
-                rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+                rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopClearance);
               }
             }
           } else {
@@ -5685,7 +5691,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 본체 가이드는 EP 켜진 경우에만 하부마감판(18mm) 포함, 끄면 본체만
             const rSingleUpperHasBottomEP = (rightmostMod as any)?.hasBottomEndPanel !== false;
             const rSingleUpperFinishMm = rSingleUpperHasBottomEP ? R_UPPER_BOTTOM_FINISH_MM : 0;
-            rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상단몰딩 하단 = 가구 상단
+            rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopClearance); // 상단몰딩/상단갭 하단 = 가구 상단
             rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH + rSingleUpperFinishMm); // 가구 하단 + (EP 시 하부마감판)
             rLowerCabinetBodyTopY = rFurnitureTopY;
             rSingleLowerCountertopTopY = rFurnitureTopY;
@@ -5696,11 +5702,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rSingleLowerCountertopTopY = rFurnitureTopY + mmToThreeUnits(rSingleLowerCountertopH);
           }
           // 상하부장 동시배치 시 상부장 Y 좌표
-          const rUpperCabinetBottomY = rHasDualCabinet ? mmToThreeUnits(rEffectiveH - rActualTopSize - rUpperCabinetH) : 0;
+          const rUpperCabinetBottomY = rHasDualCabinet ? mmToThreeUnits(rEffectiveH - rActualTopClearance - rUpperCabinetH) : 0;
           const rUpperCabinetBodyBottomY = rHasDualCabinet ? rUpperCabinetBottomY + mmToThreeUnits(rUpperCabinetBottomEpH) : 0;
-          const rUpperCabinetTopY = rHasDualCabinet ? mmToThreeUnits(rEffectiveH - rActualTopSize) : 0;
+          const rUpperCabinetTopY = rHasDualCabinet ? mmToThreeUnits(rEffectiveH - rActualTopClearance) : 0;
           const rMiddleGapH = rHasDualCabinet
-            ? Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rLowerCabinetH - rLowerCountertopH - rUpperCabinetH - rActualTopSize)
+            ? Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rLowerCabinetH - rLowerCountertopH - rUpperCabinetH - rActualTopClearance)
             : 0;
           const lowerFrontZ_R = resolveFrontDimensionFrontZ(rightLowerMod ?? rightmostMod, 'lower');
           const upperFrontZ_R = resolveFrontDimensionFrontZ(topRefMod_R ?? rightmostMod, 'upper');
@@ -5911,7 +5917,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
                       outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                     >
-                      {Math.round(rEffectiveH - rActualTopSize - rFurnitureH - rFloorFinishForHeight)}
+                      {Math.round(rEffectiveH - rActualTopClearance - rFurnitureH - rFloorFinishForHeight)}
                     </Text>
                   </>
                 )
