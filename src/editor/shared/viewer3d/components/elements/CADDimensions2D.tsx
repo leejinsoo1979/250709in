@@ -1,10 +1,9 @@
 import React, { useMemo } from 'react';
-import { Text, Html } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { useAlert } from '@/contexts/AlertContext';
 import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
 import { calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
@@ -302,97 +301,6 @@ const resolveShoeCabinetDoorFrontZ = (
   const furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + backWallGapZ + depth / 2;
 
   return furnitureZ + depth / 2 + doorThickness;
-};
-
-/**
- * 미드웨이 치수 편집 UI (HTML 오버레이)
- * - 2D 치수선 위에 투명 HTML div를 덮어 확실히 클릭 가능하게 함
- * - 클릭 시 input으로 전환, Enter/blur로 확정, ESC로 취소
- */
-const MidwayEditableNumber: React.FC<{
-  position: [number, number, number];
-  value: number;
-  onChange: (v: number) => void;
-  color: string;
-  fontSize: number; // Three 단위 폰트사이즈 (참고용)
-  rotated90?: boolean; // 텍스트처럼 세로로 90도 회전 표시
-  isDark?: boolean; // 2D 다크모드 여부
-}> = ({ position, value, onChange, color, rotated90, isDark }) => {
-  const [editing, setEditing] = React.useState(false);
-  const [text, setText] = React.useState(String(value));
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => { setText(String(value)); }, [value]);
-  React.useEffect(() => {
-    if (editing && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); }
-  }, [editing]);
-
-  const commit = React.useCallback(() => {
-    const n = parseFloat(text);
-    if (!isNaN(n) && n > 0 && n !== value) onChange(Math.round(n));
-    setEditing(false);
-  }, [text, value, onChange]);
-
-  // 다크모드 대응 색상
-  const bgInput = isDark ? '#1f2937' : 'rgba(255,255,255,0.95)';
-  const fgInput = isDark ? '#ffffff' : '#000000';
-  const borderInput = isDark ? '#4b5563' : color;
-  const hoverBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
-
-  return (
-    <Html
-      position={position}
-      center
-      zIndexRange={[200, 0]}
-      style={{ pointerEvents: 'auto', userSelect: 'none' }}
-    >
-      {editing ? (
-        <input
-          ref={inputRef}
-          type="number"
-          value={text}
-          onChange={e => setText(e.target.value)}
-          onBlur={commit}
-          onKeyDown={e => {
-            if (e.key === 'Enter') commit();
-            else if (e.key === 'Escape') { setText(String(value)); setEditing(false); }
-          }}
-          style={{
-            width: 64, padding: '2px 4px', fontSize: 13,
-            border: `1px solid ${borderInput}`, borderRadius: 3, textAlign: 'center',
-            backgroundColor: bgInput,
-            color: fgInput,
-            // 브라우저 기본 스타일 억제 (다크/라이트 모드 명시적 제어)
-            colorScheme: isDark ? 'dark' : 'light',
-            outline: 'none',
-            WebkitAppearance: 'none',
-            appearance: 'none',
-          }}
-        />
-      ) : (
-        <div
-          onClick={(e) => { e.stopPropagation(); setEditing(true); }}
-          title="클릭하여 편집"
-          style={{
-            cursor: 'pointer',
-            padding: '2px 8px',
-            minWidth: 36,
-            textAlign: 'center',
-            color,
-            fontSize: 13,
-            fontWeight: 500,
-            background: 'transparent',
-            transform: rotated90 ? 'rotate(-90deg)' : undefined,
-            whiteSpace: 'nowrap',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = hoverBg; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
-        >
-          {value}
-        </div>
-      )}
-    </Html>
-  );
 };
 
 type SectionWithCalc = SectionConfig & { calculatedHeight?: number };
@@ -933,7 +841,6 @@ interface CADDimensions2DProps {
  */
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { showAlert } = useAlert();
   // 상판 실효 두께 — 하부장 상판설치는 인조대리석 선택값만 사용
   const _stoneTopThk = (mod: any) => getStoneTopThicknessMm(mod);
   const _lowerTopFinishThk = (mod: any) => getLowerTopFinishThicknessMm(mod);
@@ -1581,54 +1488,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]}
                       color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                     />
-                    {seg.upperModuleId && seg.currentHeightMm ? (
-                      <MidwayEditableNumber
-                        position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                        value={seg.heightMm}
-                        color={textColor}
-                        fontSize={largeFontSize}
-                        rotated90
-                        isDark={view2DTheme === 'dark'}
-                        onChange={(newGap) => {
-                          const currentUpperHeight = seg.currentHeightMm || 0;
-                          const maxGap = Math.max(0, Math.round(seg.heightMm + currentUpperHeight - 1));
-                          let nextGap = Math.round(newGap);
-                          let shouldWarn = false;
-
-                          if (nextGap < 0) {
-                            nextGap = 0;
-                            shouldWarn = true;
-                          } else if (nextGap > maxGap) {
-                            nextGap = maxGap;
-                            shouldWarn = true;
-                          }
-
-                          const delta = seg.heightMm - nextGap; // 양수: 갭 줄임 → 상부장 확장
-                          const newHeight = Math.max(1, Math.round(currentUpperHeight + delta));
-                          if (seg.upperModuleId) {
-                            useFurnitureStore.getState().updatePlacedModule(seg.upperModuleId, {
-                              customHeight: newHeight,
-                            });
-                          }
-                          if (shouldWarn) {
-                            showAlert(
-                              `입력값이 공간 높이를 초과하여 가능한 최대값 ${nextGap}으로 변경했습니다.`,
-                              { title: '치수 변경 불가' }
-                            );
-                          }
-                        }}
-                      />
-                    ) : (
-                      <Text
-                        position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                        fontSize={largeFontSize} color={textColor}
-                        anchorX="center" anchorY="middle"
-                        renderOrder={100001} depthTest={false}
-                        rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                      >
-                        {seg.heightMm}
-                      </Text>
-                    )}
+                    <Text
+                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={100001} depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      {seg.heightMm}
+                    </Text>
                   </group>
                 </React.Fragment>
                 );
