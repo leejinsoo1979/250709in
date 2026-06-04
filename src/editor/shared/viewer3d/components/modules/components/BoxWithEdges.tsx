@@ -25,6 +25,7 @@ import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/ed
 
 const MIN_BOX_GEOMETRY_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
+const toRenderedMm = (value: number) => Math.round((value / 0.01) * 10) / 10;
 
 const getPanelSimulationSlot = (key: string) => {
   const existing = panelSimulationSlots.get(key);
@@ -881,9 +882,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       furnitureId: targetFurnitureIds[0],
       panelName,
       sourceScope: isSharedDimensionSource ? 'shared' : 'direct',
-      widthMm: Math.round(safeArgs[0] / 0.01),
-      heightMm: Math.round(safeArgs[1] / 0.01),
-      depthMm: Math.round(safeArgs[2] / 0.01),
+      widthMm: toRenderedMm(safeArgs[0]),
+      heightMm: toRenderedMm(safeArgs[1]),
+      depthMm: toRenderedMm(safeArgs[2]),
     });
     targetFurnitureIds.slice(1).forEach(targetFurnitureId => {
       updateRenderedPanelDimension({
@@ -891,9 +892,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         furnitureId: targetFurnitureId,
         panelName,
         sourceScope: isSharedDimensionSource ? 'shared' : 'direct',
-        widthMm: Math.round(safeArgs[0] / 0.01),
-        heightMm: Math.round(safeArgs[1] / 0.01),
-        depthMm: Math.round(safeArgs[2] / 0.01),
+        widthMm: toRenderedMm(safeArgs[0]),
+        heightMm: toRenderedMm(safeArgs[1]),
+        depthMm: toRenderedMm(safeArgs[2]),
       });
     });
     return () => {
@@ -2568,9 +2569,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           ...(panelName ? { panelName } : {}),
           ...(compositeKey ? { liveDimensionKey: compositeKey } : {}),
           liveDimension: {
-            widthMm: Math.round(safeArgs[0] / 0.01),
-            heightMm: Math.round(safeArgs[1] / 0.01),
-            depthMm: Math.round(safeArgs[2] / 0.01),
+            widthMm: toRenderedMm(safeArgs[0]),
+            heightMm: toRenderedMm(safeArgs[1]),
+            depthMm: toRenderedMm(safeArgs[2]),
             useObjectBounds: true,
           },
           ...(liveDimensionNotchLines ? { liveDimensionNotchLines } : {}),

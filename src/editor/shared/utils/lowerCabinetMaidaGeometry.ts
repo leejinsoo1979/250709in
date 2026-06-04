@@ -199,7 +199,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
     : (doorTopGap ?? defaultDrawerTopGap);
   const effectiveDrawerBottomGap = doorBottomGap ?? defaultDrawerBottomGap;
 
-  const drawer2TierFromBottom = (sourceModuleHeightMm - 125) / 2;
+  const drawer2TierFromBottom = (currentCabinetHmm - 125) / 2;
   const doorLift2TierNotch = Math.max(0, Math.round((currentCabinetHmm - 75) / 2));
   const doorLift2TierMaidaH = Math.max(0, doorLift2TierNotch + 45);
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));

@@ -2392,6 +2392,8 @@ export const calculatePanelDetails = (
     const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
     const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
     const isTopDown1Tier = moduleData.id.includes('lower-top-down-1tier');
+    const isBasicDrawer2Tier = moduleData.id.includes('lower-drawer-2tier');
+    const isBasicDrawer3Tier = moduleData.id.includes('lower-drawer-3tier');
 
     let notchFromBottoms: number[];
     let notchHeightsArr: number[];
@@ -2454,8 +2456,7 @@ export const calculatePanelDetails = (
         notchHeightsArr = topDown2TierGeometry.notches.map(notch => notch.height);
         hideTopNotch = true;
       } else { // standard lower-drawer-2tier
-        const bodyH = moduleData.dimensions.height || 785;
-        notchFromBottoms = [(bodyH - 125) / 2]; notchHeightsArr = [65];
+        notchFromBottoms = [(height - 125) / 2]; notchHeightsArr = [65];
       }
     }
 
@@ -2469,7 +2470,7 @@ export const calculatePanelDetails = (
       ? [...sortedNotches]
       : [...sortedNotches, { fromBottom: sidePanelHMm - upperNotchH, height: upperNotchH }];
 
-    const extZones: { notchAboveBottom: number; notchBelowTop: number | null }[] = [];
+    const extZones: { notchAboveBottom: number; notchBelowTop: number | null; bottomMm: number }[] = [];
     let zCursor = 0;
     for (let ni = 0; ni < allNotches.length; ni++) {
       const notch = allNotches[ni];
@@ -2477,6 +2478,7 @@ export const calculatePanelDetails = (
         extZones.push({
           notchAboveBottom: notch.fromBottom,
           notchBelowTop: ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null,
+          bottomMm: zCursor,
         });
       }
       zCursor = notch.fromBottom + notch.height;
@@ -2486,21 +2488,37 @@ export const calculatePanelDetails = (
       extZones.push({
         notchAboveBottom: sidePanelHMm - basicThickness,
         notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
+        bottomMm: zCursor,
       });
     }
 
     // 측판 높이: 1단 250mm, 2단이상 130mm (3단서랍), 2단서랍은 모두 250mm
     for (let di = 0; di < extDrawerCount; di++) {
-      const extSideHMm = fixedSideHeightMm ?? (extDrawerCount >= 3 ? (di === 0 ? 250 : 130) : 250);
-      const extBackHMm = extSideHMm - 15 - backPanelThickness; // 뒷판높이 = 측판 - 15 - 바닥판두께
+      const requestedExtSideHMm = fixedSideHeightMm
+        ?? (isTopDown2Tier ? 240
+          : isTopDown3Tier ? (di === 0 ? 180 : 130)
+          : isDoorLift3Tier ? (di === 0 ? 240 : 130)
+          : isDoorLift2Tier ? (height <= 640 ? 180 : 240)
+          : isBasicDrawer2Tier ? (height <= 673 ? 180 : 240)
+          : isBasicDrawer3Tier ? (di === 0 ? 240 : 130)
+          : extDrawerCount >= 3 ? (di === 0 ? 250 : 130)
+          : 250);
+      const zone = extZones[di];
+      const sideBottomReferenceMm = di === 0
+        ? basicThickness
+        : (zone?.notchBelowTop ?? zone?.bottomMm ?? 0);
+      const maxExtSideHMm = zone
+        ? Math.max(0, zone.notchAboveBottom - sideBottomReferenceMm - 20)
+        : requestedExtSideHMm;
+      const extSideHMm = Math.max(0, Math.min(requestedExtSideHMm, maxExtSideHMm));
+      const extBackHMm = Math.max(0, extSideHMm - 15 - backPanelThickness); // 뒷판높이 = 측판 - 15 - 바닥판두께
       const drawerNum = di + 1;
 
       // 마이다 높이: fixedMaidaHeights 우선, 없으면 zone 기반 계산
       let maidaHeightMm: number;
       if (fixedMaidaHeights && fixedMaidaHeights[di]) {
         maidaHeightMm = fixedMaidaHeights[di];
-      } else if (extZones[di]) {
-        const zone = extZones[di];
+      } else if (zone) {
         const maidaTopMm = zone.notchAboveBottom + 40;
         const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
         maidaHeightMm = maidaTopMm - maidaBottomMm;
@@ -2538,7 +2556,7 @@ export const calculatePanelDetails = (
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
       extDrawerPanels.push(
-        { name: `서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: Math.round(maidaHeightMm), thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
+        { name: `서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: Math.round(maidaHeightMm * 10) / 10, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
       );
     }
   }

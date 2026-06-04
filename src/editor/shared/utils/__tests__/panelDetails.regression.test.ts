@@ -326,6 +326,21 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '서랍1 뒷판').groovePositions).toBeUndefined()
   })
 
+  it('기본 2단 서랍장 높이 축소 시 서랍 측판과 마이다는 현재 몸통 높이 기준 0.5mm 단위를 유지한다', () => {
+    const panels = calculatePanels('lower-drawer-2tier-500', 500, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9,
+      freeHeight: 500
+    })
+
+    expect(findPanel(panels, '서랍1 좌측판').height).toBe(149.5)
+    expect(findPanel(panels, '서랍1 우측판').height).toBe(149.5)
+    expect(findPanel(panels, '서랍2 좌측판').height).toBe(167.5)
+    expect(findPanel(panels, '서랍2 우측판').height).toBe(167.5)
+    expect(findPanel(panels, '서랍1(마이다)').height).toBe(232.5)
+    expect(findPanel(panels, '서랍2(마이다)').height).toBe(232.5)
+  })
+
   it('유리장 서랍 모듈 목재 패널은 옵티마이저 패널 목록에 모두 포함된다', () => {
     const panels = calculatePanels('single-glass-cabinet-500', 500, 365, {
       hasDoor: true,

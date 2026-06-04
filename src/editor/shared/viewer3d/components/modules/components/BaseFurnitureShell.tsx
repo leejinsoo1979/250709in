@@ -19,6 +19,8 @@ import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizin
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
 import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 
+const toRenderedMm = (value: number) => Math.round((value / 0.01) * 10) / 10;
+
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
 let GLASS_TILE_LOAD_PROMISE: Promise<HTMLImageElement> | null = null;
@@ -62,9 +64,9 @@ const GlassAccessoryAssemblySource: React.FC<{
       sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
-      widthMm: Math.round(args[0] / 0.01),
-      heightMm: Math.round(args[1] / 0.01),
-      depthMm: Math.round(args[2] / 0.01),
+      widthMm: toRenderedMm(args[0]),
+      heightMm: toRenderedMm(args[1]),
+      depthMm: toRenderedMm(args[2]),
     });
     return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, args]);
@@ -138,9 +140,9 @@ const TileBackPanelMesh: React.FC<{
       sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
-      widthMm: Math.round(args[0] / 0.01),
-      heightMm: Math.round(args[1] / 0.01),
-      depthMm: Math.round(args[2] / 0.01),
+      widthMm: toRenderedMm(args[0]),
+      heightMm: toRenderedMm(args[1]),
+      depthMm: toRenderedMm(args[2]),
     });
     return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, args]);

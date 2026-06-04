@@ -122,11 +122,22 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   // 측판 높이: sideHeightOverrides가 있으면 우선, 없으면 기본값
   // 기본: 3단서랍장=1단 250mm/2단이상 130mm, 2단서랍장=모든 단 250mm
-  const sideHeightMm = sideHeightOverrides
+  const requestedSideHeightMm = sideHeightOverrides
     ? (sideHeightOverrides.all != null
       ? sideHeightOverrides.all
       : (index === 0 ? (sideHeightOverrides.first ?? 250) : (sideHeightOverrides.rest ?? 130)))
     : (drawerCount >= 3 ? (index === 0 ? 250 : 130) : 250);
+  const basicThicknessMm = basicThickness / 0.01;
+  const bottomGapMm = bottomGap / 0.01;
+  const topClearanceMm = 5;
+  const sideBottomReferenceMm = index === 0
+    ? basicThicknessMm
+    : (zone.notchBelowTop ?? zone.bottomMm);
+  const maxSideHeightMm = Math.max(
+    0,
+    zone.notchAboveBottom - sideBottomReferenceMm - bottomGapMm - topClearanceMm
+  );
+  const sideHeightMm = Math.max(0, Math.min(requestedSideHeightMm, maxSideHeightMm));
   const sideHeight = mmToThreeUnits(sideHeightMm);
 
   const bottomPanelTopY = cabinetBottomY + basicThickness;
@@ -147,7 +158,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const bottomWidth = drawerInnerWidth + mmToThreeUnits(14);
 
   // 뒷판 높이: 측판높이 - 13mm(홈 하단 12mm + 끼움 여유 1mm) - 바닥판두께
-  const backHeightMm = sideHeightMm - 13 - bottomThkMm;
+  const backHeightMm = Math.max(0, sideHeightMm - 13 - bottomThkMm);
   const backHeight = mmToThreeUnits(backHeightMm);
   const bottomTopYPos = bottomY + bottomThk / 2;
   const backY = bottomTopYPos + backHeight / 2;

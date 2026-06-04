@@ -80,6 +80,7 @@ const PANEL_SIMULATION_SCALE = PANEL_SIMULATION_MM_TO_WORLD / PANEL_SIMULATION_S
 const PANEL_SIMULATION_SHEET_GAP_WORLD = 1.2;
 const PANEL_SIMULATION_ADMIN_EMAIL = 'sbbc212@gmail.com';
 
+const roundToTenthMm = (value: number) => Math.round(value * 10) / 10;
 const clampNumber = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 const normalizeEmail = (email?: string | null) => (email || '').toLowerCase().trim();
@@ -713,8 +714,8 @@ const buildPanelSimulationSummary = (
       widthWorld: sheet.sheetWidthWorld,
       heightWorld: sheet.sheetHeightWorld,
       material: '미지정',
-      widthMm: Math.round(sheet.sheetWidthWorld / PANEL_SIMULATION_MM_TO_WORLD),
-      heightMm: Math.round(sheet.sheetHeightWorld / PANEL_SIMULATION_MM_TO_WORLD),
+      widthMm: roundToTenthMm(sheet.sheetWidthWorld / PANEL_SIMULATION_MM_TO_WORLD),
+      heightMm: roundToTenthMm(sheet.sheetHeightWorld / PANEL_SIMULATION_MM_TO_WORLD),
     }));
   const stockBySpec = new Map<string, PanelSimulationSummary['stockSpecs'][number]>();
   const materialByName = new Map<string, number>();
@@ -1460,9 +1461,9 @@ const PanelSimulationAccessoryItem: React.FC<{
         panelName: source.panelName,
         liveDimensionKey: `panel-simulation::${source.key}`,
         liveDimension: {
-          widthMm: Math.round(source.args[0] * 100),
-          heightMm: Math.round(source.args[1] * 100),
-          depthMm: Math.round(source.args[2] * 100),
+          widthMm: roundToTenthMm(source.args[0] * 100),
+          heightMm: roundToTenthMm(source.args[1] * 100),
+          depthMm: roundToTenthMm(source.args[2] * 100),
           sizeThree: [
             Math.max(0.001, source.args[0]),
             Math.max(0.001, source.args[1]),
@@ -1982,9 +1983,9 @@ const PanelSimulationMovingPanels: React.FC = () => {
           .multiply(getPanelSimulationStyleTiltQuaternion(animationStyle, progress, sourceIndex));
         const currentScale = fromScale.clone().lerp(toScale, progress);
         const liveDimensionData = {
-          widthMm: Math.round(source.args[0] * 100),
-          heightMm: Math.round(source.args[1] * 100),
-          depthMm: Math.round(source.args[2] * 100),
+          widthMm: roundToTenthMm(source.args[0] * 100),
+          heightMm: roundToTenthMm(source.args[1] * 100),
+          depthMm: roundToTenthMm(source.args[2] * 100),
           useObjectBounds: true,
         };
 

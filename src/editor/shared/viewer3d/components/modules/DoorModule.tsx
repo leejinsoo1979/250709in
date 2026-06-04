@@ -46,6 +46,7 @@ import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/ed
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
+const toRenderedMm = (value: number) => Math.round((value / 0.01) * 10) / 10;
 
 const sanitizeDoorBoxGeometrySize = (value: number): number => {
   if (!Number.isFinite(value) || value <= 0) {
@@ -158,9 +159,9 @@ const BoxWithEdges: React.FC<{
       sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
-      widthMm: Math.round(safeArgs[0] / 0.01),
-      heightMm: Math.round(safeArgs[1] / 0.01),
-      depthMm: Math.round(safeArgs[2] / 0.01),
+      widthMm: toRenderedMm(safeArgs[0]),
+      heightMm: toRenderedMm(safeArgs[1]),
+      depthMm: toRenderedMm(safeArgs[2]),
     });
     return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, safeArgs]);
@@ -440,9 +441,9 @@ const BoxWithEdges: React.FC<{
             ...(panelName ? { panelName } : {}),
             ...(compositeKeyForCleanup ? { liveDimensionKey: compositeKeyForCleanup } : {}),
             liveDimension: {
-              widthMm: Math.round(safeArgs[0] / 0.01),
-              heightMm: Math.round(safeArgs[1] / 0.01),
-              depthMm: Math.round(safeArgs[2] / 0.01),
+              widthMm: toRenderedMm(safeArgs[0]),
+              heightMm: toRenderedMm(safeArgs[1]),
+              depthMm: toRenderedMm(safeArgs[2]),
               useObjectBounds: true,
             },
           }}
@@ -537,9 +538,9 @@ const GlassDoorAssemblySource: React.FC<{
       sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
-      widthMm: Math.round(args[0] / 0.01),
-      heightMm: Math.round(args[1] / 0.01),
-      depthMm: Math.round(args[2] / 0.01),
+      widthMm: toRenderedMm(args[0]),
+      heightMm: toRenderedMm(args[1]),
+      depthMm: toRenderedMm(args[2]),
     });
     return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, args]);

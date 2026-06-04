@@ -2621,12 +2621,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 도어올림 2단: fromBottom=355
         // 상판내림 3단: fromBottom=225, 445, 665 (1단=225, 따내기65, 2단=155, 따내기65, 3단=155, 따내기65, 상단55)
         // 상판내림 2단: 1/2단 마이다 높이를 동일하게 유지하고, 사이 간격 20mm를 보존
-        const drawer2TierFromBottom = (moduleData.dimensions.height - 125) / 2;
         // 도어올림 2단: 사용자 몸통 H 변경 시 도어와 몸통이 균형있게 같이 변하도록 동적 계산
         // 노치높이 65, 도어갭 20 고정. notch=(H-75)/2, maida=notch+45 (도어갭 20mm 보존)
         // (H=785 기준: notch=355, 도어=400 — 기존 값과 동일)
         // 정수 반올림으로 0.5 단위 방지. maida를 notch에서 파생시켜 도어갭 일관성 보장
         const currentCabinetHmm = Math.round(adjustedHeight / 0.01);
+        const drawer2TierFromBottom = (currentCabinetHmm - 125) / 2;
         const doorLift2TierNotch = Math.max(0, Math.round((currentCabinetHmm - 75) / 2));
         const doorLift2TierMaidaH = Math.max(0, doorLift2TierNotch + 45);
         // 도어올림 3단: 아래 도어(360mm)와 첫 노치(315) 고정, 위쪽 2개 도어만 균등하게 H 변경 흡수

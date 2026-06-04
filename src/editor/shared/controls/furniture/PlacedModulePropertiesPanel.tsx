@@ -408,6 +408,13 @@ const formatMaidaTierLabel = (displayIndex: number, total: number): string => {
   return displayIndex === 0 ? '1단(위)' : displayIndex === total - 1 ? `${total}단(아래)` : `${displayIndex + 1}단(중간)`;
 };
 
+const formatMmInputValue = (value: number | string | undefined): string => {
+  if (value === '' || value == null) return '';
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) return '';
+  return Number.isInteger(numeric) ? String(numeric) : String(Math.round(numeric * 10) / 10);
+};
+
 const resolveMaidaDisplayWidthMm = (
   module: any,
   moduleData: any,
@@ -457,7 +464,7 @@ const resolveExternalMaidaHeightsMm = (
     : (doorTopGap ?? defaultTopGap);
   const effectiveBottomGap = doorBottomGap ?? defaultBottomGap;
 
-  const drawer2TierFromBottom = ((moduleData?.dimensions?.height ?? 785) - 125) / 2;
+  const drawer2TierFromBottom = (currentCabinetHmm - 125) / 2;
   const doorLift2TierNotch = Math.max(0, Math.round((currentCabinetHmm - 75) / 2));
   const doorLift2TierMaidaH = Math.max(0, doorLift2TierNotch + 45);
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
@@ -517,7 +524,7 @@ const resolveExternalMaidaHeightsMm = (
     const gapBottomExt = isBottomDrawer ? (effectiveBottomGap - defaultBottomGap) : 0;
     const defaultHeight = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
     const fixedHeight = fixedMaidaHeights?.[idx];
-    return Math.max(0, Math.round(fixedHeight != null ? fixedHeight + gapTopExt + gapBottomExt : defaultHeight));
+    return Math.max(0, Math.round((fixedHeight != null ? fixedHeight + gapTopExt + gapBottomExt : defaultHeight) * 10) / 10);
   });
 };
 
@@ -590,7 +597,7 @@ const resolveTouchMaidaHeightsMm = (
     heights = positioned;
   }
 
-  return heights.map(h => Math.max(0, Math.round(h)));
+  return heights.map(h => Math.max(0, Math.round(h * 10) / 10));
 };
 
 const resolveInductionMaidaHeightsMm = (
@@ -607,7 +614,10 @@ const resolveInductionMaidaHeightsMm = (
   const maida2Bottom = maida2Top - maida2Height;
   const maida1Top = maida2Bottom - gapMm;
   const maida1Bottom = -5 - gapBottomExt;
-  return [Math.max(0, Math.round(maida1Top - maida1Bottom)), Math.round(maida2Height)];
+  return [
+    Math.max(0, Math.round((maida1Top - maida1Bottom) * 10) / 10),
+    Math.max(0, Math.round(maida2Height * 10) / 10),
+  ];
 };
 
 const calculateRenderedSurroundPanelsForModule = (
@@ -6912,12 +6922,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: next });
             };
             const handleChange = (idx: number, raw: string) => {
-              const num = parseInt(raw, 10);
+              const num = parseFloat(raw);
               applyValue(idx, num);
             };
             const handleArrow = (idx: number, dir: 1 | -1) => {
               const baseCur = current[idx] ?? defaultMaida[idx] ?? 0;
-              applyValue(idx, baseCur + dir);
+              applyValue(idx, baseCur + dir * 0.5);
             };
             const handleReset = () => {
               updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
@@ -6974,10 +6984,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
-                            inputMode="numeric"
+                            inputMode="decimal"
                             className={styles.epInput}
-                            value={val}
-                            placeholder={String(defaultMaida[di] ?? '')}
+                            value={formatMmInputValue(val)}
+                            placeholder={formatMmInputValue(defaultMaida[di])}
                             disabled={fieldDisabled}
                             onChange={(e) => handleChange(di, e.target.value)}
                             onKeyDown={(e) => {
