@@ -52,17 +52,21 @@ const GlassAccessoryAssemblySource: React.FC<{
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const dimensionSourceIdRef = useRef(
+    `${sourceKey || panelName}-${Math.random().toString(36).slice(2)}`
+  );
 
   useEffect(() => {
     if (!furnitureId || !panelName) return;
     updateRenderedPanelDimension({
+      sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
       widthMm: Math.round(args[0] / 0.01),
       heightMm: Math.round(args[1] / 0.01),
       depthMm: Math.round(args[2] / 0.01),
     });
-    return () => removeRenderedPanelDimension(furnitureId, panelName);
+    return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, args]);
 
   useEffect(() => {
@@ -124,17 +128,21 @@ const TileBackPanelMesh: React.FC<{
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const dimensionSourceIdRef = useRef(
+    `${panelName || 'tile-panel'}-${Math.random().toString(36).slice(2)}`
+  );
 
   React.useEffect(() => {
     if (!furnitureId || !panelName) return;
     updateRenderedPanelDimension({
+      sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
       widthMm: Math.round(args[0] / 0.01),
       heightMm: Math.round(args[1] / 0.01),
       depthMm: Math.round(args[2] / 0.01),
     });
-    return () => removeRenderedPanelDimension(furnitureId, panelName);
+    return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, args]);
 
   React.useEffect(() => {

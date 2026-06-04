@@ -858,6 +858,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     hasSimulationLayouts: boolean;
   } | null>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const dimensionSourceIdRef = React.useRef(
+    `${panelName || 'panel'}-${Math.random().toString(36).slice(2)}`
+  );
   const panelSimulationLayoutCount = React.useMemo(
     () => Object.keys(panelSimulationLayouts).length,
     [panelSimulationLayouts]
@@ -873,6 +876,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (targetFurnitureIds.length === 0) return;
 
     updateRenderedPanelDimension({
+      sourceId: dimensionSourceIdRef.current,
       furnitureId: targetFurnitureIds[0],
       panelName,
       widthMm: Math.round(safeArgs[0] / 0.01),
@@ -881,6 +885,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     });
     targetFurnitureIds.slice(1).forEach(targetFurnitureId => {
       updateRenderedPanelDimension({
+        sourceId: dimensionSourceIdRef.current,
         furnitureId: targetFurnitureId,
         panelName,
         widthMm: Math.round(safeArgs[0] / 0.01),
@@ -889,7 +894,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       });
     });
     return () => {
-      targetFurnitureIds.forEach(targetFurnitureId => removeRenderedPanelDimension(targetFurnitureId, panelName));
+      targetFurnitureIds.forEach(targetFurnitureId => {
+        removeRenderedPanelDimension(targetFurnitureId, panelName, dimensionSourceIdRef.current);
+      });
     };
   }, [furnitureId, dimensionFurnitureIds, panelName, safeArgs]);
 

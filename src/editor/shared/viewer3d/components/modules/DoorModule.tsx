@@ -139,6 +139,9 @@ const BoxWithEdges: React.FC<{
     hasSimulationLayouts: boolean;
   } | null>(null);
   const compositeKeyForCleanup = furnitureId && panelName ? `${furnitureId}::${panelName}` : undefined;
+  const dimensionSourceIdRef = React.useRef(
+    `${panelName || 'door'}-${Math.random().toString(36).slice(2)}`
+  );
   React.useEffect(() => {
     return () => {
       if (compositeKeyForCleanup) removePanelSimulationSource(compositeKeyForCleanup);
@@ -152,13 +155,14 @@ const BoxWithEdges: React.FC<{
   React.useEffect(() => {
     if (!furnitureId || !panelName) return;
     updateRenderedPanelDimension({
+      sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
       widthMm: Math.round(safeArgs[0] / 0.01),
       heightMm: Math.round(safeArgs[1] / 0.01),
       depthMm: Math.round(safeArgs[2] / 0.01),
     });
-    return () => removeRenderedPanelDimension(furnitureId, panelName);
+    return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, safeArgs]);
 
   const panelSimulationLayoutCount = useMemo(
@@ -523,17 +527,21 @@ const GlassDoorAssemblySource: React.FC<{
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
   const registryKey = furnitureId ? `accessory::${furnitureId}::${sourceKey}` : null;
+  const dimensionSourceIdRef = React.useRef(
+    `${sourceKey || panelName}-${Math.random().toString(36).slice(2)}`
+  );
 
   useEffect(() => {
     if (!furnitureId || !panelName) return;
     updateRenderedPanelDimension({
+      sourceId: dimensionSourceIdRef.current,
       furnitureId,
       panelName,
       widthMm: Math.round(args[0] / 0.01),
       heightMm: Math.round(args[1] / 0.01),
       depthMm: Math.round(args[2] / 0.01),
     });
-    return () => removeRenderedPanelDimension(furnitureId, panelName);
+    return () => removeRenderedPanelDimension(furnitureId, panelName, dimensionSourceIdRef.current);
   }, [furnitureId, panelName, args]);
 
   useEffect(() => {

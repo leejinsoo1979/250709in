@@ -1,6 +1,7 @@
 import { getCanonicalPanelNameMatchScore, normalizeCanonicalPanelName } from './panelNameCanonical';
 
 export interface RenderedPanelDimension {
+  sourceId: string;
   furnitureId: string;
   panelName: string;
   canonicalName: string;
@@ -13,8 +14,11 @@ const dimensions = new Map<string, RenderedPanelDimension>();
 const listeners = new Set<() => void>();
 let version = 0;
 
-const keyOf = (furnitureId: string, panelName: string) =>
+const canonicalKeyOf = (furnitureId: string, panelName: string) =>
   `${furnitureId}::${normalizeCanonicalPanelName(panelName)}`;
+
+const sourceKeyOf = (furnitureId: string, panelName: string, sourceId?: string) =>
+  `${canonicalKeyOf(furnitureId, panelName)}::${sourceId || 'default'}`;
 
 const roundMm = (value: number) => Math.round(value * 10) / 10;
 
@@ -31,12 +35,14 @@ export const subscribeRenderedPanelDimensions = (listener: () => void) => {
 export const getRenderedPanelDimensionsSnapshot = () => version;
 
 export const updateRenderedPanelDimension = ({
+  sourceId,
   furnitureId,
   panelName,
   widthMm,
   heightMm,
   depthMm,
 }: {
+  sourceId?: string;
   furnitureId?: string;
   panelName?: string;
   widthMm: number;
@@ -48,6 +54,7 @@ export const updateRenderedPanelDimension = ({
 
   const canonicalName = normalizeCanonicalPanelName(panelName);
   const next: RenderedPanelDimension = {
+    sourceId: sourceId || 'default',
     furnitureId,
     panelName,
     canonicalName,
@@ -55,7 +62,7 @@ export const updateRenderedPanelDimension = ({
     heightMm: roundMm(heightMm),
     depthMm: roundMm(depthMm),
   };
-  const key = keyOf(furnitureId, panelName);
+  const key = sourceKeyOf(furnitureId, panelName, sourceId);
   const prev = dimensions.get(key);
   if (
     prev &&
@@ -71,29 +78,57 @@ export const updateRenderedPanelDimension = ({
   notify();
 };
 
-export const removeRenderedPanelDimension = (furnitureId?: string, panelName?: string) => {
+export const removeRenderedPanelDimension = (furnitureId?: string, panelName?: string, sourceId?: string) => {
   if (!furnitureId || !panelName) return;
-  if (dimensions.delete(keyOf(furnitureId, panelName))) notify();
+  if (sourceId) {
+    if (dimensions.delete(sourceKeyOf(furnitureId, panelName, sourceId))) notify();
+    return;
+  }
+
+  const canonicalKey = canonicalKeyOf(furnitureId, panelName);
+  let changed = false;
+  Array.from(dimensions.keys()).forEach(key => {
+    if (key.startsWith(`${canonicalKey}::`)) {
+      dimensions.delete(key);
+      changed = true;
+    }
+  });
+  if (changed) notify();
+};
+
+export const findRenderedPanelDimensions = (
+  furnitureId: string | undefined,
+  panelName: string | undefined
+): RenderedPanelDimension[] => {
+  if (!furnitureId || !panelName) return [];
+
+  const canonicalName = normalizeCanonicalPanelName(panelName);
+  const exact = Array.from(dimensions.values()).filter(item =>
+    item.furnitureId === furnitureId && item.canonicalName === canonicalName
+  );
+  if (exact.length > 0) return exact;
+
+  let bestScore = Infinity;
+  const best: RenderedPanelDimension[] = [];
+  dimensions.forEach(item => {
+    if (item.furnitureId !== furnitureId) return;
+    const score = getCanonicalPanelNameMatchScore(panelName, item.panelName);
+    if (score >= 1) return;
+    if (score < bestScore) {
+      bestScore = score;
+      best.length = 0;
+      best.push(item);
+    } else if (score === bestScore) {
+      best.push(item);
+    }
+  });
+
+  return best;
 };
 
 export const findRenderedPanelDimension = (
   furnitureId: string | undefined,
   panelName: string | undefined
 ): RenderedPanelDimension | undefined => {
-  if (!furnitureId || !panelName) return undefined;
-
-  const exact = dimensions.get(keyOf(furnitureId, panelName));
-  if (exact) return exact;
-
-  let best: { score: number; item: RenderedPanelDimension } | null = null;
-  dimensions.forEach(item => {
-    if (item.furnitureId !== furnitureId) return;
-    const score = getCanonicalPanelNameMatchScore(panelName, item.panelName);
-    if (score >= 1) return;
-    if (!best || score < best.score) {
-      best = { score, item };
-    }
-  });
-
-  return best?.item;
+  return findRenderedPanelDimensions(furnitureId, panelName)[0];
 };

@@ -11,6 +11,7 @@ import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../v
 import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import {
   findRenderedPanelDimension,
+  findRenderedPanelDimensions,
   getRenderedPanelDimensionsSnapshot,
   subscribeRenderedPanelDimensions
 } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
@@ -61,6 +62,41 @@ const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
   }
 
   return next;
+};
+
+const applyRenderedPanelDimensions = (panel: any, furnitureId?: string) => {
+  if (!panel?.name || !furnitureId) return [panel];
+  if (!panel.width && !panel.height && !panel.depth) return [panel];
+
+  const renderedItems = findRenderedPanelDimensions(furnitureId, panel.name);
+  if (renderedItems.length <= 1) return [applyRenderedPanelDimension(panel, furnitureId)];
+
+  return renderedItems.map((rendered, index) => {
+    const next = applyRenderedPanelDimension(panel, furnitureId);
+    const panelThickness = Number(panel.thickness);
+    const xIsThickness = Number.isFinite(panelThickness)
+      ? Math.abs(rendered.widthMm - panelThickness) <= Math.abs(rendered.depthMm - panelThickness)
+      : rendered.widthMm <= rendered.depthMm && rendered.widthMm <= rendered.heightMm;
+
+    if (panel.width !== undefined && panel.height !== undefined) {
+      next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
+      next.height = rendered.heightMm;
+      next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+    } else if (panel.width !== undefined && panel.depth !== undefined) {
+      next.width = rendered.widthMm;
+      next.depth = rendered.depthMm;
+      next.thickness = rendered.heightMm;
+    } else if (panel.height !== undefined && panel.depth !== undefined) {
+      next.height = rendered.heightMm;
+      next.depth = xIsThickness ? rendered.depthMm : rendered.widthMm;
+      next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+    }
+
+    return {
+      ...next,
+      name: `${panel.name} ${index + 1}`,
+    };
+  });
 };
 
 const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
@@ -529,7 +565,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     (placedModule as any)?.topEndPanelOffset,
     (placedModule as any)?.topEndPanelBackOffset,
     true
-  ).map(panel => applyRenderedPanelDimension(panel, placedModule.id));
+  ).flatMap(panel => applyRenderedPanelDimensions(panel, placedModule.id));
 
   // 서라운드 패널 (공간 전체 단위)
   const surroundHeightMm = (() => {
