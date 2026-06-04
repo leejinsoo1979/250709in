@@ -6769,9 +6769,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 	          ?? (module.moduleId?.includes('upper') ? 'upper'
 	            : module.moduleId?.includes('lower') ? 'lower' : 'full');
 	        const isLowerDim = moduleCategoryForDim === 'lower';
+	        const isUpperDim = moduleCategoryForDim === 'upper';
 	        const topGapMmForDim = module.hasTopFrame === false
 	          ? Math.max(0, Math.round(module.topFrameGap ?? 0))
 	          : 0;
+	        const topFrameMmForDim = module.hasTopFrame === false
+	          ? topGapMmForDim
+	          : Math.max(0, Math.round(module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)));
 	        // 우측 작은 상단갭 박스(가구 우측에 100 표시) — 좌측에 이미 표시되므로 중복 제거
 	        const showTopGapHeightGuide = false;
         const moduleCeilingMmForDim = (() => {
@@ -6810,7 +6814,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 	        const lowerTopYMm = moduleBottomYMmForDim + moduleHeightMm;
 	        const LOWER_DIM_OFFSET_MM = 150; // 하부장 상단에서 치수선까지 거리 (연장선 길이)
 	        const lowerDimY = mmToThreeUnits(lowerTopYMm + LOWER_DIM_OFFSET_MM);
-	        const dimY = isLowerDim ? lowerDimY : slotDimensionY;
+	        const upperTopYMm = moduleCeilingMmForDim - topFrameMmForDim;
+	        const upperDimY = mmToThreeUnits(upperTopYMm + DIM_GAP);
+	        const dimY = isLowerDim ? lowerDimY : (isUpperDim ? upperDimY : slotDimensionY);
+	        const moduleWidthExtensionStartY = isUpperDim ? mmToThreeUnits(upperTopYMm) : moduleCeilingYForDim;
+	        const moduleWidthExtensionEndY = isUpperDim
+	          ? dimY
+	          : ((hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY);
 	        const moduleWidthSection = moduleCategoryForDim === 'upper'
 	          ? 'upper'
 	          : moduleCategoryForDim === 'lower'
@@ -7013,7 +7023,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ) : (
               <>
 	                <NativeLine name="dimension_line"
-	                  points={[[leftX, moduleCeilingYForDim, moduleWidthExtZ], [leftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, moduleWidthExtZ]]}
+	                  points={[[leftX, moduleWidthExtensionStartY, moduleWidthExtZ], [leftX, moduleWidthExtensionEndY, moduleWidthExtZ]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
@@ -7022,7 +7032,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   transparent={true}
                 />
 	                <NativeLine name="dimension_line"
-	                  points={[[rightX, moduleCeilingYForDim, moduleWidthExtZ], [rightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, moduleWidthExtZ]]}
+	                  points={[[rightX, moduleWidthExtensionStartY, moduleWidthExtZ], [rightX, moduleWidthExtensionEndY, moduleWidthExtZ]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
@@ -7043,7 +7053,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height)
                 : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height);
               const baseFrameHGap = module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0);
-              const topFrameForGap = module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              const topFrameForGap = module.hasTopFrame === false
+                ? Math.max(0, Math.round(module.topFrameGap ?? 0))
+                : (module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
               let gapDimY: number;
               if (modCat === 'upper') {
                 // 상부장 중앙: (공간상단 - topFrame - modHeight) ~ (공간상단 - topFrame) 의 중간
@@ -7117,10 +7129,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const isRightmostInGroup = isMulti
                 ? groupModules.every(m => m.id === module.id || m.position.x <= module.position.x)
                 : true;
-              // 자유배치 전용. 슬롯배치는 슬롯 인덱스 기반이라 별도 처리가 필요해 화살표 자체 표시 안 함.
+              // 자유/커스텀 가이드 배치 전용. 슬롯배치는 슬롯 인덱스 기반이라 화살표 자체 표시 안 함.
               const guideLayoutActive = spaceInfo.customGuideMode === true
                 && (spaceInfo.freePlacementGuides?.length || 0) > 0;
-              const suppressFreePlacementMoveHandles = guideLayoutActive || module.guideSlotPlacement === true;
+              const isGuidePlacementModule = module.guideSlotPlacement === true
+                || (guideLayoutActive && module.isFreePlacement === true);
+              const suppressFreePlacementMoveHandles = spaceInfo.freePlacementGuideEditing === true;
               const canMoveLeft = isFreePlacement && !suppressFreePlacementMoveHandles && realLeftGapMm >= 3 && isLeftmostInGroup;
               const canMoveRight = isFreePlacement && !suppressFreePlacementMoveHandles && realRightGapMm >= 3 && isRightmostInGroup;
               // 좌측 한계: 벽 이격 경계 또는 인접 가구 우측 끝
@@ -7136,10 +7150,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const maxModWidth = isModDual ? 1200 : 600;
               const currentWidthMm = (module.freeWidth || module.customWidth || module.moduleWidth || 0);
               const userResized = !!(module as any).userResizedWidth;
+              const shouldAutoExpandOnMove = !isGuidePlacementModule && !userResized;
               const totalAvailableMm = realLeftGapMm + currentWidthMm + realRightGapMm;
-              const newWidthMm = userResized
-                ? currentWidthMm
-                : Math.min(maxModWidth, Math.floor(totalAvailableMm));
+              const newWidthMm = shouldAutoExpandOnMove
+                ? Math.min(maxModWidth, Math.floor(totalAvailableMm))
+                : currentWidthMm;
               const newHalfWThree = mmToThreeUnits(newWidthMm) / 2;
 
               // 그룹 이동: 좌·우 동일한 한 칸 단위로 이동 (그룹 내 최소 가구 폭).
@@ -7172,7 +7187,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 const newX = snap(leftLimit + newHalfWThree);
                 const updates: any = { position: { ...module.position, x: newX } };
-                if (!userResized) {
+                if (shouldAutoExpandOnMove) {
                   updates.freeWidth = newWidthMm;
                   updates.moduleWidth = newWidthMm;
                 }
@@ -7192,7 +7207,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
                 const newX = snap(rightLimit - newHalfWThree);
                 const updates: any = { position: { ...module.position, x: newX } };
-                if (!userResized) {
+                if (shouldAutoExpandOnMove) {
                   updates.freeWidth = newWidthMm;
                   updates.moduleWidth = newWidthMm;
                 }
@@ -13140,7 +13155,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const baseFrameMm3D = (module as any).hasBase === false ? 0
               : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
             const floatMm3D = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
-            const topFrameMm3D = (module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+            const topFrameMm3D = (module as any).hasTopFrame === false
+              ? ((module as any).topFrameGap ?? 0)
+              : ((module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
             const moduleBottomMm3D = isUpper3D
               ? Math.max(0, Math.round(spaceInfo.height - topFrameMm3D - moduleHeightMm3D))
               : (floorFinishMm3D + baseFrameMm3D + floatMm3D);
@@ -13326,7 +13343,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const baseFrameMm3D = (module as any).hasBase === false ? 0
           : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
         const floatMm3D = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
-        const topFrameMm3D = (module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+        const topFrameMm3D = (module as any).hasTopFrame === false
+          ? ((module as any).topFrameGap ?? 0)
+          : ((module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
         const moduleHeightMm3D = isUpper3D
           ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height ?? 600)
           : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height ?? 2200);
