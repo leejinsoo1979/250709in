@@ -3872,7 +3872,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           <button className={styles.closeButton} onClick={handleClose} aria-label="닫기"></button>
         </div>
 
-        {currentPlacedModule && (
+        {currentPlacedModule && !showDetails && (
           <FurniturePresetButtons
             placedModule={currentPlacedModule}
             moduleCategory={moduleData?.category}
@@ -7063,11 +7063,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
               updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
             };
-            const baseSize = spaceInfo.guideBaseFrameAllMode !== false
-              ? (isLowerMod
-                ? (mod.baseFrameHeight ?? spaceInfo.baseboardLowerSize ?? bfDefault)
-                : (spaceInfo.baseConfig?.height ?? mod.baseFrameHeight ?? bfDefault))
-              : (guideBaseSlotForModule?.baseFrameHeight ?? mod.baseFrameHeight ?? bfDefault);
+            const baseSize = isLowerMod
+              ? (mod.baseFrameHeight ?? guideBaseSlotForModule?.baseFrameHeight ?? spaceInfo.baseboardLowerSize ?? bfDefault)
+              : (spaceInfo.guideBaseFrameAllMode !== false
+                ? (spaceInfo.baseConfig?.height ?? mod.baseFrameHeight ?? bfDefault)
+                : (guideBaseSlotForModule?.baseFrameHeight ?? mod.baseFrameHeight ?? bfDefault));
             const baseOffset = spaceInfo.guideBaseFrameAllMode !== false
               ? ((spaceInfo.baseConfig as any)?.offset ?? mod.baseFrameOffset ?? 0)
               : (guideBaseSlotForModule?.baseFrameOffset ?? mod.baseFrameOffset ?? 0);
@@ -7700,7 +7700,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           })()}
 
           {/* 하부장(1섹션) 깊이 + 뒤고정/앞고정 */}
-          {currentPlacedModule && moduleData?.category === 'lower' && !isTwoSectionFurniture && (() => {
+          {!showDetails && currentPlacedModule && moduleData?.category === 'lower' && !isTwoSectionFurniture && (() => {
             const depthDir = currentPlacedModule.lowerSectionDepthDirection || 'front';
             const curDepth = currentPlacedModule.freeDepth || currentPlacedModule.customDepth || moduleData.dimensions.depth;
             return (
