@@ -104,14 +104,18 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   const isGuidePlacementMode = isFreePlacementMode || isCustomGuideMode;
 
   // 슬롯 배열 생성
-  const slotButtons: { displayIndex: number; actualIndex: number; zone: 'normal' | 'dropped' }[] = [];
+  const slotButtons: { displayIndex: number; actualIndex: number; zone: 'normal' | 'dropped'; label?: string; guideZone?: 'full' | 'upper' | 'lower'; x?: number; width?: number }[] = [];
 
   if (isCustomGuideMode) {
     getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []).forEach((slot) => {
       slotButtons.push({
         displayIndex: slot.displayIndex,
         actualIndex: slot.selectedSlotIndex,
-        zone: 'normal' as const
+        zone: 'normal' as const,
+        label: slot.label,
+        guideZone: slot.guideZone,
+        x: slot.x,
+        width: slot.width
       });
     });
   } else if (isFreePlacementMode) {
@@ -189,6 +193,245 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     pointerEvents: 'auto'
   } : containerStyle;
 
+  const hasSplitGuideSlots = isCustomGuideMode && finalSlotButtons.some(slot =>
+    slot.guideZone === 'upper' || slot.guideZone === 'lower'
+  );
+  const splitSlotRows = hasSplitGuideSlots
+    ? [
+      { key: 'upper', slots: finalSlotButtons.filter(slot => slot.guideZone === 'upper') },
+      { key: 'lower', slots: finalSlotButtons.filter(slot => slot.guideZone === 'lower') },
+      { key: 'full', slots: finalSlotButtons.filter(slot => slot.guideZone === 'full') }
+    ].filter(row => row.slots.length > 0)
+    : [];
+  const splitGuideSlots = hasSplitGuideSlots
+    ? finalSlotButtons.filter(slot => typeof slot.x === 'number' && typeof slot.width === 'number')
+    : [];
+  const splitMinX = splitGuideSlots.length > 0
+    ? Math.min(...splitGuideSlots.map(slot => slot.x ?? 0))
+    : 0;
+  const splitMaxX = splitGuideSlots.length > 0
+    ? Math.max(...splitGuideSlots.map(slot => (slot.x ?? 0) + Math.max(1, slot.width ?? 1)))
+    : 0;
+  const splitSpanMm = Math.max(1, splitMaxX - splitMinX);
+  const splitRowVisualWidthPx = splitGuideSlots.length > 0
+    ? Math.min(compact ? 320 : 560, Math.max(compact ? 180 : 260, splitSpanMm * 0.12))
+    : 0;
+
+  const getSlotButtonLabel = (slot: typeof finalSlotButtons[number]) => {
+    if (hasSplitGuideSlots && slot.guideZone !== 'full') return slot.displayIndex;
+    return slot.label ?? slot.displayIndex;
+  };
+
+  const getSlotButtonTitle = (slot: typeof finalSlotButtons[number], isDroppedZone: boolean) => {
+    if (isDroppedZone) return '단내림 영역';
+    if (hasSplitGuideSlots && slot.guideZone === 'upper') return `상부장 슬롯 ${slot.displayIndex}`;
+    if (hasSplitGuideSlots && slot.guideZone === 'lower') return `하부장 슬롯 ${slot.displayIndex}`;
+    return `슬롯 ${slot.label ?? slot.displayIndex}`;
+  };
+
+  const getProportionalSlotButtonLayout = (slot: typeof finalSlotButtons[number]) => {
+    if (!hasSplitGuideSlots || splitRowVisualWidthPx <= 0 || typeof slot.x !== 'number' || typeof slot.width !== 'number') return undefined;
+    const slotWidthMm = Math.max(1, slot.width ?? 1);
+    return {
+      left: Math.round(((slot.x - splitMinX) / splitSpanMm) * splitRowVisualWidthPx),
+      width: Math.max(1, Math.round((slotWidthMm / splitSpanMm) * splitRowVisualWidthPx))
+    };
+  };
+
+  const activeSplitSlotIndices = (() => {
+    if (!hasSplitGuideSlots || selectedSlotIndex === null) return new Set<number>();
+    const selectedSlot = finalSlotButtons.find(slot => slot.actualIndex === selectedSlotIndex);
+    if (!selectedSlot || typeof selectedSlot.x !== 'number' || typeof selectedSlot.width !== 'number') {
+      return new Set<number>([selectedSlotIndex]);
+    }
+
+    const selectedCenterX = selectedSlot.x + selectedSlot.width / 2;
+    const slotsByZone = new Map<'full' | 'upper' | 'lower', typeof finalSlotButtons[number]>();
+    finalSlotButtons.forEach(slot => {
+      if (typeof slot.x !== 'number' || typeof slot.width !== 'number') return;
+      const guideZone = slot.guideZone ?? 'full';
+      const slotStartX = slot.x - 0.5;
+      const slotEndX = slot.x + slot.width + 0.5;
+      if (selectedCenterX < slotStartX || selectedCenterX > slotEndX) return;
+
+      const existing = slotsByZone.get(guideZone);
+      if (!existing) {
+        slotsByZone.set(guideZone, slot);
+        return;
+      }
+
+      const slotDistance = Math.abs(slot.x + slot.width / 2 - selectedCenterX);
+      const existingDistance = Math.abs((existing.x ?? 0) + (existing.width ?? 0) / 2 - selectedCenterX);
+      if (slotDistance < existingDistance) {
+        slotsByZone.set(guideZone, slot);
+      }
+    });
+
+    const indices = new Set<number>([selectedSlotIndex]);
+    slotsByZone.forEach(slot => indices.add(slot.actualIndex));
+    return indices;
+  })();
+
+  const handleSlotButtonClick = (
+    slot: typeof finalSlotButtons[number],
+    e: React.MouseEvent<HTMLButtonElement>
+  ) => {
+    e.stopPropagation(); // 4분할 뷰에서 클릭 이벤트 버블링 방지
+    e.preventDefault();
+    setSelectedSlotIndex(slot.actualIndex);
+    // 해당 슬롯에 배치된 가구로 팝업 전환
+    let matched: typeof placedModules[number] | undefined;
+    if (isGuidePlacementMode) {
+      // 자유배치: 가상 슬롯 = X좌표 순서로 그룹화된 X 좌표. actualIndex번째 X그룹의 가구
+      const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
+      const guideGroups = isCustomGuideMode ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []) : [];
+      const guideGroupCenters = guideGroups.map(group => (
+        (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
+      ));
+      const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+      const xGroups: number[] = guideGroupCenters.length > 0 ? guideGroupCenters : [];
+      if (xGroups.length === 0) {
+        let lastX: number | null = null;
+        sortedByX.forEach(m => {
+          const mx = m.position?.x ?? 0;
+          if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+            xGroups.push(mx);
+            lastX = mx;
+          }
+        });
+      }
+      const targetX = xGroups[slot.actualIndex];
+      if (targetX !== undefined) {
+        const guideGroup = guideGroups[slot.actualIndex];
+        const inGroup = sortedByX.filter(m => Math.abs((m.position?.x ?? 0) - targetX) < 0.01);
+        if (guideGroup?.guideZone === 'upper') {
+          matched = inGroup.find(m =>
+            m.guideSlotZone === 'upper' ||
+            m.freePlacementCategory === 'upper' ||
+            m.moduleId?.startsWith('upper-') ||
+            m.moduleId?.includes('-upper-')
+          );
+        } else if (guideGroup?.guideZone === 'lower') {
+          matched = inGroup.find(m =>
+            m.guideSlotZone === 'lower' ||
+            m.freePlacementCategory === 'lower' ||
+            m.moduleId?.startsWith('lower-') ||
+            m.moduleId?.includes('-lower-')
+          );
+        }
+        // 해당 X 그룹의 가구 중 첫 번째 (상/하 분할이 아니면 하부 우선)
+        matched = matched || inGroup.find(m => m.moduleId?.includes('lower-')) || inGroup[0];
+      }
+    } else {
+      // 슬롯 배치: slotIndex 매칭 (듀얼은 본인 또는 본인-1)
+      matched = placedModules.find(m => {
+        if (m.slotIndex === slot.actualIndex) return true;
+        if (m.isDualSlot && m.slotIndex !== undefined && m.slotIndex + 1 === slot.actualIndex) return true;
+        return false;
+      });
+    }
+    const fStore = useFurnitureStore.getState();
+    const uStore = useUIStore.getState();
+    if (matched) {
+      fStore.setSelectedPlacedModuleId(matched.id);
+      // 상판내림: stoneThk에 맞춰 doorTopGap 자동 보정 (slot 이동으로 stale 값 방지)
+      const mid = matched.moduleId || '';
+      const isTopDown = mid.includes('lower-top-down');
+      if (isTopDown) {
+        const sThk = matched.stoneTopThickness || 0;
+        const expectedGap = matched.hasTopEndPanel === true ? -82 : sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
+        if (matched.doorTopGap !== expectedGap && (sThk > 0 || matched.hasTopEndPanel === true)) {
+          fStore.updatePlacedModule(matched.id, { doorTopGap: expectedGap });
+        }
+      }
+      // 가구 편집 팝업(우측 패널)을 해당 가구로 전환
+      uStore.openFurnitureEditPopup(matched.id);
+    } else {
+      fStore.setSelectedPlacedModuleId(null);
+      // 빈 슬롯이면 팝업 닫기
+      uStore.closeAllPopups();
+    }
+  };
+
+  const renderSlotButton = (slot: typeof finalSlotButtons[number]) => {
+    const isActive = selectedSlotIndex === slot.actualIndex || activeSplitSlotIndices.has(slot.actualIndex);
+    const isDroppedZone = slot.zone === 'dropped';
+
+    // 버튼 스타일 (다크/라이트 테마에 따른 색상)
+    const baseButtonStyle: React.CSSProperties = isActive
+      ? {
+          backgroundColor: themeColor,
+          borderColor: themeColor,
+          color: 'white',
+        }
+      : isDroppedZone
+      ? {
+          backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
+          borderColor: isDark ? '#303030' : '#c0c0c0',
+          color: isDark ? '#d0d0d0' : '#555',
+        }
+      : {
+          backgroundColor: isDark ? '#2a2a2a' : 'white',
+          borderColor: isDark ? '#404040' : '#d0d0d0',
+          color: isDark ? '#e0e0e0' : '#333',
+        };
+
+    // 컴팩트 모드용 버튼 스타일
+    const proportionalLayout = getProportionalSlotButtonLayout(slot);
+    const proportionalStyle: React.CSSProperties = proportionalLayout
+      ? {
+        position: 'absolute',
+        left: proportionalLayout.left,
+        width: proportionalLayout.width,
+        minWidth: proportionalLayout.width,
+        maxWidth: proportionalLayout.width
+      }
+      : {};
+    const buttonStyle: React.CSSProperties = compact
+      ? {
+          ...baseButtonStyle,
+          minWidth: '24px',
+          height: '22px',
+          padding: '0 6px',
+          border: '1px solid',
+          borderRadius: '4px',
+          fontSize: '11px',
+          fontWeight: isActive ? 600 : 500,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.15s ease',
+          ...proportionalStyle
+        }
+      : {
+          ...baseButtonStyle,
+          ...proportionalStyle
+        };
+
+    return (
+      <button
+        key={`${slot.guideZone ?? slot.zone}-${slot.actualIndex}`}
+        className={compact ? undefined : `${styles.slotButton} ${isActive ? styles.active : ''}`}
+        onClick={(e) => handleSlotButtonClick(slot, e)}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        style={buttonStyle}
+        title={getSlotButtonTitle(slot, isDroppedZone)}
+      >
+        {getSlotButtonLabel(slot)}
+      </button>
+    );
+  };
+
+  const splitRowStyle: React.CSSProperties | undefined = hasSplitGuideSlots
+    ? {
+      position: 'relative',
+      width: splitRowVisualWidthPx,
+      height: compact ? 22 : 32
+    }
+    : undefined;
+
   return (
     <div
       className={compact ? undefined : styles.slotSelector}
@@ -198,124 +441,28 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className={compact ? undefined : styles.slotButtons} style={compact ? { display: 'flex', gap: '3px', alignItems: 'center' } : undefined}>
-        {finalSlotButtons.map((slot) => {
-          const isActive = selectedSlotIndex === slot.actualIndex;
-          const isDroppedZone = slot.zone === 'dropped';
-
-          // 버튼 스타일 (다크/라이트 테마에 따른 색상)
-          const baseButtonStyle: React.CSSProperties = isActive
-            ? {
-                backgroundColor: themeColor,
-                borderColor: themeColor,
-                color: 'white',
-              }
-            : isDroppedZone
-            ? {
-                backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
-                borderColor: isDark ? '#303030' : '#c0c0c0',
-                color: isDark ? '#d0d0d0' : '#555',
-              }
-            : {
-                backgroundColor: isDark ? '#2a2a2a' : 'white',
-                borderColor: isDark ? '#404040' : '#d0d0d0',
-                color: isDark ? '#e0e0e0' : '#333',
-              };
-
-          // 컴팩트 모드용 버튼 스타일
-          const buttonStyle: React.CSSProperties = compact
-            ? {
-                ...baseButtonStyle,
-                minWidth: '24px',
-                height: '22px',
-                padding: '0 6px',
-                border: '1px solid',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: isActive ? 600 : 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s ease'
-              }
-            : baseButtonStyle;
-
-          return (
-            <button
-              key={slot.actualIndex}
-              className={compact ? undefined : `${styles.slotButton} ${isActive ? styles.active : ''}`}
-              onClick={(e) => {
-                e.stopPropagation(); // 4분할 뷰에서 클릭 이벤트 버블링 방지
-                e.preventDefault();
-                setSelectedSlotIndex(slot.actualIndex);
-                // 해당 슬롯에 배치된 가구로 팝업 전환
-                let matched: typeof placedModules[number] | undefined;
-                if (isGuidePlacementMode) {
-                  // 자유배치: 가상 슬롯 = X좌표 순서로 그룹화된 X 좌표. actualIndex번째 X그룹의 가구
-                  const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
-                  const guideGroups = isCustomGuideMode
-                    ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []).map(group => (
-                      (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
-                    ))
-                    : [];
-                  const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
-                  const xGroups: number[] = guideGroups.length > 0 ? guideGroups : [];
-                  if (xGroups.length === 0) {
-                    let lastX: number | null = null;
-                    sortedByX.forEach(m => {
-                      const mx = m.position?.x ?? 0;
-                      if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-                        xGroups.push(mx);
-                        lastX = mx;
-                      }
-                    });
-                  }
-                  const targetX = xGroups[slot.actualIndex];
-                  if (targetX !== undefined) {
-                    // 해당 X 그룹의 가구 중 첫 번째 (상부/하부 혼재 시 하부 우선)
-                    const inGroup = sortedByX.filter(m => Math.abs((m.position?.x ?? 0) - targetX) < 0.01);
-                    matched = inGroup.find(m => m.moduleId?.includes('lower-')) || inGroup[0];
-                  }
-                } else {
-                  // 슬롯 배치: slotIndex 매칭 (듀얼은 본인 또는 본인-1)
-                  matched = placedModules.find(m => {
-                    if (m.slotIndex === slot.actualIndex) return true;
-                    if (m.isDualSlot && m.slotIndex !== undefined && m.slotIndex + 1 === slot.actualIndex) return true;
-                    return false;
-                  });
-                }
-                const fStore = useFurnitureStore.getState();
-                const uStore = useUIStore.getState();
-                if (matched) {
-                  fStore.setSelectedPlacedModuleId(matched.id);
-                  // 상판내림: stoneThk에 맞춰 doorTopGap 자동 보정 (slot 이동으로 stale 값 방지)
-                  const mid = matched.moduleId || '';
-                  const isTopDown = mid.includes('lower-top-down');
-                  if (isTopDown) {
-                    const sThk = matched.stoneTopThickness || 0;
-                    const expectedGap = matched.hasTopEndPanel === true ? -82 : sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
-                    if (matched.doorTopGap !== expectedGap && (sThk > 0 || matched.hasTopEndPanel === true)) {
-                      fStore.updatePlacedModule(matched.id, { doorTopGap: expectedGap });
-                    }
-                  }
-                  // 가구 편집 팝업(우측 패널)을 해당 가구로 전환
-                  uStore.openFurnitureEditPopup(matched.id);
-                } else {
-                  fStore.setSelectedPlacedModuleId(null);
-                  // 빈 슬롯이면 팝업 닫기
-                  uStore.closeAllPopups();
-                }
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              style={buttonStyle}
-              title={isDroppedZone ? '단내림 영역' : `슬롯 ${slot.displayIndex}`}
+      <div
+        className={compact ? undefined : hasSplitGuideSlots ? styles.splitSlotRows : styles.slotButtons}
+        style={compact ? {
+          display: 'flex',
+          flexDirection: hasSplitGuideSlots ? 'column' : 'row',
+          gap: hasSplitGuideSlots ? '4px' : '3px',
+          alignItems: 'center'
+        } : undefined}
+      >
+        {hasSplitGuideSlots ? (
+          splitSlotRows.map(row => (
+            <div
+              key={row.key}
+              className={compact ? undefined : styles.splitSlotRow}
+              style={splitRowStyle}
             >
-              {slot.displayIndex}
-            </button>
-          );
-        })}
+              {row.slots.map(renderSlotButton)}
+            </div>
+          ))
+        ) : (
+          finalSlotButtons.map(renderSlotButton)
+        )}
       </div>
     </div>
   );

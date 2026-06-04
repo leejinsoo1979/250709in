@@ -21,6 +21,7 @@ import {
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { getModuleById } from '@/data/modules';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
@@ -8171,22 +8172,19 @@ const Room: React.FC<RoomProps> = ({
               ? placedModules.filter(module => module.zone === activeZone)
               : placedModules;
 
-            // 2. 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
+            // 2. 측면뷰이고 selectedSlotIndex가 있는 경우 슬롯/커스텀가이드 기준 필터링
             if (
               viewMode === '2D' &&
               (view2DDirection === 'left' || view2DDirection === 'right') &&
               selectedSlotIndex !== null
             ) {
-              filteredModules = filteredModules.filter(module => {
-                if (module.slotIndex === undefined) return false;
-
-                // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
-                if (module.isDualSlot) {
-                  return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
-                }
-
-                // 싱글 가구인 경우: 정확히 일치하는 슬롯만
-                return module.slotIndex === selectedSlotIndex;
+              filteredModules = filterSideViewModules({
+                placedModules: filteredModules,
+                viewDirection: view2DDirection,
+                selectedSlotIndex,
+                isFreePlacement: isFreePlacement || spaceInfo.customGuideMode === true,
+                spaceInfo,
+                excludeSurroundPanels: false
               });
             }
 
