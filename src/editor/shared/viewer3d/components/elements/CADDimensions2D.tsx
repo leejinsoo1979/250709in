@@ -1489,6 +1489,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               });
             }
 
+            if (modCat_l2 === 'upper' && (mod as any).hasBottomEndPanel !== false) {
+              segments_l2.push({
+                bottomY: mmToThreeUnits(cabinetBottomMm - DEFAULT_BASIC_THICKNESS_MM),
+                topY: mmToThreeUnits(cabinetBottomMm),
+                heightMm: DEFAULT_BASIC_THICKNESS_MM,
+                key: `upper-bottom-ep-${moduleIndex}`
+              });
+            }
+
             // 상판/상부 EP 두께 세그먼트 (인조대리석 상판과 동일 표기)
             if (topFinishThicknessL2 > 0) {
               segments_l2.push({
@@ -2440,12 +2449,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const frontGapMm = (module as any).bottomEndPanelOffset ?? 0;
                 const backGapMm = (module as any).bottomEndPanelBackOffset ?? -35;
                 const backInsetMm = Math.abs(backGapMm);
-                const finishDepthMm = customDepth - frontGapMm - backInsetMm;
+                const finishDepthMm = Math.max(0, depthLayout.upper.depthMm - frontGapMm - backInsetMm);
                 const finishDepth = mmToThreeUnits(finishDepthMm);
-                // 마감판 중심 Z = 가구 중심 Z + (frontGap - backGap)/2 (앞쪽으로 frontGap, 뒤쪽으로 backGap 들어감)
-                const finishZ = furnitureZ + mmToThreeUnits((backInsetMm - frontGapMm) / 2);
+                // 렌더와 동일: 상부장 본체 중심에서 전면/후면 갭만큼 하부 EP 깊이를 줄인다.
+                const finishZ = depthLayout.upper.centerZ + mmToThreeUnits((backInsetMm - frontGapMm) / 2);
                 const finishDimY = furnitureBottomEdge - mmToThreeUnits(80);
-                const cabinetBackZ = furnitureZ - moduleDepth / 2;
+                const cabinetBackZ = depthLayout.upper.backZ;
+                const cabinetFrontZ = depthLayout.upper.frontZ;
                 const finishBackZ = finishZ - finishDepth / 2;
                 const offsetMm = backGapMm;
 
@@ -2511,7 +2521,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                     {/* 전면갭 치수선 (마감판 앞면 ~ 가구 앞면) — 전면갭 > 0 일 때만 표시 */}
                     {frontGapMm > 0 && (() => {
-                      const cabinetFrontZ = furnitureZ + moduleDepth / 2;
                       const finishFrontZ = finishZ + finishDepth / 2;
                       return (
                         <>
@@ -3056,6 +3065,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 topY: mmToThreeUnits(cabinetTopMm),
                 heightMm: Math.round(cabinetHeightForDimMm),
                 key: `furniture-${moduleIndex}`
+              });
+            }
+
+            if (modCat_rl2 === 'upper' && (mod as any).hasBottomEndPanel !== false) {
+              segments_rl2.push({
+                bottomY: mmToThreeUnits(cabinetBottomMm - DEFAULT_BASIC_THICKNESS_MM),
+                topY: mmToThreeUnits(cabinetBottomMm),
+                heightMm: DEFAULT_BASIC_THICKNESS_MM,
+                key: `upper-bottom-ep-${moduleIndex}`
               });
             }
 
@@ -3881,18 +3899,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const cabinetTopMm_r = depthEffH_r - topFrameVal_r;
                 const cabinetBottomMm_r = cabinetTopMm_r - modHeightMm_r;
                 const furnitureBottomEdge_r = mmToThreeUnits(cabinetBottomMm_r);
-                // 상부장 Z 재계산 (하부장 뒷면 맞춤)
-                const lowerDepthU = mmToThreeUnits(650);
-                const upperFurnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - lowerDepthU + moduleDepth / 2;
 
                 const frontGapMm_r = (mod as any).bottomEndPanelOffset ?? 0;
                 const backGapMm_r = (mod as any).bottomEndPanelBackOffset ?? -35;
                 const backInsetMm_r = Math.abs(backGapMm_r);
-                const finishDepthMm_r = customDepth - frontGapMm_r - backInsetMm_r;
+                const finishDepthMm_r = Math.max(0, depthLayout_d2.upper.depthMm - frontGapMm_r - backInsetMm_r);
                 const finishDepth_r = mmToThreeUnits(finishDepthMm_r);
-                const finishZ_r = upperFurnitureZ + mmToThreeUnits((backInsetMm_r - frontGapMm_r) / 2);
+                const finishZ_r = depthLayout_d2.upper.centerZ + mmToThreeUnits((backInsetMm_r - frontGapMm_r) / 2);
                 const finishDimY_r = furnitureBottomEdge_r - mmToThreeUnits(80);
-                const cabinetBackZ_r = upperFurnitureZ - moduleDepth / 2;
+                const cabinetBackZ_r = depthLayout_d2.upper.backZ;
+                const cabinetFrontZ_r = depthLayout_d2.upper.frontZ;
                 const finishBackZ_r = finishZ_r - finishDepth_r / 2;
                 const offsetMm_r = backGapMm_r;
 
@@ -3950,6 +3966,33 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         </Text>
                       </>
                     )}
+
+                    {/* 전면갭 치수선 (마감판 앞면 ~ 가구 앞면) — 전면갭 > 0 일 때만 표시 */}
+                    {frontGapMm_r > 0 && (() => {
+                      const finishFrontZ_r = finishZ_r + finishDepth_r / 2;
+                      return (
+                        <>
+                          <ExtLine points={[[0, furnitureBottomEdge_r, cabinetFrontZ_r], [0, finishDimY_r, cabinetFrontZ_r]]} color={dimensionColor} />
+                          <NativeLine name="dimension_line"
+                            points={[[0, finishDimY_r, finishFrontZ_r], [0, finishDimY_r, cabinetFrontZ_r]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          <NativeLine name="dimension_line"
+                            points={[[0 - 0.02, finishDimY_r, cabinetFrontZ_r], [0 + 0.02, finishDimY_r, cabinetFrontZ_r]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          <Text
+                            position={[0, finishDimY_r - mmToThreeUnits(40), (finishFrontZ_r + cabinetFrontZ_r) / 2]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            renderOrder={100001} depthTest={false}
+                            rotation={[0, Math.PI / 2, 0]}
+                          >
+                            {frontGapMm_r}
+                          </Text>
+                        </>
+                      );
+                    })()}
                   </group>
                 );
               })()}
