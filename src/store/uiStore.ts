@@ -6,12 +6,17 @@ export type View2DDirection = 'front' | 'left' | 'right' | 'top' | 'all';
 export type PlacementWall = 'front' | 'left' | 'right';
 
 // 에디터 탭 타입 정의
+export type EditorTabContext = 'owned' | 'shared' | 'admin' | 'readonly';
+
 export interface EditorTab {
-  id: string; // `${projectId}_${designFileId}` 형태의 고유 키
+  id: string; // `${context}_${projectId}_${designFileId}` 형태의 고유 키
   projectId: string;
   projectName: string;
   designFileId: string;
   designFileName: string;
+  tabContext?: EditorTabContext;
+  ownerName?: string;
+  ownerEmail?: string;
   addedAt: number; // timestamp
 }
 
@@ -366,7 +371,7 @@ interface UIState {
   addTab: (tab: Omit<EditorTab, 'id' | 'addedAt'>) => void;
   removeTab: (tabId: string) => string | null; // 다음 활성 탭 ID 반환
   setActiveTab: (tabId: string) => void;
-  updateTab: (tabId: string, updates: Partial<Pick<EditorTab, 'designFileName' | 'designFileId' | 'projectName'>>) => void;
+  updateTab: (tabId: string, updates: Partial<Pick<EditorTab, 'designFileName' | 'designFileId' | 'projectName' | 'tabContext' | 'ownerName' | 'ownerEmail'>>) => void;
 
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
@@ -1431,15 +1436,22 @@ export const useUIStore = create<UIState>()(
 
       // 에디터 탭 액션들
       addTab: (tab) => {
-        const id = `${tab.projectId}_${tab.designFileId}`;
+        const context = tab.tabContext || 'owned';
+        const id = `${context}_${tab.projectId}_${tab.designFileId}`;
         set((state) => {
-          // 중복 체크: id 기반 (projectId + designFileId 조합)
+          // 중복 체크: 컨텍스트 + projectId + designFileId 조합
           const existingById = state.openTabs.find(t => t.id === id);
           if (existingById) {
             // 기존 탭의 이름이 다르면 업데이트
-            if (existingById.designFileName !== tab.designFileName || existingById.projectName !== tab.projectName) {
+            if (
+              existingById.designFileName !== tab.designFileName ||
+              existingById.projectName !== tab.projectName ||
+              existingById.tabContext !== context ||
+              existingById.ownerName !== tab.ownerName ||
+              existingById.ownerEmail !== tab.ownerEmail
+            ) {
               return {
-                openTabs: state.openTabs.map(t => t.id === id ? { ...t, designFileName: tab.designFileName, projectName: tab.projectName } : t),
+                openTabs: state.openTabs.map(t => t.id === id ? { ...t, ...tab, tabContext: context } : t),
                 activeTabId: id,
               };
             }
@@ -1447,7 +1459,7 @@ export const useUIStore = create<UIState>()(
           }
           // 새 탭은 맨 앞(왼쪽)에 추가하고 활성화
           return {
-            openTabs: [{ ...tab, id, addedAt: Date.now() }, ...state.openTabs],
+            openTabs: [{ ...tab, tabContext: context, id, addedAt: Date.now() }, ...state.openTabs],
             activeTabId: id,
           };
         });

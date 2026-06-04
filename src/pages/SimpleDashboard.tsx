@@ -281,8 +281,9 @@ const SimpleDashboard: React.FC = () => {
     params.set('projectId', projectId);
     if (designFileId) params.set('designFileId', designFileId);
     if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
+    if (nav.activeMenu === 'shared-with-me') params.set('tabContext', 'shared');
     navigate(`/configurator?${params.toString()}`);
-  }, [navigate]);
+  }, [navigate, nav.activeMenu]);
 
   // 3D 뷰어 모달
   const handleCloseViewer = useCallback(() => {

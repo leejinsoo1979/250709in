@@ -11,7 +11,7 @@ import { generateSurround } from '@/editor/shared/utils/surroundGenerator';
 import { useProjectStore, type BasicInfo } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
-import { useUIStore, type EditorTab, type View2DDirection } from '@/store/uiStore';
+import { useUIStore, type EditorTab, type EditorTabContext, type View2DDirection } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
 import { getProject, updateProject, createProject, createDesignFile, getDesignFiles, getDesignFilesPublic } from '@/firebase/projects';
@@ -612,6 +612,18 @@ const buildSharedViewerUrl = (
   return `/shared-viewer?${params.toString()}`;
 };
 
+const buildConfiguratorTabUrl = (tab: EditorTab) => {
+  const params = new URLSearchParams({
+    projectId: tab.projectId,
+    designFileId: tab.designFileId,
+  });
+  if (tab.designFileName) params.set('designFileName', tab.designFileName);
+  if (tab.tabContext === 'admin' || tab.tabContext === 'shared') {
+    params.set('tabContext', tab.tabContext);
+  }
+  return `/configurator?${params.toString()}`;
+};
+
 const Configurator: React.FC = () => {
   const { user: authUser } = useAuth();
   const [searchParams] = useSearchParams();
@@ -627,6 +639,12 @@ const Configurator: React.FC = () => {
   const modeParam = searchParams.get('mode');
   const isReadOnlyMode = modeParam === 'readonly';
   const shareScopeParam = searchParams.get('scope') === 'project' ? 'project' : 'design';
+  const tabContextParam = searchParams.get('tabContext');
+  const currentTabContext: EditorTabContext = isReadOnlyMode
+    ? 'readonly'
+    : tabContextParam === 'admin' || tabContextParam === 'shared'
+      ? tabContextParam
+      : 'owned';
   const isNewDesign = isDemoMode ? true : searchParams.get('design') === 'new';
   const projectIdParam = isDemoMode ? null : (searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project'));
 
@@ -3637,9 +3655,12 @@ const Configurator: React.FC = () => {
                         projectName: project.title || '프로젝트',
                         designFileId: file.id,
                         designFileName: file.name,
+                        tabContext: 'readonly',
+                        ownerName: project.userName || project.userEmail || '',
+                        ownerEmail: project.userEmail || '',
                       });
                     });
-                    useUIStore.getState().setActiveTab(`${designFile.projectId}_${designFileId}`);
+                    useUIStore.getState().setActiveTab(`readonly_${designFile.projectId}_${designFileId}`);
                   }
 
                   // 읽기 전용 모드에서는 URL 변경 금지
@@ -3755,6 +3776,8 @@ const Configurator: React.FC = () => {
                     projectName: useProjectStore.getState().basicInfo.title || '프로젝트',
                     designFileId,
                     designFileName: designFile.name,
+                    tabContext: currentTabContext,
+                    ownerName: projectOwner?.name,
                   });
                 }
 
@@ -3834,7 +3857,7 @@ const Configurator: React.FC = () => {
       }, 500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectIdParam, designFileIdParam, urlDesignFileNameParam, modeParam, shareScopeParam, skipLoadParam, isNewDesignParam]);
+  }, [projectIdParam, designFileIdParam, urlDesignFileNameParam, modeParam, shareScopeParam, currentTabContext, skipLoadParam, isNewDesignParam]);
 
   // 협업자 정보 가져오기 (현재 디자인 파일 기준으로 필터링)
   useEffect(() => {
@@ -4579,7 +4602,7 @@ const Configurator: React.FC = () => {
     }
 
     if (!isReadOnly) {
-      navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
+      navigate(buildConfiguratorTabUrl(tab), { replace: true });
     } else {
       navigate(buildSharedViewerUrl(tab.projectId, tab.designFileId, tab.designFileName, shareScopeParam), { replace: true });
     }
@@ -4602,7 +4625,7 @@ const Configurator: React.FC = () => {
     if (nextTabId) {
       const nextTab = useUIStore.getState().openTabs.find(t => t.id === nextTabId);
       if (nextTab) {
-        navigate(`/configurator?projectId=${nextTab.projectId}&designFileId=${nextTab.designFileId}`, { replace: true });
+        navigate(buildConfiguratorTabUrl(nextTab), { replace: true });
       }
     } else {
       // 마지막 탭 → 대시보드로 이동
@@ -9095,8 +9118,17 @@ const Configurator: React.FC = () => {
                           projectName: proj?.title || '프로젝트',
                           designFileId: file.id,
                           designFileName: file.name,
+                          tabContext: currentTabContext,
                         });
-                        navigate(`/configurator?projectId=${fileTreeSelectedProjectId}&designFileId=${file.id}`, { replace: true });
+                        navigate(buildConfiguratorTabUrl({
+                          id: '',
+                          projectId: fileTreeSelectedProjectId!,
+                          projectName: proj?.title || '프로젝트',
+                          designFileId: file.id,
+                          designFileName: file.name,
+                          tabContext: currentTabContext,
+                          addedAt: Date.now(),
+                        }), { replace: true });
                         setIsFileTreeOpen(false);
                       }}
                     >

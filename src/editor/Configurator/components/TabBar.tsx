@@ -16,6 +16,13 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
   const openTabs = useUIStore((s) => s.openTabs);
   const activeTabId = useUIStore((s) => s.activeTabId);
 
+  const getContextLabel = (tab: EditorTab) => {
+    if (tab.tabContext === 'admin') return '관리자';
+    if (tab.tabContext === 'shared') return '공유';
+    if (tab.tabContext === 'readonly') return '읽기';
+    return null;
+  };
+
   return (
     <div className={styles.tabBar}>
       {/* 파일트리 토글 버튼 */}
@@ -29,17 +36,21 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
         </button>
       )}
       {openTabs.map((tab) => (
+        (() => {
+          const contextLabel = getContextLabel(tab);
+          return (
         <div
           key={tab.id}
-          className={`${styles.tab} ${tab.id === activeTabId ? styles.active : ''}`}
+          className={`${styles.tab} ${tab.id === activeTabId ? styles.active : ''} ${tab.tabContext ? styles[`context_${tab.tabContext}`] || '' : ''}`}
           onClick={() => {
             if (tab.id !== activeTabId) {
               onTabSwitch(tab);
             }
           }}
-          title={`${tab.projectName} / ${tab.designFileName}`}
+          title={`${contextLabel ? `[${contextLabel}] ` : ''}${tab.projectName} / ${tab.designFileName}${tab.ownerName || tab.ownerEmail ? ` · ${tab.ownerName || tab.ownerEmail}` : ''}`}
         >
           <span className={styles.tabLabel}>
+            {contextLabel && <span className={styles.tabBadge}>{contextLabel}</span>}
             <span className={styles.tabProjectName}>{tab.projectName}</span>
             <span className={styles.tabSeparator}>/</span>
             {tab.designFileName}
@@ -59,6 +70,8 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
             </button>
           )}
         </div>
+          );
+        })()
       ))}
     </div>
   );

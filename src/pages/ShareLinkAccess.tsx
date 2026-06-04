@@ -170,6 +170,7 @@ export const ShareLinkAccess: React.FC = () => {
           if (link.designFileName) {
             url += `&designFileName=${encodeURIComponent(link.designFileName)}`;
           }
+          url += '&tabContext=shared';
           navigate(url);
         }, 3000);
       } else {

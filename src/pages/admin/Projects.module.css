@@ -105,7 +105,8 @@
 
 /* 섹션 */
 .projectsSection,
-.detailSection {
+.detailSection,
+.recentDesignsSection {
   background: var(--theme-surface, #ffffff);
   border: 2px solid var(--theme-border, #e5e7eb);
   border-radius: 16px;
@@ -116,10 +117,16 @@
 }
 
 .projectsSection:hover,
-.detailSection:hover {
+.detailSection:hover,
+.recentDesignsSection:hover {
   border-color: var(--theme-primary, #3b82f6);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
   transform: translateY(-2px);
+}
+
+.recentDesignsSection {
+  margin-bottom: 24px;
+  min-height: 0;
 }
 
 .sectionHeader {
@@ -440,16 +447,26 @@
   border: 2px solid var(--theme-border, #e5e7eb);
 }
 
-.filesTable table {
+.recentDesignsTable {
+  max-height: 440px;
+  overflow: auto;
+  border-radius: 10px;
+  border: 2px solid var(--theme-border, #e5e7eb);
+}
+
+.filesTable table,
+.recentDesignsTable table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.filesTable thead {
+.filesTable thead,
+.recentDesignsTable thead {
   background: var(--theme-background, #f9fafb);
 }
 
-.filesTable th {
+.filesTable th,
+.recentDesignsTable th {
   padding: 14px 18px;
   text-align: left;
   font-size: 12px;
@@ -460,20 +477,24 @@
   border-bottom: 2px solid var(--theme-border, #e5e7eb);
 }
 
-.filesTable tbody tr {
+.filesTable tbody tr,
+.recentDesignsTable tbody tr {
   border-bottom: 1px solid var(--theme-border, #e5e7eb);
   transition: all 0.2s ease;
 }
 
-.filesTable tbody tr:hover {
+.filesTable tbody tr:hover,
+.recentDesignsTable tbody tr:hover {
   background: var(--theme-background, #f9fafb);
 }
 
-.filesTable tbody tr:last-child {
+.filesTable tbody tr:last-child,
+.recentDesignsTable tbody tr:last-child {
   border-bottom: none;
 }
 
-.filesTable td {
+.filesTable td,
+.recentDesignsTable td {
   padding: 18px;
   font-size: 14px;
   font-weight: 500;
@@ -509,6 +530,33 @@
 .fileName {
   font-weight: 700;
   color: var(--theme-text, #1f2937);
+}
+
+.recentFileText,
+.recentOwner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.recentOwner span:first-child {
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.recentOwner span:last-child {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.compactLoading,
+.compactEmpty {
+  padding: 28px;
+  text-align: center;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .fileSize {

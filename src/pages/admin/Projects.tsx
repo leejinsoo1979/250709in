@@ -28,6 +28,9 @@ interface DesignFile {
   fileName: string;
   userId: string;
   projectId: string;
+  projectName?: string;
+  ownerName?: string;
+  ownerEmail?: string;
   createdAt: Date | null;
   updatedAt: Date | null;
   fileSize?: number;
@@ -41,6 +44,7 @@ const Projects = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [designFiles, setDesignFiles] = useState<DesignFile[]>([]);
+  const [recentDesignFiles, setRecentDesignFiles] = useState<DesignFile[]>([]);
   const [filesLoading, setFilesLoading] = useState(false);
 
   // 프로젝트 목록 가져오기
@@ -128,8 +132,37 @@ const Projects = () => {
           };
         });
 
+        const projectInfoById = new Map(
+          projectsData.map((project) => [project.id, project])
+        );
+        const recentFilesData: DesignFile[] = designFilesSnap.docs
+          .map((fileDoc: any) => {
+            const data = fileDoc.data();
+            const projectId = data.projectId || '';
+            const project = projectInfoById.get(projectId);
+            return {
+              id: fileDoc.id,
+              fileName: data.fileName || data.filename || data.name || data.file_name || data.title || `파일_${fileDoc.id.substring(0, 8)}`,
+              userId: data.userId || project?.userId || '',
+              projectId,
+              projectName: project?.projectName || '프로젝트 없음',
+              ownerName: project?.ownerName || '',
+              ownerEmail: project?.ownerEmail || '',
+              createdAt: data.createdAt?.toDate?.() || null,
+              updatedAt: data.updatedAt?.toDate?.() || null,
+              fileSize: data.fileSize || data.size || 0
+            };
+          })
+          .sort((a, b) => {
+            const aTime = a.createdAt?.getTime() ?? 0;
+            const bTime = b.createdAt?.getTime() ?? 0;
+            return bTime - aTime;
+          })
+          .slice(0, 30);
+
         console.log('📁 프로젝트 데이터:', projectsData.length, '건');
         setProjects(projectsData);
+        setRecentDesignFiles(recentFilesData);
       } catch (error) {
         console.error('❌ 프로젝트 목록 조회 실패:', error);
       } finally {
@@ -222,6 +255,74 @@ const Projects = () => {
             <p className={styles.subtitle}>전체 프로젝트 및 디자인 파일 관리</p>
           </div>
         </div>
+      </div>
+
+      <div className={styles.recentDesignsSection}>
+        <div className={styles.sectionHeader}>
+          <div className={styles.sectionTitleWrapper}>
+            <FileText size={20} />
+            <h2 className={styles.sectionTitle}>
+              최근 생성된 디자인 ({recentDesignFiles.length})
+            </h2>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className={styles.compactLoading}>최근 디자인을 불러오는 중...</div>
+        ) : recentDesignFiles.length === 0 ? (
+          <div className={styles.compactEmpty}>최근 생성된 디자인이 없습니다</div>
+        ) : (
+          <div className={styles.recentDesignsTable}>
+            <table>
+              <thead>
+                <tr>
+                  <th>디자인</th>
+                  <th>프로젝트</th>
+                  <th>소유자</th>
+                  <th>생성일</th>
+                  <th>작업</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentDesignFiles.map(file => (
+                  <tr key={file.id}>
+                    <td>
+                      <div className={styles.fileInfo}>
+                        <div className={styles.fileIcon}>
+                          <FileText size={18} />
+                        </div>
+                        <div className={styles.recentFileText}>
+                          <span className={styles.fileName}>{file.fileName}</span>
+                          <code className={styles.projectId}>ID: {file.id.slice(0, 8)}...</code>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{file.projectName || '-'}</td>
+                    <td>
+                      <div className={styles.recentOwner}>
+                        <span>{file.ownerName || '이름 없음'}</span>
+                        <span>{file.ownerEmail || '-'}</span>
+                      </div>
+                    </td>
+                    <td className={styles.fileDate}>
+                      {file.createdAt ? file.createdAt.toLocaleString('ko-KR') : '-'}
+                    </td>
+                    <td>
+                      <button
+                        className={styles.openButton}
+                        onClick={() => navigate(`/configurator?projectId=${file.projectId}&designFileId=${file.id}&designFileName=${encodeURIComponent(file.fileName)}&tabContext=admin`)}
+                        title="에디터에서 열기"
+                      >
+                        <ExternalLink size={16} />
+                        열기
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className={styles.content}>
@@ -404,7 +505,7 @@ const Projects = () => {
                         <td>
                           <button
                             className={styles.openButton}
-                            onClick={() => navigate(`/configurator?projectId=${file.projectId}&designFileId=${file.id}&designFileName=${encodeURIComponent(file.fileName)}`)}
+                            onClick={() => navigate(`/configurator?projectId=${file.projectId}&designFileId=${file.id}&designFileName=${encodeURIComponent(file.fileName)}&tabContext=admin`)}
                             title="에디터에서 열기"
                           >
                             <ExternalLink size={16} />
