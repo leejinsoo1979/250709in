@@ -450,7 +450,19 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     !!(placedModule as any)?.doorWidthAdjustEnabled,
     (placedModule as any)?.doorWidthAdjustMm ?? -1.5,
     baseFrameGapMm,
-    topFrameGapMm
+    topFrameGapMm,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    placedModule?.hasTopEndPanel === true,
+    (placedModule as any)?.topEndPanelBackLip ?? 0,
+    (placedModule as any)?.topEndPanelBackLipThickness ?? 0,
+    (placedModule as any)?.topEndPanelOffset,
+    (placedModule as any)?.topEndPanelBackOffset,
+    true
   );
 
   // 서라운드 패널 (공간 전체 단위)

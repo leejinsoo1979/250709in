@@ -194,6 +194,8 @@ export interface PlacedModule {
   hasTopEndPanel?: boolean;      // 하부장 상부 EP 표시 여부
   topEndPanelOffset?: number;    // 하부장 상부 EP 전면 옵셋 (mm, 기본 20, 양수=확장, 음수=축소)
   topEndPanelBackOffset?: number; // 하부장 상부 EP 후면 옵셋 (mm, 양수=확장, 음수=축소)
+  topEndPanelBackLip?: number; // 하부장 상부 EP 뒷턱 높이 (mm, 0=없음)
+  topEndPanelBackLipThickness?: number; // 하부장 상부 EP 뒷턱 두께 (mm, 미설정 시 EP 두께)
 
   // 슬롯 모드 사용자 지정 너비
   slotCustomWidth?: number; // 슬롯모드에서 사용자 지정 가구 너비 (mm)

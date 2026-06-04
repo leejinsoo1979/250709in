@@ -56,6 +56,7 @@ export const FURNITURE_PRESET_FIELD_GROUPS: FurniturePresetGroup[] = [
       'hasTopFrame', 'topFrameThickness', 'topFrameOffset', 'topFrameGap',
       'hasBase', 'hasBottomFrame', 'baseFrameHeight', 'baseFrameOffset', 'baseFrameGap',
       'hasTopEndPanel', 'topEndPanelOffset', 'topEndPanelBackOffset',
+      'topEndPanelBackLip', 'topEndPanelBackLipThickness',
       'hasBottomEndPanel', 'bottomEndPanelOffset', 'bottomEndPanelBackOffset',
       'individualFloatHeight',
       'cabinetBodyHeight',

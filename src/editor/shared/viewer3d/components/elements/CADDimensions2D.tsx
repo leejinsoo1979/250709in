@@ -1467,6 +1467,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   });
                 }
               }
+
+              if (mod.hasTopEndPanel === true) {
+                const topEpBackLipH = (mod as any).topEndPanelBackLip || 0;
+                if (topEpBackLipH > 0) {
+                  segments_l2.push({
+                    bottomY: mmToThreeUnits(cabinetTopMm + topFinishThickness),
+                    topY: mmToThreeUnits(cabinetTopMm + topFinishThickness + topEpBackLipH),
+                    heightMm: topEpBackLipH,
+                    key: `top-ep-backlip-${moduleIndex}`
+                  });
+                }
+              }
             }
           });
 
@@ -3006,6 +3018,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     topY: mmToThreeUnits(cabinetTopMm + topFinishThickness + backLipH),
                     heightMm: backLipH,
                     key: `stone-backlip-${moduleIndex}`
+                  });
+                }
+              }
+
+              if (mod.hasTopEndPanel === true) {
+                const topEpBackLipH = (mod as any).topEndPanelBackLip || 0;
+                if (topEpBackLipH > 0) {
+                  segments_rl2.push({
+                    bottomY: mmToThreeUnits(cabinetTopMm + topFinishThickness),
+                    topY: mmToThreeUnits(cabinetTopMm + topFinishThickness + topEpBackLipH),
+                    heightMm: topEpBackLipH,
+                    key: `top-ep-backlip-${moduleIndex}`
                   });
                 }
               }

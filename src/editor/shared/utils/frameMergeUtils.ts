@@ -24,6 +24,8 @@ export interface TopEndPanelMergeGroup extends FrameMergeGroup {
   thicknessMm: number;
   frontGapMm: number;
   backGapMm: number;
+  backLipHeightMm: number;
+  backLipThicknessMm: number;
   isTopDown: boolean;
 }
 
@@ -42,8 +44,9 @@ function getEpCorrectedWidth(mod: PlacedModule): number {
 
 function getTopEndPanelWidth(mod: PlacedModule): number {
   const epThk = resolvePetPanelThicknessMm(mod.endPanelThickness);
-  const leftCoverMm = mod.hasLeftEndPanel ? epThk : 0;
-  const rightCoverMm = mod.hasRightEndPanel ? epThk : 0;
+  const sideEpWrapsTop = ((mod as any).endPanelTopOffset ?? 0) > 0;
+  const leftCoverMm = mod.hasLeftEndPanel && !sideEpWrapsTop ? epThk : 0;
+  const rightCoverMm = mod.hasRightEndPanel && !sideEpWrapsTop ? epThk : 0;
   return Math.round((getEpCorrectedWidth(mod) + leftCoverMm + rightCoverMm) * 10) / 10;
 }
 
@@ -249,7 +252,9 @@ function getTopEndPanelSettings(mod: PlacedModule) {
   const backGapMm = mod.topEndPanelBackOffset ?? 0;
   const depthMm = Math.max(0, (mod.customDepth ?? mod.freeDepth ?? 600) + frontGapMm + backGapMm);
   const thicknessMm = resolvePetPanelThicknessMm(mod.endPanelThickness);
-  return { frontGapMm, backGapMm, depthMm, thicknessMm, isTopDown: isTopDownLowerModule(mod) };
+  const backLipHeightMm = mod.topEndPanelBackLip ?? 0;
+  const backLipThicknessMm = mod.topEndPanelBackLipThickness || thicknessMm;
+  return { frontGapMm, backGapMm, depthMm, thicknessMm, backLipHeightMm, backLipThicknessMm, isTopDown: isTopDownLowerModule(mod) };
 }
 
 /**
@@ -305,6 +310,8 @@ export function computeTopEndPanelMergeGroups(
       Math.abs(prevSettings.frontGapMm - settings.frontGapMm) < 0.1 &&
       Math.abs(prevSettings.backGapMm - settings.backGapMm) < 0.1 &&
       Math.abs(prevSettings.depthMm - settings.depthMm) < 0.1 &&
+      Math.abs(prevSettings.backLipHeightMm - settings.backLipHeightMm) < 0.1 &&
+      Math.abs(prevSettings.backLipThicknessMm - settings.backLipThicknessMm) < 0.1 &&
       prevSettings.isTopDown === settings.isTopDown;
     const samePosition =
       Math.abs(prevMod.position.y - mod.position.y) < 0.1 &&

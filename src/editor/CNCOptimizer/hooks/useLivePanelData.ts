@@ -1396,6 +1396,16 @@ export function useLivePanelData() {
             height: TOP_DOWN_STONE_FRONT_HEIGHT_MM,
             meshName: 'top-end-panel-front',
           });
+          if (group.backLipHeightMm > 0) {
+            allPanels.push({
+              ...basePanel,
+              id: `merged_top_ep_${gIdx}_back_lip`,
+              name: `${group.label} 상부 EP 뒷턱`,
+              height: Math.round(group.backLipHeightMm * 10) / 10,
+              thickness: group.backLipThicknessMm,
+              meshName: 'top-end-panel-back-lip',
+            });
+          }
           return;
         }
 
@@ -1406,6 +1416,16 @@ export function useLivePanelData() {
           height: Math.round(group.depthMm * 10) / 10,
           meshName: 'top-end-panel',
         });
+        if (group.backLipHeightMm > 0) {
+          allPanels.push({
+            ...basePanel,
+            id: `merged_top_ep_${gIdx}_back_lip`,
+            name: `${group.label} 상부 EP 뒷턱`,
+            height: Math.round(group.backLipHeightMm * 10) / 10,
+            thickness: group.backLipThicknessMm,
+            meshName: 'top-end-panel-back-lip',
+          });
+        }
       });
 
       // ★ 프레임 병합 처리: frameMergeEnabled=true일 때 개별 상부/걸래받이을 병합

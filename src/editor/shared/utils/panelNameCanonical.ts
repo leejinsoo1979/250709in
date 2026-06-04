@@ -31,6 +31,7 @@ export function toViewerPanelName(panelName: string): string {
   if (panelName === '전대') return '전대(분절후방)';
   if (panelName.includes('상단몰딩') || panelName.includes('상단 몰딩')) return 'top-frame';
   if (panelName.includes('걸래받이') || panelName.includes('걸레받이')) return 'base-frame';
+  if (panelName === '하부마감판') return '하부 EP';
 
   if (panelName.includes('좌측 서라운드 측면판')) return 'left-surround-lshape-side';
   if (panelName.includes('좌측 서라운드 전면판')) return 'left-surround-lshape-front';
@@ -80,6 +81,8 @@ export function getCanonicalPanelNameCandidates(panelName?: string): Set<string>
   add(normalized.replace(/후면보강대/g, '보강대'));
   add(normalized.replace(/목찬넬프레임수평$/g, '목찬넬프레임수평(1)'));
   add(normalized.replace(/목찬넬프레임수직$/g, '목찬넬프레임수직(1)'));
+  if (normalized === '하부EP') add('하부마감판');
+  if (normalized === '하부마감판') add('하부EP');
 
   return candidates;
 }

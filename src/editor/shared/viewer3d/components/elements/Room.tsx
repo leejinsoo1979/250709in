@@ -8338,6 +8338,8 @@ export default React.memo(Room, (prevProps, nextProps) => {
     if (prev.hasTopEndPanel !== next.hasTopEndPanel) return false;
     if (prev.topEndPanelOffset !== next.topEndPanelOffset) return false;
     if (prev.topEndPanelBackOffset !== next.topEndPanelBackOffset) return false;
+    if (prev.topEndPanelBackLip !== next.topEndPanelBackLip) return false;
+    if (prev.topEndPanelBackLipThickness !== next.topEndPanelBackLipThickness) return false;
     if (JSON.stringify(prev.hingePositionsMm) !== JSON.stringify(next.hingePositionsMm)) return false;
     if (JSON.stringify(prev.upperDoorHingePositionsMm) !== JSON.stringify(next.upperDoorHingePositionsMm)) return false;
     if (JSON.stringify(prev.lowerDoorHingePositionsMm) !== JSON.stringify(next.lowerDoorHingePositionsMm)) return false;

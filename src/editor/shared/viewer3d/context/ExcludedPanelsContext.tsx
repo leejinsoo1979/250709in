@@ -114,6 +114,11 @@ export function getExcludedPanelAliases(panelName: string): string[] {
 
   if (withoutFurnitureLabel === '바닥') aliases.add('바닥판');
   if (withoutFurnitureLabel === '바닥판') aliases.add('바닥');
+  if (withoutFurnitureLabel === '하부 EP' || withoutFurnitureLabel === '하부EP') aliases.add('하부마감판');
+  if (withoutFurnitureLabel === '하부마감판') {
+    aliases.add('하부 EP');
+    aliases.add('하부EP');
+  }
   if (withoutFurnitureLabel.endsWith(' 바닥')) aliases.add(withoutFurnitureLabel.replace(/ 바닥$/, ' 바닥판'));
   if (withoutFurnitureLabel.endsWith(' 바닥판')) aliases.add(withoutFurnitureLabel.replace(/ 바닥판$/, ' 바닥'));
 

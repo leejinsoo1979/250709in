@@ -17,7 +17,7 @@ import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resol
 import { getDirectLowerDowelShelfPositionsMm, isDirectLowerDowelShelfModule } from './lowerCabinetDowelShelves';
 import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
-import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm } from './panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from './panelThickness';
 import { resolveSplitDoorGeometry } from './splitDoorGeometry';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
@@ -93,7 +93,13 @@ export const calculatePanelDetails = (
   topFrameRightAdjustMm: number = 0,
   baseFrameWidthAdjustEnabled: boolean = false,
   baseFrameLeftAdjustMm: number = 0,
-  baseFrameRightAdjustMm: number = 0
+  baseFrameRightAdjustMm: number = 0,
+  hasTopEndPanel: boolean = false,
+  topEndPanelBackLipHeight: number = 0,
+  topEndPanelBackLipThickness: number = 0,
+  topEndPanelOffsetMm?: number,
+  topEndPanelBackOffsetMm?: number,
+  includeTopEndPanelMain: boolean = false
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -2884,10 +2890,10 @@ export const calculatePanelDetails = (
     );
   }
 
-  // === 상부장 하부 마감판 (3D UpperCabinet.tsx L131-148과 동일) ===
+  // === 상부장 하부 EP (3D UpperCabinet.tsx L131-148과 동일) ===
   if (moduleData.category === 'upper') {
     panels.frame.push({
-      name: '하부마감판',
+      name: '하부 EP',
       width: customWidth,
       depth: customDepth - 35,
       thickness: PET_PANEL_THICKNESS_MM,
@@ -3005,6 +3011,64 @@ export const calculatePanelDetails = (
           material: '인조대리석',
         });
       }
+    }
+  }
+
+  let hasTopEndPanelSection = false;
+  const pushTopEndPanelSectionHeader = () => {
+    if (hasTopEndPanelSection) return;
+    result.push({ name: '=== 상부 EP ===' });
+    hasTopEndPanelSection = true;
+  };
+
+  if (isLowerForStone && hasTopEndPanel) {
+    const topEpThickness = resolvePetPanelThicknessMm(endPanelThickness);
+    const sideEpWrapsTop = effectiveEndPanelTopOffsetMm > 0;
+    const topEndPanelWidth = customWidth
+      + (hasLeftEndPanel && !sideEpWrapsTop ? resolvePetPanelThicknessMm(endPanelThickness) : 0)
+      + (hasRightEndPanel && !sideEpWrapsTop ? resolvePetPanelThicknessMm(endPanelThickness) : 0);
+    const topEpFrontGap = resolveTopEndPanelFrontOffsetMm(moduleData.id, doorTopGap, topEndPanelOffsetMm);
+    const topEpDepth = Math.max(0, customDepth + topEpFrontGap + (topEndPanelBackOffsetMm ?? 0));
+
+    if (includeTopEndPanelMain) {
+      pushTopEndPanelSectionHeader();
+      const isTopDownForTopEndPanel = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+      if (isTopDownForTopEndPanel) {
+        result.push({
+          name: '상부 EP 상판',
+          width: topEndPanelWidth,
+          depth: topEpDepth,
+          thickness: topEpThickness,
+          material: 'PET',
+        });
+        result.push({
+          name: '상부 EP 앞판',
+          width: topEndPanelWidth,
+          height: getTopDownStoneFrontHeightMm(topEpThickness),
+          thickness: topEpThickness,
+          material: 'PET',
+        });
+      } else {
+        result.push({
+          name: '상부 EP',
+          width: topEndPanelWidth,
+          depth: topEpDepth,
+          thickness: topEpThickness,
+          material: 'PET',
+        });
+      }
+    }
+
+    if (topEndPanelBackLipHeight > 0) {
+      const lipThickness = topEndPanelBackLipThickness || topEpThickness;
+      pushTopEndPanelSectionHeader();
+      result.push({
+        name: '상부 EP 뒷턱',
+        width: topEndPanelWidth,
+        height: topEndPanelBackLipHeight,
+        thickness: lipThickness,
+        material: 'PET',
+      });
     }
   }
 

@@ -2324,10 +2324,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
+    const renderedWidthForPanels =
+      currentPlacedModule?.isFreePlacement && currentPlacedModule?.freeWidth
+        ? currentPlacedModule.freeWidth
+        : (currentPlacedModule?.placementWall === 'left' || currentPlacedModule?.placementWall === 'right') &&
+          typeof (currentPlacedModule as any)?.sideLogicalWidth === 'number'
+          ? (currentPlacedModule as any).sideLogicalWidth
+          : currentPlacedModule?.adjustedWidth
+            ?? currentPlacedModule?.slotCustomWidth
+            ?? currentPlacedModule?.customWidth
+            ?? customWidth;
     const doorOuterOpenSides = resolveDoorOuterOpenSides({
       spaceInfo,
       placedModule: currentPlacedModule,
-      moduleWidthMm: doorOriginalWidth ?? customWidth
+      moduleWidthMm: doorOriginalWidth ?? renderedWidthForPanels
     });
     const rawDoorWidthAdjustEnabled = !!(currentPlacedModule as any)?.doorWidthAdjustEnabled;
     const autoCoverDoorMatchesManual = autoCoverDoorSlotWidthMm !== undefined
@@ -2341,7 +2351,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       ? false
       : rawDoorWidthAdjustEnabled;
     return calculatePanelDetails(
-      moduleData, customWidth, customDepth, hasDoor, t, panelDoorOriginalWidth,
+      moduleData, renderedWidthForPanels, customDepth, hasDoor, t, panelDoorOriginalWidth,
       currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
@@ -2395,9 +2405,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.baseFrameRightAdjustMm ?? 0,
       currentPlacedModule?.hasTopEndPanel === true,
       (currentPlacedModule as any)?.topEndPanelBackLip ?? 0,
-      (currentPlacedModule as any)?.topEndPanelBackLipThickness ?? 0
+      (currentPlacedModule as any)?.topEndPanelBackLipThickness ?? 0,
+      (currentPlacedModule as any)?.topEndPanelOffset,
+      (currentPlacedModule as any)?.topEndPanelBackOffset,
+      true
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, (currentPlacedModule as any)?.topEndPanelOffset, (currentPlacedModule as any)?.topEndPanelBackOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights, currentPlacedModule?.freeWidth, currentPlacedModule?.slotCustomWidth, (currentPlacedModule as any)?.sideLogicalWidth, currentPlacedModule?.placementWall]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {

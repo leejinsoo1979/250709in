@@ -1108,6 +1108,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
     topGap?: number;
     baseHeight?: number;
     baseOffset?: number;
+    baseLowerSize?: number;
     baseLowerOffset?: number;
     baseGap?: number;
     baseLowerGap?: number;
@@ -1141,6 +1142,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	          d.baseboardSize !== undefined ? d.baseboardSize : d.baseHeight
 	        ),
 	        baseOffset,
+	        baseLowerSize: d.baseboardLowerEnabled === false ? 0 : (
+	          d.baseboardLowerSize !== undefined
+	            ? d.baseboardLowerSize
+	            : (d.baseboardSize ?? d.baseHeight ?? 105)
+	        ),
 	        baseLowerOffset,
         baseGap,
         baseLowerGap
@@ -1684,6 +1690,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const baseFrameSlots = guideSlots
                 .filter((slot) => (slot.guideZone || 'full') !== 'upper')
                 .sort((a, b) => a.x - b.x || a.index - b.index);
+              const allBaseGuideSlotsAreLower = baseFrameSlots.length > 0 && baseFrameSlots.every(slot => (slot.guideZone || 'full') === 'lower');
               const frameSize = (spaceInfo.frameSize || {}) as any;
               const baseConfig = (spaceInfo.baseConfig || {}) as any;
               const globalTopGap = Math.max(0, frameSize.topGap ?? userDefaults.topGap ?? 0);
@@ -1693,8 +1700,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalTopOffset = frameSize.topOffset ?? userDefaults.topOffset ?? 0;
               const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
               const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? userDefaults.baseGap ?? 0) : 0;
+              const lowerGuideBaseDefault = spaceInfo.baseboardLowerSize ?? userDefaults.baseLowerSize ?? 105;
               const globalBaseHeight = globalBaseEnabled
-                ? resolveDefaultBackedRawSize(spaceInfo.baseConfig?.height, userDefaults.baseHeight ?? 65, globalBaseGap)
+                ? resolveDefaultBackedRawSize(
+                  allBaseGuideSlotsAreLower ? spaceInfo.baseboardLowerSize : spaceInfo.baseConfig?.height,
+                  allBaseGuideSlotsAreLower ? lowerGuideBaseDefault : (userDefaults.baseHeight ?? 65),
+                  globalBaseGap
+                )
                 : Math.max(65, spaceInfo.baseConfig?.height || userDefaults.baseHeight || 65);
               const globalBaseOffset = baseConfig.offset ?? userDefaults.baseOffset ?? 0;
               const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
@@ -1723,7 +1735,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
                 resolveDefaultBackedRawSize(
                   slot.baseFrameHeight,
-                  (slot.guideZone || 'full') === 'lower' ? 105 : (globalBaseHeight > 0 ? globalBaseHeight : 65),
+                  (slot.guideZone || 'full') === 'lower' ? lowerGuideBaseDefault : (globalBaseHeight > 0 ? globalBaseHeight : 65),
                   getSlotBaseGap(slot)
                 )
               );
@@ -1841,15 +1853,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               : { ...baseConfig, type: 'floor', placementType: 'ground', height: Math.max(1, globalBaseHeight || 65), floatHeight: 0 }
                           });
                         }}
-                        onSizeChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, type: 'floor', placementType: 'ground', height: v } })}
-                        onOffsetChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, offset: v } })}
-                        onGapChange={(v, nextSize) => setSpaceInfo({
-                          baseConfig: {
-                            ...baseConfig,
-                            ...(nextSize !== undefined ? { height: nextSize } : {}),
-                            gap: Math.max(0, v)
+                        onSizeChange={(v) => setSpaceInfo(allBaseGuideSlotsAreLower
+                          ? {
+                            baseboardLowerSize: v,
+                            baseConfig: { ...baseConfig, type: 'floor', placementType: 'ground' }
                           }
-                        })}
+                          : { baseConfig: { ...baseConfig, type: 'floor', placementType: 'ground', height: v } }
+                        )}
+                        onOffsetChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, offset: v } })}
+                        onGapChange={(v, nextSize) => setSpaceInfo(allBaseGuideSlotsAreLower
+                          ? {
+                            ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
+                            baseConfig: {
+                              ...baseConfig,
+                              gap: Math.max(0, v)
+                            }
+                          }
+                          : {
+                            baseConfig: {
+                              ...baseConfig,
+                              ...(nextSize !== undefined ? { height: nextSize } : {}),
+                              gap: Math.max(0, v)
+                            }
+                          }
+                        )}
                         onFloatChange={(v) => setSpaceInfo({ baseConfig: { ...baseConfig, type: 'stand', placementType: 'float', height: 0, floatHeight: v } })}
                       />
                     ) : (
@@ -1998,21 +2025,33 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? userDefaults.baseOffset ?? 0;
               const globalBaseGap = (spaceInfo.baseConfig as any)?.gap ?? userDefaults.baseGap ?? 0;
               const globalTop = resolveDefaultBackedRawSize(spaceInfo.frameSize?.top, userDefaults.frameTop ?? 30, globalTopGap);
-              const globalBase = resolveDefaultBackedRawSize(spaceInfo.baseConfig?.height, userDefaults.baseHeight ?? 65, globalBaseGap);
+              const isLowerBaseModule = (module?: any) => getModuleCategory(module) === 'lower';
+              const allBaseModsAreLower = baseSortedMods.length > 0 && baseSortedMods.every(isLowerBaseModule);
+              const lowerBaseDefault = spaceInfo.baseboardLowerSize ?? userDefaults.baseLowerSize ?? 105;
+              const globalBase = allBaseModsAreLower
+                ? resolveDefaultBackedRawSize(baseSortedMods[0]?.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, globalBaseGap)
+                : resolveDefaultBackedRawSize(spaceInfo.baseConfig?.height, userDefaults.baseHeight ?? 65, globalBaseGap);
               const defaultIfZero = (value: number | undefined, fallback: number) => (
                 value === undefined ? fallback : value
               );
               const getBaseOffsetDefault = (module?: any) => {
-                const isLower = module?.moduleId?.startsWith('lower-') || module?.moduleId?.includes('-lower-');
+                const isLower = isLowerBaseModule(module);
                 return isLower ? (userDefaults.baseLowerOffset ?? globalBaseOffset) : globalBaseOffset;
               };
               const getBaseGapDefault = (module?: any) => {
-                const isLower = module?.moduleId?.startsWith('lower-') || module?.moduleId?.includes('-lower-');
+                const isLower = isLowerBaseModule(module);
                 return isLower ? (userDefaults.baseLowerGap ?? globalBaseGap) : globalBaseGap;
               };
               const getBaseOffsetDisplay = (module?: any) => defaultIfZero(module?.baseFrameOffset, getBaseOffsetDefault(module));
               const getBaseGapDisplay = (module?: any) => defaultIfZero(module?.baseFrameGap, getBaseGapDefault(module));
-              const getBaseSizeDisplay = (module?: any) => resolveDefaultBackedRawSize(module?.baseFrameHeight, globalBase, getBaseGapDisplay(module));
+              const getBaseSizeDisplay = (module?: any) => {
+                const isLower = isLowerBaseModule(module);
+                return resolveDefaultBackedRawSize(
+                  isLower ? (module?.baseFrameHeight ?? spaceInfo.baseboardLowerSize) : module?.baseFrameHeight,
+                  isLower ? lowerBaseDefault : globalBase,
+                  getBaseGapDisplay(module)
+                );
+              };
               const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
               const indexing = calculateSpaceIndexing(spaceInfo);
               const slotColWidth = indexing.columnWidth || 0;
@@ -2211,7 +2250,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                                label={group.label}
 	                                enabled={allEnabled}
 	                                widthMM={group.totalWidthMm}
-	                                heightMM={globalBase}
+	                                heightMM={isLowerGroup ? getBaseSizeDisplay(firstMod) : globalBase}
 	                                offset={globalBaseOffset}
 	                                gap={globalBaseGap}
                                 splitGapFromSize={allEnabled}
@@ -2225,7 +2264,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                   }));
                                 }}
 	                                onHeightChange={(v) => {
-	                                  setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, height: v } as any });
+	                                  setSpaceInfo(isLowerGroup
+	                                    ? { baseboardLowerSize: v }
+	                                    : { baseConfig: { ...spaceInfo.baseConfig, height: v } as any }
+	                                  );
 	                                  group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
 	                                }}
 	                                onOffsetChange={(v) => {
@@ -2245,10 +2287,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           }) : baseSortedMods.map((mod, idx) => {
                             const baseEnabled = mod.hasBase !== false;
                             const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
-                            const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+                            const isLowerMod = isLowerBaseModule(mod);
                             const bfMin = isLowerMod ? 60 : 40;
                             const bfMax = isLowerMod ? 150 : 100;
-                            const bfDefault = isLowerMod ? 105 : (userDefaults.baseHeight ?? 60);
+                            const bfDefault = isLowerMod ? lowerBaseDefault : (userDefaults.baseHeight ?? 60);
                             return (
                               <FrameRow key={`base-${mod.id}`}
                                 label={`${toAlpha(idx + 1)}(하)`}
@@ -2439,17 +2481,35 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                            }));
 	                          }}
 		                          onSizeChange={(v) => {
-		                            setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, height: v } as any });
+		                            setSpaceInfo(allBaseModsAreLower
+		                              ? { baseboardLowerSize: v }
+		                              : { baseConfig: { ...spaceInfo.baseConfig, height: v } as any }
+		                            );
 		                            baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
 		                          }}
 		                          onOffsetChange={(v) => {
 		                            setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, offset: v } as any });
 		                            baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
 		                          }}
-		                          onGapChange={(v) => {
+		                          onGapChange={(v, nextSize) => {
 		                            const nextGap = Math.max(0, v);
-		                            setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, gap: nextGap } as any });
-		                            baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: nextGap } as any));
+		                            setSpaceInfo(allBaseModsAreLower
+		                              ? {
+		                                ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
+		                                baseConfig: { ...spaceInfo.baseConfig, gap: nextGap } as any
+		                              }
+		                              : {
+		                                baseConfig: {
+		                                  ...spaceInfo.baseConfig,
+		                                  ...(nextSize !== undefined ? { height: nextSize } : {}),
+		                                  gap: nextGap
+		                                } as any
+		                              }
+		                            );
+		                            baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+		                              ...(nextSize !== undefined ? { baseFrameHeight: nextSize } : {}),
+		                              baseFrameGap: nextGap
+		                            } as any));
 		                          }}
 	                          hlKey="base-all"
 	                          setHighlightedFrame={setHighlightedFrame}
@@ -2460,11 +2520,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                    baseNum++;
 	                    const baseEnabled = mod.hasBase !== false;
 	                    const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
-                    const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+                    const isLowerMod = isLowerBaseModule(mod);
                     const bfMin = isLowerMod ? 60 : 40;
                     const bfMax = isLowerMod ? 150 : 100;
                     // 일반 가구 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
-                    const bfDefault = isLowerMod ? 105 : (userDefaults.baseHeight ?? 60);
+                    const bfDefault = isLowerMod ? lowerBaseDefault : (userDefaults.baseHeight ?? 60);
                     return (
                       <FrameRow key={`base-${mod.id}`}
                         label={`${toAlpha(baseNum)}(하)`}

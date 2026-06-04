@@ -6672,6 +6672,7 @@ const Configurator: React.FC = () => {
             const baseFrameSlots = guideSlots
               .filter((slot) => (slot.guideZone || 'full') !== 'upper')
               .sort((a, b) => a.x - b.x || a.index - b.index);
+            const allBaseGuideSlotsAreLower = baseFrameSlots.length > 0 && baseFrameSlots.every(slot => (slot.guideZone || 'full') === 'lower');
             const frameSize = (spaceInfo.frameSize || {}) as any;
             const baseConfig = (spaceInfo.baseConfig || {}) as any;
             const globalTopGap = Math.max(0, frameSize.topGap ?? 0);
@@ -6686,10 +6687,13 @@ const Configurator: React.FC = () => {
             const globalBaseGap = globalBaseEnabled
               ? Math.max(0, guideBaseFrameAllMode ? (baseConfig.gap ?? 0) : (guideGlobalBaseSlot?.baseFrameGap ?? baseConfig.gap ?? 0))
               : 0;
+            const lowerGuideBaseDefault = spaceInfo.baseboardLowerSize ?? 105;
             const globalBaseHeight = globalBaseEnabled
               ? resolveFrameRawSize(
-                guideBaseFrameAllMode ? spaceInfo.baseConfig?.height : guideGlobalBaseSlot?.baseFrameHeight,
-                spaceInfo.baseConfig?.height ?? (hasSplitGuideSlots ? 105 : 65),
+                guideBaseFrameAllMode
+                  ? (allBaseGuideSlotsAreLower ? spaceInfo.baseboardLowerSize : spaceInfo.baseConfig?.height)
+                  : guideGlobalBaseSlot?.baseFrameHeight,
+                allBaseGuideSlotsAreLower ? lowerGuideBaseDefault : (spaceInfo.baseConfig?.height ?? (hasSplitGuideSlots ? lowerGuideBaseDefault : 65)),
                 globalBaseGap
               )
               : Math.max(65, spaceInfo.baseConfig?.height || 65);
@@ -6712,10 +6716,14 @@ const Configurator: React.FC = () => {
               slotUpdates: Partial<FreePlacementGuideSlot>,
               moduleUpdates: Record<string, any>
             ) => {
+              const { height: nextBaseHeight, ...baseConfigUpdatesWithoutHeight } = baseConfigUpdates;
+              const nextBaseConfigUpdates = allBaseGuideSlotsAreLower
+                ? baseConfigUpdatesWithoutHeight
+                : baseConfigUpdates;
               const nextSpaceInfo: Record<string, any> = {
                 baseConfig: {
                   ...baseConfig,
-                  ...baseConfigUpdates
+                  ...nextBaseConfigUpdates
                 },
                 freePlacementGuides: guideSlots.map((slot) => (
                   (slot.guideZone || 'full') === 'upper'
@@ -6723,6 +6731,9 @@ const Configurator: React.FC = () => {
                     : { ...slot, ...slotUpdates }
                 ))
               };
+              if (allBaseGuideSlotsAreLower && typeof nextBaseHeight === 'number' && nextBaseHeight > 0) {
+                nextSpaceInfo.baseboardLowerSize = nextBaseHeight;
+              }
               setSpaceInfo(nextSpaceInfo);
               guideBaseCandidateModules.forEach((module) => {
                 updatePlacedModule(module.id, moduleUpdates);
@@ -6743,7 +6754,7 @@ const Configurator: React.FC = () => {
             const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
               resolveFrameRawSize(
                 slot.baseFrameHeight,
-                (slot.guideZone || 'full') === 'lower' ? 105 : (globalBaseHeight > 0 ? globalBaseHeight : 65),
+                (slot.guideZone || 'full') === 'lower' ? lowerGuideBaseDefault : (globalBaseHeight > 0 ? globalBaseHeight : 65),
                 getSlotBaseGap(slot)
               )
             );
@@ -7516,7 +7527,11 @@ const Configurator: React.FC = () => {
                     const firstBase = baseFreeMods[0];
                     const globalBaseOffsetLocal = (spaceInfo.baseConfig as any)?.offset ?? 0;
                     const globalBaseGapLocal = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
-                    const globalBaseLocal = resolveFrameRawSize(spaceInfo.baseConfig?.height, 65, globalBaseGapLocal);
+                    const allBaseFreeModsAreLower = baseFreeMods.every(m => getModuleCategory(m) === 'lower');
+                    const lowerBaseDefaultLocal = spaceInfo.baseboardLowerSize ?? 105;
+                    const globalBaseLocal = allBaseFreeModsAreLower
+                      ? resolveFrameRawSize(firstBase.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefaultLocal, globalBaseGapLocal)
+                      : resolveFrameRawSize(spaceInfo.baseConfig?.height, 65, globalBaseGapLocal);
                     const unifiedEnabled = baseFreeMods.every(m => m.hasBase !== false);
                     if (unifiedEnabled) {
 	                      return <FrameOffsetRow key="base-all-free"
@@ -7527,7 +7542,10 @@ const Configurator: React.FC = () => {
 	                        gap={globalBaseGapLocal}
 	                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: defaultIfZeroFree((m as any).baseFrameGap, globalBaseGapLocal), doorBottomGap: -5 })))}
 	                        onSizeChange={(v) => {
-	                          handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v } as any });
+	                          handleSpaceInfoUpdate(allBaseFreeModsAreLower
+                              ? { baseboardLowerSize: v }
+                              : { baseConfig: { ...spaceInfo.baseConfig, height: v } as any }
+                            );
 	                          baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
 	                        }}
 	                        onOffsetChange={(v) => {
@@ -7593,7 +7611,10 @@ const Configurator: React.FC = () => {
                   const freeBaseEnabled = mod.hasBase !== false;
                   const globalBaseGapLocal = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
                   const baseGap = Math.max(0, defaultIfZeroFree((mod as any).baseFrameGap, globalBaseGapLocal));
-                  const rawBaseHeight = resolveFrameRawSize(mod.baseFrameHeight, spaceInfo.baseConfig?.height || 65, baseGap);
+                  const lowerBaseDefault = spaceInfo.baseboardLowerSize ?? 105;
+                  const rawBaseHeight = cat === 'lower'
+                    ? resolveFrameRawSize(mod.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, baseGap)
+                    : resolveFrameRawSize(mod.baseFrameHeight, spaceInfo.baseConfig?.height || 65, baseGap);
                   const baseOffsetDefault = (spaceInfo.baseConfig as any)?.offset ?? 0;
                   return (
                     <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
@@ -7956,12 +7977,20 @@ const Configurator: React.FC = () => {
             );
           }
           const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
+          const isInsertFrameSlot = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
+          const topSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'lower');
+          const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
+          const isLowerBaseSlotModule = (m: any) => getModuleCategory(m) === 'lower';
+          const allBaseSlotModsAreLower = baseSortedMods.length > 0 && baseSortedMods.every(isLowerBaseSlotModule);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
           const globalTopGap = Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
           const globalTop = resolveFrameRawSize(spaceInfo.frameSize?.top, 30, globalTopGap);
           const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
           const globalBaseGap = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
-          const globalBase = resolveFrameRawSize(spaceInfo.baseConfig?.height, 65, globalBaseGap);
+          const lowerBaseDefault = spaceInfo.baseboardLowerSize ?? 105;
+          const globalBase = allBaseSlotModsAreLower
+            ? resolveFrameRawSize(baseSortedMods[0]?.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, globalBaseGap)
+            : resolveFrameRawSize(spaceInfo.baseConfig?.height, 65, globalBaseGap);
           const defaultIfZeroSlot = (value: number | undefined, fallback: number) => (
             value === undefined ? fallback : value
           );
@@ -7996,12 +8025,16 @@ const Configurator: React.FC = () => {
             label: string,
           ) => {
             const enabled = mod.hasBase !== false;
-            const isLower = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+            const isLower = isLowerBaseSlotModule(mod);
             const bfMin = isLower ? 60 : 40;
             const bfMax = isLower ? 150 : 100;
-            const bfDefault = isLower ? 105 : 60;
+            const bfDefault = isLower ? lowerBaseDefault : 60;
             const baseGap = Math.max(0, defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap));
-            const rawBaseHeight = resolveFrameRawSize(mod.baseFrameHeight, bfDefault, baseGap);
+            const rawBaseHeight = resolveFrameRawSize(
+              isLower ? (mod.baseFrameHeight ?? spaceInfo.baseboardLowerSize) : mod.baseFrameHeight,
+              bfDefault,
+              baseGap
+            );
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -8299,9 +8332,6 @@ const Configurator: React.FC = () => {
           let topNum = 0;
           let baseNum = 0;
           // 키큰장찬넬(insert-frame)은 채움재이므로 상단몰딩/걸레받이 전체 토글에서 제외 (전체 OFF 시 바닥 아래로 내려가는 문제 방지)
-          const isInsertFrameSlot = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
-          const topSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'lower');
-          const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
           // 통합 모드: '전체' 체크박스로 제어
           const allTopOn = topFrameAllMode;
           const allBaseOn = baseFrameAllMode;
@@ -8518,7 +8548,10 @@ const Configurator: React.FC = () => {
                                 })));
                               },
 	                              (v) => {
-	                                handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, height: v } as any });
+	                                handleSpaceInfoUpdate(allBaseSlotModsAreLower
+	                                  ? { baseboardLowerSize: v }
+	                                  : { baseConfig: { ...spaceInfo.baseConfig, height: v } as any }
+	                                );
 	                                baseSortedMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
 	                              },
 	                              (v) => {
@@ -8529,13 +8562,22 @@ const Configurator: React.FC = () => {
 	                              globalBaseGap,
 	                              (v, nextSize) => {
 	                                const nextGap = Math.max(0, v);
-	                                handleSpaceInfoUpdate({
-	                                  baseConfig: {
-	                                    ...spaceInfo.baseConfig,
-	                                    ...(nextSize !== undefined ? { height: nextSize } : {}),
-	                                    gap: nextGap
-	                                  } as any
-	                                });
+	                                handleSpaceInfoUpdate(allBaseSlotModsAreLower
+	                                  ? {
+	                                    ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
+	                                    baseConfig: {
+	                                      ...spaceInfo.baseConfig,
+	                                      gap: nextGap
+	                                    } as any
+	                                  }
+	                                  : {
+	                                    baseConfig: {
+	                                      ...spaceInfo.baseConfig,
+	                                      ...(nextSize !== undefined ? { height: nextSize } : {}),
+	                                      gap: nextGap
+	                                    } as any
+	                                  }
+	                                );
 	                                baseSortedMods.forEach(m => updatePlacedModule(m.id, {
 	                                  ...(nextSize !== undefined ? { baseFrameHeight: nextSize } : {}),
 	                                  baseFrameGap: nextGap

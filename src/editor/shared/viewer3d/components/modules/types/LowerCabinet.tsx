@@ -1854,9 +1854,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     ) * 0.01;
     const backOffset = ((placedModuleForCorner as any).topEndPanelBackOffset ?? 0) * 0.01;
     const thickness = resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness) * 0.01;
+    const backLipHeight = Math.max(0, ((placedModuleForCorner as any).topEndPanelBackLip ?? 0) * 0.01);
+    const backLipThickness = Math.max(
+      0.01,
+      (((placedModuleForCorner as any).topEndPanelBackLipThickness ?? resolvePetPanelThicknessMm((placedModuleForCorner as any).endPanelThickness)) * 0.01)
+    );
     const sideEpThickness = thickness;
-    const leftCover = placedModuleForCorner.hasLeftEndPanel ? sideEpThickness : 0;
-    const rightCover = placedModuleForCorner.hasRightEndPanel ? sideEpThickness : 0;
+    const sideEpTopExtension = Number(endPanelTopOffset ?? (placedModuleForCorner as any).endPanelTopOffset ?? 0);
+    const sideEpWrapsTop = sideEpTopExtension > 0;
+    const leftCover = placedModuleForCorner.hasLeftEndPanel && !sideEpWrapsTop ? sideEpThickness : 0;
+    const rightCover = placedModuleForCorner.hasRightEndPanel && !sideEpWrapsTop ? sideEpThickness : 0;
     const panelFrontZ = baseFurniture.depth / 2 + frontOffset;
     const panelBackZ = -baseFurniture.depth / 2 - backOffset;
     const depth = Math.max(0.01, panelFrontZ - panelBackZ);
@@ -1866,6 +1873,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       depth,
       xOffset: (rightCover - leftCover) / 2,
       zOffset: (panelFrontZ + panelBackZ) / 2,
+      backLipHeight,
+      backLipThickness,
     };
   }, [
     placedModuleForCorner?.hasTopEndPanel,
@@ -1873,7 +1882,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     placedModuleForCorner?.hasRightEndPanel,
     (placedModuleForCorner as any)?.topEndPanelOffset,
     (placedModuleForCorner as any)?.topEndPanelBackOffset,
+    (placedModuleForCorner as any)?.topEndPanelBackLip,
+    (placedModuleForCorner as any)?.topEndPanelBackLipThickness,
     (placedModuleForCorner as any)?.endPanelThickness,
+    endPanelTopOffset,
     adjustedWidth,
     baseFurniture.width,
     baseFurniture.depth
@@ -2992,6 +3004,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             furnitureId={placedFurnitureId}
           />
         )
+      )}
+
+      {/* 하부장 상부 EP 뒷턱 — 상부 EP 뒤쪽 수직판 */}
+      {!hideAccessories && showFurniture && topEndPanelData && topEndPanelData.backLipHeight > 0 && !(viewMode === '2D' && view2DDirection === 'top') && (
+        <BoxWithEdges
+          args={[topEndPanelData.width, topEndPanelData.backLipHeight, topEndPanelData.backLipThickness]}
+          position={[
+            topEndPanelData.xOffset,
+            cabinetYPosition + adjustedHeight / 2 + topEndPanelData.thickness + topEndPanelData.backLipHeight / 2,
+            (is2DMode && view2DDirection === 'front')
+              ? topEndPanelData.zOffset
+              : topEndPanelData.zOffset - topEndPanelData.depth / 2 + topEndPanelData.backLipThickness / 2
+          ]}
+          material={lFrameDoorMaterial}
+          renderMode={renderMode}
+          panelName="상부 EP 뒷턱"
+          furnitureId={placedFurnitureId}
+        />
       )}
 
       {/* 인조대리석 상판 — 상판내림은 졸리컷 L자, 그 외는 단순 박스 (탑뷰에서는 숨김) */}

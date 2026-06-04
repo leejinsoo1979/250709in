@@ -64,7 +64,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
     customSections, // useBaseFurniture가 modelConfig.sections/leftSections/rightSections 오버라이드
   });
 
-  // 좌/우 최외곽 상부장 자동 판별 — 서라운드 프레임 옆이면 하부마감판을 프레임 위로 확장
+  // 좌/우 최외곽 상부장 자동 판별 — 서라운드 프레임 옆이면 하부 EP를 프레임 위로 확장
   const placedModulesForOuter = useFurnitureStore(state => state.placedModules);
   const outerExtendLeftUpper = useMemo(() => {
     if (!placedFurnitureId || !spaceInfo) return 0;
@@ -219,7 +219,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              panelName="하부마감판"
+              panelName="하부 EP"
             />
               );
             })()}
