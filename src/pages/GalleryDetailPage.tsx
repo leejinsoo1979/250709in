@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Eye, Heart, ArrowLeft } from 'lucide-react';
+import { Eye, Heart, ArrowLeft, ExternalLink } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import {
   GalleryPost,
@@ -109,6 +109,18 @@ export default function GalleryDetailPage() {
     setLiked(true);
     setPost(prev => prev ? { ...prev, likes: prev.likes + 1 } : prev);
     try { await incrementGalleryLike(postId, 1); } catch {}
+  };
+
+  const openReadOnlyViewer = () => {
+    if (!post) return;
+    const params = new URLSearchParams({
+      projectId: post.projectId,
+      designFileId: post.designFileId,
+      designFileName: post.title,
+      mode: 'readonly',
+      scope: 'design',
+    });
+    navigate(`/shared-viewer?${params.toString()}`);
   };
 
   // 댓글 로드
@@ -304,6 +316,29 @@ export default function GalleryDetailPage() {
                   <Heart size={14} fill={liked ? '#ef4444' : 'none'} /> {post.likes}
                 </button>
               </div>
+
+              <button
+                onClick={openReadOnlyViewer}
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  border: '1px solid var(--theme-primary, #7C5CFF)',
+                  background: 'var(--theme-primary, #7C5CFF)',
+                  color: '#fff',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  marginBottom: 16,
+                }}
+              >
+                <ExternalLink size={15} />
+                자세히보기
+              </button>
 
               {post.description && (
                 <div style={{
