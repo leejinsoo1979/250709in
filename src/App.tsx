@@ -69,6 +69,7 @@ import { ShareLinkAccess } from '@/pages/ShareLinkAccess';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useUIStore } from '@/store/uiStore';
 import CNCOptimizer from '@/editor/CNCOptimizer';
 import CNCOptimizerNew from '@/editor/CNCOptimizer/CNCOptimizerNew';
 import CNCOptimizerPro from '@/editor/CNCOptimizer/CNCOptimizerPro';
@@ -102,6 +103,14 @@ function RouteChangeHandler() {
     const pageName = location.pathname;
     const pageTitle = document.title || pageName;
     logPageView(pageName, pageTitle);
+
+    const editorPaths = new Set(['/configurator', '/demo', '/shared-viewer']);
+    if (!editorPaths.has(location.pathname)) {
+      const uiState = useUIStore.getState();
+      if (uiState.isLiveDimensionMode || uiState.isTapeMeasureMode || uiState.liveDimensionSelectedKey) {
+        uiState.setLiveDimensionMode(false);
+      }
+    }
   }, [location.pathname]);
 
   return null;
