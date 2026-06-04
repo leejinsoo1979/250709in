@@ -50,6 +50,7 @@ import {
   resolvePetPanelThicknessMm,
   resolveTopEndPanelFrontOffsetMm
 } from '@/editor/shared/utils/panelThickness';
+import { computeLowerCabinetExternalMaidaRanges } from '@/editor/shared/utils/lowerCabinetMaidaGeometry';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
 const getImagePath = (filename: string) => {
@@ -360,14 +361,45 @@ const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurro
 const isLowerDrawerMaidaModuleId = (moduleId?: string): boolean => {
   if (!moduleId) return false;
   return moduleId.includes('lower-drawer-')
+    || moduleId.includes('lower-door-lift-1tier')
     || moduleId.includes('lower-door-lift-2tier')
     || moduleId.includes('lower-door-lift-3tier')
     || moduleId.includes('lower-door-lift-touch-')
+    || moduleId.includes('lower-top-down-1tier')
     || moduleId.includes('lower-top-down-2tier')
     || moduleId.includes('lower-top-down-3tier')
     || moduleId.includes('lower-top-down-touch-')
     || moduleId.includes('lower-induction-cabinet')
     || moduleId.includes('dual-lower-induction-cabinet');
+};
+
+const findRenderedMaidaHeightsBottomToTop = (
+  furnitureId: string | undefined,
+  moduleId: string | undefined,
+  maidaCount: number
+): number[] | undefined => {
+  if (!furnitureId || !moduleId || maidaCount <= 0) return undefined;
+
+  const names = (() => {
+    if (moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')) {
+      return Array.from({ length: maidaCount }, (_, i) => `인덕션 ${i + 1}단서랍(마이다)`);
+    }
+    if (moduleId.includes('lower-door-lift-touch-') || moduleId.includes('lower-top-down-touch-')) {
+      return Array.from({ length: maidaCount }, (_, i) => `터치${i + 1}단서랍(마이다)`);
+    }
+    return Array.from({ length: maidaCount }, (_, i) => `서랍${i + 1}(마이다)`);
+  })();
+
+  const heights = names.map(name => {
+    const rendered = findRenderedPanelDimension(furnitureId, name);
+    return typeof rendered?.heightMm === 'number' && Number.isFinite(rendered.heightMm)
+      ? rendered.heightMm
+      : undefined;
+  });
+
+  return heights.every((height): height is number => typeof height === 'number')
+    ? heights
+    : undefined;
 };
 
 const formatMaidaTierLabel = (displayIndex: number, total: number): string => {
@@ -5748,13 +5780,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const bodyH = baseBodyH + absorbedTopH + absorbedBaseH;
             // 상판내림: 도어 H = cabH + topGap + bottomGap (가구 상단~도어 상단 갭 일정)
             const doorH = Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
-            const doorThickness = 20;
+            const doorPanelsForDimensions = panelDetails.filter((panel: any) => panel?.isDoor && typeof panel?.height === 'number');
+            const primaryDoorPanelForDimensions = doorPanelsForDimensions[0];
+            const doorThickness = Math.round(primaryDoorPanelForDimensions?.thickness ?? 20);
             const splitDoorPanelsForDimensions = isShelfSplitModuleId(currentPlacedModule.moduleId)
-              ? panelDetails.filter((panel: any) => panel?.isDoor && typeof panel?.height === 'number')
+              ? doorPanelsForDimensions
               : [];
             const lowerDoorPanelForDimensions = splitDoorPanelsForDimensions.find((panel: any) => String(panel.name || '').includes('하부 도어'));
             const upperDoorPanelForDimensions = splitDoorPanelsForDimensions.find((panel: any) => String(panel.name || '').includes('상부 도어'));
             const isSplitDoorDimension = !!lowerDoorPanelForDimensions && !!upperDoorPanelForDimensions;
+            const primaryDoorDimensionH = primaryDoorPanelForDimensions
+              ? Math.round(primaryDoorPanelForDimensions.height)
+              : doorH;
+            const primaryDoorDimensionW = primaryDoorPanelForDimensions
+              ? Math.round(primaryDoorPanelForDimensions.width ?? doorW)
+              : doorW;
             const upperDoorDimensionH = isSplitDoorDimension
               ? Math.round(upperDoorPanelForDimensions.height)
               : doorH;
@@ -5824,7 +5864,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                     {renderDoorDimensionRow('하부 도어', lowerDoorDimensionW, lowerDoorDimensionH)}
                   </>
-                ) : renderDoorDimensionRow(null, doorW, doorH)}
+                ) : renderDoorDimensionRow(null, primaryDoorDimensionW, primaryDoorDimensionH)}
                 {/* 도어 확장/축소 토글: 사용자가 도어 폭을 좌/우 방향으로 +/- 조정 */}
                 <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
@@ -5929,19 +5969,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const maidaWidth = resolveMaidaDisplayWidthMm(currentPlacedModule, moduleData, bodyWidth, maidaOuterOpenSides);
               const maidaThickness = moduleData?.modelConfig?.basicThickness || 18;
               const moduleId = currentPlacedModule.moduleId ?? '';
-              const heights = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')
-                ? resolveInductionMaidaHeightsMm(currentPlacedModule, bodyHeight)
-                : moduleId.includes('lower-door-lift-touch-') || moduleId.includes('lower-top-down-touch-')
-                  ? resolveTouchMaidaHeightsMm(currentPlacedModule, moduleId, bodyHeight, stoneThickness)
-                  : resolveExternalMaidaHeightsMm(
-                    moduleId,
-                    bodyHeight,
-                    moduleData,
-                    stoneThickness,
-                    currentPlacedModule.doorTopGap,
-                    currentPlacedModule.doorBottomGap,
-                    currentPlacedModule.hasTopEndPanel === true
-                  );
+              const fallbackHeights = computeLowerCabinetExternalMaidaRanges({
+                moduleId,
+                moduleHeightMm: bodyHeight,
+                sourceModuleHeightMm: moduleData.dimensions.height,
+                stoneTopThicknessMm: stoneThickness,
+                doorTopGap: currentPlacedModule.doorTopGap,
+                doorBottomGap: currentPlacedModule.doorBottomGap,
+                hasTopEndPanel: currentPlacedModule.hasTopEndPanel === true,
+                basicThicknessMm: maidaThickness,
+                customMaidaHeights: Array.isArray((currentPlacedModule as any).customMaidaHeights)
+                  ? (currentPlacedModule as any).customMaidaHeights
+                  : undefined
+              }).map(range => range.maidaHeightMm);
+              const heights = findRenderedMaidaHeightsBottomToTop(
+                currentPlacedModule.id,
+                moduleId,
+                fallbackHeights.length
+              ) ?? fallbackHeights;
               const displayHeights = heights.slice().reverse();
               if (displayHeights.length === 0) return null;
 
@@ -6800,8 +6845,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               : (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) ? 2
               : 3;
 
-            // 실제 렌더링 마이다 값 계산 (LowerCabinet과 동일 공식)
-            const moduleH = currentPlacedModule.freeHeight ?? (moduleData?.dimensions?.height ?? 780);
+            // 입력칸 표시값은 렌더 등록 치수를 최우선으로 사용한다.
+            // 렌더가 아직 등록되기 전 초기 렌더링에만 fallback 값을 만든다.
+            const moduleH = Math.round(adjustedFreeHeight || placedBodyHeight || currentPlacedModule.freeHeight || moduleData?.dimensions?.height || 780);
             const stoneThk = (currentPlacedModule as any).stoneTopThickness ?? 20;
             const isTopDownAny = isTopDownTouch2 || isTopDownTouch3;
             const tdStretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
@@ -6812,25 +6858,30 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const maidaTotalFront = moduleH + topExt + bottomExt;
             const gapM = 3;
             const current = (currentPlacedModule.customMaidaHeights ?? []) as number[];
-            // 디폴트 마이다 값 (위→아래 순서가 아니라 di=0(아래)→di=N(위) 순서)
-            const defaultMaida: number[] = (() => {
-              if (isInduction) return [Math.max(0, Math.round(maidaTotalFront))];
-              if (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) {
-                const evenH = Math.floor(Math.max(0, maidaTotalFront - gapM) / 2);
-                return [evenH, evenH]; // [아래, 위]
-              }
-              if (isDoorLiftTouch3) {
-                const m2 = 227, m1 = 360; // 2단, 1단(위)
-                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
-                return [m0, m2, m1]; // [3단(아래), 2단, 1단(위)]
-              }
-              if (isTopDownTouch3) {
-                const m2 = 240, m1 = 240;
-                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
-                return [m0, m2, m1];
-              }
-              return [];
-            })();
+            const fallbackDefaultMaida = computeLowerCabinetExternalMaidaRanges({
+              moduleId: mid,
+              moduleHeightMm: moduleH,
+              sourceModuleHeightMm: moduleData?.dimensions?.height || moduleH,
+              stoneTopThicknessMm: stoneThk,
+              doorTopGap: (currentPlacedModule as any).doorTopGap,
+              doorBottomGap: (currentPlacedModule as any).doorBottomGap,
+              hasTopEndPanel: currentPlacedModule.hasTopEndPanel === true,
+              basicThicknessMm: moduleData?.modelConfig?.basicThickness || 18
+            }).map(range => range.maidaHeightMm);
+            const fallbackActiveMaida = computeLowerCabinetExternalMaidaRanges({
+              moduleId: mid,
+              moduleHeightMm: moduleH,
+              sourceModuleHeightMm: moduleData?.dimensions?.height || moduleH,
+              stoneTopThicknessMm: stoneThk,
+              doorTopGap: (currentPlacedModule as any).doorTopGap,
+              doorBottomGap: (currentPlacedModule as any).doorBottomGap,
+              hasTopEndPanel: currentPlacedModule.hasTopEndPanel === true,
+              basicThicknessMm: moduleData?.modelConfig?.basicThickness || 18,
+              customMaidaHeights: current.length === maidaCount ? current : undefined
+            }).map(range => range.maidaHeightMm);
+            const renderedMaida = findRenderedMaidaHeightsBottomToTop(currentPlacedModule.id, mid, maidaCount);
+            const defaultMaida = renderedMaida ?? fallbackDefaultMaida;
+            const activeMaida = renderedMaida ?? fallbackActiveMaida;
             const totalLimit = maidaTotalFront + 100;
             const gapBetween = 3;
 
@@ -6882,25 +6933,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const toInternalIdx = (uiIdx: number) => (maidaCount - 1) - uiIdx;
 
             const editEnabled = current.length === maidaCount;
-            // 체크박스 ON 시 초기값: 도어갭 영향 없는 default 기준 마이다 (가구 영역 내 안전값)
-            const initMaida: number[] = (() => {
-              if (isInduction) return [Math.max(0, Math.round(maidaTotalFront))];
-              if (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) {
-                const evenH = Math.floor(Math.max(0, maidaTotalFront - gapM) / 2);
-                return [evenH, evenH];
-              }
-              if (isDoorLiftTouch3) {
-                const m2 = 227, m1 = 360;
-                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
-                return [m0, m2, m1];
-              }
-              if (isTopDownTouch3) {
-                const m2 = 240, m1 = 240;
-                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
-                return [m0, m2, m1];
-              }
-              return [];
-            })();
+            const initMaida = defaultMaida.slice(0, maidaCount);
             const toggleEdit = () => {
               if (editEnabled) {
                 updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
@@ -6930,12 +6963,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const isBottomTier = di === 0;
                     let val: number | string = '';
                     if (isBottomTier) {
-                      // 자동 흡수: maidaTotalFront - (1단+2단) - 갭×2
-                      const m1 = current[2] ?? defaultMaida[2] ?? 0;
-                      const m2 = current[1] ?? defaultMaida[1] ?? 0;
-                      val = Math.max(0, Math.round(maidaTotalFront - m1 - m2 - 2 * gapM));
+                      val = activeMaida[di] ?? defaultMaida[di] ?? '';
                     } else {
-                      val = current[di] ?? defaultMaida[di] ?? '';
+                      val = editEnabled ? (current[di] ?? activeMaida[di] ?? defaultMaida[di] ?? '') : (activeMaida[di] ?? defaultMaida[di] ?? '');
                     }
                     const fieldDisabled = !editEnabled || isBottomTier;
                     return (
