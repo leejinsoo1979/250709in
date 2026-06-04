@@ -20,6 +20,8 @@ import { isDummyModuleId } from './dummyModule';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from './panelThickness';
 import { resolveSplitDoorGeometry } from './splitDoorGeometry';
 
+const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10;
+
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
   moduleData: ModuleData,
@@ -1602,8 +1604,8 @@ export const calculatePanelDetails = (
       customPositionsMm?: number[],
       insideFaceHingeSide?: 'left' | 'right'
     ) => {
-      const panelWidthMm = Math.max(0, Math.round(widthMm));
-      const panelHeightMm = Math.max(0, Math.round(heightMm));
+      const panelWidthMm = Math.max(0, roundMmToTenth(widthMm));
+      const panelHeightMm = Math.max(0, roundMmToTenth(heightMm));
       const doorBoring = createDoorBoringData(panelWidthMm, panelHeightMm, isLeftHinge, fixedHingeCount, customPositionsMm, insideFaceHingeSide);
       panels.door.push({
         name,

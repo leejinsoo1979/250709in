@@ -415,6 +415,8 @@ const formatMmInputValue = (value: number | string | undefined): string => {
   return Number.isInteger(numeric) ? String(numeric) : String(Math.round(numeric * 10) / 10);
 };
 
+const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10;
+
 const resolveMaidaDisplayWidthMm = (
   module: any,
   moduleData: any,
@@ -1121,7 +1123,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
     const doorGap = 2;
     
     if (moduleData.id.includes('dual')) {
-      const doorWidth = Math.floor((customWidth - doorGap * 3) / 2);
+      const doorWidth = roundMmToTenth((customWidth - doorGap * 3) / 2);
       panels.door.push({
         name: '좌측 도어',
         width: doorWidth,
@@ -2373,7 +2375,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (!currentPlacedModule || !moduleData || currentPlacedModule.isFreePlacement) return undefined;
     if (!currentPlacedModule.hasDoor || !slotInfo?.hasColumn) return undefined;
     if (typeof slotInfo.doorWidth === 'number' && slotInfo.doorWidth > 0) {
-      return Math.round(slotInfo.doorWidth + 3);
+      return roundMmToTenth(slotInfo.doorWidth + 3);
     }
     return currentPlacedModule.slotCustomWidth ?? currentPlacedModule.customWidth ?? moduleData.dimensions.width;
   })();
@@ -2472,7 +2474,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     });
     const rawDoorWidthAdjustEnabled = !!(currentPlacedModule as any)?.doorWidthAdjustEnabled;
     const autoCoverDoorMatchesManual = autoCoverDoorSlotWidthMm !== undefined
-      && Math.round((currentPlacedModule as any)?.doorWidthAdjustMm ?? autoCoverDoorWidthAdjustMm) === Math.round(autoCoverDoorWidthAdjustMm);
+      && Math.round((((currentPlacedModule as any)?.doorWidthAdjustMm ?? autoCoverDoorWidthAdjustMm) - autoCoverDoorWidthAdjustMm) * 10) === 0;
     const panelDoorOriginalWidth = autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
       ? autoCoverDoorSlotWidthMm
       : autoCoverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
@@ -4301,17 +4303,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   let dimensionDisplay = '';
 
                   if (panel.diameter) {
-                    dimensionDisplay = `Φ ${panel.diameter} × L ${panel.width}`;
+                    dimensionDisplay = `Φ ${formatMmInputValue(panel.diameter)} × L ${formatMmInputValue(panel.width)}`;
                   } else if (panel.width && panel.height) {
-                    dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                    dimensionDisplay = `W ${formatMmInputValue(panel.width)} × L ${formatMmInputValue(panel.height)}`;
                   } else if (panel.width && panel.depth) {
-                    dimensionDisplay = `W ${panel.width} × L ${panel.depth}`;
+                    dimensionDisplay = `W ${formatMmInputValue(panel.width)} × L ${formatMmInputValue(panel.depth)}`;
                   } else if (panel.height && panel.depth) {
-                    dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
+                    dimensionDisplay = `W ${formatMmInputValue(panel.height)} × L ${formatMmInputValue(panel.depth)}`;
                   } else if (panel.description) {
                     dimensionDisplay = panel.description;
                   } else {
-                    dimensionDisplay = `${panel.width || panel.height || panel.depth}`;
+                    dimensionDisplay = formatMmInputValue(panel.width || panel.height || panel.depth);
                   }
 
                   const panelChecked = isPanelChecked(panel.name);
@@ -5765,11 +5767,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
             // 싱글: 도어 1장 → 도어 너비 = 몸통 + v
             const rawDoorW = isDualSlot
-              ? Math.max(0, Math.round(bodyWidth / 2) - 3)
+              ? Math.max(0, bodyWidth / 2 - 3)
               : (effectiveDoorWidthAdjustEnabled
                 ? Math.max(0, bodyWidth + effectiveUserExtension)
                 : Math.max(0, bodyWidth - 3));
-            const doorW = Math.max(0, Math.round(rawDoorW));
+            const doorW = Math.max(0, roundMmToTenth(rawDoorW));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
@@ -5800,22 +5802,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const upperDoorPanelForDimensions = splitDoorPanelsForDimensions.find((panel: any) => String(panel.name || '').includes('상부 도어'));
             const isSplitDoorDimension = !!lowerDoorPanelForDimensions && !!upperDoorPanelForDimensions;
             const primaryDoorDimensionH = primaryDoorPanelForDimensions
-              ? Math.round(primaryDoorPanelForDimensions.height)
-              : doorH;
+              ? roundMmToTenth(primaryDoorPanelForDimensions.height)
+              : roundMmToTenth(doorH);
             const primaryDoorDimensionW = primaryDoorPanelForDimensions
-              ? Math.round(primaryDoorPanelForDimensions.width ?? doorW)
+              ? roundMmToTenth(primaryDoorPanelForDimensions.width ?? doorW)
               : doorW;
             const upperDoorDimensionH = isSplitDoorDimension
-              ? Math.round(upperDoorPanelForDimensions.height)
-              : doorH;
+              ? roundMmToTenth(upperDoorPanelForDimensions.height)
+              : roundMmToTenth(doorH);
             const lowerDoorDimensionH = isSplitDoorDimension
-              ? Math.round(lowerDoorPanelForDimensions.height)
-              : doorH;
+              ? roundMmToTenth(lowerDoorPanelForDimensions.height)
+              : roundMmToTenth(doorH);
             const upperDoorDimensionW = isSplitDoorDimension
-              ? Math.round(upperDoorPanelForDimensions.width ?? doorW)
+              ? roundMmToTenth(upperDoorPanelForDimensions.width ?? doorW)
               : doorW;
             const lowerDoorDimensionW = isSplitDoorDimension
-              ? Math.round(lowerDoorPanelForDimensions.width ?? doorW)
+              ? roundMmToTenth(lowerDoorPanelForDimensions.width ?? doorW)
               : doorW;
             const middleDoorGapMm = isSplitDoorDimension
               ? Math.round(-((upperDoorBottomGap || 0) + (lowerDoorTopGap || 0)))
@@ -5835,7 +5837,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
                     <div className={styles.inputWithUnit}>
-                      <input type="text" value={widthMm} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <input type="text" value={formatMmInputValue(widthMm)} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
                       <span className={styles.unit}>mm</span>
                     </div>
                   </div>
@@ -5843,7 +5845,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
                     <div className={styles.inputWithUnit}>
-                      <input type="text" value={heightMm} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <input type="text" value={formatMmInputValue(heightMm)} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
                       <span className={styles.unit}>mm</span>
                     </div>
                   </div>

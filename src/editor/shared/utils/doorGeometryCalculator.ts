@@ -6,6 +6,8 @@ import {
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants'
 import { classifyModule } from './moduleClassification'
 
+const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10
+
 export type DoorHingeSide = 'left' | 'right'
 export type DoorCabinetCategory = 'upper' | 'lower' | 'full' | 'tall' | 'generic'
 
@@ -164,7 +166,7 @@ export const resolveDoorLeafDimensions = (
   }
 
   if (isDualDoor) {
-    const leafWidthMm = Math.floor(doorWidthMm / 2 - doorGapMm)
+    const leafWidthMm = roundMmToTenth(doorWidthMm / 2 - doorGapMm)
 
     return {
       leafCount: 2,

@@ -21,6 +21,15 @@ import {
 } from '@/editor/shared/utils/framePanelListDimensions';
 import styles from './FurnitureInfoModal.module.css';
 
+const formatMmValue = (value: number | string | undefined): string => {
+  if (value === '' || value == null) return '';
+  const numeric = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numeric)) return '';
+  const rounded = Math.round(numeric * 10) / 10;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+};
+
+const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10;
 
 interface FurnitureInfoModalProps {
   isOpen: boolean;
@@ -398,7 +407,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
       const doorGap = 2;
       
       if (moduleData.id.includes('dual')) {
-        const doorWidth = Math.floor((customWidth - doorGap * 3) / 2);
+        const doorWidth = roundMmToTenth((customWidth - doorGap * 3) / 2);
         panels.door.push({
           name: '좌측 도어',
           width: doorWidth,
@@ -689,19 +698,19 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
                       <div className={styles.cell}>{panel.name}</div>
                       <div className={styles.cell}>
                         {panel.diameter ? (
-                          `Φ${panel.diameter}mm × L${panel.width}mm`
+                          `Φ${formatMmValue(panel.diameter)}mm × L${formatMmValue(panel.width)}mm`
                         ) : panel.width && panel.height ? (
-                          `${panel.width} × ${panel.height}mm`
+                          `${formatMmValue(panel.width)} × ${formatMmValue(panel.height)}mm`
                         ) : panel.width && panel.depth ? (
-                          `${panel.width} × ${panel.depth}mm`
+                          `${formatMmValue(panel.width)} × ${formatMmValue(panel.depth)}mm`
                         ) : panel.height && panel.depth ? (
-                          `${panel.height} × ${panel.depth}mm`
+                          `${formatMmValue(panel.height)} × ${formatMmValue(panel.depth)}mm`
                         ) : panel.description ? (
                           panel.description
                         ) : (
-                          `${panel.width || panel.height || panel.depth}mm`
+                          `${formatMmValue(panel.width || panel.height || panel.depth)}mm`
                         )}
-                        {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${panel.thickness})`}
+                        {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${formatMmValue(panel.thickness)})`}
                       </div>
                       <div className={styles.cell}>{panel.material || '-'}</div>
                     </div>
