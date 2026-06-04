@@ -7653,6 +7653,7 @@ const Room: React.FC<RoomProps> = ({
                 ];
                 const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
                 const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
+                const owningId = seg.placedModuleId || firstModuleId;
                 return (
                   <React.Fragment key={`free-base-merged-${idx}`}>
                       <BoxWithEdges
@@ -7664,8 +7665,8 @@ const Room: React.FC<RoomProps> = ({
                       material={seg.material ?? baseMat}
                         renderMode={renderMode}
                         shadowEnabled={shadowEnabled}
-                        excludeKey={`${firstModuleId}::base-frame`}
-                        furnitureId={seg.placedModuleId || firstModuleId}
+                        excludeKey={`${owningId}::base-frame`}
+                        furnitureId={owningId}
                         panelName="base-frame"
                       />
                     {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
@@ -8013,6 +8014,7 @@ const Room: React.FC<RoomProps> = ({
                         ];
                         const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
                         const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
+                        const owningId = seg.placedModuleId || firstModuleId;
                         return (
                           <React.Fragment key={`slot-base-merged-${idx}`}>
                             <BoxWithEdges
@@ -8025,8 +8027,8 @@ const Room: React.FC<RoomProps> = ({
                               renderMode={renderMode}
                               shadowEnabled={shadowEnabled}
                               renderOrder={seg.behindCeiling ? -1 : undefined}
-                              excludeKey={`${firstModuleId}::base-frame`}
-                              furnitureId={seg.placedModuleId || firstModuleId}
+                              excludeKey={`${owningId}::base-frame`}
+                              furnitureId={owningId}
                               panelName="base-frame"
                             />
                             {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}

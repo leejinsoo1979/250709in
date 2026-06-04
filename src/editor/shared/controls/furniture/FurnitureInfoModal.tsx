@@ -15,6 +15,10 @@ import {
   getRenderedPanelDimensionsSnapshot,
   subscribeRenderedPanelDimensions
 } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
+import {
+  applyFramePanelListWidthFallback,
+  stripFramePanelListFallbackMarker
+} from '@/editor/shared/utils/framePanelListDimensions';
 import styles from './FurnitureInfoModal.module.css';
 
 
@@ -31,7 +35,10 @@ const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
 
   const rendered = findRenderedPanelDimension(furnitureId, panel.name);
   if (!rendered) return panel;
+  return applyRenderedPanelDimensionItem(panel, rendered);
+};
 
+const applyRenderedPanelDimensionItem = (panel: any, rendered: any) => {
   const next = { ...panel };
   const panelThickness = Number(panel.thickness);
   const xIsThickness = Number.isFinite(panelThickness)
@@ -61,7 +68,7 @@ const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
     next.thickness = rendered.heightMm;
   }
 
-  return next;
+  return stripFramePanelListFallbackMarker(next);
 };
 
 const applyRenderedPanelDimensions = (panel: any, furnitureId?: string) => {
@@ -69,31 +76,20 @@ const applyRenderedPanelDimensions = (panel: any, furnitureId?: string) => {
   if (!panel.width && !panel.height && !panel.depth) return [panel];
 
   const renderedItems = findRenderedPanelDimensions(furnitureId, panel.name);
-  if (renderedItems.length <= 1) return [applyRenderedPanelDimension(panel, furnitureId)];
+  if (
+    panel.__preferFrameWidthFallback === true &&
+    renderedItems.length > 0 &&
+    renderedItems.every(rendered => rendered.sourceScope === 'shared')
+  ) {
+    return [stripFramePanelListFallbackMarker(panel)];
+  }
+  if (renderedItems.length <= 1) return [stripFramePanelListFallbackMarker(applyRenderedPanelDimension(panel, furnitureId))];
 
   return renderedItems.map((rendered, index) => {
-    const next = applyRenderedPanelDimension(panel, furnitureId);
-    const panelThickness = Number(panel.thickness);
-    const xIsThickness = Number.isFinite(panelThickness)
-      ? Math.abs(rendered.widthMm - panelThickness) <= Math.abs(rendered.depthMm - panelThickness)
-      : rendered.widthMm <= rendered.depthMm && rendered.widthMm <= rendered.heightMm;
-
-    if (panel.width !== undefined && panel.height !== undefined) {
-      next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
-      next.height = rendered.heightMm;
-      next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
-    } else if (panel.width !== undefined && panel.depth !== undefined) {
-      next.width = rendered.widthMm;
-      next.depth = rendered.depthMm;
-      next.thickness = rendered.heightMm;
-    } else if (panel.height !== undefined && panel.depth !== undefined) {
-      next.height = rendered.heightMm;
-      next.depth = xIsThickness ? rendered.depthMm : rendered.widthMm;
-      next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
-    }
+    const next = applyRenderedPanelDimensionItem(panel, rendered);
 
     return {
-      ...next,
+      ...stripFramePanelListFallbackMarker(next),
       name: `${panel.name} ${index + 1}`,
     };
   });
@@ -553,19 +549,22 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     (placedModule as any)?.doorWidthAdjustMm ?? -1.5,
     baseFrameGapMm,
     topFrameGapMm,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
+    !!(placedModule as any)?.topFrameWidthAdjustEnabled,
+    (placedModule as any)?.topFrameLeftAdjustMm ?? 0,
+    (placedModule as any)?.topFrameRightAdjustMm ?? 0,
+    !!(placedModule as any)?.baseFrameWidthAdjustEnabled,
+    (placedModule as any)?.baseFrameLeftAdjustMm ?? 0,
+    (placedModule as any)?.baseFrameRightAdjustMm ?? 0,
     placedModule?.hasTopEndPanel === true,
     (placedModule as any)?.topEndPanelBackLip ?? 0,
     (placedModule as any)?.topEndPanelBackLipThickness ?? 0,
     (placedModule as any)?.topEndPanelOffset,
     (placedModule as any)?.topEndPanelBackOffset,
     true
-  ).flatMap(panel => applyRenderedPanelDimensions(panel, placedModule.id));
+  ).flatMap(panel => applyRenderedPanelDimensions(
+    applyFramePanelListWidthFallback(panel, placedModule, renderedWidthForPanels, spaceInfo),
+    placedModule.id
+  ));
 
   // 서라운드 패널 (공간 전체 단위)
   const surroundHeightMm = (() => {

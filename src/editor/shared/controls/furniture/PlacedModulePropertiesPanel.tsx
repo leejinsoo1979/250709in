@@ -16,6 +16,10 @@ import {
   getRenderedPanelDimensionsSnapshot,
   subscribeRenderedPanelDimensions
 } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
+import {
+  applyFramePanelListWidthFallback,
+  stripFramePanelListFallbackMarker
+} from '@/editor/shared/utils/framePanelListDimensions';
 import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
@@ -70,7 +74,10 @@ const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
 
   const rendered = findRenderedPanelDimension(furnitureId, panel.name);
   if (!rendered) return panel;
+  return applyRenderedPanelDimensionItem(panel, rendered);
+};
 
+const applyRenderedPanelDimensionItem = (panel: any, rendered: any) => {
   const next = { ...panel };
   const panelThickness = Number(panel.thickness);
   const xIsThickness = Number.isFinite(panelThickness)
@@ -100,7 +107,7 @@ const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
     next.thickness = rendered.heightMm;
   }
 
-  return next;
+  return stripFramePanelListFallbackMarker(next);
 };
 
 const applyRenderedPanelDimensions = (panel: any, furnitureId?: string) => {
@@ -108,31 +115,20 @@ const applyRenderedPanelDimensions = (panel: any, furnitureId?: string) => {
   if (!panel.width && !panel.height && !panel.depth) return [panel];
 
   const renderedItems = findRenderedPanelDimensions(furnitureId, panel.name);
-  if (renderedItems.length <= 1) return [applyRenderedPanelDimension(panel, furnitureId)];
+  if (
+    panel.__preferFrameWidthFallback === true &&
+    renderedItems.length > 0 &&
+    renderedItems.every(rendered => rendered.sourceScope === 'shared')
+  ) {
+    return [stripFramePanelListFallbackMarker(panel)];
+  }
+  if (renderedItems.length <= 1) return [stripFramePanelListFallbackMarker(applyRenderedPanelDimension(panel, furnitureId))];
 
   return renderedItems.map((rendered, index) => {
-    const next = applyRenderedPanelDimension(panel, furnitureId);
-    const panelThickness = Number(panel.thickness);
-    const xIsThickness = Number.isFinite(panelThickness)
-      ? Math.abs(rendered.widthMm - panelThickness) <= Math.abs(rendered.depthMm - panelThickness)
-      : rendered.widthMm <= rendered.depthMm && rendered.widthMm <= rendered.heightMm;
-
-    if (panel.width !== undefined && panel.height !== undefined) {
-      next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
-      next.height = rendered.heightMm;
-      next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
-    } else if (panel.width !== undefined && panel.depth !== undefined) {
-      next.width = rendered.widthMm;
-      next.depth = rendered.depthMm;
-      next.thickness = rendered.heightMm;
-    } else if (panel.height !== undefined && panel.depth !== undefined) {
-      next.height = rendered.heightMm;
-      next.depth = xIsThickness ? rendered.depthMm : rendered.widthMm;
-      next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
-    }
+    const next = applyRenderedPanelDimensionItem(panel, rendered);
 
     return {
-      ...next,
+      ...stripFramePanelListFallbackMarker(next),
       name: `${panel.name} ${index + 1}`,
     };
   });
@@ -2503,7 +2499,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.topEndPanelBackOffset,
       true
     );
-    return calculatedPanels.flatMap(panel => applyRenderedPanelDimensions(panel, currentPlacedModule?.id));
+    return calculatedPanels.flatMap(panel => applyRenderedPanelDimensions(
+      applyFramePanelListWidthFallback(panel, currentPlacedModule, renderedWidthForPanels, spaceInfo),
+      currentPlacedModule?.id
+    ));
   }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, (currentPlacedModule as any)?.topEndPanelOffset, (currentPlacedModule as any)?.topEndPanelBackOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights, currentPlacedModule?.freeWidth, currentPlacedModule?.freeDepth, currentPlacedModule?.slotCustomWidth, (currentPlacedModule as any)?.sideLogicalWidth, currentPlacedModule?.placementWall, renderedPanelDimensionsRevision]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속

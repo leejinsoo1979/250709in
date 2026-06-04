@@ -868,7 +868,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   React.useEffect(() => {
     if (!panelName) return;
-    const targetFurnitureIds = dimensionFurnitureIds && dimensionFurnitureIds.length > 0
+    const isSharedDimensionSource = !!dimensionFurnitureIds && dimensionFurnitureIds.length > 0;
+    const targetFurnitureIds = isSharedDimensionSource
       ? Array.from(new Set(dimensionFurnitureIds.filter(Boolean)))
       : furnitureId
         ? [furnitureId]
@@ -879,6 +880,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       sourceId: dimensionSourceIdRef.current,
       furnitureId: targetFurnitureIds[0],
       panelName,
+      sourceScope: isSharedDimensionSource ? 'shared' : 'direct',
       widthMm: Math.round(safeArgs[0] / 0.01),
       heightMm: Math.round(safeArgs[1] / 0.01),
       depthMm: Math.round(safeArgs[2] / 0.01),
@@ -888,6 +890,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         sourceId: dimensionSourceIdRef.current,
         furnitureId: targetFurnitureId,
         panelName,
+        sourceScope: isSharedDimensionSource ? 'shared' : 'direct',
         widthMm: Math.round(safeArgs[0] / 0.01),
         heightMm: Math.round(safeArgs[1] / 0.01),
         depthMm: Math.round(safeArgs[2] / 0.01),

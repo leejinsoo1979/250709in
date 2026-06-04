@@ -5,6 +5,7 @@ export interface RenderedPanelDimension {
   furnitureId: string;
   panelName: string;
   canonicalName: string;
+  sourceScope: 'direct' | 'shared';
   widthMm: number;
   heightMm: number;
   depthMm: number;
@@ -38,6 +39,7 @@ export const updateRenderedPanelDimension = ({
   sourceId,
   furnitureId,
   panelName,
+  sourceScope = 'direct',
   widthMm,
   heightMm,
   depthMm,
@@ -45,6 +47,7 @@ export const updateRenderedPanelDimension = ({
   sourceId?: string;
   furnitureId?: string;
   panelName?: string;
+  sourceScope?: 'direct' | 'shared';
   widthMm: number;
   heightMm: number;
   depthMm: number;
@@ -58,6 +61,7 @@ export const updateRenderedPanelDimension = ({
     furnitureId,
     panelName,
     canonicalName,
+    sourceScope,
     widthMm: roundMm(widthMm),
     heightMm: roundMm(heightMm),
     depthMm: roundMm(depthMm),
@@ -69,7 +73,8 @@ export const updateRenderedPanelDimension = ({
     prev.widthMm === next.widthMm &&
     prev.heightMm === next.heightMm &&
     prev.depthMm === next.depthMm &&
-    prev.panelName === next.panelName
+    prev.panelName === next.panelName &&
+    prev.sourceScope === next.sourceScope
   ) {
     return;
   }
@@ -96,6 +101,24 @@ export const removeRenderedPanelDimension = (furnitureId?: string, panelName?: s
   if (changed) notify();
 };
 
+const normalizeRenderedPanelDimensions = (items: RenderedPanelDimension[]) => {
+  const directItems = items.filter(item => item.sourceScope === 'direct');
+  const sourceItems = directItems.length > 0 ? directItems : items;
+  const seen = new Set<string>();
+  return sourceItems.filter(item => {
+    const key = [
+      item.canonicalName,
+      item.widthMm,
+      item.heightMm,
+      item.depthMm,
+      item.sourceScope,
+    ].join('::');
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 export const findRenderedPanelDimensions = (
   furnitureId: string | undefined,
   panelName: string | undefined
@@ -106,7 +129,7 @@ export const findRenderedPanelDimensions = (
   const exact = Array.from(dimensions.values()).filter(item =>
     item.furnitureId === furnitureId && item.canonicalName === canonicalName
   );
-  if (exact.length > 0) return exact;
+  if (exact.length > 0) return normalizeRenderedPanelDimensions(exact);
 
   let bestScore = Infinity;
   const best: RenderedPanelDimension[] = [];
@@ -123,7 +146,7 @@ export const findRenderedPanelDimensions = (
     }
   });
 
-  return best;
+  return normalizeRenderedPanelDimensions(best);
 };
 
 export const findRenderedPanelDimension = (
