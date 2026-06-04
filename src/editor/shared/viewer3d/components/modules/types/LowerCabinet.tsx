@@ -2078,7 +2078,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   ]
                 };
               })() : moduleData.id.includes('lower-drawer-2tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: (moduleData.dimensions.height - 125) / 2 }]
+                sideNotches: [{ y: 65, z: 40, fromBottom: (Math.round(adjustedHeight / 0.01) - 125) / 2 }]
               } : moduleData.id.includes('lower-door-lift-3tier') ? {
                 // 도어올림 3단: notch1=315(고정), notch2는 위 2개 도어 균등 분할 (LowerCabinet.tsx doorLift3TierNotch2와 동일 공식)
                 sideNotches: [

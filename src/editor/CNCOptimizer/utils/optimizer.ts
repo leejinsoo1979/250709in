@@ -233,6 +233,7 @@ export const optimizePanels = async (
         sideBoringDiameter: originalPanel.sideBoringDiameter,
         sideBoringDepth: originalPanel.sideBoringDepth,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        backPanelGroove: originalPanel.backPanelGroove,
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
         screwDepthPositions: originalPanel.screwDepthPositions,
@@ -337,6 +338,7 @@ export const optimizePanelsImproved = async (
         sideBoringDiameter: originalPanel.sideBoringDiameter,
         sideBoringDepth: originalPanel.sideBoringDepth,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        backPanelGroove: originalPanel.backPanelGroove,
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
         screwDepthPositions: originalPanel.screwDepthPositions,
@@ -504,6 +506,7 @@ export const optimizePanelsMultiple = async (
         sideBoringDiameter: originalPanel.sideBoringDiameter,
         sideBoringDepth: originalPanel.sideBoringDepth,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        backPanelGroove: originalPanel.backPanelGroove,
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
         screwDepthPositions: originalPanel.screwDepthPositions,
@@ -626,6 +629,7 @@ export const optimizePanelsMultipleImproved = async (
         sideBoringDiameter: originalPanel.sideBoringDiameter,
         sideBoringDepth: originalPanel.sideBoringDepth,
         groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        backPanelGroove: originalPanel.backPanelGroove,
         // 도어 힌지 보링 전용 필드
         screwPositions: originalPanel.screwPositions,
         screwDepthPositions: originalPanel.screwDepthPositions,

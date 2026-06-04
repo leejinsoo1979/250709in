@@ -182,6 +182,7 @@ describe('convertPlacedPanelToMprBoringData', () => {
       material: 'PB',
       color: 'MW',
       grain: 'VERTICAL',
+      backPanelGroove: { offset: 16, width: 7, depth: 7.5 },
     } as PlacedPanel;
 
     const converted = convertPlacedPanelToMprBoringData(panel);
@@ -192,13 +193,13 @@ describe('convertPlacedPanelToMprBoringData', () => {
     expect(mpr).toContain(']2');
     expect(mpr).toContain('X=860.0000');
     expect(mpr).toContain('Y=0.0000');
-    expect(mpr).toContain('Y=359.0000');
+    expect(mpr).toContain('Y=360.5000');
     expect(mpr).toContain('<109 \\Nuten\\');
     expect(mpr).toContain('XA="-1.0000"');
-    expect(mpr).toContain('YA="359.0000"');
+    expect(mpr).toContain('YA="360.5000"');
     expect(mpr).toContain('XE="861.0000"');
-    expect(mpr).toContain('YE="359.0000"');
-    expect(mpr).toContain('NB="3.0000"');
+    expect(mpr).toContain('YE="360.5000"');
+    expect(mpr).toContain('NB="7.0000"');
     expect(mpr).toContain('TI="7.5000"');
     expect(mpr).not.toContain('백패널 홈');
   });

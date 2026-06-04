@@ -297,7 +297,9 @@ export function generateLowerCabinetBorings(
   panels.push(generateSidePanelBorings(params, false, settings));
 
   // 3. 상판
-  panels.push(generateHorizontalPanelBorings(params, true, settings));
+  if (params.hasTopPanel !== false) {
+    panels.push(generateHorizontalPanelBorings(params, true, settings));
+  }
 
   // 4. 하판
   panels.push(generateHorizontalPanelBorings(params, false, settings));

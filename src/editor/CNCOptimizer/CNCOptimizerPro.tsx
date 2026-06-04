@@ -481,6 +481,7 @@ function PageInner(){
             sideBoringDiameter: p.sideBoringDiameter,
             sideBoringDepth: p.sideBoringDepth,
             groovePositions: p.groovePositions, // 홈 위치 유지 (서랍 앞판/뒷판)
+            backPanelGroove: p.backPanelGroove,
             // 도어 힌지 보링 필드
             screwPositions: p.screwPositions,
             screwDepthPositions: p.screwDepthPositions,
@@ -663,7 +664,8 @@ function PageInner(){
           sideBoringPositions: p.sideBoringPositions,
           sideBoringDiameter: p.sideBoringDiameter,
           sideBoringDepth: p.sideBoringDepth,
-          groovePositions: p.groovePositions
+          groovePositions: p.groovePositions,
+          backPanelGroove: p.backPanelGroove
         });
 
         return {
@@ -683,6 +685,7 @@ function PageInner(){
           sideBoringDiameter: p.sideBoringDiameter,
           sideBoringDepth: p.sideBoringDepth,
           groovePositions: p.groovePositions,
+          backPanelGroove: p.backPanelGroove,
           // 도어 힌지 보링 필드
           screwPositions: p.screwPositions,
           screwDepthPositions: p.screwDepthPositions,
@@ -980,6 +983,7 @@ function PageInner(){
               sideBoringDiameter: p.sideBoringDiameter,
               sideBoringDepth: p.sideBoringDepth,
               groovePositions: p.groovePositions, // 홈 위치
+              backPanelGroove: p.backPanelGroove,
               // 도어 힌지 보링 필드
               screwPositions: p.screwPositions,
               screwDepthPositions: p.screwDepthPositions,
@@ -1108,6 +1112,7 @@ function PageInner(){
             sideBoringDiameter: p.sideBoringDiameter,
             sideBoringDepth: p.sideBoringDepth,
             groovePositions: p.groovePositions,
+            backPanelGroove: p.backPanelGroove,
             screwPositions: p.screwPositions,
             screwDepthPositions: p.screwDepthPositions,
             isDoor: p.isDoor,

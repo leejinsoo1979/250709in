@@ -573,7 +573,7 @@ export const calculatePanelDetails = (
           } else if (id.includes('lower-drawer-3tier')) {
             notches.push({ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 });
           } else if (id.includes('lower-drawer-2tier')) {
-            notches.push({ y: 65, z: 40, fromBottom: (moduleData.dimensions.height - 125) / 2 });
+            notches.push({ y: 65, z: 40, fromBottom: (height - 125) / 2 });
           } else if (id.includes('lower-door-lift-3tier')) {
             notches.push({ y: 65, z: 40, fromBottom: 315 }, { y: 65, z: 40, fromBottom: 545 });
           } else if (id.includes('lower-door-lift-2tier')) {
@@ -2767,7 +2767,7 @@ export const calculatePanelDetails = (
       ? resolveTopDown2TierGeometry(height, stoneTopThickness).notches
       : isTopDownHalf || isTopDownTouch
       ? [{ fromBottom: 665, height: 65 }]
-      : [{ fromBottom: ((moduleData.dimensions.height || 785) - 125) / 2, height: 65 }];
+      : [{ fromBottom: (height - 125) / 2, height: 65 }];
     // 상단 따내기 (60mm) - 도어올림/상판내림은 상단 따내기 없음 (상판내림은 665에 이미 포함)
     if (!isDoorLift2Tier && !isDoorLift3Tier && !isTopDown3Tier && !isTopDown2Tier && !isTopDownHalf && !isTopDownTouch) {
       lowerNotches.push({ fromBottom: height - 60, height: 60 });

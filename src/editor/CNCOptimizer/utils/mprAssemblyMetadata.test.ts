@@ -34,6 +34,7 @@ describe('buildMprAssemblyMetadata', () => {
         thickness: 18,
         material: 'PB',
         grain: 'V',
+        backPanelGroove: { offset: 16, width: 7, depth: 7.5 },
         borings: [
           {
             id: 'fixed-side-1',
@@ -87,7 +88,7 @@ describe('buildMprAssemblyMetadata', () => {
         mprCommand: 'Nuten',
         through: false,
         depth: 7.5,
-        mpr: expect.objectContaining({ XA: 18.5, YA: -1, XE: 18.5, YE: 861, NB: 3, TI: 7.5 }),
+        mpr: expect.objectContaining({ XA: 19.5, YA: -1, XE: 19.5, YE: 861, NB: 7, TI: 7.5 }),
       }),
       expect.objectContaining({
         id: 'side-notch-1',

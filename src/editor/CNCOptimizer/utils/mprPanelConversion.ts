@@ -237,5 +237,6 @@ export function convertPlacedPanelToMprBoringData(panel: PlacedPanel): PanelBori
     borings,
     sideNotches: panel.sideNotches,
     groovePositions: panel.groovePositions,
+    backPanelGroove: panel.backPanelGroove,
   };
 }

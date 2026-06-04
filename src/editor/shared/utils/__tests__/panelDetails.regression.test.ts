@@ -339,6 +339,14 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '서랍2 우측판').height).toBe(167.5)
     expect(findPanel(panels, '서랍1(마이다)').height).toBe(232.5)
     expect(findPanel(panels, '서랍2(마이다)').height).toBe(232.5)
+    expect(findPanel(panels, '좌측판').sideNotches).toEqual([
+      { y: 60, z: 40, fromBottom: 440 },
+      { y: 65, z: 40, fromBottom: 187.5 }
+    ])
+    expect(findPanel(panels, '우측판').sideNotches).toEqual([
+      { y: 60, z: 40, fromBottom: 440 },
+      { y: 65, z: 40, fromBottom: 187.5 }
+    ])
   })
 
   it('유리장 서랍 모듈 목재 패널은 옵티마이저 패널 목록에 모두 포함된다', () => {

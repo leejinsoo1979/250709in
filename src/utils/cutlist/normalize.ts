@@ -26,6 +26,7 @@ export interface RawPanel {
   sideBoringDiameter?: number;
   sideBoringDepth?: number;
   groovePositions?: Array<{ y: number; height: number; depth: number }>;
+  backPanelGroove?: { offset: number; width: number; depth: number };
   screwPositions?: number[];
   screwDepthPositions?: number[];
   isDoor?: boolean;
@@ -58,6 +59,7 @@ export interface NormalizedPanel {
   sideBoringDiameter?: number;
   sideBoringDepth?: number;
   groovePositions?: Array<{ y: number; height: number; depth: number }>;
+  backPanelGroove?: { offset: number; width: number; depth: number };
   screwPositions?: number[];
   screwDepthPositions?: number[];
   isDoor?: boolean;
@@ -181,6 +183,7 @@ export function normalizePanel(panel: RawPanel, targetUnit: Unit = 'mm'): Normal
     sideBoringDiameter: panel.sideBoringDiameter,
     sideBoringDepth: panel.sideBoringDepth,
     groovePositions: panel.groovePositions,
+    backPanelGroove: panel.backPanelGroove,
     screwPositions: panel.screwPositions,
     screwDepthPositions: panel.screwDepthPositions,
     isDoor: panel.isDoor,

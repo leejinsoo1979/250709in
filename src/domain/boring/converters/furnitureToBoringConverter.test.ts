@@ -85,7 +85,9 @@ describe('convertFurnitureToBoring', () => {
       .filter(panel => panel.panelType === 'side-left' || panel.panelType === 'side-right')
       .flatMap(panel => panel.borings);
 
+    expect(result.panels.some(panel => panel.panelType === 'top')).toBe(false);
     expect(sideBorings.some(boring => boring.type === 'hinge-screw')).toBe(false);
     expect(sideBorings.some(boring => boring.id.startsWith('cam-bolt-top'))).toBe(false);
+    expect(sideBorings.some(boring => boring.note === 'fixed-panel-side-bore')).toBe(false);
   });
 });

@@ -482,8 +482,8 @@ export class PDFExporter {
         const originalHeight = panel.height; // 측판의 높이 방향
         // 좌측판/우측판에 따라 백패널 방향이 대칭
         const isLeftSidePanelForGroove = panel.name?.includes('좌측');
-        const backPanelDepthOffset = 16;
-        const grooveWidth = 10;
+        const backPanelDepthOffset = panel.backPanelGroove?.offset ?? 16;
+        const grooveWidth = panel.backPanelGroove?.width ?? 10;
         const grooveStartX = isLeftSidePanelForGroove
           ? originalWidth - backPanelDepthOffset - grooveWidth // 좌측판: 뒤=X=width쪽
           : backPanelDepthOffset; // 우측판: 뒤=X=0쪽

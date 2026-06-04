@@ -30,8 +30,8 @@ interface ModuleGeometry {
   rotationDeg: number;
 }
 
-const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 17;
-const BACK_PANEL_GROOVE_WIDTH_MM = 3;
+const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 16;
+const BACK_PANEL_GROOVE_WIDTH_MM = 10;
 const BACK_PANEL_GROOVE_CUT_DEPTH_MM = 7.5;
 const CONTOUR_CUT_DEPTH_MM = -2;
 
@@ -338,15 +338,19 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
     && !name.includes('서랍')
     && !name.includes('도어')
     && (name.includes('좌측') || name.includes('우측') || name.includes('측판'))
-    && panel.width > BACK_PANEL_GROOVE_REAR_OFFSET_MM + BACK_PANEL_GROOVE_WIDTH_MM;
+    && panel.width > (panel.backPanelGroove?.offset ?? BACK_PANEL_GROOVE_REAR_OFFSET_MM)
+      + (panel.backPanelGroove?.width ?? BACK_PANEL_GROOVE_WIDTH_MM);
 
   if (hasBackPanelGroove) {
     const isRightSide = panel.panelType === 'side-right' || name.includes('우측');
+    const grooveOffset = panel.backPanelGroove?.offset ?? BACK_PANEL_GROOVE_REAR_OFFSET_MM;
+    const grooveWidth = panel.backPanelGroove?.width ?? BACK_PANEL_GROOVE_WIDTH_MM;
+    const grooveDepth = panel.backPanelGroove?.depth ?? BACK_PANEL_GROOVE_CUT_DEPTH_MM;
     const x = isRightSide
-      ? BACK_PANEL_GROOVE_REAR_OFFSET_MM
-      : panel.width - BACK_PANEL_GROOVE_REAR_OFFSET_MM - BACK_PANEL_GROOVE_WIDTH_MM;
-    const resolvedX = resolveRotatedX(panel, x, BACK_PANEL_GROOVE_WIDTH_MM);
-    const centerX = resolvedX + BACK_PANEL_GROOVE_WIDTH_MM / 2;
+      ? grooveOffset
+      : panel.width - grooveOffset - grooveWidth;
+    const resolvedX = resolveRotatedX(panel, x, grooveWidth);
+    const centerX = resolvedX + grooveWidth / 2;
     operations.push({
       id: 'back-panel-groove',
       operationType: 'groove',
@@ -356,11 +360,11 @@ function buildPocketOperations(panel: PanelBoringData, role: string) {
         YA: -1,
         XE: roundMm(centerX),
         YE: roundMm(panel.height + 1),
-        NB: BACK_PANEL_GROOVE_WIDTH_MM,
-        TI: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
+        NB: roundMm(grooveWidth),
+        TI: roundMm(grooveDepth),
       },
       through: false,
-      depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
+      depth: grooveDepth,
     });
   }
 

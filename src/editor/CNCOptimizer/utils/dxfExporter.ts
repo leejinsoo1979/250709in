@@ -502,7 +502,8 @@ export class DXFExporter {
 
       // ★★★ 백패널 홈 가공 표시 ★★★
       if (isFurnitureSidePanel) {
-        const bpOffset = 16, gw = 10;
+        const bpOffset = (panel as any).backPanelGroove?.offset ?? 16;
+        const gw = (panel as any).backPanelGroove?.width ?? 10;
         const gsX = isLeftSidePanel ? origW - bpOffset - gw : bpOffset;
 
         if (panel.rotated) {

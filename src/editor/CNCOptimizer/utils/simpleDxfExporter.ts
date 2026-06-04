@@ -560,7 +560,8 @@ export class SimpleDXFExporter {
 
         // 백패널 홈 (가구 측판)
         if (isFurnitureSide) {
-          const bpOff = 16, gw = 10;
+          const bpOff = (panel as any).backPanelGroove?.offset ?? 16;
+          const gw = (panel as any).backPanelGroove?.width ?? 10;
           const gsX = isLeftSide ? origW - bpOff - gw : bpOff;
           let gx: number, gy: number, gWidth: number, gHeight: number;
           if (panel.rotated) {

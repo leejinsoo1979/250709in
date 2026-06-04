@@ -4,7 +4,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculatePanelDetails as calculatePanelDetailsShared, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
 import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
-import type { BoringDepthGroup, Panel } from '../types';
+import type { BackPanelGroove, BoringDepthGroup, Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import type { ShelfBoringPositionDetail } from '@/domain/boring/utils/calculateShelfBoringPositions';
@@ -21,7 +21,8 @@ import {
   hasDirectLowerTopPanel,
   isDirectLowerDowelShelfModule,
 } from '@/editor/shared/utils/lowerCabinetDowelShelves';
-import { PET_PANEL_THICKNESS_MM } from '@/editor/shared/utils/panelThickness';
+import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { isFurnitureSidePanelName } from '@/utils/cnc/optimizerMachiningGeometry';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -60,6 +61,25 @@ function normalizePetPanelThickness<T extends { material?: string; thickness?: n
   return {
     ...panel,
     thickness: PET_PANEL_THICKNESS_MM,
+  };
+}
+
+const BACK_PANEL_GROOVE_CUT_DEPTH_MM = 7.5;
+
+function normalizeBackPanelThicknessMm(thicknessMm?: number | null): number {
+  const rawThickness = thicknessMm ?? 9;
+  if (rawThickness === 9.5) return 9;
+  if (rawThickness === 5 || rawThickness === 5.5) return 6;
+  if (rawThickness === 3.5) return 3;
+  return rawThickness;
+}
+
+function resolveBackPanelGroove(basicThicknessMm: number, backPanelThicknessMm: number): BackPanelGroove {
+  const nominalBackPanelOffsetThicknessMm = resolveNominalBackPanelOffsetThicknessMm(basicThicknessMm);
+  return {
+    offset: Math.max(0, nominalBackPanelOffsetThicknessMm - 2),
+    width: Math.max(0, backPanelThicknessMm + 1),
+    depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
   };
 }
 
@@ -133,6 +153,17 @@ function isMainHorizontalPanel(panel: any): boolean {
 
 const FIXED_HORIZONTAL_SIDE_BORING_DIAMETER = 5;
 const FIXED_HORIZONTAL_SIDE_BORING_DEPTH = 30;
+
+function hasRenderedLowerTopPanel(moduleId?: string, category?: string): boolean {
+  if (!moduleId) return true;
+
+  const isLowerModule = category === 'lower'
+    || moduleId.includes('lower-')
+    || moduleId.includes('dual-lower-');
+  if (!isLowerModule) return true;
+
+  return moduleId.includes('lower-door-lift-') || moduleId.includes('lower-top-down-');
+}
 
 function resolveFixedHorizontalSideBoringPositions(panelDepth: number): number[] | undefined {
   if (!Number.isFinite(panelDepth) || panelDepth <= 60) return undefined;
@@ -493,8 +524,17 @@ function calculateModuleShelfBoringDetails({
   };
 
   const moduleId = moduleData?.id || placedModule?.moduleId || '';
+  const topPanelFilteredDetails = hasRenderedLowerTopPanel(moduleId, moduleData?.category)
+    ? baseResultWithRodShelves.details
+    : baseResultWithRodShelves.details.filter(detail => detail.role !== 'top-panel');
+  const topPanelFilteredResult = {
+    ...baseResultWithRodShelves,
+    positions: topPanelFilteredDetails.map(detail => detail.y),
+    details: topPanelFilteredDetails,
+  };
+
   if (!isDirectLowerDowelShelfModule(moduleId)) {
-    return baseResultWithRodShelves;
+    return topPanelFilteredResult;
   }
 
   const directShelfDetails = getDirectLowerDowelShelfBoringDetails({
@@ -508,14 +548,14 @@ function calculateModuleShelfBoringDetails({
       spacingMm: 32,
     },
   });
-  const fixedDetails = baseResultWithRodShelves.details.filter(detail => (
+  const fixedDetails = topPanelFilteredResult.details.filter(detail => (
     isFixedPanelBoringDetail(detail) &&
     (hasDirectLowerTopPanel(moduleId) || detail.role !== 'top-panel')
   ));
   const details = [...fixedDetails, ...directShelfDetails].sort((a, b) => a.y - b.y);
 
   return {
-    ...baseResultWithRodShelves,
+    ...topPanelFilteredResult,
     positions: details.map(detail => detail.y),
     details,
     shelves: directShelfDetails.map(detail => detail.y),
@@ -848,14 +888,7 @@ export function useLivePanelData() {
 
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
-        const rawModuleBackPanelThickness = (placedModule as any).backPanelThickness ?? 9;
-        const moduleBackPanelThickness = rawModuleBackPanelThickness === 9.5
-          ? 9
-          : rawModuleBackPanelThickness === 5 || rawModuleBackPanelThickness === 5.5
-            ? 6
-            : rawModuleBackPanelThickness === 3.5
-              ? 3
-              : rawModuleBackPanelThickness;
+        const moduleBackPanelThickness = normalizeBackPanelThicknessMm((placedModule as any).backPanelThickness);
 
         // 프레임 높이 계산
         const topFrameH = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
@@ -1020,6 +1053,7 @@ export function useLivePanelData() {
           : (modelConfig?.sections || modelConfig?.leftSections || []);
         const furnitureHeight = getPlacedModuleHeightMm(placedModule, moduleData);
         const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
+        const moduleBackPanelGroove = resolveBackPanelGroove(basicThicknessMm, moduleBackPanelThickness);
 
         console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: sections=`, sections);
@@ -1219,6 +1253,7 @@ export function useLivePanelData() {
             sideBoringDiameter: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DIAMETER : undefined,
             sideBoringDepth: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DEPTH : undefined,
             groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
+            backPanelGroove: isFurnitureSidePanelName(panel.name) ? moduleBackPanelGroove : undefined,
             // 도어 전용 필드
             screwPositions: isDoorPanel ? screwPositions : undefined,
             screwDepthPositions: isDoorPanel ? screwDepthPositions : undefined,
@@ -1840,14 +1875,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
-      const rawModuleBackPanelThickness2 = (placedModule as any).backPanelThickness ?? 9;
-      const moduleBackPanelThickness2 = rawModuleBackPanelThickness2 === 9.5
-        ? 9
-        : rawModuleBackPanelThickness2 === 5 || rawModuleBackPanelThickness2 === 5.5
-          ? 6
-          : rawModuleBackPanelThickness2 === 3.5
-            ? 3
-            : rawModuleBackPanelThickness2;
+      const moduleBackPanelThickness2 = normalizeBackPanelThicknessMm((placedModule as any).backPanelThickness);
 
       // 프레임 높이 계산
       const topFrameH2 = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
@@ -2003,6 +2031,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         : (modelConfig?.sections || modelConfig?.leftSections || []);
       const furnitureHeight = getPlacedModuleHeightMm(placedModule, moduleData);
       const basicThicknessMm = modelConfig?.basicThickness ?? (spaceInfo.panelThickness ?? 18);
+      const moduleBackPanelGroove = resolveBackPanelGroove(basicThicknessMm, moduleBackPanelThickness2);
 
       console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);
 
@@ -2201,6 +2230,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           sideBoringDiameter: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DIAMETER : undefined,
           sideBoringDepth: panelSideBoringPositions ? FIXED_HORIZONTAL_SIDE_BORING_DEPTH : undefined,
           groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
+          backPanelGroove: isFurnitureSidePanelName(panel.name) ? moduleBackPanelGroove : undefined,
           // 도어 전용 필드
           screwPositions: isDoorPanel ? screwPositions : undefined,
           screwDepthPositions: isDoorPanel ? screwDepthPositions : undefined,

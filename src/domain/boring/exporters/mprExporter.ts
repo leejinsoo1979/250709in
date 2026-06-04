@@ -13,8 +13,8 @@ import type {
 import { DEFAULT_MPR_EXPORT_SETTINGS } from '../constants';
 import { encodeCp949 } from './cp949Encoder';
 
-const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 17;
-const BACK_PANEL_GROOVE_WIDTH_MM = 3;
+const BACK_PANEL_GROOVE_REAR_OFFSET_MM = 16;
+const BACK_PANEL_GROOVE_WIDTH_MM = 10;
 const BACK_PANEL_GROOVE_CUT_DEPTH_MM = 7.5;
 const CONTOUR_CUT_DEPTH_MM = -2;
 
@@ -280,8 +280,9 @@ interface BackPanelGrooveLine {
 function resolveBackPanelGrooveLine(panel: PanelBoringData): BackPanelGrooveLine | null {
   if (!isFurnitureSidePanelForBackPanelGroove(panel)) return null;
   if (panel.height <= 26 || panel.width <= 0) return null;
-  const previewBackPanelDepthOffset = 16;
-  const previewGrooveWidth = 10;
+  const previewBackPanelDepthOffset = panel.backPanelGroove?.offset ?? 16;
+  const previewGrooveWidth = panel.backPanelGroove?.width ?? BACK_PANEL_GROOVE_WIDTH_MM;
+  const grooveCutDepth = panel.backPanelGroove?.depth ?? BACK_PANEL_GROOVE_CUT_DEPTH_MM;
   const grooveStartY = isLeftSidePanel(panel)
     ? panel.height - previewBackPanelDepthOffset - previewGrooveWidth
     : previewBackPanelDepthOffset;
@@ -293,8 +294,8 @@ function resolveBackPanelGrooveLine(panel: PanelBoringData): BackPanelGrooveLine
     x2: panel.width,
     y2: centerY,
     centerY,
-    width: BACK_PANEL_GROOVE_WIDTH_MM,
-    depth: BACK_PANEL_GROOVE_CUT_DEPTH_MM,
+    width: previewGrooveWidth,
+    depth: grooveCutDepth,
   };
 }
 

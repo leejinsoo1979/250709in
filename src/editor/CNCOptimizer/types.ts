@@ -5,6 +5,12 @@ export interface GroovePosition {
   depth: number;   // 홈 깊이 (mm)
 }
 
+export interface BackPanelGroove {
+  offset: number; // 측판 뒤쪽 끝에서 백패널 홈 시작까지 거리 (mm)
+  width: number;  // 백패널 끼움 홈 폭 (mm)
+  depth: number;  // 홈 가공 깊이 (mm)
+}
+
 export interface BoringDepthGroup {
   y: number;
   depthPositions: number[];
@@ -28,6 +34,7 @@ export interface Panel {
   sideBoringDiameter?: number; // 측면 피스 유도보링 직경
   sideBoringDepth?: number; // 측면 피스 유도보링 깊이
   groovePositions?: GroovePosition[]; // 바닥판 끼우는 홈 위치
+  backPanelGroove?: BackPanelGroove; // 백패널 끼움 홈
   // 도어 힌지 보링 전용 필드
   screwPositions?: number[]; // 나사홀 Y위치 (힌지컵 상하 각 22.5mm)
   screwDepthPositions?: number[]; // 나사홀 X위치
@@ -81,6 +88,7 @@ export interface PlacedPanel extends Panel {
   sideBoringPositions?: number[];
   sideBoringDiameter?: number;
   sideBoringDepth?: number;
+  backPanelGroove?: BackPanelGroove;
   // 측판 힌지 브라켓 타공 전용 필드
   bracketBoringPositions?: number[];
   bracketBoringDepthPositions?: number[];
