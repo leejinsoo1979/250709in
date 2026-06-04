@@ -1590,6 +1590,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       customHeight: matchesAutoHeight(placedModule.customHeight),
     };
   }, [isUpperCabinetForY, placedModule.zone, placedModule.freeHeight, placedModule.customHeight, spaceInfo]);
+  const manualUpperCustomHeightMm = isUpperCabinetForY
+    && placedModule.customHeight
+    && !autoDroppedUpperHeight.customHeight
+    ? placedModule.customHeight
+    : undefined;
 
   // adjustedPosition 계산 (Y축 위치 포함)
   let adjustedPosition = initialAdjustedPosition;
@@ -1605,8 +1610,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
-      const upperCabinetHeight = (placedModule.customHeight && !autoDroppedUpperHeight.customHeight)
-        ? placedModule.customHeight
+      const upperCabinetHeight = manualUpperCustomHeightMm
+        ? manualUpperCustomHeightMm
         : (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight)
           ? placedModule.freeHeight
           : (currentGuideSlotHeightMm ?? (actualModuleData?.dimensions.height || 0))); // 상부장 높이
@@ -1614,7 +1619,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (currentGuideSlotYRangeMm && placedModule.guideSlotZone === 'upper') {
         adjustedPosition = {
           ...adjustedPosition,
-          y: ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01
+          y: manualUpperCustomHeightMm
+            ? (currentGuideSlotYRangeMm.end - manualUpperCustomHeightMm / 2) * 0.01
+            : ((currentGuideSlotYRangeMm.start + currentGuideSlotYRangeMm.end) / 2) * 0.01
         };
       } else {
 
@@ -1687,16 +1694,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatH = placedModule.individualFloatHeight ?? 0;
       furnitureHeightMm += (absorbedBase - floatH);
     }
-  } else if (currentGuideSlotHeightMm !== undefined && !placedModule.freeHeight && (isUpperCabinetForY || isLowerCabinetForY)) {
+  } else if (currentGuideSlotHeightMm !== undefined && !placedModule.freeHeight && !manualUpperCustomHeightMm && (isUpperCabinetForY || isLowerCabinetForY)) {
     furnitureHeightMm = currentGuideSlotHeightMm;
-  } else if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight) {
-    furnitureHeightMm = placedModule.customHeight;
+  } else if (manualUpperCustomHeightMm) {
+    furnitureHeightMm = manualUpperCustomHeightMm;
   } else if (placedModule.isFreePlacement && placedModule.freeHeight && !(isUpperCabinetForY && (autoDroppedUpperHeight.freeHeight || isStaleUpperTotalHeight(placedModule.freeHeight)))) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
     // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
-    if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight) {
-      furnitureHeightMm = placedModule.customHeight;
+    if (manualUpperCustomHeightMm) {
+      furnitureHeightMm = manualUpperCustomHeightMm;
     } else {
       furnitureHeightMm = actualModuleData?.dimensions.height || 0;
     }

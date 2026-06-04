@@ -1421,14 +1421,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     placedModuleForCorner?.cornerSideHingePosition
     ?? (isRightCornerCabinet ? 'right' : 'left')
   ) as 'left' | 'right';
-  console.log('🏠 [LowerCabinet] Props 확인:', {
-    moduleId: moduleData.id,
-    lowerSectionTopOffset,
-    placementType: spaceInfo?.baseConfig?.placementType,
-    floatHeight: spaceInfo?.baseConfig?.floatHeight,
-    hideTopPanel: !moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'),
-    hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-'),
-  });
   const { renderMode: contextRenderMode, viewMode, hideAccessories } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
   
@@ -2298,18 +2290,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     - sideBaseFrameDepth / 2
                     - mmToUnits(spaceInfo?.baseConfig?.depth ?? 0)
                     - mmToUnits(sideBaseFrameOffsetMm);
-                  if (typeof window !== 'undefined' && (window as any).__FRAME_OFFSET_DEBUG__) {
-                    console.log('[FRAME_OFFSET_DEBUG][LowerCabinet/side-base]', {
-                      placedFurnitureId,
-                      sidePlacedFurnitureId,
-                      sideCabinetDepth,
-                      sideBaseFrameDepth,
-                      baseConfigDepth: spaceInfo?.baseConfig?.depth ?? 0,
-                      sideBaseFrameOffsetMm,
-                      sideBaseFrameZ,
-                      guideBaseFrameAllMode: spaceInfo?.guideBaseFrameAllMode,
-                    });
-                  }
                   const sideBaseFrameY = sideCabinetBottomY - sideBaseFrameHeight / 2;
                   const shouldRenderSideBaseFrame = hasBase !== false
                     && sideBaseFrameHeightMm > 0
