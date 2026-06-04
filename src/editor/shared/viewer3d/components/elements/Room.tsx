@@ -6338,7 +6338,9 @@ const Room: React.FC<RoomProps> = ({
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                  } else if (slotModCategory === 'full' && !isShoeSlot && !slotModMid.includes('pull-out-cabinet') && !slotModMid.includes('pantry-cabinet') && !slotModMid.includes('fridge-cabinet') && !slotModMid.includes('built-in-fridge')) {
+                  } else if (slotModCategory === 'full' && isShoeSlot) {
+                    slotFrameZ = getFrontPlacedModuleFrameCenterZ(mod);
+                  } else if (slotModCategory === 'full' && !slotModMid.includes('pull-out-cabinet') && !slotModMid.includes('pantry-cabinet') && !slotModMid.includes('fridge-cabinet') && !slotModMid.includes('built-in-fridge')) {
                     slotFrameZ = getFrontPlacedModuleFrameCenterZ(mod);
                   } else {
                     slotFrameZ = topZPos;
