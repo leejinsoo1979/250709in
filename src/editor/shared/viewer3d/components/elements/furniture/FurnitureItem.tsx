@@ -3637,6 +3637,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         userData={{ furnitureId: placedModule.id }}
         position={[placedModule.position.x, placedModule.position.y, surroundZ]}
         onClick={(e) => {
+          if (readOnly) return;
           e.stopPropagation();
           (window as any).__r3fClickHandled = true;
           useUIStore.getState().setSelectedColumnId(null);
@@ -3649,7 +3650,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <SurroundPanelMesh placedModule={placedModule} renderMode={effectiveRenderMode} viewMode={viewMode} />
 
         {/* 서라운드 패널 설정 톱니 아이콘 */}
-        {(
+        {!readOnly && (
           <Html
             position={[0, 0, surroundFrontZ]}
             center
@@ -3688,7 +3689,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         )}
 
         {/* 서라운드 옵셋 팝업 */}
-        {showSurroundOptions && (
+        {!readOnly && showSurroundOptions && (
           <Html
             position={[1.5, 0, surroundFrontZ]}
             center
@@ -4630,6 +4631,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   baseFrameGap={(placedModule as any).baseFrameGap}
                   individualFloatHeight={placedModule.individualFloatHeight}
                   isCustomizable={placedModule.isCustomizable}
+                  readOnly={readOnly}
                   customConfig={placedModule.customConfig}
                   parentGroupY={adjustedPosition.y}
                   endPanelHeightMode={placedModule.endPanelHeightMode}
@@ -5142,7 +5144,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
       {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 (하부장/인서트 프레임 제외, 측면뷰 상부장 제외) */}
-      {placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !placedModule.moduleId?.includes('insert-frame') && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && isUpperCabinet) && (
+      {!readOnly && placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !placedModule.moduleId?.includes('insert-frame') && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && isUpperCabinet) && (
         <Html
           position={[
             adjustedPosition.x,
@@ -5190,7 +5192,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 도어 옵션 플로팅 패널 */}
-      {showDoorOptions && placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && viewMode !== '2D' && (
+      {!readOnly && showDoorOptions && placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && viewMode !== '2D' && (
         <Html
           position={[
             adjustedPosition.x + width / 2 + 1.5,

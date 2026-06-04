@@ -539,6 +539,7 @@ const Header: React.FC<HeaderProps> = ({
   // 설정 패널 열기 이벤트 리스너
   useEffect(() => {
     const handleOpenSettings = () => {
+      if (readOnly) return;
       setIsSettingsPanelOpen(true);
     };
 
@@ -547,7 +548,7 @@ const Header: React.FC<HeaderProps> = ({
     return () => {
       window.removeEventListener('openSettingsPanel', handleOpenSettings);
     };
-  }, []);
+  }, [readOnly]);
 
   const handleHelpClick = () => {
     setIsHelpModalOpen(true);
@@ -1378,15 +1379,17 @@ const Header: React.FC<HeaderProps> = ({
           {!readOnly && <MobileLayoutToggle />}
 
           {/* 도어 설치 토글 */}
-          <div className={styles.mobileShadowToggle}>
-            <span className={styles.shadowLabel}>{hasDoorsInstalled ? '도어제거' : '도어설치'}</span>
-            <div
-              onClick={onDoorInstallationToggle}
-              className={`${styles.toggleSwitch} ${hasDoorsInstalled ? styles.active : ''}`}
-            >
-              <div className={styles.toggleKnob} />
+          {!readOnly && (
+            <div className={styles.mobileShadowToggle}>
+              <span className={styles.shadowLabel}>{hasDoorsInstalled ? '도어제거' : '도어설치'}</span>
+              <div
+                onClick={onDoorInstallationToggle}
+                className={`${styles.toggleSwitch} ${hasDoorsInstalled ? styles.active : ''}`}
+              >
+                <div className={styles.toggleKnob} />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* 그림자 토글 (3D에서만 표시) */}
           {viewMode === '3D' && (

@@ -9394,6 +9394,7 @@ const Configurator: React.FC = () => {
               onDoorsToggle={toggleDoors}
               hasDoorsInstalled={hasDoorsInstalled}
               onDoorInstallationToggle={handleDoorInstallation}
+              readOnly={isReadOnly}
               surroundGenerated={(() => {
                 const fs = spaceInfo.freeSurround;
                 return fs ? (fs.left.enabled || fs.top.enabled || fs.right.enabled || (fs.middle?.some(m => m.enabled) ?? false)) : false;

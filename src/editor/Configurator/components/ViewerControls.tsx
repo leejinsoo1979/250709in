@@ -51,6 +51,7 @@ interface ViewerControlsProps {
   onStartGuideSetupInNewTab?: () => Promise<boolean> | boolean;
   guideSetupRequest?: boolean;
   onGuideSetupRequestHandled?: () => void;
+  readOnly?: boolean;
 }
 
 const ViewerControls: React.FC<ViewerControlsProps> = ({
@@ -80,7 +81,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onFrameMergeToggle,
   onStartGuideSetupInNewTab,
   guideSetupRequest = false,
-  onGuideSetupRequestHandled
+  onGuideSetupRequestHandled,
+  readOnly = false
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount, activePlacementWall, setActivePlacementWall, cameraMode, setCameraMode, guideDepthEditMode, setGuideDepthEditMode } = useUIStore();
   const { user } = useAuth();
@@ -233,6 +235,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   ]);
 
   const openGuideDialog = () => {
+    if (readOnly) return;
     useUIStore.getState().clearSelectedFurnitureIds();
     useUIStore.getState().setSelectedSlotIndex(null);
     onViewModeChange('3D');
@@ -253,6 +256,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   };
 
   useEffect(() => {
+    if (readOnly) return;
     if (!guideSetupRequest) {
       guideSetupAutoOpenedRef.current = false;
       return;
@@ -263,9 +267,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     guideSetupAutoOpenedRef.current = true;
     onGuideSetupRequestHandled?.();
     openGuideDialog();
-  }, [guideSetupRequest]);
+  }, [guideSetupRequest, readOnly]);
 
   useEffect(() => {
+    if (readOnly) return;
     if (guideSetupAutoOpenedRef.current || guideSetupRequest || typeof window === 'undefined') return;
 
     const params = new URLSearchParams(window.location.search);
@@ -277,9 +282,10 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${window.location.hash}`;
     window.history.replaceState({}, '', nextUrl);
     openGuideDialog();
-  }, []);
+  }, [guideSetupRequest, readOnly]);
 
   useEffect(() => {
+    if (readOnly) return;
     const guideCount = spaceInfo?.freePlacementGuides?.length || 0;
     const shouldRestoreGuideDialog = !!spaceInfo?.customGuideMode
       && !spaceInfo?.freePlacementGuideEditing
@@ -298,10 +304,12 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     spaceInfo?.freePlacementGuideEditing,
     spaceInfo?.freePlacementGuides?.length,
     canCreateFreePlacementGuide,
-    showGuideDialog
+    showGuideDialog,
+    readOnly
   ]);
 
   const handleGuideButtonClick = async () => {
+    if (readOnly) return;
     if (spaceInfo?.freePlacementGuideEditing) {
       useUIStore.getState().setSelectedSlotIndex(null);
       setSpaceInfo({
@@ -319,6 +327,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   };
 
   const enterGuideSlotEditMode = () => {
+    if (readOnly) return;
     useUIStore.getState().setSelectedSlotIndex(null);
     useUIStore.getState().setSelectedFurnitureId(null);
     useUIStore.getState().closeAllPopups();
@@ -332,6 +341,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   };
 
   const handleGuideSlotEditClick = () => {
+    if (readOnly) return;
     if (spaceInfo?.freePlacementGuideEditing) {
       void handleGuideButtonClick();
       return;
@@ -354,6 +364,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
   useEffect(() => {
     const handleGuideToggle = () => {
+      if (readOnly) return;
       if (!canCreateFreePlacementGuide) return;
       void handleGuideButtonClick();
     };
@@ -370,7 +381,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     canCreateFreePlacementGuide,
     spaceInfo?.freePlacementGuideEditing,
     spaceInfo?.freePlacementGuides,
-    handleGuideButtonClick
+    handleGuideButtonClick,
+    readOnly
   ]);
 
   const stepSlotCount = (value: string, delta: number) => {
@@ -395,6 +407,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   };
 
   const createFreePlacementGuides = () => {
+    if (readOnly) return;
     const clampSlotCount = (value: string) => Math.max(1, Math.min(30, Math.floor(Number(value) || 1)));
     const totalWidth = spaceInfo?.width || 0;
     const bounds = spaceInfo ? getFreePlacementGuideBoundsX(spaceInfo) : { startX: -totalWidth / 2, endX: totalWidth / 2 };
@@ -442,7 +455,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   if (isMobile) {
     return (
       <div className={styles.mobileViewerControls}>
-        {spaceInfo?.freePlacementGuideEditing && (
+        {!readOnly && spaceInfo?.freePlacementGuideEditing && (
           <button
             type="button"
             className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive}`}
@@ -472,7 +485,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >2D</button>
           </div>
 
-          {onDoorInstallationToggle && hasFurniture && (
+          {!readOnly && onDoorInstallationToggle && hasFurniture && (
             <button
               className={`${styles.mobileIconButton} ${hasDoorsInstalled ? styles.active : ''}`}
               onClick={onDoorInstallationToggle}
@@ -549,7 +562,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                   <RulerDimensionLine size={18} /><span>줄자</span>
                 </button>
               )}
-              {viewMode === '3D' && (
+              {!readOnly && viewMode === '3D' && (
                 <button className={`${styles.mobileOptionItem} ${showFurnitureEditHandles ? styles.active : ''}`} onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}>
                   <Edit3 size={18} /><span>아이콘</span>
                 </button>
@@ -569,7 +582,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   // ── Desktop UI ──
   return (
     <div className={styles.viewerControls}>
-      {viewMode === '3D' && spaceInfo?.customGuideMode && (spaceInfo.freePlacementGuides?.length || 0) > 0 && (
+      {!readOnly && viewMode === '3D' && spaceInfo?.customGuideMode && (spaceInfo.freePlacementGuides?.length || 0) > 0 && (
         <button
           type="button"
           className={`${styles.guideCreateButton} ${styles.guideCreateButtonActive} ${styles.guideSlotEditButton}`}
@@ -743,7 +756,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
         {/* 스캔/줄자 버튼 — 우측 패널 토글 옆 세로 배열로 이동 (Configurator/index.tsx 참조) */}
 
-        {onDoorInstallationToggle && hasFurniture && (
+        {!readOnly && onDoorInstallationToggle && hasFurniture && (
           <div className={styles.segmentedControl} style={{ position: 'relative' }}>
             <button
               className={`${styles.segmentButton} ${styles.segmentIconText} ${hasDoorsInstalled ? styles.segmentAccentActive : ''}`}
@@ -797,7 +810,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         <QRCodeGenerator onClose={() => setShowQRGenerator(false)} />
       )}
 
-      {showGuideDialog && (
+      {!readOnly && showGuideDialog && (
         <div className={styles.guideDialogBackdrop} onMouseDown={() => { setShowGuideDialog(false); if (!spaceInfo?.freePlacementGuides?.length) setSpaceInfo({ customGuideMode: false }); }}>
           <div className={styles.guideDialog} onMouseDown={(event) => event.stopPropagation()}>
             <div className={styles.guideDialogHeader}>

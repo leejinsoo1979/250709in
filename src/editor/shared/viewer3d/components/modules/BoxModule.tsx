@@ -111,6 +111,7 @@ interface BoxModuleProps {
   baseFrameGap?: number; // 개별 걸레받이 갭 (mm)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
   isCustomizable?: boolean; // 커스터마이징 가구 여부
+  readOnly?: boolean; // 읽기 전용 모드
   customConfig?: CustomFurnitureConfig; // 커스터마이징 설정
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
@@ -207,6 +208,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   baseFrameGap,
   individualFloatHeight, // 개별 띄움 높이
   isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
+  readOnly = false,
   customConfig, // 커스터마이징 설정
   // 이벤트 핸들러들
   onPointerDown,
@@ -541,7 +543,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           rightEndPanelOffsetDir={rightEndPanelOffsetDir}
           endPanelHeightMode={endPanelHeightMode}
           parentGroupY={parentGroupY}
-          isEditable={_isCustomizable}
+          isEditable={!readOnly && _isCustomizable}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
