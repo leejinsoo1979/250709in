@@ -49,6 +49,8 @@ export interface FurnitureTypeProps {
   lowerSectionWidthDirection?: 'left' | 'right'; // 하부 너비 줄이는 방향 (기본: left = 좌고정)
   upperSectionWidthDirection?: 'left' | 'right'; // 상부 너비 줄이는 방향
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm)
+  endPanelTopOffset?: number; // EP 몸통 상단 확장 (mm)
+  endPanelBottomOffset?: number; // EP 몸통 하단 확장 (mm)
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)

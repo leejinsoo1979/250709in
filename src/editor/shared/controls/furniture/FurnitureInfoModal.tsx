@@ -420,12 +420,12 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     undefined,
     undefined,
     undefined,
-    placedModule?.hasTopFrame === false
-      ? 0
-      : (placedModule?.endPanelTopOffset !== undefined ? placedModule.endPanelTopOffset : topFrameHeightMm),
-    placedModule?.hasBase === false
-      ? 0
-      : (placedModule?.endPanelBottomOffset !== undefined ? placedModule.endPanelBottomOffset : baseFrameHeightMm),
+    placedModule?.endPanelTopOffset !== undefined
+      ? placedModule.endPanelTopOffset
+      : (placedModule?.hasTopFrame === false ? 0 : topFrameHeightMm),
+    placedModule?.endPanelBottomOffset !== undefined
+      ? placedModule.endPanelBottomOffset
+      : (placedModule?.hasBase === false ? 0 : baseFrameHeightMm),
     undefined,
     undefined,
     undefined,

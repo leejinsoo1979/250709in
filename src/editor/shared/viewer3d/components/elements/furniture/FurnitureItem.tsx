@@ -4588,6 +4588,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   lowerLeftSectionDepth={placedModule.lowerLeftSectionDepth} // 하부 좌측 영역 깊이 (mm)
                   lowerRightSectionDepth={placedModule.lowerRightSectionDepth} // 하부 우측 영역 깊이 (mm)
                   lowerSectionTopOffset={placedModule.lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 각 가구별 저장된 값 사용
+                  endPanelTopOffset={placedModule.endPanelTopOffset}
+                  endPanelBottomOffset={placedModule.endPanelBottomOffset}
                   backPanelThickness={placedModule.backPanelThickness} // 백패널 두께 (mm)
                   hasLeftEndPanel={placedModule.hasLeftEndPanel}
                   hasRightEndPanel={placedModule.hasRightEndPanel}
@@ -4752,12 +4754,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   ? 0
                   : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65)));
               // 사용자가 명시한 값(0 포함, undefined가 아니면)을 우선 사용. undefined일 때만 default.
-              const epTopOffsetMm = placedModule.hasTopFrame === false
-                ? 0
-                : (placedModule.endPanelTopOffset !== undefined ? (placedModule.endPanelTopOffset as number) : defaultEpTopOffsetMm);
-              const epBottomOffsetMm = placedModule.hasBase === false
-                ? 0
-                : (placedModule.endPanelBottomOffset !== undefined ? (placedModule.endPanelBottomOffset as number) : defaultEpBottomOffsetMm);
+              const epTopOffsetMm = placedModule.endPanelTopOffset !== undefined
+                ? (placedModule.endPanelTopOffset as number)
+                : defaultEpTopOffsetMm;
+              const epBottomOffsetMm = placedModule.endPanelBottomOffset !== undefined
+                ? (placedModule.endPanelBottomOffset as number)
+                : defaultEpBottomOffsetMm;
               const topOff = mmToThreeUnits(epTopOffsetMm);
               const bottomOff = mmToThreeUnits(epBottomOffsetMm);
 

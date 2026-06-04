@@ -690,6 +690,18 @@ const computeLowerCabinetMaidaHeights = (
     });
   }
 
+  const isBasicOneTier = moduleId.includes('lower-drawer-1tier');
+  const isDoorLiftOneTier = moduleId.includes('lower-door-lift-1tier');
+  if (isBasicOneTier || isDoorLiftOneTier) {
+    const maidaBottom = -doorBottomGap;
+    const maidaHeight = Math.max(0, moduleHeightMm + doorTopGap + doorBottomGap);
+    return [{
+      maidaHeightMm: maidaHeight,
+      maidaBottomMm: maidaBottom,
+      maidaTopMm: maidaBottom + maidaHeight,
+    }];
+  }
+
   const is3Tier = moduleId.includes('lower-drawer-3tier');
   // 3단 서랍장 H 변경 동작: 상단 묶음(마이다3 + 노치2갭 + 마이다2 + 노치1갭 + 상단갭) 크기 고정,
   //   캐비넷 상단에 붙어 평행 이동. H 변화는 하단 마이다1이 흡수.
@@ -2646,6 +2658,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (modCategory === 'lower' && isDrawerModule) {
               // 서랍 모듈: 마이다 개별 높이
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
+              const isTvOneDrawer = mod.moduleId.includes('lower-drawer-1tier')
+                || mod.moduleId.includes('lower-door-lift-1tier');
               // 모듈별 기본 doorTopGap (computeLowerCabinetMaidaHeights 내부 defaultDTG와 일치해야 함)
               const isDL = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
@@ -2666,7 +2680,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const firstMaida = lowerMaidas[0];
                 const floorToMaidaBottomMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
                 const useFloorBottomGapForMaida = (isFloating || modHasBaseOff) && baseFrameHeightMm > 0;
-                if (firstMaida.maidaBottomMm > 0) {
+                if (!isTvOneDrawer && firstMaida.maidaBottomMm > 0) {
                   if (useFloorBottomGapForMaida) {
                     const floorGapMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
                     gaps.push({ bottomMm: 0, topMm: floorGapMm, heightMm: Math.round(floorGapMm), absCoord: true });
@@ -2679,14 +2693,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
                   const gapBotMm = lowerMaidas[gi].maidaTopMm;
                   const gapTopMm = lowerMaidas[gi + 1].maidaBottomMm;
-                  if (gapTopMm - gapBotMm > 0) {
+                  if (!isTvOneDrawer && gapTopMm - gapBotMm > 0) {
                     gaps.push({ bottomMm: gapBotMm, topMm: gapTopMm, heightMm: Math.round(gapTopMm - gapBotMm) });
                   }
                 }
                 // 상단 갭: 마지막 마이다 상단 ~ 캐비넷 상단
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal = modHeightMm - lastMaida.maidaTopMm;
-                if (topGapTotal > 0) {
+                if (!isTvOneDrawer && topGapTotal > 0) {
                   const topFinishThicknessForTopDown = isTD ? topFinishThicknessForMaida : _stoneTopThk(mod);
                   if (isTD && topFinishThicknessForTopDown > 0) {
                     const frontPlateTopMm = modHeightMm + topFinishThicknessForTopDown;

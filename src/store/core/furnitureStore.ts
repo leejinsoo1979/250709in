@@ -452,6 +452,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         module.backWallGap = 0;
       }
 
+      // 우측바 백패널 두께는 배치된 가구 값으로 표시되므로, 신규 가구도 현재 값 상속
+      // 기존 배치 가구가 없으면 사용자 기본설정/전역값을 폴백으로 사용한다.
+      if (module.backPanelThickness === undefined) {
+        const rawBackPanelThickness =
+          state.placedModules.find(m => !m.isSurroundPanel && typeof m.backPanelThickness === 'number')?.backPanelThickness
+          ?? (spaceInfo as any).backPanelThickness
+          ?? 9;
+        module.backPanelThickness = rawBackPanelThickness === 9.5
+          ? 9
+          : rawBackPanelThickness === 5 || rawBackPanelThickness === 5.5
+            ? 6
+            : rawBackPanelThickness === 3.5
+              ? 3
+              : rawBackPanelThickness;
+      }
+
       // 도어 설치 토글 상태를 신규 가구에 자동 반영
       let intent = false;
       let doorsOpen: boolean | null = null;
@@ -586,9 +602,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         console.log('[addModule stoneTop auto] matched existing:', existingWithStone?.moduleId, 'stoneThk:', existingWithStone?.stoneTopThickness);
         if (existingWithStone) {
           module.stoneTopThickness = existingWithStone.stoneTopThickness;
+          const isDoorLiftNew = module.moduleId?.includes('lower-door-lift');
           // 상판 오프셋도 같은 값으로 (앞 23 기본, 그 외는 0)
           if (module.stoneTopFrontOffset === undefined) {
-            module.stoneTopFrontOffset = existingWithStone.stoneTopFrontOffset ?? 23;
+            module.stoneTopFrontOffset = isDoorLiftNew ? 0 : (existingWithStone.stoneTopFrontOffset ?? 23);
           }
           if (module.stoneTopBackOffset === undefined) {
             module.stoneTopBackOffset = existingWithStone.stoneTopBackOffset ?? 0;
@@ -602,6 +619,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 상판내림: stoneThk에 맞춰 cabH(freeHeight) + doorTopGap 자동 보정
           const isTopDownNew = module.moduleId?.includes('lower-top-down-');
           const sThk = module.stoneTopThickness || 0;
+          if (isDoorLiftNew && sThk > 0) {
+            module.stoneTopFrontOffset = 0;
+            module.doorTopGap = sThk + 15;
+          }
           if (isTopDownNew && sThk > 0) {
             const expectedGap = getTopDownDoorTopGap(sThk, module.hasTopEndPanel === true);
             module.doorTopGap = expectedGap;

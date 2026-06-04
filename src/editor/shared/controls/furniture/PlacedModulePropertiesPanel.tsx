@@ -1676,10 +1676,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 섹션별 깊이 초기화
       const lowerDepth = currentPlacedModule.lowerSectionDepth;
       const upperDepth = currentPlacedModule.upperSectionDepth;
+      const lowerDepthDir = currentPlacedModule.lowerSectionDepthDirection || 'front';
+      const upperDepthDir = currentPlacedModule.upperSectionDepthDirection || lowerDepthDir;
       setLowerSectionDepth(lowerDepth);
       setUpperSectionDepth(upperDepth);
       setOriginalLowerSectionDepth(lowerDepth); // 원래 값 저장
       setOriginalUpperSectionDepth(upperDepth); // 원래 값 저장
+      setLowerDepthDirection(lowerDepthDir);
+      setUpperDepthDirection(upperDepthDir);
+      setOriginalLowerDepthDirection(lowerDepthDir);
+      setOriginalUpperDepthDirection(upperDepthDir);
       // 섹션별 깊이 입력 필드 초기화
       setLowerDepthInput(lowerDepth?.toString() ?? '');
       setUpperDepthInput(upperDepth?.toString() ?? '');
@@ -1991,6 +1997,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 인조대리석 상판 앞 오프셋 자동 보정: 상판 설치 상태에서 frontOffset 미설정 시 기본값 적용
       const stoneT = currentPlacedModule.stoneTopThickness || 0;
       const stoneFO = currentPlacedModule.stoneTopFrontOffset;
+      if (stoneT > 0 && isDoorLift && stoneFO !== 0) {
+        updatePlacedModule(currentPlacedModule.id, { stoneTopFrontOffset: 0 });
+      }
       if (stoneT > 0 && (stoneFO === undefined || stoneFO === 0)) {
         const defaultFO = isTopDown
           ? (stoneT === 30 ? 33 : 23)
@@ -2203,7 +2212,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -2270,16 +2279,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
   const visualBaseFrameHeightMm = baseFrameHeightMm;
   // 사용자가 명시한 값(0 포함, undefined가 아니면)을 우선 사용. undefined일 때만 default.
-  const endPanelTopOffsetForPanels = currentPlacedModule?.hasTopFrame === false
-    ? 0
-    : (currentPlacedModule?.endPanelTopOffset !== undefined
-      ? (currentPlacedModule.endPanelTopOffset as number)
-      : (currentPlacedModule?.topFrameThickness ?? topFrameHeightMm));
-  const endPanelBottomOffsetForPanels = currentPlacedModule?.hasBase === false
-    ? 0
-    : (currentPlacedModule?.endPanelBottomOffset !== undefined
-      ? (currentPlacedModule.endPanelBottomOffset as number)
-      : visualBaseFrameHeightMm);
+  const endPanelTopOffsetForPanels = currentPlacedModule?.endPanelTopOffset !== undefined
+    ? (currentPlacedModule.endPanelTopOffset as number)
+    : (currentPlacedModule?.hasTopFrame === false ? 0 : (currentPlacedModule?.topFrameThickness ?? topFrameHeightMm));
+  const endPanelBottomOffsetForPanels = currentPlacedModule?.endPanelBottomOffset !== undefined
+    ? (currentPlacedModule.endPanelBottomOffset as number)
+    : (currentPlacedModule?.hasBase === false ? 0 : visualBaseFrameHeightMm);
 
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
   // moduleData는 zone 반영된 effectiveSpaceInfo로 getModuleById 조회되므로
@@ -2805,10 +2810,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const applyLowerCabinetDepthDirection = (direction: 'front' | 'back') => {
     if (!currentPlacedModule) return;
 
+    const currentBodyDepth = currentPlacedModule.freeDepth
+      ?? currentPlacedModule.customDepth
+      ?? currentPlacedModule.lowerSectionDepth
+      ?? customDepth;
     const updates: Record<string, any> = {
+      customDepth: currentBodyDepth,
+      lowerSectionDepth: currentBodyDepth,
+      upperSectionDepth: currentBodyDepth,
+      endPanelDepth: currentBodyDepth,
       lowerSectionDepthDirection: direction,
       upperSectionDepthDirection: direction,
     };
+    if (currentPlacedModule.isFreePlacement || currentPlacedModule.freeDepth !== undefined) {
+      updates.freeDepth = currentBodyDepth;
+    }
     if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
       updates.sectionDepthDirections = (currentPlacedModule as any).sectionDepthDirections.map(() => direction);
     }
@@ -7763,12 +7779,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ? (spaceInfo.baseConfig?.type === 'stand' ? 0 : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65)))
               : 0;
             // 사용자가 명시한 값(undefined가 아니면 0 포함)을 우선 사용. undefined일 때만 default.
-            const epTopOffsetValue = epTopEnabled
-              ? (currentPlacedModule.endPanelTopOffset !== undefined ? currentPlacedModule.endPanelTopOffset : epTopDefault)
-              : 0;
-            const epBottomOffsetValue = epBaseEnabled
-              ? (currentPlacedModule.endPanelBottomOffset !== undefined ? currentPlacedModule.endPanelBottomOffset : epBaseDefault)
-              : 0;
+            const epTopOffsetValue = currentPlacedModule.endPanelTopOffset !== undefined
+              ? currentPlacedModule.endPanelTopOffset
+              : (epTopEnabled ? epTopDefault : 0);
+            const epBottomOffsetValue = currentPlacedModule.endPanelBottomOffset !== undefined
+              ? currentPlacedModule.endPanelBottomOffset
+              : (epBaseEnabled ? epBaseDefault : 0);
             return (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>엔드패널</h5>
@@ -8608,6 +8624,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (isDoorLift) {
                             const newGap = thickness + 15;
                             updates.doorTopGap = newGap;
+                            updates.stoneTopFrontOffset = 0;
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
                           }
@@ -8669,7 +8686,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           } else {
                             bulk.hasTopEndPanel = false;
                             // 처음 설치되는 하부장은 기본 앞 오프셋 23 적용
-                            if ((m.stoneTopThickness || 0) === 0) {
+                            if (isBulkDoorLift) {
+                              bulk.stoneTopFrontOffset = 0;
+                              bulk.doorTopGap = thickness + 15;
+                            } else if ((m.stoneTopThickness || 0) === 0) {
                               bulk.stoneTopFrontOffset = 23;
                             }
                             if (isBulkBasicLowerDoorGap && !isBulkDoorLift && !isBulkTopDown) {

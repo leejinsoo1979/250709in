@@ -77,6 +77,8 @@ interface BoxModuleProps {
   lowerLeftSectionDepth?: number; // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
   lowerSectionTopOffset?: number; // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+  endPanelTopOffset?: number; // EP 몸통 상단 확장 (mm)
+  endPanelBottomOffset?: number; // EP 몸통 하단 확장 (mm)
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
@@ -171,6 +173,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   lowerLeftSectionDepth, // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth, // 하부 우측 영역 깊이 (mm)
   lowerSectionTopOffset, // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+  endPanelTopOffset,
+  endPanelBottomOffset,
   grainDirection, // 텍스처 결 방향
   panelGrainDirections, // 패널별 개별 결 방향
   backPanelThickness: backPanelThicknessProp, // 백패널 두께 (mm)
@@ -1330,6 +1334,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        endPanelTopOffset={endPanelTopOffset}
+        endPanelBottomOffset={endPanelBottomOffset}
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)

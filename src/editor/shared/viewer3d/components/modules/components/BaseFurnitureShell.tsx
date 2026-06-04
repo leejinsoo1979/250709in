@@ -336,6 +336,8 @@ interface BaseFurnitureShellProps {
   // 엔드패널 여부
   isLeftEndPanel?: boolean;
   isRightEndPanel?: boolean;
+  endPanelTopOffsetMm?: number;
+  endPanelBottomOffsetMm?: number;
 
   // 환기캡 숨김 (하부장용)
   hideVentilationCap?: boolean;
@@ -403,6 +405,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   lowerSectionTopOffsetMm,
   isLeftEndPanel = false,
   isRightEndPanel = false,
+  endPanelTopOffsetMm = 0,
+  endPanelBottomOffsetMm = 0,
   textureUrl,
   panelGrainDirections,
   hideVentilationCap = true,
@@ -555,6 +559,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     // 엔드패널은 BoxWithEdges의 isHighlighted prop으로 별도 처리됨
     return getPanelMaterial(panelName);
   };
+
+  const endPanelYOffset = mmToThreeUnits(endPanelTopOffsetMm - endPanelBottomOffsetMm) / 2;
+  const endPanelHeightExtension = mmToThreeUnits(endPanelTopOffsetMm + endPanelBottomOffsetMm);
+  const leftSidePanelHeight = isLeftEndPanel ? height + endPanelHeightExtension : height;
+  const leftSidePanelYOffset = isLeftEndPanel ? endPanelYOffset : 0;
+  const rightSidePanelHeight = isRightEndPanel ? height + endPanelHeightExtension : height;
+  const rightSidePanelYOffset = isRightEndPanel ? endPanelYOffset : 0;
 
   return (
     <group>
@@ -960,8 +971,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 {/* 왼쪽 측면 판재 */}
                 <BoxWithEdges
                   key={`left-panel-${getSidePanelMaterial('좌측판').uuid}`}
-                  args={[basicThickness, height, depth]}
-                  position={[-innerWidth/2 - basicThickness/2, 0, 0]}
+                  args={[basicThickness, leftSidePanelHeight, depth]}
+                  position={[-innerWidth/2 - basicThickness/2, leftSidePanelYOffset, 0]}
                   material={getSidePanelMaterial('좌측판')}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -971,14 +982,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                   textureUrl={textureUrl}
-                  faceGrooves={createBackPanelFaceGrooves('right', height)}
+                  faceGrooves={createBackPanelFaceGrooves('right', leftSidePanelHeight)}
                 />
 
                 {/* 오른쪽 측면 판재 */}
                 <BoxWithEdges
                   key={`right-panel-${getSidePanelMaterial('우측판').uuid}`}
-                  args={[basicThickness, height, depth]}
-                  position={[innerWidth/2 + basicThickness/2, 0, 0]}
+                  args={[basicThickness, rightSidePanelHeight, depth]}
+                  position={[innerWidth/2 + basicThickness/2, rightSidePanelYOffset, 0]}
                   material={getSidePanelMaterial('우측판')}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -988,7 +999,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                   textureUrl={textureUrl}
-                  faceGrooves={createBackPanelFaceGrooves('left', height)}
+                  faceGrooves={createBackPanelFaceGrooves('left', rightSidePanelHeight)}
                 />
               </>
             )}
@@ -3202,6 +3213,8 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.isEditMode === nextProps.isEditMode &&
     prevProps.placedFurnitureId === nextProps.placedFurnitureId &&
     prevProps.lowerSectionTopOffsetMm === nextProps.lowerSectionTopOffsetMm &&
+    prevProps.endPanelTopOffsetMm === nextProps.endPanelTopOffsetMm &&
+    prevProps.endPanelBottomOffsetMm === nextProps.endPanelBottomOffsetMm &&
     prevProps.showFurniture === nextProps.showFurniture &&
     prevProps.lowerSectionDepthMm === nextProps.lowerSectionDepthMm &&
     prevProps.upperSectionDepthMm === nextProps.upperSectionDepthMm &&

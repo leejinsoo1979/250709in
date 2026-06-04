@@ -9275,6 +9275,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     );
                   }
 
+                  const doorModuleId = doorModule.moduleId || doorModData?.id || '';
+                  const isTvBasicOneDrawer = doorModuleId.includes('lower-drawer-1tier');
+                  const isTvDoorLiftOneDrawer = doorModuleId.includes('lower-door-lift-1tier');
+                  if (doorModule.hasDoor && (isTvBasicOneDrawer || isTvDoorLiftOneDrawer)) {
+                    const cabinetH = doorModule.customHeight
+                      ?? doorModule.freeHeight
+                      ?? doorModData?.dimensions.height
+                      ?? 230;
+                    const cabinetBottomAbs = bottomFrameHeight;
+                    const defaultDoorTopGap = isTvDoorLiftOneDrawer ? 30 : -20;
+                    const defaultDoorBottomGap = 5;
+                    const effectiveDoorTopGap = doorModule.doorTopGap ?? defaultDoorTopGap;
+                    const effectiveDoorBottomGap = doorModule.doorBottomGap ?? defaultDoorBottomGap;
+                    const maidaHeightMm = Math.max(0, cabinetH + effectiveDoorTopGap + effectiveDoorBottomGap);
+                    const maidaBottomAbs = cabinetBottomAbs - effectiveDoorBottomGap;
+                    const maidaTopAbs = maidaBottomAbs + maidaHeightMm;
+                    const bY = mmToThreeUnits(maidaBottomAbs);
+                    const tY = mmToThreeUnits(maidaTopAbs);
+                    const midY = (bY + tY) / 2;
+
+                    if (maidaHeightMm <= 0) return null;
+
+                    return (
+                      <group name="door-dimension-height-tv-one-drawer">
+                        <Line points={[[0, bY, doorDimZ], [0, tY, doorDimZ]]} color={doorColor} lineWidth={0.6} />
+                        <Line points={createArrowHead([0, bY, doorDimZ], [0, bY + 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                        <Line points={createArrowHead([0, tY, doorDimZ], [0, tY - 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                        <Text
+                          name="door-dimension-height-tv-one-drawer-text"
+                          renderOrder={100001} depthTest={false}
+                          position={[0, midY, doorDimZ + mmToThreeUnits(60)]}
+                          fontSize={baseFontSize}
+                          color={doorColor}
+                          anchorX="center" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                        >
+                          {Math.round(maidaHeightMm)}
+                        </Text>
+                        <Line points={[[0, tY, doorGuideFrontZ], [0, tY, doorGuideEndZ]]} color={doorColor} lineWidth={0.3} />
+                        <Line points={[[0, bY, doorGuideFrontZ], [0, bY, doorGuideEndZ]]} color={doorColor} lineWidth={0.3} />
+                      </group>
+                    );
+                  }
+
                   // 도어가 없는 가구 (인덕션 이외)는 치수선 생략
                   if (!doorModule.hasDoor) return null;
 

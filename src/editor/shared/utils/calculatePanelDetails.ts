@@ -2400,13 +2400,17 @@ export const calculatePanelDetails = (
       const topDownOneTierChannelBottom = height - (topDownOneTierStretcher + 65);
       const drawerSideBottomMm = basicThickness + 15;
       const tvDrawerSideTopGapMm = 21;
+      const defaultOneTierTopGap = isDoorLift1Tier ? 30 : -20;
+      const effectiveOneTierTopGap = doorTopGap ?? defaultOneTierTopGap;
+      const effectiveOneTierBottomGap = doorBottomGap ?? 5;
+      const oneTierMaidaHeight = Math.max(0, height + effectiveOneTierTopGap + effectiveOneTierBottomGap);
       notchFromBottoms = isTopDown1Tier ? [topDownOneTierChannelBottom] : [];
       notchHeightsArr = isTopDown1Tier ? [65] : [];
       hideTopNotch = !isBasicOneTier;
       fixedMaidaHeights = isDoorLift1Tier
-        ? [height]
+        ? [oneTierMaidaHeight]
         : isBasicOneTier
-          ? [Math.max(0, height - 55)]
+          ? [oneTierMaidaHeight]
           : isTopDown1Tier
             ? [Math.max(0, topDownOneTierChannelBottom + 5)]
             : undefined;

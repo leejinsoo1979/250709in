@@ -1296,6 +1296,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
   lowerSectionTopOffset,
+  endPanelTopOffset,
+  endPanelBottomOffset,
   placedFurnitureId,
   panelGrainDirections,
   backPanelThickness,
@@ -2026,6 +2028,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               lowerSectionDepthDirection={lowerSectionDepthDirection}
               upperSectionDepthDirection={upperSectionDepthDirection}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
+              endPanelTopOffsetMm={endPanelTopOffset}
+              endPanelBottomOffsetMm={endPanelBottomOffset}
               renderMode={renderMode}
               isFloating={isFloating}
               hideVentilationCap={true}
@@ -2590,13 +2594,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 상판내림 2/3단: 상부 EP 기본 -82, 일반 stoneThk별 10→-90, 20→-80, 30→-70
         const topDownDefaultTopGapLR = placedModuleForCorner?.hasTopEndPanel === true ? -82 : stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
         const isTvOneDrawer = is1Tier || isDoorLift1Tier;
-        const defaultDrawerTopGap = isTvOneDrawer
-          ? 0
-          : (isTopDown1Tier || isTopDown2Tier || isTopDown3Tier)
-            ? topDownDefaultTopGapLR
-            : (isDoorLift2Tier || isDoorLift3Tier)
-              ? 30
-              : -20;
+        const defaultDrawerTopGap = (isTopDown1Tier || isTopDown2Tier || isTopDown3Tier)
+          ? topDownDefaultTopGapLR
+          : (isDoorLift1Tier || isDoorLift2Tier || isDoorLift3Tier)
+            ? 30
+            : -20;
         const defaultDrawerBottomGap = 5;
         const effectiveDrawerTopGap = (isTopDown1Tier || isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
           ? defaultDrawerTopGap
@@ -2628,7 +2630,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const drawer3TierDelta = currentCabinetHmm - 785;
         const td3StretcherForNotch = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
         const td3StretcherDeltaForNotch = td3StretcherForNotch - 55;
-        const basicOneTierMaidaH = Math.max(0, currentCabinetHmm - 55);
+        const oneTierMaidaH = Math.max(0, currentCabinetHmm + defaultDrawerTopGap + defaultDrawerBottomGap);
         const topDownOneTierChannelBottom = currentCabinetHmm - (td3StretcherForNotch + 65);
         const topDownOneTierMaidaH = Math.max(0, topDownOneTierChannelBottom + 5);
         const drawerSideBottomMm = (baseFurniture.basicThickness / 0.01) + 15;
@@ -2672,7 +2674,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               notchHeights={notchHeights}
               isEditMode={isEditMode}
               hideTopNotch={isDoorLift1Tier || isDoorLift2Tier || isDoorLift3Tier || isTopDown1Tier || isTopDown2Tier || isTopDown3Tier}
-              maidaHeightsMm={isDoorLift1Tier ? [currentCabinetHmm] : is1Tier ? [basicOneTierMaidaH] : isTopDown1Tier ? [topDownOneTierMaidaH] : isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined}
+              maidaHeightsMm={isDoorLift1Tier || is1Tier ? [oneTierMaidaH] : isTopDown1Tier ? [topDownOneTierMaidaH] : isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined}
               sideHeightOverrides={
                 is1Tier ? { all: basicOneTierSideH }
                 : isTopDown1Tier ? { all: topDownOneTierSideH }
