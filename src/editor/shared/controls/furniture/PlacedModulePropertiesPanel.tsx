@@ -10,6 +10,11 @@ import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
+import {
+  findRenderedPanelDimension,
+  getRenderedPanelDimensionsSnapshot,
+  subscribeRenderedPanelDimensions
+} from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
@@ -56,6 +61,45 @@ const isPlainShoeShelfModuleId = (moduleId?: string): boolean => {
 
 const isShelfSplitModuleId = (moduleId?: string): boolean => {
   return !!moduleId?.includes('shelf-split');
+};
+
+const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
+  if (!panel?.name || !furnitureId) return panel;
+  if (!panel.width && !panel.height && !panel.depth) return panel;
+
+  const rendered = findRenderedPanelDimension(furnitureId, panel.name);
+  if (!rendered) return panel;
+
+  const next = { ...panel };
+  const panelThickness = Number(panel.thickness);
+  const xIsThickness = Number.isFinite(panelThickness)
+    ? Math.abs(rendered.widthMm - panelThickness) <= Math.abs(rendered.depthMm - panelThickness)
+    : rendered.widthMm <= rendered.depthMm && rendered.widthMm <= rendered.heightMm;
+
+  if (panel.width !== undefined && panel.height !== undefined) {
+    next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
+    next.height = rendered.heightMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.width !== undefined && panel.depth !== undefined) {
+    next.width = rendered.widthMm;
+    next.depth = rendered.depthMm;
+    next.thickness = rendered.heightMm;
+  } else if (panel.height !== undefined && panel.depth !== undefined) {
+    next.height = rendered.heightMm;
+    next.depth = xIsThickness ? rendered.depthMm : rendered.widthMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.width !== undefined) {
+    next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.height !== undefined) {
+    next.height = rendered.heightMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.depth !== undefined) {
+    next.depth = rendered.depthMm;
+    next.thickness = rendered.heightMm;
+  }
+
+  return next;
 };
 
 const isHangingWardrobeModuleId = (moduleId?: string): boolean => {
@@ -2322,6 +2366,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     return base;
   })();
 
+  const renderedPanelDimensionsRevision = React.useSyncExternalStore(
+    subscribeRenderedPanelDimensions,
+    getRenderedPanelDimensionsSnapshot,
+    getRenderedPanelDimensionsSnapshot
+  );
+
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
     const renderedWidthForPanels =
@@ -2334,6 +2384,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ?? currentPlacedModule?.slotCustomWidth
             ?? currentPlacedModule?.customWidth
             ?? customWidth;
+    const renderedDepthForPanels =
+      currentPlacedModule?.isFreePlacement && currentPlacedModule?.freeDepth
+        ? currentPlacedModule.freeDepth
+        : typeof currentPlacedModule?.customDepth === 'number' && currentPlacedModule.customDepth > 0
+          ? currentPlacedModule.customDepth
+          : getDefaultDepth(moduleData);
+    const renderedHasDoor = currentPlacedModule?.hasDoor ?? hasDoor;
     const doorOuterOpenSides = resolveDoorOuterOpenSides({
       spaceInfo,
       placedModule: currentPlacedModule,
@@ -2350,8 +2407,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const panelDoorWidthAdjustEnabled = autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
       ? false
       : rawDoorWidthAdjustEnabled;
-    return calculatePanelDetails(
-      moduleData, renderedWidthForPanels, customDepth, hasDoor, t, panelDoorOriginalWidth,
+    const calculatedPanels = calculatePanelDetails(
+      moduleData, renderedWidthForPanels, renderedDepthForPanels, renderedHasDoor, t, panelDoorOriginalWidth,
       currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
@@ -2410,7 +2467,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.topEndPanelBackOffset,
       true
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, (currentPlacedModule as any)?.topEndPanelOffset, (currentPlacedModule as any)?.topEndPanelBackOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights, currentPlacedModule?.freeWidth, currentPlacedModule?.slotCustomWidth, (currentPlacedModule as any)?.sideLogicalWidth, currentPlacedModule?.placementWall]);
+    return calculatedPanels.map(panel => applyRenderedPanelDimension(panel, currentPlacedModule?.id));
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, (currentPlacedModule as any)?.topEndPanelOffset, (currentPlacedModule as any)?.topEndPanelBackOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights, currentPlacedModule?.freeWidth, currentPlacedModule?.freeDepth, currentPlacedModule?.slotCustomWidth, (currentPlacedModule as any)?.sideLogicalWidth, currentPlacedModule?.placementWall, renderedPanelDimensionsRevision]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -4158,55 +4216,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     // });
                   }
 
-                  // 결 방향에 따라 W/L 레이블 결정
-                  const isVerticalGrain = currentDirection === 'vertical';
+                  void currentDirection;
 
                   // W/L 표시 로직
-                  // - 일반 가구 패널: height가 긴쪽(L)
-                  // - 서랍 패널 특수 케이스: width 또는 depth가 긴쪽(L)
+                  // - 패널목록은 제작 치수 확인용이므로 렌더/계산된 panel 치수 순서 그대로 표시한다.
+                  // - 결방향은 재단 방향 속성일 뿐, 여기서 치수 순서를 뒤집지 않는다.
                   let dimensionDisplay = '';
-
-                  // 서랍 패널인지 확인
-                  const isDrawerPanel = panel.name.includes('서랍');
-
-                  // 백패널 여부 확인 (무결이어도 Length는 항상 높이 축)
-                  const isBackPanel = panel.name.includes('백패널');
 
                   if (panel.diameter) {
                     dimensionDisplay = `Φ ${panel.diameter} × L ${panel.width}`;
                   } else if (panel.width && panel.height) {
-                    // width/height를 가진 패널 (도어, 측판, 백패널 등)
-                    if (isBackPanel) {
-                      // 백패널: 높이(height) = L (항상), 가로(width) = W
-                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
-                    } else if (isVerticalGrain) {
-                      // 세로 결: height가 L
-                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
-                    } else {
-                      // 가로 결: width가 L
-                      dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
-                    }
+                    dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
                   } else if (panel.width && panel.depth) {
-                    // width/depth를 가진 패널 (상판, 바닥판, 선반 - 기본 가로 결)
-                    if (isVerticalGrain) {
-                      // 세로 결: depth가 L
-                      dimensionDisplay = `W ${panel.width} × L ${panel.depth}`;
-                    } else {
-                      // 가로 결: width가 L (선반·상판·바닥은 width가 재단방향)
-                      dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
-                    }
+                    dimensionDisplay = `W ${panel.width} × L ${panel.depth}`;
                   } else if (panel.height && panel.depth) {
-                    // height/depth를 가진 패널
-                    if (isDrawerPanel) {
-                      // 서랍 측판: depth가 재단방향(L)
-                      dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
-                    } else if (isVerticalGrain) {
-                      // 일반 가구 측판 (세로 결): height가 L
-                      dimensionDisplay = `W ${panel.depth} × L ${panel.height}`;
-                    } else {
-                      // 가로 결: depth가 L
-                      dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
-                    }
+                    dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
                   } else if (panel.description) {
                     dimensionDisplay = panel.description;
                   } else {

@@ -8,6 +8,12 @@ import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizin
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
+import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
+import {
+  findRenderedPanelDimension,
+  getRenderedPanelDimensionsSnapshot,
+  subscribeRenderedPanelDimensions
+} from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 import styles from './FurnitureInfoModal.module.css';
 
 
@@ -17,6 +23,45 @@ interface FurnitureInfoModalProps {
   moduleData: Module | null;
   placedModule: PlacedModule | null;
 }
+
+const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
+  if (!panel?.name || !furnitureId) return panel;
+  if (!panel.width && !panel.height && !panel.depth) return panel;
+
+  const rendered = findRenderedPanelDimension(furnitureId, panel.name);
+  if (!rendered) return panel;
+
+  const next = { ...panel };
+  const panelThickness = Number(panel.thickness);
+  const xIsThickness = Number.isFinite(panelThickness)
+    ? Math.abs(rendered.widthMm - panelThickness) <= Math.abs(rendered.depthMm - panelThickness)
+    : rendered.widthMm <= rendered.depthMm && rendered.widthMm <= rendered.heightMm;
+
+  if (panel.width !== undefined && panel.height !== undefined) {
+    next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
+    next.height = rendered.heightMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.width !== undefined && panel.depth !== undefined) {
+    next.width = rendered.widthMm;
+    next.depth = rendered.depthMm;
+    next.thickness = rendered.heightMm;
+  } else if (panel.height !== undefined && panel.depth !== undefined) {
+    next.height = rendered.heightMm;
+    next.depth = xIsThickness ? rendered.depthMm : rendered.widthMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.width !== undefined) {
+    next.width = xIsThickness ? rendered.depthMm : rendered.widthMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.height !== undefined) {
+    next.height = rendered.heightMm;
+    next.thickness = xIsThickness ? rendered.widthMm : rendered.depthMm;
+  } else if (panel.depth !== undefined) {
+    next.depth = rendered.depthMm;
+    next.thickness = rendered.heightMm;
+  }
+
+  return next;
+};
 
 const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   isOpen,
@@ -29,6 +74,11 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   const allPlacedModules = useFurnitureStore(state => state.placedModules);
 
   const { spaceInfo } = useSpaceConfigStore();
+  React.useSyncExternalStore(
+    subscribeRenderedPanelDimensions,
+    getRenderedPanelDimensionsSnapshot,
+    getRenderedPanelDimensionsSnapshot
+  );
 
   // 결 방향 상태 (기본값: horizontal)
   const [grainDirection, setGrainDirection] = useState<'horizontal' | 'vertical'>('horizontal');
@@ -372,8 +422,24 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   }; */
 
   const customWidth = placedModule.customWidth || moduleData.dimensions.width;
-  const customDepth = placedModule.customDepth || moduleData.dimensions.depth;
-  const hasDoor = placedModule.doorConfig?.enabled || false;
+  const renderedWidthForPanels =
+    placedModule.isFreePlacement && placedModule.freeWidth
+      ? placedModule.freeWidth
+      : (placedModule.placementWall === 'left' || placedModule.placementWall === 'right') &&
+        typeof (placedModule as any).sideLogicalWidth === 'number'
+        ? (placedModule as any).sideLogicalWidth
+        : placedModule.adjustedWidth
+          ?? placedModule.slotCustomWidth
+          ?? placedModule.customWidth
+          ?? moduleData.dimensions.width;
+  const renderedDepthForPanels =
+    placedModule.isFreePlacement && placedModule.freeDepth
+      ? placedModule.freeDepth
+      : typeof placedModule.customDepth === 'number' && placedModule.customDepth > 0
+        ? placedModule.customDepth
+        : getDefaultFurnitureDepth(spaceInfo, moduleData as ModuleData);
+  const customDepth = renderedDepthForPanels;
+  const hasDoor = placedModule.hasDoor ?? placedModule.doorConfig?.enabled ?? false;
   
   // 프레임 높이 계산
   const topFrameHeightMm = placedModule?.topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
@@ -397,8 +463,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   );
 
   const panels = calculatePanelDetails(
-    moduleData as ModuleData, customWidth, customDepth, hasDoor, t,
-    undefined, undefined, undefined, undefined, undefined, undefined, undefined,
+    moduleData as ModuleData, renderedWidthForPanels, customDepth, hasDoor, t,
+    undefined, placedModule.hingePosition, placedModule.hingeType, undefined, placedModule.doorTopGap, placedModule.doorBottomGap, undefined,
     placedModule?.backPanelThickness, placedModule?.customConfig,
     placedModule?.hasLeftEndPanel, placedModule?.hasRightEndPanel,
     placedModule?.endPanelThickness, placedModule?.freeHeight || placedModule?.customHeight,
@@ -434,7 +500,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     resolveDoorOuterOpenSides({
       spaceInfo,
       placedModule: placedModule as any,
-      moduleWidthMm: customWidth
+      moduleWidthMm: renderedWidthForPanels
     }),
     {
       upperDoorTopGap: placedModule?.upperDoorTopGap,
@@ -463,7 +529,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     (placedModule as any)?.topEndPanelOffset,
     (placedModule as any)?.topEndPanelBackOffset,
     true
-  );
+  ).map(panel => applyRenderedPanelDimension(panel, placedModule.id));
 
   // 서라운드 패널 (공간 전체 단위)
   const surroundHeightMm = (() => {

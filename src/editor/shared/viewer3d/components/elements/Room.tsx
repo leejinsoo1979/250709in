@@ -801,6 +801,10 @@ const Room: React.FC<RoomProps> = ({
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
+  const frameDimensionFurnitureIds = useMemo(
+    () => placedModulesFromStore.filter(pm => !pm.isSurroundPanel).map(pm => pm.id),
+    [placedModulesFromStore]
+  );
   // CNC와 동일한 방식으로 좌/우 끝 모듈 ID 계산 (slotIndex 기준)
   const leftMostModuleId = useMemo(() => {
     if (placedModulesFromStore.length <= 1) return placedModulesFromStore[0]?.id || '';
@@ -6582,6 +6586,7 @@ const Room: React.FC<RoomProps> = ({
                       shadowEnabled={shadowEnabled}
                       excludeKey={`${firstModuleId}::top-frame`}
                       furnitureId={firstModuleId}
+                      dimensionFurnitureIds={frameDimensionFurnitureIds}
                       panelName="top-frame"
                     />
                   )}
@@ -6610,6 +6615,7 @@ const Room: React.FC<RoomProps> = ({
                       shadowEnabled={shadowEnabled}
                       excludeKey={`${firstModuleId}::top-frame`}
                       furnitureId={firstModuleId}
+                      dimensionFurnitureIds={frameDimensionFurnitureIds}
                       panelName="top-frame"
                     />
                   )}
@@ -6694,6 +6700,7 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${firstModuleId}::top-frame`}
                   furnitureId={firstModuleId}
+                  dimensionFurnitureIds={frameDimensionFurnitureIds}
                   panelName="top-frame"
                 />
               );
@@ -6737,6 +6744,7 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${firstModuleId}::top-frame`}
                   furnitureId={firstModuleId}
+                  dimensionFurnitureIds={frameDimensionFurnitureIds}
                   panelName="top-frame"
                 />
               );
@@ -8109,6 +8117,7 @@ const Room: React.FC<RoomProps> = ({
                       shadowEnabled={shadowEnabled}
                       excludeKey={`${firstModuleId}::base-frame`}
                       furnitureId={firstModuleId}
+                      dimensionFurnitureIds={frameDimensionFurnitureIds}
                       panelName="base-frame"
                     />
                   );
@@ -8152,6 +8161,7 @@ const Room: React.FC<RoomProps> = ({
                       shadowEnabled={shadowEnabled}
                       excludeKey={`${firstModuleId}::base-frame`}
                       furnitureId={firstModuleId}
+                      dimensionFurnitureIds={frameDimensionFurnitureIds}
                       panelName="base-frame"
                     />
                   );

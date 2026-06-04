@@ -21,6 +21,7 @@ import {
   resolvePanelSimulationTarget
 } from '../../../utils/panelSimulationMotion';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
+import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 
 const MIN_BOX_GEOMETRY_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
@@ -774,6 +775,7 @@ interface BoxWithEdgesProps {
   panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향 (fallback)
   textureUrl?: string; // 텍스처 URL
   furnitureId?: string; // 가구 ID - 스토어에서 직접 panelGrainDirections 가져오기 위함
+  dimensionFurnitureIds?: string[]; // 한 렌더 프레임이 여러 가구 패널목록에 귀속되는 경우
   renderOrder?: number; // 렌더링 순서 (천장 뒤로 보낼 때 사용)
   notch?: { y: number; z: number }; // 앞쪽 상단 모서리 따내기 (Y방향 높이, Z방향 깊이) — L자형 단일 메시
   notches?: Array<{ y: number; z: number; fromBottom: number }>; // 다중 따내기 (fromBottom: 바닥에서 시작점, Three.js 단위)
@@ -810,6 +812,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   panelName,
   panelGrainDirections,
   textureUrl,
+  dimensionFurnitureIds,
   renderOrder,
   notch,
   notches,
@@ -859,6 +862,37 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     () => Object.keys(panelSimulationLayouts).length,
     [panelSimulationLayouts]
   );
+
+  React.useEffect(() => {
+    if (!panelName) return;
+    const targetFurnitureIds = dimensionFurnitureIds && dimensionFurnitureIds.length > 0
+      ? Array.from(new Set(dimensionFurnitureIds.filter(Boolean)))
+      : furnitureId
+        ? [furnitureId]
+        : [];
+    if (targetFurnitureIds.length === 0) return;
+
+    updateRenderedPanelDimension({
+      furnitureId: targetFurnitureIds[0],
+      panelName,
+      widthMm: Math.round(safeArgs[0] / 0.01),
+      heightMm: Math.round(safeArgs[1] / 0.01),
+      depthMm: Math.round(safeArgs[2] / 0.01),
+    });
+    targetFurnitureIds.slice(1).forEach(targetFurnitureId => {
+      updateRenderedPanelDimension({
+        furnitureId: targetFurnitureId,
+        panelName,
+        widthMm: Math.round(safeArgs[0] / 0.01),
+        heightMm: Math.round(safeArgs[1] / 0.01),
+        depthMm: Math.round(safeArgs[2] / 0.01),
+      });
+    });
+    return () => {
+      targetFurnitureIds.forEach(targetFurnitureId => removeRenderedPanelDimension(targetFurnitureId, panelName));
+    };
+  }, [furnitureId, dimensionFurnitureIds, panelName, safeArgs]);
+
   React.useEffect(() => {
     return () => {
       if (compositeKey) removePanelSimulationSource(compositeKey);

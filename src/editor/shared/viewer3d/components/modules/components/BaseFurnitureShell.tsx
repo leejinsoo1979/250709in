@@ -17,6 +17,7 @@ import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/Exc
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -51,6 +52,18 @@ const GlassAccessoryAssemblySource: React.FC<{
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+
+  useEffect(() => {
+    if (!furnitureId || !panelName) return;
+    updateRenderedPanelDimension({
+      furnitureId,
+      panelName,
+      widthMm: Math.round(args[0] / 0.01),
+      heightMm: Math.round(args[1] / 0.01),
+      depthMm: Math.round(args[2] / 0.01),
+    });
+    return () => removeRenderedPanelDimension(furnitureId, panelName);
+  }, [furnitureId, panelName, args]);
 
   useEffect(() => {
     return () => {
@@ -111,6 +124,18 @@ const TileBackPanelMesh: React.FC<{
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+
+  React.useEffect(() => {
+    if (!furnitureId || !panelName) return;
+    updateRenderedPanelDimension({
+      furnitureId,
+      panelName,
+      widthMm: Math.round(args[0] / 0.01),
+      heightMm: Math.round(args[1] / 0.01),
+      depthMm: Math.round(args[2] / 0.01),
+    });
+    return () => removeRenderedPanelDimension(furnitureId, panelName);
+  }, [furnitureId, panelName, args]);
 
   React.useEffect(() => {
     return () => {

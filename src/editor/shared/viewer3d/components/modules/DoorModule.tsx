@@ -42,6 +42,7 @@ import {
 } from '../../utils/panelSimulationMotion';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
@@ -148,6 +149,18 @@ const BoxWithEdges: React.FC<{
     sanitizeDoorBoxGeometrySize(args[1]),
     sanitizeDoorBoxGeometrySize(args[2]),
   ], [args[0], args[1], args[2]]);
+  React.useEffect(() => {
+    if (!furnitureId || !panelName) return;
+    updateRenderedPanelDimension({
+      furnitureId,
+      panelName,
+      widthMm: Math.round(safeArgs[0] / 0.01),
+      heightMm: Math.round(safeArgs[1] / 0.01),
+      depthMm: Math.round(safeArgs[2] / 0.01),
+    });
+    return () => removeRenderedPanelDimension(furnitureId, panelName);
+  }, [furnitureId, panelName, safeArgs]);
+
   const panelSimulationLayoutCount = useMemo(
     () => Object.keys(panelSimulationLayouts).length,
     [panelSimulationLayouts]
@@ -510,6 +523,18 @@ const GlassDoorAssemblySource: React.FC<{
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
   const registryKey = furnitureId ? `accessory::${furnitureId}::${sourceKey}` : null;
+
+  useEffect(() => {
+    if (!furnitureId || !panelName) return;
+    updateRenderedPanelDimension({
+      furnitureId,
+      panelName,
+      widthMm: Math.round(args[0] / 0.01),
+      heightMm: Math.round(args[1] / 0.01),
+      depthMm: Math.round(args[2] / 0.01),
+    });
+    return () => removeRenderedPanelDimension(furnitureId, panelName);
+  }, [furnitureId, panelName, args]);
 
   useEffect(() => {
     return () => {

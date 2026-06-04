@@ -114,6 +114,7 @@ export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 've
 
   // ── 프레임류 ──────────────────────────────────
   if (panelName.includes('커튼박스')) return 'vertical';
+  if (panelName.includes('상부 EP 앞판') || panelName.includes('상부 EP 뒷턱')) return 'vertical';
   if (
     panelName.includes('키큰장찬넬 전면프레임') ||
     panelName.includes('키큰장찬넬 좌EP') ||
