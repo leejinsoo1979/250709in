@@ -8636,8 +8636,8 @@ const Configurator: React.FC = () => {
                   onClick={() => setDoorGapRefMode('body')}
                   style={{
                     padding: '2px 6px', fontSize: '10px',
-                    background: doorGapRefMode === 'body' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
-                    color: doorGapRefMode === 'body' ? 'white' : 'var(--theme-text-primary)',
+                    background: doorGapRefMode === 'body' ? 'var(--theme-primary, #4a90d9)' : 'transparent',
+                    color: doorGapRefMode === 'body' ? 'white' : 'var(--theme-text-secondary)',
                     border: '1px solid var(--theme-border)', borderRadius: '3px', cursor: 'pointer', fontWeight: 600,
                   }}
                 >몸통</button>
@@ -8646,8 +8646,8 @@ const Configurator: React.FC = () => {
                   onClick={() => setDoorGapRefMode('cf')}
                   style={{
                     padding: '2px 6px', fontSize: '10px',
-                    background: doorGapRefMode === 'cf' ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
-                    color: doorGapRefMode === 'cf' ? 'white' : 'var(--theme-text-primary)',
+                    background: doorGapRefMode === 'cf' ? 'var(--theme-primary, #4a90d9)' : 'transparent',
+                    color: doorGapRefMode === 'cf' ? 'white' : 'var(--theme-text-secondary)',
                     border: '1px solid var(--theme-border)', borderRadius: '3px', cursor: 'pointer', fontWeight: 600,
                   }}
                 >천장·바닥</button>

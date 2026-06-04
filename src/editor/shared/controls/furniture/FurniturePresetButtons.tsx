@@ -77,7 +77,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
   const categoryLabel = getFurniturePresetCategoryLabel(category);
 
   return (
-    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--theme-border)', background: 'var(--theme-bg-secondary, #f5f5f5)' }}>
+    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--theme-border)', background: 'transparent' }}>
       <button
         type="button"
         onClick={handleSave}
