@@ -1196,8 +1196,15 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     if (!m || !dr) return 'M';
     const sideBottomY = dr.bottomY; // three units
     const isTopTier = tier === drawerTotalCount;
-    const limitY = (isTopTier && isTopDownTouch)
-      ? cabinetBottomY + mmToThreeUnits(mokchannelBottomMm - MOKCHANNEL_MIN_GAP_MM)
+    // 맨 위 서랍 측판 상단 한계(최소 15mm 갭):
+    //  - 상판내림 터치(목찬넬 있음): 목찬넬(가로전대) 하단
+    //  - 도어올림 터치(목찬넬 없음): 몸통 천판 하단(= 측판높이 − 천판두께). 서랍은 몸통 안에만.
+    //  - 그 외 칸: 자기 마이다 상단 (갭 0)
+    const cabinetTopPanelBottomMm = cabHmmForLegra - basicThicknessMm; // 몸통 천판 하단(mm)
+    const limitY = isTopTier
+      ? (isTopDownTouch
+          ? cabinetBottomY + mmToThreeUnits(mokchannelBottomMm - MOKCHANNEL_MIN_GAP_MM)
+          : cabinetBottomY + mmToThreeUnits(cabinetTopPanelBottomMm - MOKCHANNEL_MIN_GAP_MM))
       : cabinetBottomY + mmToThreeUnits(m.bottomMm + m.height);
     const sideTopY = (bodyMm: number) => sideBottomY + mmToThreeUnits(bodyMm);
     return sideTopY(228) <= limitY ? 'F' : sideTopY(164) <= limitY ? 'L' : 'M';
