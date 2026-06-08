@@ -358,6 +358,41 @@ const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurro
   return { sideHeightMm: spaceInfo.height, frontHeightMm: spaceInfo.height };
 };
 
+// 마이다치수 H 입력칸: controlled. 타이핑 중엔 로컬 state 유지(연속 입력),
+// 외부에서 값이 바뀌면(흡수로 반대 칸 변경 등) 동기화. blur/Enter/화살표로 적용.
+const MaidaHeightInput: React.FC<{
+  value: number;
+  className?: string;
+  onApply: (v: number) => void;
+}> = ({ value, className, onApply }) => {
+  const [text, setText] = React.useState(String(value));
+  const focusedRef = React.useRef(false);
+  React.useEffect(() => {
+    if (!focusedRef.current) setText(String(value));
+  }, [value]);
+  const apply = () => {
+    const n = parseFloat(text);
+    if (Number.isFinite(n) && n > 0 && n !== value) onApply(n);
+  };
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={text}
+      className={className}
+      onFocus={() => { focusedRef.current = true; }}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => { focusedRef.current = false; apply(); }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); const n = (parseFloat(text) || value) + 1; setText(String(n)); onApply(n); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); const n = (parseFloat(text) || value) - 1; setText(String(n)); onApply(n); }
+      }}
+      style={{ fontSize: '12px', cursor: 'text', color: 'var(--theme-text-primary)' }}
+    />
+  );
+};
+
 const isLowerDrawerMaidaModuleId = (moduleId?: string): boolean => {
   if (!moduleId) return false;
   return moduleId.includes('lower-drawer-')
@@ -6066,6 +6101,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const displayHeights = heights.slice().reverse();
               if (displayHeights.length === 0) return null;
 
+              // "마이다치수" H 칸 직접 편집 → customMaidaHeights([아래,위] 순)에 저장.
+              // 한 칸을 바꾸면 인접 칸이 반대로 흡수해 합·갭(영역)을 유지한다.
+              //  displayHeights는 위→아래(reverse), 저장은 di(아래=0) 기준 → 인덱스를 뒤집어 매핑.
+              const maidaTierCount = displayHeights.length;
+              const applyMaidaH = (displayIdx: number, num: number) => {
+                if (!Number.isFinite(num) || num <= 0) return;
+                const di = (maidaTierCount - 1) - displayIdx;
+                const base = heights.slice(); // bottom-to-top 실제값
+                const prev = base[di];
+                const delta = num - prev;
+                if (delta === 0) return;
+                base[di] = num;
+                if (maidaTierCount > 1) {
+                  const absorbIdx = di < maidaTierCount - 1 ? di + 1 : di - 1;
+                  const absorbH = base[absorbIdx] - delta;
+                  if (absorbH <= 0) { alert('인접 마이다가 0 이하로 줄어듭니다. 더 작은 값을 입력하세요.'); return; }
+                  base[absorbIdx] = absorbH;
+                }
+                // 마이다를 바꾸면 수동 레그라 선택을 리셋해 자동축소가 다시 작동하게 한다.
+                //  (수동 선택은 마이다를 다시 만지기 전까지만 우선)
+                updatePlacedModule(currentPlacedModule.id, {
+                  customMaidaHeights: base.map(v => Math.round(v)),
+                  legraDrawerTypes: undefined,
+                } as any);
+              };
+
               return (
                 <div className={styles.propertySection}>
                   <h5 className={styles.sectionTitle}>
@@ -6092,7 +6153,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
                             <div className={styles.inputWithUnit}>
-                              <input type="text" value={heightMm} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                              <MaidaHeightInput
+                                value={heightMm}
+                                className={styles.depthInput}
+                                onApply={(v) => applyMaidaH(idx, v)}
+                              />
                               <span className={styles.unit}>mm</span>
                             </div>
                           </div>
@@ -7021,72 +7086,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 });
               }
             };
+            // 마이다 크기 변경 입력은 위 "마이다치수" 칸으로 일원화(제거됨). 여기선 레그라 종류만 표시.
+            void editEnabled; void toggleEdit; void handleChange; void handleArrow; void handleReset;
+            void labels; void toInternalIdx; void activeMaida; void defaultMaida; void current;
             return (
               <div className={styles.propertySection}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <h5 className={styles.sectionTitle} style={{ margin: 0 }}>마이다 크기 변경</h5>
-                  <input
-                    type="checkbox"
-                    checked={editEnabled}
-                    onChange={toggleEdit}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                    aria-label="마이다 크기 변경 모드"
-                  />
-                </div>
-                <div className={styles.epRow} style={{ gap: '8px' }}>
-                  {labels.map((label, uiIdx) => {
-                    const di = toInternalIdx(uiIdx);
-                    // 3단형(터치 등)은 맨 아래가 자동 흡수값 — 1·2단 + 갭 + 자동흡수 = 가구 본체 영역.
-                    // 단, 인덕션장은 2단이며 위·아래 모두 사용자가 직접 입력 가능해야 한다(자동흡수 제외).
-                    const isBottomTier = di === 0 && !isInduction;
-                    let val: number | string = '';
-                    if (isBottomTier) {
-                      val = activeMaida[di] ?? defaultMaida[di] ?? '';
-                    } else {
-                      val = editEnabled ? (current[di] ?? activeMaida[di] ?? defaultMaida[di] ?? '') : (activeMaida[di] ?? defaultMaida[di] ?? '');
-                    }
-                    const fieldDisabled = !editEnabled || isBottomTier;
-                    return (
-                      <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0', opacity: fieldDisabled ? 0.5 : 1 }}>
-                        <label className={styles.epFieldLabel}>{label}</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            className={styles.epInput}
-                            value={formatMmInputValue(val)}
-                            placeholder={formatMmInputValue(defaultMaida[di])}
-                            disabled={fieldDisabled}
-                            onChange={(e) => handleChange(di, e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp') { e.preventDefault(); handleArrow(di, 1); }
-                              else if (e.key === 'ArrowDown') { e.preventDefault(); handleArrow(di, -1); }
-                            }}
-                            style={{ cursor: fieldDisabled ? 'not-allowed' : 'text' }}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                {editEnabled && (
-                  <button
-                    onClick={handleReset}
-                    style={{
-                      marginTop: '8px',
-                      padding: '6px 10px',
-                      fontSize: '11px',
-                      background: 'var(--theme-surface)',
-                      border: '1px solid var(--theme-border)',
-                      borderRadius: '4px',
-                      color: 'var(--theme-text-secondary)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    기본값으로 복원
-                  </button>
-                )}
                 {/* 레그라 서랍 종류 선택 드롭다운 (tier별) */}
                 {(() => {
                   const legraTypes = ((currentPlacedModule as any).legraDrawerTypes ?? []) as ('M' | 'L' | 'F' | undefined)[];
@@ -7110,6 +7114,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   // drawerHeight → 자동 매칭된 레그라 종류
                   const autoLegraType = (dh: number): 'M' | 'L' | 'F' =>
                     dh >= 200 ? 'F' : dh <= 120 ? 'M' : 'L';
+                  // 인덕션장: 아래 서랍(di=0)은 Y좌표 기준 자동 등급(수동·마이다 크기 무시).
+                  //  렌더(LowerCabinet)와 동일: 서랍 측판 상단 Y ≤ 아래 마이다 상단 Y 인 가장 큰 등급.
+                  //   서랍 측판 바닥(mm) = basicThickness(18) + bottomGap(28) = 46
+                  //   아래 마이다 상단 Y(mm) = 마이다1 바닥(-5 - bottomExt) + 마이다1 높이(activeMaida[0])
+                  const indBottomExt = ((currentPlacedModule as any).doorBottomGap ?? 5) - 5;
+                  const indDrawer1BaseBottom = 18 + 28;
+                  const indMaida1TopY = (-5 - indBottomExt) + (activeMaida[0] ?? 0);
+                  const maidaAutoLegraType = (): 'M' | 'L' | 'F' =>
+                    (indDrawer1BaseBottom + 228 <= indMaida1TopY) ? 'F'
+                    : (indDrawer1BaseBottom + 164 <= indMaida1TopY) ? 'L' : 'M';
                   return (
                     <div style={{ marginTop: '12px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>
@@ -7119,13 +7133,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         {labels.map((label, uiIdx) => {
                           const di = toInternalIdx(uiIdx);
                           const autoType = autoLegraType(drawerHeightsByModule[di] ?? 164);
-                          const cur = legraTypes[di] ?? autoType; // 사용자 선택 없으면 실제 배치 종류 표시
+                          // 터치서랍: 렌더가 저장한 자동등급(legraDrawerTypesAuto)을 표시 → 렌더와 실시간 일치.
+                          //  수동 선택(legraTypes)이 있으면 그게 우선(측판 렌더도 동일 우선순위).
+                          const renderAuto = ((currentPlacedModule as any).legraDrawerTypesAuto?.[di]) as ('M'|'L'|'F') | undefined;
+                          // 인덕션 아래 서랍은 마이다 기준 자동(읽기전용)
+                          const inductionAutoLower = isInduction && di === 0
+                            ? maidaAutoLegraType()
+                            : undefined;
+                          const cur = inductionAutoLower ?? legraTypes[di] ?? renderAuto ?? autoType;
+                          const isReadOnlyLegra = inductionAutoLower !== undefined;
                           return (
                             <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0' }}>
                               <label className={styles.epFieldLabel}>{label}</label>
                               <select
                                 value={cur}
-                                onChange={(e) => setLegraType(di, e.target.value as any)}
+                                disabled={isReadOnlyLegra}
+                                onChange={(e) => { if (!isReadOnlyLegra) setLegraType(di, e.target.value as any); }}
                                 style={{
                                   width: '100%',
                                   padding: '4px',
@@ -7133,8 +7156,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   border: '1px solid var(--theme-border)',
                                   borderRadius: '4px',
                                   background: 'var(--theme-surface)',
-                                  color: 'var(--theme-text-primary)',
-                                  cursor: 'pointer',
+                                  color: isReadOnlyLegra ? 'var(--theme-text-secondary)' : 'var(--theme-text-primary)',
+                                  cursor: isReadOnlyLegra ? 'default' : 'pointer',
                                 }}
                               >
                                 <option value="M">소</option>

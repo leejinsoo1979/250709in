@@ -559,12 +559,15 @@ const computeLowerCabinetMaidaHeights = (
     const gapTopExt = doorTopGap - defaultDTG;
     const gapBottomExt = doorBottomGap - defaultDBG;
     const gapMm = 3;
-    const FIXED_MAIDA2_H = 427; // 상단 마이다 높이 고정 (H=785 기준 상수)
-    // 마이다2 (상단): 위치만 H에 연동, 크기는 FIXED_MAIDA2_H + 상단/하단 갭 확장 반영
-    const maida2H = Math.max(0, FIXED_MAIDA2_H + gapTopExt);
+    const FIXED_MAIDA2_H = 427;
+    // 사용자 입력(customMaidaHeights, [아래, 위])이 유효하면 위 마이다 높이를 입력값으로 쓴다.
+    const cmh = Array.isArray(customMaidaHeights) && customMaidaHeights.length === 2
+      && customMaidaHeights.every(v => typeof v === 'number' && v > 0) ? customMaidaHeights : undefined;
+    // 마이다2 (상단): 상단은 가구 상단에 고정, 높이는 입력값 우선
+    const maida2H = cmh ? cmh[1] : Math.max(0, FIXED_MAIDA2_H + gapTopExt);
     const maida2Top = moduleHeightMm - 20 + gapTopExt;
     const maida2Bottom = maida2Top - maida2H;
-    // 마이다1 (하단): 마이다2 아래 3mm 갭 이후부터 캐비넷 하단(-5 - bottomExt)까지 (= H 변화 흡수)
+    // 마이다1 (하단): 하단 고정, 위(maida2)가 커지면 높이가 줄어 흡수 (하단갭 침범 없음)
     const maida1Top = maida2Bottom - gapMm;
     const maida1Bottom = -5 - gapBottomExt;
     const maida1H = Math.max(0, maida1Top - maida1Bottom);

@@ -49,7 +49,10 @@ export const computeLowerCabinetExternalMaidaRanges = ({
     const gapBottomExt = effectiveBottomGap - defaultBottomGap;
     const gapMm = 3;
     const fixedUpperMaidaH = 427;
-    const upperH = Math.max(0, fixedUpperMaidaH + gapTopExt);
+    // 사용자 입력(customMaidaHeights, [아래, 위])이 유효하면 위 마이다 높이를 입력값으로 쓴다.
+    const cmh = Array.isArray(customMaidaHeights) && customMaidaHeights.length === 2
+      && customMaidaHeights.every(v => typeof v === 'number' && v > 0) ? customMaidaHeights : undefined;
+    const upperH = cmh ? cmh[1] : Math.max(0, fixedUpperMaidaH + gapTopExt);
     const upperTop = currentCabinetHmm - 20 + gapTopExt;
     const upperBottom = upperTop - upperH;
     const lowerTop = upperBottom - gapMm;
