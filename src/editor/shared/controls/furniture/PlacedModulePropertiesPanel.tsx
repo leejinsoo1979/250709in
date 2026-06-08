@@ -364,7 +364,8 @@ const MaidaHeightInput: React.FC<{
   value: number;
   className?: string;
   onApply: (v: number) => void;
-}> = ({ value, className, onApply }) => {
+  readOnly?: boolean;
+}> = ({ value, className, onApply, readOnly }) => {
   const [text, setText] = React.useState(String(value));
   const focusedRef = React.useRef(false);
   React.useEffect(() => {
@@ -374,6 +375,17 @@ const MaidaHeightInput: React.FC<{
     const n = parseFloat(text);
     if (Number.isFinite(n) && n > 0 && n !== value) onApply(n);
   };
+  if (readOnly) {
+    return (
+      <input
+        type="text"
+        value={String(value)}
+        readOnly
+        className={className}
+        style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }}
+      />
+    );
+  }
   return (
     <input
       type="text"
@@ -6105,6 +6117,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               // 한 칸을 바꾸면 인접 칸이 반대로 흡수해 합·갭(영역)을 유지한다.
               //  displayHeights는 위→아래(reverse), 저장은 di(아래=0) 기준 → 인덱스를 뒤집어 매핑.
               const maidaTierCount = displayHeights.length;
+              // 레그라 서랍(인덕션·도어올림터치·상판내림터치)만 마이다 H 직접 입력 가능.
+              //  일반 서랍(lower-drawer-* 등)은 마이다치수 읽기전용.
+              const maidaMid = currentPlacedModule.moduleId ?? '';
+              const isLegraMaidaModule = maidaMid.includes('lower-induction-cabinet')
+                || maidaMid.includes('dual-lower-induction-cabinet')
+                || maidaMid.includes('lower-door-lift-touch-')
+                || maidaMid.includes('lower-top-down-touch-');
               const applyMaidaH = (displayIdx: number, num: number) => {
                 if (!Number.isFinite(num) || num <= 0) return;
                 const di = (maidaTierCount - 1) - displayIdx;
@@ -6157,6 +6176,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 value={heightMm}
                                 className={styles.depthInput}
                                 onApply={(v) => applyMaidaH(idx, v)}
+                                readOnly={!isLegraMaidaModule}
                               />
                               <span className={styles.unit}>mm</span>
                             </div>
