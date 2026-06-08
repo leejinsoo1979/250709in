@@ -636,7 +636,9 @@ const computeLowerCabinetMaidaHeights = (
               ? [185, 240, 240]
               : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm));
     const maidaHeightsMm = [...baseMaidaHeightsMm];
-    if (!isTopDownTouch && maidaHeightsMm.length > 0) {
+    // ※ cmhValid(사용자 직접 입력)면 갭 보정 스킵 → 입력값 그대로 (3D 렌더와 동일).
+    //    안 그러면 입력값에 상/하단갭이 더해져 치수가이드가 몸체와 어긋나고 튐.
+    if (!cmhValid && !isTopDownTouch && maidaHeightsMm.length > 0) {
       maidaHeightsMm[0] = Math.max(0, maidaHeightsMm[0] + gapBottomExt);
       const topIndex = maidaHeightsMm.length - 1;
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
@@ -663,8 +665,20 @@ const computeLowerCabinetMaidaHeights = (
     // 마이다 묶음을 캐비넷 상단에서 아래로 채워 내림. 맨 아래(maida0)가 남은 공간 흡수.
     if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
       const lastIdx = maidaHeightsMm.length - 1;
-      const topPositionMm = -bottomExtMm + totalFrontMm; // 마이다 묶음 끝 (캐비넷 바닥 기준)
       const result: { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] = new Array(maidaHeightsMm.length);
+      if (cmhValid) {
+        // 3D 렌더와 동일: 맨 아래(3단) 하단을 가구 바닥(-bottomExtMm, 하단갭 반영)에 고정,
+        //  아래→위로 입력값 누적. 상단갭은 맨 위(1단) 칸 높이에만 더해 1단 상단만 올라가게.
+        let cursorBottom = -bottomExtMm;
+        for (let i = 0; i <= lastIdx; i++) {
+          const h = (i === lastIdx) ? maidaHeightsMm[i] + gapTopExt : maidaHeightsMm[i];
+          result[i] = { maidaHeightMm: h, maidaBottomMm: cursorBottom, maidaTopMm: cursorBottom + h };
+          cursorBottom += h + gapMm;
+        }
+        return result;
+      }
+      // 자동(미입력): 천장 고정 위→아래, 맨 아래(maida0)가 남은 공간 흡수.
+      const topPositionMm = -bottomExtMm + totalFrontMm;
       let cursorTop = topPositionMm;
       for (let i = lastIdx; i >= 1; i--) {
         const h = maidaHeightsMm[i];
@@ -672,9 +686,6 @@ const computeLowerCabinetMaidaHeights = (
         result[i] = { maidaHeightMm: h, maidaBottomMm: bottomMm, maidaTopMm: cursorTop };
         cursorTop = bottomMm - gapMm;
       }
-      // 3단(맨 아래) 마이다는 항상 자동 흡수 (LowerCabinet과 동일)
-      //   하단 = -bottomExtMm (가구 본체 바닥, 도어 하단갭 늘면 아래로 확장)
-      //   상단 = cursorTop (1·2단 묶음 끝)
       const bottomStart = -bottomExtMm;
       const newMaida0H = Math.max(0, cursorTop - bottomStart);
       result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };

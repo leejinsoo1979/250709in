@@ -1140,11 +1140,13 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     if (customMaidaValid) {
       // 사용자 입력값: 맨 아래(3단) 하단을 가구 바닥(-bottomExtMm)에 고정하고
       //  아래→위로 입력 높이만큼 그대로 누적한다.
-      //  → 패널이 한 칸을 바꾸면 인접 한 칸만 흡수해 합·갭을 유지하므로,
-      //    움직이는 경계는 딱 그 두 칸의 공유선 하나뿐이고 나머지 칸 위치는 고정.
+      //  갭 규칙:
+      //   - 하단갭 ↑ → 3단(맨아래) 하단만 내려감 (시작점 -bottomExtMm 에 이미 반영)
+      //   - 상단갭 ↑ → 1단(맨위) 상단만 올라감 (맨 위 칸 높이에 gapTopExt 만 더함)
+      //   → 그 사이 경계들은 입력값대로 고정.
       let cursorBottom = -bottomExtMm;
       for (let i = 0; i <= lastIdx; i++) {
-        const h = maidaHeightsMm[i];
+        const h = (i === lastIdx) ? maidaHeightsMm[i] + gapTopExt : maidaHeightsMm[i];
         result[i] = {
           height: h,
           centerY: cabinetBottomY + mmToThreeUnits(cursorBottom + h / 2),
