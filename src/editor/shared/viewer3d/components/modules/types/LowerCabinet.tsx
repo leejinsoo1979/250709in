@@ -25,6 +25,7 @@ import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { calculateInternalSpace, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateFurnitureDepth } from '@/editor/shared/viewer3d/utils/geometry';
 import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry, resolveTopDownTopPanelFrontReductionMm } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { getDirectLowerDowelShelfBoringDetails, getDirectLowerDowelShelfPositionsMm, hasDirectLowerTopPanel, isDirectLowerDowelShelfModule } from '@/editor/shared/utils/lowerCabinetDowelShelves';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
@@ -1820,10 +1821,23 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     return isAdjRight ? rightFrameMM : 0;
   }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.right, spaceInfo?.width]);
 
+  // 상판 깊이 통일: 배치된 모든 하부장 중 가장 깊은 깊이에 맞춰 상판을 설치한다.
+  //  - 가구는 앞면이 일직선으로 정렬되어 있고(앞면정렬), 깊이가 다르면 뒷면 위치가 다르다.
+  //  - 얕은 가구는 뒷벽과 틈이 생기므로, 상판을 뒤쪽(뒷벽 방향)으로 확장해 뒷벽에 붙인다.
+  //  - 앞면은 그대로 유지되어 깊은 가구 상판과 앞면이 일치한다.
+  const unifiedFurnitureDepthMm = useMemo(
+    () => calculateFurnitureDepth(placedModulesForOuter, spaceInfo),
+    [placedModulesForOuter, spaceInfo]
+  );
+
   const stoneTopData = useMemo(() => {
     if (stoneThickness <= 0) return null;
     const furW = adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width;
-    const furD = baseFurniture.depth;
+    const selfD = baseFurniture.depth; // 자기 가구 깊이 (Three 단위)
+    // 전체 하부장 중 최대 깊이로 통일 (자기 깊이보다 작아지지 않도록 보정)
+    const unifiedD = Math.max(selfD, unifiedFurnitureDepthMm * 0.01);
+    // 통일로 늘어난 깊이만큼 뒤로 확장 → 뒷벽에 붙고 앞면은 유지 (Z+ = 앞쪽)
+    const backExtend = (unifiedD - selfD) / 2;
     const fo = stoneFrontOff * 0.01;
     const bo = stoneBackOff * 0.01;
     const lo = (stoneLeftOff + outerExtendLeft) * 0.01;
@@ -1832,9 +1846,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     return {
       thickness: stoneThickness * 0.01,
       width: furW + lo + ro,
-      depth: furD + fo + bo,
+      depth: unifiedD + fo + bo,
       xOffset: (ro - lo) / 2,
-      zOffset: (fo - bo) / 2,
+      zOffset: (fo - bo) / 2 - backExtend,
       backLipHeight: stoneBackLip * 0.01, // mm → m
       backLipThickness: lipThicknessMm * 0.01, // mm → m
       backLipDepthOffset: stoneBackLipDepthOff * 0.01, // mm → m
@@ -1843,7 +1857,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       backLipFullFill: stoneBackLipFullFill,
       backLipFillHeight: stoneBackLipFillHeightOff * 0.01, // mm → m
     };
-  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, outerExtendLeft, outerExtendRight, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, outerExtendLeft, outerExtendRight, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth, unifiedFurnitureDepthMm]);
 
   const topEndPanelData = useMemo(() => {
     if (placedModuleForCorner?.hasTopEndPanel !== true) return null;
