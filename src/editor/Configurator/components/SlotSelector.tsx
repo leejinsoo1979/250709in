@@ -4,7 +4,11 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getSideViewGuideSlotGroups } from '@/editor/shared/utils/sideViewModuleFilter';
+import {
+  getRelatedSideViewGuideSlotGroups,
+  getSideViewFreePlacementSlotGroups,
+  getSideViewGuideSlotGroups
+} from '@/editor/shared/utils/sideViewModuleFilter';
 import styles from './SlotSelector.module.css';
 
 interface SlotSelectorProps {
@@ -116,27 +120,42 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
       });
     });
   } else if (isFreePlacementMode) {
-    // 자유배치 모드: 배치된 가구 수 기반으로 가상 슬롯 생성 (X좌표 순)
     const nonSurroundModules = placedModules.filter(m => !m.isSurroundPanel);
-    const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+    const freePlacementSlotGroups = getSideViewFreePlacementSlotGroups(nonSurroundModules, spaceInfo.width || 0);
 
-    // X좌표 기준 그룹핑 (같은 X = 상부장+하부장 조합)
-    let virtualSlotCount = 0;
-    let lastX: number | null = null;
-    sortedByX.forEach(m => {
-      const mx = m.position?.x ?? 0;
-      if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-        virtualSlotCount++;
-        lastX = mx;
-      }
-    });
-
-    for (let i = 0; i < virtualSlotCount; i++) {
-      slotButtons.push({
-        displayIndex: i + 1,
-        actualIndex: i,
-        zone: 'normal' as const
+    if (freePlacementSlotGroups.length > 0) {
+      freePlacementSlotGroups.forEach((slot) => {
+        slotButtons.push({
+          displayIndex: slot.displayIndex,
+          actualIndex: slot.selectedSlotIndex,
+          zone: 'normal' as const,
+          label: slot.label,
+          guideZone: slot.guideZone,
+          x: slot.x,
+          width: slot.width
+        });
       });
+    } else {
+      const sortedByX = [...nonSurroundModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+
+      // 폭 정보를 알 수 없는 예전 자유배치 데이터는 기존 X좌표 그룹 방식을 유지한다.
+      let virtualSlotCount = 0;
+      let lastX: number | null = null;
+      sortedByX.forEach(m => {
+        const mx = m.position?.x ?? 0;
+        if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+          virtualSlotCount++;
+          lastX = mx;
+        }
+      });
+
+      for (let i = 0; i < virtualSlotCount; i++) {
+        slotButtons.push({
+          displayIndex: i + 1,
+          actualIndex: i,
+          zone: 'normal' as const
+        });
+      }
     }
   } else {
     // 슬롯 기반 배치: 기존 로직
@@ -178,20 +197,7 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     }
   }
 
-  const hasRawSplitGuideSlots = isCustomGuideMode && slotButtons.some(slot =>
-    slot.guideZone === 'upper' || slot.guideZone === 'lower'
-  );
-
-  const finalSlotButtons = hasRawSplitGuideSlots
-    ? Array.from(new Set(slotButtons.map(slot => slot.actualIndex)))
-      .sort((a, b) => a - b)
-      .map((actualIndex) => ({
-        displayIndex: actualIndex + 1,
-        actualIndex,
-        zone: 'normal' as const,
-        label: `${actualIndex + 1}`
-      }))
-    : slotButtons;
+  const finalSlotButtons = slotButtons;
 
   // 컴팩트 모드용 컨테이너 스타일
   const compactContainerStyle: React.CSSProperties = compact ? {
@@ -203,7 +209,9 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     pointerEvents: 'auto'
   } : containerStyle;
 
-  const hasSplitGuideSlots = false;
+  const hasSplitGuideSlots = finalSlotButtons.some(slot =>
+    slot.guideZone === 'upper' || slot.guideZone === 'lower'
+  );
   const splitSlotRows = hasSplitGuideSlots
     ? [
       { key: 'upper', slots: finalSlotButtons.filter(slot => slot.guideZone === 'upper') },
@@ -226,11 +234,14 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     : 0;
 
   const getSlotButtonLabel = (slot: typeof finalSlotButtons[number]) => {
+    if (hasSplitGuideSlots && slot.guideZone !== 'full') return slot.displayIndex;
     return slot.label ?? slot.displayIndex;
   };
 
   const getSlotButtonTitle = (slot: typeof finalSlotButtons[number], isDroppedZone: boolean) => {
     if (isDroppedZone) return '단내림 영역';
+    if (hasSplitGuideSlots && slot.guideZone === 'upper') return `상부장 슬롯 ${slot.displayIndex}`;
+    if (hasSplitGuideSlots && slot.guideZone === 'lower') return `하부장 슬롯 ${slot.displayIndex}`;
     return `슬롯 ${slot.label ?? slot.displayIndex}`;
   };
 
@@ -289,8 +300,10 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     if (isGuidePlacementMode) {
       // 자유배치: 가상 슬롯 = X좌표 순서로 그룹화된 X 좌표. actualIndex번째 X그룹의 가구
       const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
-      const guideGroups = isCustomGuideMode ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []) : [];
-      const targetGuideGroups = guideGroups.filter(group => group.selectedSlotIndex === slot.actualIndex);
+      const guideGroups = isCustomGuideMode
+        ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || [])
+        : getSideViewFreePlacementSlotGroups(nonSurround, spaceInfo.width || 0);
+      const targetGuideGroups = getRelatedSideViewGuideSlotGroups(guideGroups, slot.actualIndex);
       const guideGroupCenters = targetGuideGroups.length > 0
         ? targetGuideGroups.map(group => (
           (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
@@ -312,9 +325,7 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
       }
       const targetX = xGroups[slot.actualIndex];
       if (targetX !== undefined || targetGuideGroups.length > 0) {
-        const guideGroup = slot.guideZone
-          ? targetGuideGroups.find(group => group.guideZone === slot.guideZone) ?? targetGuideGroups[0] ?? guideGroups[slot.actualIndex]
-          : undefined;
+        const guideGroup = guideGroups[slot.actualIndex];
         const targetXs = targetGuideGroups.length > 0
           ? guideGroupCenters
           : targetX !== undefined ? [targetX] : [];
