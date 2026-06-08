@@ -368,8 +368,14 @@ const MaidaHeightInput: React.FC<{
 }> = ({ value, className, onApply, readOnly }) => {
   const [text, setText] = React.useState(String(value));
   const focusedRef = React.useRef(false);
+  const lastValueRef = React.useRef(value);
   React.useEffect(() => {
-    if (!focusedRef.current) setText(String(value));
+    if (lastValueRef.current !== value) {
+      lastValueRef.current = value;
+      setText(String(value));
+    } else if (!focusedRef.current) {
+      setText(String(value));
+    }
   }, [value]);
   const apply = () => {
     const n = parseFloat(text);
@@ -2127,15 +2133,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 개별 가구값이 최우선. 카테고리 글로벌은 개별값이 없을 때의 폴백(defaultTopGap)에만 반영한다.
       // (catTopGap을 개별값보다 우선하면 카테고리 판별이 어긋날 때 키큰장 값으로 되돌아가는 버그)
       const rawTopGap = currentPlacedModule.doorTopGap;
+      const staleDoorLiftAutoTopGap = isDoorLift
+        && typeof rawTopGap === 'number'
+        && rawTopGap === (currentPlacedModule.stoneTopThickness || 0) + 15;
       const topDownNoEpDefaultGap = isTopDown
         ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, false)
         : undefined;
       const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
-        : (isBasicLowerDoorGap && rawTopGap === 20)
-          ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
-          : (isDoorLift && (rawTopGap === 20 || rawTopGap === 30))
-            ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
+          : (isBasicLowerDoorGap && rawTopGap === 20)
+            ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
+          : staleDoorLiftAutoTopGap
+            ? defaultTopGap
           : (isTopDown && currentPlacedModule.hasTopEndPanel === true && rawTopGap === topDownNoEpDefaultGap)
             ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
@@ -2588,13 +2597,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.topEndPanelBackLipThickness ?? 0,
       (currentPlacedModule as any)?.topEndPanelOffset,
       (currentPlacedModule as any)?.topEndPanelBackOffset,
-      true
+      true,
+      (currentPlacedModule as any)?.customMaidaHeightsMode
     );
     return calculatedPanels.flatMap(panel => applyRenderedPanelDimensions(
       applyFramePanelListWidthFallback(panel, currentPlacedModule, renderedWidthForPanels, spaceInfo),
       currentPlacedModule?.id
     ));
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, (currentPlacedModule as any)?.topEndPanelOffset, (currentPlacedModule as any)?.topEndPanelBackOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights, currentPlacedModule?.freeWidth, currentPlacedModule?.freeDepth, currentPlacedModule?.slotCustomWidth, (currentPlacedModule as any)?.sideLogicalWidth, currentPlacedModule?.placementWall, renderedPanelDimensionsRevision]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, autoCoverDoorWidthAdjustMm, backPanelThicknessValue, currentPlacedModule, spaceInfo, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, panelTopFrameHeightMm, visualBaseFrameHeightMm, baseFrameGapMm, topFrameGapMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.leftEndPanelOffset, currentPlacedModule?.rightEndPanelOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.upperDoorTopGap, currentPlacedModule?.upperDoorBottomGap, currentPlacedModule?.lowerDoorTopGap, currentPlacedModule?.lowerDoorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, currentPlacedModule?.lowerSectionTopOffset, currentPlacedModule?.maidaWidthAdjustEnabled, currentPlacedModule?.maidaWidthAdjustMm, currentPlacedModule?.doorWidthAdjustEnabled, currentPlacedModule?.doorWidthAdjustMm, currentPlacedModule?.topFrameWidthAdjustEnabled, currentPlacedModule?.topFrameLeftAdjustMm, currentPlacedModule?.topFrameRightAdjustMm, currentPlacedModule?.baseFrameWidthAdjustEnabled, currentPlacedModule?.baseFrameLeftAdjustMm, currentPlacedModule?.baseFrameRightAdjustMm, currentPlacedModule?.hasTopEndPanel, (currentPlacedModule as any)?.topEndPanelBackLip, (currentPlacedModule as any)?.topEndPanelBackLipThickness, (currentPlacedModule as any)?.topEndPanelOffset, (currentPlacedModule as any)?.topEndPanelBackOffset, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights, (currentPlacedModule as any)?.customMaidaHeightsMode, currentPlacedModule?.freeWidth, currentPlacedModule?.freeDepth, currentPlacedModule?.slotCustomWidth, (currentPlacedModule as any)?.sideLogicalWidth, currentPlacedModule?.placementWall, renderedPanelDimensionsRevision]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -3163,7 +3173,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     return {
       doorTopGap: nextTopEndPanelOffset > 0
         ? DOOR_LIFT_TOP_EP_COLLISION_GAP
-        : DOOR_LIFT_DOOR_TOP_GAP_DEFAULT,
+        : (spaceInfo.doorTopGapLowerDoorLift ?? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT),
+    };
+  };
+
+  const getDoorLiftTouchCustomMaidaBaseUpdates = (): Record<string, any> => {
+    if (!currentPlacedModule?.moduleId?.includes('lower-door-lift-touch-')) return {};
+    if ((currentPlacedModule as any).customMaidaHeightsMode === 'gapBase') return {};
+    const custom = (currentPlacedModule as any).customMaidaHeights;
+    if (!Array.isArray(custom) || custom.length < 2 || !custom.every((v: any) => typeof v === 'number' && v > 0)) return {};
+    const defaultTopExt = 30;
+    const defaultBottomExt = 5;
+    const topDelta = (currentPlacedModule.doorTopGap ?? defaultTopExt) - defaultTopExt;
+    const bottomDelta = (currentPlacedModule.doorBottomGap ?? defaultBottomExt) - defaultBottomExt;
+    const next = [...custom];
+    next[0] -= bottomDelta;
+    next[next.length - 1] -= topDelta;
+    if (!next.every(v => Number.isFinite(v) && v > 0)) return {};
+    return {
+      customMaidaHeights: next.map(v => Math.round(v)),
+      customMaidaHeightsMode: 'gapBase',
     };
   };
 
@@ -3176,6 +3205,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (!isNaN(numValue) && currentPlacedModule) {
       setDoorTopGap(numValue);
       updatePlacedModule(currentPlacedModule.id, {
+        ...getDoorLiftTouchCustomMaidaBaseUpdates(),
         doorTopGap: numValue,
         ...getBasicLowerDoorTopGapUpdates(numValue),
       });
@@ -3190,7 +3220,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const numValue = parseInt(value);
     if (!isNaN(numValue) && currentPlacedModule) {
       setDoorBottomGap(numValue);
-      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: numValue });
+      updatePlacedModule(currentPlacedModule.id, {
+        ...getDoorLiftTouchCustomMaidaBaseUpdates(),
+        doorBottomGap: numValue
+      });
     }
   };
 
@@ -3199,6 +3232,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (!isNaN(value) && currentPlacedModule) {
       setDoorTopGap(value);
       updatePlacedModule(currentPlacedModule.id, {
+        ...getDoorLiftTouchCustomMaidaBaseUpdates(),
         doorTopGap: value,
         ...getBasicLowerDoorTopGapUpdates(value),
       });
@@ -3212,7 +3246,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const value = parseInt(doorBottomGapInput);
     if (!isNaN(value) && currentPlacedModule) {
       setDoorBottomGap(value);
-      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
+      updatePlacedModule(currentPlacedModule.id, {
+        ...getDoorLiftTouchCustomMaidaBaseUpdates(),
+        doorBottomGap: value
+      });
     } else {
       // 유효하지 않은 값이면 이전 값으로 복원
       setDoorBottomGapInput(doorBottomGap.toString());
@@ -3225,6 +3262,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (!isNaN(value) && currentPlacedModule) {
         setDoorTopGap(value);
         updatePlacedModule(currentPlacedModule.id, {
+          ...getDoorLiftTouchCustomMaidaBaseUpdates(),
           doorTopGap: value,
           ...getBasicLowerDoorTopGapUpdates(value),
         });
@@ -3238,6 +3276,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorTopGap(newValue);
       if (currentPlacedModule) {
         updatePlacedModule(currentPlacedModule.id, {
+          ...getDoorLiftTouchCustomMaidaBaseUpdates(),
           doorTopGap: newValue,
           ...getBasicLowerDoorTopGapUpdates(newValue),
         });
@@ -3250,6 +3289,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorTopGap(newValue);
       if (currentPlacedModule) {
         updatePlacedModule(currentPlacedModule.id, {
+          ...getDoorLiftTouchCustomMaidaBaseUpdates(),
           doorTopGap: newValue,
           ...getBasicLowerDoorTopGapUpdates(newValue),
         });
@@ -3262,7 +3302,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const value = parseInt(doorBottomGapInput);
       if (!isNaN(value) && currentPlacedModule) {
         setDoorBottomGap(value);
-        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
+        updatePlacedModule(currentPlacedModule.id, {
+          ...getDoorLiftTouchCustomMaidaBaseUpdates(),
+          doorBottomGap: value
+        });
       }
       (e.target as HTMLInputElement).blur();
     } else if (e.key === 'ArrowUp') {
@@ -3272,7 +3315,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorBottomGapInput(newValue.toString());
       setDoorBottomGap(newValue);
       if (currentPlacedModule) {
-        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: newValue });
+        updatePlacedModule(currentPlacedModule.id, {
+          ...getDoorLiftTouchCustomMaidaBaseUpdates(),
+          doorBottomGap: newValue
+        });
       }
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -3281,7 +3327,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setDoorBottomGapInput(newValue.toString());
       setDoorBottomGap(newValue);
       if (currentPlacedModule) {
-        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: newValue });
+        updatePlacedModule(currentPlacedModule.id, {
+          ...getDoorLiftTouchCustomMaidaBaseUpdates(),
+          doorBottomGap: newValue
+        });
       }
     }
   };
@@ -3980,7 +4029,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           && spaceInfo.frameConfig?.top !== false;
         if (mod.doorTopGap === undefined) {
           updates.doorTopGap = isDL
-            ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
+            ? (spaceInfo.doorTopGapLowerDoorLift ?? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT)
             : isTD
               ? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true)
               : isBasicLowerDoorGap
@@ -3988,8 +4037,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 : isLowerModule
                   ? 20
                   : (isFullSurroundForDoorDefaults ? -3 : 5);
-        } else if (isDL && (mod.doorTopGap === 20 || mod.doorTopGap === 30)) {
-          updates.doorTopGap = DOOR_LIFT_DOOR_TOP_GAP_DEFAULT;
         } else if (isBasicLowerDoorGap && mod.doorTopGap === 20) {
           updates.doorTopGap = BASIC_LOWER_DOOR_TOP_GAP_DEFAULT;
         } else if (isFullSurroundForDoorDefaults && mod.hasTopFrame !== false && mod.doorTopGap === 5 && !isDL && !isTD && !isLowerModule) {
@@ -6092,35 +6139,35 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const maidaWidth = resolveMaidaDisplayWidthMm(currentPlacedModule, moduleData, bodyWidth, maidaOuterOpenSides);
               const maidaThickness = moduleData?.modelConfig?.basicThickness || 18;
               const moduleId = currentPlacedModule.moduleId ?? '';
+              const parsedDoorTopGapInput = parseInt(doorTopGapInput, 10);
+              const parsedDoorBottomGapInput = parseInt(doorBottomGapInput, 10);
+              const effectiveDoorTopGapForMaida = Number.isFinite(parsedDoorTopGapInput)
+                ? parsedDoorTopGapInput
+                : (currentPlacedModule.doorTopGap ?? doorTopGap);
+              const effectiveDoorBottomGapForMaida = Number.isFinite(parsedDoorBottomGapInput)
+                ? parsedDoorBottomGapInput
+                : (currentPlacedModule.doorBottomGap ?? doorBottomGap);
               const fallbackHeights = computeLowerCabinetExternalMaidaRanges({
                 moduleId,
                 moduleHeightMm: bodyHeight,
                 sourceModuleHeightMm: moduleData.dimensions.height,
                 stoneTopThicknessMm: stoneThickness,
-                doorTopGap: currentPlacedModule.doorTopGap,
-                doorBottomGap: currentPlacedModule.doorBottomGap,
+                doorTopGap: effectiveDoorTopGapForMaida,
+                doorBottomGap: effectiveDoorBottomGapForMaida,
                 hasTopEndPanel: currentPlacedModule.hasTopEndPanel === true,
                 basicThicknessMm: maidaThickness,
                 customMaidaHeights: Array.isArray((currentPlacedModule as any).customMaidaHeights)
                   ? (currentPlacedModule as any).customMaidaHeights
-                  : undefined
+                  : undefined,
+                customMaidaHeightsMode: (currentPlacedModule as any).customMaidaHeightsMode
               }).map(range => range.maidaHeightMm);
-              // source of truth 우선순위:
-              //  1) 사용자가 입력한 customMaidaHeights([아래=0 ... 위=N-1])가 있으면 그대로 사용
-              //     → DOM 역추적(findRendered…)을 쓰면 한 박자 늦거나 순서가 꼬여
-              //        입력 직후 옛 값으로 되돌아가는 문제가 생김.
-              //  2) 없으면 렌더 DOM값, 그것도 없으면 fallback(기하 계산값).
-              const storedCustomMaida = Array.isArray((currentPlacedModule as any).customMaidaHeights)
-                && (currentPlacedModule as any).customMaidaHeights.length === fallbackHeights.length
-                && (currentPlacedModule as any).customMaidaHeights.every((v: any) => typeof v === 'number' && v > 0)
-                ? ((currentPlacedModule as any).customMaidaHeights as number[])
-                : undefined;
-              const heights = storedCustomMaida
-                ?? findRenderedMaidaHeightsBottomToTop(
+              const renderedHeights = findRenderedMaidaHeightsBottomToTop(
                   currentPlacedModule.id,
                   moduleId,
                   fallbackHeights.length
-                )
+                );
+              // 팝업 H는 실제 렌더/치수가이드 값을 우선 표시하고, 렌더 등록 전만 fallback을 쓴다.
+              const heights = renderedHeights
                 ?? fallbackHeights;
               const displayHeights = heights.slice().reverse();
               if (displayHeights.length === 0) return null;
@@ -6136,6 +6183,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 || maidaMid.includes('dual-lower-induction-cabinet')
                 || maidaMid.includes('lower-door-lift-touch-')
                 || maidaMid.includes('lower-top-down-touch-');
+              const toStoredMaidaHeights = (displayedBottomToTop: number[]): number[] | null => {
+                const stored = [...displayedBottomToTop];
+                const lastIdx = stored.length - 1;
+                if (lastIdx < 0) return null;
+                const isDoorLiftTouch = maidaMid.includes('lower-door-lift-touch-');
+                const isTopDownTouch = maidaMid.includes('lower-top-down-touch-');
+                if (isDoorLiftTouch || isTopDownTouch) {
+                  const tdStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
+                  const defaultTopExt = isTopDownTouch ? -(tdStretcherH + 25) : 30;
+                  const defaultBottomExt = 5;
+                  const gapTopExt = (effectiveDoorTopGapForMaida ?? defaultTopExt) - defaultTopExt;
+                  const gapBottomExt = (effectiveDoorBottomGapForMaida ?? defaultBottomExt) - defaultBottomExt;
+                  stored[0] -= gapBottomExt;
+                  stored[lastIdx] -= gapTopExt;
+                }
+                const rounded = stored.map(v => Math.round(v));
+                return rounded.every(v => Number.isFinite(v) && v > 0) ? rounded : null;
+              };
               const MAIDA_MIN_MM = 153; // 가장 작은 레그라 서랍(소 117 + 오프셋 21 + 갭 15)이 들어가는 최소 마이다
               const applyMaidaH = (displayIdx: number, num: number) => {
                 if (!Number.isFinite(num) || num <= 0) return;
@@ -6156,10 +6221,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 if (absorbH < MAIDA_MIN_MM) { alert(`인접 마이다가 최소 ${MAIDA_MIN_MM}mm보다 작아집니다. 더 작은 값을 입력하세요.`); return; }
                 base[di] = num;
                 base[absorbIdx] = absorbH;
+                const storedHeights = toStoredMaidaHeights(base);
+                if (!storedHeights) { alert('마이다 치수를 저장할 수 없습니다. 상하단 갭과 입력값을 확인하세요.'); return; }
                 // 마이다를 바꾸면 수동 레그라 선택을 리셋해 자동축소가 다시 작동하게 한다.
                 //  (수동 선택은 마이다를 다시 만지기 전까지만 우선)
                 updatePlacedModule(currentPlacedModule.id, {
-                  customMaidaHeights: base.map(v => Math.round(v)),
+                  customMaidaHeights: storedHeights,
+                  customMaidaHeightsMode: 'gapBase',
                   legraDrawerTypes: undefined,
                 } as any);
               };
@@ -7058,7 +7126,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               doorBottomGap: (currentPlacedModule as any).doorBottomGap,
               hasTopEndPanel: currentPlacedModule.hasTopEndPanel === true,
               basicThicknessMm: moduleData?.modelConfig?.basicThickness || 18,
-              customMaidaHeights: current.length === maidaCount ? current : undefined
+              customMaidaHeights: current.length === maidaCount ? current : undefined,
+              customMaidaHeightsMode: (currentPlacedModule as any).customMaidaHeightsMode
             }).map(range => range.maidaHeightMm);
             const renderedMaida = findRenderedMaidaHeightsBottomToTop(currentPlacedModule.id, mid, maidaCount);
             const defaultMaida = renderedMaida ?? fallbackDefaultMaida;
@@ -8958,13 +9027,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           updates.stoneTopRightOffset = 0;
                           updates.stoneTopBackLip = 0;
                           updates.stoneTopBackLipThickness = 0;
-                          // 도어올림: 상판 제거 시 doorTopGap 기본값(30) 복원
-                          if (isDoorLift) {
-                            const defaultGap = 30;
-                            updates.doorTopGap = defaultGap;
-                            setDoorTopGap(defaultGap);
-                            setDoorTopGapInput(String(defaultGap));
-                          }
+                          // 도어올림 상단갭은 사용자가 입력한 절대값이므로 상판 변경에서 덮어쓰지 않는다.
                         } else {
                           updates.hasTopEndPanel = false;
                           // 두께 선택/변경 시 기본 앞 오프셋 적용
@@ -8987,13 +9050,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               });
                             }
                           }
-                          // 도어올림: 상판 두께별 도어 상단갭 (10mm→25, 20mm→35, 30mm→45)
+                          // 도어올림 상단갭은 측판 상단 기준 절대값이므로 상판 두께 변경과 분리한다.
                           if (isDoorLift) {
-                            const newGap = thickness + 15;
-                            updates.doorTopGap = newGap;
                             updates.stoneTopFrontOffset = 0;
-                            setDoorTopGap(newGap);
-                            setDoorTopGapInput(String(newGap));
                           }
                           if (isBasicLowerDoorGap && !isDoorLift && !isTopDown) {
                             const defaultGap = -20;
@@ -9055,7 +9114,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             // 처음 설치되는 하부장은 기본 앞 오프셋 23 적용
                             if (isBulkDoorLift) {
                               bulk.stoneTopFrontOffset = 0;
-                              bulk.doorTopGap = thickness + 15;
                             } else if ((m.stoneTopThickness || 0) === 0) {
                               bulk.stoneTopFrontOffset = 23;
                             }

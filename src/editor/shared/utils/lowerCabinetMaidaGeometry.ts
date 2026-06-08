@@ -14,6 +14,7 @@ interface LowerCabinetMaidaGeometryOptions {
   hasTopEndPanel?: boolean;
   basicThicknessMm?: number;
   customMaidaHeights?: number[];
+  customMaidaHeightsMode?: string;
 }
 
 const roundMm = (value: number): number => Math.round(value * 10) / 10;
@@ -37,6 +38,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
   hasTopEndPanel = false,
   basicThicknessMm = 18,
   customMaidaHeights,
+  customMaidaHeightsMode,
 }: LowerCabinetMaidaGeometryOptions): LowerCabinetMaidaRange[] => {
   const currentCabinetHmm = Math.round(moduleHeightMm);
 
@@ -135,12 +137,13 @@ export const computeLowerCabinetExternalMaidaRanges = ({
       maidaHeightsMm[1] = evenH;
       maidaHeightsMm[2] = evenH;
     }
-    // ※ customMaidaValid(사용자 직접 입력)면 입력값 최우선 → topExt 보정 스킵
-    //    (3D 렌더와 동일하게 처리, 치수가 위아래로 튀는 문제 방지)
-    if (!customMaidaValid && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+    // 도어올림 터치: 상단갭 증가분은 맨 위 마이다 윗변만,
+    // 하단갭 증가분은 맨 아래 마이다 아랫변만 움직인다.
+    if (!customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
       const topExtDeltaMm = topExtMm - defaultTopExtMm;
       if (topExtDeltaMm !== 0) {
-        maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + topExtDeltaMm);
+        const topIdx = maidaHeightsMm.length - 1;
+        maidaHeightsMm[topIdx] = Math.max(0, maidaHeightsMm[topIdx] + topExtDeltaMm);
       }
     }
     if (!customMaidaValid && (isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
@@ -151,11 +154,38 @@ export const computeLowerCabinetExternalMaidaRanges = ({
 
     if ((isTopDownTouch || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
       const lastIdx = maidaHeightsMm.length - 1;
-      const topShiftMm = isDoorLift3Fixed ? (topExtMm - defaultTopExtMm) : 0;
+      const topShiftMm = (isDoorLift2Fixed || isDoorLift3Fixed) ? (topExtMm - defaultTopExtMm) : 0;
       const topPositionMm = isTopDownTouch
         ? -bottomExtMm + maidaTotalFrontMm
         : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
       const result: LowerCabinetMaidaRange[] = new Array(maidaHeightsMm.length);
+      if (customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed)) {
+        const gapTopExtLocal = topExtMm - defaultTopExtMm;
+        const gapBottomExtLocal = bottomExtMm - defaultBottomExtMm;
+        const customIsGapBase = customMaidaHeightsMode === 'gapBase';
+        if (customIsGapBase && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+          const targetBaseMaidaSum = Math.max(0, maidaTotalFrontMm - gapMm * 2);
+          const currentBaseMaidaSum = maidaHeightsMm.reduce((sum, value) => sum + value, 0);
+          const heightDelta = targetBaseMaidaSum - currentBaseMaidaSum;
+          if (Math.abs(heightDelta) > 0.01) {
+            maidaHeightsMm[1] = Math.max(0, maidaHeightsMm[1] + heightDelta / 2);
+            maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + heightDelta / 2);
+          }
+        }
+        let cursorBottom = -defaultBottomExtMm - gapBottomExtLocal;
+        for (let i = 0; i <= lastIdx; i++) {
+          let height = maidaHeightsMm[i];
+          if (customIsGapBase && i === 0) height += gapBottomExtLocal;
+          if (customIsGapBase && i === lastIdx) height += gapTopExtLocal;
+          result[i] = {
+            maidaHeightMm: roundMm(height),
+            maidaBottomMm: roundMm(cursorBottom),
+            maidaTopMm: roundMm(cursorBottom + height),
+          };
+          cursorBottom += height + gapMm;
+        }
+        return result;
+      }
       if (customMaidaValid) {
         // 3D 렌더와 동일: 시작점을 기본 바닥(-defaultBottomExtMm)에 고정하고 아래→위 누적.
         //  하단갭 ↑ → 3단(맨아래)만 gapBottomExt 만큼 하단 내려감 / 상단갭 ↑ → 1단(맨위)만 gapTopExt 올라감.
@@ -166,7 +196,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
         for (let i = 0; i <= lastIdx; i++) {
           let height = maidaHeightsMm[i];
           if (i === 0) { cursorBottom -= gapBottomExtLocal; height += gapBottomExtLocal; }
-          if (i === lastIdx) height += gapTopExtLocal;
+          if (i === lastIdx && isTopDownTouch) height += gapTopExtLocal;
           result[i] = {
             maidaHeightMm: roundMm(height),
             maidaBottomMm: roundMm(cursorBottom),
@@ -214,9 +244,10 @@ export const computeLowerCabinetExternalMaidaRanges = ({
   }
 
   const topDownDefaultTopGap = hasTopEndPanel ? -82 : stoneTopThicknessMm === 10 ? -90 : stoneTopThicknessMm === 30 ? -70 : -80;
+  const isDoorLift = isDoorLift1Tier || isDoorLift2Tier || isDoorLift3Tier;
   const defaultDrawerTopGap = (isTopDown1Tier || isTopDown2Tier || isTopDown3Tier)
     ? topDownDefaultTopGap
-    : (isDoorLift1Tier || isDoorLift2Tier || isDoorLift3Tier)
+    : isDoorLift
       ? 30
       : -20;
   const defaultDrawerBottomGap = 5;
@@ -301,8 +332,9 @@ export const computeLowerCabinetExternalMaidaRanges = ({
     const gapBottomExt = isBottomDrawer ? (effectiveDrawerBottomGap - defaultDrawerBottomGap) : 0;
     const defaultHeight = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
     const fixedHeight = fixedMaidaHeights?.[idx];
-    const height = Math.max(0, fixedHeight != null ? fixedHeight + gapTopExt + gapBottomExt : defaultHeight);
     const bottom = maidaBottomMm - gapBottomExt;
+    const baseHeight = fixedHeight != null ? fixedHeight + gapTopExt + gapBottomExt : defaultHeight;
+    const height = Math.max(0, baseHeight);
     return {
       maidaHeightMm: roundMm(height),
       maidaBottomMm: roundMm(bottom),

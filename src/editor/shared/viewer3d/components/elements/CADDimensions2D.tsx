@@ -16,6 +16,7 @@ import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { TOP_DOWN_STONE_FRONT_HEIGHT_MM, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
+import { computeLowerCabinetExternalMaidaRanges, isLowerCabinetExternalMaidaModuleId } from '@/editor/shared/utils/lowerCabinetMaidaGeometry';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
@@ -541,8 +542,23 @@ const computeLowerCabinetMaidaHeights = (
   doorBottomGap: number,
   stoneTopThicknessMm: number = 20,
   customMaidaHeights?: number[],
+  customMaidaHeightsMode?: string,
   hasTopEndPanel?: boolean,
 ): { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] | null => {
+  if (isLowerCabinetExternalMaidaModuleId(moduleId)) {
+    const ranges = computeLowerCabinetExternalMaidaRanges({
+      moduleId,
+      moduleHeightMm,
+      stoneTopThicknessMm,
+      doorTopGap,
+      doorBottomGap,
+      customMaidaHeights,
+      customMaidaHeightsMode,
+      hasTopEndPanel,
+    });
+    return ranges.length > 0 ? ranges : null;
+  }
+
   // 하부장 서랍/마이다 모듈만 처리
   const isLowerDrawer = moduleId.includes('lower-drawer-');
   const isLowerDoorLift = moduleId.includes('lower-door-lift-');
@@ -666,20 +682,9 @@ const computeLowerCabinetMaidaHeights = (
     if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
       const lastIdx = maidaHeightsMm.length - 1;
       const result: { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] = new Array(maidaHeightsMm.length);
-      if (cmhValid) {
-        // 3D 렌더와 동일: 시작점을 기본 바닥(-defaultBottomExtMm)에 고정하고 아래→위 누적.
-        //  하단갭 ↑ → 3단(맨아래)만 gapBottomExt 만큼 하단 내려감 / 상단갭 ↑ → 1단(맨위)만 gapTopExt 올라감.
-        let cursorBottom = -defaultBottomExtMm;
-        for (let i = 0; i <= lastIdx; i++) {
-          let h = maidaHeightsMm[i];
-          if (i === 0) { cursorBottom -= gapBottomExt; h += gapBottomExt; }
-          if (i === lastIdx) h += gapTopExt;
-          result[i] = { maidaHeightMm: h, maidaBottomMm: cursorBottom, maidaTopMm: cursorBottom + h };
-          cursorBottom += h + gapMm;
-        }
-        return result;
-      }
-      // 자동(미입력): 천장 고정 위→아래, 맨 아래(maida0)가 남은 공간 흡수.
+      // 한통(cmhValid)·반통(자동) 동일 방식으로 표시 통일:
+      //  천장(topPositionMm)에 맨 위 마이다 윗변 고정 → 위에서 아래로 스택.
+      //  높이는 cmhValid면 입력값, 아니면 기본값을 그대로 쓴다(갭 합산 안 함).
       const topPositionMm = -bottomExtMm + totalFrontMm;
       let cursorTop = topPositionMm;
       for (let i = lastIdx; i >= 1; i--) {
@@ -689,7 +694,7 @@ const computeLowerCabinetMaidaHeights = (
         cursorTop = bottomMm - gapMm;
       }
       const bottomStart = -bottomExtMm;
-      const newMaida0H = Math.max(0, cursorTop - bottomStart);
+      const newMaida0H = cmhValid ? maidaHeightsMm[0] : Math.max(0, cursorTop - bottomStart);
       result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };
       return result;
     }
@@ -2700,21 +2705,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               // customMaidaHeights는 store 최신값을 직접 조회 (mod 스냅샷이 옛값일 수 있음).
               //  한통/반통 등으로 측면뷰 mod.id와 입력 대상 id가 갈릴 수 있어,
               //  ① id 일치 → ② 같은 슬롯 → ③ 같은 x위치 + 같은 moduleId 순으로 찾는다.
-              const cmhForMaida = (() => {
-                const byId = (placedModulesStore.find(pm => pm.id === mod.id) as any)?.customMaidaHeights;
-                if (byId) return byId;
-                const direct = (mod as any).customMaidaHeights;
-                if (direct) return direct;
-                const cand = placedModulesStore.find(pm => {
+              const maidaSourceModule = (() => {
+                const byId = placedModulesStore.find(pm => pm.id === mod.id);
+                if ((byId as any)?.customMaidaHeights) return byId;
+                if ((mod as any).customMaidaHeights) return mod;
+                return placedModulesStore.find(pm => {
                   if (pm.id === mod.id) return false;
                   if (!(pm as any).customMaidaHeights) return false;
                   if (pm.moduleId !== mod.moduleId) return false;
                   if (pm.slotIndex !== undefined && mod.slotIndex !== undefined && pm.slotIndex === mod.slotIndex) return true;
                   return Math.abs((pm.position?.x ?? 0) - (mod.position?.x ?? 0)) < 0.01;
                 });
-                return (cand as any)?.customMaidaHeights;
               })();
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, topFinishThicknessForMaida, cmhForMaida, mod.hasTopEndPanel === true);
+              const cmhForMaida = (maidaSourceModule as any)?.customMaidaHeights;
+              const cmhModeForMaida = (maidaSourceModule as any)?.customMaidaHeightsMode;
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, topFinishThicknessForMaida, cmhForMaida, cmhModeForMaida, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
@@ -4052,7 +4057,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const topFinishThicknessForMaida_r = isTD_r
                 ? getLowerTopFinishThicknessForModule(mod as PlacedModule)
                 : getStoneTopThicknessMm(mod);
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, topFinishThicknessForMaida_r, (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
+              const maidaSourceModule_r = placedModulesStore.find(pm => pm.id === mod.id) ?? mod;
+              const cmhForMaida_r = (maidaSourceModule_r as any)?.customMaidaHeights
+                ?? (mod as any).customMaidaHeights;
+              const cmhModeForMaida_r = (maidaSourceModule_r as any)?.customMaidaHeightsMode
+                ?? (mod as any).customMaidaHeightsMode;
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, topFinishThicknessForMaida_r, cmhForMaida_r, cmhModeForMaida_r, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 

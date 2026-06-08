@@ -413,44 +413,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
               : synced.baseFrameGap;
           }
 
-          // 도어 셋팅 — 카테고리별 갭을 배치된 가구 개별값에 덮어쓴다.
-          // (모달에서 셋팅하면 이미 배치된 가구도 새 값으로 갱신되어야 함)
-          {
-            const mid = module.moduleId || '';
-            const isUpperMod = mid.includes('upper-cabinet') || mid.includes('dual-upper-cabinet');
-            if (isUpperMod) {
-              if (values.doorSettingUpperEnabled) {
-                updates.doorTopGap = synced.doorTopGapUpper;
-                updates.doorBottomGap = synced.doorBottomGapUpper;
-              }
-            } else if (isLower) {
-              const isDoorLift = mid.includes('lower-door-lift-');
-              const isTopDown = mid.includes('lower-top-down-');
-              if (isDoorLift) {
-                if (values.doorSettingLowerDoorLiftEnabled) {
-                  updates.doorTopGap = synced.doorTopGapLowerDoorLift;
-                  updates.doorBottomGap = synced.doorBottomGapLowerDoorLift;
-                }
-              } else if (isTopDown) {
-                if (values.doorSettingLowerTopDownEnabled) {
-                  updates.doorTopGap = synced.doorTopGapLowerTopDown;
-                  updates.doorBottomGap = synced.doorBottomGapLowerTopDown;
-                }
-              } else {
-                if (values.doorSettingLowerEnabled) {
-                  updates.doorTopGap = synced.doorTopGapLower;
-                  updates.doorBottomGap = synced.doorBottomGapLower;
-                }
-              }
-            } else {
-              // 키큰장(full)
-              if (values.doorSettingTallEnabled) {
-                updates.doorTopGap = synced.doorTopGapTall;
-                updates.doorBottomGap = synced.doorBottomGapTall;
-              }
-            }
-          }
-
           if (Object.keys(updates).length > 0) furnitureState.updatePlacedModule(module.id, updates);
         });
       const guides = spaceState.spaceInfo.freePlacementGuides ?? [];

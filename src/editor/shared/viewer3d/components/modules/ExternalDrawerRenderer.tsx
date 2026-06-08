@@ -174,10 +174,10 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
   const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
-  // fixedMaidaHeightMm이 있어도 상단/하단 갭 delta를 추가 적용
   const maidaHeightMm = fixedMaidaHeightMm != null ? (fixedMaidaHeightMm + gapTopExt + gapBottomExt) : defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
-  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm - gapBottomExt) + maidaHeight / 2;
+  const maidaBottomActualMm = maidaBottomMm - gapBottomExt;
+  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomActualMm) + maidaHeight / 2;
 
   // 2D 마이다 overlay/대각선용
   const { viewMode } = useSpace3DView();

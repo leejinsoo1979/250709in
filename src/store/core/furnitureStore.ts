@@ -621,7 +621,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           const sThk = module.stoneTopThickness || 0;
           if (isDoorLiftNew && sThk > 0) {
             module.stoneTopFrontOffset = 0;
-            module.doorTopGap = sThk + 15;
+            if (module.doorTopGap === undefined) {
+              module.doorTopGap = configuredDoorTopGap;
+            }
           }
           if (isTopDownNew && sThk > 0) {
             const expectedGap = getTopDownDoorTopGap(sThk, module.hasTopEndPanel === true);

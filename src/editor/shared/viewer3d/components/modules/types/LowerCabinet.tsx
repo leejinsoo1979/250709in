@@ -1060,6 +1060,11 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return (pm as any)?.customMaidaHeights as number[] | undefined;
   });
+  const customMaidaHeightsModeRaw = useFurnitureStore(state => {
+    if (!placedFurnitureId) return undefined;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return (pm as any)?.customMaidaHeightsMode as string | undefined;
+  });
   const legraDrawerTypesRaw = useFurnitureStore(state => {
     if (!placedFurnitureId) return undefined;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
@@ -1103,13 +1108,13 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     maidaHeightsMm[1] = evenH;
     maidaHeightsMm[2] = evenH;
   }
-  // 도어올림 터치 3단: 상단갭(doorTopGap) 변화량을 1단(맨위) 마이다에 흡수
-  //   ※ customMaidaValid(사용자 직접 입력)면 입력값이 최우선 → 보정 스킵.
-  //     (스킵 안 하면 입력값에 topExtDelta가 매 렌더 더해져 치수가 위아래로 튐)
-  if (!customMaidaValid && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+  // 도어올림 터치: 상단갭 증가분은 맨 위 마이다 윗변만,
+  // 하단갭 증가분은 맨 아래 마이다 아랫변만 움직인다.
+  if (!customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
     const topExtDeltaMm = topExtMm - defaultTopExtMm;
     if (topExtDeltaMm !== 0) {
-      maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + topExtDeltaMm);
+      const topIdx = maidaHeightsMm.length - 1;
+      maidaHeightsMm[topIdx] = Math.max(0, maidaHeightsMm[topIdx] + topExtDeltaMm);
     }
   }
   // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정, maida0이 흡수
@@ -1128,16 +1133,39 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // 그 외(터치 아닌 경우)는 기존대로 바닥에서 위로 누적
   let maidas: { height: number; centerY: number; tier: number; bottomMm: number }[];
   if ((isTopDownTouch || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
-    // 마이다 영역은 도어갭과 무관. 항상 default 위치 사용.
-    //   ※ 도어올림 3단만 예외: 상단갭(topExtMm) 변화량을 시작점(top)에 반영해
-    //      1단 마이다 윗변이 도어 상단을 따라 같이 올라가/내려가도록 함.
+    // 도어올림은 상단갭을 측판 상단 기준 절대값으로 본다.
+    // 맨 위 마이다 윗변 = 측판 상단 + topExtMm.
     const lastIdx = maidaHeightsMm.length - 1;
-    const topShiftMm = isDoorLift3Fixed ? (topExtMm - defaultTopExtMm) : 0;
+    const topShiftMm = (isDoorLift2Fixed || isDoorLift3Fixed) ? (topExtMm - defaultTopExtMm) : 0;
     const topPositionMm = isTopDownTouch
       ? -bottomExtMm + maidaTotalFrontMm
       : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
-    if (customMaidaValid) {
+    if (customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed)) {
+      const customIsGapBase = customMaidaHeightsModeRaw === 'gapBase';
+      if (customIsGapBase && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+        const targetBaseMaidaSum = Math.max(0, maidaTotalFrontMm - gapMm * 2);
+        const currentBaseMaidaSum = maidaHeightsMm.reduce((sum, value) => sum + value, 0);
+        const heightDelta = targetBaseMaidaSum - currentBaseMaidaSum;
+        if (Math.abs(heightDelta) > 0.01) {
+          maidaHeightsMm[1] = Math.max(0, maidaHeightsMm[1] + heightDelta / 2);
+          maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + heightDelta / 2);
+        }
+      }
+      let cursorBottom = -defaultBottomExtMm - gapBottomExt;
+      for (let i = 0; i <= lastIdx; i++) {
+        let h = maidaHeightsMm[i];
+        if (customIsGapBase && i === 0) h += gapBottomExt;
+        if (customIsGapBase && i === lastIdx) h += gapTopExt;
+        result[i] = {
+          height: h,
+          centerY: cabinetBottomY + mmToThreeUnits(cursorBottom + h / 2),
+          tier: i + 1,
+          bottomMm: cursorBottom
+        };
+        cursorBottom += h + gapMm;
+      }
+    } else if (customMaidaValid) {
       // 사용자 입력값: 시작점을 기본 바닥(-defaultBottomExtMm)에 고정하고 아래→위 누적.
       //  갭 규칙 (3단·1단 칸만 갭만큼 길어지고 나머지 위치는 고정):
       //   - 시작점 고정 → 하단갭이 늘어도 마이다 전체가 같이 안 내려감
@@ -1147,7 +1175,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       for (let i = 0; i <= lastIdx; i++) {
         let h = maidaHeightsMm[i];
         if (i === 0) { cursorBottom -= gapBottomExt; h += gapBottomExt; }
-        if (i === lastIdx) h += gapTopExt;
+        if (i === lastIdx && isTopDownTouch) h += gapTopExt;
         result[i] = {
           height: h,
           centerY: cabinetBottomY + mmToThreeUnits(cursorBottom + h / 2),

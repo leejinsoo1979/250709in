@@ -19,6 +19,7 @@ import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from './panelThickness';
 import { resolveSplitDoorGeometry } from './splitDoorGeometry';
+import { computeLowerCabinetExternalMaidaRanges } from './lowerCabinetMaidaGeometry';
 
 const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10;
 
@@ -101,7 +102,8 @@ export const calculatePanelDetails = (
   topEndPanelBackLipThickness: number = 0,
   topEndPanelOffsetMm?: number,
   topEndPanelBackOffsetMm?: number,
-  includeTopEndPanelMain: boolean = false
+  includeTopEndPanelMain: boolean = false,
+  customMaidaHeightsMode?: string
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -2598,7 +2600,7 @@ export const calculatePanelDetails = (
     const tdTouchStretcherH = stoneTopThickness === 10 ? 65 : stoneTopThickness === 30 ? 45 : 55;
     const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
-    const topExtMm = isTopDownTouch ? (doorTopGap ?? defaultTopExtMm) : defaultTopExtMm;
+    const topExtMm = doorTopGap ?? defaultTopExtMm;
     const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
     const totalFrontMm = height + topExtMm + bottomExtMm;
     const gapMm = 3;
@@ -2631,12 +2633,23 @@ export const calculatePanelDetails = (
       && customMaidaHeights.every(v => typeof v === 'number' && v > 0))
       ? customMaidaHeights
       : undefined;
+    const maidaRanges = computeLowerCabinetExternalMaidaRanges({
+      moduleId: moduleData.id,
+      moduleHeightMm: height,
+      stoneTopThicknessMm: stoneTopThickness,
+      doorTopGap,
+      doorBottomGap,
+      customMaidaHeights: cmh,
+      customMaidaHeightsMode,
+    });
 
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;
       const backH = dh - drawerThicknessMm;
       let maidaH: number;
-      if (cmh) {
+      if (maidaRanges[di]) {
+        maidaH = maidaRanges[di].maidaHeightMm;
+      } else if (cmh) {
         maidaH = cmh[di];
       } else if (isDoorLift2Fixed) {
         maidaH = fixedMaidaDoorLift2[di];
