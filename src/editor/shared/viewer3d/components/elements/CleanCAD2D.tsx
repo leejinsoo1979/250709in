@@ -522,6 +522,29 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true;
 
+  // 미드웨이(상부장~하부장 갭) 편집: 좌/우 어느 쪽에서 편집하든 배치된 "모든 상부 가구"에
+  // 동일하게 반영한다(가구별 개별 높이 조정은 가구편집 팝업에서만 수행하는 특수 케이스).
+  //   delta = 현재 미드웨이 − 새 미드웨이 (양수면 상부장이 그만큼 아래로 확장)
+  //   각 상부 가구 customHeight += delta
+  const applyMidwayGapToAllUppers = (currentGap: number, newGap: number) => {
+    const delta = currentGap - newGap;
+    if (delta === 0) return;
+    const isUpperModule = (m: any) => {
+      const mid = m.moduleId || '';
+      return mid.includes('upper-cabinet') || mid.includes('upper-');
+    };
+    useFurnitureStore.getState().placedModules.forEach((m: any) => {
+      if (!isUpperModule(m)) return;
+      const baseH = typeof m.customHeight === 'number' && m.customHeight > 0
+        ? m.customHeight
+        : (m.freeHeight ?? m.moduleHeight ?? 0);
+      const nextH = Math.round(baseH + delta);
+      if (nextH > 0 && nextH !== baseH) {
+        updatePlacedModule(m.id, { customHeight: nextH });
+      }
+    });
+  };
+
   // 측면뷰 3구간 치수 기준 가구: CADDimensions2D.getVisibleFurnitureForSideView()와 완전 동기화
   const sideViewMod = useMemo(() => {
     if (placedModules.length === 0) return null;
@@ -4987,11 +5010,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                               color={textColor}
                               isDark={currentViewDirection !== '3D' && view2DTheme === 'dark'}
                               onChange={(newGap) => {
-                                const delta = middleGapH - newGap;
-                                const newBodyHeight = Math.round(currentUpperH + delta);
-                                if (newBodyHeight > 0) {
-                                  updatePlacedModule(upperMod.id, { customHeight: newBodyHeight });
-                                }
+                                // 좌/우/모든 상부 가구 연동
+                                applyMidwayGapToAllUppers(middleGapH, newGap);
                               }}
                             />
                           </Html>
@@ -6012,11 +6032,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                               color={textColor}
                               isDark={currentViewDirection !== '3D' && view2DTheme === 'dark'}
                               onChange={(newGap) => {
-                                const delta = rMiddleGapH - newGap;
-                                const newBodyHeight = Math.round(currentRUpperH + delta);
-                                if (newBodyHeight > 0) {
-                                  updatePlacedModule(rUpperMod.id, { customHeight: newBodyHeight });
-                                }
+                                // 좌/우/모든 상부 가구 연동
+                                applyMidwayGapToAllUppers(rMiddleGapH, newGap);
                               }}
                             />
                           </Html>
