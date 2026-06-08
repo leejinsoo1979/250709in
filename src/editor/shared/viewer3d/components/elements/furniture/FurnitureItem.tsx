@@ -3595,13 +3595,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return undefined;
   }, [isDualFurniture, localSlotIndex, placedModule.slotIndex, placedModule.zone, spaceInfo.droppedCeiling?.enabled, zoneSlotInfo, indexing.slotWidths, normalizedSlotIndex]);
 
+  const isGuideOrFreePlacementModule =
+    placedModule.isFreePlacement === true ||
+    placedModule.guideSlotPlacement === true ||
+    placedModule.guideDepthPlacement === true;
+
   // 측면뷰에서 선택된 슬롯의 가구만 표시 (4분할 뷰 포함)
+  // 커스텀/자유배치는 PlacedFurnitureContainer에서 가이드 기준으로 이미 필터링한다.
   // view2DDirection은 prop으로 전달받음 (4분할 뷰에서는 각 패널별로 'left'/'right' 전달)
   // 중요: selectedSlotIndex는 전역 인덱스이므로 globalSlotIndex와 비교해야 함
   if (
     viewMode === '2D' &&
     (view2DDirection === 'left' || view2DDirection === 'right') &&
-    selectedSlotIndex !== null
+    selectedSlotIndex !== null &&
+    !isGuideOrFreePlacementModule
   ) {
     // 전역 인덱스 사용 (단내림 가구도 정확히 비교)
     const furnitureGlobalSlotIndex = globalSlotIndex ?? normalizedSlotIndex;

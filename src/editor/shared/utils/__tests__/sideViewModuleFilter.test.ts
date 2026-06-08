@@ -91,7 +91,7 @@ describe('filterSideViewModules', () => {
     }).map(module => module.id)).toEqual(['middle-lower', 'middle-upper'])
   })
 
-  it('커스텀 상하분할 가이드는 선택 X 레벨의 상부/하부를 함께 표시한다', () => {
+  it('커스텀 상하분할 가이드는 같은 슬롯 번호의 상부/하부를 함께 표시한다', () => {
     const guides = [
       { id: 'upper-1', index: 0, x: 0, width: 600, guideZone: 'upper' as const },
       { id: 'upper-2', index: 1, x: 600, width: 600, guideZone: 'upper' as const },
@@ -146,6 +146,14 @@ describe('filterSideViewModules', () => {
       isFreePlacement: true,
       spaceInfo: { width: 1200, freePlacementGuides: guides }
     }).map(module => module.id)).toEqual(['lower-2-module', 'upper-2-module'])
+
+    expect(filterSideViewModules({
+      placedModules: modules,
+      viewDirection: 'left',
+      selectedSlotIndex: 2,
+      isFreePlacement: true,
+      spaceInfo: { width: 1200, freePlacementGuides: guides }
+    }).map(module => module.id)).toEqual([])
   })
 
   it('측면도 슬롯 그룹은 듀얼 가구를 점유한 두 슬롯에 모두 포함한다', () => {

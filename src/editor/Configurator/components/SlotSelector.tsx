@@ -185,11 +185,11 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   const finalSlotButtons = hasRawSplitGuideSlots
     ? Array.from(new Set(slotButtons.map(slot => slot.actualIndex)))
       .sort((a, b) => a - b)
-      .map((actualIndex, index) => ({
-        displayIndex: index + 1,
+      .map((actualIndex) => ({
+        displayIndex: actualIndex + 1,
         actualIndex,
         zone: 'normal' as const,
-        label: `${index + 1}`
+        label: `${actualIndex + 1}`
       }))
     : slotButtons;
 
