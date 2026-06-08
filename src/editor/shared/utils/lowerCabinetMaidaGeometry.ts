@@ -166,7 +166,12 @@ export const computeLowerCabinetExternalMaidaRanges = ({
         cursorTop = bottom - gapMm;
       }
       const bottomStart = -bottomExtMm;
-      const bottomHeight = Math.max(0, cursorTop - bottomStart);
+      // 사용자 입력(customMaidaValid)이면 맨 아래 칸도 입력 높이를 그대로 쓴다.
+      //  (패널이 합·최소값을 보장하므로 자동 흡수로 덮어쓰지 않음 → 입력대로 렌더)
+      //  자동(미입력)일 때만 맨 아래가 남는 공간을 흡수한다.
+      const bottomHeight = customMaidaValid
+        ? maidaHeightsMm[0]
+        : Math.max(0, cursorTop - bottomStart);
       result[0] = {
         maidaHeightMm: roundMm(bottomHeight),
         maidaBottomMm: roundMm(bottomStart),
