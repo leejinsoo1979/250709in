@@ -154,6 +154,21 @@ export const computeLowerCabinetExternalMaidaRanges = ({
         ? -bottomExtMm + maidaTotalFrontMm
         : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
       const result: LowerCabinetMaidaRange[] = new Array(maidaHeightsMm.length);
+      if (customMaidaValid) {
+        // 3D 렌더와 동일: 맨 아래 하단을 가구 바닥에 고정하고 아래→위로 입력값 누적.
+        let cursorBottom = -bottomExtMm;
+        for (let i = 0; i <= lastIdx; i++) {
+          const height = maidaHeightsMm[i];
+          result[i] = {
+            maidaHeightMm: roundMm(height),
+            maidaBottomMm: roundMm(cursorBottom),
+            maidaTopMm: roundMm(cursorBottom + height),
+          };
+          cursorBottom += height + gapMm;
+        }
+        return result;
+      }
+      // 자동(미입력): 천장 고정 위→아래, 맨 아래가 남는 공간 흡수.
       let cursorTop = topPositionMm;
       for (let i = lastIdx; i >= 1; i--) {
         const height = maidaHeightsMm[i];
@@ -166,12 +181,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
         cursorTop = bottom - gapMm;
       }
       const bottomStart = -bottomExtMm;
-      // 사용자 입력(customMaidaValid)이면 맨 아래 칸도 입력 높이를 그대로 쓴다.
-      //  (패널이 합·최소값을 보장하므로 자동 흡수로 덮어쓰지 않음 → 입력대로 렌더)
-      //  자동(미입력)일 때만 맨 아래가 남는 공간을 흡수한다.
-      const bottomHeight = customMaidaValid
-        ? maidaHeightsMm[0]
-        : Math.max(0, cursorTop - bottomStart);
+      const bottomHeight = Math.max(0, cursorTop - bottomStart);
       result[0] = {
         maidaHeightMm: roundMm(bottomHeight),
         maidaBottomMm: roundMm(bottomStart),

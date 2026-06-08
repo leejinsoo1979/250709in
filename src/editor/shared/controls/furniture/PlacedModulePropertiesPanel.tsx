@@ -6105,11 +6105,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   ? (currentPlacedModule as any).customMaidaHeights
                   : undefined
               }).map(range => range.maidaHeightMm);
-              const heights = findRenderedMaidaHeightsBottomToTop(
-                currentPlacedModule.id,
-                moduleId,
-                fallbackHeights.length
-              ) ?? fallbackHeights;
+              // source of truth 우선순위:
+              //  1) 사용자가 입력한 customMaidaHeights([아래=0 ... 위=N-1])가 있으면 그대로 사용
+              //     → DOM 역추적(findRendered…)을 쓰면 한 박자 늦거나 순서가 꼬여
+              //        입력 직후 옛 값으로 되돌아가는 문제가 생김.
+              //  2) 없으면 렌더 DOM값, 그것도 없으면 fallback(기하 계산값).
+              const storedCustomMaida = Array.isArray((currentPlacedModule as any).customMaidaHeights)
+                && (currentPlacedModule as any).customMaidaHeights.length === fallbackHeights.length
+                && (currentPlacedModule as any).customMaidaHeights.every((v: any) => typeof v === 'number' && v > 0)
+                ? ((currentPlacedModule as any).customMaidaHeights as number[])
+                : undefined;
+              const heights = storedCustomMaida
+                ?? findRenderedMaidaHeightsBottomToTop(
+                  currentPlacedModule.id,
+                  moduleId,
+                  fallbackHeights.length
+                )
+                ?? fallbackHeights;
               const displayHeights = heights.slice().reverse();
               if (displayHeights.length === 0) return null;
 

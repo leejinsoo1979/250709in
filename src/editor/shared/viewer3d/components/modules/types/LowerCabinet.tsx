@@ -1136,33 +1136,47 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       ? -bottomExtMm + maidaTotalFrontMm
       : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
-    // 천장(topPositionMm)에 맨 위 마이다 윗변을 고정하고 위→아래로 쌓는다.
-    //  - customMaidaValid: 모든 칸(맨 아래 포함)을 입력값 그대로 사용
-    //    → 패널이 인접칸을 흡수해 합·갭을 유지하므로 경계 하나만 이동, 나머지 고정.
-    //  - 자동(미입력): 맨 위~2단은 입력값, 맨 아래(0)가 남은 공간 흡수.
-    let cursorTop = topPositionMm;
-    for (let i = lastIdx; i >= 1; i--) {
-      const h = maidaHeightsMm[i];
-      const bottomMm = cursorTop - h;
-      result[i] = {
-        height: h,
-        centerY: cabinetBottomY + mmToThreeUnits(bottomMm + h / 2),
-        tier: i + 1,
-        bottomMm
+    if (customMaidaValid) {
+      // 사용자 입력값: 맨 아래(3단) 하단을 가구 바닥(-bottomExtMm)에 고정하고
+      //  아래→위로 입력 높이만큼 그대로 누적한다.
+      //  → 패널이 한 칸을 바꾸면 인접 한 칸만 흡수해 합·갭을 유지하므로,
+      //    움직이는 경계는 딱 그 두 칸의 공유선 하나뿐이고 나머지 칸 위치는 고정.
+      let cursorBottom = -bottomExtMm;
+      for (let i = 0; i <= lastIdx; i++) {
+        const h = maidaHeightsMm[i];
+        result[i] = {
+          height: h,
+          centerY: cabinetBottomY + mmToThreeUnits(cursorBottom + h / 2),
+          tier: i + 1,
+          bottomMm: cursorBottom
+        };
+        cursorBottom += h + gapMm;
+      }
+    } else {
+      // 자동(미입력): 천장에 맨 위 마이다 윗변을 고정하고 위→아래로 쌓되,
+      //  맨 아래(0)가 남은 공간을 흡수.
+      let cursorTop = topPositionMm;
+      for (let i = lastIdx; i >= 1; i--) {
+        const h = maidaHeightsMm[i];
+        const bottomMm = cursorTop - h;
+        result[i] = {
+          height: h,
+          centerY: cabinetBottomY + mmToThreeUnits(bottomMm + h / 2),
+          tier: i + 1,
+          bottomMm
+        };
+        cursorTop = bottomMm - gapMm;
+      }
+      const bottomStart = -bottomExtMm;
+      const bottomHeight = Math.max(0, cursorTop - bottomStart);
+      result[0] = {
+        height: bottomHeight,
+        centerY: cabinetBottomY + mmToThreeUnits(bottomStart + bottomHeight / 2),
+        tier: 1,
+        bottomMm: bottomStart
       };
-      cursorTop = bottomMm - gapMm;
+      maidaHeightsMm[0] = bottomHeight;
     }
-    const bottomStart = -bottomExtMm;
-    const bottomHeight = customMaidaValid
-      ? maidaHeightsMm[0]
-      : Math.max(0, cursorTop - bottomStart);
-    result[0] = {
-      height: bottomHeight,
-      centerY: cabinetBottomY + mmToThreeUnits(bottomStart + bottomHeight / 2),
-      tier: 1,
-      bottomMm: bottomStart
-    };
-    maidaHeightsMm[0] = bottomHeight;
     maidas = result;
   } else {
     let currentBottomMm = -defaultBottomExtMm;
