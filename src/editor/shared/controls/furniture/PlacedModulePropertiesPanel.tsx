@@ -6124,8 +6124,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 || maidaMid.includes('dual-lower-induction-cabinet')
                 || maidaMid.includes('lower-door-lift-touch-')
                 || maidaMid.includes('lower-top-down-touch-');
+              const MAIDA_MIN_MM = 153; // 가장 작은 레그라 서랍(소 117 + 오프셋 21 + 갭 15)이 들어가는 최소 마이다
               const applyMaidaH = (displayIdx: number, num: number) => {
                 if (!Number.isFinite(num) || num <= 0) return;
+                if (num < MAIDA_MIN_MM) { alert(`마이다 최소 ${MAIDA_MIN_MM}mm 이상이어야 합니다.`); return; }
                 const di = (maidaTierCount - 1) - displayIdx;
                 const base = heights.slice(); // bottom-to-top 실제값
                 const prev = base[di];
@@ -6135,7 +6137,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 if (maidaTierCount > 1) {
                   const absorbIdx = di < maidaTierCount - 1 ? di + 1 : di - 1;
                   const absorbH = base[absorbIdx] - delta;
-                  if (absorbH <= 0) { alert('인접 마이다가 0 이하로 줄어듭니다. 더 작은 값을 입력하세요.'); return; }
+                  if (absorbH < MAIDA_MIN_MM) { alert(`인접 마이다가 최소 ${MAIDA_MIN_MM}mm보다 작아집니다. 더 작은 값을 입력하세요.`); return; }
                   base[absorbIdx] = absorbH;
                 }
                 // 마이다를 바꾸면 수동 레그라 선택을 리셋해 자동축소가 다시 작동하게 한다.
