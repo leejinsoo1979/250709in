@@ -1135,9 +1135,12 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const topPositionMm = isTopDownTouch
       ? -bottomExtMm + maidaTotalFrontMm
       : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
-    let cursorTop = topPositionMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
-    // 맨 위(lastIdx)부터 아래(1)까지 위치 고정
+    // 천장(topPositionMm)에 맨 위 마이다 윗변을 고정하고 위→아래로 쌓는다.
+    //  - customMaidaValid: 모든 칸(맨 아래 포함)을 입력값 그대로 사용
+    //    → 패널이 인접칸을 흡수해 합·갭을 유지하므로 경계 하나만 이동, 나머지 고정.
+    //  - 자동(미입력): 맨 위~2단은 입력값, 맨 아래(0)가 남은 공간 흡수.
+    let cursorTop = topPositionMm;
     for (let i = lastIdx; i >= 1; i--) {
       const h = maidaHeightsMm[i];
       const bottomMm = cursorTop - h;
@@ -1149,17 +1152,17 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       };
       cursorTop = bottomMm - gapMm;
     }
-    // 맨 아래(0): 항상 자동 흡수 (customMaidaValid 여부와 무관)
-    //   하단 = -bottomExtMm (가구 바닥), 상단 = cursorTop (1·2단 묶음 끝)
-    //   하단갭 늘리면 가구 바닥 아래로 확장
     const bottomStart = -bottomExtMm;
+    const bottomHeight = customMaidaValid
+      ? maidaHeightsMm[0]
+      : Math.max(0, cursorTop - bottomStart);
     result[0] = {
-      height: Math.max(0, cursorTop - bottomStart),
-      centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
+      height: bottomHeight,
+      centerY: cabinetBottomY + mmToThreeUnits(bottomStart + bottomHeight / 2),
       tier: 1,
       bottomMm: bottomStart
     };
-    maidaHeightsMm[0] = result[0].height;
+    maidaHeightsMm[0] = bottomHeight;
     maidas = result;
   } else {
     let currentBottomMm = -defaultBottomExtMm;
