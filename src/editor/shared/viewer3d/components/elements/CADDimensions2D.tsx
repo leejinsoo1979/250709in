@@ -624,12 +624,6 @@ const computeLowerCabinetMaidaHeights = (
     const cmhValid = customMaidaHeights
       && customMaidaHeights.length === drawerHeights.length
       && customMaidaHeights.every(v => typeof v === 'number' && v > 0);
-    if (typeof window !== 'undefined' && (window as any).__maidaDbg) {
-      // eslint-disable-next-line no-console
-      console.log('[SIDE maida]', moduleId.slice(0,40), {
-        cmhValid, customMaidaHeights, drawerLen: drawerHeights.length,
-      });
-    }
     const baseMaidaHeightsMm = cmhValid
       ? [...customMaidaHeights!]
       : (isDoorLift2Fixed
@@ -2703,7 +2697,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const topFinishThicknessForMaida = isTD
                 ? getLowerTopFinishThicknessForModule(mod as PlacedModule)
                 : getStoneTopThicknessMm(mod);
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, topFinishThicknessForMaida, (mod as any).customMaidaHeights, mod.hasTopEndPanel === true);
+              // customMaidaHeights는 store 최신값을 id로 직접 조회 (mod 스냅샷이 옛값일 수 있음)
+              const cmhForMaida = (placedModulesStore.find(pm => pm.id === mod.id) as any)?.customMaidaHeights
+                ?? (mod as any).customMaidaHeights;
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, topFinishThicknessForMaida, cmhForMaida, mod.hasTopEndPanel === true);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
