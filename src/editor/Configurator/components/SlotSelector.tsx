@@ -64,7 +64,7 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     purple: '#8b5cf6',
     vivid: '#a25378',
     red: '#D2042D',
-    pink: '#ec4899',
+    pink: '#7369ee', // ThemeContext colorMap과 일치 (브랜드 퍼플 계열). 이전 핑크(#ec4899) 잔재 제거
     indigo: '#6366f1',
     teal: '#14b8a6',
     yellow: '#eab308',
