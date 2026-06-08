@@ -190,11 +190,9 @@ const resolveFurnitureDepthDimensionLayout = (
       ? fixedFrontWithBase - actualDepth / 2
       : fixedBackWithBase + actualDepth / 2;
   } else if (isLower) {
-    const lowerBaseDepth = mmToThreeUnits(defaultDepthMm);
-    const baseFrontZ = fixedBackWithBase + lowerBaseDepth;
-    bodyCenterZ = lowerDir === 'back'
-      ? baseFrontZ - actualDepth / 2
-      : fixedBackWithBase + actualDepth / 2;
+    // 하부 가구는 뒷면을 뒷벽에 고정하고, 앞고정의 앞라인 추종은 backWallGap으로 표현한다.
+    // (FurnitureItem.tsx와 동일 — fixedBackWithBase에 backWallGapZ가 이미 포함됨)
+    bodyCenterZ = fixedBackWithBase + actualDepth / 2;
   } else if (isShoe) {
     const sameSectionDepth = Math.abs(lowerDepthMm - upperDepthMm) < 0.5;
     bodyCenterZ = sameSectionDepth && lowerDir === upperDir && lowerDir === 'back'

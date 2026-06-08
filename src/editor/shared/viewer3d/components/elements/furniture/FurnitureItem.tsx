@@ -3185,12 +3185,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       ? fixedFrontZ - depth / 2
       : fixedBackZ + depth / 2;
   } else if (isLowerForZ) {
-    const lowerBaseDepth = mmToThreeUnits(categoryDefaultDepth ?? defaultModuleDepthMm);
+    // 하부 가구는 뒷면을 뒷벽에 고정한다. 앞/뒤고정 모두 뒷면 기준이며,
+    // 앞고정의 "앞면을 기준 앞라인에 맞추는" 이동은 전부 backWallGap(아래)으로 표현한다.
+    // backWallGap은 패널에서 "가장 깊은 하부 가구 깊이 − 내 깊이"로 저장되고,
+    // 다른 가구 깊이 변경 시 일괄 갱신되어 라이브로 추종한다.
+    //   → 뒷벽이격 칸 숫자와 실제 위치, 그리고 Room.tsx(탑뷰)의 몰딩/치수가이드가 모두 일치.
     const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset;
-    const baseFrontZ = fixedBackZ + lowerBaseDepth;
-    furnitureZ = lowerSectionDir === 'back'
-      ? baseFrontZ - depth / 2
-      : fixedBackZ + depth / 2;
+    furnitureZ = fixedBackZ + depth / 2;
   } else if (isShoeCabinet) {
     // 신발장: 기본은 뒷벽 기준, 앞고정 선택 시 앞면 기준으로 깊이를 줄인다.
     // 도어 안쪽 밀림은 각 도어 렌더러의 로컬 Z에서 처리하고, 본체 기준은 임의로 띄우지 않는다.
@@ -3220,6 +3221,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 뒷벽과 이격: 기본 위치 유지(0=앞면정렬). 양수면 앞으로 이동.
   // (키큰장찬넬은 insertFrontInsetMm으로 내부 프레임만 들이고 가구 위치는 이동 안 함)
+  // 앞고정 하부 가구의 앞라인 추종도 backWallGap에 저장되므로 여기서 동일하게 적용된다.
   const backWallGapMm = placedModule.backWallGap ?? 0;
   if (!isFrontSpaceFurniture && backWallGapMm > 0) {
     furnitureZ += mmToThreeUnits(backWallGapMm);

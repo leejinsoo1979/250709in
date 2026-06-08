@@ -1072,21 +1072,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     backWallGapZValue = 0
   ) => {
     const depth = mmToThreeUnits(depthMm);
-    const fixedFrontZ = furnitureZOffsetValue + furnitureDepthValue / 2 - doorThicknessValue + baseDepthOffsetValue + backWallGapZValue;
     const fixedBackZ = furnitureZOffsetValue - furnitureDepthValue / 2 - doorThicknessValue + baseDepthOffsetValue + backWallGapZValue;
 
-    // UI의 '뒤고정'은 내부값 front다. 뒷면을 고정하고 깊이를 줄이면 앞면이 뒤로 들어간다.
-    if ((direction || 'front') === 'front') {
-      return {
-        backZ: fixedBackZ,
-        frontZ: fixedBackZ + depth,
-      };
-    }
-
-    // UI의 '앞고정'은 내부값 back이다. 기존 앞선을 유지하고 뒷면만 앞으로 온다.
+    // 하부 가구는 본체(FurnitureItem.tsx)와 동일하게 "뒷면을 뒷벽에 고정 + backWallGap 앞이동"
+    // 으로 통일한다. 앞고정의 앞라인 추종은 backWallGap(이미 fixedBackZ에 포함)으로 표현되므로
+    // 앞/뒤고정 모두 backZ=fixedBackZ, frontZ=backZ+depth 로 계산해야 치수가 본체를 정확히 따라간다.
+    // (이전엔 앞고정 시 앞면을 공간 앞면 라인에 고정해 본체와 어긋났다.)
+    void direction;
     return {
-      backZ: fixedFrontZ - depth,
-      frontZ: fixedFrontZ,
+      backZ: fixedBackZ,
+      frontZ: fixedBackZ + depth,
     };
   };
 

@@ -25,7 +25,7 @@ import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstant
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcInsertFrameResizedPositionX, calcResizedPositionX, getModuleBoundsX, getModuleCategory, resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
-import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
+import { getDefaultFurnitureDepth, getCategoryDefaultFurnitureDepth, computeLowerFrontAlignedGaps } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import {
   normalizeDoorHingePositionsMm,
@@ -2823,6 +2823,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 하부 가구의 뒷벽이격(backWallGap)을 계산한다.
+  //
+  // 정의: 하부 가구는 앞/뒤고정 버튼과 무관하게 "항상" 앞면을 기준 앞라인에 맞춘다.
+  //   기준 앞라인 = 현재 배치된 가장 깊은 하부 가구의 앞면(= 뒷벽 + 그 가구 깊이).
+  //   내 깊이가 기준보다 얕으면 뒷면이 뒷벽에서 떨어지고, 그 거리가 곧 뒷벽이격이다.
+  //   backWallGap = 기준앞라인깊이 − 내깊이  (가장 깊은 가구 자신이면 0)
+  // 예) 600/580/650 배치 → 기준 650 → 이격 50 / 70 / 0.
+  //     650 배치 전이라면 기준 600 → 이격 0 / 20.
+  // (_direction은 호환용 인자이며 정렬 동작에는 영향을 주지 않는다.)
+  const computeLowerBackWallGap = (_direction: 'front' | 'back', myDepth: number): number => {
+    if (!currentPlacedModule) return 0;
+    const isLowerModuleId = (mid = '') =>
+      mid.startsWith('lower-') || mid.includes('dual-lower-');
+    const effDepthOf = (m: any): number => {
+      const catDefault = getCategoryDefaultFurnitureDepth(
+        spaceInfo.depth || 600,
+        m.moduleId || '',
+        spaceInfo.furnitureDepthDefaults
+      );
+      const stored = typeof m.customDepth === 'number' && m.customDepth > 0
+        ? m.customDepth
+        : (typeof m.lowerSectionDepth === 'number' && m.lowerSectionDepth > 0
+            ? m.lowerSectionDepth
+            : (typeof m.freeDepth === 'number' && m.freeDepth > 0 ? m.freeDepth : undefined));
+      return stored ?? catDefault ?? 0;
+    };
+    // 기준 앞라인 = 현재 배치된 모든 하부 가구의 실제 깊이 중 최대 (내 깊이 포함)
+    let baselineDepth = myDepth;
+    placedModules.forEach((m: any) => {
+      if (m.id === currentPlacedModule.id) return;
+      if (!isLowerModuleId(m.moduleId || '')) return;
+      const d = effDepthOf(m);
+      if (d > baselineDepth) baselineDepth = d;
+    });
+    return Math.max(0, Math.round(baselineDepth - myDepth));
+  };
+
   const buildBodyDepthUpdates = (newDepth: number, includeFreeDepth = false) => {
     if (!currentPlacedModule) return { customDepth: newDepth };
 
@@ -2849,6 +2886,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       ?? 'front';
     updates.lowerSectionDepthDirection = bodyDepthDirection;
     updates.upperSectionDepthDirection = bodyDepthDirection;
+
+    // 앞고정 상태에서 깊이를 바꾸면 뒷벽이격도 함께 재계산 (앞라인 추종 유지).
+    // 뒤고정이면 0. (Room.tsx 몰딩/걸레받이/치수가이드가 backWallGap을 읽으므로 store 저장 필요)
+    updates.backWallGap = computeLowerBackWallGap(bodyDepthDirection, newDepth);
 
     if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
       updates.sectionDepthDirections = (currentPlacedModule as any).sectionDepthDirections.map(() => bodyDepthDirection);
@@ -2912,10 +2953,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     });
   };
 
+  // 어떤 가구든 배치/깊이변경이 일어나면, 현재 배치된 "모든 하부 가구"의 backWallGap을
+  // 가장 깊은 하부 가구 기준으로 다시 계산해 일괄 갱신한다(항상 앞라인 정렬, 라이브 추종).
+  // editedId/editedDepth: 방금 깊이를 바꾼 가구(아직 store 반영 전일 수 있어 직접 주입).
+  const refreshLowerFrontFixedGaps = (editedId?: string, editedDepth?: number) => {
+    const latest = useFurnitureStore.getState().placedModules;
+    // 방금 바꾼 가구의 깊이를 즉시 반영(아직 store에 안 들어왔을 수 있음)
+    const effective = (editedId && typeof editedDepth === 'number')
+      ? latest.map(m => m.id === editedId
+          ? { ...m, customDepth: editedDepth, lowerSectionDepth: editedDepth, freeDepth: editedDepth }
+          : m)
+      : latest;
+    const changes = computeLowerFrontAlignedGaps(effective, spaceInfo);
+    changes.forEach(({ id, backWallGap }) => updatePlacedModule(id, { backWallGap }));
+  };
+
   const applyBodyDepthChange = (newDepth: number, includeFreeDepth = false) => {
     syncBodyDepthLocalState(newDepth);
     if (activePopup.id) {
       updatePlacedModule(activePopup.id, buildBodyDepthUpdates(newDepth, includeFreeDepth));
+      // 내 깊이 변경이 다른 앞고정 하부 가구 앞라인 기준을 바꿀 수 있으므로 일괄 갱신
+      refreshLowerFrontFixedGaps(activePopup.id, newDepth);
     }
   };
 
@@ -2980,11 +3038,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (currentPlacedModule.isFreePlacement || currentPlacedModule.freeDepth !== undefined) {
       updates.freeDepth = currentBodyDepth;
     }
+
+    // 앞고정: 뒷벽이격을 "가장 깊은 하부 가구 깊이 − 내 깊이"로 저장. 뒤고정이면 0.
+    // (계산은 computeLowerBackWallGap 헬퍼로 일원화)
+    updates.backWallGap = computeLowerBackWallGap(direction, currentBodyDepth);
     if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
       updates.sectionDepthDirections = (currentPlacedModule as any).sectionDepthDirections.map(() => direction);
     }
 
     updatePlacedModule(currentPlacedModule.id, updates);
+    // 이 가구의 앞/뒤고정 전환이 다른 앞고정 하부 가구의 기준 깊이를 바꿀 수 있으므로 일괄 갱신
+    refreshLowerFrontFixedGaps(currentPlacedModule.id, currentBodyDepth);
     setLowerDepthDirection(direction);
     setUpperDepthDirection(direction);
   };

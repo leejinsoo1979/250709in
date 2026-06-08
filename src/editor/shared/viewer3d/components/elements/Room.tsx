@@ -7842,12 +7842,20 @@ const Room: React.FC<RoomProps> = ({
                       // 신발장 걸래받이 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
-                      // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
-                      const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
+                      const slotBaseCategory = getModuleCategory(mod);
+                      // 하부 가구: 본체(FurnitureItem)와 동일하게 "뒷면 뒷벽 고정 + 깊이" 모델로
+                      // 걸래받이 앞면을 맞춘다. baseZPos는 깊이600 가구의 앞면이므로
+                      // offset = −(600 − 실제깊이) (방향 무관). 앞라인 추종은 backWallGap으로 별도 적용.
+                      // (computeDepthZOffset은 앞고정 시 0을 반환해 본체와 어긋났다 → 하부는 별도 계산)
+                      const slotBaseIsLower = slotBaseCategory === 'lower'
+                        || slotBaseShoeMid.startsWith('lower-')
+                        || slotBaseShoeMid.includes('dual-lower-');
+                      const unifiedBaseZOffset = slotBaseIsLower
+                        ? -mmToThreeUnits(getLowerDepthZOffsetMM(mod))
+                        : computeDepthZOffset(mod, 'lower');
                       // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
                       const slotBaseBackWallGapMm = mod.backWallGap ?? 0;
                       const slotBaseBackWallGapZ = slotBaseBackWallGapMm > 0 ? mmToThreeUnits(slotBaseBackWallGapMm) : 0;
-                      const slotBaseCategory = getModuleCategory(mod);
                       const isRegularFullSlotBase = slotBaseCategory === 'full'
                         && !isShoeSlotBase
                         && !slotBaseShoeMid.includes('pull-out-cabinet')

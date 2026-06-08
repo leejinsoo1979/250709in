@@ -29,15 +29,18 @@ const MERGE_TOLERANCE_MM = 1;
  * 하부 섹션 깊이 축소에 따른 Z 오프셋 (mm)
  * 양수 = 뒤로, 음수 = 앞으로
  */
+// 걸래받이 Z 보정량(mm). baseZBase는 깊이 600짜리 하부 가구의 앞면을 전제하므로,
+// 실제 깊이가 다르면 그 차이만큼 보정한다.
+// 본체(FurnitureItem.tsx)는 "뒷면을 뒷벽에 고정 + backWallGap 앞이동" 모델이므로,
+// 걸래받이 앞면도 항상 (뒷벽 + 실제깊이) = baseZBase − (600 − 실제깊이) 가 되어야 본체를 따라간다.
+//   depthZOffsetMM = 기준깊이(600) − 실제깊이   (방향 무관)
+//   - 실제깊이가 600보다 얕으면 양수(뒤로), 깊으면 음수(앞으로).
+// 앞고정의 앞라인 추종(가장 깊은 가구에 맞춤)은 호출부에서 backWallGap으로 별도 적용된다.
 export function getLowerDepthZOffsetMM(module: PlacedModule): number {
-  const fullDepth = module.customDepth ?? module.freeDepth ?? 600;
-  const lowerDepth = module.lowerSectionDepth ?? module.customDepth;
-  if (!lowerDepth || lowerDepth >= fullDepth) return 0;
-  const diff = fullDepth - lowerDepth;
-  const dir = module.lowerSectionDepthDirection || 'front';
-  // front(뒤고정): 앞에서 줄어듦 -> 걸레받이도 뒤로 이동
-  // back(앞고정): 뒤에서 줄어듦 -> 가구 앞면 유지, 걸레받이도 유지
-  return dir === 'front' ? diff : 0;
+  const BASE_DEPTH_MM = 600;
+  const lowerDepth = module.lowerSectionDepth ?? module.customDepth ?? module.freeDepth;
+  if (!lowerDepth) return 0;
+  return BASE_DEPTH_MM - lowerDepth;
 }
 
 /**

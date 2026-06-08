@@ -15,7 +15,8 @@ import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore
 import { v4 as uuidv4 } from 'uuid';
 import {
   getCategoryDefaultFurnitureDepth,
-  getDefaultFurnitureDepth as resolveDefaultFurnitureDepth
+  getDefaultFurnitureDepth as resolveDefaultFurnitureDepth,
+  computeLowerFrontAlignedGaps
 } from '@/editor/shared/utils/furnitureDepthDefaults';
 import { resolveInsertFrameResizeHingePosition } from '@/editor/shared/utils/freePlacementUtils';
 
@@ -837,6 +838,22 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     } catch (e) {
       console.warn('[빌트인/인서트] 잔여 폭 흡수 컬럼 추가 실패', e);
     }
+  }
+
+  // 하부 가구 배치 직후: 모든 하부 가구의 앞면을 가장 깊은 가구 앞라인에 정렬
+  // (backWallGap = 최대깊이 − 자기깊이). 새로 배치한 가구가 가장 깊으면 기존 가구들이
+  // 그 앞라인으로 따라오고, 얕으면 자기 backWallGap만 채워진다.
+  try {
+    const { useSpaceConfigStore } = require('@/store/core/spaceConfigStore');
+    const curSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const latestModules = useFurnitureStore.getState().placedModules;
+    const gapChanges = computeLowerFrontAlignedGaps(latestModules, curSpaceInfo);
+    if (gapChanges.length > 0) {
+      const updateFn = useFurnitureStore.getState().updatePlacedModule;
+      gapChanges.forEach((c: { id: string; backWallGap: number }) => updateFn(c.id, { backWallGap: c.backWallGap }));
+    }
+  } catch (e) {
+    console.warn('[하부 가구 앞라인 정렬] backWallGap 갱신 실패', e);
   }
 
   return { success: true, module: newModule };
