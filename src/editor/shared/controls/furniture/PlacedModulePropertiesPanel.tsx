@@ -6133,12 +6133,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 const prev = base[di];
                 const delta = num - prev;
                 if (delta === 0) return;
-                // 한 칸을 키우면 "바로 아래 칸"(di-1)이 그만큼 줄어든다(경계선만 이동, 나머지 고정).
-                //  맨 아래(di=0)는 더 아래 칸이 없어 변경 불가.
-                if (di === 0) { alert('맨 아래 마이다는 직접 늘릴 수 없습니다. 위 칸을 조정하세요.'); return; }
-                const absorbIdx = di - 1;
+                // 경계선만 이동하고 인접 한 칸이 흡수한다(나머지 칸 고정):
+                //  - 맨 위 칸(di=N-1): 그 아래(di-1) 칸이 흡수  (1단↔2단 경계)
+                //  - 그 외 칸: 그 위(di+1) 칸이 흡수            (2단↔1단, 3단↔2단 경계)
+                const absorbIdx = (di === maidaTierCount - 1) ? di - 1 : di + 1;
+                if (absorbIdx < 0 || absorbIdx >= maidaTierCount) {
+                  alert('이 마이다는 직접 조정할 수 없습니다. 인접 칸을 조정하세요.'); return;
+                }
                 const absorbH = base[absorbIdx] - delta;
-                if (absorbH < MAIDA_MIN_MM) { alert(`아래 마이다가 최소 ${MAIDA_MIN_MM}mm보다 작아집니다. 더 작은 값을 입력하세요.`); return; }
+                if (absorbH < MAIDA_MIN_MM) { alert(`인접 마이다가 최소 ${MAIDA_MIN_MM}mm보다 작아집니다. 더 작은 값을 입력하세요.`); return; }
                 base[di] = num;
                 base[absorbIdx] = absorbH;
                 // 마이다를 바꾸면 수동 레그라 선택을 리셋해 자동축소가 다시 작동하게 한다.
