@@ -7105,7 +7105,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     : isDoorLiftTouch3 ? [228, 117, 117]
                     : isTopDownTouch2 ? [228, 228]
                     : isTopDownTouch3 ? [164, 164, 164]
-                    : isInduction ? [228, 228]
+                    : isInduction ? [228, 164]  // di=0(아래 1단)=228(대), di=1(위 2단)=164(중)
                     : [228, 228];
                   // drawerHeight → 자동 매칭된 레그라 종류
                   const autoLegraType = (dh: number): 'M' | 'L' | 'F' =>
