@@ -624,6 +624,12 @@ const computeLowerCabinetMaidaHeights = (
     const cmhValid = customMaidaHeights
       && customMaidaHeights.length === drawerHeights.length
       && customMaidaHeights.every(v => typeof v === 'number' && v > 0);
+    if (typeof window !== 'undefined' && (window as any).__maidaDbg) {
+      // eslint-disable-next-line no-console
+      console.log('[SIDE maida]', moduleId.slice(0,40), {
+        cmhValid, customMaidaHeights, drawerLen: drawerHeights.length,
+      });
+    }
     const baseMaidaHeightsMm = cmhValid
       ? [...customMaidaHeights!]
       : (isDoorLift2Fixed
