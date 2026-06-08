@@ -422,6 +422,8 @@ interface InductionDrawerAnimatedProps {
   maidaDimensionSide?: 'left' | 'right' | null;
   maidaFrontWidthMm?: number;
   maidaXOffset?: number;
+  // 레그라 서랍 종류 사용자 선택 (tier별, di=0 아래 1단 → di=1 위 2단). 측판 GLB override.
+  legraDrawerTypes?: ('M' | 'L' | 'F')[];
 }
 
 const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
@@ -444,6 +446,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   maidaDimensionSide = null,
   maidaFrontWidthMm,
   maidaXOffset = 0,
+  legraDrawerTypes,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -501,9 +504,16 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const drawerDepthMm = 490;
   const bottomGapMm = 28;
   const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
-  const drawer1TotalH = 228;
+  // 레그라 종류(소/중/대)별 서랍 본체 표준 높이 — 측판 GLB와 동일 기준(M500/L500/F500).
+  // 사용자가 종류를 선택하면 측판뿐 아니라 뒷판 높이(BackH)도 함께 줄어든다(터치서랍과 동일).
+  const inductionLegraHeightByType: Record<'M' | 'L' | 'F', number> = { M: 117, L: 164, F: 228 };
+  const drawer1TotalH = legraDrawerTypes?.[0]
+    ? inductionLegraHeightByType[legraDrawerTypes[0]]
+    : 228;
   const drawer1BackH = drawer1TotalH - drawerBottomThicknessMm;
-  const drawer2TotalH = 164;
+  const drawer2TotalH = legraDrawerTypes?.[1]
+    ? inductionLegraHeightByType[legraDrawerTypes[1]]
+    : 164;
   const drawer2BackH = drawer2TotalH - drawerBottomThicknessMm;
   // drawer2는 상단 마이다(maida2)와 연동되어야 하므로 maida2 계산 이후에 위치 결정 (아래 참조)
 
@@ -687,7 +697,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             panelName="인덕션 2단서랍 뒷판"
             furnitureId={placedFurnitureId}
           />
-          {/* 1단 서랍 레그라 측판 (GLB 모델) */}
+          {/* 1단 서랍 레그라 측판 (GLB 모델) — 사용자 선택 종류(legraDrawerTypes[0]=아래 1단) 반영 */}
           <LegraSideRail
             drawerTier={1}
             drawerBottomY={drawer1BottomY}
@@ -697,8 +707,9 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
             renderMode={renderMode}
             furnitureId={placedFurnitureId}
+            legraTypeOverride={legraDrawerTypes?.[0]}
           />
-          {/* 2단 서랍 레그라 측판 (GLB 모델) */}
+          {/* 2단 서랍 레그라 측판 (GLB 모델) — 사용자 선택 종류(legraDrawerTypes[1]=위 2단) 반영 */}
           <LegraSideRail
             drawerTier={2}
             drawerBottomY={drawer2BottomY}
@@ -708,6 +719,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
             renderMode={renderMode}
             furnitureId={placedFurnitureId}
+            legraTypeOverride={legraDrawerTypes?.[1]}
           />
         </animated.group>
       )}
@@ -2910,6 +2922,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           maidaDimensionSide={maidaDimensionSide}
           maidaFrontWidthMm={maidaFrontWidthMm}
           maidaXOffset={maidaXOffset}
+          legraDrawerTypes={(placedModuleForCorner as any)?.legraDrawerTypes}
         />
       )}
 

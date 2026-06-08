@@ -6917,7 +6917,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             if (!isLegraModule) return null;
 
             // 마이다 개수
-            const maidaCount = isInduction ? 1
+            // 인덕션장은 서랍/마이다가 2단(아래 서랍 + 위 가림 마이다)이다.
+            // computeLowerCabinetExternalMaidaRanges도 인덕션장에 2개 range를 반환하므로 2로 맞춘다.
+            const maidaCount = isInduction ? 2
               : (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) ? 2
               : 3;
 
@@ -7103,7 +7105,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     : isDoorLiftTouch3 ? [228, 117, 117]
                     : isTopDownTouch2 ? [228, 228]
                     : isTopDownTouch3 ? [164, 164, 164]
-                    : isInduction ? [228]
+                    : isInduction ? [228, 228]
                     : [228, 228];
                   // drawerHeight → 자동 매칭된 레그라 종류
                   const autoLegraType = (dh: number): 'M' | 'L' | 'F' =>
