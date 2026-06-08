@@ -135,7 +135,9 @@ export const computeLowerCabinetExternalMaidaRanges = ({
       maidaHeightsMm[1] = evenH;
       maidaHeightsMm[2] = evenH;
     }
-    if (isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+    // ※ customMaidaValid(사용자 직접 입력)면 입력값 최우선 → topExt 보정 스킵
+    //    (3D 렌더와 동일하게 처리, 치수가 위아래로 튀는 문제 방지)
+    if (!customMaidaValid && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
       const topExtDeltaMm = topExtMm - defaultTopExtMm;
       if (topExtDeltaMm !== 0) {
         maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + topExtDeltaMm);

@@ -1104,8 +1104,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     maidaHeightsMm[2] = evenH;
   }
   // 도어올림 터치 3단: 상단갭(doorTopGap) 변화량을 1단(맨위) 마이다에 흡수
-  //   customMaida 값 보존 + 상단갭 변경 시 1단 마이다 윗변이 그만큼 올라가/내려가도록.
-  if (isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+  //   ※ customMaidaValid(사용자 직접 입력)면 입력값이 최우선 → 보정 스킵.
+  //     (스킵 안 하면 입력값에 topExtDelta가 매 렌더 더해져 치수가 위아래로 튐)
+  if (!customMaidaValid && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
     const topExtDeltaMm = topExtMm - defaultTopExtMm;
     if (topExtDeltaMm !== 0) {
       maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + topExtDeltaMm);
