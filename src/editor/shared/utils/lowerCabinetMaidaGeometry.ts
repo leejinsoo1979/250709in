@@ -157,12 +157,16 @@ export const computeLowerCabinetExternalMaidaRanges = ({
         : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
       const result: LowerCabinetMaidaRange[] = new Array(maidaHeightsMm.length);
       if (customMaidaValid) {
-        // 3D 렌더와 동일: 맨 아래 하단을 가구 바닥(-bottomExtMm, 하단갭 반영)에 고정,
-        //  아래→위로 입력값 누적. 상단갭은 맨 위 칸 높이에만 더해 1단 상단만 올라가게.
+        // 3D 렌더와 동일: 시작점을 기본 바닥(-defaultBottomExtMm)에 고정하고 아래→위 누적.
+        //  하단갭 ↑ → 3단(맨아래)만 gapBottomExt 만큼 하단 내려감 / 상단갭 ↑ → 1단(맨위)만 gapTopExt 올라감.
+        //  → 시작점 고정이라 하단갭 늘려도 전체가 같이 안 내려감.
         const gapTopExtLocal = topExtMm - defaultTopExtMm;
-        let cursorBottom = -bottomExtMm;
+        const gapBottomExtLocal = bottomExtMm - defaultBottomExtMm;
+        let cursorBottom = -defaultBottomExtMm;
         for (let i = 0; i <= lastIdx; i++) {
-          const height = (i === lastIdx) ? maidaHeightsMm[i] + gapTopExtLocal : maidaHeightsMm[i];
+          let height = maidaHeightsMm[i];
+          if (i === 0) { cursorBottom -= gapBottomExtLocal; height += gapBottomExtLocal; }
+          if (i === lastIdx) height += gapTopExtLocal;
           result[i] = {
             maidaHeightMm: roundMm(height),
             maidaBottomMm: roundMm(cursorBottom),
