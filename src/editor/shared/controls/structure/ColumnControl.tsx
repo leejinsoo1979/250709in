@@ -114,7 +114,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
           <ColumnThumbnail
             width={250}
             height={2400}
-            depth={600}
+            depth={580}
             material="concrete"
             color="#888888"
             onDragStart={handleThumbnailDragStart}
