@@ -7029,16 +7029,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     type="checkbox"
                     checked={editEnabled}
                     onChange={toggleEdit}
-                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--theme-primary, #4a90d9)' }}
                     aria-label="마이다 크기 변경 모드"
                   />
                 </div>
                 <div className={styles.epRow} style={{ gap: '8px' }}>
                   {labels.map((label, uiIdx) => {
                     const di = toInternalIdx(uiIdx);
-                    // 3단(맨 아래)은 항상 자동 흡수값 — 1·2단 + 갭 + 자동흡수 = 가구 본체 영역
-                    // 1·2단은 사용자 입력값 우선
-                    const isBottomTier = di === 0;
+                    // 3단형(터치 등)은 맨 아래가 자동 흡수값 — 1·2단 + 갭 + 자동흡수 = 가구 본체 영역.
+                    // 단, 인덕션장은 2단이며 위·아래 모두 사용자가 직접 입력 가능해야 한다(자동흡수 제외).
+                    const isBottomTier = di === 0 && !isInduction;
                     let val: number | string = '';
                     if (isBottomTier) {
                       val = activeMaida[di] ?? defaultMaida[di] ?? '';
