@@ -628,8 +628,10 @@ const resolveTouchMaidaHeightsMm = (
     heights = [360, evenH, evenH];
   }
   if (!customMaida && isTopDownTouch3) {
-    const upperBundle = heights.slice(1).reduce((sum, h) => sum + h, 0) + (heights.length - 1) * gapMm;
-    heights[0] = Math.max(0, maidaTotalFront - upperBundle);
+    const bottomFixed = 185;
+    const remaining = Math.max(0, maidaTotalFront - bottomFixed - gapMm * 2);
+    const evenH = Math.floor(remaining / 2);
+    heights = [bottomFixed, evenH, evenH];
   }
 
   if (isTouch3) {

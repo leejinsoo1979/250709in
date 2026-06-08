@@ -1108,6 +1108,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     maidaHeightsMm[1] = evenH;
     maidaHeightsMm[2] = evenH;
   }
+  if (!customMaidaValid && isTopDown3Fixed && maidaHeightsMm.length === 3) {
+    const bottomFixed = 185;
+    maidaHeightsMm[0] = bottomFixed;
+    const remaining = Math.max(0, maidaTotalFrontMm - bottomFixed - gapMm * 2);
+    const evenH = Math.floor(remaining / 2);
+    maidaHeightsMm[1] = evenH;
+    maidaHeightsMm[2] = evenH;
+  }
   // 도어올림 터치: 상단갭 증가분은 맨 위 마이다 윗변만,
   // 하단갭 증가분은 맨 아래 마이다 아랫변만 움직인다.
   if (!customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
@@ -1119,7 +1127,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   }
   // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정, maida0이 흡수
   //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
-  if (!customMaidaValid && (isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
+  if (!customMaidaValid && isTopDown2Fixed && maidaHeightsMm.length >= 2) {
     const upperMaidasSum = maidaHeightsMm.slice(1).reduce((a, b) => a + b, 0);
     const upperGapsCount = maidaHeightsMm.length - 1;
     const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
@@ -1171,6 +1179,15 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       //   - 시작점 고정 → 하단갭이 늘어도 마이다 전체가 같이 안 내려감
       //   - 하단갭 ↑ → 3단(맨아래) 하단만 gapBottomExt 만큼 내려감
       //   - 상단갭 ↑ → 1단(맨위) 상단만 gapTopExt 만큼 올라감
+      if (customMaidaHeightsModeRaw === 'gapBase' && isTopDown3Fixed && maidaHeightsMm.length === 3) {
+        const targetBaseMaidaSum = Math.max(0, maidaTotalFrontMm - gapMm * 2);
+        const currentBaseMaidaSum = maidaHeightsMm.reduce((sum, value) => sum + value, 0);
+        const heightDelta = targetBaseMaidaSum - currentBaseMaidaSum;
+        if (Math.abs(heightDelta) > 0.01) {
+          maidaHeightsMm[1] = Math.max(0, maidaHeightsMm[1] + heightDelta / 2);
+          maidaHeightsMm[2] = Math.max(0, maidaHeightsMm[2] + heightDelta / 2);
+        }
+      }
       let cursorBottom = -defaultBottomExtMm;
       for (let i = 0; i <= lastIdx; i++) {
         let h = maidaHeightsMm[i];
