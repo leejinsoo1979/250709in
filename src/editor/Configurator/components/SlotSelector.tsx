@@ -33,9 +33,6 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   const placedModules = useFurnitureStore(state => state.placedModules);
   const isCustomGuideMode = spaceInfo.customGuideMode === true;
 
-  // 실제 방향 결정 (4분할 뷰에서는 splitViewDirection 사용)
-  const effectiveDirection = forSplitView ? splitViewDirection : view2DDirection;
-
   // 측면뷰가 아닐 때만 슬롯 선택을 해제한다.
   // 측면뷰 기본 상태는 선택 슬롯 없이 좌/우 끝단 기준으로 보여야 한다.
   React.useEffect(() => {
@@ -181,7 +178,20 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     }
   }
 
-  const finalSlotButtons = slotButtons;
+  const hasRawSplitGuideSlots = isCustomGuideMode && slotButtons.some(slot =>
+    slot.guideZone === 'upper' || slot.guideZone === 'lower'
+  );
+
+  const finalSlotButtons = hasRawSplitGuideSlots
+    ? Array.from(new Set(slotButtons.map(slot => slot.actualIndex)))
+      .sort((a, b) => a - b)
+      .map((actualIndex, index) => ({
+        displayIndex: index + 1,
+        actualIndex,
+        zone: 'normal' as const,
+        label: `${index + 1}`
+      }))
+    : slotButtons;
 
   // 컴팩트 모드용 컨테이너 스타일
   const compactContainerStyle: React.CSSProperties = compact ? {
@@ -193,9 +203,7 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     pointerEvents: 'auto'
   } : containerStyle;
 
-  const hasSplitGuideSlots = isCustomGuideMode && finalSlotButtons.some(slot =>
-    slot.guideZone === 'upper' || slot.guideZone === 'lower'
-  );
+  const hasSplitGuideSlots = false;
   const splitSlotRows = hasSplitGuideSlots
     ? [
       { key: 'upper', slots: finalSlotButtons.filter(slot => slot.guideZone === 'upper') },
@@ -218,14 +226,11 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     : 0;
 
   const getSlotButtonLabel = (slot: typeof finalSlotButtons[number]) => {
-    if (hasSplitGuideSlots && slot.guideZone !== 'full') return slot.displayIndex;
     return slot.label ?? slot.displayIndex;
   };
 
   const getSlotButtonTitle = (slot: typeof finalSlotButtons[number], isDroppedZone: boolean) => {
     if (isDroppedZone) return '단내림 영역';
-    if (hasSplitGuideSlots && slot.guideZone === 'upper') return `상부장 슬롯 ${slot.displayIndex}`;
-    if (hasSplitGuideSlots && slot.guideZone === 'lower') return `하부장 슬롯 ${slot.displayIndex}`;
     return `슬롯 ${slot.label ?? slot.displayIndex}`;
   };
 
@@ -285,9 +290,14 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
       // 자유배치: 가상 슬롯 = X좌표 순서로 그룹화된 X 좌표. actualIndex번째 X그룹의 가구
       const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
       const guideGroups = isCustomGuideMode ? getSideViewGuideSlotGroups(spaceInfo.freePlacementGuides || []) : [];
-      const guideGroupCenters = guideGroups.map(group => (
-        (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
-      ));
+      const targetGuideGroups = guideGroups.filter(group => group.selectedSlotIndex === slot.actualIndex);
+      const guideGroupCenters = targetGuideGroups.length > 0
+        ? targetGuideGroups.map(group => (
+          (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
+        ))
+        : guideGroups.map(group => (
+          (group.x + group.width / 2 - (spaceInfo.width || 0) / 2) * 0.01
+        ));
       const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
       const xGroups: number[] = guideGroupCenters.length > 0 ? guideGroupCenters : [];
       if (xGroups.length === 0) {
@@ -301,9 +311,16 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
         });
       }
       const targetX = xGroups[slot.actualIndex];
-      if (targetX !== undefined) {
-        const guideGroup = guideGroups[slot.actualIndex];
-        const inGroup = sortedByX.filter(m => Math.abs((m.position?.x ?? 0) - targetX) < 0.01);
+      if (targetX !== undefined || targetGuideGroups.length > 0) {
+        const guideGroup = slot.guideZone
+          ? targetGuideGroups.find(group => group.guideZone === slot.guideZone) ?? targetGuideGroups[0] ?? guideGroups[slot.actualIndex]
+          : undefined;
+        const targetXs = targetGuideGroups.length > 0
+          ? guideGroupCenters
+          : targetX !== undefined ? [targetX] : [];
+        const inGroup = sortedByX.filter(m =>
+          targetXs.some(x => Math.abs((m.position?.x ?? 0) - x) < 0.01)
+        );
         if (guideGroup?.guideZone === 'upper') {
           matched = inGroup.find(m =>
             m.guideSlotZone === 'upper' ||

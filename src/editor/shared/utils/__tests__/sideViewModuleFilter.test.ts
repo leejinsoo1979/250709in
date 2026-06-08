@@ -102,6 +102,7 @@ describe('filterSideViewModules', () => {
     const groups = getSideViewGuideSlotGroups(guides)
 
     expect(groups.map(group => group.label)).toEqual(['상1', '하1', '하2', '상2', '하3'])
+    expect(groups.map(group => group.selectedSlotIndex)).toEqual([0, 0, 1, 1, 2])
 
     const modules = [
       createModule('upper-1-module', -3, undefined, {
@@ -121,6 +122,12 @@ describe('filterSideViewModules', () => {
         isFreePlacement: true,
         guideSlotPlacement: true,
         guideSlotZone: 'lower'
+      }),
+      createModule('upper-2-module', 3, undefined, {
+        moduleId: 'upper-cabinet-600',
+        isFreePlacement: true,
+        guideSlotPlacement: true,
+        guideSlotZone: 'upper'
       })
     ]
 
@@ -138,7 +145,7 @@ describe('filterSideViewModules', () => {
       selectedSlotIndex: 1,
       isFreePlacement: true,
       spaceInfo: { width: 1200, freePlacementGuides: guides }
-    }).map(module => module.id)).toEqual(['upper-1-module', 'lower-1-module'])
+    }).map(module => module.id)).toEqual(['lower-2-module', 'upper-2-module'])
   })
 
   it('측면도 슬롯 그룹은 듀얼 가구를 점유한 두 슬롯에 모두 포함한다', () => {

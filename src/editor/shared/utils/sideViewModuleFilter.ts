@@ -62,7 +62,7 @@ export const getSideViewGuideSlotGroups = (
     return a.width - b.width
   })
 
-  const groups: Array<{ x: number; width: number; guideZone: 'full' | 'upper' | 'lower'; slotIds: string[] }> = []
+  const groups: Array<{ x: number; width: number; guideZone: 'full' | 'upper' | 'lower'; slotIds: string[]; slotIndices: number[] }> = []
   sortedSlots.forEach(slot => {
     const guideZone = slot.guideZone || 'full'
     const existing = groups.find(group =>
@@ -73,10 +73,11 @@ export const getSideViewGuideSlotGroups = (
 
     if (existing) {
       existing.slotIds.push(slot.id)
+      existing.slotIndices.push(slot.index)
       return
     }
 
-    groups.push({ x: slot.x, width: slot.width, guideZone, slotIds: [slot.id] })
+    groups.push({ x: slot.x, width: slot.width, guideZone, slotIds: [slot.id], slotIndices: [slot.index] })
   })
 
   const hasSplitSlots = groups.some(group => group.guideZone === 'upper' || group.guideZone === 'lower')
@@ -92,7 +93,9 @@ export const getSideViewGuideSlotGroups = (
     label: hasSplitSlots && group.guideZone !== 'full'
       ? `${zoneLabelMap[group.guideZone]}${zoneCounters[group.guideZone]}`
       : `${zoneCounters[group.guideZone]}`,
-    selectedSlotIndex: index
+    selectedSlotIndex: Number.isFinite(Math.min(...group.slotIndices))
+      ? Math.min(...group.slotIndices)
+      : index
   }))
 }
 
@@ -128,30 +131,35 @@ const getGuidePlacementSlotModules = (
   spaceInfo?: Pick<SpaceInfo, 'freePlacementGuides' | 'width'>
 ): PlacedModule[] | null => {
   const guideGroups = getSideViewGuideSlotGroups(spaceInfo?.freePlacementGuides || [])
-  const targetGroup = guideGroups[selectedSlotIndex]
+  const targetGroups = guideGroups.filter(group => group.selectedSlotIndex === selectedSlotIndex)
+  const targetGroup = targetGroups[0] ?? guideGroups[selectedSlotIndex]
   const spaceWidth = spaceInfo?.width || 0
   if (!targetGroup || spaceWidth <= 0) return null
 
-  const targetGuideCenterX = targetGroup.x + targetGroup.width / 2
-  const groupsByZone = new Map<'full' | 'upper' | 'lower', SideViewGuideSlotGroup>()
-  guideGroups.forEach(group => {
-    const groupStartX = group.x - 0.5
-    const groupEndX = group.x + group.width + 0.5
-    if (targetGuideCenterX < groupStartX || targetGuideCenterX > groupEndX) return
+  const xLevelGroups = targetGroups.length > 0
+    ? targetGroups
+    : (() => {
+      const targetGuideCenterX = targetGroup.x + targetGroup.width / 2
+      const groupsByZone = new Map<'full' | 'upper' | 'lower', SideViewGuideSlotGroup>()
+      guideGroups.forEach(group => {
+        const groupStartX = group.x - 0.5
+        const groupEndX = group.x + group.width + 0.5
+        if (targetGuideCenterX < groupStartX || targetGuideCenterX > groupEndX) return
 
-    const existing = groupsByZone.get(group.guideZone)
-    if (!existing) {
-      groupsByZone.set(group.guideZone, group)
-      return
-    }
+        const existing = groupsByZone.get(group.guideZone)
+        if (!existing) {
+          groupsByZone.set(group.guideZone, group)
+          return
+        }
 
-    const groupCenterDistance = Math.abs(group.x + group.width / 2 - targetGuideCenterX)
-    const existingCenterDistance = Math.abs(existing.x + existing.width / 2 - targetGuideCenterX)
-    if (groupCenterDistance < existingCenterDistance) {
-      groupsByZone.set(group.guideZone, group)
-    }
-  })
-  const xLevelGroups = Array.from(groupsByZone.values())
+        const groupCenterDistance = Math.abs(group.x + group.width / 2 - targetGuideCenterX)
+        const existingCenterDistance = Math.abs(existing.x + existing.width / 2 - targetGuideCenterX)
+        if (groupCenterDistance < existingCenterDistance) {
+          groupsByZone.set(group.guideZone, group)
+        }
+      })
+      return Array.from(groupsByZone.values())
+    })()
   const targetCenters = new Set(
     xLevelGroups.map(group => Number(((group.x + group.width / 2 - spaceWidth / 2) * 0.01).toFixed(4)))
   )
