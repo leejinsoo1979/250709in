@@ -426,6 +426,21 @@ interface InductionDrawerAnimatedProps {
   legraDrawerTypes?: ('M' | 'L' | 'F')[];
 }
 
+// 레그라 서랍 깊이(mm) — 레일 GLB 깊이 단계와 동일하게 맞춘다.
+//   바닥판·뒷판·레일 측판이 모두 같은 깊이가 되도록, 보유한 깊이별 GLB 단계(300~500) 중
+//   몸통 깊이 - 여유 50mm 이하 최대값 선택. 단 최대 500(GLB 최대 단계).
+//   예: 몸통 600 → 550→500, 몸통 550 → 500, 몸통 500 → 450, 몸통 450 → 400.
+const LEGRA_GLB_DEPTH_STEPS_MM = [300, 350, 400, 450, 500];
+const LEGRA_DRAWER_DEPTH_MARGIN_MM = 50;
+const resolveLegraDrawerDepthMm = (bodyDepthMm: number): number => {
+  const limit = bodyDepthMm - LEGRA_DRAWER_DEPTH_MARGIN_MM;
+  let chosen = LEGRA_GLB_DEPTH_STEPS_MM[0];
+  for (const step of LEGRA_GLB_DEPTH_STEPS_MM) {
+    if (step <= limit) chosen = step; else break;
+  }
+  return chosen;
+};
+
 const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   adjustedHeight,
   adjustedWidth,
@@ -501,7 +516,10 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const widthMm = adjustedWidth;
   const drawerBottomWidthMm = widthMm - basicThicknessMm * 2 - bottomSideGapMm * 2;
   const drawerBackWidthMm = widthMm - basicThicknessMm * 2 - backSideGapMm * 2;
-  const drawerDepthMm = 490;
+  // 레일 GLB 깊이 단계(300~500). 레일 측판은 이 깊이의 GLB를 그대로 사용.
+  const railGlbDepthMm = resolveLegraDrawerDepthMm(furnitureDepth / 0.01);
+  // 서랍 박스(바닥판·뒷판) 깊이 = 레일 깊이 - 10mm (예: 레일 500 → 박스 490).
+  const drawerDepthMm = railGlbDepthMm - 10;
   const bottomGapMm = 28;
   const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
   // 레그라 종류(소/중/대)별 서랍 본체 표준 높이 — 측판 GLB와 동일 기준(M500/L500/F500).
@@ -708,6 +726,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             renderMode={renderMode}
             furnitureId={placedFurnitureId}
             legraTypeOverride={legraDrawerTypes?.[0]}
+            railDepthMm={railGlbDepthMm}
+            railHeightMm={drawer1TotalH}
           />
           {/* 2단 서랍 레그라 측판 (GLB 모델) — 사용자 선택 종류(legraDrawerTypes[1]=위 2단) 반영 */}
           <LegraSideRail
@@ -720,6 +740,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             renderMode={renderMode}
             furnitureId={placedFurnitureId}
             legraTypeOverride={legraDrawerTypes?.[1]}
+            railDepthMm={railGlbDepthMm}
+            railHeightMm={drawer2TotalH}
           />
         </animated.group>
       )}
@@ -904,7 +926,10 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const backSideGapMm = 18.5;
   const drawerBottomWidthMm = widthMm - basicThicknessMm * 2 - bottomSideGapMm * 2;
   const drawerBackWidthMm = widthMm - basicThicknessMm * 2 - backSideGapMm * 2;
-  const drawerDepthMm = 490;
+  // 레일 GLB 깊이 단계(300~500). 레일 측판은 이 깊이의 GLB를 그대로 사용.
+  const railGlbDepthMm = resolveLegraDrawerDepthMm(furnitureDepth / 0.01);
+  // 서랍 박스(바닥판·뒷판) 깊이 = 레일 깊이 - 10mm (예: 레일 500 → 박스 490).
+  const drawerDepthMm = railGlbDepthMm - 10;
   const drawerBottomWidth = mmToThreeUnits(drawerBottomWidthMm);
   const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
   const drawerDepth = mmToThreeUnits(drawerDepthMm);
@@ -1220,6 +1245,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
               drawerHeightMm={d.height}
               maidaHeightMm={maidas[d.tier - 1]?.height}
               legraTypeOverride={legraDrawerTypesRaw?.[d.tier - 1]}
+              railDepthMm={railGlbDepthMm}
+              railHeightMm={d.height}
               renderMode={renderMode}
               furnitureId={placedFurnitureId}
             />

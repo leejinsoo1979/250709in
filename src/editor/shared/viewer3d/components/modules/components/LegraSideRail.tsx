@@ -23,9 +23,32 @@ interface LegraSideRailProps {
   maidaHeightMm?: number;
   // 사용자가 직접 선택한 레그라 종류 (있으면 GLB 강제 매칭)
   legraTypeOverride?: 'M' | 'L' | 'F';
+  // 레일 깊이(mm). 지정 시 그 깊이에 맞는 깊이별 GLB(300/350/400/450/500)를 불러온다.
+  railDepthMm?: number;
+  // 레일 높이(mm). (현재 깊이별 GLB 방식에서는 미사용, 향후 높이 매칭용으로 받아만 둠)
+  railHeightMm?: number;
   renderMode?: string;
   furnitureId?: string;
 }
+
+// 레일 깊이(mm) → 보유한 깊이별 GLB 단계(이하 최대값) 매핑.
+const RAIL_GLB_DEPTH_STEPS = [300, 350, 400, 450, 500];
+const resolveRailGlbDepth = (depthMm: number): number => {
+  let chosen = RAIL_GLB_DEPTH_STEPS[0];
+  for (const step of RAIL_GLB_DEPTH_STEPS) {
+    if (step <= depthMm) chosen = step; else break;
+  }
+  return chosen;
+};
+
+// 등급(M/L/SL) × 깊이(300~500) → GLB 경로.
+//  파일명 규칙: M등급 300~450은 공백 'Legra M###', 그 외(M500/L/SL)는 언더스코어 'Legra_등급###'.
+const buildRailModelPath = (grade: 'M' | 'L' | 'SL', glbDepth: number): string => {
+  if (grade === 'M') {
+    return glbDepth >= 500 ? '/models/Legra_M500.glb' : `/models/Legra M${glbDepth}.glb`;
+  }
+  return `/models/Legra_${grade}${glbDepth}.glb`;
+};
 
 // glTF meters → project units (0.01 = 1mm)
 const GLTF_SCALE = 10;
@@ -154,6 +177,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerHeightMm,
   maidaHeightMm,
   legraTypeOverride,
+  railDepthMm,
   renderMode,
   furnitureId,
 }) => {
@@ -168,17 +192,16 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   const leftSourceSignatureRef = React.useRef<string | null>(null);
   const rightSourceSignatureRef = React.useRef<string | null>(null);
 
-  // GLB 선택: 사용자가 종류 직접 선택(legraTypeOverride) > drawerHeightMm 기준 자동 매칭
-  //   M(M500) 측판 128.5 / L(L500) 측판 177 / F(F500) 측판 241
-  const modelPath = legraTypeOverride
-    ? (legraTypeOverride === 'F' ? '/models/f500.glb'
-      : legraTypeOverride === 'M' ? '/models/Legra_M500.glb'
-      : '/models/Legra_L500.glb')
+  // 등급(높이) 결정: M(낮은) / L(중간) / SL(대서랍, 높은). 기존 F는 SL로 매핑(깊이별 GLB 보유).
+  const grade: 'M' | 'L' | 'SL' = legraTypeOverride
+    ? (legraTypeOverride === 'F' ? 'SL' : legraTypeOverride === 'M' ? 'M' : 'L')
     : drawerHeightMm != null
-    ? (drawerHeightMm >= 200 ? '/models/f500.glb'
-      : drawerHeightMm <= 120 ? '/models/Legra_M500.glb'
-      : '/models/Legra_L500.glb')
-    : (drawerTier === 1 ? '/models/f500.glb' : '/models/Legra_L500.glb');
+    ? (drawerHeightMm >= 200 ? 'SL' : drawerHeightMm <= 120 ? 'M' : 'L')
+    : (drawerTier === 1 ? 'SL' : 'L');
+
+  // railDepthMm 지정 시 → 등급 × 깊이별 GLB를 직접 불러옴(변형 없음). 미지정 시 500 깊이 기본.
+  const glbDepth = railDepthMm != null ? resolveRailGlbDepth(railDepthMm) : 500;
+  const modelPath = buildRailModelPath(grade, glbDepth);
   const { scene } = useGLTF(modelPath);
 
   const is2DSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
