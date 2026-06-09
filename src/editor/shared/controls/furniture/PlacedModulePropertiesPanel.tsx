@@ -1497,6 +1497,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [doorOverlayRightInput, setDoorOverlayRightInput] = useState<string>('0');
   const [doorOverlayTopInput, setDoorOverlayTopInput] = useState<string>('0');
   const [doorOverlayBottomInput, setDoorOverlayBottomInput] = useState<string>('0');
+  const [doorWidthAdjustInput, setDoorWidthAdjustInput] = useState<string>('');
+  const [doorWidthAdjustInputFocused, setDoorWidthAdjustInputFocused] = useState(false);
   const [originalDoorSettingMode, setOriginalDoorSettingMode] = useState<'auto' | 'manual'>('auto');
   const [originalDoorOverlayLeft, setOriginalDoorOverlayLeft] = useState<number>(0);
   const [originalDoorOverlayRight, setOriginalDoorOverlayRight] = useState<number>(0);
@@ -1582,6 +1584,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const isGlassCabinetModule = !!currentPlacedModule?.moduleId?.includes('glass-cabinet');
   const isDummyModule = isDummyModuleId(currentPlacedModule?.moduleId);
   const isHingePositionEditMode = !!currentPlacedModule && hingePositionEditModeModuleId === currentPlacedModule.id;
+
+  useEffect(() => {
+    setDoorWidthAdjustInput('');
+    setDoorWidthAdjustInputFocused(false);
+  }, [currentPlacedModule?.id]);
 
   useEffect(() => {
     if (
@@ -6109,12 +6116,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <input
                           type="text"
                           inputMode="decimal"
-                          value={(currentPlacedModule as any).doorWidthAdjustMm ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : -1.5)}
+                          value={doorWidthAdjustInputFocused ? doorWidthAdjustInput : String(effectiveUserExtension)}
+                          onFocus={() => {
+                            setDoorWidthAdjustInputFocused(true);
+                            setDoorWidthAdjustInput(String(effectiveUserExtension));
+                          }}
                           onChange={(e) => {
                             const v = e.target.value;
                             // 정수/소수/음수 모두 허용 (직접입력 ex. -1.5, 50, 0.3)
                             if (v === '' || v === '-' || /^-?\d*(\.\d*)?$/.test(v)) {
-                              const num = v === '' || v === '-' || v === '.' || v === '-.' ? 0 : parseFloat(v);
+                              setDoorWidthAdjustInput(v);
+                              const num = v === '' || v === '-' || v === '.' || v === '-.' ? NaN : parseFloat(v);
                               if (!isNaN(num)) {
                                 // 0.1mm 단위로 반올림
                                 const rounded = Math.round(num * 10) / 10;
@@ -6125,16 +6137,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               }
                             }
                           }}
+                          onBlur={() => {
+                            const num = parseFloat(doorWidthAdjustInput);
+                            const next = Number.isFinite(num)
+                              ? Math.max(-500, Math.min(500, Math.round(num * 10) / 10))
+                              : effectiveUserExtension;
+                            setDoorWidthAdjustInput(String(next));
+                            setDoorWidthAdjustInputFocused(false);
+                            updatePlacedModule(currentPlacedModule.id, {
+                              doorWidthAdjustEnabled: true,
+                              doorWidthAdjustMm: next
+                            } as any);
+                          }}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : -1.5);
+                              const inputNumber = parseFloat(doorWidthAdjustInput);
+                              const cur = Number.isFinite(inputNumber) ? inputNumber : effectiveUserExtension;
                               // 0.1mm 단위 증감 (Shift 누르면 1.0mm 단위)
                               const step = e.shiftKey ? 1 : 0.1;
                               const next = Math.round((cur + (e.key === 'ArrowUp' ? step : -step)) * 10) / 10;
+                              const clamped = Math.max(-500, Math.min(500, next));
+                              setDoorWidthAdjustInput(String(clamped));
                               updatePlacedModule(currentPlacedModule.id, {
                                 doorWidthAdjustEnabled: true,
-                                doorWidthAdjustMm: Math.max(-500, Math.min(500, next))
+                                doorWidthAdjustMm: clamped
                               } as any);
                             }
                           }}
