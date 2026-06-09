@@ -255,6 +255,9 @@ const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): numbe
   return isFullSurround ? -3 : 5;
 };
 
+const clampFrameGapValue = (value: number): number => Math.max(-2000, Math.min(2000, value));
+const clampFloatHeightValue = (value: number): number => Math.max(0, Math.min(500, value));
+
 const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => (
   !!moduleId && (
     moduleId.includes('lower-half-cabinet') ||
@@ -356,7 +359,7 @@ const FrameOffsetRow: React.FC<{
     onSizeChange(nextDisplaySize);
   };
   const commitGap = (nextGap: number) => {
-    const clampedGap = Math.max(0, Math.min(2000, nextGap));
+    const clampedGap = clampFrameGapValue(nextGap);
     if (onGapChange) onGapChange(clampedGap);
   };
   const [sizeText, setSizeText] = useState(String(displaySizeMM || ''));
@@ -418,12 +421,12 @@ const FrameOffsetRow: React.FC<{
                 onKeyDown={(e) => {
                   if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                     e.preventDefault();
-                    const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                    const next = clampFrameGapValue((gap || 0) + (e.key === 'ArrowUp' ? 1 : -1));
                     setGapText(String(next)); commitGap(next);
                   } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                 }}
-                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
-                onBlur={(e) => { gapFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(c)); commitGap(c); }}
+                onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setGapText(v); }}
+                onBlur={(e) => { gapFocusRef.current = false; setHighlightedFrame(null); const c = clampFrameGapValue(parseInt(e.target.value) || 0); setGapText(String(c)); commitGap(c); }}
                 className={styles.frameNumberInput}
               />
             </div>
@@ -6929,7 +6932,7 @@ const Configurator: React.FC = () => {
                         <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-gap-${label}-${gap || 0}`}
                           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                           onBlur={(e) => {
-                            const nextGap = Math.max(0, Math.min(2000, parseUnsigned(e.target.value)));
+                            const nextGap = clampFrameGapValue(parseInt(e.target.value, 10) || 0);
                             onGap(nextGap);
                           }}
                           style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
@@ -6941,7 +6944,7 @@ const Configurator: React.FC = () => {
                       <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-off-gap-${label}-${gap || 0}`}
                         onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                         onBlur={(e) => {
-                          const nextGap = Math.max(0, Math.min(2000, parseUnsigned(e.target.value)));
+                          const nextGap = clampFrameGapValue(parseInt(e.target.value, 10) || 0);
                           onGap(nextGap);
                         }}
                         style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
@@ -6987,7 +6990,7 @@ const Configurator: React.FC = () => {
                         <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-base-gap-${label}-${gap || 0}`}
                           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                           onBlur={(e) => {
-                            const nextGap = Math.max(0, Math.min(2000, parseUnsigned(e.target.value)));
+                            const nextGap = clampFrameGapValue(parseInt(e.target.value, 10) || 0);
                             onGap(nextGap);
                           }}
                           style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
@@ -6997,7 +7000,7 @@ const Configurator: React.FC = () => {
                     <div style={numCellStyle}>
                       <span style={numLabelStyle}>띄움높이</span>
                       <input type="text" inputMode="numeric" value={floatHeight || ''}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onFloat(parseUnsigned(v)); }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) onFloat(v === '' ? 0 : clampFloatHeightValue(parseInt(v, 10))); }}
                         style={{ ...numInputStyle, color: 'var(--theme-text-primary)' }} />
                     </div>
                   )}
@@ -7036,7 +7039,7 @@ const Configurator: React.FC = () => {
                           frameSize: {
                             ...frameSize,
                             ...(nextSize !== undefined ? { top: nextSize } : {}),
-                            topGap: Math.max(0, v)
+                            topGap: clampFrameGapValue(v)
                           }
                         })
                       )
@@ -7059,7 +7062,7 @@ const Configurator: React.FC = () => {
                           (v) => updateGuideSlotFrame(slot.id, { topFrameOffset: v }),
                           (v, nextSize) => updateGuideSlotFrame(slot.id, {
                             ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
-                            topFrameGap: Math.max(0, v)
+                            topFrameGap: clampFrameGapValue(v)
                           })
                         );
                       })}
@@ -7109,7 +7112,7 @@ const Configurator: React.FC = () => {
                           { baseFrameOffset: v }
                         ),
                         (v) => {
-                          const nextGap = Math.max(0, v);
+                          const nextGap = clampFrameGapValue(v);
                           syncGuideBaseFrameAll(
                             { gap: nextGap },
                             { baseFrameGap: nextGap },
@@ -7142,7 +7145,7 @@ const Configurator: React.FC = () => {
                           (v) => updateGuideSlotFrame(slot.id, { baseFrameOffset: v }),
                           (v, nextSize) => updateGuideSlotFrame(slot.id, {
                             ...(nextSize !== undefined ? { baseFrameHeight: nextSize } : {}),
-                            baseFrameGap: Math.max(0, v)
+                            baseFrameGap: clampFrameGapValue(v)
                           }),
                           (v) => updateGuideSlotFrame(slot.id, { individualFloatHeight: v })
                         );
@@ -7468,7 +7471,7 @@ const Configurator: React.FC = () => {
 	                          topFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
 	                        }}
 	                        onGapChange={(v, nextSize) => {
-	                          const nextGap = Math.max(0, v);
+	                          const nextGap = clampFrameGapValue(v);
 	                          handleSpaceInfoUpdate({
 	                            frameSize: {
 	                              ...spaceInfo.frameSize,
@@ -7518,12 +7521,12 @@ const Configurator: React.FC = () => {
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const nextGap = Math.max(0, Math.min(2000, currentGap + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const nextGap = clampFrameGapValue(currentGap + (e.key === 'ArrowUp' ? 1 : -1));
                                   topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap })));
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nextGap = v === '' ? 0 : parseInt(v, 10); topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap }))); } }}
-                              onBlur={(e) => { const nextGap = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap }))); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const nextGap = v === '' || v === '-' ? 0 : parseInt(v, 10); topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap }))); } }}
+                              onBlur={(e) => { const nextGap = clampFrameGapValue(parseInt(e.target.value) || 0); topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap }))); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -7561,7 +7564,7 @@ const Configurator: React.FC = () => {
                       onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                       onGapChange={(v, nextSize) => updatePlacedModule(mod.id, {
                         ...(nextSize !== undefined ? { topFrameThickness: Math.max(0, nextSize) } : {}),
-                        topFrameGap: Math.max(0, v)
+                        topFrameGap: clampFrameGapValue(v)
                       })}
                       highlightKey={`top-${mod.id}`}
                       toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
@@ -7616,7 +7619,7 @@ const Configurator: React.FC = () => {
                     }}
                     onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                     onGapChange={(v, nextSize) => {
-                      const nextGap = Math.max(0, v);
+                      const nextGap = clampFrameGapValue(v);
                       if ((mod.moduleId || '').includes('shelf-split')) {
                         updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                           ...(nextSize !== undefined ? { topFrameThickness: Math.max(0, nextSize) } : {}),
@@ -7674,7 +7677,7 @@ const Configurator: React.FC = () => {
 	                        sizeMM={globalBaseLocal}
 	                        offset={globalBaseOffsetLocal}
 	                        gap={globalBaseGapLocal}
-	                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: defaultIfZeroFree((m as any).baseFrameGap, globalBaseGapLocal), doorBottomGap: -5 })))}
+	                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: clampFloatHeightValue(defaultIfZeroFree((m as any).baseFrameGap, globalBaseGapLocal)), doorBottomGap: -5 })))}
 	                        onSizeChange={(v) => {
 	                          handleSpaceInfoUpdate(allBaseFreeModsAreLower
                               ? { baseboardLowerSize: v }
@@ -7687,7 +7690,7 @@ const Configurator: React.FC = () => {
 	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
 	                        }}
 	                        onGapChange={(v, nextSize) => {
-	                          const nextGap = Math.max(0, v);
+	                          const nextGap = clampFrameGapValue(v);
 	                          handleSpaceInfoUpdate({
 	                            baseConfig: {
 	                              ...spaceInfo.baseConfig,
@@ -7723,12 +7726,12 @@ const Configurator: React.FC = () => {
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const nv = Math.max(0, Math.min(500, currentFloat + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const nv = clampFloatHeightValue(currentFloat + (e.key === 'ArrowUp' ? 1 : -1));
                                   baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { individualFloatHeight: nv })));
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : parseInt(v, 10); baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { individualFloatHeight: nv }))); } }}
-                              onBlur={(e) => { const nv = Math.max(0, Math.min(500, parseInt(e.target.value) || 0)); baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { individualFloatHeight: nv }))); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : clampFloatHeightValue(parseInt(v, 10)); baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { individualFloatHeight: nv }))); } }}
+                              onBlur={(e) => { const nv = clampFloatHeightValue(parseInt(e.target.value) || 0); baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { individualFloatHeight: nv }))); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -7758,7 +7761,7 @@ const Configurator: React.FC = () => {
                           updatePlacedModule(mod.id, {
                             hasBase: !freeBaseEnabled,
                             doorBottomGap: !freeBaseEnabled ? 25 : -5,
-                            ...(freeBaseEnabled ? { individualFloatHeight: defaultIfZeroFree((mod as any).baseFrameGap, globalBaseGapLocal) } : {}),
+                            ...(freeBaseEnabled ? { individualFloatHeight: clampFloatHeightValue(defaultIfZeroFree((mod as any).baseFrameGap, globalBaseGapLocal)) } : {}),
                           });
                         }}
                         className={`${styles.miniToggle} ${freeBaseEnabled ? styles.miniToggleActive : ''}`}
@@ -7812,11 +7815,11 @@ const Configurator: React.FC = () => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   const cur = mod.individualFloatHeight ?? 0;
-                                  updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))) }));
+                                  updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: clampFloatHeightValue(cur + (e.key === 'ArrowUp' ? 1 : -1)) }));
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) })); }}
-                              onBlur={(e) => { updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: Math.max(0, Math.min(500, parseInt(e.target.value) || 0)) })); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: v === '' ? 0 : clampFloatHeightValue(parseInt(v, 10)) })); }}
+                              onBlur={(e) => { updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: clampFloatHeightValue(parseInt(e.target.value) || 0) })); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -8178,7 +8181,7 @@ const Configurator: React.FC = () => {
                     updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                       hasBase: !enabled,
                       doorBottomGap: !enabled ? 25 : -5,
-                      ...(enabled ? { individualFloatHeight: baseGap } : {}),
+                      ...(enabled ? { individualFloatHeight: clampFloatHeightValue(baseGap) } : {}),
                     }));
                   }}
                   className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
@@ -8232,7 +8235,7 @@ const Configurator: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap);
-                            const nextGap = Math.max(0, Math.min(2000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                            const nextGap = clampFrameGapValue(cur + (e.key === 'ArrowUp' ? 1 : -1));
                             updatePlacedModule(mod.id, {
                               baseFrameGap: nextGap
                             } as any);
@@ -8243,7 +8246,7 @@ const Configurator: React.FC = () => {
                         onBlur={(e) => {
                           setHighlightedFrame(null);
                           const nextGap = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
-                          const clampedGap = Math.max(0, Math.min(2000, Number.isFinite(nextGap) ? nextGap : 0));
+                          const clampedGap = clampFrameGapValue(Number.isFinite(nextGap) ? nextGap : 0);
                           updatePlacedModule(mod.id, {
                             baseFrameGap: clampedGap
                           } as any);
@@ -8263,11 +8266,11 @@ const Configurator: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = mod.individualFloatHeight ?? 0;
-                            updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))) }));
+                            updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: clampFloatHeightValue(cur + (e.key === 'ArrowUp' ? 1 : -1)) }));
                           }
                         }}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: v === '' ? 0 : parseInt(v, 10) })); }}
-                        onBlur={(e) => { updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: Math.max(0, Math.min(500, parseInt(e.target.value) || 0)) })); }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: v === '' ? 0 : clampFloatHeightValue(parseInt(v, 10)) })); }}
+                        onBlur={(e) => { updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, { individualFloatHeight: clampFloatHeightValue(parseInt(e.target.value) || 0) })); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -8437,7 +8440,7 @@ const Configurator: React.FC = () => {
                             updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
-                            ...(newVal ? {} : { individualFloatHeight: defaultIfZeroSlot((target as any)?.baseFrameGap, globalBaseGap) }),
+                            ...(newVal ? {} : { individualFloatHeight: clampFloatHeightValue(defaultIfZeroSlot((target as any)?.baseFrameGap, globalBaseGap)) }),
                             }) : {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
@@ -8538,7 +8541,7 @@ const Configurator: React.FC = () => {
 	                          'top-all',
 	                          globalTopGap,
 	                          (v, nextSize) => {
-	                            const nextGap = Math.max(0, v);
+	                            const nextGap = clampFrameGapValue(v);
 	                            handleSpaceInfoUpdate({
 	                              frameSize: {
 	                                ...spaceInfo.frameSize,
@@ -8588,19 +8591,19 @@ const Configurator: React.FC = () => {
                                   onKeyDown={(e) => {
                                     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                       e.preventDefault();
-                                      const nextGap = Math.max(0, Math.min(2000, currentGap + (e.key === 'ArrowUp' ? 1 : -1)));
+                                      const nextGap = clampFrameGapValue(currentGap + (e.key === 'ArrowUp' ? 1 : -1));
                                       topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap })));
                                     }
                                   }}
                                   onChange={(e) => {
                                     const v = e.target.value;
-                                    if (v === '' || /^\d+$/.test(v)) {
-                                      const nextGap = v === '' ? 0 : parseInt(v, 10);
+                                    if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                      const nextGap = v === '' || v === '-' ? 0 : parseInt(v, 10);
                                       topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap })));
                                     }
                                   }}
                                   onBlur={(e) => {
-                                    const nextGap = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
+                                    const nextGap = clampFrameGapValue(parseInt(e.target.value) || 0);
                                     topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { topFrameGap: nextGap })));
                                   }}
                                   className={styles.frameNumberInput}
@@ -8635,7 +8638,7 @@ const Configurator: React.FC = () => {
                           mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap)) : defaultIfZeroSlot(mod.topFrameGap, globalTopGap),
                           (v, nextSize) => updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                             ...(nextSize !== undefined ? { topFrameThickness: Math.max(0, nextSize) } : {}),
-                            topFrameGap: Math.max(0, v)
+                            topFrameGap: clampFrameGapValue(v)
                           })),
                           mod.hasTopFrame !== false,
                         )}</React.Fragment>;
@@ -8677,7 +8680,7 @@ const Configurator: React.FC = () => {
                                 // 하부 OFF (상단몰딩 건드리지 않음)
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                                   hasBase: false,
-                                  individualFloatHeight: defaultIfZeroSlot((m as any).baseFrameGap, globalBaseGap),
+                                  individualFloatHeight: clampFloatHeightValue(defaultIfZeroSlot((m as any).baseFrameGap, globalBaseGap)),
                                   doorBottomGap: -5,
                                 })));
                               },
@@ -8695,7 +8698,7 @@ const Configurator: React.FC = () => {
 	                              'base-all',
 	                              globalBaseGap,
 	                              (v, nextSize) => {
-	                                const nextGap = Math.max(0, v);
+	                                const nextGap = clampFrameGapValue(v);
 	                                handleSpaceInfoUpdate(allBaseSlotModsAreLower
 	                                  ? {
 	                                    ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),

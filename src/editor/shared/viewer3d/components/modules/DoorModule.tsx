@@ -595,6 +595,7 @@ interface DoorModuleProps {
   color?: string;
   doorXOffset?: number; // 도어 위치 보정값 (사용하지 않음)
   originalSlotWidth?: number; // 원래 슬롯 너비 (mm) - 도어 크기는 이 값 사용
+  adjustedWidth?: number; // 기둥 회피 후 몸통 폭 (mm)
   slotCenterX?: number; // 원래 슬롯 중심 X 좌표 (Three.js 단위) - 도어 위치는 이 값 사용
   moduleData?: any; // 실제 듀얼캐비넷 분할 정보를 위한 모듈 데이터
   isDragging?: boolean; // 드래그 상태
@@ -642,6 +643,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   color,
   doorXOffset = 0, // 사용하지 않음
   originalSlotWidth,
+  adjustedWidth,
   slotCenterX,
   moduleData,
   isDragging = false,
@@ -1313,7 +1315,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 폭 계산용 슬롯 정보 (기둥 침범 여부 판정). DoorModule 스코프엔 별도 slotInfo가 없으므로
   // 배치 모듈에 저장된 columnSlotInfo를 사용한다. (없으면 undefined → 기둥 없음으로 취급)
   const slotInfo = (storePlacedModule as any)?.columnSlotInfo;
-
   // 도어 크기 계산 — 가구 본체와 동일한 slotWidths(Math.floor) 기준 사용
   // columnWidth는 소수점이 유지되지만, 가구 본체는 slotWidths(정수 내림)를 사용하므로
   // 도어도 slotWidths 기준을 사용해야 doorGap이 정확히 3mm가 됨
@@ -1383,6 +1384,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     && !(slotInfo && slotInfo.hasColumn);
   if (shouldUseProvidedLowerDoorWidth || shouldUseProvidedAdjustedDoorWidth) {
     actualDoorWidth = originalSlotWidth;
+  }
+
+  const hasExplicitZeroDoorWidthAdjust = (storePlacedModule as any)?.doorWidthAdjustMm === 0;
+  const shouldUseAdjustedDoorWidthForColumn = hasExplicitZeroDoorWidthAdjust
+    && !!(slotInfo && slotInfo.hasColumn)
+    && typeof adjustedWidth === 'number'
+    && adjustedWidth > 0
+    && typeof originalSlotWidth === 'number'
+    && originalSlotWidth > adjustedWidth;
+  if (shouldUseAdjustedDoorWidthForColumn) {
+    actualDoorWidth = adjustedWidth;
   }
 
   // === Insert 프레임 인접 시 도어 24.5mm 확장 ===
@@ -2728,7 +2740,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       rightDoorWidth += rightExtendMm;
       rightInsertExtendShift = mmToThreeUnits(rightExtendMm) / 2;
     }
-
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     

@@ -1686,12 +1686,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const topGapMm = placedModule.topFrameGap ?? 0;
       furnitureHeightMm += (topFrameMm - topGapMm);
     }
-    // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 흡수 처리 제외 (바닥 아래로 내려가는 문제 방지)
-    const isInsertFrameForFreeHeight = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
-    if (placedModule.hasBase === false && !isInsertFrameForFreeHeight) {
+    if (placedModule.hasBase === false) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
       const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
-      const floatH = placedModule.individualFloatHeight ?? 0;
+      const floatH = Math.max(0, placedModule.individualFloatHeight ?? 0);
       furnitureHeightMm += (absorbedBase - floatH);
     }
   } else if (currentGuideSlotHeightMm !== undefined && !placedModule.freeHeight && !manualUpperCustomHeightMm && (isUpperCabinetForY || isLowerCabinetForY)) {
@@ -1733,12 +1731,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
       // 걸래받이 OFF: 걸래받이 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
-      // 단, 키큰장찬넬(insert-frame)은 채움재이므로 흡수하지 않음 (바닥 아래로 내려가는 문제 방지)
-      const isInsertFrameForHeight = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
-      if (placedModule.hasBase === false && isTallCabinetForY && !isInsertFrameForHeight) {
+      if (placedModule.hasBase === false && isTallCabinetForY) {
         const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
         const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
-        const floatH = placedModule.individualFloatHeight ?? 0;
+        const floatH = Math.max(0, placedModule.individualFloatHeight ?? 0);
         furnitureHeightMm += (absorbedBase - floatH);
       }
     }
@@ -1889,12 +1885,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const configSections = placedModule.customConfig?.sections;
           const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
           const isLowerModBase = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
-          // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 OFF 영향을 받지 않음 (바닥 아래로 내려가는 문제 방지)
-          const isInsertFrameForBase = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
-          const effectiveHasBaseFalse = !isInsertFrameForBase && placedModule.hasBase === false;
+          const effectiveHasBaseFalse = placedModule.hasBase === false;
           const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (effectiveHasBaseFalse ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 105 : 60))));
           // 걸래받이 OFF + 개별 띄움 높이
-          const indivFloatMm = effectiveHasBaseFalse ? (placedModule.individualFloatHeight ?? 0) : 0;
+          const indivFloatMm = effectiveHasBaseFalse ? Math.max(0, placedModule.individualFloatHeight ?? 0) : 0;
           const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units
 
           // 바닥 마감재 높이
@@ -4562,13 +4556,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   renderMode={effectiveRenderMode}
                   hasDoor={
                     // 기둥 A(deep) 또는 adjustedWidth가 있는 경우(front 모드 제외) 또는 엔드패널 조정: 도어는 cover-door 블록에서 별도 렌더
-                    placedModule.columnPlacementMode === 'front'
-                      ? false // front 모드: cover-door 블록에서 렌더
-                      : (
-                        (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                          ? false
-                          : (placedModule.hasDoor ?? false)
-                      )
+                    slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0
+                      ? (placedModule.hasDoor ?? false)
+                      : placedModule.columnPlacementMode === 'front'
+                        ? false // front 모드: cover-door 블록에서 렌더
+                        : (
+                          (slotInfo && slotInfo.hasColumn
+                            && (placedModule as any).doorWidthAdjustMm !== 0
+                            && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                            ? false
+                            : (placedModule.hasDoor ?? false)
+                        )
                   }
                   customDepth={actualDepthMm}
                   hingePosition={optimalHingePosition}
@@ -4914,6 +4912,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 기둥 침범 시 또는 엔드패널 조정이 필요한 경우 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
       {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 엔드패널 조정이 필요한 경우 또는 기둥 앞 배치(front) 모드일 때 커버도어 렌더링 */}
       {(placedModule.hasDoor ?? false) &&
+        !(slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0) &&
         ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') ||
           (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
           (slotInfo && slotInfo.hasColumn && placedModule.columnPlacementMode === 'front') ||

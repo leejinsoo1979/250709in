@@ -1756,12 +1756,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const placedBodyHeight = currentPlacedModule && moduleData
     ? (() => {
-      const validFreeHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight)
-        ? currentPlacedModule.freeHeight
-        : undefined;
-      const validCustomHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight
-        ? currentPlacedModule.customHeight
-        : undefined;
+      // 자유배치: 사용자가 직접 조정한 freeHeight/customHeight를 항상 우선 신뢰한다.
+      //  (autoDroppedUpperHeight가 없을 때 freeHeight를 무시해 팝업이 옛 기본 높이를
+      //   표시하던 문제 수정 — 자유배치 키큰장 높이 변경이 팝업에 반영 안 되던 원인)
+      const isFreePlacementModule = !!currentPlacedModule.isFreePlacement;
+      const validFreeHeight = isFreePlacementModule
+        ? (typeof currentPlacedModule.freeHeight === 'number' && currentPlacedModule.freeHeight > 0
+            ? currentPlacedModule.freeHeight
+            : undefined)
+        : (autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight)
+            ? currentPlacedModule.freeHeight
+            : undefined);
+      const validCustomHeight = isFreePlacementModule
+        ? (typeof currentPlacedModule.customHeight === 'number' && currentPlacedModule.customHeight > 0
+            ? currentPlacedModule.customHeight
+            : undefined)
+        : (autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight
+            ? currentPlacedModule.customHeight
+            : undefined);
 
       const baseHeight = moduleData.category === 'upper'
         ? (validCustomHeight ?? validFreeHeight ?? moduleData.dimensions.height)
@@ -2427,7 +2439,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, moduleData?.category, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode, spaceInfo.surroundType, spaceInfo.frameConfig?.top, spaceInfo.doorTopGapTall, spaceInfo.doorBottomGapTall, spaceInfo.doorTopGapUpper, spaceInfo.doorBottomGapUpper, spaceInfo.doorTopGapLower, spaceInfo.doorBottomGapLower, spaceInfo.doorTopGapLowerDoorLift, spaceInfo.doorBottomGapLowerDoorLift, spaceInfo.doorTopGapLowerTopDown, spaceInfo.doorBottomGapLowerTopDown]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, moduleData?.category, placedBodyHeight, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.isFreePlacement, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode, spaceInfo.surroundType, spaceInfo.frameConfig?.top, spaceInfo.doorTopGapTall, spaceInfo.doorBottomGapTall, spaceInfo.doorTopGapUpper, spaceInfo.doorBottomGapUpper, spaceInfo.doorTopGapLower, spaceInfo.doorBottomGapLower, spaceInfo.doorTopGapLowerDoorLift, spaceInfo.doorBottomGapLowerDoorLift, spaceInfo.doorTopGapLowerTopDown, spaceInfo.doorBottomGapLowerTopDown]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -2566,14 +2578,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       moduleWidthMm: doorOriginalWidth ?? renderedWidthForPanels
     });
     const rawDoorWidthAdjustEnabled = !!(currentPlacedModule as any)?.doorWidthAdjustEnabled;
+    const isCoverDoorWidthAdjustZero = autoCoverDoorSlotWidthMm !== undefined
+      && (currentPlacedModule as any)?.doorWidthAdjustMm === 0;
     const autoCoverDoorMatchesManual = autoCoverDoorSlotWidthMm !== undefined
       && Math.round((((currentPlacedModule as any)?.doorWidthAdjustMm ?? autoCoverDoorWidthAdjustMm) - autoCoverDoorWidthAdjustMm) * 10) === 0;
-    const panelDoorOriginalWidth = autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
+    const panelDoorOriginalWidth = isCoverDoorWidthAdjustZero
+      ? undefined
+      : autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
       ? autoCoverDoorSlotWidthMm
       : autoCoverDoorWidthAdjustMm > 0 && rawDoorWidthAdjustEnabled
       ? undefined
       : doorOriginalWidth;
-    const panelDoorWidthAdjustEnabled = autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual
+    const panelDoorWidthAdjustEnabled = isCoverDoorWidthAdjustZero || (autoCoverDoorSlotWidthMm !== undefined && autoCoverDoorMatchesManual)
       ? false
       : rawDoorWidthAdjustEnabled;
     const calculatedPanels = calculatePanelDetails(
@@ -5977,7 +5993,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const NOSURROUND_DEFAULT_OFFSET_MM = -1.5;
             const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
             const userExtensionRaw = (currentPlacedModule as any).doorWidthAdjustMm;
-            const effectiveDoorWidthAdjustEnabled = doorWidthAdjustEnabled || autoCoverDoorWidthAdjustMm > 0;
+            const isExplicitZeroDoorWidthAdjust = userExtensionRaw === 0;
+            const effectiveDoorWidthAdjustEnabled = doorWidthAdjustEnabled || (autoCoverDoorWidthAdjustMm > 0 && !isExplicitZeroDoorWidthAdjust);
             const effectiveUserExtension = userExtensionRaw
               ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
@@ -6102,22 +6119,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => {
                         const enabled = e.target.checked;
                         // 토글 ON 시 초기값: 키큰장 찬넬 인접 시 자동값(insertExtensionMm), 그 외엔 노서라운드 기본 -1.5
-                        // 토글 OFF 시 사용자 입력값 제거(자동값 복귀)
+                        // 토글 OFF 시 0을 명시 저장해 기둥 커버도어 자동 확장을 끈다.
                         if (enabled) {
                           const autoInitial = autoCoverDoorWidthAdjustMm > 0
                             ? autoCoverDoorWidthAdjustMm
                             : insertExtensionMm > 0
                               ? insertExtensionMm
                               : -1.5;
-                          const initial = (currentPlacedModule as any).doorWidthAdjustMm ?? autoInitial;
+                          const savedAdjust = (currentPlacedModule as any).doorWidthAdjustMm;
+                          const initial = savedAdjust === 0 && autoInitial > 0
+                            ? autoInitial
+                            : savedAdjust ?? autoInitial;
                           updatePlacedModule(currentPlacedModule.id, {
                             doorWidthAdjustEnabled: true,
                             doorWidthAdjustMm: initial,
                           } as any);
                         } else {
-                          if (autoCoverDoorWidthAdjustMm > 0) return;
                           updatePlacedModule(currentPlacedModule.id, {
                             doorWidthAdjustEnabled: false,
+                            doorWidthAdjustMm: 0,
                           } as any);
                         }
                       }}

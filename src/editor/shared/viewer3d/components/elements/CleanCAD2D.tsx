@@ -1482,7 +1482,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (canCoexist) continue;
           const otherWmm = (otherModule.isFreePlacement && otherModule.freeWidth)
             ? otherModule.freeWidth
-            : (otherModule.customWidth || otherModule.adjustedWidth || otherModule.moduleWidth || 0);
+            : (otherModule.adjustedWidth || otherModule.customWidth || otherModule.moduleWidth || 0);
           const otherWThree = otherWmm * 0.01;
           const otherLeft = otherModule.position.x - otherWThree / 2;
           const otherRight = otherModule.position.x + otherWThree / 2;
@@ -1548,7 +1548,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // otherW: mm 단위 → Three.js 단위로 변환 (position.xはThree.js単位)
           const otherWmm = (otherModule.isFreePlacement && otherModule.freeWidth)
             ? otherModule.freeWidth
-            : (otherModule.customWidth || otherModule.adjustedWidth || otherModule.moduleWidth || 0);
+            : (otherModule.adjustedWidth || otherModule.customWidth || otherModule.moduleWidth || 0);
           const otherWThree = otherWmm * 0.01; // mm → Three.js
           const otherLeft = otherModule.position.x - otherWThree / 2;
           const otherRight = otherModule.position.x + otherWThree / 2;
@@ -4985,8 +4985,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 상부장 모듈 찾기 (leftmostMod 또는 leftCompanionMod 중 upper 카테고리)
                     const upperMod = leftCategoryResolved === 'upper' ? leftmostMod : leftCompanionMod;
                     const currentUpperH = upperCabinetBodyH;
+                    const midwayGuideStartX = leftOffset;
+                    const midwayGuideEndX = innerX - mmToThreeUnits(20);
                     return (
                       <>
+                        <NativeLine name="dimension_line"
+                          points={[[midwayGuideStartX, furnitureTopY, upperExtZ_L], [midwayGuideEndX, furnitureTopY, upperExtZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[midwayGuideStartX, upperCabinetBottomY, upperExtZ_L], [midwayGuideEndX, upperCabinetBottomY, upperExtZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
                         <NativeLine name="dimension_line"
                           points={[[innerX - mmToThreeUnits(15), upperCabinetBottomY, upperDimZ_L], [innerX + mmToThreeUnits(15), upperCabinetBottomY, upperDimZ_L]]}
                           color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -6007,8 +6017,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {rMiddleGapH > 0 && (() => {
                     const rUpperMod = rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod;
                     const currentRUpperH = rUpperCabinetBodyH;
+                    const rMidwayGuideStartX = rightWallX;
+                    const rMidwayGuideEndX = rightInnerX + mmToThreeUnits(20);
                     return (
                       <>
+                        <NativeLine name="dimension_line"
+                          points={[[rMidwayGuideStartX, rFurnitureTopY, upperExtZ_R], [rMidwayGuideEndX, rFurnitureTopY, upperExtZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[rMidwayGuideStartX, rUpperCabinetBottomY, upperExtZ_R], [rMidwayGuideEndX, rUpperCabinetBottomY, upperExtZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
                         <NativeLine name="dimension_line"
                           points={[[rightInnerX - mmToThreeUnits(15), rUpperCabinetBottomY, upperDimZ_R], [rightInnerX + mmToThreeUnits(15), rUpperCabinetBottomY, upperDimZ_R]]}
                           color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -11824,10 +11844,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? module.freeWidth
             : isColFront
               ? (slotFullW || moduleData.dimensions.width)
-              : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+              : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
           const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
-          const rightX = module.position.x + moduleWidth / 2;
+          const moduleCenterX = isColFront
+            ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
+            : ((module as any).adjustedPosition?.x ?? module.position.x);
+          const rightX = moduleCenterX + moduleWidth / 2;
 
           const panelDepthMm = spaceInfo.depth || 600;
           const furnitureDepthMm = Math.min(panelDepthMm, 600);
@@ -12078,10 +12101,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? module.freeWidth
               : isColFront
                 ? (slotFullW || moduleData.dimensions.width)
-                : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+                : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
             const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
             const moduleWidth = mmToThreeUnits(moduleWidthMm);
-            const leftX = module.position.x - moduleWidth / 2;
+            const moduleCenterX = isColFront
+              ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
+              : ((module as any).adjustedPosition?.x ?? module.position.x);
+            const leftX = moduleCenterX - moduleWidth / 2;
 
             const panelDepthMm = spaceInfo.depth || 600;
             const furnitureDepthMm = Math.min(panelDepthMm, 600);
@@ -12522,12 +12548,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? module.freeWidth
             : isColFrontTop
               ? (slotFullWTop || moduleData.dimensions.width)
-              : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+              : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
           const moduleWidth = mmToThreeUnits(actualWidth);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용 (front 모드는 슬롯 중심 X)
           const actualPositionX = isColFrontTop
             ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
-            : (module.adjustedPosition?.x || module.position.x);
+            : ((module as any).adjustedPosition?.x ?? module.position.x);
           const leftX = actualPositionX - moduleWidth / 2;
           const rightX = actualPositionX + moduleWidth / 2;
 
@@ -12847,11 +12873,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? module.freeWidth
             : isColFrontDoor
               ? (slotFullWDoor || moduleData.dimensions.width)
-              : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+              : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
           const moduleWidth = mmToThreeUnits(actualWidthMm);
           const moduleCenterX = isColFrontDoor
             ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
-            : module.position.x;
+            : ((module as any).adjustedPosition?.x ?? module.position.x);
           const leftX = moduleCenterX - moduleWidth / 2;
           const rightX = moduleCenterX + moduleWidth / 2;
           
@@ -13122,11 +13148,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? module.freeWidth
               : isColFront3D
                 ? (slotFullW3D || moduleData.dimensions.width)
-                : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+                : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
             const halfWidth = mmToThreeUnits(moduleWidthMm3D) / 2;
             const cxX3D = isColFront3D
               ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
-              : module.position.x;
+              : ((module as any).adjustedPosition?.x ?? module.position.x);
             // 가구가 화면 좌측(음수 X)이면 좌측면, 아니면 우측면에 표시
             const showOnLeftSide = cxX3D < 0;
             // 치수선은 가구 측면에서 약간 떨어진 위치
@@ -13297,11 +13323,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ? module.freeWidth
           : isColFront3D
             ? (slotFullW3D || moduleData.dimensions.width)
-            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+            : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
         const halfWidth = mmToThreeUnits(moduleWidthMm3D) / 2;
         const cxX3D = isColFront3D
           ? (module.slotIndex !== undefined ? (indexing3D.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
-          : module.position.x;
+          : ((module as any).adjustedPosition?.x ?? module.position.x);
         const showOnLeftSide = cxX3D < 0;
         const mid3D = module.moduleId || '';
         const hasInstalledDoor3D = !!moduleData.hasDoor && !!module.hasDoor;
