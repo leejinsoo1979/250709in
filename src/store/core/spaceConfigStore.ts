@@ -613,6 +613,9 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       }
       // 사용자가 슬롯 너비를 직접 지정한 상태에서는 정수화로 프레임/이격이 바뀌면 합이 깨지므로 스킵
       const hasCustomSlotWidths = Array.isArray(tempSpaceInfo.customSlotWidths) && tempSpaceInfo.customSlotWidths.length > 0;
+      const preserveSideGapsOnWidthChange = processedInfo.width !== undefined && explicitGapConfig === undefined;
+      const preservedLeftGapOnWidthChange = tempSpaceInfo.gapConfig?.left;
+      const preservedRightGapOnWidthChange = tempSpaceInfo.gapConfig?.right;
       if (shouldAdjust && !isGapConfigOnly && !isFreeMode && !hasCurtainBox && !hasCustomSlotWidths) {
         console.log('🔍 [이격 디버그] adjustForIntegerSlotWidth 호출 전:', {
           gapConfig: tempSpaceInfo.gapConfig,
@@ -654,6 +657,14 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
               ...tempSpaceInfo.gapConfig,
               ...explicitGapConfig,
             };
+          }
+          if (preserveSideGapsOnWidthChange && tempSpaceInfo.gapConfig) {
+            if (preservedLeftGapOnWidthChange !== undefined) {
+              tempSpaceInfo.gapConfig.left = preservedLeftGapOnWidthChange;
+            }
+            if (preservedRightGapOnWidthChange !== undefined) {
+              tempSpaceInfo.gapConfig.right = preservedRightGapOnWidthChange;
+            }
           }
 
           // 기존 middle/middle2 보존
