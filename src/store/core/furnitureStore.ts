@@ -774,16 +774,24 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         // 상부장과 하부장이 공존할 수 있는지 체크
         let modulesToReplace: typeof state.placedModules = [];
 
+        // moduleId 패턴 category 폴백 (getModuleById null인 커스텀 가구 대응)
+        const resolveCategoryByPattern2 = (mid?: string): 'upper' | 'lower' | undefined => {
+          if (!mid) return undefined;
+          if (mid.startsWith('upper-') || mid.includes('-upper-')) return 'upper';
+          if (mid.startsWith('lower-') || mid.includes('-lower-') || mid.includes('dual-lower-')) return 'lower';
+          return undefined;
+        };
+        const newCategorySafe = newCategory ?? resolveCategoryByPattern2(module.moduleId);
         // 모든 기존 가구와 공존 가능한지 확인
         for (const existing of existingModulesInSlot) {
           const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-          const existingCategory = existingModuleData?.category;
+          const existingCategory = existingModuleData?.category ?? resolveCategoryByPattern2(existing.moduleId);
           const existingIsCornerCabinet = isCornerCabinetModuleId(existing.moduleId);
 
           // 상부장-하부장 조합인지 확인
           if (!isCornerCabinet && !existingIsCornerCabinet && (
-            (newCategory === 'upper' && existingCategory === 'lower') ||
-            (newCategory === 'lower' && existingCategory === 'upper')
+            (newCategorySafe === 'upper' && existingCategory === 'lower') ||
+            (newCategorySafe === 'lower' && existingCategory === 'upper')
           )) {
             // 공존 가능 - 계속 진행
 
@@ -1206,16 +1214,31 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 상부장-하부장 공존 가능 여부를 체크
           let modulesToReplace: typeof state.placedModules = [];
 
+          // moduleId 패턴으로 category를 안전하게 판정한다.
+          //  getModuleById가 null을 반환(커스텀 가구 customizable-* 등)하면 category가
+          //  undefined가 되어 공존 판정이 실패 → 같은 슬롯 하부장이 교체(삭제)되던 문제 방지.
+          const resolveCategoryByPattern = (mid?: string): 'upper' | 'lower' | undefined => {
+            if (!mid) return undefined;
+            if (mid.startsWith('upper-') || mid.includes('-upper-')) return 'upper';
+            if (mid.startsWith('lower-') || mid.includes('-lower-') || mid.includes('dual-lower-')) return 'lower';
+            return undefined;
+          };
+          // 타깃(이동 중인 가구) category — getModuleById 실패 시 패턴 폴백
+          const targetCatSafe = (isTargetUpper ? 'upper' : isTargetLower ? 'lower' : undefined)
+            ?? resolveCategoryByPattern(moduleIdToCheck);
+          const isTargetUpperSafe = targetCatSafe === 'upper';
+          const isTargetLowerSafe = targetCatSafe === 'lower';
+
           // 기존 가구들과의 공존 가능 여부 체크
           for (const existing of existingModulesInSlot) {
             const existingModuleData = getModuleById(existing.moduleId, internalSpace, spaceInfo);
-            const existingCategory = existingModuleData?.category;
+            const existingCategory = existingModuleData?.category ?? resolveCategoryByPattern(existing.moduleId);
             const existingIsCornerCabinet = isCornerCabinetModuleId(existing.moduleId);
 
             // 상부장-하부장 공존 체크 (듀얼 여부와 관계없이)
             const canCoexist = !isCornerCabinet && !existingIsCornerCabinet && (
-              (isTargetUpper && existingCategory === 'lower') ||
-              (isTargetLower && existingCategory === 'upper')
+              (isTargetUpperSafe && existingCategory === 'lower') ||
+              (isTargetLowerSafe && existingCategory === 'upper')
             );
 
             if (canCoexist) {
