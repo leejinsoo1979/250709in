@@ -1363,17 +1363,19 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const PT = (moduleData?.modelConfig?.basicThickness || 18); // 판재 두께 (PET 18)
     const FRAME_DEPTH = mmTo(58);
     const PT_THREE = mmTo(PT);
+    const _pmIF = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
+    const insertHasBaseFrameForPlacement = (hasBase ?? (_pmIF as any)?.hasBase) !== false;
+    const insertBaseClearanceMmIF = insertHasBaseFrameForPlacement && spaceInfo.baseConfig?.type === 'floor'
+      ? ((typeof baseFrameHeight === 'number' ? baseFrameHeight : undefined)
+        ?? (typeof (_pmIF as any)?.baseFrameHeight === 'number' ? (_pmIF as any).baseFrameHeight : undefined)
+        ?? spaceInfo.baseConfig?.height
+        ?? 65)
+      : Math.max(0, individualFloatHeight ?? (_pmIF as any)?.individualFloatHeight ?? 0);
 
     // 공간 전체 높이로 그림. 가구 그룹은 가구 중심 기준이므로 공간 중심으로 Y 시프트.
     const spaceTotalHeightMm = spaceInfo.height || 0;
     const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
-    const baseHeightMm = spaceInfo.baseConfig?.type === 'floor'
-      ? (spaceInfo.baseConfig?.height ?? 65)
-      : 0;
-    const floatHeightMmIF = spaceInfo.baseConfig?.placementType === 'float'
-      ? (spaceInfo.baseConfig?.floatHeight ?? 0)
-      : 0;
-    const furnitureCenterYmm = floorFinishMm + baseHeightMm + floatHeightMmIF + (baseFurniture.height * 100) / 2;
+    const furnitureCenterYmm = floorFinishMm + insertBaseClearanceMmIF + (baseFurniture.height * 100) / 2;
     const spaceCenterYmm = spaceTotalHeightMm / 2;
     const fullYOffset = mmTo(spaceCenterYmm - furnitureCenterYmm);
     const fullHeight = mmTo(spaceTotalHeightMm);
@@ -1384,8 +1386,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       : (moduleData.dimensions.width || 136);
     const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
-
-    const _pmIF = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
 
     // 앞면 프레임: placedModule.insertFrontInsetMm 우선, 기본 18mm
     //   프레임 앞면 = moduleD/2 - inset → 프레임 중심 = moduleD/2 - inset - PT/2
@@ -1429,6 +1429,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const baseFrameGapMmIF = rawBaseFrameMmIF > 0
       ? Math.max(0, Math.min(rawBaseFrameMmIF, baseFrameGap ?? (_pmIF as any)?.baseFrameGap ?? 0))
       : 0;
+    const topClearanceMmIF = insertHasTopFrame
+      ? rawTopFrameMmIF
+      : Math.max(0, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0);
+    const baseClearanceMmIF = insertHasBaseFrame
+      ? rawBaseFrameMmIF
+      : Math.max(0, individualFloatHeight ?? (_pmIF as any)?.individualFloatHeight ?? 0);
     const topFrameMmIF = Math.max(0, rawTopFrameMmIF - topFrameGapMmIF);
     const baseFrameMmIF = Math.max(0, rawBaseFrameMmIF - baseFrameGapMmIF);
     const topFrameH = mmTo(topFrameMmIF);
@@ -1471,8 +1477,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF - topFrameOffsetMmIF);
     // 걸레받이 Z: 노서라운드 산식 고정 + baseConfig.depth만큼 추가로 뒤로
     const baseFrameZ = mmTo(moduleD_mm / 2 + (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM) - baseConfigDepthMmIF - baseDepthOffsetMmIF - baseFrameOffsetMmIF);
-    const frontFrameTopY = spaceTopY - mmTo(rawTopFrameMmIF);
-    const frontFrameBottomY = spaceBottomY + mmTo(rawBaseFrameMmIF);
+    const frontFrameTopY = spaceTopY - mmTo(topClearanceMmIF);
+    const frontFrameBottomY = spaceBottomY + mmTo(baseClearanceMmIF);
     const frontFrameBodyHeight = Math.max(0, frontFrameTopY - frontFrameBottomY);
     const frontFrameBodyCenterY = (frontFrameTopY + frontFrameBottomY) / 2;
     const isInsertFrame2DSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
@@ -1519,8 +1525,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         )}
         {/* 좌/우 EP (PET) — 상단 프레임/걸레받이 사이 영역만 (전면 프레임과 동일한 본체 높이) */}
         {(() => {
-          const epTopY = frontFrameTopY;       // 상단 프레임 하단(갭 변경 시에도 하단 고정)
-          const epBottomY = frontFrameBottomY; // 걸레받이 상단(갭 변경 시에도 상단 고정)
+          const epTopY = frontFrameTopY;
+          const epBottomY = frontFrameBottomY;
           const epH = Math.max(0, epTopY - epBottomY);
           const epCenterY = (epTopY + epBottomY) / 2;
           if (epH <= 0) return null;
