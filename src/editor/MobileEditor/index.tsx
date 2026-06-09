@@ -697,7 +697,7 @@ const MobileEditor: React.FC = () => {
                 </div>
                 <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
                   <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
-                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
+                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>선반장</SegBtn>
                   <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
                 </div>
 

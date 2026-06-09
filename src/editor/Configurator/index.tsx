@@ -809,7 +809,7 @@ const Configurator: React.FC = () => {
   const [fileTreeSelectedProjectId, setFileTreeSelectedProjectId] = useState<string | null>(null);
   const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
-  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/신발장/주방 토글
+  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/선반장/주방 토글
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper' | 'tall'>('basic'); // 주방 서브카테고리
   const kitchenTabsRef = useRef<HTMLDivElement>(null);
   const [kitchenTabsScroll, setKitchenTabsScroll] = useState({ canLeft: false, canRight: false });
@@ -4789,7 +4789,7 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 의류장/신발장/주방 토글 탭 — 아일랜드 모드에서는 숨김 */}
+              {/* 의류장/선반장/주방 토글 탭 — 아일랜드 모드에서는 숨김 */}
               {!spaceInfo.isIsland && (
                 <div className={styles.moduleCategoryTabs}>
                   <button
@@ -4802,7 +4802,7 @@ const Configurator: React.FC = () => {
                     className={`${styles.moduleCategoryTab} ${moduleCategory === 'shoes' ? styles.active : ''}`}
                     onClick={() => setModuleCategory('shoes')}
                   >
-                    신발장
+                    선반장
                   </button>
                   <button
                     className={`${styles.moduleCategoryTab} ${moduleCategory === 'kitchen' ? styles.active : ''}`}
@@ -4883,7 +4883,7 @@ const Configurator: React.FC = () => {
                 </div>
               )}
 
-              {/* 전체/싱글/듀얼 탭 - 의류장/신발장에서만 표시 */}
+              {/* 전체/싱글/듀얼 탭 - 의류장/선반장에서만 표시 */}
               {moduleCategory !== 'kitchen' && (
                 <div className={styles.moduleCategoryTabs}>
                   <button

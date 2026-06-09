@@ -380,10 +380,10 @@ const IPadEditor: React.FC = () => {
                 >자유배치</SegBtn>
               </div>
 
-              {/* 의류장/신발장/주방 */}
+              {/* 의류장/선반장/주방 */}
               <div style={{ padding: '0 12px 8px', display: 'flex', gap: 6 }}>
                 <SegBtn active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
-                <SegBtn active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
+                <SegBtn active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>선반장</SegBtn>
                 <SegBtn active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
               </div>
 
@@ -397,7 +397,7 @@ const IPadEditor: React.FC = () => {
                 </div>
               )}
 
-              {/* 전체/싱글/듀얼 (의류장/신발장 전용) */}
+              {/* 전체/싱글/듀얼 (의류장/선반장 전용) */}
               {moduleCategory !== 'kitchen' && (
                 <div style={{ padding: '0 12px 8px', display: 'flex', gap: 6 }}>
                   <SegBtn active={moduleType === 'all'} flex onClick={() => setModuleType('all')}>전체</SegBtn>

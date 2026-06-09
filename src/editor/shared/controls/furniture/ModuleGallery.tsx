@@ -127,7 +127,7 @@ type ModuleGalleryCell =
   | { type: 'module'; module: ModuleData }
   | { type: 'placeholder'; key: string };
 
-// 신발장 판별 (full 카테고리 내)
+// 선반장 판별 (full 카테고리 내)
 // - 선반장 계열: single-shelf-*, dual-shelf-*, single-Ndrawer-shelf-*, dual-Ndrawer-shelf-*
 // - 현관장 계열: single-entryway-*, dual-entryway-*
 // 주의: upper-cabinet-shelf-*, dual-upper-cabinet-shelf-* 는 upper 카테고리이므로 여기 해당 없음
@@ -1159,7 +1159,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 export type KitchenSubCategory = 'basic' | 'door-raise' | 'top-down' | 'upper' | 'tall';
 
 interface ModuleGalleryProps {
-  // clothing=키큰장(full), shoes=신발장(전용 모듈), kitchen=주방(하부장+상부장)
+  // clothing=키큰장(full), shoes=선반장(전용 모듈), kitchen=주방(하부장+상부장)
   // tall/upper/lower는 기존 호환용으로 유지
   moduleCategory?: 'tall' | 'upper' | 'lower' | 'clothing' | 'shoes' | 'kitchen' | 'island';
   // 주방 서브카테고리 (moduleCategory가 'kitchen'일 때만 사용)
@@ -1242,7 +1242,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'clothing') {
-    // 의류장 = 키큰장(full) 중 신발장/주방 키큰장 제외 (유리장 포함)
+    // 의류장 = 키큰장(full) 중 선반장/주방 키큰장 제외 (유리장 포함)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
       .filter(m =>
         !isShoeModuleId(m.id) &&
@@ -1254,7 +1254,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         !m.id.includes('glass-cabinet')
       );
   } else if (moduleCategory === 'shoes') {
-    // 신발장 = full 카테고리 내 선반장 계열 + 현관장
+    // 선반장 = full 카테고리 내 선반장 계열 + 현관장
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
       .filter(m => isShoeModuleId(m.id));
   } else if (moduleCategory === 'kitchen') {
@@ -1319,7 +1319,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       );
   }
 
-  // 현관장 H 임시 숨김 (신발장 카테고리 제외)
+  // 현관장 H 임시 숨김 (선반장 카테고리 제외)
   if (moduleCategory !== 'shoes') {
     categoryModules = categoryModules.filter(m => !m.id.includes('entryway-h'));
   }
@@ -1500,7 +1500,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
           ) : (
             <div className={styles.emptyMessage}>
               {moduleCategory === 'shoes'
-                ? `신발장 ${t('furniture.moduleNotReady')}`
+                ? `선반장 ${t('furniture.moduleNotReady')}`
                 : moduleCategory === 'upper'
                   ? `${t('furniture.upperCabinet')} ${t('furniture.moduleNotReady')}`
                   : moduleCategory === 'lower'
