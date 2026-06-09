@@ -1705,7 +1705,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
       furnitureHeightMm -= topFrameDelta;
     }
-    if (placedModule.hasTopFrame === false) {
+    if (placedModule.hasTopFrame === false && !hasUserResizedHeight) {
       const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
       const topGapMm = placedModule.topFrameGap ?? 0;
       furnitureHeightMm = Math.max(0, furnitureHeightMm + topFrameMm - topGapMm);
