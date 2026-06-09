@@ -1387,14 +1387,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   const hasExplicitZeroDoorWidthAdjust = (storePlacedModule as any)?.doorWidthAdjustMm === 0;
-  const shouldUseAdjustedDoorWidthForColumn = hasExplicitZeroDoorWidthAdjust
-    && !!(slotInfo && slotInfo.hasColumn)
-    && typeof adjustedWidth === 'number'
-    && adjustedWidth > 0
-    && typeof originalSlotWidth === 'number'
-    && originalSlotWidth > adjustedWidth;
-  if (shouldUseAdjustedDoorWidthForColumn) {
-    actualDoorWidth = adjustedWidth;
+  const columnAdjustedDoorWidth = typeof adjustedWidth === 'number' && adjustedWidth > 0
+    ? adjustedWidth
+    : typeof originalSlotWidth === 'number' && originalSlotWidth > 0
+      ? originalSlotWidth
+      : undefined;
+  if (hasExplicitZeroDoorWidthAdjust && !!(slotInfo && slotInfo.hasColumn) && columnAdjustedDoorWidth !== undefined) {
+    actualDoorWidth = columnAdjustedDoorWidth;
   }
 
   // === Insert 프레임 인접 시 도어 24.5mm 확장 ===

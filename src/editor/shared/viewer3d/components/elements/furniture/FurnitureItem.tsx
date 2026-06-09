@@ -4555,18 +4555,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   viewMode={viewMode}
                   renderMode={effectiveRenderMode}
                   hasDoor={
-                    // 기둥 A(deep) 또는 adjustedWidth가 있는 경우(front 모드 제외) 또는 엔드패널 조정: 도어는 cover-door 블록에서 별도 렌더
-                    slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0
-                      ? (placedModule.hasDoor ?? false)
-                      : placedModule.columnPlacementMode === 'front'
-                        ? false // front 모드: cover-door 블록에서 렌더
-                        : (
-                          (slotInfo && slotInfo.hasColumn
-                            && (placedModule as any).doorWidthAdjustMm !== 0
-                            && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                            ? false
-                            : (placedModule.hasDoor ?? false)
-                        )
+                    // 기둥 A(deep) 또는 adjustedWidth가 있는 경우(front 모드 포함) 또는 엔드패널 조정: 도어는 cover-door 블록에서 별도 렌더
+                    placedModule.columnPlacementMode === 'front'
+                      ? false // front 모드: cover-door 블록에서 렌더
+                      : (
+                        (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                          ? false
+                          : (placedModule.hasDoor ?? false)
+                      )
                   }
                   customDepth={actualDepthMm}
                   hingePosition={optimalHingePosition}
@@ -4912,7 +4908,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 기둥 침범 시 또는 엔드패널 조정이 필요한 경우 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
       {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 엔드패널 조정이 필요한 경우 또는 기둥 앞 배치(front) 모드일 때 커버도어 렌더링 */}
       {(placedModule.hasDoor ?? false) &&
-        !(slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0) &&
         ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') ||
           (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
           (slotInfo && slotInfo.hasColumn && placedModule.columnPlacementMode === 'front') ||
@@ -4923,7 +4918,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           <group
             userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
             position={[
-              (placedModule.isLocked ? placedModule.position.x : originalSlotCenterX) + doorXOffset, // 도어 중심에 오프셋 적용
+              (slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0)
+                ? adjustedPosition.x
+                : (placedModule.isLocked ? placedModule.position.x : originalSlotCenterX) + doorXOffset, // 도어 중심에 오프셋 적용
               finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
               (() => {
                 // 상/하부 섹션 depth가 있으면 도어 Z를 "덜 줄어든 쪽"(max) 기준 + direction 반영
@@ -4966,7 +4963,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
           >
             <DoorModule
-              moduleWidth={doorWidth}
+              moduleWidth={(slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0)
+                ? furnitureWidthMm
+                : doorWidth}
               moduleDepth={(() => {
                 const uS = (placedModule as any).upperSectionDepth;
                 const lS = (placedModule as any).lowerSectionDepth;
@@ -4977,8 +4976,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               spaceInfo={spaceInfo}
               color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
               textureUrl={spaceInfo.materialConfig?.doorTexture}
-              originalSlotWidth={originalSlotWidthForDoor}
-              slotCenterX={doorXOffset}
+              originalSlotWidth={(slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0)
+                ? furnitureWidthMm
+                : originalSlotWidthForDoor}
+              slotCenterX={0}
               moduleData={renderModuleData}
               isDragging={isDraggingThis}
               isEditMode={isEditModeForView}
