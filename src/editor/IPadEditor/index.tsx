@@ -390,7 +390,7 @@ const IPadEditor: React.FC = () => {
               {/* 주방 서브 */}
               {moduleCategory === 'kitchen' && (
                 <div style={{ padding: '0 12px 8px', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  <SegBtn active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
+                  <SegBtn active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>하부장</SegBtn>
                   <SegBtn active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
                   <SegBtn active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
                   <SegBtn active={kitchenSub === 'upper'} onClick={() => setKitchenSub('upper')}>상부장</SegBtn>

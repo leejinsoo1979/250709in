@@ -610,8 +610,8 @@ const resolveTouchMaidaHeightsMm = (
   const topExt = module?.doorTopGap ?? defaultTopExt;
   const bottomExt = module?.doorBottomGap ?? defaultBottomExt;
   const gapMm = 3;
-  const totalFrontMm = bodyHeightMm + topExt + bottomExt;
-  const maidaTotalFront = isTopDownTouch ? totalFrontMm : bodyHeightMm + defaultTopExt + defaultBottomExt;
+  const baseMaidaTotalFront = bodyHeightMm + defaultTopExt + defaultBottomExt;
+  const maidaTotalFront = baseMaidaTotalFront;
   let heights = customMaida
     ? customMaida
     : (isTouch3
@@ -638,10 +638,14 @@ const resolveTouchMaidaHeightsMm = (
     const topDelta = topExt - defaultTopExt;
     heights[2] = Math.max(0, heights[2] + topDelta);
   }
+  if (!customMaida && isTopDownTouch) {
+    const topDelta = topExt - defaultTopExt;
+    heights[heights.length - 1] = Math.max(0, heights[heights.length - 1] + topDelta);
+  }
   if ((isTopDownTouch || isTouch2A || isTouch2B || isTouch3) && heights.length >= 2) {
     const topShift = isTouch3 ? (topExt - defaultTopExt) : 0;
     const topPosition = isTopDownTouch
-      ? -bottomExt + maidaTotalFront
+      ? -defaultBottomExt + maidaTotalFront + (topExt - defaultTopExt)
       : -defaultBottomExt + maidaTotalFront + topShift;
     let cursorTop = topPosition;
     const positioned = new Array(heights.length).fill(0);
@@ -2141,17 +2145,37 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const topDownNoEpDefaultGap = isTopDown
         ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, false)
         : undefined;
+      const legacyTopGapValues = isTopDown
+        ? [getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, currentPlacedModule.hasTopEndPanel === true), topDownNoEpDefaultGap, 5]
+        : isDoorLift
+          ? [DOOR_LIFT_DOOR_TOP_GAP_DEFAULT, 30, (currentPlacedModule.stoneTopThickness || 0) + 15]
+          : isBasicLowerDoorGap
+            ? [BASIC_LOWER_DOOR_TOP_GAP_DEFAULT, 5, 20]
+            : isLowerCategory
+              ? [20, 5]
+              : [isFullSurroundForDoorDefaults ? -3 : 5];
+      const legacyBottomGapValues = isUpperCategory
+        ? [28, 25]
+        : isTopDown || isDoorLift
+          ? [5]
+          : isBasicLowerDoorGap
+            ? [5, 25]
+            : isLowerCategory
+              ? [2, 25]
+              : [25];
       const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
-          : (isBasicLowerDoorGap && rawTopGap === 20)
-            ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
+          : (typeof rawTopGap === 'number' && legacyTopGapValues.includes(rawTopGap))
+            ? defaultTopGap
           : staleDoorLiftAutoTopGap
             ? defaultTopGap
           : (isTopDown && currentPlacedModule.hasTopEndPanel === true && rawTopGap === topDownNoEpDefaultGap)
             ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
-      const initialBottomGap = rawBotGap ?? defaultBottomGap;
+      const initialBottomGap = typeof rawBotGap === 'number' && legacyBottomGapValues.includes(rawBotGap)
+        ? defaultBottomGap
+        : (rawBotGap ?? defaultBottomGap);
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
 
@@ -4027,17 +4051,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
         const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mId);
         const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
+        const isUpperModule = moduleData?.category === 'upper' || mId.includes('upper-cabinet');
         const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
           && spaceInfo.frameConfig?.top !== false;
         if (mod.doorTopGap === undefined) {
-          updates.doorTopGap = isDL
+          updates.doorTopGap = isUpperModule
+            ? (spaceInfo.doorTopGapUpper ?? (isFullSurroundForDoorDefaults ? -3 : 5))
+            : isDL
             ? (spaceInfo.doorTopGapLowerDoorLift ?? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT)
             : isTD
-              ? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true)
+              ? (spaceInfo.doorTopGapLowerTopDown ?? getTopDownDoorTopGap(mod.stoneTopThickness, mod.hasTopEndPanel === true))
               : isBasicLowerDoorGap
-                ? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT
+                ? (spaceInfo.doorTopGapLower ?? BASIC_LOWER_DOOR_TOP_GAP_DEFAULT)
                 : isLowerModule
-                  ? 20
+                  ? (spaceInfo.doorTopGapLower ?? 20)
                   : (isFullSurroundForDoorDefaults ? -3 : 5);
         } else if (isBasicLowerDoorGap && mod.doorTopGap === 20) {
           updates.doorTopGap = BASIC_LOWER_DOOR_TOP_GAP_DEFAULT;
@@ -4045,10 +4072,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           updates.doorTopGap = -3;
         }
         if (mod.doorBottomGap === undefined) {
-          updates.doorBottomGap = isTD || isDL || isBasicLowerDoorGap
-            ? 5
+          updates.doorBottomGap = isUpperModule
+            ? (spaceInfo.doorBottomGapUpper ?? 28)
+            : isTD
+              ? (spaceInfo.doorBottomGapLowerTopDown ?? 5)
+            : isDL
+              ? (spaceInfo.doorBottomGapLowerDoorLift ?? 5)
+            : isBasicLowerDoorGap
+              ? (spaceInfo.doorBottomGapLower ?? 5)
             : isLowerModule
-              ? 2
+              ? (spaceInfo.doorBottomGapLower ?? 2)
               : 25;
         }
       }

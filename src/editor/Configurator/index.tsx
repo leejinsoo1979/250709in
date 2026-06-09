@@ -259,6 +259,93 @@ const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): numbe
   return isFullSurround ? -3 : 5;
 };
 
+const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => (
+  !!moduleId && (
+    moduleId.includes('lower-half-cabinet') ||
+    moduleId.includes('dual-lower-half-cabinet') ||
+    moduleId.includes('lower-drawer-') ||
+    moduleId.includes('dual-lower-drawer-') ||
+    moduleId.includes('lower-sink-cabinet') ||
+    moduleId.includes('dual-lower-sink-cabinet') ||
+    moduleId.includes('lower-induction-cabinet') ||
+    moduleId.includes('dual-lower-induction-cabinet')
+  )
+);
+
+const getDoorGapDefaultsForModule = (
+  mod: any,
+  category: 'full' | 'upper' | 'lower' | undefined,
+  spaceInfo: any
+) => {
+  const moduleId = mod?.moduleId || '';
+  const isFullSurround = spaceInfo?.surroundType === 'surround'
+    && spaceInfo?.frameConfig?.top !== false;
+  const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
+  const isUpper = category === 'upper' || moduleId.includes('upper-cabinet');
+  const isDoorLift = moduleId.includes('lower-door-lift-') && !moduleId.includes('-half-');
+  const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
+  const isBasicLower = isBasicLowerDoorGapModuleId(moduleId);
+
+  if (isTopDown) {
+    return {
+      top: spaceInfo.doorTopGapLowerTopDown ?? getTopDownDoorTopGap(mod?.stoneTopThickness, mod?.hasTopEndPanel === true),
+      bottom: spaceInfo.doorBottomGapLowerTopDown ?? 5,
+    };
+  }
+  if (isDoorLift) {
+    return {
+      top: spaceInfo.doorTopGapLowerDoorLift ?? 30,
+      bottom: spaceInfo.doorBottomGapLowerDoorLift ?? 5,
+    };
+  }
+  if (isBasicLower || isLower) {
+    return {
+      top: spaceInfo.doorTopGapLower ?? (isBasicLower ? -20 : 20),
+      bottom: spaceInfo.doorBottomGapLower ?? (isBasicLower ? 5 : 2),
+    };
+  }
+  if (isUpper) {
+    return {
+      top: spaceInfo.doorTopGapUpper ?? (isFullSurround ? -3 : 5),
+      bottom: spaceInfo.doorBottomGapUpper ?? 28,
+    };
+  }
+  return {
+    top: spaceInfo.doorTopGapTall ?? spaceInfo.doorTopGap ?? (isFullSurround ? -3 : 5),
+    bottom: spaceInfo.doorBottomGapTall ?? spaceInfo.doorBottomGap ?? 25,
+  };
+};
+
+const getLegacyDoorGapDefaultsForModule = (
+  mod: any,
+  category: 'full' | 'upper' | 'lower' | undefined,
+  spaceInfo: any
+) => {
+  const moduleId = mod?.moduleId || '';
+  const isFullSurround = spaceInfo?.surroundType === 'surround'
+    && spaceInfo?.frameConfig?.top !== false;
+  const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
+  const isUpper = category === 'upper' || moduleId.includes('upper-cabinet');
+  const isDoorLift = moduleId.includes('lower-door-lift-') && !moduleId.includes('-half-');
+  const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
+  const isBasicLower = isBasicLowerDoorGapModuleId(moduleId);
+
+  if (isTopDown) return { top: [getTopDownDoorTopGap(mod?.stoneTopThickness, mod?.hasTopEndPanel === true), 5], bottom: [5] };
+  if (isDoorLift) return { top: [30, 40], bottom: [5] };
+  if (isBasicLower) return { top: [-20, 5], bottom: [5, 25] };
+  if (isLower) return { top: [20, 5], bottom: [2, 25] };
+  if (isUpper) return { top: [isFullSurround ? -3 : 5], bottom: [28, 25] };
+  return { top: [isFullSurround ? -3 : 5], bottom: [25] };
+};
+
+const resolveDisplayedDoorGap = (
+  current: number | undefined,
+  fallback: number,
+  legacyValues: number[]
+) => (
+  current === undefined || legacyValues.includes(current) ? fallback : current
+);
+
 /** 프레임 size/옵셋 입력 행 — 로컬 상태 기반 (편집 중 store 업데이트로 인한 덮어쓰기 방지) */
 const FrameOffsetRow: React.FC<{
   num: number; label: string; enabled: boolean; sizeMM: number; offset: number;
@@ -961,19 +1048,21 @@ const Configurator: React.FC = () => {
         ];
       }
       if (info.category === 'full') return [];
+      const defaults = getDoorGapDefaultsForModule(mod, info.category, spaceInfo);
+      const legacyDefaults = getLegacyDoorGapDefaultsForModule(mod, info.category, spaceInfo);
       return [{
         key: mod.id,
         mod,
         label: `도어 ${info.label}${info.category === 'upper' ? '(상)' : '(하)'}`,
         topField: 'doorTopGap' as DoorGapField,
         bottomField: 'doorBottomGap' as DoorGapField,
-        topValue: mod.doorTopGap ?? -20,
-        bottomValue: mod.doorBottomGap ?? 5,
+        topValue: resolveDisplayedDoorGap(mod.doorTopGap, defaults.top, legacyDefaults.top),
+        bottomValue: resolveDisplayedDoorGap(mod.doorBottomGap, defaults.bottom, legacyDefaults.bottom),
         category: info.category,
         splitPart: null
       }];
     });
-  }, [doorNumberMap, doorFurnitureList, isDoorSplitSettingModule]);
+  }, [doorNumberMap, doorFurnitureList, isDoorSplitSettingModule, spaceInfo]);
   const showDoorSetup = doorFurnitureList.length > 0;
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
@@ -1085,20 +1174,20 @@ const Configurator: React.FC = () => {
     const initMods = useFurnitureStore.getState().placedModules.map(m => {
       if (!m.hasDoor) return m;
       if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
-      // 모듈별 기본값: 도어올림=30, 상판내림=두께별(10T=-90/20T=-80/30T=-70), 일반하부장=-20, 그 외=spaceInfo
       const mid = m.moduleId || '';
       const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
-      const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
-      const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
-      const defaultTop = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) : isLower ? -20 : topGap;
-      const defaultBot = isLower ? 5 : botGap;
+      const isUpper = mid.includes('upper-cabinet');
+      const category = isLower ? 'lower' : isUpper ? 'upper' : 'full';
+      const defaults = getDoorGapDefaultsForModule(m, category, spaceInfo);
+      const defaultTop = defaults.top ?? topGap;
+      const defaultBot = defaults.bottom ?? botGap;
       return { ...m, doorTopGap: m.doorTopGap ?? defaultTop, doorBottomGap: m.doorBottomGap ?? defaultBot };
     });
     useFurnitureStore.setState({ placedModules: initMods });
     setTimeout(() => {
       useFurnitureStore.setState({ placedModules: [...initMods] });
     }, 50);
-  }, [showDoorSetup]);
+  }, [showDoorSetup, spaceInfo]);
 
   // 하부장 doorTopGap/doorBottomGap 기본값 마이그레이션 (모듈별 기본값)
   // 잘못된 이전 기본값(0, 20, 1.5 등)을 모듈별 올바른 기본값으로 교정
@@ -1110,10 +1199,8 @@ const Configurator: React.FC = () => {
       const mid = m.moduleId || '';
       const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
       if (!isLower) return m;
-      // 모듈별 올바른 기본값
-      const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
-      const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
-      const correctTopGap = isDL ? 30 : isTD ? getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true) : -20;
+      const defaults = getDoorGapDefaultsForModule(m, 'lower', spaceInfo);
+      const correctTopGap = defaults.top;
       // undefined만 기본값으로 보정한다. 0/양수/음수는 사용자가 직접 입력한 유효한 도어 갭이다.
       const badTopValues = [undefined];
       const badBotValues = [undefined];
@@ -1124,7 +1211,7 @@ const Configurator: React.FC = () => {
         return {
           ...m,
           doorTopGap: needsTopFix ? correctTopGap : m.doorTopGap,
-          doorBottomGap: needsBotFix ? 5 : m.doorBottomGap,
+          doorBottomGap: needsBotFix ? defaults.bottom : m.doorBottomGap,
         };
       }
       return m;
@@ -1132,7 +1219,7 @@ const Configurator: React.FC = () => {
     if (changed) {
       useFurnitureStore.setState({ placedModules: fixed });
     }
-  }, []);
+  }, [spaceInfo]);
 
   // 걸래받이 OFF/ON + 띄움높이 동기화는 RightPanel에서 직접 처리
   // (Configurator watcher 제거 — React 배치 업데이트로 인한 경쟁 조건 방지)
@@ -4728,7 +4815,7 @@ const Configurator: React.FC = () => {
                       className={`${styles.moduleCategoryTab} ${kitchenSub === 'basic' ? styles.active : ''}`}
                       onClick={() => setKitchenSub('basic')}
                     >
-                      기본장
+                      하부장
                     </button>
                     <button
                       className={`${styles.moduleCategoryTab} ${kitchenSub === 'door-raise' ? styles.active : ''}`}
@@ -7272,6 +7359,14 @@ const Configurator: React.FC = () => {
             const cat = getModuleCategory(m);
             return cat === 'lower' || cat === 'full';
           });
+          const topFreeFrameValueMods = sorted.filter(m => {
+            const cat = getModuleCategory(m);
+            return cat === 'upper' || cat === 'full';
+          });
+          const baseFreeFrameValueMods = sorted.filter(m => {
+            const cat = getModuleCategory(m);
+            return cat === 'lower' || cat === 'full';
+          });
           const allTopOnFree = topFrameAllMode;
           const allBaseOnFree = baseFrameAllMode;
           const toggleAllTopFree = () => {
@@ -7354,11 +7449,11 @@ const Configurator: React.FC = () => {
                         })))}
 	                        onSizeChange={(v) => {
 	                          handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v } as any });
-	                          topFreeMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)));
+	                          topFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)));
 	                        }}
 	                        onOffsetChange={(v) => {
 	                          handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v } as any });
-	                          topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
+	                          topFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
 	                        }}
 	                        onGapChange={(v, nextSize) => {
 	                          const nextGap = Math.max(0, v);
@@ -7369,7 +7464,7 @@ const Configurator: React.FC = () => {
 	                              topGap: nextGap
 	                            } as any
 	                          });
-	                          topFreeMods.forEach(m => updatePlacedModule(
+	                          topFreeFrameValueMods.forEach(m => updatePlacedModule(
 	                            m.id,
 	                            getShelfSplitTopClearanceUpdates(m, {
 	                              ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
@@ -7569,11 +7664,11 @@ const Configurator: React.FC = () => {
                               ? { baseboardLowerSize: v }
                               : { baseConfig: { ...spaceInfo.baseConfig, height: v } as any }
                             );
-	                          baseFreeMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
+	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
 	                        }}
 	                        onOffsetChange={(v) => {
 	                          handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v } as any });
-	                          baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
+	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
 	                        }}
 	                        onGapChange={(v, nextSize) => {
 	                          const nextGap = Math.max(0, v);
@@ -7584,7 +7679,7 @@ const Configurator: React.FC = () => {
 	                              gap: nextGap
 	                            } as any
 	                          });
-	                          baseFreeMods.forEach(m => updatePlacedModule(m.id, {
+	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, {
 	                            ...(nextSize !== undefined ? { baseFrameHeight: nextSize } : {}),
 	                            baseFrameGap: nextGap
 	                          } as any));
@@ -8003,6 +8098,8 @@ const Configurator: React.FC = () => {
           const isInsertFrameSlot = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
           const topSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'lower');
           const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
+          const topSlotFrameValueMods = sorted.filter(m => getModuleCategory(m) !== 'lower');
+          const baseSlotFrameValueMods = sorted.filter(m => getModuleCategory(m) !== 'upper');
           const isLowerBaseSlotModule = (m: any) => getModuleCategory(m) === 'lower';
           const allBaseSlotModsAreLower = baseSortedMods.length > 0 && baseSortedMods.every(isLowerBaseSlotModule);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
@@ -8418,11 +8515,11 @@ const Configurator: React.FC = () => {
                           },
 	                          (v) => {
 	                            handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v } as any });
-	                            topSortedMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)));
+	                            topSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)));
 	                          },
 	                          (v) => {
 	                            handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, topOffset: v } as any });
-	                            topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
+	                            topSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
 	                          },
 	                          'top-all',
 	                          globalTopGap,
@@ -8435,7 +8532,7 @@ const Configurator: React.FC = () => {
 	                                topGap: nextGap
 	                              } as any
 	                            });
-	                            topSortedMods.forEach(m => updatePlacedModule(
+	                            topSlotFrameValueMods.forEach(m => updatePlacedModule(
 	                              m.id,
 	                              getShelfSplitTopClearanceUpdates(m, {
 	                                ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
@@ -8575,11 +8672,11 @@ const Configurator: React.FC = () => {
 	                                  ? { baseboardLowerSize: v }
 	                                  : { baseConfig: { ...spaceInfo.baseConfig, height: v } as any }
 	                                );
-	                                baseSortedMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
+	                                baseSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
 	                              },
 	                              (v) => {
 	                                handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v } as any });
-	                                baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
+	                                baseSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
 	                              },
 	                              'base-all',
 	                              globalBaseGap,
@@ -8601,7 +8698,7 @@ const Configurator: React.FC = () => {
 	                                    } as any
 	                                  }
 	                                );
-	                                baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+	                                baseSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, {
 	                                  ...(nextSize !== undefined ? { baseFrameHeight: nextSize } : {}),
 	                                  baseFrameGap: nextGap
 	                                } as any));

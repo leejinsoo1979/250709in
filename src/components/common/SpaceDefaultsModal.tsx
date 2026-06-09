@@ -99,6 +99,13 @@ const INSTALL_OPTIONS: { id: NonNullable<SpaceConfigDefaults['installType']>; la
   { id: 'freestanding', label: '벽없음' },
 ];
 
+const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boolean): number => {
+  if (hasTopEndPanel) return -82;
+  if (stoneTopThickness === 10) return -90;
+  if (stoneTopThickness === 30) return -70;
+  return -80;
+};
+
 /* ── NumberInput ── */
 interface NumberInputProps {
   label: string;
@@ -150,6 +157,12 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
               // 음수 입력 허용: 빈 문자열, '-' 단독, 숫자/소수점/마이너스 조합 허용
               if (v === '' || v === '-' || /^-?\d*\.?\d*$/.test(v)) {
                 setLocalValue(v);
+                if (v !== '' && v !== '-') {
+                  const next = Number(v);
+                  if (!isNaN(next)) {
+                    onChange(Math.max(lo, Math.min(hi, next)));
+                  }
+                }
               }
             }}
             onBlur={(e) => commit(e.target.value)}
@@ -264,9 +277,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     const previousBaseFrameHeight = loadedDefaults.baseboardEnabled ? previousVisibleBaseFrameHeight : 0;
     const previousLowerBaseFrameHeight = loadedDefaults.baseboardLowerEnabled ? previousVisibleLowerBaseFrameHeight : 0;
     const baseFrameOffset = values.baseboardOffset;
-    const lowerBaseFrameOffset = values.baseboardLowerOffset === 0 && baseFrameOffset !== 0
-      ? baseFrameOffset
-      : values.baseboardLowerOffset;
+    const lowerBaseFrameOffset = values.baseboardLowerOffset;
     const synced = {
       ...values,
       baseboardLowerOffset: lowerBaseFrameOffset,
@@ -293,6 +304,121 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       const isLowerModule = (moduleId?: string) => (
         moduleId?.startsWith('lower-') || moduleId?.includes('-lower-')
       );
+      const isBasicLowerDoorGapModule = (moduleId?: string) => (
+        !!moduleId && (
+          moduleId.includes('lower-half-cabinet') ||
+          moduleId.includes('dual-lower-half-cabinet') ||
+          moduleId.includes('lower-drawer-') ||
+          moduleId.includes('dual-lower-drawer-') ||
+          moduleId.includes('lower-sink-cabinet') ||
+          moduleId.includes('dual-lower-sink-cabinet') ||
+          moduleId.includes('lower-induction-cabinet') ||
+          moduleId.includes('dual-lower-induction-cabinet')
+        )
+      );
+      const isFullSurroundForDoorDefaults = spaceState.spaceInfo.surroundType === 'surround'
+        && spaceState.spaceInfo.frameConfig?.top !== false;
+      const resolveDoorDefaults = (
+        module: any,
+        defaults: Required<SpaceConfigDefaults>,
+      ) => {
+        const moduleId = module.moduleId || '';
+        const isLower = isLowerModule(moduleId);
+        const isUpper = moduleId.includes('upper-cabinet');
+        const isDoorLift = moduleId.includes('lower-door-lift-');
+        const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
+        const isBasicLower = isBasicLowerDoorGapModule(moduleId);
+        if (isTopDown) {
+          return {
+            top: defaults.doorSettingLowerTopDownEnabled
+              ? defaults.doorTopGapLowerTopDown
+              : (defaults.doorTopGapLower ?? defaults.doorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true)),
+            bottom: defaults.doorSettingLowerTopDownEnabled
+              ? defaults.doorBottomGapLowerTopDown
+              : (defaults.doorBottomGapLower ?? defaults.doorBottomGap ?? 5),
+          };
+        }
+        if (isDoorLift) {
+          return {
+            top: defaults.doorSettingLowerDoorLiftEnabled
+              ? defaults.doorTopGapLowerDoorLift
+              : (defaults.doorTopGapLower ?? defaults.doorTopGap ?? 30),
+            bottom: defaults.doorSettingLowerDoorLiftEnabled
+              ? defaults.doorBottomGapLowerDoorLift
+              : (defaults.doorBottomGapLower ?? defaults.doorBottomGap ?? 5),
+          };
+        }
+        if (isBasicLower || isLower) {
+          return {
+            top: defaults.doorSettingLowerEnabled
+              ? defaults.doorTopGapLower
+              : (defaults.doorTopGap ?? (isBasicLower ? -20 : 20)),
+            bottom: defaults.doorSettingLowerEnabled
+              ? defaults.doorBottomGapLower
+              : (defaults.doorBottomGap ?? (isBasicLower ? 5 : 2)),
+          };
+        }
+        if (isUpper) {
+          return {
+            top: defaults.doorSettingUpperEnabled
+              ? defaults.doorTopGapUpper
+              : (defaults.doorTopGap ?? (isFullSurroundForDoorDefaults ? -3 : 5)),
+            bottom: defaults.doorSettingUpperEnabled
+              ? defaults.doorBottomGapUpper
+              : (defaults.doorBottomGap ?? 28),
+          };
+        }
+        return {
+          top: defaults.doorSettingTallEnabled
+            ? defaults.doorTopGapTall
+            : (defaults.doorTopGap ?? (isFullSurroundForDoorDefaults ? -3 : 5)),
+          bottom: defaults.doorSettingTallEnabled
+            ? defaults.doorBottomGapTall
+            : (defaults.doorBottomGap ?? 25),
+        };
+      };
+      const resolveLegacyDoorDefaults = (module: any) => {
+        const moduleId = module.moduleId || '';
+        const isLower = isLowerModule(moduleId);
+        const isUpper = moduleId.includes('upper-cabinet');
+        const isDoorLift = moduleId.includes('lower-door-lift-');
+        const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
+        const isBasicLower = isBasicLowerDoorGapModule(moduleId);
+        if (isTopDown) {
+          return {
+            top: [getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true), 5],
+            bottom: [5],
+          };
+        }
+        if (isDoorLift) {
+          return {
+            top: [30, 40],
+            bottom: [5],
+          };
+        }
+        if (isBasicLower) {
+          return {
+            top: [-20, 5],
+            bottom: [5, 25],
+          };
+        }
+        if (isLower) {
+          return {
+            top: [20, 5],
+            bottom: [2, 25],
+          };
+        }
+        if (isUpper) {
+          return {
+            top: [isFullSurroundForDoorDefaults ? -3 : 5],
+            bottom: [28, 25],
+          };
+        }
+        return {
+          top: [isFullSurroundForDoorDefaults ? -3 : 5],
+          bottom: [25],
+        };
+      };
       const nextFrameSize = {
         ...curFrameSize,
         top: topFrameHeight,
@@ -350,11 +476,15 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
           const currentTopGap = module.topFrameGap;
           const currentOffset = module.baseFrameOffset;
           const currentGap = module.baseFrameGap;
+          const currentDoorTopGap = module.doorTopGap;
+          const currentDoorBottomGap = module.doorBottomGap;
           const previousSpaceTopHeight = curFrameSize.top ?? 30;
           const previousSpaceBaseHeight = curBaseConfig.height ?? 65;
           const previousTopGap = (curFrameSize as any)?.topGap ?? 0;
           const previousSpaceOffset = (curBaseConfig as any)?.offset ?? 0;
           const previousSpaceGap = (curBaseConfig as any)?.gap ?? 0;
+          const previousDoorDefaults = resolveDoorDefaults(module, loadedDefaults);
+          const nextDoorDefaults = resolveDoorDefaults(module, synced as Required<SpaceConfigDefaults>);
           const wasUsingDefaultTopHeight = isDefaultNumber(currentTopHeight, [
             previousTopFrameHeight,
             previousSpaceTopHeight,
@@ -411,6 +541,23 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
             updates.baseFrameGap = isLower
               ? (lowerBaseFrameGap ?? synced.baseFrameGap)
               : synced.baseFrameGap;
+          }
+          if (module.hasDoor === true) {
+            const legacyDoorDefaults = resolveLegacyDoorDefaults(module);
+            const wasUsingDefaultDoorTopGap =
+              currentDoorTopGap === undefined ||
+              currentDoorTopGap === previousDoorDefaults.top ||
+              legacyDoorDefaults.top.includes(currentDoorTopGap);
+            const wasUsingDefaultDoorBottomGap =
+              currentDoorBottomGap === undefined ||
+              currentDoorBottomGap === previousDoorDefaults.bottom ||
+              legacyDoorDefaults.bottom.includes(currentDoorBottomGap);
+            if (wasUsingDefaultDoorTopGap) {
+              updates.doorTopGap = nextDoorDefaults.top;
+            }
+            if (wasUsingDefaultDoorBottomGap) {
+              updates.doorBottomGap = nextDoorDefaults.bottom;
+            }
           }
 
           if (Object.keys(updates).length > 0) furnitureState.updatePlacedModule(module.id, updates);

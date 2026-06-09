@@ -1039,6 +1039,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const gapTopExt = topExtMm - defaultTopExtMm;
   const gapBottomExt = bottomExtMm - defaultBottomExtMm;
   const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
+  const baseMaidaTotalFrontMm = moduleHeightMm + defaultTopExtMm + defaultBottomExtMm;
   const gapMm = 3;
   const drawerCount = drawerHeights.length;
   const totalGaps = (drawerCount - 1) * gapMm;
@@ -1086,7 +1087,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
             ? [185, 240, 240]
             : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm));
   const maidaTotalFrontMm = isTopDownTouch
-    ? totalFrontMm
+    ? baseMaidaTotalFrontMm
     : moduleHeightMm + defaultTopExtMm + defaultBottomExtMm;
   const maidaHeightsMm = [...baseMaidaHeightsMm];
   // 도어올림 터치 2A/2B + 상판내림 터치 2단: 1단·2단 마이다 정수 균등 분배
@@ -1133,6 +1134,13 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
     maidaHeightsMm[0] = Math.max(0, maidaTotalFrontMm - upperBundle);
   }
+  if (!customMaidaValid && isTopDownTouch && maidaHeightsMm.length >= 2) {
+    const topExtDeltaMm = topExtMm - defaultTopExtMm;
+    if (topExtDeltaMm !== 0) {
+      const topIdx = maidaHeightsMm.length - 1;
+      maidaHeightsMm[topIdx] = Math.max(0, maidaHeightsMm[topIdx] + topExtDeltaMm);
+    }
+  }
 
   // 상판내림 터치: 마이다 묶음을 캐비넷 '상단'에서 채워 내려옴
   //   → 맨 위 마이다는 항상 stretcher 하단 - 20mm 위치 (1단)
@@ -1146,7 +1154,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const lastIdx = maidaHeightsMm.length - 1;
     const topShiftMm = (isDoorLift2Fixed || isDoorLift3Fixed) ? (topExtMm - defaultTopExtMm) : 0;
     const topPositionMm = isTopDownTouch
-      ? -bottomExtMm + maidaTotalFrontMm
+      ? -defaultBottomExtMm + maidaTotalFrontMm + (topExtMm - defaultTopExtMm)
       : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
     if (customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed)) {
@@ -1180,7 +1188,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       //   - 하단갭 ↑ → 3단(맨아래) 하단만 gapBottomExt 만큼 내려감
       //   - 상단갭 ↑ → 1단(맨위) 상단만 gapTopExt 만큼 올라감
       if (customMaidaHeightsModeRaw === 'gapBase' && isTopDown3Fixed && maidaHeightsMm.length === 3) {
-        const targetBaseMaidaSum = Math.max(0, maidaTotalFrontMm - gapMm * 2);
+        const targetBaseMaidaSum = Math.max(0, baseMaidaTotalFrontMm - gapMm * 2);
         const currentBaseMaidaSum = maidaHeightsMm.reduce((sum, value) => sum + value, 0);
         const heightDelta = targetBaseMaidaSum - currentBaseMaidaSum;
         if (Math.abs(heightDelta) > 0.01) {

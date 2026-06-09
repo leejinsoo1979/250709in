@@ -98,6 +98,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
       : (doorTopGap ?? defaultTopExtMm);
     const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
     const totalFrontMm = currentCabinetHmm + topExtMm + bottomExtMm;
+    const baseMaidaTotalFrontMm = currentCabinetHmm + defaultTopExtMm + defaultBottomExtMm;
     const gapMm = 3;
     const drawerCount = drawerHeights.length;
     const totalDrawerH = drawerHeights.reduce((a, b) => a + b, 0);
@@ -120,7 +121,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
               ? [185, 240, 240]
               : drawerHeights.map(h => (h / totalDrawerH) * (totalFrontMm - (drawerCount - 1) * gapMm)));
     const maidaTotalFrontMm = isTopDownTouch
-      ? totalFrontMm
+      ? baseMaidaTotalFrontMm
       : currentCabinetHmm + defaultTopExtMm + defaultBottomExtMm;
     const maidaHeightsMm = [...baseMaidaHeightsMm];
 
@@ -159,12 +160,19 @@ export const computeLowerCabinetExternalMaidaRanges = ({
       const upperBundle = upperMaidasSum + (maidaHeightsMm.length - 1) * gapMm;
       maidaHeightsMm[0] = Math.max(0, maidaTotalFrontMm - upperBundle);
     }
+    if (!customMaidaValid && isTopDownTouch && maidaHeightsMm.length >= 2) {
+      const topExtDeltaMm = topExtMm - defaultTopExtMm;
+      if (topExtDeltaMm !== 0) {
+        const topIdx = maidaHeightsMm.length - 1;
+        maidaHeightsMm[topIdx] = Math.max(0, maidaHeightsMm[topIdx] + topExtDeltaMm);
+      }
+    }
 
     if ((isTopDownTouch || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
       const lastIdx = maidaHeightsMm.length - 1;
       const topShiftMm = (isDoorLift2Fixed || isDoorLift3Fixed) ? (topExtMm - defaultTopExtMm) : 0;
       const topPositionMm = isTopDownTouch
-        ? -bottomExtMm + maidaTotalFrontMm
+        ? -defaultBottomExtMm + maidaTotalFrontMm + (topExtMm - defaultTopExtMm)
         : -defaultBottomExtMm + maidaTotalFrontMm + topShiftMm;
       const result: LowerCabinetMaidaRange[] = new Array(maidaHeightsMm.length);
       if (customMaidaValid && (isDoorLift2Fixed || isDoorLift3Fixed)) {
@@ -201,7 +209,7 @@ export const computeLowerCabinetExternalMaidaRanges = ({
         const gapTopExtLocal = topExtMm - defaultTopExtMm;
         const gapBottomExtLocal = bottomExtMm - defaultBottomExtMm;
         if (customMaidaHeightsMode === 'gapBase' && isTopDown3Fixed && maidaHeightsMm.length === 3) {
-          const targetBaseMaidaSum = Math.max(0, maidaTotalFrontMm - gapMm * 2);
+          const targetBaseMaidaSum = Math.max(0, baseMaidaTotalFrontMm - gapMm * 2);
           const currentBaseMaidaSum = maidaHeightsMm.reduce((sum, value) => sum + value, 0);
           const heightDelta = targetBaseMaidaSum - currentBaseMaidaSum;
           if (Math.abs(heightDelta) > 0.01) {

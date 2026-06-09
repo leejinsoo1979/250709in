@@ -703,7 +703,7 @@ const MobileEditor: React.FC = () => {
 
                 {moduleCategory === 'kitchen' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
-                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>하부장</SegBtn>
                     <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
                     <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
                     <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'upper'} onClick={() => setKitchenSub('upper')}>상부장</SegBtn>

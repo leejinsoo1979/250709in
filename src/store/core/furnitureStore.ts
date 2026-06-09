@@ -1392,26 +1392,51 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const category = moduleData?.category;
 
-      let topGap = defaultTopGap;
-      let bottomGap = defaultBottomGap;
+      let topGap = typeof spaceInfo.doorTopGapTall === 'number'
+        ? spaceInfo.doorTopGapTall
+        : defaultTopGap;
+      let bottomGap = typeof spaceInfo.doorBottomGapTall === 'number'
+        ? spaceInfo.doorBottomGapTall
+        : defaultBottomGap;
 	      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
 	      const isDoorLift = module.moduleId?.includes('lower-door-lift-');
 	      const isTopDown = module.moduleId?.includes('lower-top-down-');
       const isShelfSplit = module.moduleId?.includes('shelf-split');
       if (isTopDown) {
-        topGap = getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);   // 상판내림: 상부EP=-82, 일반 10T=-90/20T=-80/30T=-70
-        bottomGap = 5;  // 상판내림: 하단 5mm
+        topGap = typeof spaceInfo.doorTopGapLowerTopDown === 'number'
+          ? spaceInfo.doorTopGapLowerTopDown
+          : getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);   // 상판내림: 상부EP=-82, 일반 10T=-90/20T=-80/30T=-70
+        bottomGap = typeof spaceInfo.doorBottomGapLowerTopDown === 'number'
+          ? spaceInfo.doorBottomGapLowerTopDown
+          : 5;  // 상판내림: 하단 5mm
       } else if (isDoorLift) {
-        topGap = 30;    // 도어올림: 상단 30mm
-        bottomGap = 5;  // 도어올림: 하단 5mm
+        topGap = typeof spaceInfo.doorTopGapLowerDoorLift === 'number'
+          ? spaceInfo.doorTopGapLowerDoorLift
+          : 30;    // 도어올림: 상단 30mm
+        bottomGap = typeof spaceInfo.doorBottomGapLowerDoorLift === 'number'
+          ? spaceInfo.doorBottomGapLowerDoorLift
+          : 5;  // 도어올림: 하단 5mm
       } else if (isBasicLower) {
-        topGap = -20;   // 기본하부장: 도어 상단 -20mm (캐비넷보다 짧음)
-        bottomGap = 5;  // 기본하부장: 도어 하단 5mm 확장
+        topGap = typeof spaceInfo.doorTopGapLower === 'number'
+          ? spaceInfo.doorTopGapLower
+          : -20;   // 기본하부장: 도어 상단 -20mm (캐비넷보다 짧음)
+        bottomGap = typeof spaceInfo.doorBottomGapLower === 'number'
+          ? spaceInfo.doorBottomGapLower
+          : 5;  // 기본하부장: 도어 하단 5mm 확장
       } else if (category === 'lower') {
-        topGap = 20;    // 기타 하부장: LOWER_DOOR_TOP_GAP
-        bottomGap = 2;  // 기타 하부장: LOWER_DOOR_BOTTOM_EXTENSION
+        topGap = typeof spaceInfo.doorTopGapLower === 'number'
+          ? spaceInfo.doorTopGapLower
+          : 20;    // 기타 하부장: LOWER_DOOR_TOP_GAP
+        bottomGap = typeof spaceInfo.doorBottomGapLower === 'number'
+          ? spaceInfo.doorBottomGapLower
+          : 2;  // 기타 하부장: LOWER_DOOR_BOTTOM_EXTENSION
       } else if (category === 'upper') {
-        bottomGap = 28; // 상부장 기본값
+        topGap = typeof spaceInfo.doorTopGapUpper === 'number'
+          ? spaceInfo.doorTopGapUpper
+          : topGap;
+        bottomGap = typeof spaceInfo.doorBottomGapUpper === 'number'
+          ? spaceInfo.doorBottomGapUpper
+          : 28; // 상부장 기본값
       }
       return {
 	        ...module,
