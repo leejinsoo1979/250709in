@@ -4420,7 +4420,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })();
           const actualTopSize = topRefMod_L?.hasTopFrame === false ? 0 : (resolvedTopClearance_L ?? (topRefMod_L?.topFrameThickness !== undefined ? topRefMod_L.topFrameThickness : globalTopFrame));
           const actualTopClearance = topRefMod_L?.hasTopFrame === false
-            ? (resolvedTopClearance_L ?? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0)))
+            ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
             : actualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -5513,7 +5513,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })();
           const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (rResolvedTopClearance ?? (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame));
           const rActualTopClearance = topRefMod_R?.hasTopFrame === false
-            ? (rResolvedTopClearance ?? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0)))
+            ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
             : rActualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
