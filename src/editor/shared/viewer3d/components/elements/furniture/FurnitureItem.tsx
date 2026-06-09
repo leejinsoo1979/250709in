@@ -1873,7 +1873,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       sectionFullH = Math.max(0, upper.height || 0);
     }
-    const nextShelfPos = Math.max(0, Math.round(sectionFullH / 2));
+    const sectionInnerH = Math.max(0, sectionFullH - 2 * basicThicknessMm);
+    const nextShelfPos = Math.max(0, Math.round(sectionInnerH - userGap - basicThicknessMm / 2));
     if (!appendNew && nextShelfPos === shelfPositions[safetyIdx] && (upper.height === sectionFullH)) {
       return placedModule.customSections;
     }
