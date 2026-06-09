@@ -1683,11 +1683,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
               const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? userDefaults.baseGap ?? 0) : 0;
               const lowerGuideBaseDefault = spaceInfo.baseboardLowerSize ?? userDefaults.baseLowerSize ?? 105;
+              const globalLowerBaseGap = globalBaseEnabled ? Math.max(0, spaceInfo.baseboardLowerGap ?? userDefaults.baseLowerGap ?? globalBaseGap) : 0;
               const globalBaseHeight = globalBaseEnabled
                 ? resolveDefaultBackedRawSize(
                   allBaseGuideSlotsAreLower ? spaceInfo.baseboardLowerSize : spaceInfo.baseConfig?.height,
                   allBaseGuideSlotsAreLower ? lowerGuideBaseDefault : (userDefaults.baseHeight ?? 65),
-                  globalBaseGap
+                  allBaseGuideSlotsAreLower ? globalLowerBaseGap : globalBaseGap
                 )
                 : Math.max(65, spaceInfo.baseConfig?.height || userDefaults.baseHeight || 65);
               const globalBaseOffset = baseConfig.offset ?? userDefaults.baseOffset ?? 0;
@@ -1723,7 +1724,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 )
               );
               const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
-                getSlotBaseEnabled(slot) ? Math.max(0, defaultIfZero(slot.baseFrameGap, globalBaseGap)) : 0
+                getSlotBaseEnabled(slot)
+                  ? Math.max(0, defaultIfZero(slot.baseFrameGap, (slot.guideZone || 'full') === 'lower' ? globalLowerBaseGap : globalBaseGap))
+                  : 0
               );
               const guideAllCheckboxStyle: React.CSSProperties = {
                 display: 'flex',
@@ -1827,7 +1830,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         type="base"
                         size={globalBaseHeight}
                         offset={allBaseGuideSlotsAreLower ? globalLowerBaseOffset : globalBaseOffset}
-                        gap={globalBaseGap}
+                        gap={allBaseGuideSlotsAreLower ? globalLowerBaseGap : globalBaseGap}
                         floatHeight={globalFloatHeight}
                         onToggle={() => {
                           setSpaceInfo({
@@ -1850,10 +1853,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         onGapChange={(v, nextSize) => setSpaceInfo(allBaseGuideSlotsAreLower
                           ? {
                             ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
-                            baseConfig: {
-                              ...baseConfig,
-                              gap: Math.max(0, v)
-                            }
+                            baseboardLowerGap: Math.max(0, v)
                           }
                           : {
                             baseConfig: {
@@ -2011,12 +2011,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? userDefaults.baseOffset ?? 0;
               const globalLowerBaseOffset = spaceInfo.baseboardLowerOffset ?? userDefaults.baseLowerOffset ?? globalBaseOffset;
               const globalBaseGap = (spaceInfo.baseConfig as any)?.gap ?? userDefaults.baseGap ?? 0;
+              const globalLowerBaseGap = spaceInfo.baseboardLowerGap ?? userDefaults.baseLowerGap ?? globalBaseGap;
               const globalTop = resolveDefaultBackedRawSize(spaceInfo.frameSize?.top, userDefaults.frameTop ?? 30, globalTopGap);
               const isLowerBaseModule = (module?: any) => getModuleCategory(module) === 'lower';
               const allBaseModsAreLower = baseSortedMods.length > 0 && baseSortedMods.every(isLowerBaseModule);
               const lowerBaseDefault = spaceInfo.baseboardLowerSize ?? userDefaults.baseLowerSize ?? 105;
               const globalBase = allBaseModsAreLower
-                ? resolveDefaultBackedRawSize(baseSortedMods[0]?.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, globalBaseGap)
+                ? resolveDefaultBackedRawSize(baseSortedMods[0]?.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, globalLowerBaseGap)
                 : resolveDefaultBackedRawSize(spaceInfo.baseConfig?.height, userDefaults.baseHeight ?? 65, globalBaseGap);
               const defaultIfZero = (value: number | undefined, fallback: number) => (
                 value === undefined ? fallback : value
@@ -2027,7 +2028,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               };
               const getBaseGapDefault = (module?: any) => {
                 const isLower = isLowerBaseModule(module);
-                return isLower ? (userDefaults.baseLowerGap ?? globalBaseGap) : globalBaseGap;
+                return isLower ? globalLowerBaseGap : globalBaseGap;
               };
               const getBaseOffsetDisplay = (module?: any) => defaultIfZero(module?.baseFrameOffset, getBaseOffsetDefault(module));
               const getBaseGapDisplay = (module?: any) => defaultIfZero(module?.baseFrameGap, getBaseGapDefault(module));
@@ -2239,7 +2240,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                                widthMM={group.totalWidthMm}
 	                                heightMM={isLowerGroup ? getBaseSizeDisplay(firstMod) : globalBase}
 	                                offset={isLowerGroup ? getBaseOffsetDefault(firstMod) : globalBaseOffset}
-	                                gap={globalBaseGap}
+	                                gap={isLowerGroup ? globalLowerBaseGap : globalBaseGap}
                                 splitGapFromSize={allEnabled}
                                 userBaseHeightDefault={userDefaults.baseHeight}
                                 onToggle={() => {
@@ -2266,7 +2267,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
 		                                }}
 	                                onGapChange={(v) => {
 	                                  const nextGap = Math.max(0, v);
-	                                  setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, gap: nextGap } as any });
+	                                  setSpaceInfo(isLowerGroup
+                                      ? { baseboardLowerGap: nextGap }
+                                      : { baseConfig: { ...spaceInfo.baseConfig, gap: nextGap } as any }
+                                    );
 	                                  group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameGap: nextGap } as any));
 	                                }}
                                 hlKey={hlKey}
@@ -2460,7 +2464,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 		                          widthMM={Math.round(totalWidthMM * 10) / 10}
 		                          sizeMM={globalBase}
 			                          offset={allBaseModsAreLower ? globalLowerBaseOffset : globalBaseOffset}
-		                          gap={globalBaseGap}
+		                          gap={allBaseModsAreLower ? globalLowerBaseGap : globalBaseGap}
 	                          splitGapFromSize={unifiedEnabled}
 	                          onToggle={() => {
 	                            const newVal = !unifiedEnabled;
@@ -2489,7 +2493,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 		                            setSpaceInfo(allBaseModsAreLower
 		                              ? {
 		                                ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
-		                                baseConfig: { ...spaceInfo.baseConfig, gap: nextGap } as any
+		                                baseboardLowerGap: nextGap
 		                              }
 		                              : {
 		                                baseConfig: {

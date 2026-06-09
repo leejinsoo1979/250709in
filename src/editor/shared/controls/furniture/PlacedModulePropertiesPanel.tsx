@@ -7439,10 +7439,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             };
             const commitBaseOffset = (nextOffset: number) => {
               if (spaceInfo.guideBaseFrameAllMode !== false) {
-                setSpaceInfo({ baseConfig: { ...spaceInfo.baseConfig, offset: nextOffset } as any });
+                setSpaceInfo(isLowerMod
+                  ? { baseboardLowerOffset: nextOffset }
+                  : { baseConfig: { ...spaceInfo.baseConfig, offset: nextOffset } as any }
+                );
               }
               syncGuideBaseSlotForModule({ baseFrameOffset: nextOffset });
               updatePlacedModule(mod.id, { baseFrameOffset: nextOffset });
+            };
+            const commitBaseGap = (nextGap: number) => {
+              if (spaceInfo.guideBaseFrameAllMode !== false) {
+                setSpaceInfo(isLowerMod
+                  ? { baseboardLowerGap: nextGap }
+                  : { baseConfig: { ...spaceInfo.baseConfig, gap: nextGap } as any }
+                );
+              }
+              syncGuideBaseSlotForModule({ baseFrameGap: nextGap });
+              updatePlacedModule(mod.id, { baseFrameGap: nextGap });
             };
             const baseSize = isLowerMod
               ? (mod.baseFrameHeight ?? guideBaseSlotForModule?.baseFrameHeight ?? spaceInfo.baseboardLowerSize ?? bfDefault)
@@ -7450,10 +7463,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 ? (spaceInfo.baseConfig?.height ?? mod.baseFrameHeight ?? bfDefault)
                 : (guideBaseSlotForModule?.baseFrameHeight ?? mod.baseFrameHeight ?? bfDefault));
             const baseOffset = spaceInfo.guideBaseFrameAllMode !== false
-              ? ((spaceInfo.baseConfig as any)?.offset ?? mod.baseFrameOffset ?? 0)
+              ? (isLowerMod
+                ? (spaceInfo.baseboardLowerOffset ?? mod.baseFrameOffset ?? 0)
+                : ((spaceInfo.baseConfig as any)?.offset ?? mod.baseFrameOffset ?? 0))
               : (guideBaseSlotForModule?.baseFrameOffset ?? mod.baseFrameOffset ?? 0);
             const baseGap = spaceInfo.guideBaseFrameAllMode !== false
-              ? ((spaceInfo.baseConfig as any)?.gap ?? mod.baseFrameGap ?? 0)
+              ? (isLowerMod
+                ? (spaceInfo.baseboardLowerGap ?? mod.baseFrameGap ?? 0)
+                : ((spaceInfo.baseConfig as any)?.gap ?? mod.baseFrameGap ?? 0))
               : (guideBaseSlotForModule?.baseFrameGap ?? mod.baseFrameGap ?? 0);
             const getEndPanelGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
               if (!mod.hasLeftEndPanel && !mod.hasRightEndPanel) return {};
@@ -8008,8 +8025,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                                e.preventDefault();
 	                                const maxGap = Math.max(0, baseSize - 1);
 	                                const next = Math.max(0, Math.min(maxGap, (baseGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-	                                syncGuideBaseSlotForModule({ baseFrameGap: next });
-	                                updatePlacedModule(mod.id, { baseFrameGap: next });
+	                                commitBaseGap(next);
 	                              } else if (e.key === 'Enter') {
 	                                (e.target as HTMLInputElement).blur();
                               }
@@ -8020,16 +8036,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                                const num = v === '' ? 0 : parseInt(v, 10);
 	                                const maxGap = Math.max(0, baseSize - 1);
 	                                const nextGap = Math.max(0, Math.min(maxGap, num));
-	                                syncGuideBaseSlotForModule({ baseFrameGap: nextGap });
-	                                updatePlacedModule(mod.id, { baseFrameGap: nextGap });
+	                                commitBaseGap(nextGap);
 	                              }
 	                            }}
 	                            onBlur={(e) => {
 	                              setHighlightedFrame(null);
 	                              const maxGap = Math.max(0, baseSize - 1);
 	                              const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
-	                              syncGuideBaseSlotForModule({ baseFrameGap: clamped });
-	                              updatePlacedModule(mod.id, { baseFrameGap: clamped });
+	                              commitBaseGap(clamped);
 	                            }}
                             style={inputStyle}
                           />
