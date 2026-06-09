@@ -210,6 +210,81 @@ const getPlainShoeShelfSectionHeights = (
   return [lowerH, upperH];
 };
 
+const recalculateSectionShelves = (section: any, height: number, thickness: number) => {
+  const updated: any = { ...section, height: Math.round(height), heightType: 'absolute' };
+  if ((section.type === 'shelf' || section.type === 'open') && (section.count > 0 || (Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0))) {
+    const shelfCount = section.count || (section.shelfPositions?.length ?? 0);
+    const innerH = Math.max(0, Math.round(height) - 2 * thickness);
+    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, thickness);
+  }
+  return updated;
+};
+
+const resolveStandardSectionHeights = (
+  sections: any[],
+  sectionBasisH: number
+): number[] => {
+  const roundedBasis = Math.max(0, Math.round(sectionBasisH || 0));
+  const heights = sections.map((section, index) => {
+    const isLast = index === sections.length - 1;
+    if (isLast) return 0;
+    if ((section.heightType || 'percentage') === 'absolute') {
+      return Math.max(0, Math.round(section.height || 0));
+    }
+    const ratio = (section.height || section.heightRatio || 50) / 100;
+    return Math.max(0, Math.round(roundedBasis * ratio));
+  });
+  const fixedBeforeLast = heights.slice(0, -1).reduce((sum, height) => sum + height, 0);
+  heights[sections.length - 1] = Math.max(0, roundedBasis - fixedBeforeLast);
+  return heights;
+};
+
+const buildSectionsWithUpperAbsorbingBodyHeight = (
+  sections: any[],
+  currentSectionBasisH: number,
+  requestedBodyHeight: number,
+  thickness: number
+) => {
+  if (!Array.isArray(sections) || sections.length < 2) {
+    return { bodyHeight: Math.max(100, Math.round(requestedBodyHeight)), sections: undefined };
+  }
+  const currentHeights = resolveStandardSectionHeights(sections, currentSectionBasisH);
+  const fixedLowerSum = currentHeights.slice(0, -1).reduce((sum, height) => sum + height, 0);
+  const bodyHeight = Math.max(Math.round(requestedBodyHeight), fixedLowerSum + 100);
+  const nextHeights = currentHeights.map((height, index) => (
+    index === currentHeights.length - 1
+      ? Math.max(100, bodyHeight - fixedLowerSum)
+      : height
+  ));
+  return {
+    bodyHeight,
+    sections: sections.map((section, index) => recalculateSectionShelves(section, nextHeights[index], thickness)),
+  };
+};
+
+const buildOppositeAbsorbedStandardSections = (
+  sections: any[],
+  sectionBasisH: number,
+  editedIndex: number,
+  requestedHeight: number,
+  thickness: number
+) => {
+  if (!Array.isArray(sections) || sections.length < 2) return null;
+  const currentHeights = resolveStandardSectionHeights(sections, sectionBasisH);
+  const lastIndex = sections.length - 1;
+  const absorbIndex = editedIndex === lastIndex ? 0 : lastIndex;
+  const nextEditedHeight = Math.max(100, Math.round(requestedHeight));
+  const nextHeights = [...currentHeights];
+  nextHeights[editedIndex] = nextEditedHeight;
+  const otherSum = nextHeights.reduce((sum, height, index) => (
+    index === absorbIndex ? sum : sum + height
+  ), 0);
+  const nextAbsorbHeight = Math.round(sectionBasisH) - otherSum;
+  if (nextAbsorbHeight < 100) return null;
+  nextHeights[absorbIndex] = nextAbsorbHeight;
+  return sections.map((section, index) => recalculateSectionShelves(section, nextHeights[index], thickness));
+};
+
 const getRenderedSectionBasisHeight = (
   module: any,
   spaceInfo: any,
@@ -1809,6 +1884,36 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     && usesStableShelfSectionBoundary(currentPlacedModule.moduleId)
     && !currentPlacedModule.isFreePlacement;
   const bodyHeightInputValue = isAutoBodyHeightInput ? Math.round(placedBodyHeight).toString() : freeHeightInput;
+
+  const buildFreePlacementBodyHeightSectionUpdate = React.useCallback((requestedBodyHeight: number) => {
+    if (
+      !currentPlacedModule?.isFreePlacement ||
+      !moduleData ||
+      moduleData.category !== 'full' ||
+      isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
+    ) {
+      return { bodyHeight: Math.max(100, Math.round(requestedBodyHeight)) };
+    }
+
+    const sourceSections = Array.isArray((currentPlacedModule as any).customSections)
+      && (currentPlacedModule as any).customSections.length >= 2
+      ? (currentPlacedModule as any).customSections
+      : moduleData.modelConfig?.sections;
+    if (!Array.isArray(sourceSections) || sourceSections.length < 2) {
+      return { bodyHeight: Math.max(100, Math.round(requestedBodyHeight)) };
+    }
+
+    return buildSectionsWithUpperAbsorbingBodyHeight(
+      sourceSections,
+      placedBodyHeight || moduleData.dimensions.height || requestedBodyHeight,
+      requestedBodyHeight,
+      moduleData.modelConfig?.basicThickness || 18
+    );
+  }, [
+    currentPlacedModule,
+    moduleData,
+    placedBodyHeight,
+  ]);
 
   const getCountertopThicknessHeightUpdates = React.useCallback((targetModule: any, nextThickness: number) => {
     const targetId = targetModule?.moduleId || '';
@@ -4923,10 +5028,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                             : 0;
                           const absB = 0;
-	                          const val = displayVal - absT - absB - lowerBaseForInput;
+	                          let val = displayVal - absT - absB - lowerBaseForInput;
+                          const bodySectionUpdate = buildFreePlacementBodyHeightSectionUpdate(val);
+                          val = bodySectionUpdate.bodyHeight;
                           const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
+                          if (bodySectionUpdate.sections) {
+                            updates.customSections = bodySectionUpdate.sections;
+                          }
                           updates.userResizedHeight = true;
                           // 2단서랍장: cabinetBodyHeight도 함께 저장 (렌더링이 우선 사용)
                           if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
@@ -4952,7 +5062,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }
                           }
                           updatePlacedModule(currentPlacedModule.id, updates);
-                          setFreeHeightInput(displayVal.toString()); // 표시는 사용자 입력값(흡수분 포함) 그대로 유지
+                          setFreeHeightInput((val + absT + absB + lowerBaseForInput).toString());
                           setSectionHeightInputs({}); // 섹션 높이 캐시 초기화 → 재계산
                           const store = useFurnitureStore.getState();
                           const dims = {
@@ -5008,10 +5118,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
                             const absB = 0;
-	                            const val = displayVal - absT - absB - lowerBaseForInput;
+	                            let val = displayVal - absT - absB - lowerBaseForInput;
+                            const bodySectionUpdate = buildFreePlacementBodyHeightSectionUpdate(val);
+                            val = bodySectionUpdate.bodyHeight;
                             const updates: any = moduleData.category === 'upper'
                               ? { customHeight: val, freeHeight: undefined }
                               : { freeHeight: val };
+                            if (bodySectionUpdate.sections) {
+                              updates.customSections = bodySectionUpdate.sections;
+                            }
                             updates.userResizedHeight = true;
                             if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
                                 ) {
@@ -5028,7 +5143,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             // 동기화 useEffect가 store stale 값으로 덮어쓰지 않도록 focused 유지 후 store 업데이트
                             freeHeightFocusedRef.current = true;
                             updatePlacedModule(currentPlacedModule.id, updates);
-                            setFreeHeightInput(displayVal.toString());
+                            setFreeHeightInput((val + absT + absB + lowerBaseForInput).toString());
                             setSectionHeightInputs({});
                             // 다음 tick에 focused 해제 (store 업데이트 반영 후)
                             setTimeout(() => { freeHeightFocusedRef.current = false; }, 50);
@@ -5056,10 +5171,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
                             const absB = 0;
-	                            const next = nextDisplay - absT - absB - lowerBaseForInput;
+	                            let next = nextDisplay - absT - absB - lowerBaseForInput;
+                            const bodySectionUpdate = buildFreePlacementBodyHeightSectionUpdate(next);
+                            next = bodySectionUpdate.bodyHeight;
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
+                            if (bodySectionUpdate.sections) {
+                              arrowUpdates.customSections = bodySectionUpdate.sections;
+                            }
                             arrowUpdates.userResizedHeight = true;
 	                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
 	                                ) {
@@ -5073,6 +5193,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                              arrowUpdates.cabinetBodyHeight = next;
 	                            }
                             updatePlacedModule(currentPlacedModule.id, arrowUpdates);
+                            setFreeHeightInput((next + absT + absB + lowerBaseForInput).toString());
                             setSectionHeightInputs({}); // 섹션 높이 캐시 초기화
                           }
                         }
@@ -5559,45 +5680,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               } else if (isCustom) {
                                 handleSectionHeightBlur(sIdx);
                               } else if (isFreePlacementStandard && mcSections) {
-                                // 자유배치 표준 가구: 선택 섹션 높이를 고정하고, 나머지 섹션 치수는 유지한 채 전체 H를 재계산한다.
+                                // 자유배치 표준 가구: 몸통 H는 고정하고, 변경한 섹션의 반대쪽 섹션이 흡수한다.
                                 const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
                                 if (isNaN(inputVal) || inputVal < 100) {
                                   setSectionHeightInputs({});
                                   return;
                                 }
-                                const renderedHeights = mcSections.map((section: any, idx: number) => {
-                                  if (idx === sIdx) return inputVal;
-                                  if (plainShoeShelfSectionHeights) return plainShoeShelfSectionHeights[idx] ?? 0;
-                                  if (idx === mcSections.length - 1) {
-                                    const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
-                                      if ((s.heightType || 'percentage') === 'absolute') return acc + (s.height || 0);
-                                      const ratio = (s.height || s.heightRatio || 50) / 100;
-                                      return acc + Math.round(sectionBasisH * ratio);
-                                    }, 0);
-                                    return Math.max(0, sectionBasisH - fixedSum);
-                                  }
-                                  if ((section.heightType || 'percentage') === 'absolute') return section.height || 0;
-                                  return Math.round(sectionBasisH * ((section.height || section.heightRatio || 50) / 100));
-                                });
-                                const nextTotalH = renderedHeights.reduce((sum: number, h: number) => sum + h, 0);
-                                const clampedH = Math.max(300, Math.min(3000, Math.round(nextTotalH)));
                                 const basicThickness = moduleData?.modelConfig?.basicThickness || 18;
-                                const nextSections = mcSections.map((section: any, idx: number) => {
-                                  if (idx !== sIdx || idx === mcSections.length - 1) return section;
-                                  const updated: any = { ...section, height: inputVal, heightType: 'absolute' };
-                                  if ((section.type === 'shelf' || section.type === 'open') && (section.count > 0 || (Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0))) {
-                                    const shelfCount = section.count || (section.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
-                                  }
-                                  return updated;
-                                });
-                                updatePlacedModule(currentPlacedModule.id, {
-                                  freeHeight: clampedH,
-                                  userResizedHeight: true,
-                                  customSections: nextSections,
-                                } as any);
-                                setFreeHeightInput(clampedH.toString());
+                                const nextSections = buildOppositeAbsorbedStandardSections(
+                                  mcSections,
+                                  sectionBasisH,
+                                  sIdx,
+                                  inputVal,
+                                  basicThickness
+                                );
+                                if (!nextSections) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                updatePlacedModule(currentPlacedModule.id, { customSections: nextSections } as any);
                                 setSectionHeightInputs({});
                               } else if (isPantryOrPullOut && mcSections) {
                                 // 팬트리장/인출장: 전체 몸통 H 고정, 변경한 섹션의 반대쪽 섹션이 흡수한다.

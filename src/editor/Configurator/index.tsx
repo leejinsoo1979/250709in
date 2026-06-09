@@ -24,7 +24,7 @@ import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/i
 import { calculateInternalSpace, calculateTopBottomFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleCategory, redistributeFreePlacementGuidesForSpaceChange } from '@/editor/shared/utils/freePlacementUtils';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
-import { getModuleById } from '@/data/modules';
+import { calculateEvenShelfPositions, getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import IslandSetupModal, { IslandSetupValues } from '@/components/common/IslandSetupModal';
 import { useHistoryStore } from '@/store/historyStore';
@@ -111,6 +111,58 @@ const getTopDownDoorTopGap = (stoneTopThickness?: number, hasTopEndPanel?: boole
 const getActiveFloorFinishHeight = (space: any): number => {
   if (!space?.hasFloorFinish) return 0;
   return Number(space.floorFinish?.height ?? space.floorFinishHeight ?? 0) || 0;
+};
+
+const recalculateStandardSectionShelves = (section: any, height: number, thickness: number) => {
+  const updated: any = { ...section, height: Math.round(height), heightType: 'absolute' };
+  if ((section.type === 'shelf' || section.type === 'open') && (section.count > 0 || (Array.isArray(section.shelfPositions) && section.shelfPositions.length > 0))) {
+    const shelfCount = section.count || (section.shelfPositions?.length ?? 0);
+    const innerH = Math.max(0, Math.round(height) - 2 * thickness);
+    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, thickness);
+  }
+  return updated;
+};
+
+const resolveStandardSectionHeightsForFrame = (sections: any[], sectionBasisH: number): number[] => {
+  const roundedBasis = Math.max(0, Math.round(sectionBasisH || 0));
+  const heights = sections.map((section, index) => {
+    if (index === sections.length - 1) return 0;
+    if ((section.heightType || 'percentage') === 'absolute') {
+      return Math.max(0, Math.round(section.height || 0));
+    }
+    const ratio = (section.height || section.heightRatio || 50) / 100;
+    return Math.max(0, Math.round(roundedBasis * ratio));
+  });
+  const fixedBeforeLast = heights.slice(0, -1).reduce((sum, height) => sum + height, 0);
+  heights[sections.length - 1] = Math.max(0, roundedBasis - fixedBeforeLast);
+  return heights;
+};
+
+const buildTopAbsorbedSectionUpdatesForFrame = (
+  module: any,
+  moduleData: any,
+  previousBodyHeight: number,
+  requestedBodyHeight: number
+) => {
+  const sourceSections = Array.isArray(module?.customSections) && module.customSections.length >= 2
+    ? module.customSections
+    : moduleData?.modelConfig?.sections;
+  if (!Array.isArray(sourceSections) || sourceSections.length < 2) {
+    return { bodyHeight: Math.max(100, Math.round(requestedBodyHeight)) };
+  }
+  const thickness = moduleData?.modelConfig?.basicThickness || 18;
+  const currentHeights = resolveStandardSectionHeightsForFrame(sourceSections, previousBodyHeight);
+  const fixedLowerSum = currentHeights.slice(0, -1).reduce((sum, height) => sum + height, 0);
+  const bodyHeight = Math.max(Math.round(requestedBodyHeight), fixedLowerSum + 100);
+  const nextHeights = currentHeights.map((height, index) => (
+    index === currentHeights.length - 1 ? Math.max(100, bodyHeight - fixedLowerSum) : height
+  ));
+  return {
+    bodyHeight,
+    customSections: sourceSections.map((section: any, index: number) => (
+      recalculateStandardSectionShelves(section, nextHeights[index], thickness)
+    )),
+  };
 };
 
 const buildDefaultFrameResetUpdates = (
@@ -7755,9 +7807,21 @@ const Configurator: React.FC = () => {
                         updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) });
                         return;
                       }
-                      const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
+                      const moduleDataForSections = getModuleById(
+                        mod.moduleId,
+                        { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+                        spaceInfo
+                      );
+                      const requestedFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
+                      const sectionUpdate = buildTopAbsorbedSectionUpdatesForFrame(
+                        mod,
+                        moduleDataForSections,
+                        modHeight,
+                        requestedFreeHeight
+                      );
                       updatePlacedModule(mod.id, {
-                        freeHeight: newFreeHeight,
+                        freeHeight: sectionUpdate.bodyHeight,
+                        ...(sectionUpdate.customSections ? { customSections: sectionUpdate.customSections } : {}),
                         userResizedHeight: true,
                       });
                     }}
