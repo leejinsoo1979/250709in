@@ -179,6 +179,7 @@ export const useBaseFurniture = (
 
       const rescaleShelfPositions = (section: SectionConfig, newHeight: number): SectionConfig => {
         const hasCustomShelfPositions = !!customSections
+          && !isShelfSplit
           && Array.isArray(section.shelfPositions)
           && (section.count ?? 0) > 0
           && section.shelfPositions.length >= (section.count ?? 0);

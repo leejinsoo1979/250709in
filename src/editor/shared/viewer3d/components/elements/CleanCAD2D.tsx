@@ -4582,6 +4582,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               calculateInternalSpace(spaceInfo),
               spaceInfo
             );
+            const hasExplicitCustomSections = Array.isArray((leftViewMod as any)?.customSections);
             const sections = ((leftViewMod as any)?.customSections || modData?.modelConfig?.sections) as any[] | undefined;
             if (sections && sections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이 - 띄움)
@@ -4617,11 +4618,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 && !leftModId.includes('shelf-split');
               const leftIsShelfSplit = leftModId.includes('shelf-split');
               if (leftIsEntryway && rawHeights.length >= 2) {
+                if (hasExplicitCustomSections) {
+                  sectionHeights = rawHeights.map(h => Math.max(0, Math.round(h || 0)));
+                } else {
                 const fixedSum = rawHeights.slice(1).reduce((a, b) => a + b, 0);
                 sectionHeights = [
                   Math.max(0, sectionBasisH - fixedSum),
                   ...rawHeights.slice(1),
                 ];
+                }
               } else if ((leftIsPlainShelf || leftIsShelfSplit) && rawHeights.length >= 2) {
                 // 하부 경계는 바닥 기준 1060mm 유지:
                 // 걸레받이 OFF면 하부에 base를 더하고, 띄움은 하부에서 뺀다.
@@ -4651,11 +4656,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     : remainingUpperH,
                 ];
               } else {
-                const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
-                sectionHeights = [
-                  ...rawHeights.slice(0, -1),
-                  Math.max(0, sectionBasisH - fixedSum)
-                ];
+                if (hasExplicitCustomSections) {
+                  sectionHeights = rawHeights.map(h => Math.max(0, Math.round(h || 0)));
+                } else {
+                  const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                  sectionHeights = [
+                    ...rawHeights.slice(0, -1),
+                    Math.max(0, sectionBasisH - fixedSum)
+                  ];
+                }
               }
             }
           }
@@ -5646,6 +5655,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               calculateInternalSpace(spaceInfo),
               spaceInfo
             );
+            const rHasExplicitCustomSections = Array.isArray((rightmostMod as any)?.customSections);
             const rSections = ((rightmostMod as any)?.customSections || rModData?.modelConfig?.sections) as any[] | undefined;
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
@@ -5673,11 +5683,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 && !rModId.includes('-2drawer-shelf-')
                 && !rModId.includes('shelf-split');
               if (rIsEntryway && rRawHeights.length >= 2) {
+                if (rHasExplicitCustomSections) {
+                  rSectionHeights = rRawHeights.map(h => Math.max(0, Math.round(h || 0)));
+                } else {
                 const rFixedSum = rRawHeights.slice(1).reduce((a, b) => a + b, 0);
                 rSectionHeights = [
                   Math.max(0, rSectionBasisH - rFixedSum),
                   ...rRawHeights.slice(1),
                 ];
+                }
               } else if (rIsPlainShelf && rRawHeights.length >= 2) {
                 const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
                   && spaceInfo?.baseConfig?.placementType === 'float';
@@ -5698,11 +5712,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   Math.max(0, rSectionBasisH - rNewLowerH),
                 ];
               } else {
-                const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
-                rSectionHeights = [
-                  ...rRawHeights.slice(0, -1),
-                  Math.max(0, rSectionBasisH - rFixedSum)
-                ];
+                if (rHasExplicitCustomSections) {
+                  rSectionHeights = rRawHeights.map(h => Math.max(0, Math.round(h || 0)));
+                } else {
+                  const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                  rSectionHeights = [
+                    ...rRawHeights.slice(0, -1),
+                    Math.max(0, rSectionBasisH - rFixedSum)
+                  ];
+                }
               }
             }
           }
@@ -8565,7 +8583,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topFrameDimensionValue = isTopFrameOff
               ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
               : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
-            const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
+            const topFrameDimensionHeight = isTopFrameOff ? topFrameHeight : (topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue);
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
               ? resolveLowerTopFinishThicknessMm(lowerTopFinishRefMod, spaceInfo)
@@ -10274,7 +10292,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topFrameDimensionValue = isTopFrameOff
               ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
               : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
-            const topFrameDimensionHeight = topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue;
+            const topFrameDimensionHeight = isTopFrameOff ? topFrameHeight : (topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue);
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
               ? resolveLowerTopFinishThicknessMm(lowerTopFinishRefMod, spaceInfo)
