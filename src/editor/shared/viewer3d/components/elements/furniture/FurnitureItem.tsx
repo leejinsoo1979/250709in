@@ -1668,7 +1668,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // freeHeight가 있으면 사용하되, 없거나 갱신 안 됐을 때도 올바르게 계산
   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeightMm = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-  if (currentGuideSlotHeightMm !== undefined && isTallCabinetForY) {
+  const hasManualFreeTallHeight = placedModule.isFreePlacement
+    && isTallCabinetForY
+    && placedModule.userResizedHeight === true
+    && typeof placedModule.freeHeight === 'number'
+    && placedModule.freeHeight > 0;
+  if (currentGuideSlotHeightMm !== undefined && isTallCabinetForY && !hasManualFreeTallHeight) {
     furnitureHeightMm = currentGuideSlotHeightMm;
   } else if (placedModule.isFreePlacement && isTallCabinetForY) {
     // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
