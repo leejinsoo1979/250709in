@@ -2968,21 +2968,30 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       updates.sectionDepths = (currentPlacedModule as any).sectionDepths.map(() => newDepth);
     }
     const latestPlacedModule = useFurnitureStore.getState().placedModules.find(module => module.id === currentPlacedModule.id);
-    const bodyDepthDirection = latestPlacedModule?.lowerSectionDepthDirection
-      ?? latestPlacedModule?.upperSectionDepthDirection
+    const nextLowerDepthDirection = latestPlacedModule?.lowerSectionDepthDirection
       ?? currentPlacedModule.lowerSectionDepthDirection
-      ?? currentPlacedModule.upperSectionDepthDirection
       ?? lowerDepthDirection
       ?? 'front';
-    updates.lowerSectionDepthDirection = bodyDepthDirection;
-    updates.upperSectionDepthDirection = bodyDepthDirection;
+    const nextUpperDepthDirection = latestPlacedModule?.upperSectionDepthDirection
+      ?? currentPlacedModule.upperSectionDepthDirection
+      ?? upperDepthDirection
+      ?? nextLowerDepthDirection;
+    updates.lowerSectionDepthDirection = nextLowerDepthDirection;
+    updates.upperSectionDepthDirection = nextUpperDepthDirection;
 
     // 앞고정 상태에서 깊이를 바꾸면 뒷벽이격도 함께 재계산 (앞라인 추종 유지).
     // 뒤고정이면 0. (Room.tsx 몰딩/걸레받이/치수가이드가 backWallGap을 읽으므로 store 저장 필요)
-    updates.backWallGap = computeLowerBackWallGap(bodyDepthDirection, newDepth);
+    updates.backWallGap = computeLowerBackWallGap(nextLowerDepthDirection, newDepth);
 
     if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
-      updates.sectionDepthDirections = (currentPlacedModule as any).sectionDepthDirections.map(() => bodyDepthDirection);
+      const latestSectionDepthDirections = Array.isArray((latestPlacedModule as any)?.sectionDepthDirections)
+        ? (latestPlacedModule as any).sectionDepthDirections as ('front' | 'back')[]
+        : undefined;
+      updates.sectionDepthDirections = ((currentPlacedModule as any).sectionDepthDirections as ('front' | 'back')[]).map((direction, index, directions) => (
+        latestSectionDepthDirections?.[index]
+        ?? direction
+        ?? (index === directions.length - 1 ? nextUpperDepthDirection : nextLowerDepthDirection)
+      ));
     }
 
     if (currentPlacedModule.customConfig) {

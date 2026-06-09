@@ -985,13 +985,24 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           depthSyncUpdates.sectionDepths = (existingModule as any).sectionDepths.map(() => requestedBodyDepth);
         }
 
+        const nextLowerDepthDirection = (updates as any).lowerSectionDepthDirection
+          ?? (existingModule as any).lowerSectionDepthDirection
+          ?? 'front';
+        const nextUpperDepthDirection = (updates as any).upperSectionDepthDirection
+          ?? (existingModule as any).upperSectionDepthDirection
+          ?? nextLowerDepthDirection;
+        depthSyncUpdates.lowerSectionDepthDirection = nextLowerDepthDirection;
+        depthSyncUpdates.upperSectionDepthDirection = nextUpperDepthDirection;
+
         if (Array.isArray((existingModule as any).sectionDepthDirections)) {
-          const bodyDepthDirection = (updates as any).lowerSectionDepthDirection
-            ?? (updates as any).upperSectionDepthDirection
-            ?? (existingModule as any).lowerSectionDepthDirection
-            ?? (existingModule as any).upperSectionDepthDirection
-            ?? 'front';
-          depthSyncUpdates.sectionDepthDirections = (existingModule as any).sectionDepthDirections.map(() => bodyDepthDirection);
+          const updateSectionDepthDirections = Array.isArray((updates as any).sectionDepthDirections)
+            ? (updates as any).sectionDepthDirections as ('front' | 'back')[]
+            : undefined;
+          depthSyncUpdates.sectionDepthDirections = ((existingModule as any).sectionDepthDirections as ('front' | 'back')[]).map((direction, index, directions) => (
+            updateSectionDepthDirections?.[index]
+            ?? direction
+            ?? (index === directions.length - 1 ? nextUpperDepthDirection : nextLowerDepthDirection)
+          ));
         }
 
         if ((existingModule as any).customConfig?.sections) {
