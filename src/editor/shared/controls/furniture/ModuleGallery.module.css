@@ -178,6 +178,13 @@
   opacity: 0;
 }
 
+.thumbnailPlaceholder {
+  min-width: 0;
+  width: 100%;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* 썸네일 이름 */
 .thumbnailName {
   margin-top: 4px;

@@ -123,6 +123,10 @@ const FURNITURE_ICONS: Record<string, string> = {
 // 모듈 타입 정의
 export type ModuleType = 'all' | 'single' | 'dual';
 
+type ModuleGalleryCell =
+  | { type: 'module'; module: ModuleData }
+  | { type: 'placeholder'; key: string };
+
 // 신발장 판별 (full 카테고리 내)
 // - 선반장 계열: single-shelf-*, dual-shelf-*, single-Ndrawer-shelf-*, dual-Ndrawer-shelf-*
 // - 현관장 계열: single-entryway-*, dual-entryway-*
@@ -169,6 +173,28 @@ const getTextThumbnailLabel = (moduleId: string): string | null => {
   if (moduleId.includes('lower-drawer-1tier')) return 'TV장기본';
   if (moduleId.includes('lower-door-lift-1tier')) return 'TV장도어올림';
   return null;
+};
+
+const arrangeModulesBySingleDualColumns = (
+  singleModules: ModuleData[],
+  dualModules: ModuleData[]
+): ModuleGalleryCell[] => {
+  const maxRows = Math.max(singleModules.length, dualModules.length);
+  const cells: ModuleGalleryCell[] = [];
+
+  for (let index = 0; index < maxRows; index++) {
+    const singleModule = singleModules[index];
+    const dualModule = dualModules[index];
+
+    cells.push(singleModule
+      ? { type: 'module', module: singleModule }
+      : { type: 'placeholder', key: `single-placeholder-${index}` });
+    cells.push(dualModule
+      ? { type: 'module', module: dualModule }
+      : { type: 'placeholder', key: `dual-placeholder-${index}` });
+  }
+
+  return cells;
 };
 
 // 썸네일 아이�� 컴포넌트
@@ -1330,16 +1356,21 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   }, [fullModules, indexing.columnCount]);
 
   // 현재 선택된 탭에 따른 모듈 목록
-  const currentModules = useMemo(() => {
+  const currentModuleCells = useMemo<ModuleGalleryCell[]>(() => {
     // 모든 카테고리에서 싱글/듀얼 필터링 적용
-    const modules = selectedType === 'all'
-      ? [...singleModules, ...dualModules]
-      : selectedType === 'single'
-        ? singleModules
-        : dualModules;
+    if (selectedType === 'all') {
+      return arrangeModulesBySingleDualColumns(singleModules, dualModules);
+    }
 
-    return modules;
+    const modules = selectedType === 'single' ? singleModules : dualModules;
+    return modules.map(module => ({ type: 'module', module }));
   }, [selectedType, singleModules, dualModules]);
+
+  const currentModulesCount = selectedType === 'all'
+    ? singleModules.length + dualModules.length
+    : selectedType === 'single'
+      ? singleModules.length
+      : dualModules.length;
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
@@ -1447,8 +1478,13 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
       {/* 썸네일 그리드 (2열) */}
       <div className={styles.thumbnailGrid}>
-          {currentModules.length > 0 ? (
-            currentModules.map(module => {
+          {currentModulesCount > 0 ? (
+            currentModuleCells.map(cell => {
+              if (cell.type === 'placeholder') {
+                return <div key={cell.key} className={styles.thumbnailPlaceholder} aria-hidden="true" />;
+              }
+
+              const { module } = cell;
               const iconPath = getIconPath(module.id);
               const isValid = isModuleValid(module);
 
