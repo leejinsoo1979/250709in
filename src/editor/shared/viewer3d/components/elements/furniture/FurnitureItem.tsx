@@ -823,7 +823,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let targetModuleId = placedModule.moduleId;
 
   // 싱글 상하부장 디버깅
-  const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
+  const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet')
+    || placedModule.moduleId.startsWith('upper-')
+    || placedModule.moduleId.includes('-upper-');
   const isLowerCabinet = placedModule.moduleId.includes('lower-');
   const isDualCabinet = placedModule.moduleId.includes('dual-');
 
@@ -865,7 +867,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // customWidth가 있고 adjustedWidth가 없는 경우 - customWidth로 모듈 ID 생성
   else if (placedModule.customWidth && !placedModule.adjustedWidth) {
     // 상하부장 특별 처리
-    const isUpperLower = targetModuleId.includes('upper-cabinet') || targetModuleId.includes('lower-cabinet');
+    const isUpperLower = targetModuleId.includes('upper-cabinet')
+      || targetModuleId.startsWith('upper-')
+      || targetModuleId.includes('-upper-')
+      || targetModuleId.includes('lower-cabinet');
 
     if (isUpperLower) {
       // 싱글 상하부장의 경우 customWidth를 무조건 적용
@@ -1015,7 +1020,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const parts = placedModule.moduleId.split('-');
 
     // 상하부장 특별 처리
-    const isUpperCabinetFallback = placedModule.moduleId.includes('upper-cabinet');
+    const isUpperCabinetFallback = placedModule.moduleId.includes('upper-cabinet')
+      || placedModule.moduleId.startsWith('upper-')
+      || placedModule.moduleId.includes('-upper-');
     const isLowerCabinetFallback = placedModule.moduleId.includes('lower-cabinet');
 
     if (isUpperCabinetFallback || isLowerCabinetFallback) {
@@ -3168,7 +3175,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장/하부장/키큰장: backWallGap 0 기준 뒷벽 라인을 맞춘다.
-  const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
+  const isUpperForZ = actualModuleData?.category === 'upper'
+    || placedModule.moduleId?.includes('upper-cabinet')
+    || placedModule.moduleId?.startsWith('upper-')
+    || placedModule.moduleId?.includes('-upper-');
   // 신발장 카테고리 + 유리장: 뒷벽에 뒷면 정렬 (앞면 맞추는 로직 제거)
   const midForZ = placedModule.moduleId || '';
   const isShoeCabinet = (midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-') || midForZ.includes('glass-cabinet'));
@@ -3344,7 +3354,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const sideBaseFrame = (() => {
     if (!shouldRenderSideWallFrames) return null;
     if (placedModule.hasBase === false) return null;
-    if (actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet')) return null;
+    if (
+      actualModuleData?.category === 'upper'
+      || placedModule.moduleId?.includes('upper-cabinet')
+      || placedModule.moduleId?.startsWith('upper-')
+      || placedModule.moduleId?.includes('-upper-')
+    ) return null;
     if (spaceInfo.baseConfig?.type !== 'floor') return null;
 
     const rawHeightMm = placedModule.guideSlotPlacement

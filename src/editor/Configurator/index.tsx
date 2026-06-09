@@ -247,8 +247,11 @@ const DoorGapInput: React.FC<{
   );
 };
 
-const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): number => {
+const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean, module?: any): number => {
   if (!hasTopFrame) return -5;
+  if (module && isUpperCabinetModuleId(module.moduleId)) {
+    return typeof spaceInfo?.doorTopGapUpper === 'number' ? spaceInfo.doorTopGapUpper : 5;
+  }
   const frameConfig = spaceInfo?.frameConfig;
   const isFullSurround = spaceInfo?.surroundType === 'surround'
     && frameConfig?.top !== false;
@@ -7529,7 +7532,7 @@ const Configurator: React.FC = () => {
             topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
               hasTopFrame: true,
               topFrameGap: 0,
-              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
+	              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
             })));
           };
           const toggleAllBaseFree = () => {
@@ -7647,7 +7650,7 @@ const Configurator: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                         <button
-                          onClick={() => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasTopFrame: true, topFrameGap: 0, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) })))}
+	                          onClick={() => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasTopFrame: true, topFrameGap: 0, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m) })))}
                           className={styles.miniToggle}
                         />
                         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
@@ -7695,7 +7698,7 @@ const Configurator: React.FC = () => {
                         updatePlacedModule(mod.id, {
                           hasTopFrame: newVal,
                           topFrameGap: newVal ? 0 : (mod.topFrameGap ?? upperTopFrame),
-                          doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                          doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
                         });
                       }}
                       onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) })}
@@ -7738,7 +7741,7 @@ const Configurator: React.FC = () => {
                       updatePlacedModule(mod.id, {
                         hasTopFrame: newVal,
                         topFrameGap: newVal ? 0 : actualTopFrameSize,
-                        doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                        doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
                       });
                     }}
                     onSizeChange={(v) => {
@@ -8563,8 +8566,8 @@ const Configurator: React.FC = () => {
                             updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
                               hasTopFrame: newVal,
                               topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap)),
-                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal),
-                            }) : { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
+	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target),
+	                            }) : { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target) });
                           });
                         },
                         (v) => {
@@ -8641,7 +8644,7 @@ const Configurator: React.FC = () => {
             topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
               hasTopFrame: true,
               topFrameGap: 0,
-              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
+	              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
             })));
           };
           const toggleAllBase = () => {
@@ -8688,7 +8691,7 @@ const Configurator: React.FC = () => {
                             const newVal = !unifiedEnabled;
                             topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                               hasTopFrame: newVal,
-                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal),
+	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, m),
                               topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap)),
                             })));
                           },
@@ -8740,7 +8743,7 @@ const Configurator: React.FC = () => {
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                             <button
                               onClick={() => {
-                                topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasTopFrame: true, topFrameGap: 0, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) })));
+	                                topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasTopFrame: true, topFrameGap: 0, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m) })));
                               }}
                               className={styles.miniToggle}
                             />
@@ -8791,7 +8794,7 @@ const Configurator: React.FC = () => {
                             updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                               hasTopFrame: newVal,
                               topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap)),
-                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
                             }));
                           },
                           (v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v)),

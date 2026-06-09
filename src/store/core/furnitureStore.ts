@@ -433,6 +433,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const internalSpace = calculateInternalSpace(spaceInfo);
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
+      const isNewUpperById = isUpperCabinetModuleId(module.moduleId);
+      const isNewUpper = newCategory === 'upper' || isNewUpperById;
 
       // 아일랜드 모드: islandSide 미지정이면 현재 활성 면으로 자동 태깅
       if (spaceInfo.isIsland && !module.islandSide) {
@@ -519,7 +521,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	      } else if (isBasicLowerCabinet || newCategory === 'lower') {
 	        configuredDoorTopGap = typeof spaceInfo.doorTopGapLower === 'number' ? spaceInfo.doorTopGapLower : undefined;
 	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapLower === 'number' ? spaceInfo.doorBottomGapLower : undefined;
-	      } else if (newCategory === 'upper') {
+	      } else if (isNewUpper) {
 	        configuredDoorTopGap = typeof spaceInfo.doorTopGapUpper === 'number' ? spaceInfo.doorTopGapUpper : undefined;
 	        configuredDoorBottomGap = typeof spaceInfo.doorBottomGapUpper === 'number' ? spaceInfo.doorBottomGapUpper : undefined;
 	      } else {
@@ -530,7 +532,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	          ? spaceInfo.doorBottomGapTall
 	          : (typeof spaceInfo.doorBottomGap === 'number' ? spaceInfo.doorBottomGap : undefined);
 	      }
-      if (module.doorBottomGap === undefined) {
+      if (isNewUpper) {
+        // 신규 상부장은 하부장 선배치로 상속된 도어값(5/-3/25/28)을 수동값으로 보지 않는다.
+        module.doorBottomGap = configuredDoorBottomGap ?? 28;
+      } else if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
           module.doorBottomGap = configuredDoorBottomGap ?? 28;
@@ -548,7 +553,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
 
       // 도어 상단 이격거리 초기화 (카테고리별 기본값)
-      if (module.doorTopGap === undefined) {
+      if (isNewUpper) {
+        // 신규 상부장은 하부장 선배치로 상속된 도어값(5/-3)을 수동값으로 보지 않는다.
+        module.doorTopGap = configuredDoorTopGap ?? 5;
+      } else if (module.doorTopGap === undefined) {
         if (isTopDown) {
           // 상판내림: 10T=-90, 20T=-80, 30T=-70
           module.doorTopGap = configuredDoorTopGap ?? getTopDownDoorTopGap(module.stoneTopThickness, module.hasTopEndPanel === true);
@@ -573,7 +581,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	        module.upperDoorTopGap = module.upperDoorTopGap ?? module.doorTopGap ?? shelfSplitTopGap;
 	      }
 
-      const hasTopByDefault = newCategory === 'upper' || newCategory === 'full';
+      const hasTopByDefault = isNewUpper || newCategory === 'full';
       if (hasTopByDefault && module.topFrameOffset === undefined && typeof spaceInfo.frameSize?.topOffset === 'number') {
         module.topFrameOffset = spaceInfo.frameSize.topOffset;
       }
@@ -1336,7 +1344,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             updates.doorTopGap = spaceInfo.doorTopGapUpper;
           }
         }
-        if (m.doorBottomGap === undefined || m.doorBottomGap === 28 || m.doorBottomGap === 25) {
+        if (m.doorBottomGap === undefined || m.doorBottomGap === 28 || m.doorBottomGap === 25 || m.doorBottomGap === 5) {
           if (typeof spaceInfo.doorBottomGapUpper === 'number') {
             updates.doorBottomGap = spaceInfo.doorBottomGapUpper;
           }
@@ -1510,12 +1518,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	          doorTopGap: isShelfSplit
 	            ? (module.doorTopGap ?? (isFullSurround && module.hasTopFrame !== false ? -3 : 5))
 	            : category === 'upper'
-	            ? (module.doorTopGap ?? topGap)
+	            ? topGap
 	            : isFullSurround && module.hasTopFrame !== false && category !== 'lower' && module.doorTopGap === 5
 	            ? -3
 	            : (module.doorTopGap ?? topGap),
 	          ...(isShelfSplit ? { upperDoorTopGap: module.upperDoorTopGap ?? module.doorTopGap ?? (isFullSurround && module.hasTopFrame !== false ? -3 : 5) } : {}),
-	          doorBottomGap: module.doorBottomGap ?? bottomGap
+	          doorBottomGap: category === 'upper' ? bottomGap : (module.doorBottomGap ?? bottomGap)
 	        })
 	      };
     });
@@ -1798,7 +1806,7 @@ useFurnitureStore.subscribe((state) => {
       needsMigration = true;
       break;
     }
-    if (isUpper && typeof spInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spInfo.doorBottomGapUpper && (m.doorBottomGap === 28 || m.doorBottomGap === 25)) {
+    if (isUpper && typeof spInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spInfo.doorBottomGapUpper && (m.doorBottomGap === 28 || m.doorBottomGap === 25 || m.doorBottomGap === 5)) {
       needsMigration = true;
       break;
     }
@@ -1819,7 +1827,7 @@ useFurnitureStore.subscribe((state) => {
 	      } else if (typeof spInfo.doorTopGapUpper === 'number' && m.doorTopGap !== spInfo.doorTopGapUpper && (m.doorTopGap === -3 || m.doorTopGap === 5)) {
 	        updates.doorTopGap = spInfo.doorTopGapUpper;
 	      }
-	      if (typeof spInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spInfo.doorBottomGapUpper && (m.doorBottomGap === 28 || m.doorBottomGap === 25)) {
+	      if (typeof spInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spInfo.doorBottomGapUpper && (m.doorBottomGap === 28 || m.doorBottomGap === 25 || m.doorBottomGap === 5)) {
 	        updates.doorBottomGap = spInfo.doorBottomGapUpper;
 	      }
 	      if (Object.keys(updates).length > 0) return { ...m, ...updates };

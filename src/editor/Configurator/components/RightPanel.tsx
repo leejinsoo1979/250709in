@@ -905,8 +905,20 @@ interface RightPanelProps {
   onFrameTypeChange: (type: 'surround' | 'no-surround') => void;
 }
 
-const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): number => {
+const isUpperCabinetModule = (module?: any): boolean => {
+  if (!module) return false;
+  const moduleId = module?.moduleId || '';
+  return getModuleCategory(module) === 'upper'
+    || moduleId.startsWith('upper-')
+    || moduleId.includes('-upper-')
+    || moduleId.includes('upper-cabinet');
+};
+
+const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean, module?: any): number => {
   if (!hasTopFrame) return -5;
+  if (module && isUpperCabinetModule(module)) {
+    return typeof spaceInfo?.doorTopGapUpper === 'number' ? spaceInfo.doorTopGapUpper : 5;
+  }
   const frameConfig = spaceInfo?.frameConfig;
   const isFullSurround = spaceInfo?.surroundType === 'surround'
     && frameConfig?.top !== false;
@@ -2101,7 +2113,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   topSortedMods.forEach(m => updatePlacedModule(m.id, {
                     hasTopFrame: true,
                     topFrameGap: 0,
-                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
+	                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
                   }));
                 };
                 const toggleAllBaseMerge = () => {
@@ -2150,7 +2162,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                   updatePlacedModule(id, {
                                     hasTopFrame: newVal,
                                     topFrameGap: newVal ? 0 : getTopOffGapDisplay(target),
-                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target)
                                   });
                                 });
                               }}
@@ -2198,7 +2210,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 updatePlacedModule(mod.id, {
                                   hasTopFrame: newVal,
                                   topFrameGap: newVal ? 0 : getTopOffGapDisplay(mod),
-                                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
                                 });
                               }}
                               onSizeChange={(v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v))}
@@ -2329,7 +2341,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                topSortedMods.forEach(m => updatePlacedModule(m.id, {
 	                  hasTopFrame: true,
 	                  topFrameGap: 0,
-	                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, true)
+		                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
 	                }));
 	              };
               const toggleAllBase = () => {
@@ -2376,7 +2388,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             topSortedMods.forEach(m => updatePlacedModule(m.id, {
                               hasTopFrame: newVal,
                               topFrameGap: newVal ? 0 : getTopOffGapDisplay(m),
-                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, m)
                             }));
                           }}
 	                          onSizeChange={(v) => {
@@ -2420,7 +2432,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             updatePlacedModule(mod.id, {
                               hasTopFrame: newVal,
                               topFrameGap: newVal ? 0 : getTopOffGapDisplay(mod),
-                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal)
+	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
                             });
                           }}
                           onSizeChange={(v) => {

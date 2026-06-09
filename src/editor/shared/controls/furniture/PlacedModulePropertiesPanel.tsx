@@ -2144,7 +2144,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
         && spaceInfo.frameConfig?.top !== false;
       // 카테고리별 글로벌 도어 갭 (공간설정 모달에서 셋팅한 값) — 하부장 3종/상부장/키큰장
-      const isUpperCategory = moduleData?.category === 'upper' || modId.includes('upper-cabinet');
+      const isUpperCategory = moduleData?.category === 'upper'
+        || modId.startsWith('upper-')
+        || modId.includes('-upper-')
+        || modId.includes('upper-cabinet');
       const catTopGap = isUpperCategory
         ? spaceInfo.doorTopGapUpper
         : isLowerCategory
@@ -2170,7 +2173,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               : (isFullSurroundForDoorDefaults ? -3 : 5));
       const defaultBottomGap = catBottomGap ?? (isTopDown || isDoorLift || isBasicLowerDoorGap
         ? 5
-        : isLowerCategory
+          : isUpperCategory
+            ? 28
+          : isLowerCategory
           ? 2
           : 25);
       // 개별 가구값이 최우선. 카테고리 글로벌은 개별값이 없을 때의 폴백(defaultTopGap)에만 반영한다.
@@ -2190,9 +2195,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ? [BASIC_LOWER_DOOR_TOP_GAP_DEFAULT, 5, 20]
             : isLowerCategory
               ? [20, 5]
-              : [isFullSurroundForDoorDefaults ? -3 : 5];
+              : isUpperCategory
+                ? [-3, 5]
+                : [isFullSurroundForDoorDefaults ? -3 : 5];
       const legacyBottomGapValues = isUpperCategory
-        ? [28, 25]
+        ? [28, 25, 5]
         : isTopDown || isDoorLift
           ? [5]
           : isBasicLowerDoorGap
@@ -2200,7 +2207,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : isLowerCategory
               ? [2, 25]
               : [25];
-      const initialTopGap = !isDoorSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
+      const initialTopGap = !isDoorSplitForDoorGaps && !isUpperCategory && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
           : (typeof rawTopGap === 'number' && legacyTopGapValues.includes(rawTopGap))
             ? defaultTopGap
@@ -4104,10 +4111,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
         const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mId);
         const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
-        const isUpperModule = moduleData?.category === 'upper' || mId.includes('upper-cabinet');
+        const isUpperModule = moduleData?.category === 'upper'
+          || mId.startsWith('upper-')
+          || mId.includes('-upper-')
+          || mId.includes('upper-cabinet');
         const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
           && spaceInfo.frameConfig?.top !== false;
-        if (mod.doorTopGap === undefined) {
+        if (isUpperModule) {
+          updates.doorTopGap = spaceInfo.doorTopGapUpper ?? (isFullSurroundForDoorDefaults ? -3 : 5);
+          updates.doorBottomGap = spaceInfo.doorBottomGapUpper ?? 28;
+        } else if (mod.doorTopGap === undefined) {
           updates.doorTopGap = isUpperModule
             ? (spaceInfo.doorTopGapUpper ?? (isFullSurroundForDoorDefaults ? -3 : 5))
             : isDL
@@ -4124,7 +4137,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         } else if (isFullSurroundForDoorDefaults && mod.hasTopFrame !== false && mod.doorTopGap === 5 && !isDL && !isTD && !isLowerModule) {
           updates.doorTopGap = -3;
         }
-        if (mod.doorBottomGap === undefined) {
+        if (!isUpperModule && mod.doorBottomGap === undefined) {
           updates.doorBottomGap = isUpperModule
             ? (spaceInfo.doorBottomGapUpper ?? 28)
             : isTD

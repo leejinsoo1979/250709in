@@ -1178,7 +1178,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const __isLowerDoor = __doorMid.includes('lower-cabinet') || __doorMid.includes('dual-lower-cabinet')
     || __doorMid.includes('lower-') || moduleData?.category === 'lower';
   const doorCategory: 'upper' | 'lowerBasic' | 'lowerDoorLift' | 'lowerTopDown' | 'tall' =
-    (__doorMid.includes('upper-cabinet') || __doorMid.includes('dual-upper-cabinet'))
+    (__doorMid.includes('upper-cabinet') || __doorMid.includes('dual-upper-cabinet') || __doorMid.startsWith('upper-') || __doorMid.includes('-upper-') || moduleData?.category === 'upper')
       ? 'upper'
       : __isLowerDoor
         ? (__doorMid.includes('lower-door-lift-') ? 'lowerDoorLift'
@@ -1522,7 +1522,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   );
   // 상부장: 모듈 ID로 단일/듀얼 확정 (싱글 상부장은 너비가 600 넘어도 도어 1짝 유지)
   const isSingleUpperCabinet = !!(
-    moduleData?.id?.includes('upper-cabinet') &&
+    (moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.startsWith('upper-') || moduleData?.id?.includes('-upper-') || moduleData?.category === 'upper') &&
     !moduleData?.id?.startsWith('dual-')
   );
   const isExplicitSingleByModuleId = !!(
@@ -1547,7 +1547,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // === 문 높이 계산 ===
   // 상부장/하부장인지 확인
-  const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
+  const isUpperCabinet = moduleData?.id?.includes('upper-cabinet')
+    || moduleData?.id?.includes('dual-upper-cabinet')
+    || moduleData?.id?.startsWith('upper-')
+    || moduleData?.id?.includes('-upper-')
+    || moduleData?.category === 'upper';
   const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet') || moduleData?.category === 'lower';
   const floorFinishDoorBottomReferenceMm = !isUpperCabinet
     && originalSpaceInfo.baseConfig?.type === 'floor'

@@ -414,7 +414,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
         if (isUpper) {
           return {
             top: [isFullSurroundForDoorDefaults ? -3 : 5],
-            bottom: [28, 25],
+            bottom: [28, 25, 5],
           };
         }
         return {
