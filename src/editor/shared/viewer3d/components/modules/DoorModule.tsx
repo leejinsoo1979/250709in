@@ -2724,6 +2724,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         leftExtendMm = totalAdjusted;
       } else if (autoExtendRightMm > 0) {
         rightExtendMm = totalAdjusted;
+      } else if (slotInfo?.intrusionDirection === 'from-left' || (columnCheck.isNearColumn && columnCheck.columnSide === 'left')) {
+        leftExtendMm = totalAdjusted;
+      } else if (slotInfo?.intrusionDirection === 'from-right' || (columnCheck.isNearColumn && columnCheck.columnSide === 'right')) {
+        rightExtendMm = totalAdjusted;
       } else {
         // 수동 확장: v + 3 을 경첩 반대쪽(관례: 우측)에 적용
         rightExtendMm = totalAdjusted;
@@ -3781,6 +3785,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       } else if (autoLeftMm > 0) {
         insertExtendLeft = totalAdjusted;
       } else if (autoRightMm > 0) {
+        insertExtendRight = totalAdjusted;
+      } else if (slotInfo?.intrusionDirection === 'from-left' || (columnCheck.isNearColumn && columnCheck.columnSide === 'left')) {
+        insertExtendLeft = totalAdjusted;
+      } else if (slotInfo?.intrusionDirection === 'from-right' || (columnCheck.isNearColumn && columnCheck.columnSide === 'right')) {
         insertExtendRight = totalAdjusted;
       } else {
         // 수동 확장: v + 3 을 경첩 반대쪽에 적용

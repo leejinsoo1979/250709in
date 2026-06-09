@@ -4918,7 +4918,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           <group
             userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
             position={[
-              (slotInfo && slotInfo.hasColumn && (placedModule as any).doorWidthAdjustMm === 0)
+              (slotInfo && slotInfo.hasColumn && typeof (placedModule as any).doorWidthAdjustMm === 'number')
                 ? adjustedPosition.x
                 : (placedModule.isLocked ? placedModule.position.x : originalSlotCenterX) + doorXOffset, // 도어 중심에 오프셋 적용
               finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
