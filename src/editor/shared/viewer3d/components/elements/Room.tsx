@@ -5383,11 +5383,6 @@ const Room: React.FC<RoomProps> = ({
                       const baseFH = mod.freeHeight || internalSpaceHeight;
                       const maxFH = internalSpaceHeight - floatHeightForFrame;
                       modFreeHeight = Math.min(baseFH, maxFH);
-                      if (mod.topFrameThickness !== undefined) {
-                        const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
-                        const topFrameDelta = mod.topFrameThickness - globalTopFrame;
-                        modFreeHeight -= topFrameDelta;
-                      }
                     } else {
                       modFreeHeight = mod.freeHeight || internalSpaceHeight;
                     }
