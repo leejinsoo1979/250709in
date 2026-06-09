@@ -168,6 +168,14 @@ export const useSpaceInfoHandler = () => {
 
     setSpaceInfo(finalUpdates as any);
 
+    const isUpperModule = (moduleId?: string) => (
+      !!moduleId && (
+        moduleId.startsWith('upper-') ||
+        moduleId.includes('-upper-') ||
+        moduleId.includes('upper-cabinet')
+      )
+    );
+
     // 도어 상단갭 전파
     if ((finalUpdates as any).doorTopGap !== undefined) {
       const currentModules = useFurnitureStore.getState().placedModules;
@@ -178,6 +186,21 @@ export const useSpaceInfoHandler = () => {
           updatePlacedModule(m.id, { doorTopGap: (finalUpdates as any).doorTopGap });
         }
       });
+    }
+    if ((finalUpdates as any).doorTopGapUpper !== undefined || (finalUpdates as any).doorBottomGapUpper !== undefined) {
+      const currentModules = useFurnitureStore.getState().placedModules;
+      currentModules
+        .filter(m => m.hasDoor && isUpperModule(m.moduleId))
+        .forEach(m => {
+          const doorUpdates: Partial<typeof m> = {};
+          if ((finalUpdates as any).doorTopGapUpper !== undefined) {
+            doorUpdates.doorTopGap = (finalUpdates as any).doorTopGapUpper;
+          }
+          if ((finalUpdates as any).doorBottomGapUpper !== undefined) {
+            doorUpdates.doorBottomGap = (finalUpdates as any).doorBottomGapUpper;
+          }
+          updatePlacedModule(m.id, doorUpdates);
+        });
     }
   };
 

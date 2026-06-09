@@ -300,6 +300,13 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       const isLowerModule = (moduleId?: string) => (
         moduleId?.startsWith('lower-') || moduleId?.includes('-lower-')
       );
+      const isUpperModule = (moduleId?: string) => (
+        !!moduleId && (
+          moduleId.startsWith('upper-') ||
+          moduleId.includes('-upper-') ||
+          moduleId.includes('upper-cabinet')
+        )
+      );
       const isBasicLowerDoorGapModule = (moduleId?: string) => (
         !!moduleId && (
           moduleId.includes('lower-half-cabinet') ||
@@ -320,7 +327,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       ) => {
         const moduleId = module.moduleId || '';
         const isLower = isLowerModule(moduleId);
-        const isUpper = moduleId.includes('upper-cabinet');
+        const isUpper = isUpperModule(moduleId);
         const isDoorLift = moduleId.includes('lower-door-lift-');
         const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
         const isBasicLower = isBasicLowerDoorGapModule(moduleId);
@@ -376,7 +383,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
       const resolveLegacyDoorDefaults = (module: any) => {
         const moduleId = module.moduleId || '';
         const isLower = isLowerModule(moduleId);
-        const isUpper = moduleId.includes('upper-cabinet');
+        const isUpper = isUpperModule(moduleId);
         const isDoorLift = moduleId.includes('lower-door-lift-');
         const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
         const isBasicLower = isBasicLowerDoorGapModule(moduleId);

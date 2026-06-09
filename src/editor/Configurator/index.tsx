@@ -1177,7 +1177,7 @@ const Configurator: React.FC = () => {
       if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
       const mid = m.moduleId || '';
       const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
-      const isUpper = mid.includes('upper-cabinet');
+      const isUpper = mid.startsWith('upper-') || mid.includes('-upper-') || mid.includes('upper-cabinet');
       const category = isLower ? 'lower' : isUpper ? 'upper' : 'full';
       const defaults = getDoorGapDefaultsForModule(m, category, spaceInfo);
       const defaultTop = defaults.top ?? topGap;
