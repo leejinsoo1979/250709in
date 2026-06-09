@@ -1495,7 +1495,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
     return result;
-  }, [moduleData, isPlacementStructureDragging, slotInfo, isColumnC, spaceInfo, placedModule.subSlotPosition, indexing.columnWidth]);
+  }, [
+    moduleData,
+    isPlacementStructureDragging,
+    slotInfo,
+    isColumnC,
+    spaceInfo,
+    placedModule.subSlotPosition,
+    placedModule.freeHeight,
+    placedModule.customHeight,
+    placedModule.userResizedHeight,
+    currentGuideSlotHeightMm,
+    indexing.columnWidth,
+  ]);
 
   // 듀얼 가구인지 확인 (가장 먼저 계산)
   // placedModule.isDualSlot이 있으면 그것을 사용, 없으면 모듈 ID로 판단
@@ -3104,6 +3116,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         ...actualModuleData,
         dimensions: {
           ...actualModuleData.dimensions,
+          height: furnitureHeightMm,
           depth: actualDepthMm,
         },
       }

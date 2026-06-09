@@ -4919,18 +4919,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                             updates.cabinetBodyHeight = val;
                           }
-                          // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
+                          // 슬롯배치 키큰장만 가구 높이 감소분을 상단몰딩으로 흡수한다.
+                          // 자유배치 H 입력은 실제 가구 높이를 직접 줄여야 하므로 상단몰딩을 키우지 않는다.
                           if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
                               ) {
                             const iSpace = calculateInternalSpace(spaceInfo);
                             const originalH = iSpace.height; // 원래 내경 높이
                             const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                            const heightDiff = originalH - val; // 줄어든 만큼
-                            if (heightDiff > 0) {
-                              updates.topFrameThickness = globalTopFrame + heightDiff;
+                            if (currentPlacedModule.isFreePlacement) {
+                              updates.topFrameThickness = globalTopFrame;
                             } else {
-                              // 원래보다 크거나 같으면 상단몰딩 기본값
-                              updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
+                              const heightDiff = originalH - val; // 줄어든 만큼
+                              if (heightDiff > 0) {
+                                updates.topFrameThickness = globalTopFrame + heightDiff;
+                              } else {
+                                // 원래보다 크거나 같으면 상단몰딩 기본값
+                                updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
+                              }
                             }
                           }
                           updatePlacedModule(currentPlacedModule.id, updates);
@@ -4999,7 +5004,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 ) {
                               const iSpace = calculateInternalSpace(spaceInfo);
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                              updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - val));
+                              updates.topFrameThickness = currentPlacedModule.isFreePlacement
+                                ? globalTopFrame
+                                : Math.max(0, globalTopFrame + (iSpace.height - val));
                             }
                             // 2단서랍장: cabinetBodyHeight도 함께 저장
                             if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
@@ -5045,7 +5052,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 	                                ) {
 	                              const iSpace = calculateInternalSpace(spaceInfo);
 	                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
-	                              arrowUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - next));
+	                              arrowUpdates.topFrameThickness = currentPlacedModule.isFreePlacement
+	                                ? globalTopFrame
+	                                : Math.max(0, globalTopFrame + (iSpace.height - next));
 	                            }
 	                            if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
 	                              arrowUpdates.cabinetBodyHeight = next;
@@ -5639,7 +5648,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                                   const iSpace = calculateInternalSpace(spaceInfo);
                                   const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                                  secUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - clampedH));
+                                  secUpdates.topFrameThickness = currentPlacedModule.isFreePlacement
+                                    ? globalTopFrame
+                                    : Math.max(0, globalTopFrame + (iSpace.height - clampedH));
                                 }
                                 updatePlacedModule(currentPlacedModule.id, secUpdates);
                                 setFreeHeightInput(clampedH.toString());

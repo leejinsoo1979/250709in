@@ -271,6 +271,52 @@ const isBasicLowerDoorGapModuleId = (moduleId?: string): boolean => (
   )
 );
 
+const isUpperCabinetModuleId = (moduleId?: string): boolean => (
+  !!moduleId && (
+    moduleId.startsWith('upper-') ||
+    moduleId.includes('-upper-') ||
+    moduleId.includes('upper-cabinet')
+  )
+);
+
+const applyUpperDoorDefaultsFromProfile = (
+  spaceConfig: any,
+  defaults: SpaceConfigDefaults | null
+) => {
+  if (!defaults) return;
+  const top = defaults.doorSettingUpperEnabled === false
+    ? defaults.doorTopGap
+    : defaults.doorTopGapUpper;
+  const bottom = defaults.doorSettingUpperEnabled === false
+    ? defaults.doorBottomGap
+    : defaults.doorBottomGapUpper;
+  if (typeof top === 'number') spaceConfig.doorTopGapUpper = top;
+  if (typeof bottom === 'number') spaceConfig.doorBottomGapUpper = bottom;
+};
+
+const applyUpperDoorDefaultsToLoadedModules = (
+  modules: any[],
+  spaceConfig: any
+) => modules.map((module) => {
+  if (
+    module.isSurroundPanel ||
+    module.hasDoor !== true ||
+    !isUpperCabinetModuleId(module.moduleId)
+  ) {
+    return module;
+  }
+
+  const updates: Record<string, number> = {};
+  if (typeof spaceConfig.doorTopGapUpper === 'number') {
+    updates.doorTopGap = spaceConfig.doorTopGapUpper;
+  }
+  if (typeof spaceConfig.doorBottomGapUpper === 'number') {
+    updates.doorBottomGap = spaceConfig.doorBottomGapUpper;
+  }
+
+  return Object.keys(updates).length > 0 ? { ...module, ...updates } : module;
+});
+
 const getDoorGapDefaultsForModule = (
   mod: any,
   category: 'full' | 'upper' | 'lower' | undefined,
@@ -280,7 +326,7 @@ const getDoorGapDefaultsForModule = (
   const isFullSurround = spaceInfo?.surroundType === 'surround'
     && spaceInfo?.frameConfig?.top !== false;
   const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
-  const isUpper = category === 'upper' || moduleId.includes('upper-cabinet');
+  const isUpper = category === 'upper' || isUpperCabinetModuleId(moduleId);
   const isDoorLift = moduleId.includes('lower-door-lift-') && !moduleId.includes('-half-');
   const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
   const isBasicLower = isBasicLowerDoorGapModuleId(moduleId);
@@ -324,7 +370,7 @@ const getLegacyDoorGapDefaultsForModule = (
   const isFullSurround = spaceInfo?.surroundType === 'surround'
     && spaceInfo?.frameConfig?.top !== false;
   const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
-  const isUpper = category === 'upper' || moduleId.includes('upper-cabinet');
+  const isUpper = category === 'upper' || isUpperCabinetModuleId(moduleId);
   const isDoorLift = moduleId.includes('lower-door-lift-') && !moduleId.includes('-half-');
   const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
   const isBasicLower = isBasicLowerDoorGapModuleId(moduleId);
@@ -1239,6 +1285,7 @@ const Configurator: React.FC = () => {
 	    placedModules.forEach(m => {
 	      const isShelfSplit = m.moduleId?.includes('shelf-split');
 	      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
+	      const isUpper = isUpperCabinetModuleId(m.moduleId);
 	      if (isShelfSplit && m.hasDoor) {
 	        const targetTopGap = isFullSurroundDoorDefault && m.hasTopFrame !== false ? -3 : 5;
 	        const updates: any = {};
@@ -1252,7 +1299,19 @@ const Configurator: React.FC = () => {
 	          updatePlacedModule(m.id, updates);
 	        }
 	      }
-	      if (!isShelfSplit && isFullSurroundDoorDefault && m.hasDoor && !isLower && m.hasTopFrame !== false && (m.doorTopGap === undefined || m.doorTopGap === 5)) {
+	      if (!isShelfSplit && isUpper && m.hasDoor) {
+	        const updates: any = {};
+	        if (typeof spaceInfo.doorTopGapUpper === 'number' && m.doorTopGap !== spaceInfo.doorTopGapUpper) {
+	          updates.doorTopGap = spaceInfo.doorTopGapUpper;
+	        }
+	        if (typeof spaceInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spaceInfo.doorBottomGapUpper) {
+	          updates.doorBottomGap = spaceInfo.doorBottomGapUpper;
+	        }
+	        if (Object.keys(updates).length > 0) {
+	          updatePlacedModule(m.id, updates);
+	        }
+	      }
+	      if (!isShelfSplit && !isUpper && isFullSurroundDoorDefault && m.hasDoor && !isLower && m.hasTopFrame !== false && (m.doorTopGap === undefined || m.doorTopGap === 5)) {
 	        updatePlacedModule(m.id, { doorTopGap: -3 });
 	      }
     });
@@ -2081,19 +2140,25 @@ const Configurator: React.FC = () => {
         // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
         spaceConfig.mainDoorCount = undefined;
         spaceConfig.droppedCeilingDoorCount = undefined;
-        spaceConfig.customColumnCount = undefined;
-        delete spaceConfig.lockedWallGaps; // 세션 전용
+	        spaceConfig.customColumnCount = undefined;
+	        delete spaceConfig.lockedWallGaps; // 세션 전용
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
-        // 이격: 저장된 프로젝트 값이 있으면 그대로 유지한다.
-        // 기본값은 과거 데이터처럼 gapConfig가 비어 있는 경우에만 보정한다.
-        if (spaceConfig.surroundType === 'no-surround') {
-          try {
-            const defaults = await getSpaceConfigDefaults();
-            if (!isLatestDesignLoad(loadKey)) {
-              return;
-            }
-            if (defaults) {
+	        let profileDefaults: SpaceConfigDefaults | null = null;
+	        try {
+	          profileDefaults = await getSpaceConfigDefaults();
+	          if (!isLatestDesignLoad(loadKey)) {
+	            return;
+	          }
+	          applyUpperDoorDefaultsFromProfile(spaceConfig, profileDefaults);
+	        } catch { /* noop */ }
+
+	        // 이격: 저장된 프로젝트 값이 있으면 그대로 유지한다.
+	        // 기본값은 과거 데이터처럼 gapConfig가 비어 있는 경우에만 보정한다.
+	        if (spaceConfig.surroundType === 'no-surround') {
+	          try {
+	            const defaults = profileDefaults;
+	            if (defaults) {
               const defLeft = defaults.gapLeft ?? 1.5;
               const defRight = defaults.gapRight ?? 1.5;
               const defTopOffset = defaults.topMoldingOffset ?? defaults.frameTopOffset;
@@ -2154,7 +2219,7 @@ const Configurator: React.FC = () => {
         const loadedLowerBaseOffset = normalizedSpaceConfig.baseboardLowerOffset ?? loadedBaseOffset;
         const loadedTopAllMode = normalizedSpaceConfig.guideTopFrameAllMode ?? true;
         const loadedBaseAllMode = normalizedSpaceConfig.guideBaseFrameAllMode ?? true;
-        const migratedModules = (project.furniture?.placedModules || []).map((m: any) => {
+        const frameMigratedModules = (project.furniture?.placedModules || []).map((m: any) => {
           if (m.isSurroundPanel || m.moduleId?.includes('insert-frame')) return m;
           const category = getModuleCategory(m);
           const updates: any = {};
@@ -2167,6 +2232,7 @@ const Configurator: React.FC = () => {
           }
           return Object.keys(updates).length > 0 ? { ...m, ...updates } : m;
         });
+        const migratedModules = applyUpperDoorDefaultsToLoadedModules(frameMigratedModules, normalizedSpaceConfig);
         if (!isLatestDesignLoad(loadKey)) {
           return;
         }
@@ -3816,10 +3882,18 @@ const Configurator: React.FC = () => {
                     type: 'floor' as const,
                     placementType: 'ground' as const,
                     ...designFile.spaceConfig.baseConfig
-                  }
-                };
+	                  }
+	                };
 
-                // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
+	                try {
+	                  const profileDefaults = await getSpaceConfigDefaults();
+	                  if (!isLatestDesignLoad(requestedLoadKey)) {
+	                    return;
+	                  }
+	                  applyUpperDoorDefaultsFromProfile(spaceConfig, profileDefaults);
+	                } catch { /* noop */ }
+
+	                // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
                 // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지
                 isLoadingProjectRef.current = true;
                 const normalizedSpaceConfig = normalizeSpaceInfoFrameSize(spaceConfig);
@@ -3865,11 +3939,12 @@ const Configurator: React.FC = () => {
                   ...m,
                   baseModuleType: m.baseModuleType || m.moduleId.replace(/-[\d.]+$/, '')
                 }));
+                const modulesWithUpperDoorDefaults = applyUpperDoorDefaultsToLoadedModules(modulesWithBaseType, useSpaceConfigStore.getState().spaceInfo);
 
-                setPlacedModules(modulesWithBaseType);
+                setPlacedModules(modulesWithUpperDoorDefaults);
 // console.log('🪑 가구 배치 데이터 설정:', {
-                  // count: modulesWithBaseType.length,
-                  // modules: modulesWithBaseType.map(m => ({
+                  // count: modulesWithUpperDoorDefaults.length,
+                  // modules: modulesWithUpperDoorDefaults.map(m => ({
                     // id: m.id,
                     // moduleId: m.moduleId,
                     // baseModuleType: m.baseModuleType,
@@ -4559,14 +4634,32 @@ const Configurator: React.FC = () => {
 
     setSpaceInfo(finalUpdates);
 
-    // 전체서라운드 전환 시 도어 상단갭을 키큰장/상부장에만 전파 (하부장은 자체 기본값 사용)
+    // 전체서라운드 전환 시 공통 도어 상단갭은 전체장에만 전파한다.
+    // 상부장은 상부장 전용 상하단갭만 사용해야 하부장 배치 순서에 영향을 받지 않는다.
     if (finalUpdates.doorTopGap !== undefined) {
       const currentModules = useFurnitureStore.getState().placedModules;
       const modulesWithDoor = currentModules.filter(m => m.hasDoor);
       modulesWithDoor.forEach(m => {
         const isLower = m.moduleId?.includes('lower-');
-        if (!isLower) {
+        const isUpper = isUpperCabinetModuleId(m.moduleId);
+        if (!isLower && !isUpper) {
           updatePlacedModule(m.id, { doorTopGap: finalUpdates.doorTopGap });
+        }
+      });
+    }
+    if (finalUpdates.doorTopGapUpper !== undefined || finalUpdates.doorBottomGapUpper !== undefined) {
+      const currentModules = useFurnitureStore.getState().placedModules;
+      const upperModulesWithDoor = currentModules.filter(m => m.hasDoor && isUpperCabinetModuleId(m.moduleId));
+      upperModulesWithDoor.forEach(m => {
+        const updatesForUpper: any = {};
+        if (finalUpdates.doorTopGapUpper !== undefined) {
+          updatesForUpper.doorTopGap = finalUpdates.doorTopGapUpper;
+        }
+        if (finalUpdates.doorBottomGapUpper !== undefined) {
+          updatesForUpper.doorBottomGap = finalUpdates.doorBottomGapUpper;
+        }
+        if (Object.keys(updatesForUpper).length > 0) {
+          updatePlacedModule(m.id, updatesForUpper);
         }
       });
     }
@@ -7660,7 +7753,10 @@ const Configurator: React.FC = () => {
                         return;
                       }
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
-                      updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
+                      updatePlacedModule(mod.id, {
+                        freeHeight: newFreeHeight,
+                        userResizedHeight: true,
+                      });
                     }}
                     onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                     onGapChange={(v, nextSize) => {
