@@ -6123,6 +6123,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? insertExtensionMm
                               : -1.5;
                           const savedAdjust = (currentPlacedModule as any).doorWidthAdjustMm;
+                          if (savedAdjust === 0 && autoCoverDoorWidthAdjustMm > 0) {
+                            updatePlacedModule(currentPlacedModule.id, {
+                              doorWidthAdjustEnabled: false,
+                              doorWidthAdjustMm: undefined,
+                            } as any);
+                            return;
+                          }
                           const initial = savedAdjust === 0 && autoInitial > 0
                             ? autoInitial
                             : savedAdjust ?? autoInitial;
