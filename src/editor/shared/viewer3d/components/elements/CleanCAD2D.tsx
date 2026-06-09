@@ -535,9 +535,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     };
     useFurnitureStore.getState().placedModules.forEach((m: any) => {
       if (!isUpperModule(m)) return;
+      const moduleData = getModuleById(
+        m.moduleId,
+        { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+        spaceInfo
+      );
       const baseH = typeof m.customHeight === 'number' && m.customHeight > 0
         ? m.customHeight
-        : (m.freeHeight ?? m.moduleHeight ?? 0);
+        : (m.freeHeight ?? m.moduleHeight ?? moduleData?.dimensions.height ?? 0);
       const nextH = Math.round(baseH + delta);
       if (nextH > 0 && nextH !== baseH) {
         updatePlacedModule(m.id, { customHeight: nextH });
@@ -5001,6 +5006,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           points={[[innerX - mmToThreeUnits(15), upperCabinetBottomY, upperDimZ_L], [innerX + mmToThreeUnits(15), upperCabinetBottomY, upperDimZ_L]]}
                           color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                         />
+                        <NativeLine name="dimension_line"
+                          points={[[innerX, furnitureTopY, upperDimZ_L], [innerX, upperCabinetBottomY, upperDimZ_L]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([innerX, furnitureTopY, upperDimZ_L], [innerX, furnitureTopY + 0.05, upperDimZ_L])}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([innerX, upperCabinetBottomY, upperDimZ_L], [innerX, upperCabinetBottomY - 0.05, upperDimZ_L])}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
                         <Text renderOrder={100001} depthTest={false}
                           position={[innerX - mmToThreeUnits(25), (furnitureTopY + upperCabinetBottomY) / 2, upperTextZ_L]}
                           fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
@@ -6031,6 +6048,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         />
                         <NativeLine name="dimension_line"
                           points={[[rightInnerX - mmToThreeUnits(15), rUpperCabinetBottomY, upperDimZ_R], [rightInnerX + mmToThreeUnits(15), rUpperCabinetBottomY, upperDimZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[rightInnerX, rFurnitureTopY, upperDimZ_R], [rightInnerX, rUpperCabinetBottomY, upperDimZ_R]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([rightInnerX, rFurnitureTopY, upperDimZ_R], [rightInnerX, rFurnitureTopY + 0.05, upperDimZ_R])}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={createArrowHead([rightInnerX, rUpperCabinetBottomY, upperDimZ_R], [rightInnerX, rUpperCabinetBottomY - 0.05, upperDimZ_R])}
                           color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                         />
                         <Text renderOrder={100001} depthTest={false}
