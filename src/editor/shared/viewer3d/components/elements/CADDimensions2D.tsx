@@ -25,16 +25,21 @@ const resolveGuideBaseFrameOffsetMm = (
   spaceInfo: SpaceInfo,
   fallbackOffsetMm: number
 ): number => {
-  const baseDefault = spaceInfo.baseConfig?.offset ?? fallbackOffsetMm;
+  const useGlobalBase = spaceInfo.guideBaseFrameAllMode ?? true;
+  const category = getModuleCategory(module);
+  const isLower = category === 'lower'
+    || module.moduleId?.startsWith('lower-')
+    || module.moduleId?.includes('dual-lower-');
+  const baseDefault = isLower
+    ? (spaceInfo.baseboardLowerOffset ?? spaceInfo.baseConfig?.offset ?? fallbackOffsetMm)
+    : (spaceInfo.baseConfig?.offset ?? fallbackOffsetMm);
+  if (useGlobalBase && typeof baseDefault === 'number') {
+    return baseDefault;
+  }
   if (typeof module.baseFrameOffset === 'number') {
     return module.baseFrameOffset;
   }
-  const useGlobalBase = spaceInfo.guideBaseFrameAllMode ?? true;
-  if (useGlobalBase && typeof spaceInfo.baseConfig?.offset === 'number') {
-    return spaceInfo.baseConfig.offset;
-  }
   const guides = spaceInfo.freePlacementGuides || [];
-  const category = getModuleCategory(module);
   const isGuideModule = module.guideSlotPlacement === true
     || module.guideDepthPlacement === true
     || (spaceInfo.customGuideMode === true && module.isFreePlacement === true);
@@ -187,9 +192,7 @@ const resolveFurnitureDepthDimensionLayout = (
   } else if (isUpper) {
     bodyCenterZ = fixedBackWithoutBase + actualDepth / 2;
   } else if (isKitchenTall || isBackAlignedFull) {
-    bodyCenterZ = lowerDir === 'back'
-      ? fixedFrontWithBase - actualDepth / 2
-      : fixedBackWithBase + actualDepth / 2;
+    bodyCenterZ = fixedBackWithBase + actualDepth / 2;
   } else if (isLower) {
     // 하부 가구는 뒷면을 뒷벽에 고정하고, 앞고정의 앞라인 추종은 backWallGap으로 표현한다.
     // (FurnitureItem.tsx와 동일 — fixedBackWithBase에 backWallGapZ가 이미 포함됨)
@@ -262,6 +265,25 @@ const resolveShelfSplitTopDistanceMm = (
   return Math.max(0, Math.round(effectiveHeightMm - bodyTopMm));
 };
 
+const resolveFullBodyTopClearanceMm = (
+  mod: any,
+  spaceInfo: SpaceInfo,
+  effectiveHeightMm = spaceInfo.height
+): number | null => {
+  if (!mod || getModuleCategory(mod as PlacedModule) !== 'full') return null;
+  const moduleData = getModuleById(mod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+  const bodyHeight = mod.freeHeight
+    ?? mod.customHeight
+    ?? mod.cabinetBodyHeight
+    ?? moduleData?.dimensions.height;
+  if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
+  const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+  const bottomDistance = mod.hasBase === false
+    ? (mod.individualFloatHeight ?? 0)
+    : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+  return Math.max(0, Math.round(effectiveHeightMm - floorFinishMm - bottomDistance - bodyHeight));
+};
+
 const resolveTopFrameDistanceMm = (
   mod: any,
   spaceInfo: SpaceInfo,
@@ -269,8 +291,12 @@ const resolveTopFrameDistanceMm = (
   effectiveHeightMm = spaceInfo.height
 ): number => {
   const shelfSplitTopDistance = resolveShelfSplitTopDistanceMm(mod, spaceInfo, effectiveHeightMm);
+  const fullBodyTopClearance = resolveFullBodyTopClearanceMm(mod, spaceInfo, effectiveHeightMm);
   if (mod?.hasTopFrame === false) {
-    return Math.max(0, Math.round(mod?.topFrameGap ?? shelfSplitTopDistance ?? 0));
+    return Math.max(0, Math.round(shelfSplitTopDistance ?? fullBodyTopClearance ?? mod?.topFrameGap ?? 0));
+  }
+  if (mod?.userResizedHeight === true && fullBodyTopClearance !== null) {
+    return fullBodyTopClearance;
   }
   return mod?.topFrameThickness ?? fallbackTopFrameMm;
 };
@@ -336,7 +362,7 @@ const computeFurnitureHeightMm = (
     if ((mod as any).hasTopFrame === false) {
       const topFrameMm = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30);
       const topGapMm = (mod as any).topFrameGap ?? 0;
-      heightMm += (topFrameMm - topGapMm);
+      heightMm += Math.max(0, topFrameMm - topGapMm);
     }
     if ((mod as any).hasBase === false) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -372,7 +398,7 @@ const computeFurnitureHeightMm = (
       if ((mod as any).hasTopFrame === false && isTall) {
         const topFrameMm = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30);
         const topGapMm = (mod as any).topFrameGap ?? 0;
-        heightMm += (topFrameMm - topGapMm);
+        heightMm += Math.max(0, topFrameMm - topGapMm);
       }
       if (mod.baseFrameHeight !== undefined && !isStandType && isTall) {
         const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
@@ -1097,7 +1123,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const isShelfSplitFull = category === 'full' && typeof modData.id === 'string' && modData.id.includes('shelf-split');
     if (isShelfSplitFull) {
       const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH);
-      const topGapVal = Math.max(0, Math.round((mod as any).topFrameGap ?? 0));
+      const topGapVal = (mod as any).hasTopFrame === false
+        ? topFrameVal
+        : Math.max(0, Math.round((mod as any).topFrameGap ?? 0));
       const cabinetTopAbs = (mod as any).hasTopFrame === false
         ? effectiveH - topGapVal
         : effectiveH - topFrameVal;
@@ -1249,11 +1277,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const target = visibleFurniture.find(module => {
       const mod = module as PlacedModule;
       const cat = getModuleCategory(mod);
-      return (cat === 'full' || cat === 'upper') && Number((mod as any).topFrameGap ?? 0) > 0;
+      return mod.hasTopFrame === false
+        && (cat === 'full' || cat === 'upper')
+        && Number((mod as any).topFrameGap ?? 0) > 0;
     }) as PlacedModule | undefined;
 
     if (!target) return 0;
-    return Math.min(displaySpaceHeightMm, Math.max(0, Math.round(Number((target as any).topFrameGap ?? 0))));
+    const resolvedTopClearance = resolveFullBodyTopClearanceMm(target, spaceInfo, displaySpaceHeightMm);
+    return Math.min(displaySpaceHeightMm, Math.max(0, Math.round(resolvedTopClearance ?? Number((target as any).topFrameGap ?? 0))));
   };
 
   if (currentViewDirection === 'left') {
@@ -1382,7 +1413,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const cabinetHeightForDimMm = (() => {
               if (!isShelfSplitFull) return moduleHeightMm;
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_l2);
-              const topGapVal = Math.max(0, Math.round((mod as any).topFrameGap ?? topFrameVal));
+              const topGapVal = (mod as any).hasTopFrame === false
+                ? topFrameVal
+                : Math.max(0, Math.round((mod as any).topFrameGap ?? topFrameVal));
               cabinetTopMm = (mod as any).hasTopFrame === false
                 ? effectiveH_l2 - topGapVal
                 : effectiveH_l2 - topFrameVal;
@@ -1450,7 +1483,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부장/키큰장(full): 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
             if (modCat_l2 === 'upper' || modCat_l2 === 'full') {
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_l2);
-              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0)));
+              const topGapVal = mod.hasTopFrame === false
+                ? topFrameVal
+                : 0;
               const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
               if (visibleTopFrameVal > 0) {
                 segments_l2.push({
@@ -2959,7 +2994,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const cabinetHeightForDimMm = (() => {
               if (!isShelfSplitFull) return moduleHeightMm;
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_rl2);
-              const topGapVal = Math.max(0, Math.round((mod as any).topFrameGap ?? topFrameVal));
+              const topGapVal = (mod as any).hasTopFrame === false
+                ? topFrameVal
+                : Math.max(0, Math.round((mod as any).topFrameGap ?? topFrameVal));
               cabinetTopMm = (mod as any).hasTopFrame === false
                 ? effectiveH_rl2 - topGapVal
                 : effectiveH_rl2 - topFrameVal;
@@ -3021,7 +3058,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부장/키큰장(full) 상단몰딩: 몸통 섹션 치수와 같은 연장선 기준으로 표시
             if (modCat_rl2 === 'upper' || modCat_rl2 === 'full') {
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_rl2);
-              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0)));
+              const topGapVal = mod.hasTopFrame === false
+                ? topFrameVal
+                : 0;
               const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
               if (visibleTopFrameVal > 0) {
                 segments_rl2.push({

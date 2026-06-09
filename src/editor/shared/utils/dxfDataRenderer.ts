@@ -65,7 +65,7 @@ const getAbsorbedTopFrameHeightMm = (
   if ((module as any).hasTopFrame !== false) return 0;
   const topFrameMm = module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
   const topGapMm = (module as any).topFrameGap ?? 0;
-  return topFrameMm - topGapMm;
+  return Math.max(0, topFrameMm - topGapMm);
 };
 
 const getModuleHeightMm = (

@@ -1687,12 +1687,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // freeHeight가 있으면 사용하되, 없거나 갱신 안 됐을 때도 올바르게 계산
   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeightMm = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-  const hasManualFreeTallHeight = placedModule.isFreePlacement
-    && isTallCabinetForY
+  const hasManualTallHeight = isTallCabinetForY
     && placedModule.userResizedHeight === true
     && typeof placedModule.freeHeight === 'number'
     && placedModule.freeHeight > 0;
-  if (currentGuideSlotHeightMm !== undefined && isTallCabinetForY && !hasManualFreeTallHeight) {
+  if (currentGuideSlotHeightMm !== undefined && isTallCabinetForY && !hasManualTallHeight) {
     furnitureHeightMm = currentGuideSlotHeightMm;
   } else if (placedModule.isFreePlacement && isTallCabinetForY) {
     // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
@@ -1709,7 +1708,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (placedModule.hasTopFrame === false) {
       const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
       const topGapMm = placedModule.topFrameGap ?? 0;
-      furnitureHeightMm += (topFrameMm - topGapMm);
+      furnitureHeightMm += Math.max(0, topFrameMm - topGapMm);
     }
     if (placedModule.hasBase === false) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -1721,6 +1720,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureHeightMm = currentGuideSlotHeightMm;
   } else if (manualUpperCustomHeightMm) {
     furnitureHeightMm = manualUpperCustomHeightMm;
+  } else if (
+    !placedModule.isFreePlacement
+    && isTallCabinetForY
+    && placedModule.userResizedHeight === true
+    && typeof placedModule.freeHeight === 'number'
+    && placedModule.freeHeight > 0
+  ) {
+    furnitureHeightMm = placedModule.freeHeight;
   } else if (placedModule.isFreePlacement && placedModule.freeHeight && !(isUpperCabinetForY && (autoDroppedUpperHeight.freeHeight || isStaleUpperTotalHeight(placedModule.freeHeight)))) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
@@ -1745,7 +1752,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (placedModule.hasTopFrame === false && isTallCabinetForY) {
         const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
         const topGapMm = placedModule.topFrameGap ?? 0;
-        furnitureHeightMm += (topFrameMm - topGapMm);
+        furnitureHeightMm += Math.max(0, topFrameMm - topGapMm);
       }
       // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
       // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로 개별 차이를 반영
@@ -1778,6 +1785,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       furnitureHeightMm -= floorFinishForHeight;
     }
   }
+
+  const effectiveTopFrameThicknessMm = (() => {
+    if (placedModule.hasTopFrame === false) return placedModule.topFrameThickness;
+    if (!isTallCabinetForY || placedModule.userResizedHeight !== true) {
+      return placedModule.topFrameThickness;
+    }
+    const bodyHeight = placedModule.freeHeight
+      ?? placedModule.customHeight
+      ?? placedModule.cabinetBodyHeight
+      ?? actualModuleData?.dimensions.height;
+    if (typeof bodyHeight !== 'number' || bodyHeight <= 0) {
+      return placedModule.topFrameThickness;
+    }
+    let effectiveHeight = spaceInfo.height ?? internalSpace.height;
+    if (effectiveZone === 'dropped') {
+      if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+        effectiveHeight = (spaceInfo.height ?? effectiveHeight) - (spaceInfo.stepCeiling.dropHeight || 0);
+      } else if (spaceInfo.droppedCeiling?.enabled) {
+        effectiveHeight = (spaceInfo.height ?? effectiveHeight) - (spaceInfo.droppedCeiling.dropHeight || 0);
+      }
+    }
+    const bottomClearance = placedModule.hasBase === false
+      ? Math.max(0, placedModule.individualFloatHeight ?? 0)
+      : Math.max(0, placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+    const floorFinish = spaceInfo.hasFloorFinish && spaceInfo.floorFinish
+      ? Math.max(0, spaceInfo.floorFinish.height || 0)
+      : 0;
+    return Math.max(0, Math.round(effectiveHeight - bodyHeight - bottomClearance - floorFinish));
+  })();
 
   // 걸래받이 토글 꺼짐 → 가구 높이 유지, Y 위치만 바닥으로 내림 (baseHeightMm=0 처리)
   // furnitureHeightMm는 변경하지 않음 (측판 높이 유지)
@@ -1837,12 +1873,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       sectionFullH = Math.max(0, upper.height || 0);
     }
-    // ShelfRenderer: 갭 = (sectionFullH - 2t) - positionMm - t/2 (선반 윗면 ~ 상판 아랫면)
-    // → positionMm = sectionFullH - 2t - userGap - t/2 = sectionFullH - userGap - 2.5t
-    // 단 useBaseFurniture가 preserveUpperSafetyShelfGap로 비례 조정 시
-    // currentGap = section.height-2t - pos - t/2 식을 쓰므로,
-    // section.height도 sectionFullH로 갱신하여 비례 조정이 작동하지 않도록 함.
-    const nextShelfPos = Math.max(0, Math.round((sectionFullH - 2 * basicThicknessMm) - userGap - basicThicknessMm / 2));
+    const nextShelfPos = Math.max(0, Math.round(sectionFullH / 2));
     if (!appendNew && nextShelfPos === shelfPositions[safetyIdx] && (upper.height === sectionFullH)) {
       return placedModule.customSections;
     }
@@ -1862,7 +1893,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       };
     } else {
       if (currentGuideSlotYRangeMm && (placedModule.guideSlotZone === 'full' || placedModule.guideSlotZone === 'lower')) {
-        const hasUserHeight = placedModule.isFreePlacement
+        const hasUserHeight = placedModule.userResizedHeight === true
           && typeof placedModule.freeHeight === 'number'
           && placedModule.freeHeight > 0;
         const centerY = hasUserHeight
@@ -3201,12 +3232,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 상부장: 뒷면을 하부장 뒷면에 정렬
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
   } else if (isKitchenTallCabinet || isBackAlignedTallCabinet) {
-    const baseDepth = mmToThreeUnits(defaultModuleDepthMm);
     const fixedBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseDepthOffset;
-    const fixedFrontZ = fixedBackZ + baseDepth;
-    furnitureZ = usesUnifiedSectionDepthDirection && lowerSectionDir === 'back'
-      ? fixedFrontZ - depth / 2
-      : fixedBackZ + depth / 2;
+    // 키큰장/의류장도 본체 기준은 항상 뒷벽 고정이다.
+    // 앞고정 전환 시 생기는 뒷벽이격은 아래 backWallGap 보정 한 곳에서만 적용한다.
+    furnitureZ = fixedBackZ + depth / 2;
   } else if (isLowerForZ) {
     // 하부 가구는 뒷면을 뒷벽에 고정한다. 앞/뒤고정 모두 뒷면 기준이며,
     // 앞고정의 "앞면을 기준 앞라인에 맞추는" 이동은 전부 backWallGap(아래)으로 표현한다.
@@ -3321,10 +3350,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? (spaceInfo.baseboardLowerGap ?? (spaceInfo.baseConfig as any)?.gap)
     : (spaceInfo.baseConfig as any)?.gap;
   const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
-  const effectiveBaseFrameOffsetMm = typeof placedModule.baseFrameOffset === 'number'
-    ? placedModule.baseFrameOffset
-    : (useGlobalBaseFrameOffset && typeof globalBaseFrameOffsetMm === 'number'
-      ? globalBaseFrameOffsetMm
+  const effectiveBaseFrameOffsetMm = useGlobalBaseFrameOffset && typeof globalBaseFrameOffsetMm === 'number'
+    ? globalBaseFrameOffsetMm
+    : (typeof placedModule.baseFrameOffset === 'number'
+      ? placedModule.baseFrameOffset
       : (globalBaseFrameOffsetMm ?? 0));
   const effectiveBaseFrameGapMm = typeof (placedModule as any).baseFrameGap === 'number'
     ? (placedModule as any).baseFrameGap
@@ -3337,10 +3366,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (placedModule.hasTopFrame === false) return null;
     if (actualModuleData?.category === 'lower') return null;
 
-    const rawHeightMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-    const gapMm = rawHeightMm > 0
-      ? Math.max(0, Math.min(rawHeightMm, placedModule.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0))
-      : 0;
+    const rawHeightMm = effectiveTopFrameThicknessMm ?? (spaceInfo.frameSize?.top ?? 30);
+    const gapMm = 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
     if (visibleHeightMm <= 0.5) return null;
 
@@ -4669,9 +4696,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   })()} // 패널별 개별 결 방향
                   zone={effectiveZone}
                   isFreePlacement={placedModule.isFreePlacement}
-                  topFrameThickness={placedModule.topFrameThickness}
+                  topFrameThickness={effectiveTopFrameThicknessMm}
                   topFrameOffset={effectiveTopFrameOffsetMm}
-                  topFrameGap={placedModule.topFrameGap}
+                  topFrameGap={placedModule.hasTopFrame === false ? placedModule.topFrameGap : 0}
                   hasTopFrame={placedModule.hasTopFrame}
                   hasBase={placedModule.hasBase}
                   baseFrameHeight={placedModule.baseFrameHeight}
@@ -5045,7 +5072,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               zone={effectiveZone}
               internalHeight={furnitureHeightMm}
               isFreePlacement={placedModule.isFreePlacement}
-              topFrameThickness={placedModule.topFrameThickness}
+              topFrameThickness={effectiveTopFrameThicknessMm}
               hasBase={placedModule.hasBase}
               individualFloatHeight={placedModule.individualFloatHeight}
               individualBaseFrameHeight={placedModule.baseFrameHeight}

@@ -2064,16 +2064,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const baseDistance = m.hasBase === false
                   ? (m.individualFloatHeight ?? 0)
                   : (m.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-                const sectionTop = baseDistance + sections
-                  .slice(0, 2)
-                  .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
-                return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
+	                const sectionTop = baseDistance + sections
+	                  .slice(0, 2)
+	                  .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
+	                return Math.max(0, Math.round((spaceInfo.height ?? 0) - sectionTop));
+	              };
+              const computeBodyHeightTopOffGap = (m: any) => {
+                if (!m) return null;
+                const bodyHeight = m.freeHeight ?? m.customHeight ?? m.moduleData?.dimensions?.height;
+                if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
+                const floorFinishH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+                const bottomDistance = m.hasBase === false
+                  ? (m.individualFloatHeight ?? 0)
+                  : (m.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
+                return Math.max(0, Math.round((spaceInfo.height ?? 0) - bodyHeight - bottomDistance - floorFinishH));
               };
-              const getTopSizeDisplay = (m: any) => {
-                const enabledGap = m?.hasTopFrame === false ? 0 : Math.max(0, defaultIfZero(m?.topFrameGap, globalTopGap));
-                return resolveDefaultBackedRawSize(m?.topFrameThickness, globalTop, enabledGap);
-              };
-              const getTopOffGapDisplay = (m: any) => computeShelfSplitTopDistance(m) ?? defaultIfZero(m?.topFrameGap, getTopSizeDisplay(m));
+	              const getTopSizeDisplay = (m: any) => {
+	                const enabledGap = m?.hasTopFrame === false ? 0 : Math.max(0, defaultIfZero(m?.topFrameGap, globalTopGap));
+	                return resolveDefaultBackedRawSize(m?.topFrameThickness, globalTop, enabledGap);
+	              };
+              const getTopOffGapDisplay = (m: any) => (
+                m?.userResizedHeight === true
+                  ? (computeShelfSplitTopDistance(m) ?? computeBodyHeightTopOffGap(m) ?? defaultIfZero(m?.topFrameGap, getTopSizeDisplay(m)))
+                  : (computeShelfSplitTopDistance(m) ?? defaultIfZero(m?.topFrameGap, getTopSizeDisplay(m)))
+              );
               const getTopGapDisplay = (m: any) => (
                 m?.hasTopFrame === false
                   ? getTopOffGapDisplay(m)
@@ -2150,7 +2164,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                              label={group.label}
 	                              enabled={allEnabled}
 	                              widthMM={group.totalWidthMm}
-	                              heightMM={globalTop}
+		                              heightMM={firstMod?.topFrameThickness ?? globalTop}
 	                              offset={(spaceInfo.frameSize as any)?.topOffset ?? getTopOffsetDisplay(firstMod)}
 	                              gap={globalTopGap}
                               splitGapFromSize={allEnabled}
@@ -2159,11 +2173,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 const newVal = !allEnabled;
                                 group.moduleIds.forEach(id => {
                                   const target = topSortedMods.find(m => m.id === id);
-                                  updatePlacedModule(id, {
-                                    hasTopFrame: newVal,
-                                    topFrameGap: newVal ? 0 : getTopOffGapDisplay(target),
-	                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target)
-                                  });
+                                  const nextTopSize = newVal ? getTopOffGapDisplay(target) : undefined;
+	                                  updatePlacedModule(id, target && newVal ? {
+	                                    ...getTopFrameSizeUpdates(target, nextTopSize),
+	                                    hasTopFrame: true,
+	                                    topFrameGap: 0,
+		                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, target)
+	                                  } : {
+	                                    hasTopFrame: newVal,
+	                                    topFrameGap: getTopOffGapDisplay(target),
+		                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target)
+	                                  });
                                 });
                               }}
 	                              onHeightChange={(v) => {
@@ -2206,12 +2226,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               gap={getTopGapDisplay(mod)}
                               splitGapFromSize={mod.hasTopFrame !== false}
                               onToggle={() => {
-                                const newVal = !(mod.hasTopFrame !== false);
-                                updatePlacedModule(mod.id, {
-                                  hasTopFrame: newVal,
-                                  topFrameGap: newVal ? 0 : getTopOffGapDisplay(mod),
-	                                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
-                                });
+	                                const newVal = !(mod.hasTopFrame !== false);
+                                const nextTopSize = newVal ? getTopOffGapDisplay(mod) : undefined;
+	                                updatePlacedModule(mod.id, newVal ? {
+	                                  ...getTopFrameSizeUpdates(mod, nextTopSize),
+	                                  hasTopFrame: true,
+	                                  topFrameGap: 0,
+		                                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, mod)
+	                                } : {
+	                                  hasTopFrame: false,
+	                                  topFrameGap: getTopOffGapDisplay(mod),
+		                                  doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, mod)
+	                                });
                               }}
                               onSizeChange={(v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v))}
                               onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
@@ -2379,17 +2405,25 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                          label="전체"
 	                          enabled={unifiedEnabled}
 	                          widthMM={Math.round(totalWidthMM * 10) / 10}
-	                          sizeMM={globalTop}
+		                          sizeMM={first?.topFrameThickness ?? globalTop}
 	                          offset={(spaceInfo.frameSize as any)?.topOffset ?? getTopOffsetDisplay(first)}
 	                          gap={globalTopGap}
                           splitGapFromSize={unifiedEnabled}
                           onToggle={() => {
                             const newVal = !unifiedEnabled;
-                            topSortedMods.forEach(m => updatePlacedModule(m.id, {
-                              hasTopFrame: newVal,
-                              topFrameGap: newVal ? 0 : getTopOffGapDisplay(m),
-	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, m)
-                            }));
+	                            topSortedMods.forEach(m => {
+                              const nextTopSize = newVal ? getTopOffGapDisplay(m) : undefined;
+                              updatePlacedModule(m.id, newVal ? {
+                                ...getTopFrameSizeUpdates(m, nextTopSize),
+	                              hasTopFrame: true,
+	                              topFrameGap: 0,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
+	                            } : {
+	                              hasTopFrame: false,
+	                              topFrameGap: getTopOffGapDisplay(m),
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, m)
+	                            });
+                            });
                           }}
 	                          onSizeChange={(v) => {
 	                            setSpaceInfo({ frameSize: { ...spaceInfo.frameSize, top: v } as any });
@@ -2428,12 +2462,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           gap={getTopGapDisplay(mod)}
                           splitGapFromSize={mod.hasTopFrame !== false}
                           onToggle={() => {
-                            const newVal = !(mod.hasTopFrame !== false);
-                            updatePlacedModule(mod.id, {
-                              hasTopFrame: newVal,
-                              topFrameGap: newVal ? 0 : getTopOffGapDisplay(mod),
-	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
-                            });
+	                            const newVal = !(mod.hasTopFrame !== false);
+                            const nextTopSize = newVal ? getTopOffGapDisplay(mod) : undefined;
+	                            updatePlacedModule(mod.id, newVal ? {
+	                              ...getTopFrameSizeUpdates(mod, nextTopSize),
+	                              hasTopFrame: true,
+	                              topFrameGap: 0,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, mod)
+	                            } : {
+	                              hasTopFrame: false,
+	                              topFrameGap: getTopOffGapDisplay(mod),
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, mod)
+	                            });
                           }}
                           onSizeChange={(v) => {
                             updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v));

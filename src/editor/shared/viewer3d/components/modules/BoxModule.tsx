@@ -1423,7 +1423,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         ?? spaceInfo.baseConfig?.height
         ?? 65)
       : 0;
-    const topFrameGapMmIF = rawTopFrameMmIF > 0
+    const topFrameGapMmIF = rawTopFrameMmIF > 0 && !insertHasTopFrame
       ? Math.max(0, Math.min(rawTopFrameMmIF, topFrameGap ?? (_pmIF as any)?.topFrameGap ?? (spaceInfo.frameSize as any)?.topGap ?? 0))
       : 0;
     const baseFrameGapMmIF = rawBaseFrameMmIF > 0
@@ -1466,7 +1466,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const isFloatPlacementIF = spaceInfo.baseConfig?.type === 'stand'
       && spaceInfo.baseConfig?.placementType === 'float';
     const baseDepthOffsetMmIF = isFloatPlacementIF ? (spaceInfo.baseConfig?.depth || 0) : 0;
-    const frameDoorOffsetMmIF = (spaceInfo as any).frameOffsetBase === 'door' ? DOOR_FRONT_OFFSET_MM : 0;
+    const frameDoorOffsetMmIF = (spaceInfo as any).frameOffsetBase === 'door' && hasDoor ? DOOR_FRONT_OFFSET_MM : 0;
     const baseConfigDepthMmIF = spaceInfo.baseConfig?.depth || 0;
     // 상단몰딩 Z: 전체서라운드면 +3, 노서라운드면 -20
     const topFrameRefZMm = isFullSurroundIF
@@ -1840,7 +1840,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const upperDoorY = splitDoorGeometry.upperDoorCenterFromBottomMm - cabinetH / 2;
             const lowerDoorDepthPlacement = resolveSplitDoorDepthPlacement(0);
             const upperDoorDepthPlacement = resolveSplitDoorDepthPlacement(1);
-            const lowerSplitDoorBottomGap = lowerDoorBottomGap ?? 0;
+            const lowerSplitDoorBottomGap = lowerDoorBottomGap ?? doorBottomGap ?? 0;
             const upperSplitDoorTopGap = upperDoorTopGap ?? doorTopGap;
             const upperSplitDoorBottomGap = upperDoorBottomGap ?? 0;
             return (
@@ -1848,7 +1848,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 {/* 하부 도어 — 너비 치수 표시 (분절 가구는 단일 너비 치수만 표시: 하부만) */}
                 <group position={[0, 0, lowerDoorDepthPlacement.zOffset]}>
                   <DoorModule
-                    key="shelf-split-lower-door"
+                    key={`shelf-split-lower-door-${lowerSplitDoorBottomGap}-${lowerDoorTopGap ?? 'd'}-${Math.round(lowerDoorH)}-${Math.round(lowerDoorY)}`}
                     hingeMode="auto"
                     hideWidthDimension={false}
                     moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -1889,7 +1889,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
                 <group position={[0, 0, upperDoorDepthPlacement.zOffset]}>
                   <DoorModule
-                    key="shelf-split-upper-door"
+                    key={`shelf-split-upper-door-${upperSplitDoorTopGap ?? 'd'}-${upperSplitDoorBottomGap}-${Math.round(upperDoorH)}-${Math.round(upperDoorY)}`}
                     hingeMode="auto"
                     moduleWidth={doorWidth || moduleData.dimensions.width}
                     moduleDepth={upperDoorDepthPlacement.moduleDepthMm}

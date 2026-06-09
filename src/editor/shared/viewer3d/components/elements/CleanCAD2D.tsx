@@ -4407,9 +4407,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const baseRefMod = leftLowerMod ?? leftmostMod;
           const topRefMod_L = leftUpperMod ?? leftmostMod;
           const actualBottomSize = baseRefMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
-          const actualTopSize = topRefMod_L?.hasTopFrame === false ? 0 : (topRefMod_L?.topFrameThickness !== undefined ? topRefMod_L.topFrameThickness : globalTopFrame);
+          const resolvedTopClearance_L = (() => {
+            if (!topRefMod_L) return null;
+            const modData = getModuleById(topRefMod_L.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+            const category = modData?.category
+              ?? (topRefMod_L.moduleId.includes('upper') ? 'upper'
+                : topRefMod_L.moduleId.includes('lower') ? 'lower' : 'full');
+            if (category !== 'full') return null;
+            const bodyHeight = topRefMod_L.freeHeight ?? topRefMod_L.customHeight ?? topRefMod_L.cabinetBodyHeight ?? modData?.dimensions.height;
+            if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
+            return Math.max(0, Math.round(effectiveH - floorFinishHeightMmGlobal - actualBottomSize - bodyHeight));
+          })();
+          const actualTopSize = topRefMod_L?.hasTopFrame === false ? 0 : (resolvedTopClearance_L ?? (topRefMod_L?.topFrameThickness !== undefined ? topRefMod_L.topFrameThickness : globalTopFrame));
           const actualTopClearance = topRefMod_L?.hasTopFrame === false
-            ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
+            ? (resolvedTopClearance_L ?? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0)))
             : actualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -5224,8 +5235,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : Math.max(0, Math.round(actualTopSize));
                 if (displayTopFrame <= 0) return null;
                 const topGapH = topRefMod_L?.hasTopFrame === false
-                  ? 0
-                  : Math.max(0, Math.min(displayTopFrame, Math.round(topRefMod_L?.topFrameGap ?? 0)));
+                  ? Math.max(0, Math.min(displayTopFrame, userTopGap))
+                  : 0;
                 const visibleTopFrameH = Math.max(0, displayTopFrame - topGapH);
                 const singleLowerTopRef = singleLowerCountertopH > 0 ? singleLowerCountertopTopY : furnitureTopY;
                 const sectionSplitTopRef = hasSectionSplit
@@ -5489,9 +5500,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상하부장 동시배치 시 rightmostMod가 하부장이면 rightUpperMod(상부장)의 hasTopFrame 참조
           const topRefMod_R = rightUpperMod ?? rightmostMod;
           const rActualBottomSize = rightLowerMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
-          const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame);
+          const rResolvedTopClearance = (() => {
+            if (!topRefMod_R) return null;
+            const modData = getModuleById(topRefMod_R.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+            const category = modData?.category
+              ?? (topRefMod_R.moduleId.includes('upper') ? 'upper'
+                : topRefMod_R.moduleId.includes('lower') ? 'lower' : 'full');
+            if (category !== 'full') return null;
+            const bodyHeight = topRefMod_R.freeHeight ?? topRefMod_R.customHeight ?? topRefMod_R.cabinetBodyHeight ?? modData?.dimensions.height;
+            if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
+            return Math.max(0, Math.round(rEffectiveH - floorFinishHeightMmGlobal - rActualBottomSize - bodyHeight));
+          })();
+          const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (rResolvedTopClearance ?? (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame));
           const rActualTopClearance = topRefMod_R?.hasTopFrame === false
-            ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
+            ? (rResolvedTopClearance ?? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0)))
             : rActualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -6257,8 +6279,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : Math.max(0, Math.round(rActualTopSize));
                 if (displayTopFrame <= 0) return null;
                 const topGapH = topRefMod_R?.hasTopFrame === false
-                  ? 0
-                  : Math.max(0, Math.min(displayTopFrame, Math.round(topRefMod_R?.topFrameGap ?? 0)));
+                  ? Math.max(0, Math.min(displayTopFrame, userTopGap))
+                  : 0;
                 const visibleTopFrameH = Math.max(0, displayTopFrame - topGapH);
                 const rSingleLowerTopRef = rSingleLowerCountertopH > 0 ? rSingleLowerCountertopTopY : rFurnitureTopY;
                 const rSectionSplitTopRef = rHasSectionSplit
@@ -6524,7 +6546,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 공통 데이터: 조절발/상단몰딩
           const footHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0);
-          const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+	          const topFrameMm = customModule.hasTopFrame === false
+	            ? Math.max(0, Math.round(customModule.topFrameGap ?? 0))
+	            : Math.max(0, Math.round(customModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)));
           const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
           const floorFinishYDim = mmToThreeUnits(floorFinishMm);
 
@@ -8561,6 +8585,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? 0
               : Math.max(0, Math.min(bottomFrameHeight, (bottomFrameRefMod as any)?.baseFrameGap ?? 0));
             const bottomFrameVisibleHeight = Math.max(0, bottomFrameHeight - bottomFrameGapHeight);
+            const computedTopClearance = (() => {
+              if (!topFrameRefMod || getSideCategory(topFrameRefMod) !== 'full') return null;
+              const modData = getModuleById(topFrameRefMod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+              const bodyHeight = topFrameRefMod.freeHeight
+                ?? topFrameRefMod.customHeight
+                ?? topFrameRefMod.cabinetBodyHeight
+                ?? modData?.dimensions.height;
+              if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
+              return Math.max(0, Math.round(spaceInfo.height - floorFinishHeightMm - bottomFrameHeight - bodyHeight));
+            })();
+            const effectiveTopFrameDistance = computedTopClearance ?? rawTopFrame;
             const moduleFloatHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
               ? Math.max(0, Math.round(bottomFrameRefMod.individualFloatHeight ?? 0))
               : 0;
@@ -8577,12 +8612,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
             const topFrameHeight = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, rawTopFrame - baseFrameAbsorbed);
+              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              : Math.max(0, effectiveTopFrameDistance - baseFrameAbsorbed);
             const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
             const topFrameDimensionValue = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
+              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              : Math.max(0, Math.round((hasUpperTopFrameRef ? effectiveTopFrameDistance : topFrameHeight) ?? 0));
             const topFrameDimensionHeight = isTopFrameOff ? topFrameHeight : (topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue);
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
@@ -9096,7 +9131,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const epEnabled = epRefMod?.hasTopEndPanel === true;
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
-                  const topGapMm = Math.min(totalMm, Math.max(0, Math.round((epRefMod as any)?.topFrameGap ?? 0)));
+	                  const topGapMm = 0;
                   const visibleTopMm = Math.max(0, totalMm);
                   const topGapBottomY = topFrameTopY - mmToThreeUnits(topGapMm);
                   const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
@@ -10270,6 +10305,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? 0
               : Math.max(0, Math.min(bottomFrameHeight, (bottomFrameRefMod as any)?.baseFrameGap ?? 0));
             const bottomFrameVisibleHeight = Math.max(0, bottomFrameHeight - bottomFrameGapHeight);
+            const computedTopClearance = (() => {
+              if (!topFrameRefMod || getSideCategory(topFrameRefMod) !== 'full') return null;
+              const modData = getModuleById(topFrameRefMod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+              const bodyHeight = topFrameRefMod.freeHeight
+                ?? topFrameRefMod.customHeight
+                ?? topFrameRefMod.cabinetBodyHeight
+                ?? modData?.dimensions.height;
+              if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
+              return Math.max(0, Math.round(spaceInfo.height - floorFinishHeightMm - bottomFrameHeight - bodyHeight));
+            })();
+            const effectiveTopFrameDistance = computedTopClearance ?? rawTopFrame;
             const moduleFloatHeight = canAbsorbBaseInSideView && bottomFrameRefMod?.hasBase === false
               ? Math.max(0, Math.round(bottomFrameRefMod.individualFloatHeight ?? 0))
               : 0;
@@ -10286,12 +10332,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
             const topFrameHeight = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, rawTopFrame - baseFrameAbsorbed);
+              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              : Math.max(0, effectiveTopFrameDistance - baseFrameAbsorbed);
             const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
             const topFrameDimensionValue = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? topFrameRefMod?.topFrameGap ?? 0))
-              : Math.max(0, Math.round((hasUpperTopFrameRef ? rawTopFrame : topFrameHeight) ?? 0));
+              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              : Math.max(0, Math.round((hasUpperTopFrameRef ? effectiveTopFrameDistance : topFrameHeight) ?? 0));
             const topFrameDimensionHeight = isTopFrameOff ? topFrameHeight : (topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue);
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
@@ -10812,7 +10858,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const epEnabled = epRefMod?.hasTopEndPanel === true;
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
-                  const topGapMm = Math.min(totalMm, Math.max(0, Math.round((epRefMod as any)?.topFrameGap ?? 0)));
+	                  const topGapMm = 0;
                   const visibleTopMm = Math.max(0, totalMm);
                   const topGapBottomY = topFrameLineTopY - mmToThreeUnits(topGapMm);
                   const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;

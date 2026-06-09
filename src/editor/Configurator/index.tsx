@@ -7647,7 +7647,7 @@ const Configurator: React.FC = () => {
 	                      return <FrameOffsetRow key="top-all-free"
 	                        num={1} label="전체"
 	                        enabled={true}
-	                        sizeMM={globalTop}
+		                        sizeMM={firstTop?.topFrameThickness ?? globalTop}
 	                        offset={(spaceInfo.frameSize as any)?.topOffset ?? topOffsetDefaultU}
 	                        gap={globalTopGapLocal}
                         onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
@@ -7696,15 +7696,25 @@ const Configurator: React.FC = () => {
                         const md = getModuleById(firstTop.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
                         return md?.dimensions.height ?? 0;
                       })();
-                    const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
-                    const currentGap = firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap;
+	                    const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
+	                    const currentGap = firstTop.userResizedHeight === true
+	                      ? (computeShelfSplitTopDistance(firstTop) ?? computedGap)
+	                      : (firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap);
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
-                        <button
-	                          onClick={() => topFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasTopFrame: true, topFrameGap: 0, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m) })))}
-                          className={styles.miniToggle}
-                        />
+	                        <button
+		                          onClick={() => topFreeMods.forEach(m => {
+		                            const nextTopSize = getFreeTopOffGap(m);
+		                            updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
+		                              ...getTopFrameSizeUpdates(m, nextTopSize),
+		                              hasTopFrame: true,
+		                              topFrameGap: 0,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
+		                            }));
+		                          })}
+	                          className={styles.miniToggle}
+	                        />
                         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                           <div className={styles.frameItemInput} style={{ flex: 1 }}>
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>상단갭</span>
@@ -7787,15 +7797,22 @@ const Configurator: React.FC = () => {
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? ((spaceInfo.frameSize as any)?.topOffset ?? 0)}
-                    gap={mod.hasTopFrame === false ? defaultIfZeroFree(mod.topFrameGap, actualTopFrameSize) : defaultIfZeroFree(mod.topFrameGap, globalTopGapLocal)}
-                    onToggle={() => {
-                      const newVal = !(mod.hasTopFrame !== false);
-                      updatePlacedModule(mod.id, {
-                        hasTopFrame: newVal,
-                        topFrameGap: newVal ? 0 : actualTopFrameSize,
-	                        doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
-                      });
-                    }}
+	                    gap={mod.hasTopFrame === false
+	                      ? (mod.userResizedHeight === true ? actualTopFrameSize : defaultIfZeroFree(mod.topFrameGap, actualTopFrameSize))
+	                      : defaultIfZeroFree(mod.topFrameGap, globalTopGapLocal)}
+	                      onToggle={() => {
+	                        const newVal = !(mod.hasTopFrame !== false);
+	                      updatePlacedModule(mod.id, newVal ? {
+	                        ...getTopFrameSizeUpdates(mod, actualTopFrameSize, effectiveSpaceHeight),
+	                        hasTopFrame: true,
+	                        topFrameGap: 0,
+		                        doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, mod)
+	                      } : {
+	                        hasTopFrame: false,
+	                        topFrameGap: actualTopFrameSize,
+		                        doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, mod)
+	                      });
+	                    }}
                     onSizeChange={(v) => {
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
@@ -7975,7 +7992,9 @@ const Configurator: React.FC = () => {
                   const rawBaseHeight = cat === 'lower'
                     ? resolveFrameRawSize(mod.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, baseGap)
                     : resolveFrameRawSize(mod.baseFrameHeight, spaceInfo.baseConfig?.height || 65, baseGap);
-                  const baseOffsetDefault = (spaceInfo.baseConfig as any)?.offset ?? 0;
+                  const baseOffsetDefault = cat === 'lower'
+                    ? (spaceInfo.baseboardLowerOffset ?? (spaceInfo.baseConfig as any)?.offset ?? 0)
+                    : ((spaceInfo.baseConfig as any)?.offset ?? 0);
                   return (
                     <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(bn)}(하)</span>
@@ -8623,17 +8642,22 @@ const Configurator: React.FC = () => {
                         group.totalWidthMm,
                         firstMod?.topFrameThickness ?? globalTop,
                         firstMod?.topFrameOffset ?? topOffsetDefault,
-                        () => {
-                          const newVal = !allEnabled;
-                          group.moduleIds.forEach(id => {
-                            const target = sorted.find(m => m.id === id);
-                            updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
-                              hasTopFrame: newVal,
-                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap)),
-	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target),
+	                          () => {
+	                            const newVal = !allEnabled;
+	                            group.moduleIds.forEach(id => {
+	                              const target = sorted.find(m => m.id === id);
+	                            updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, newVal ? {
+	                              ...getTopFrameSizeUpdates(target, computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap)),
+	                              hasTopFrame: true,
+	                              topFrameGap: 0,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, target),
+	                            } : {
+	                              hasTopFrame: false,
+	                              topFrameGap: computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap),
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, target),
 	                            }) : { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target) });
-                          });
-                        },
+	                          });
+	                        },
                         (v) => {
                           group.moduleIds.forEach(id => {
                             const target = sorted.find(m => m.id === id);
@@ -8749,16 +8773,19 @@ const Configurator: React.FC = () => {
 	                        return renderSlotFrameRow(
 	                          '전체',
 	                          unifiedEnabled,
-	                          globalTop,
+		                          firstTop?.topFrameThickness ?? globalTop,
 	                          (spaceInfo.frameSize as any)?.topOffset ?? topOffsetDefaultU,
-                          () => {
-                            const newVal = !unifiedEnabled;
-                            topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
-                              hasTopFrame: newVal,
-	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, m),
-                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap)),
-                            })));
-                          },
+	                          () => {
+	                            const newVal = !unifiedEnabled;
+	                            topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
+	                              hasTopFrame: newVal,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, m),
+	                              ...(newVal
+	                                ? getTopFrameSizeUpdates(m, computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap))
+	                                : {}),
+	                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap)),
+	                            })));
+	                          },
 	                          (v) => {
 	                            handleSpaceInfoUpdate({ frameSize: { ...spaceInfo.frameSize, top: v } as any });
 	                            topSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, getTopFrameSizeUpdates(m, v)));
@@ -8800,17 +8827,39 @@ const Configurator: React.FC = () => {
                             const md = getModuleById(firstTop.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
                             return md?.dimensions.height ?? 0;
                           })();
-                        const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
-                        const currentGap = firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap;
+	                        const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
+	                        const currentGap = firstTop.userResizedHeight === true
+	                          ? (computeShelfSplitTopDistance(firstTop) ?? computedGap)
+	                          : (firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap);
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
-                            <button
-                              onClick={() => {
-	                                topSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasTopFrame: true, topFrameGap: 0, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m) })));
-                              }}
-                              className={styles.miniToggle}
-                            />
+	                            <button
+	                              onClick={() => {
+		                                topSortedMods.forEach(m => {
+		                                  const floorFinishForMod = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+		                                  const bottomForMod = m.hasBase === false
+		                                    ? (m.individualFloatHeight ?? 0)
+		                                    : (m.baseFrameHeight ?? globalBase);
+		                                  const furnitureHForMod = m.freeHeight
+		                                    ?? m.customHeight
+		                                    ?? (() => {
+		                                      const md = getModuleById(m.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+		                                      return md?.dimensions.height ?? 0;
+		                                    })();
+		                                  const nextTopSize = m.userResizedHeight === true
+		                                    ? (computeShelfSplitTopDistance(m) ?? Math.max(0, spaceInfo.height - furnitureHForMod - bottomForMod - floorFinishForMod))
+		                                    : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap));
+		                                  updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
+		                                    ...getTopFrameSizeUpdates(m, nextTopSize),
+		                                    hasTopFrame: true,
+		                                    topFrameGap: 0,
+		                                    doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, m)
+		                                  }));
+		                                });
+	                              }}
+	                              className={styles.miniToggle}
+	                            />
                             <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                               <div className={styles.frameItemInput} style={{ flex: 1 }}>
                                 <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>상단갭</span>
@@ -8848,23 +8897,42 @@ const Configurator: React.FC = () => {
                         if (cat === 'lower') return null;
                         topNum++;
                         const topOffsetDefault = (spaceInfo.frameSize as any)?.topOffset ?? ((cat === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0);
-                        return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
+	                        const floorFinishH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+	                        const bottomPortion = mod.hasBase === false
+	                          ? (mod.individualFloatHeight ?? 0)
+	                          : (mod.baseFrameHeight ?? globalBase);
+	                        const furnitureActualH = mod.freeHeight
+	                          ?? mod.customHeight
+	                          ?? (() => {
+	                            const md = getModuleById(mod.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+	                            return md?.dimensions.height ?? 0;
+	                          })();
+	                        const computedTopOffGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
+	                        const displayedTopOffGap = mod.userResizedHeight === true
+	                          ? (computeShelfSplitTopDistance(mod) ?? computedTopOffGap)
+	                          : (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap));
+	                        return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
                           `${toAlpha(topNum)}(상)`,
                           mod.hasTopFrame !== false,
                           mod.topFrameThickness ?? globalTop,
                           mod.topFrameOffset ?? topOffsetDefault,
                           () => {
-                            const newVal = !(mod.hasTopFrame !== false);
-                            updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
-                              hasTopFrame: newVal,
-                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap)),
-	                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, mod)
-                            }));
-                          },
+	                            const newVal = !(mod.hasTopFrame !== false);
+	                            updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, newVal ? {
+	                              ...getTopFrameSizeUpdates(mod, displayedTopOffGap),
+	                              hasTopFrame: true,
+	                              topFrameGap: 0,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, mod)
+	                            } : {
+	                              hasTopFrame: false,
+	                              topFrameGap: displayedTopOffGap,
+		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, mod)
+	                            }));
+	                          },
                           (v) => updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v)),
                           (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
                           `top-${mod.id}`,
-                          mod.hasTopFrame === false ? (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap)) : defaultIfZeroSlot(mod.topFrameGap, globalTopGap),
+	                          mod.hasTopFrame === false ? displayedTopOffGap : defaultIfZeroSlot(mod.topFrameGap, globalTopGap),
                           (v, nextSize) => updatePlacedModule(mod.id, getShelfSplitTopClearanceUpdates(mod, {
                             ...(nextSize !== undefined ? { topFrameThickness: Math.max(0, nextSize) } : {}),
                             topFrameGap: clampFrameGapValue(v)
