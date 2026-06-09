@@ -1783,15 +1783,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         && moduleData.category === 'full'
         && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
         && typeof currentPlacedModule.topFrameThickness === 'number'
+        && currentPlacedModule.userResizedHeight !== true
         ? Math.max(100, Math.round(
             calculateInternalSpace(spaceInfo).height
             - (currentPlacedModule.topFrameThickness - (spaceInfo.frameSize?.top ?? 30))
           ))
         : undefined;
+      const manuallyResizedHeight = isFreePlacementModule && currentPlacedModule.userResizedHeight === true
+        ? (validFreeHeight ?? validCustomHeight)
+        : undefined;
 
       const baseHeight = moduleData.category === 'upper'
         ? (validCustomHeight ?? validFreeHeight ?? storedModuleHeight ?? moduleData.dimensions.height)
-        : (topFrameDerivedFullHeight ?? validFreeHeight ?? validCustomHeight ?? storedModuleHeight ?? moduleData.dimensions.height);
+        : (manuallyResizedHeight ?? topFrameDerivedFullHeight ?? validFreeHeight ?? validCustomHeight ?? storedModuleHeight ?? moduleData.dimensions.height);
       const normalizedBodyHeight = normalizeLowerBodyHeightForDisplay(baseHeight);
       // 자유배치 가구는 공간 높이가 아니라 사용자가 정한 실제 높이를 쓴다.
       //  (getFullBodyDisplayHeight는 spaceInfo.height로 고정 → 자유배치에서 높이 변경이
@@ -2449,7 +2453,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, moduleData?.category, placedBodyHeight, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.moduleData?.dimensions?.height, currentPlacedModule?.isFreePlacement, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode, spaceInfo.surroundType, spaceInfo.frameConfig?.top, spaceInfo.doorTopGapTall, spaceInfo.doorBottomGapTall, spaceInfo.doorTopGapUpper, spaceInfo.doorBottomGapUpper, spaceInfo.doorTopGapLower, spaceInfo.doorBottomGapLower, spaceInfo.doorTopGapLowerDoorLift, spaceInfo.doorBottomGapLowerDoorLift, spaceInfo.doorTopGapLowerTopDown, spaceInfo.doorBottomGapLowerTopDown]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, moduleData?.category, placedBodyHeight, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.moduleData?.dimensions?.height, currentPlacedModule?.isFreePlacement, currentPlacedModule?.userResizedHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode, spaceInfo.surroundType, spaceInfo.frameConfig?.top, spaceInfo.doorTopGapTall, spaceInfo.doorBottomGapTall, spaceInfo.doorTopGapUpper, spaceInfo.doorBottomGapUpper, spaceInfo.doorTopGapLower, spaceInfo.doorBottomGapLower, spaceInfo.doorTopGapLowerDoorLift, spaceInfo.doorBottomGapLowerDoorLift, spaceInfo.doorTopGapLowerTopDown, spaceInfo.doorBottomGapLowerTopDown]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정

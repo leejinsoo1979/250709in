@@ -1674,9 +1674,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
     const baseFreeHeight = placedModule.freeHeight || internalSpace.height;
     const maxFreeHeight = internalSpace.height - floatHeightMm;
+    const hasUserResizedHeight = placedModule.userResizedHeight === true;
     furnitureHeightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 가구 상단몰딩 두께 변경 시 추가 보정
-    if (placedModule.topFrameThickness !== undefined) {
+    if (placedModule.topFrameThickness !== undefined && !hasUserResizedHeight) {
       const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
       const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
       furnitureHeightMm -= topFrameDelta;

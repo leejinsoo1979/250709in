@@ -326,9 +326,10 @@ const computeFurnitureHeightMm = (
     // 자유배치 키큰장: freeHeight 우선, 없으면 internalSpace.height
     const baseFreeHeight = mod.freeHeight || internalSpace.height;
     const maxFreeHeight = internalSpace.height - floatHeightMm;
+    const hasUserResizedHeight = (mod as any).userResizedHeight === true;
     heightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 상단몰딩 두께 변경 시 보정
-    if (mod.topFrameThickness !== undefined || mod.moduleId?.includes('shelf-split')) {
+    if (!hasUserResizedHeight && (mod.topFrameThickness !== undefined || mod.moduleId?.includes('shelf-split'))) {
       const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
       heightMm -= (resolveTopFrameDistanceMm(mod, spaceInfo, globalTopFrame) - globalTopFrame);
     }

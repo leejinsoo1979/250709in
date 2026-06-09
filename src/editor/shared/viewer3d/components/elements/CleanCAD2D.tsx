@@ -8684,8 +8684,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
-                const hasManualHeight = !!(viewMod.freeHeight || viewMod.customHeight);
-                if (!isGlassCabinetForSideDim && isTopFrameOff && category === 'full' && hasManualHeight) {
+                const hasUserResizedHeight = (viewMod as any).userResizedHeight === true;
+                const hasManualHeight = !!(viewMod.freeHeight || viewMod.customHeight || hasUserResizedHeight);
+                if (!isGlassCabinetForSideDim && isTopFrameOff && category === 'full' && hasManualHeight && !hasUserResizedHeight) {
                   moduleHeight += Math.max(0, rawTopFrame - topFrameHeight);
                 }
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
@@ -10391,8 +10392,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
-                const hasManualHeight = !!(viewMod.freeHeight || viewMod.customHeight);
-                if (!isGlassCabinetForSideDim && isTopFrameOff && category === 'full' && hasManualHeight) {
+                const hasUserResizedHeight = (viewMod as any).userResizedHeight === true;
+                const hasManualHeight = !!(viewMod.freeHeight || viewMod.customHeight || hasUserResizedHeight);
+                if (!isGlassCabinetForSideDim && isTopFrameOff && category === 'full' && hasManualHeight && !hasUserResizedHeight) {
                   moduleHeight += Math.max(0, rawTopFrame - topFrameHeight);
                 }
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
