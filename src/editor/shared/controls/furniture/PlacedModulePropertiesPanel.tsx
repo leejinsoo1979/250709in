@@ -7962,14 +7962,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             };
             const getShelfSplitTopClearanceUpdates = (nextState: Record<string, any>) => {
               const sections = Array.isArray((mod as any).customSections) ? (mod as any).customSections : [];
-              const isShelfSplit = isShelfSplitModuleId(mod?.moduleId) && sections.length >= 2;
-              const modCat = getModuleById(
-                mod.moduleId,
-                { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-                spaceInfo
-              )?.category
-                ?? (mod.moduleId?.startsWith('upper-') || mod.moduleId?.includes('-upper-') ? 'upper'
-                  : mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-') ? 'lower' : 'full');
+              if (!isShelfSplitModuleId(mod?.moduleId) || sections.length < 2) {
+                return nextState;
+              }
               const nextHasTopFrame = nextState.hasTopFrame ?? mod.hasTopFrame;
               const nextTopFrameThickness = nextState.topFrameThickness ?? mod.topFrameThickness ?? rawTopSize;
               const nextTopGap = nextState.topFrameGap ?? mod.topFrameGap ?? actualShelfSplitTopSize ?? rawTopSize;
@@ -7982,53 +7977,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const baseDistance = nextHasBase === false
                 ? (nextIndividualFloatHeight ?? 0)
                 : (nextBaseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-
-              if (isShelfSplit) {
-                const lowerH = Number(sections[0]?.height) || 0;
-                const nextUpperH = Math.max(100, (spaceInfo.height ?? 0) - baseDistance - topClearance - lowerH);
-                const nextSections = sections.map((section: any, index: number) => (
-                  index === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
-                ));
-                return {
-                  ...nextState,
-                  customSections: nextSections,
-                  upperDoorHingePositionsMm: undefined,
-                };
-              }
-
-              // 분할 가구가 아닌 일반 키큰장(full): 상단갭 변경 시 가구 높이(freeHeight)를 줄인다.
-              //  공간높이 = 상단갭(topClearance) + 가구높이 + 걸레받이/띄움(baseDistance) + 바닥마감
-              if (modCat === 'full') {
-                const floorFinish = spaceInfo?.hasFloorFinish && spaceInfo?.floorFinish
-                  ? Math.max(0, Math.round(spaceInfo.floorFinish.height || 0))
-                  : 0;
-                // 상단갭 입력 맥락: 클리어런스는 입력한 갭(nextTopGap)을 그대로 쓴다.
-                //  (hasTopFrame 플래그가 아직 false로 안 들어와 topFrameThickness(30)로
-                //   계산되면 갭 100을 넣어도 30만 줄어드는 문제 방지)
-                const gapClearance = nextState.topFrameGap !== undefined
-                  ? Math.max(0, Number(nextState.topFrameGap))
-                  : topClearance;
-                const nextBodyHeight = Math.max(100, Math.round((spaceInfo.height ?? 0) - gapClearance - baseDistance - floorFinish));
-                // freeHeight와 함께 customSections(상부 섹션)도 같이 줄여야 한다.
-                //  (getUpperShelfGapSyncUpdates가 섹션을 다른 기준으로 덮어쓰거나, 렌더가
-                //   섹션 높이를 우선 사용해 freeHeight만 바꾸면 30만 줄어든 것처럼 보임)
-                const result: Record<string, any> = { ...nextState, freeHeight: nextBodyHeight };
-                const srcSections = Array.isArray((nextState as any).customSections)
-                  ? (nextState as any).customSections
-                  : (Array.isArray((mod as any).customSections) ? (mod as any).customSections : null);
-                if (Array.isArray(srcSections) && srcSections.length >= 2) {
-                  const lowerH = Number(srcSections[0]?.height) || 0;
-                  const nextUpperH = Math.max(100, nextBodyHeight - lowerH);
-                  result.customSections = srcSections.map((section: any, index: number) => (
-                    index === srcSections.length - 1
-                      ? { ...section, height: nextUpperH, heightType: 'absolute' }
-                      : section
-                  ));
-                }
-                return result;
-              }
-
-              return nextState;
+              const lowerH = Number(sections[0]?.height) || 0;
+              const nextUpperH = Math.max(100, (spaceInfo.height ?? 0) - baseDistance - topClearance - lowerH);
+              const nextSections = sections.map((section: any, index: number) => (
+                index === 1 ? { ...section, height: nextUpperH, heightType: 'absolute' } : section
+              ));
+              return {
+                ...nextState,
+                customSections: nextSections,
+                upperDoorHingePositionsMm: undefined,
+              };
             };
             const getBaseSizeSyncUpdates = (nextSize: number) => {
               const clampedSize = Math.max(0, nextSize);
