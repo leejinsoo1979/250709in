@@ -6944,7 +6944,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <div style={{ flex: 1, textAlign: 'center' }}>천장·바닥 기준</div>
                   </div>
 
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>상부 도어</div>
                   {renderSplitDoorGapRow(
                     '상단갭',
                     'upperDoorTopGap',
@@ -6952,20 +6951,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     upperDoorTopGap,
                     cfTopValue,
                     onTopCfChange
-                  )}
-                  {!isPantrySplitDoorModule && renderSplitDoorGapRow(
-                    '하단갭',
-                    'upperDoorBottomGap',
-                    upperDoorBottomGapInput,
-                    upperDoorBottomGap
-                  )}
-
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--theme-text-secondary)', margin: '12px 0 6px' }}>하부 도어</div>
-                  {!isPantrySplitDoorModule && renderSplitDoorGapRow(
-                    '상단갭',
-                    'lowerDoorTopGap',
-                    lowerDoorTopGapInput,
-                    lowerDoorTopGap
                   )}
                   {renderSplitDoorGapRow(
                     '하단갭',
