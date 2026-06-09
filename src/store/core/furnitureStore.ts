@@ -510,6 +510,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	      const isDoorLift = module.moduleId?.includes('lower-door-lift-');
 	      const isTopDown = module.moduleId?.includes('lower-top-down-');
 	      const isShelfSplit = module.moduleId?.includes('shelf-split');
+	      const isPantrySplit = module.moduleId?.includes('pantry-cabinet-split');
 	      let configuredDoorTopGap: number | undefined;
 	      let configuredDoorBottomGap: number | undefined;
 	      if (isTopDown) {
@@ -575,11 +576,17 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	          module.doorTopGap = configuredDoorTopGap ?? (isFullSurround ? -3 : 5);
 	        }
 	      }
-	      if (isShelfSplit) {
-	        const shelfSplitTopGap = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false ? -3 : 5;
-	        module.doorTopGap = module.doorTopGap ?? shelfSplitTopGap;
-	        module.upperDoorTopGap = module.upperDoorTopGap ?? module.doorTopGap ?? shelfSplitTopGap;
-	      }
+		      if (isShelfSplit) {
+		        const shelfSplitTopGap = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false ? -3 : 5;
+		        module.doorTopGap = module.doorTopGap ?? shelfSplitTopGap;
+		        module.upperDoorTopGap = module.upperDoorTopGap ?? module.doorTopGap ?? shelfSplitTopGap;
+		      }
+		      if (isPantrySplit) {
+		        module.upperDoorTopGap = module.upperDoorTopGap ?? module.doorTopGap ?? configuredDoorTopGap ?? 0;
+		        module.lowerDoorBottomGap = module.lowerDoorBottomGap ?? module.doorBottomGap ?? configuredDoorBottomGap ?? 0;
+		        module.lowerDoorTopGap = -2;
+		        module.upperDoorBottomGap = -1;
+		      }
 
       const hasTopByDefault = isNewUpper || newCategory === 'full';
       if (hasTopByDefault && module.topFrameOffset === undefined && typeof spaceInfo.frameSize?.topOffset === 'number') {
@@ -1523,6 +1530,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	            ? -3
 	            : (module.doorTopGap ?? topGap),
 	          ...(isShelfSplit ? { upperDoorTopGap: module.upperDoorTopGap ?? module.doorTopGap ?? (isFullSurround && module.hasTopFrame !== false ? -3 : 5) } : {}),
+	          ...(isPantrySplit ? {
+	            upperDoorTopGap: module.upperDoorTopGap ?? module.doorTopGap ?? topGap,
+	            lowerDoorBottomGap: module.lowerDoorBottomGap ?? module.doorBottomGap ?? bottomGap,
+	            lowerDoorTopGap: -2,
+	            upperDoorBottomGap: -1,
+	          } : {}),
 	          doorBottomGap: category === 'upper' ? bottomGap : (module.doorBottomGap ?? bottomGap)
 	        })
 	      };
@@ -1787,11 +1800,21 @@ useFurnitureStore.subscribe((state) => {
 	    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
 	    const isDoorLift = m.moduleId?.includes('lower-door-lift-');
 	    const isTopDown = m.moduleId?.includes('lower-top-down-');
-	    const isShelfSplit = m.moduleId?.includes('shelf-split');
-	    if (isShelfSplit && m.hasDoor === true && (m.doorTopGap === undefined || m.upperDoorTopGap === undefined)) {
-	      needsMigration = true;
-	      break;
-	    }
+		    const isShelfSplit = m.moduleId?.includes('shelf-split');
+		    const isPantrySplit = m.moduleId?.includes('pantry-cabinet-split');
+		    if (isShelfSplit && m.hasDoor === true && (m.doorTopGap === undefined || m.upperDoorTopGap === undefined)) {
+		      needsMigration = true;
+		      break;
+		    }
+		    if (isPantrySplit && m.hasDoor === true && (
+		      m.upperDoorTopGap === undefined
+		      || m.lowerDoorBottomGap === undefined
+		      || m.lowerDoorTopGap !== -2
+		      || m.upperDoorBottomGap !== -1
+		    )) {
+		      needsMigration = true;
+		      break;
+		    }
 	    if ((isBasic || isDoorLift || isTopDown) && (m.doorTopGap === undefined || m.doorBottomGap === undefined)) {
 	      needsMigration = true;
 	      break;
@@ -1832,14 +1855,29 @@ useFurnitureStore.subscribe((state) => {
 	      }
 	      if (Object.keys(updates).length > 0) return { ...m, ...updates };
 	    }
-	    if (m.moduleId?.includes('shelf-split') && m.hasDoor === true) {
-	      const shelfSplitTargetTopGap = spInfo.surroundType === 'surround' && spInfo.frameConfig?.top !== false && m.hasTopFrame !== false ? -3 : 5;
-	      return {
-	        ...m,
-	        doorTopGap: m.doorTopGap ?? shelfSplitTargetTopGap,
-	        upperDoorTopGap: m.upperDoorTopGap ?? m.doorTopGap ?? shelfSplitTargetTopGap,
-	      };
-	    }
+		    if (m.moduleId?.includes('shelf-split') && m.hasDoor === true) {
+		      const shelfSplitTargetTopGap = spInfo.surroundType === 'surround' && spInfo.frameConfig?.top !== false && m.hasTopFrame !== false ? -3 : 5;
+		      return {
+		        ...m,
+		        doorTopGap: m.doorTopGap ?? shelfSplitTargetTopGap,
+		        upperDoorTopGap: m.upperDoorTopGap ?? m.doorTopGap ?? shelfSplitTargetTopGap,
+		      };
+		    }
+		    if (m.moduleId?.includes('pantry-cabinet-split') && m.hasDoor === true) {
+		      const pantryTopGap = typeof spInfo.doorTopGapTall === 'number'
+		        ? spInfo.doorTopGapTall
+		        : (typeof spInfo.doorTopGap === 'number' ? spInfo.doorTopGap : (m.doorTopGap ?? 0));
+		      const pantryBottomGap = typeof spInfo.doorBottomGapTall === 'number'
+		        ? spInfo.doorBottomGapTall
+		        : (typeof spInfo.doorBottomGap === 'number' ? spInfo.doorBottomGap : (m.doorBottomGap ?? 0));
+		      return {
+		        ...m,
+		        upperDoorTopGap: m.upperDoorTopGap ?? pantryTopGap,
+		        lowerDoorBottomGap: m.lowerDoorBottomGap ?? pantryBottomGap,
+		        lowerDoorTopGap: -2,
+		        upperDoorBottomGap: -1,
+		      };
+		    }
 		    if (spInfo.surroundType === 'surround' && spInfo.frameConfig?.top !== false && !isUpperCabinetModuleId(m.moduleId) && !m.moduleId?.includes('lower-') && m.hasTopFrame !== false && m.doorTopGap === 5) {
 		      return { ...m, doorTopGap: -3 };
 		    }

@@ -1111,19 +1111,27 @@ const Configurator: React.FC = () => {
       if (isDoorSplitSettingModule(mod)) {
         const isPantrySplit = (mod.moduleId || '').includes('pantry-cabinet-split');
         const lowerTopDefault = isPantrySplit ? -2 : -40;
+        const upperBottomDefault = isPantrySplit ? -1 : undefined;
         const upperDefaults = getDoorGapDefaultsForModule(mod, 'upper', spaceInfo);
         const upperLegacyDefaults = getLegacyDoorGapDefaultsForModule(mod, 'upper', spaceInfo);
         const lowerTopValue = typeof mod.lowerDoorTopGap === 'number'
           ? (mod.lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? lowerTopDefault : mod.lowerDoorTopGap)
           : lowerTopDefault;
-        const rawUpperTopValue = mod.upperDoorTopGap ?? mod.doorTopGap;
+        const rawUpperTopValue = mod.upperDoorTopGap ?? mod.doorTopGap ?? (isPantrySplit
+          ? (spaceInfo.doorTopGapTall ?? spaceInfo.doorTopGap)
+          : undefined);
         const upperBottomValue = typeof mod.upperDoorBottomGap === 'number'
-          ? ([
-              isPantrySplit ? -1 : 20,
-              isPantrySplit ? 1 : -20,
-              ...upperLegacyDefaults.bottom,
-            ].includes(mod.upperDoorBottomGap) ? upperDefaults.bottom : mod.upperDoorBottomGap)
-          : upperDefaults.bottom;
+          ? (isPantrySplit
+            ? -1
+            : ([
+                20,
+                -20,
+                ...upperLegacyDefaults.bottom,
+              ].includes(mod.upperDoorBottomGap) ? upperDefaults.bottom : mod.upperDoorBottomGap))
+          : (upperBottomDefault ?? upperDefaults.bottom);
+        const lowerBottomValue = mod.lowerDoorBottomGap ?? mod.doorBottomGap ?? (isPantrySplit
+          ? (spaceInfo.doorBottomGapTall ?? spaceInfo.doorBottomGap ?? 0)
+          : 0);
         return [
           {
             key: `${mod.id}-lower`,
@@ -1131,8 +1139,8 @@ const Configurator: React.FC = () => {
             label: `도어 ${info.label}(하)`,
             topField: 'lowerDoorTopGap' as DoorGapField,
             bottomField: 'lowerDoorBottomGap' as DoorGapField,
-            topValue: lowerTopValue,
-            bottomValue: mod.lowerDoorBottomGap ?? 0,
+            topValue: isPantrySplit ? -2 : lowerTopValue,
+            bottomValue: lowerBottomValue,
             category: 'lower' as const,
             splitPart: 'lower' as const
           },
@@ -1238,6 +1246,11 @@ const Configurator: React.FC = () => {
 
   // 개별 모드: 개별 가구 도어 갭 변경 (전체선택 시 모든 도어에 동일 적용)
   const handleIndividualDoorGapChange = (moduleId: string, field: DoorGapField, val: string, syncModuleIds?: string[]) => {
+    const targetModule = useFurnitureStore.getState().placedModules.find(m => m.id === moduleId);
+    const isPantrySplit = !!targetModule?.moduleId?.includes('pantry-cabinet-split');
+    if (isPantrySplit && (field === 'upperDoorBottomGap' || field === 'lowerDoorTopGap')) {
+      return;
+    }
     const num = parseFloat(val);
     if (!isNaN(num)) {
       // 일반 도어 갭만 글로벌 fallback 값으로도 반영한다.
@@ -5368,6 +5381,30 @@ const Configurator: React.FC = () => {
             <tr>
               <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
               {entries.map((entry) => {
+                const isLockedPantryInnerGap = entry.mod.moduleId?.includes('pantry-cabinet-split') && entry.topField === 'lowerDoorTopGap';
+                if (isLockedPantryInnerGap) {
+                  return (
+                    <td key={`top-${entry.key}-locked`} style={{ padding: '2px 3px', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={entry.topValue}
+                        disabled
+                        readOnly
+                        style={{
+                          width: '100%',
+                          padding: '4px 2px',
+                          fontSize: '12px',
+                          textAlign: 'center',
+                          border: '1px solid var(--theme-border, #ddd)',
+                          borderRadius: '3px',
+                          backgroundColor: 'var(--theme-background-tertiary, #eef2f7)',
+                          color: 'var(--theme-text-secondary, #666)',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </td>
+                  );
+                }
                 const { topDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
                 const referenceMode = entry.splitPart === 'upper'
                   ? doorGapRefMode
@@ -5382,6 +5419,30 @@ const Configurator: React.FC = () => {
             <tr>
               <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
               {entries.map((entry) => {
+                const isLockedPantryInnerGap = entry.mod.moduleId?.includes('pantry-cabinet-split') && entry.bottomField === 'upperDoorBottomGap';
+                if (isLockedPantryInnerGap) {
+                  return (
+                    <td key={`bot-${entry.key}-locked`} style={{ padding: '2px 3px', textAlign: 'center' }}>
+                      <input
+                        type="number"
+                        value={entry.bottomValue}
+                        disabled
+                        readOnly
+                        style={{
+                          width: '100%',
+                          padding: '4px 2px',
+                          fontSize: '12px',
+                          textAlign: 'center',
+                          border: '1px solid var(--theme-border, #ddd)',
+                          borderRadius: '3px',
+                          backgroundColor: 'var(--theme-background-tertiary, #eef2f7)',
+                          color: 'var(--theme-text-secondary, #666)',
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </td>
+                  );
+                }
                 const { bottomDistance } = computeSplitDoorRefDistances(entry.mod, entry.splitPart);
                 const referenceMode = entry.splitPart === 'lower'
                   ? doorGapRefMode

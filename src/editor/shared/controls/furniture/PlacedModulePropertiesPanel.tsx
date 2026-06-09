@@ -2423,18 +2423,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const splitUpperBottomDefault = isPantrySplitForDoorGaps ? -1 : 20;
       const rawSplitLowerTopGap = currentPlacedModule.lowerDoorTopGap;
       const rawSplitUpperBottomGap = currentPlacedModule.upperDoorBottomGap;
-      const upperTopGap = currentPlacedModule.upperDoorTopGap ?? currentPlacedModule.doorTopGap ?? 0;
+      const upperTopGap = currentPlacedModule.upperDoorTopGap
+        ?? currentPlacedModule.doorTopGap
+        ?? (isPantrySplitForDoorGaps ? (spaceInfo.doorTopGapTall ?? spaceInfo.doorTopGap ?? 0) : 0);
       const upperBottomGap = typeof rawSplitUpperBottomGap === 'number'
-        ? (
-          (!isPantrySplitForDoorGaps && rawSplitUpperBottomGap === -20)
-            ? splitUpperBottomDefault
-            : (isPantrySplitForDoorGaps && rawSplitUpperBottomGap === 1 ? splitUpperBottomDefault : rawSplitUpperBottomGap)
-        )
+        ? (isPantrySplitForDoorGaps
+          ? splitUpperBottomDefault
+          : (rawSplitUpperBottomGap === -20 ? splitUpperBottomDefault : rawSplitUpperBottomGap))
         : (isDoorSplitForDoorGaps ? splitUpperBottomDefault : 0);
       const lowerTopGap = typeof rawSplitLowerTopGap === 'number'
-        ? (rawSplitLowerTopGap === (isPantrySplitForDoorGaps ? 2 : 40) ? splitLowerTopDefault : rawSplitLowerTopGap)
+        ? (isPantrySplitForDoorGaps
+          ? splitLowerTopDefault
+          : (rawSplitLowerTopGap === 40 ? splitLowerTopDefault : rawSplitLowerTopGap))
         : (isDoorSplitForDoorGaps ? splitLowerTopDefault : 0);
-      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? currentPlacedModule.doorBottomGap ?? 0;
+      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap
+        ?? currentPlacedModule.doorBottomGap
+        ?? (isPantrySplitForDoorGaps ? (spaceInfo.doorBottomGapTall ?? spaceInfo.doorBottomGap ?? 0) : 0);
 
       setUpperDoorTopGap(upperTopGap);
       setUpperDoorTopGapInput(upperTopGap.toString());
@@ -2610,7 +2614,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, moduleData?.category, placedBodyHeight, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.moduleData?.dimensions?.height, currentPlacedModule?.isFreePlacement, currentPlacedModule?.userResizedHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode, spaceInfo.surroundType, spaceInfo.frameConfig?.top, spaceInfo.doorTopGapTall, spaceInfo.doorBottomGapTall, spaceInfo.doorTopGapUpper, spaceInfo.doorBottomGapUpper, spaceInfo.doorTopGapLower, spaceInfo.doorBottomGapLower, spaceInfo.doorTopGapLowerDoorLift, spaceInfo.doorBottomGapLowerDoorLift, spaceInfo.doorTopGapLowerTopDown, spaceInfo.doorBottomGapLowerTopDown]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, moduleData?.category, placedBodyHeight, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.moduleData?.dimensions?.height, currentPlacedModule?.isFreePlacement, currentPlacedModule?.userResizedHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasTopEndPanel, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.lowerSectionDepthDirection, currentPlacedModule?.upperSectionDepthDirection, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height, spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.droppedCeiling?.enabled, spaceInfo.droppedCeiling?.dropHeight, spaceInfo.stepCeiling?.enabled, spaceInfo.stepCeiling?.dropHeight, spaceInfo.layoutMode, spaceInfo.surroundType, spaceInfo.frameConfig?.top, spaceInfo.doorTopGap, spaceInfo.doorBottomGap, spaceInfo.doorTopGapTall, spaceInfo.doorBottomGapTall, spaceInfo.doorTopGapUpper, spaceInfo.doorBottomGapUpper, spaceInfo.doorTopGapLower, spaceInfo.doorBottomGapLower, spaceInfo.doorTopGapLowerDoorLift, spaceInfo.doorBottomGapLowerDoorLift, spaceInfo.doorTopGapLowerTopDown, spaceInfo.doorBottomGapLowerTopDown]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -6673,6 +6677,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
             const isShelfSplitDoorModule = isDoorSplitModuleId(currentPlacedModule.moduleId);
+            const isPantrySplitDoorModule = currentPlacedModule.moduleId?.includes('pantry-cabinet-split');
             // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이
             //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
             const topFrameMm = currentPlacedModule.hasTopFrame === false
@@ -6811,6 +6816,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ) => {
               const numValue = parseInt(value);
               const updates: Record<string, number> = {};
+              if (isPantrySplitDoorModule && (field === 'upperDoorBottomGap' || field === 'lowerDoorTopGap')) {
+                return;
+              }
               if (field === 'upperDoorTopGap') {
                 setUpperDoorTopGapInput(value);
                 if (!isNaN(numValue)) {
@@ -6945,7 +6953,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     cfTopValue,
                     onTopCfChange
                   )}
-                  {renderSplitDoorGapRow(
+                  {!isPantrySplitDoorModule && renderSplitDoorGapRow(
                     '하단갭',
                     'upperDoorBottomGap',
                     upperDoorBottomGapInput,
@@ -6953,7 +6961,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   )}
 
                   <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--theme-text-secondary)', margin: '12px 0 6px' }}>하부 도어</div>
-                  {renderSplitDoorGapRow(
+                  {!isPantrySplitDoorModule && renderSplitDoorGapRow(
                     '상단갭',
                     'lowerDoorTopGap',
                     lowerDoorTopGapInput,
