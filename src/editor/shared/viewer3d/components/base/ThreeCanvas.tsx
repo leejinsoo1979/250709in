@@ -1833,7 +1833,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             touches={controlsConfig.touches}
             panSpeed={0.8}
             rotateSpeed={0.6}
-            zoomSpeed={controlsConfig.zoomSpeed ?? (viewMode === '2D' ? 0.02 : 1.2)}
+            zoomSpeed={controlsConfig.zoomSpeed ?? (viewMode === '2D' ? 0.02 : 1.6)}
             enableDamping={viewMode !== '2D'}
             dampingFactor={0.1}
             screenSpacePanning={true}
