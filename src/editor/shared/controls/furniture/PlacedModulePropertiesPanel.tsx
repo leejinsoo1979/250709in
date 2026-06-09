@@ -1779,12 +1779,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? (validCustomHeight ?? validFreeHeight ?? moduleData.dimensions.height)
         : (validFreeHeight ?? validCustomHeight ?? moduleData.dimensions.height);
       const normalizedBodyHeight = normalizeLowerBodyHeightForDisplay(baseHeight);
-      return usesStableShelfSectionBoundary(currentPlacedModule.moduleId)
+      // 자유배치 가구는 공간 높이가 아니라 사용자가 정한 실제 높이를 쓴다.
+      //  (getFullBodyDisplayHeight는 spaceInfo.height로 고정 → 자유배치에서 높이 변경이
+      //   팝업에 반영 안 되고 초기화되던 원인. 슬롯배치 키큰장만 공간높이 고정 유지.)
+      return (usesStableShelfSectionBoundary(currentPlacedModule.moduleId) && !currentPlacedModule.isFreePlacement)
         ? getFullBodyDisplayHeight(currentPlacedModule, spaceInfo, normalizedBodyHeight)
         : normalizedBodyHeight;
     })()
     : 0;
-  const isAutoBodyHeightInput = !!currentPlacedModule && usesStableShelfSectionBoundary(currentPlacedModule.moduleId);
+  const isAutoBodyHeightInput = !!currentPlacedModule
+    && usesStableShelfSectionBoundary(currentPlacedModule.moduleId)
+    && !currentPlacedModule.isFreePlacement;
   const bodyHeightInputValue = isAutoBodyHeightInput ? Math.round(placedBodyHeight).toString() : freeHeightInput;
 
   const getCountertopThicknessHeightUpdates = React.useCallback((targetModule: any, nextThickness: number) => {
