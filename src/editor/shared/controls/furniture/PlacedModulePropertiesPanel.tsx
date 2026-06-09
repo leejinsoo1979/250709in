@@ -1868,15 +1868,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
             ? currentPlacedModule.customWidth
             : moduleData.dimensions.width));
-      console.log('🔍 [팝업 치수 디버그]', {
-        moduleId: currentPlacedModule.moduleId,
-        isDualSlot: currentPlacedModule.isDualSlot,
-        adjustedWidth: currentPlacedModule.adjustedWidth,
-        customWidth_prop: currentPlacedModule.customWidth,
-        moduleDimWidth: moduleData.dimensions.width,
-        initialWidth,
-        freeWidth: currentPlacedModule.freeWidth,
-      });
 
       // customDepth 초기화 — 가구 변경 시 항상 갱신
       setCustomDepth(initialDepth);

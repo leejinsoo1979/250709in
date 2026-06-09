@@ -2944,16 +2944,16 @@ const Configurator: React.FC = () => {
 
         // 탭 추가
         const project = newDesignProjects.find(p => p.id === newDesignProjectId);
-        useUIStore.getState().addTab({
+        const newTab = {
           projectId: newDesignProjectId,
           projectName: project?.title || newDesignProjectId,
           designFileId: result.id,
           designFileName: newDesignName.trim(),
-        });
+        };
+        useUIStore.getState().addTab(newTab);
 
-        // 새 디자인으로 이동 — Configurator가 Firebase에서 새 spaceConfig를 로드하도록 강제 새로고침
-        const targetUrl = `/configurator?projectId=${newDesignProjectId}&designFileId=${result.id}`;
-        window.location.href = targetUrl;
+        // 새 디자인으로 이동. 전체 리로드를 피해야 기존 에디터 탭 목록이 유지된다.
+        navigate(buildConfiguratorTabUrl(newTab), { replace: false });
       }
     } catch (error) {
       console.error('새 디자인 생성 중 오류:', error);
@@ -3278,8 +3278,17 @@ const Configurator: React.FC = () => {
             useSpaceConfigStore.getState().markAsSaved();
             useFurnitureStore.getState().markAsSaved();
 
-            // URL 업데이트 + 강제 새로고침 (새 spaceConfig 적용)
-            window.location.href = `/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`;
+            const activeTab = useUIStore.getState().openTabs.find(tab => tab.id === useUIStore.getState().activeTabId);
+            const newTab = {
+              projectId: projectIdToUse,
+              projectName: activeTab?.projectName || basicInfo.title || projectIdToUse,
+              designFileId,
+              designFileName: newTitle.trim(),
+            };
+            useUIStore.getState().addTab(newTab);
+
+            // URL 업데이트. 전체 리로드를 피해야 기존 에디터 탭 목록이 유지된다.
+            navigate(buildConfiguratorTabUrl(newTab), { replace: false });
             return;
 
 // console.log('✅ 디자인 파일 다른이름으로 저장 성공:', newTitle);
