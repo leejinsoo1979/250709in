@@ -4334,7 +4334,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       ? (currentPlacedModule.customDepth ?? getDefaultDepth(moduleData))
                       : customDepth;
                     const is2Tier = currentPlacedModule?.moduleId.includes('lower-drawer-2tier') || currentPlacedModule?.moduleId.includes('dual-lower-drawer-2tier');
-                    const displayH = is2Tier && currentPlacedModule?.cabinetBodyHeight ? currentPlacedModule.cabinetBodyHeight : moduleData.dimensions.height;
+                    const displayH = is2Tier && currentPlacedModule?.cabinetBodyHeight
+                      ? currentPlacedModule.cabinetBodyHeight
+                      : Math.round(placedBodyHeight || moduleData.dimensions.height);
                     if (!isCornerCabinet) {
                       return `${directW} × ${displayH} × ${directD}mm`;
                     }
