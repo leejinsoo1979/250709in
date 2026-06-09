@@ -415,7 +415,7 @@ const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_I
 //   - 양 측면: 좌/우 EP (18 × 가구높이 × 58)
 //   - 뒤는 열림 (ㄷ자)
 //   - 키큰장 탭 노출 위해 ID에 'insert-frame' 키워드
-const INSERT_FRAME_OUTER_WIDTH = 136;
+const INSERT_FRAME_OUTER_WIDTH = 100;
 const INSERT_FRAME_DEPTH = 58;
 
 const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FRAME_OUTER_WIDTH): ModuleData => {
