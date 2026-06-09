@@ -5107,6 +5107,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                             updates.cabinetBodyHeight = val;
                           }
+	                          // 키큰장 H 변경 시 남는 상부 공간은 토글 상태에 따라 몰딩 또는 갭으로 흡수한다.
+	                          if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
+	                              ) {
+	                            const iSpace = calculateInternalSpace(spaceInfo);
+	                            const originalH = iSpace.height; // 원래 내경 높이
+	                            const globalTopFrame = spaceInfo.frameSize?.top || 30;
+	                            if (currentPlacedModule.isFreePlacement) {
+	                              updates.topFrameThickness = globalTopFrame;
+	                            } else {
+	                              const heightDiff = originalH - val; // 줄어든 만큼
+	                              if (heightDiff > 0) {
+	                                updates.topFrameThickness = globalTopFrame + heightDiff;
+                              } else {
+                                // 원래보다 크거나 같으면 상단몰딩 기본값
+                                updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
+	                              }
+	                            }
+	                          }
                           applyFullTopClearanceForBodyHeight(updates, currentPlacedModule, spaceInfo, moduleData.category, val);
 	                          updatePlacedModule(currentPlacedModule.id, updates);
                           setFreeHeightInput((val + absT + absB + lowerBaseForInput).toString());
@@ -5172,6 +5190,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               updates.customSections = bodySectionUpdate.sections;
                             }
                             updates.userResizedHeight = true;
+                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
+                                ) {
+                              const iSpace = calculateInternalSpace(spaceInfo);
+                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                              updates.topFrameThickness = currentPlacedModule.isFreePlacement
+                                ? globalTopFrame
+                                : Math.max(0, globalTopFrame + (iSpace.height - val));
+                            }
                             applyFullTopClearanceForBodyHeight(updates, currentPlacedModule, spaceInfo, moduleData.category, val);
                             // 2단서랍장: cabinetBodyHeight도 함께 저장
                             if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
@@ -5214,6 +5240,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               arrowUpdates.customSections = bodySectionUpdate.sections;
                             }
                             arrowUpdates.userResizedHeight = true;
+                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
+                                ) {
+                              const iSpace = calculateInternalSpace(spaceInfo);
+                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                              arrowUpdates.topFrameThickness = currentPlacedModule.isFreePlacement
+                                ? globalTopFrame
+                                : Math.max(0, globalTopFrame + (iSpace.height - next));
+                            }
                             applyFullTopClearanceForBodyHeight(arrowUpdates, currentPlacedModule, spaceInfo, moduleData.category, next);
                             if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                               arrowUpdates.cabinetBodyHeight = next;
@@ -5784,6 +5818,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const newTotalH = prevFixed + inputVal;
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
                                 const secUpdates: any = { freeHeight: clampedH, userResizedHeight: true };
+                                // 키큰장: 상단몰딩도 연동
+                                if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
+                                  const iSpace = calculateInternalSpace(spaceInfo);
+                                  const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                                  secUpdates.topFrameThickness = currentPlacedModule.isFreePlacement
+                                    ? globalTopFrame
+                                    : Math.max(0, globalTopFrame + (iSpace.height - clampedH));
+                                }
                                 applyFullTopClearanceForBodyHeight(secUpdates, currentPlacedModule, spaceInfo, moduleData.category, clampedH);
                                 updatePlacedModule(currentPlacedModule.id, secUpdates);
                                 setFreeHeightInput(clampedH.toString());

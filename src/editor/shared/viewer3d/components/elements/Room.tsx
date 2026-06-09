@@ -890,7 +890,8 @@ const Room: React.FC<RoomProps> = ({
     const moduleDepthUnits = mmToThreeUnits(getPlacedModuleDepthMm(mod));
     const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
     const baseDepthOffset = isFloatPlacement ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
-    const moduleFrontZ = furnitureOffsetZ - furnitureDepthUnits / 2 + moduleDepthUnits + baseDepthOffset;
+    const doorFrontOffset = mod?.hasDoor === false ? 0 : 20;
+    const moduleFrontZ = furnitureOffsetZ - furnitureDepthUnits / 2 - mmToThreeUnits(doorFrontOffset) + moduleDepthUnits + baseDepthOffset;
     return moduleFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
   };
 
@@ -5247,7 +5248,9 @@ const Room: React.FC<RoomProps> = ({
           const surroundDoorOffset = spaceInfo.surroundOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
-          const frameDoorOffset = 0;
+          const frameDoorOffset = spaceInfo.frameOffsetBase === 'door'
+            ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
+            : 0;
           const baseZWithoutDoor = isFullSurround
             ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
             : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
@@ -5343,6 +5346,11 @@ const Room: React.FC<RoomProps> = ({
                       const baseFH = mod.freeHeight || internalSpaceHeight;
                       const maxFH = internalSpaceHeight - floatHeightForFrame;
                       modFreeHeight = Math.min(baseFH, maxFH);
+                      if (mod.topFrameThickness !== undefined) {
+                        const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
+                        const topFrameDelta = mod.topFrameThickness - globalTopFrame;
+                        modFreeHeight -= topFrameDelta;
+                      }
                     } else {
                       modFreeHeight = mod.freeHeight || internalSpaceHeight;
                     }
@@ -5366,12 +5374,10 @@ const Room: React.FC<RoomProps> = ({
                     ) && !modIdForTopFrame.includes('-4drawer-shelf-')
                       && !modIdForTopFrame.includes('-2drawer-shelf-')
                       && !modIdForTopFrame.includes('shelf-split');
-                    // 상단몰딩은 저장된 가구별 설정값을 렌더링한다.
-                    // 키큰장 높이 변경분을 여기서 다시 흡수하면 우측바 값과 렌더 높이가 갈라진다.
+                    // 상부장/유리장/일반 선반장: 상단몰딩 = 설정값.
+                    // 일반 키큰장(full)은 본체 높이 변경분을 상단몰딩이 흡수하므로 공간 기반으로 계산한다.
                     let totalFrameHeightMM: number;
-                    if (mod.topFrameThickness !== undefined) {
-                      totalFrameHeightMM = mod.topFrameThickness;
-                    } else if (modCategory === 'upper' || isGlassCabinetTopFrame || isPlainShelfTopFrame) {
+                    if (modCategory === 'upper' || isGlassCabinetTopFrame || isPlainShelfTopFrame) {
                       totalFrameHeightMM = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
                     } else {
                       totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
@@ -5384,7 +5390,9 @@ const Room: React.FC<RoomProps> = ({
 
                     // 상부몰딩 옵셋은 걸레받이와 동일하게 양수일수록 뒤로 들어간다.
                     const modTopZOffset = modTopOffsetMM ? -mmToThreeUnits(modTopOffsetMM) : 0;
-                    const topFrameZRetract = 0;
+                    const DOOR_THICKNESS_MM = PET_PANEL_THICKNESS_MM;
+                    const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
+                    const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
                     // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;

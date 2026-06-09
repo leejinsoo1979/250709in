@@ -1456,16 +1456,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     // 가구 그룹 월드 Z (FurnitureItem 기본 분기, insert-frame은 도어 없음 doorThickness=0):
     //   = furnitureZOffset + furnitureDepth/2 - moduleD_mm/2 + baseDepthOffset
     // → 로컬 Z (월드 - 그룹):
-    //   상단몰딩 = moduleD_mm/2 - END/2 + (전체서라운드 ? 3 : -20) - baseDepthOffset
+    //   상단몰딩 = moduleD_mm/2 - END/2 + (전체서라운드 ? 3 : -20) + frameDoorOffset - baseDepthOffset
     //   걸레받이 = moduleD_mm/2 - END/2 - 20 - (baseConfig.depth ?? 0) - baseDepthOffset
     const END_PANEL_THK_MM = 18;
     const NO_SURROUND_OFFSET_MM = 20;
+    const DOOR_FRONT_OFFSET_MM = 20;
     const moduleD_mm = 58; // insert-frame baseFurniture.depth = 58mm
     const isFullSurroundIF = spaceInfo.surroundType === 'surround';
     const isFloatPlacementIF = spaceInfo.baseConfig?.type === 'stand'
       && spaceInfo.baseConfig?.placementType === 'float';
     const baseDepthOffsetMmIF = isFloatPlacementIF ? (spaceInfo.baseConfig?.depth || 0) : 0;
-    const frameDoorOffsetMmIF = 0;
+    const frameDoorOffsetMmIF = (spaceInfo as any).frameOffsetBase === 'door' && hasDoor ? DOOR_FRONT_OFFSET_MM : 0;
     const baseConfigDepthMmIF = spaceInfo.baseConfig?.depth || 0;
     // 상단몰딩 Z: 전체서라운드면 +3, 노서라운드면 -20
     const topFrameRefZMm = isFullSurroundIF
