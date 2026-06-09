@@ -175,24 +175,81 @@ const getTextThumbnailLabel = (moduleId: string): string | null => {
   return null;
 };
 
+const isBackOfThumbnailListModule = (module: ModuleData): boolean => {
+  const id = module.id;
+  return !!getTextThumbnailLabel(id)
+    || id.includes('dummy')
+    || id.includes('right-corner')
+    || id.includes('left-corner');
+};
+
 const arrangeModulesBySingleDualColumns = (
   singleModules: ModuleData[],
   dualModules: ModuleData[]
 ): ModuleGalleryCell[] => {
-  const maxRows = Math.max(singleModules.length, dualModules.length);
-  const cells: ModuleGalleryCell[] = [];
+  const getPairKey = (module: ModuleData): string => module.id
+    .replace(/-[\d.]+$/, '')
+    .replace(/^single-/, '')
+    .replace(/^dual-/, '');
 
-  for (let index = 0; index < maxRows; index++) {
-    const singleModule = singleModules[index];
-    const dualModule = dualModules[index];
+  const arrangeGroup = (
+    singles: ModuleData[],
+    duals: ModuleData[],
+    groupKey: string
+  ): ModuleGalleryCell[] => {
+    const dualByPairKey = new Map<string, ModuleData[]>();
+    duals.forEach((module) => {
+      const key = getPairKey(module);
+      const modules = dualByPairKey.get(key) || [];
+      modules.push(module);
+      dualByPairKey.set(key, modules);
+    });
 
-    cells.push(singleModule
-      ? { type: 'module', module: singleModule }
-      : { type: 'placeholder', key: `single-placeholder-${index}` });
-    cells.push(dualModule
-      ? { type: 'module', module: dualModule }
-      : { type: 'placeholder', key: `dual-placeholder-${index}` });
-  }
+    const cells: ModuleGalleryCell[] = [];
+    const unmatchedSingles: ModuleData[] = [];
+
+    singles.forEach((singleModule) => {
+      const key = getPairKey(singleModule);
+      const matchedDualModules = dualByPairKey.get(key);
+      const dualModule = matchedDualModules?.shift();
+
+      if (!dualModule) {
+        unmatchedSingles.push(singleModule);
+        return;
+      }
+
+      if (matchedDualModules && matchedDualModules.length === 0) {
+        dualByPairKey.delete(key);
+      }
+
+      cells.push({ type: 'module', module: singleModule });
+      cells.push({ type: 'module', module: dualModule });
+    });
+
+    unmatchedSingles.forEach((singleModule, index) => {
+      cells.push({ type: 'module', module: singleModule });
+      cells.push({ type: 'placeholder', key: `${groupKey}-dual-placeholder-${index}` });
+    });
+
+    Array.from(dualByPairKey.entries()).forEach(([key, modules]) => {
+      modules.forEach((dualModule, index) => {
+        cells.push({ type: 'placeholder', key: `${groupKey}-single-placeholder-${key}-${index}` });
+        cells.push({ type: 'module', module: dualModule });
+      });
+    });
+
+    return cells;
+  };
+
+  const visibleSingles = singleModules.filter(module => !isBackOfThumbnailListModule(module));
+  const visibleDuals = dualModules.filter(module => !isBackOfThumbnailListModule(module));
+  const backSingles = singleModules.filter(isBackOfThumbnailListModule);
+  const backDuals = dualModules.filter(isBackOfThumbnailListModule);
+
+  const cells: ModuleGalleryCell[] = [
+    ...arrangeGroup(visibleSingles, visibleDuals, 'main'),
+    ...arrangeGroup(backSingles, backDuals, 'back')
+  ];
 
   return cells;
 };
@@ -1286,8 +1343,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         const isTopDownLowerDummy = /^single-dummy-lower-top-down-half-100(?:\.0+)?$/.test(id);
         const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
         const isTopDown = id.includes('top-down');
-        if (kitchenSubCategory === 'door-raise') return isDoorRaise || isDoorLiftLowerDummy;
-        if (kitchenSubCategory === 'top-down') return isTopDown || isTopDownLowerDummy;
+        if (kitchenSubCategory === 'door-raise') return (!id.includes('single-dummy-lower-') && isDoorRaise) || isDoorLiftLowerDummy;
+        if (kitchenSubCategory === 'top-down') return (!id.includes('single-dummy-lower-') && isTopDown) || isTopDownLowerDummy;
         // 기본장 = 도어올림/상판내림 제외한 나머지
         return isBasicLowerDummy || (!isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-'));
       });
@@ -1302,8 +1359,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       const isTopDownLowerDummy = /^single-dummy-lower-top-down-half-100(?:\.0+)?$/.test(id);
       const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
       const isTopDown = id.includes('top-down');
-      if (kitchenSubCategory === 'door-raise') return isDoorRaise || isDoorLiftLowerDummy;
-      if (kitchenSubCategory === 'top-down') return isTopDown || isTopDownLowerDummy;
+      if (kitchenSubCategory === 'door-raise') return (!id.includes('single-dummy-lower-') && isDoorRaise) || isDoorLiftLowerDummy;
+      if (kitchenSubCategory === 'top-down') return (!id.includes('single-dummy-lower-') && isTopDown) || isTopDownLowerDummy;
       return isBasicLowerDummy || (!isDoorRaise && !isTopDown && !id.includes('single-dummy-lower-'));
     });
   } else {

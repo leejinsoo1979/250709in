@@ -1482,6 +1482,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 	      const isDoorLift = module.moduleId?.includes('lower-door-lift-');
 	      const isTopDown = module.moduleId?.includes('lower-top-down-');
       const isShelfSplit = module.moduleId?.includes('shelf-split');
+      const isPantrySplit = module.moduleId?.includes('pantry-cabinet-split');
       if (isTopDown) {
         topGap = typeof spaceInfo.doorTopGapLowerTopDown === 'number'
           ? spaceInfo.doorTopGapLowerTopDown
