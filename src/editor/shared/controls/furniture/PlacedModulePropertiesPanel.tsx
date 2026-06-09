@@ -2979,9 +2979,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     updates.lowerSectionDepthDirection = nextLowerDepthDirection;
     updates.upperSectionDepthDirection = nextUpperDepthDirection;
 
-    // 앞고정 상태에서 깊이를 바꾸면 뒷벽이격도 함께 재계산 (앞라인 추종 유지).
-    // 뒤고정이면 0. (Room.tsx 몰딩/걸레받이/치수가이드가 backWallGap을 읽으므로 store 저장 필요)
-    updates.backWallGap = computeLowerBackWallGap(nextLowerDepthDirection, newDepth);
+    const currentModuleCategory = moduleData?.category ?? getPlacedModuleCategoryForPanels(currentPlacedModule);
+    const isCurrentUpperModule = currentModuleCategory === 'upper';
+
+    // backWallGap은 하부장 앞라인 정렬용 값이다.
+    // 상부장에 이 값이 들어가면 하부장 최대 깊이에 영향을 받아 뒷고정 위치가 틀어진다.
+    updates.backWallGap = isCurrentUpperModule ? 0 : computeLowerBackWallGap(nextLowerDepthDirection, newDepth);
 
     if (Array.isArray((currentPlacedModule as any).sectionDepthDirections)) {
       const latestSectionDepthDirections = Array.isArray((latestPlacedModule as any)?.sectionDepthDirections)

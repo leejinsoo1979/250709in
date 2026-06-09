@@ -3222,7 +3222,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 뒷벽과 이격: 기본 위치 유지(0=앞면정렬). 양수면 앞으로 이동.
   // (키큰장찬넬은 insertFrontInsetMm으로 내부 프레임만 들이고 가구 위치는 이동 안 함)
   // 앞고정 하부 가구의 앞라인 추종도 backWallGap에 저장되므로 여기서 동일하게 적용된다.
-  const backWallGapMm = placedModule.backWallGap ?? 0;
+  const backWallGapMm = isUpperForZ ? 0 : (placedModule.backWallGap ?? 0);
   if (!isFrontSpaceFurniture && backWallGapMm > 0) {
     furnitureZ += mmToThreeUnits(backWallGapMm);
   }

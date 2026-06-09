@@ -947,6 +947,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         depthSpaceInfo
       );
       const depthSections = depthModuleData?.modelConfig?.sections;
+      const isUpperDepthModule = depthModuleData?.category === 'upper'
+        || existingModule.moduleId?.startsWith('upper-')
+        || existingModule.moduleId?.includes('-upper-');
       const isSingleBodyLowerDepth = depthModuleData?.category === 'lower'
         && !existingModule.customConfig
         && (!Array.isArray(depthSections) || depthSections.length <= 1);
@@ -979,6 +982,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
         if (existingModule.isFreePlacement || existingModule.freeDepth !== undefined || updates.freeDepth !== undefined) {
           depthSyncUpdates.freeDepth = requestedBodyDepth;
+        }
+
+        if (isUpperDepthModule) {
+          depthSyncUpdates.backWallGap = 0;
         }
 
         if (Array.isArray((existingModule as any).sectionDepths)) {
