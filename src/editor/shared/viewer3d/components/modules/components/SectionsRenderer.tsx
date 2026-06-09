@@ -274,7 +274,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     // 가구 스토어 업데이트
     updatePlacedModule(placedFurnitureId, {
       customSections: result.updatedSections,
-      ...(placedModule.isFreePlacement ? { freeHeight: updatedHeight } : {}),
+      ...(placedModule.isFreePlacement ? { freeHeight: updatedHeight, userResizedHeight: true } : {}),
       // moduleData도 업데이트 (dimensions.height)
       moduleData: {
         ...placedModule.moduleData!,

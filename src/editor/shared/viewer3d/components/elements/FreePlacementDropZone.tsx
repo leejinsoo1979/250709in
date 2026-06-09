@@ -1765,21 +1765,29 @@ const FreePlacementDropZone: React.FC = () => {
     // 원래 높이 구하기 (단내림 조정 전 높이)
     const originalModuleData = getModuleById(mod.moduleId, internalSpace, spaceInfo);
     const originalHeight = originalModuleData?.dimensions.height || mod.freeHeight || 0;
+    const storedHeight = typeof mod.freeHeight === 'number' && mod.freeHeight > 0
+      ? mod.freeHeight
+      : (typeof (mod as any).customHeight === 'number' && (mod as any).customHeight > 0 ? (mod as any).customHeight : undefined);
+    const hasManualHeight = !!(mod as any).userResizedHeight
+      || (storedHeight !== undefined && Math.abs(storedHeight - originalHeight) > 1);
+    const manualHeight = hasManualHeight ? storedHeight : undefined;
 
-    let effectiveHeight = mod.freeHeight || originalHeight;
+    let effectiveHeight = manualHeight ?? mod.freeHeight ?? originalHeight;
     let newZone = mod.zone || 'normal';
 
     if (droppedZone.zone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
       if (category === 'full' || category === 'upper') {
-        effectiveHeight = droppedZone.droppedInternalHeight;
+        effectiveHeight = manualHeight !== undefined
+          ? Math.min(manualHeight, droppedZone.droppedInternalHeight)
+          : droppedZone.droppedInternalHeight;
       }
       newZone = 'dropped';
     } else {
-      // normal zone: full/upper 카테고리는 전체 내경 높이로 복원 (단내림→메인 이동 시)
+      // normal zone: 수동 높이가 있는 full/upper는 이동해도 높이를 보존한다.
       if (category === 'full' || category === 'upper') {
-        effectiveHeight = originalHeight;
+        effectiveHeight = manualHeight ?? originalHeight;
       } else {
-        effectiveHeight = mod.freeHeight || originalHeight;
+        effectiveHeight = manualHeight ?? mod.freeHeight ?? originalHeight;
       }
       newZone = 'normal';
     }

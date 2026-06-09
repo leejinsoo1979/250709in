@@ -4908,6 +4908,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
+                          updates.userResizedHeight = true;
                           // 2단서랍장: cabinetBodyHeight도 함께 저장 (렌더링이 우선 사용)
                           if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                             updates.cabinetBodyHeight = val;
@@ -4987,6 +4988,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const updates: any = moduleData.category === 'upper'
                               ? { customHeight: val, freeHeight: undefined }
                               : { freeHeight: val };
+                            updates.userResizedHeight = true;
                             if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
                                 ) {
                               const iSpace = calculateInternalSpace(spaceInfo);
@@ -5032,6 +5034,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
+                            arrowUpdates.userResizedHeight = true;
 	                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
 	                                ) {
 	                              const iSpace = calculateInternalSpace(spaceInfo);
@@ -5563,6 +5566,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 });
                                 updatePlacedModule(currentPlacedModule.id, {
                                   freeHeight: clampedH,
+                                  userResizedHeight: true,
                                   customSections: nextSections,
                                 } as any);
                                 setFreeHeightInput(clampedH.toString());
@@ -5624,7 +5628,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 // 더 단순하게: newTotalH = prevFixed + inputVal (하부+상부 = 전체)
                                 const newTotalH = prevFixed + inputVal;
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
-                                const secUpdates: any = { freeHeight: clampedH };
+                                const secUpdates: any = { freeHeight: clampedH, userResizedHeight: true };
                                 // 키큰장: 상단몰딩도 연동
                                 if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                                   const iSpace = calculateInternalSpace(spaceInfo);
