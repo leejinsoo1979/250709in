@@ -1010,17 +1010,19 @@ const Configurator: React.FC = () => {
       if (isDoorSplitSettingModule(mod)) {
         const isPantrySplit = (mod.moduleId || '').includes('pantry-cabinet-split');
         const lowerTopDefault = isPantrySplit ? -2 : -40;
-        const upperBottomDefault = isPantrySplit ? -1 : 20;
+        const upperDefaults = getDoorGapDefaultsForModule(mod, 'upper', spaceInfo);
+        const upperLegacyDefaults = getLegacyDoorGapDefaultsForModule(mod, 'upper', spaceInfo);
         const lowerTopValue = typeof mod.lowerDoorTopGap === 'number'
           ? (mod.lowerDoorTopGap === (isPantrySplit ? 2 : 40) ? lowerTopDefault : mod.lowerDoorTopGap)
           : lowerTopDefault;
+        const rawUpperTopValue = mod.upperDoorTopGap ?? mod.doorTopGap;
         const upperBottomValue = typeof mod.upperDoorBottomGap === 'number'
-          ? (
-            (!isPantrySplit && mod.upperDoorBottomGap === -20)
-              ? upperBottomDefault
-              : (isPantrySplit && mod.upperDoorBottomGap === 1 ? upperBottomDefault : mod.upperDoorBottomGap)
-          )
-          : upperBottomDefault;
+          ? ([
+              isPantrySplit ? -1 : 20,
+              isPantrySplit ? 1 : -20,
+              ...upperLegacyDefaults.bottom,
+            ].includes(mod.upperDoorBottomGap) ? upperDefaults.bottom : mod.upperDoorBottomGap)
+          : upperDefaults.bottom;
         return [
           {
             key: `${mod.id}-lower`,
@@ -1039,7 +1041,7 @@ const Configurator: React.FC = () => {
             label: `도어 ${info.label}(상)`,
             topField: 'upperDoorTopGap' as DoorGapField,
             bottomField: 'upperDoorBottomGap' as DoorGapField,
-            topValue: mod.upperDoorTopGap ?? (mod.doorTopGap ?? 0),
+            topValue: resolveDisplayedDoorGap(rawUpperTopValue, upperDefaults.top, upperLegacyDefaults.top),
             bottomValue: upperBottomValue,
             category: 'upper' as const,
             splitPart: 'upper' as const
