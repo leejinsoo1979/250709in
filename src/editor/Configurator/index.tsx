@@ -8419,7 +8419,7 @@ const Configurator: React.FC = () => {
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBaseOffset)));
+                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || offset || 0)));
                       }}
                       className={styles.frameNumberInput}
                     />
