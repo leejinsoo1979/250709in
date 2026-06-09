@@ -226,8 +226,11 @@ const BoxWithEdges: React.FC<{
       roughness: 0.18,
       metalness: 0.2,
       side: THREE.DoubleSide,
+      transparent: viewMode === '3D' && isTransparentMode,
+      opacity: viewMode === '3D' && isTransparentMode ? 0.28 : 1,
+      depthWrite: !(viewMode === '3D' && isTransparentMode),
     });
-  }, [doorEdgeBandingColor]);
+  }, [doorEdgeBandingColor, isTransparentMode, viewMode]);
 
   useEffect(() => {
     return () => {
@@ -464,19 +467,19 @@ const BoxWithEdges: React.FC<{
             <React.Fragment key={`door-edge-face-${faceIndex}`}>
               <mesh position={[0, safeArgs[1] / 2 - doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} transparent={viewMode === '3D' && isTransparentMode} opacity={viewMode === '3D' && isTransparentMode ? 0.28 : 1} />
               </mesh>
               <mesh position={[0, -safeArgs[1] / 2 + doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} transparent={viewMode === '3D' && isTransparentMode} opacity={viewMode === '3D' && isTransparentMode ? 0.28 : 1} />
               </mesh>
               <mesh position={[-safeArgs[0] / 2 + doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} transparent={viewMode === '3D' && isTransparentMode} opacity={viewMode === '3D' && isTransparentMode ? 0.28 : 1} />
               </mesh>
               <mesh position={[safeArgs[0] / 2 - doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} transparent={viewMode === '3D' && isTransparentMode} opacity={viewMode === '3D' && isTransparentMode ? 0.28 : 1} />
               </mesh>
             </React.Fragment>
           ))}
@@ -855,6 +858,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.color.set(getThemeColor());
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
+        } else if (viewMode === '3D' && isTransparentMode) {
+          mat.transparent = true;
+          mat.opacity = 0.28;
+          mat.depthWrite = false;
+          mat.depthTest = true;
+          mat.side = THREE.DoubleSide;
+          if (!mat.map) {
+            mat.color.set(doorColor);
+          }
         } else if (viewMode === '2D') {
           if (view2DDirection === 'front') {
             // 정면뷰: early return으로 처리되므로 여기는 도달하지 않음
@@ -2810,10 +2822,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const gT = mmToThreeUnits(5);
                 const innerWL = leftDoorWidthUnits - 2 * fW;
                 const innerHL = doorHeight - 2 * fW;
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x918878, metalness: 0.85, roughness: 0.4 });
+                const frameMat = new THREE.MeshStandardMaterial({
+                  color: 0x918878,
+                  metalness: 0.85,
+                  roughness: 0.4,
+                  transparent: isTransparentMode,
+                  opacity: isTransparentMode ? 0.28 : 1,
+                  depthWrite: !isTransparentMode,
+                });
                 const glassMat = new THREE.MeshPhysicalMaterial({
-                  color: 0x4a2e1c, transparent: true, opacity: 0.38, roughness: 0.08, metalness: 0.0,
+                  color: 0x4a2e1c, transparent: true, opacity: isTransparentMode ? 0.18 : 0.38, roughness: 0.08, metalness: 0.0,
                   transmission: 0.4, thickness: 0.5, ior: 1.45, side: THREE.DoubleSide,
+                  depthWrite: !isTransparentMode,
                 });
                 return (
                   <GlassDoorAssemblySource
@@ -3228,10 +3248,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const gT = mmToThreeUnits(5);
                 const innerWR = rightDoorWidthUnits - 2 * fW;
                 const innerHR = doorHeight - 2 * fW;
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x918878, metalness: 0.85, roughness: 0.4 });
+                const frameMat = new THREE.MeshStandardMaterial({
+                  color: 0x918878,
+                  metalness: 0.85,
+                  roughness: 0.4,
+                  transparent: isTransparentMode,
+                  opacity: isTransparentMode ? 0.28 : 1,
+                  depthWrite: !isTransparentMode,
+                });
                 const glassMat = new THREE.MeshPhysicalMaterial({
-                  color: 0x4a2e1c, transparent: true, opacity: 0.38, roughness: 0.08, metalness: 0.0,
+                  color: 0x4a2e1c, transparent: true, opacity: isTransparentMode ? 0.18 : 0.38, roughness: 0.08, metalness: 0.0,
                   transmission: 0.4, thickness: 0.5, ior: 1.45, side: THREE.DoubleSide,
+                  depthWrite: !isTransparentMode,
                 });
                 return (
                   <GlassDoorAssemblySource
@@ -3823,18 +3851,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 color: 0x918878,
                 metalness: 0.85,
                 roughness: 0.4,
+                transparent: isTransparentMode,
+                opacity: isTransparentMode ? 0.28 : 1,
+                depthWrite: !isTransparentMode,
               });
               // 브라운경(짙은 갈색 반투명 유리) 재질 — 브라운 톤 강화
               const glassMaterial = new THREE.MeshPhysicalMaterial({
                 color: 0x4a2e1c,
                 transparent: true,
-                opacity: 0.38,
+                opacity: isTransparentMode ? 0.18 : 0.38,
                 roughness: 0.08,
                 metalness: 0.0,
                 transmission: 0.4,
                 thickness: 0.5,
                 ior: 1.45,
                 side: THREE.DoubleSide,
+                depthWrite: !isTransparentMode,
               });
               return (
                 <GlassDoorAssemblySource

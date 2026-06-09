@@ -1834,6 +1834,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const upperDoorY = splitDoorGeometry.upperDoorCenterFromBottomMm - cabinetH / 2;
             const lowerDoorDepthPlacement = resolveSplitDoorDepthPlacement(0);
             const upperDoorDepthPlacement = resolveSplitDoorDepthPlacement(1);
+            const lowerSplitDoorBottomGap = lowerDoorBottomGap ?? 0;
+            const upperSplitDoorTopGap = upperDoorTopGap ?? doorTopGap;
+            const upperSplitDoorBottomGap = upperDoorBottomGap ?? 0;
             return (
               <>
                 {/* 하부 도어 — 너비 치수 표시 (분절 가구는 단일 너비 치수만 표시: 하부만) */}
@@ -1863,7 +1866,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     lowerDoorHingePositionsMm={placedLowerDoorHingePositionsMm}
                     floatHeight={spaceInfo?.baseConfig?.floatHeight}
                     doorTopGap={doorTopGap}
-                    doorBottomGap={doorBottomGap}
+                    doorBottomGap={lowerSplitDoorBottomGap}
                     zone={zone}
                     internalHeight={internalHeight}
                     isFreePlacement={isFreePlacement}
@@ -1902,8 +1905,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     upperDoorHingePositionsMm={placedUpperDoorHingePositionsMm}
                     lowerDoorHingePositionsMm={placedLowerDoorHingePositionsMm}
                     floatHeight={spaceInfo?.baseConfig?.floatHeight}
-                    doorTopGap={doorTopGap}
-                    doorBottomGap={doorBottomGap}
+                    doorTopGap={upperSplitDoorTopGap}
+                    doorBottomGap={upperSplitDoorBottomGap}
                     zone={zone}
                     internalHeight={internalHeight}
                     isFreePlacement={isFreePlacement}
@@ -1914,6 +1917,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     forcedDoorHeightMm={upperDoorH}
                     forcedDoorYMm={upperDoorY}
                     splitDoorPanelName="상부 도어"
+                    splitDoorBottomGapMm={splitDoorGeometry.splitGapMm}
                     hideWidthDimension={true}
                   />
                 </group>
