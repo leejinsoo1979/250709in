@@ -69,6 +69,10 @@ const isShelfSplitModuleId = (moduleId?: string): boolean => {
   return !!moduleId?.includes('shelf-split');
 };
 
+const isDoorSplitModuleId = (moduleId?: string): boolean => {
+  return !!moduleId && (moduleId.includes('shelf-split') || moduleId.includes('pantry-cabinet-split'));
+};
+
 const applyRenderedPanelDimension = (panel: any, furnitureId?: string) => {
   if (!panel?.name || !furnitureId) return panel;
   if (!panel.width && !panel.height && !panel.depth) return panel;
@@ -2106,7 +2110,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 상단갭 = 몸통 상단에서 위로, 하단갭 = 몸통 하단에서 아래로
       // 기본값 0 = 도어 == 몸통. 도어올림/상판내림은 모듈별 기본값 사용
       const modId = currentPlacedModule.moduleId || '';
-      const isShelfSplitForDoorGaps = isShelfSplitModuleId(modId);
+      const isDoorSplitForDoorGaps = isDoorSplitModuleId(modId);
       const isDoorLift = isDoorLiftTopEndPanelModuleId(modId);
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
       const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(modId);
@@ -2170,7 +2174,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : isLowerCategory
               ? [2, 25]
               : [25];
-      const initialTopGap = !isShelfSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
+      const initialTopGap = !isDoorSplitForDoorGaps && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
           : (typeof rawTopGap === 'number' && legacyTopGapValues.includes(rawTopGap))
             ? defaultTopGap
@@ -2243,10 +2247,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ? splitUpperBottomDefault
             : (isPantrySplitForDoorGaps && rawSplitUpperBottomGap === 1 ? splitUpperBottomDefault : rawSplitUpperBottomGap)
         )
-        : (isShelfSplitForDoorGaps ? splitUpperBottomDefault : 0);
+        : (isDoorSplitForDoorGaps ? splitUpperBottomDefault : 0);
       const lowerTopGap = typeof rawSplitLowerTopGap === 'number'
         ? (rawSplitLowerTopGap === (isPantrySplitForDoorGaps ? 2 : 40) ? splitLowerTopDefault : rawSplitLowerTopGap)
-        : (isShelfSplitForDoorGaps ? splitLowerTopDefault : 0);
+        : (isDoorSplitForDoorGaps ? splitLowerTopDefault : 0);
       const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? currentPlacedModule.doorBottomGap ?? 0;
 
       setUpperDoorTopGap(upperTopGap);
@@ -6007,7 +6011,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const doorPanelsForDimensions = panelDetails.filter((panel: any) => panel?.isDoor && typeof panel?.height === 'number');
             const primaryDoorPanelForDimensions = doorPanelsForDimensions[0];
             const doorThickness = Math.round(primaryDoorPanelForDimensions?.thickness ?? 20);
-            const splitDoorPanelsForDimensions = isShelfSplitModuleId(currentPlacedModule.moduleId)
+            const splitDoorPanelsForDimensions = isDoorSplitModuleId(currentPlacedModule.moduleId)
               ? doorPanelsForDimensions
               : [];
             const lowerDoorPanelForDimensions = splitDoorPanelsForDimensions.find((panel: any) => String(panel.name || '').includes('하부 도어'));
@@ -6421,7 +6425,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
-            const isShelfSplitDoorModule = isShelfSplitModuleId(currentPlacedModule.moduleId);
+            const isShelfSplitDoorModule = isDoorSplitModuleId(currentPlacedModule.moduleId);
             // 천장 ~ 가구 상단 거리 = 상단몰딩 두께, 가구 하단 ~ 마감 바닥 거리 = 걸레받이 높이
             //   (가구는 공간 - 상단몰딩 - 걸레받이로 자동 산정되므로 이렇게 정확히 일치함)
             const topFrameMm = currentPlacedModule.hasTopFrame === false
