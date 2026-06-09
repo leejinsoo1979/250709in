@@ -19,7 +19,7 @@ import {
   calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
-import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
+import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX } from '@/editor/shared/utils/baseStripUtils';
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
@@ -893,6 +893,48 @@ const Room: React.FC<RoomProps> = ({
     const doorFrontOffset = mod?.hasDoor === false ? 0 : 20;
     const moduleFrontZ = furnitureOffsetZ - furnitureDepthUnits / 2 - mmToThreeUnits(doorFrontOffset) + moduleDepthUnits + baseDepthOffset;
     return moduleFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+  };
+
+  const getFrontPlacedModuleTopFrameCenterZ = (mod: any): number => {
+    const panelDepthMm = spaceInfo.depth || 1500;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const panelDepthUnits = mmToThreeUnits(panelDepthMm);
+    const furnitureDepthUnits = mmToThreeUnits(furnitureDepthMm);
+    const furnitureOffsetZ = -panelDepthUnits / 2 + (panelDepthUnits - furnitureDepthUnits) / 2;
+    const moduleDepthUnits = mmToThreeUnits(getPlacedModuleDepthMm(mod));
+    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+    const baseDepthOffset = isFloatPlacement ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+    const moduleFrontZ = furnitureOffsetZ - furnitureDepthUnits / 2 - mmToThreeUnits(20) + moduleDepthUnits + baseDepthOffset;
+    return moduleFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+  };
+
+  const getBaseFrameCenterZ = (mod: any): number => {
+    const panelDepthMm = spaceInfo.depth || 1500;
+    const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    const panelDepthUnits = mmToThreeUnits(panelDepthMm);
+    const furnitureDepthUnits = mmToThreeUnits(furnitureDepthMm);
+    const furnitureOffsetZ = -panelDepthUnits / 2 + (panelDepthUnits - furnitureDepthUnits) / 2;
+    const mid = mod.moduleId || '';
+    const sectionDepths = mod.sectionDepths as number[] | undefined;
+    const defaultShoeDepthMm = mid.includes('glass-cabinet') ? 365 : 380;
+    const isShoeBase = mid.includes('-entryway-')
+      || mid.includes('-shelf-')
+      || mid.includes('-4drawer-shelf-')
+      || mid.includes('-2drawer-shelf-')
+      || mid.includes('glass-cabinet');
+    const baseDepthMm = isShoeBase
+      ? (mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepthMm)
+      : (sectionDepths?.[0] || mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || getPlacedModuleDepthMm(mod));
+    const baseFrontCenterZ = furnitureOffsetZ
+      - furnitureDepthUnits / 2
+      - mmToThreeUnits(20)
+      + mmToThreeUnits(baseDepthMm)
+      - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+    const baseInsetMm = (spaceInfo.baseConfig?.depth ?? 0) + resolveEffectiveBaseFrameOffsetMm(mod, spaceInfo);
+    const backWallGapMm = mod.backWallGap ?? 0;
+    return baseFrontCenterZ
+      - mmToThreeUnits(baseInsetMm)
+      + (backWallGapMm > 0 ? mmToThreeUnits(backWallGapMm) : 0);
   };
 
   // 해당 가구의 프레임 Z 이동량 계산 (공간 기본 깊이 600 기준)
@@ -5242,21 +5284,19 @@ const Room: React.FC<RoomProps> = ({
           const minLeftMM = hasFreeMods ? Math.min(...allModuleBounds.map(b => b.left)) : 0;
           const maxRightMM = hasFreeMods ? Math.max(...allModuleBounds.map(b => b.right)) : 0;
 
-          // 도어기준 시: 앞면 = 도어 앞면 (몸통 앞면 + 뒷면 갭 2mm + 도어 18T)
-          const DOOR_FRONT_OFFSET_MM = 20;
           // 서라운드와 상걸래받이 각각 독립적으로 도어기준 적용
+          const DOOR_FRONT_OFFSET_MM = 20;
           const surroundDoorOffset = spaceInfo.surroundOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
-          const frameDoorOffset = spaceInfo.frameOffsetBase === 'door'
-            ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
-            : 0;
-          const baseZWithoutDoor = isFullSurround
-            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+          const freeSlotTopZPosition = isFullSurround
+            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2
             : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
               mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
-          const topZPosition = baseZWithoutDoor + frameDoorOffset;
-          const surroundZPosition = baseZWithoutDoor + surroundDoorOffset;
+          const surroundBaseZPosition = isFullSurround
+            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+            : freeSlotTopZPosition;
+          const surroundZPosition = surroundBaseZPosition + surroundDoorOffset;
 
           return (
             <>
@@ -5271,9 +5311,6 @@ const Room: React.FC<RoomProps> = ({
                   const floatHeightForFrame = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
                     ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
                   const ceilingToBaseTopMM = internalSpaceHeight + topBottomFrameHeightMm - floatHeightForFrame;
-                  const isDoorBase = spaceInfo.frameOffsetBase === 'door';
-                  const isSpaceFitDoor = (spaceInfo.doorSetupMode || 'furniture-fit') === 'space-fit';
-
                   group.modules.filter((mod) => {
                     if (((mod as any).placementWall || 'front') !== 'front') return false;
                     if (mod.hasTopFrame === false) return false;
@@ -5390,10 +5427,6 @@ const Room: React.FC<RoomProps> = ({
 
                     // 상부몰딩 옵셋은 걸레받이와 동일하게 양수일수록 뒤로 들어간다.
                     const modTopZOffset = modTopOffsetMM ? -mmToThreeUnits(modTopOffsetMM) : 0;
-                    const DOOR_THICKNESS_MM = PET_PANEL_THICKNESS_MM;
-                    const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
-                    const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
-
                     // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
@@ -5420,7 +5453,7 @@ const Room: React.FC<RoomProps> = ({
                     let nSectionFrameZ: number | null = null;
                     if (isNSectionMod && modCategory !== 'full') {
                       if (modMidShoe.includes('pull-out-cabinet')) {
-                        nSectionFrameZ = topZPosition;
+                        nSectionFrameZ = freeSlotTopZPosition;
                       } else {
                         const sectionDepthsArr = (mod as any).sectionDepths as number[] | undefined;
                         const lastIdx = sectionDepthsArr ? sectionDepthsArr.length - 1 : -1;
@@ -5433,11 +5466,9 @@ const Room: React.FC<RoomProps> = ({
                       }
                     }
                     const fullModuleFrameZ = modCategory === 'full'
-                      ? getFrontPlacedModuleFrameCenterZ(mod)
+                      ? getFrontPlacedModuleTopFrameCenterZ(mod)
                       : null;
-                    const generalFrameZ = mod.hasDoor === false && isDoorBase
-                      ? baseZWithoutDoor
-                      : topZPosition;
+                    const generalFrameZ = freeSlotTopZPosition;
                     const freeTopFrameBaseZ = modCategory === 'upper'
                       ? upperFrameZ
                       : (modCategory === 'full'
@@ -5451,7 +5482,7 @@ const Room: React.FC<RoomProps> = ({
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: freeTopFrameBaseZ + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
+                      zPosition: freeTopFrameBaseZ + modTopZOffset + modTopBackWallGapZ,
                       height: renderFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -6359,7 +6390,7 @@ const Room: React.FC<RoomProps> = ({
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   } else if (slotModCategory === 'full') {
-                    slotFrameZ = getFrontPlacedModuleFrameCenterZ(mod);
+                    slotFrameZ = getFrontPlacedModuleTopFrameCenterZ(mod);
                   } else {
                     slotFrameZ = topZPos;
                   }
@@ -7440,14 +7471,6 @@ const Room: React.FC<RoomProps> = ({
           const stripGroups = computeBaseStripGroups(placedModulesFromStore);
           if (stripGroups.length === 0) return null;
 
-          // 걸래받이 옵셋은 실제 가구 앞단과 걸래받이 앞면 사이 거리다.
-          // 가구 본체 측판(FurnitureItem)과 동일하게 baseConfig.depth도 차감해야
-          // 본체 앞면과 걸래받이 앞면이 같은 기준에 정렬된다. (이 차감이 빠져
-          // baseConfig.depth(=옵셋과 별개)만큼 걸래받이가 어긋나던 문제)
-          const baseZBase = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-            mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
-            mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
-
           const allBaseSegments: (FrameRenderSegment & { key: string })[] = [];
           const rawBaseMat = baseFrameMaterial ?? createFrameMaterial('base');
           // 디자인 모드: 조절발이 비치도록 반투명 처리
@@ -7467,35 +7490,7 @@ const Room: React.FC<RoomProps> = ({
               const adjustedBaseBounds = applyFrameWidthAdjustMm(bounds.left, bounds.right, mod, 'base');
               const modWidthMM = adjustedBaseBounds.rightMm - adjustedBaseBounds.leftMm;
               const modCenterXmm = (adjustedBaseBounds.leftMm + adjustedBaseBounds.rightMm) / 2;
-              const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
-              const effectiveBaseFrameOffsetMm = resolveEffectiveBaseFrameOffsetMm(mod, spaceInfo);
-              const modBaseZInset = mmToThreeUnits(effectiveBaseFrameOffsetMm);
-              // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
-              const baseShoeMid = mod.moduleId || '';
-              const isShoeBase = (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-') || baseShoeMid.includes('glass-cabinet'));
-              let baseZPosition: number;
-              if (isShoeBase) {
-                // 걸래받이: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 기본 깊이
-                const defaultShoeDepthMm = baseShoeMid.includes('glass-cabinet') ? 365 : 380;
-                const shoeDepthMm = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepthMm;
-                const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
-                const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
-                const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
-                const shoeFrontZ = shoeBackZ + mmToThreeUnits(shoeDepthMm);
-                // 신발장도 사용자 입력 baseFrameOffset(modBaseZInset) 반영
-                baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - modBaseZInset;
-              } else {
-                const baseModuleFrameZ = getModuleCategory(mod) === 'full'
-                  ? getFrontPlacedModuleFrameCenterZ(mod)
-                  : baseZBase;
-                baseZPosition = baseModuleFrameZ - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
-              }
-              // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
-              const modBaseBackWallGapMm = mod.backWallGap ?? 0;
-              if (modBaseBackWallGapMm > 0) {
-                baseZPosition += mmToThreeUnits(modBaseBackWallGapMm);
-              }
+              const baseZPosition = getBaseFrameCenterZ(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
               const rawBaseHeightMm = mod.baseFrameHeight ?? (freeIsLower
                 ? (spaceInfo.baseboardLowerSize ?? 105)
@@ -7642,7 +7637,7 @@ const Room: React.FC<RoomProps> = ({
               // 섹션 전체 bottomPanelRaise → 걸래받이 없음
               if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
-              // baseFrameOffset은 이미 baseZPosition에 반영됨 (modBaseZInset)
+              // baseFrameOffset은 이미 baseZPosition에 반영됨
               allBaseSegments.push({
                 widthMm: modWidthMM,
                 centerXmm: modCenterXmm,
@@ -7791,9 +7786,6 @@ const Room: React.FC<RoomProps> = ({
                   );
                   if (slotModsForBase.length === 0) return null;
 
-                  const baseZPos = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                    mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo));
-
                   const globalBaseHeightMm = spaceInfo.baseConfig?.height ?? 65;
                   const baseMat = zoneMaterial;
                   const isSideViewBase = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
@@ -7870,23 +7862,7 @@ const Room: React.FC<RoomProps> = ({
                       const modBaseH = mmToThreeUnits(modBaseHeight);
                       const baseGapThreeUnits = mmToThreeUnits(baseFrameGapMm);
                       const modBaseYCenter = panelStartY + floatHeight + baseGapThreeUnits + modBaseH / 2;
-                      const effectiveBaseFrameOffsetMm = resolveEffectiveBaseFrameOffsetMm(mod, spaceInfo);
-                      const modBaseZInset = mmToThreeUnits(effectiveBaseFrameOffsetMm);
-                      // 하부 가구: 본체(FurnitureItem)와 동일하게 "뒷면 뒷벽 고정 + 깊이" 모델로
-                      // 걸래받이 앞면을 맞춘다. baseZPos는 깊이600 가구의 앞면이므로
-                      // offset = −(600 − 실제깊이) (방향 무관). 앞라인 추종은 backWallGap으로 별도 적용.
-                      // (computeDepthZOffset은 앞고정 시 0을 반환해 본체와 어긋났다 → 하부는 별도 계산)
-                      const unifiedBaseZOffset = slotBaseIsLower
-                        ? -mmToThreeUnits(getLowerDepthZOffsetMM(mod))
-                        : computeDepthZOffset(mod, 'lower');
-                      // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
-                      const slotBaseBackWallGapMm = mod.backWallGap ?? 0;
-                      const slotBaseBackWallGapZ = slotBaseBackWallGapMm > 0 ? mmToThreeUnits(slotBaseBackWallGapMm) : 0;
-                      const isFullSlotBase = slotBaseCategory === 'full';
-                      const baseFrameReferenceZ = isFullSlotBase
-                        ? getFrontPlacedModuleFrameCenterZ(mod)
-                        : baseZPos;
-                      const effectiveBaseZ = baseFrameReferenceZ + (isFullSlotBase ? 0 : unifiedBaseZOffset) + slotBaseBackWallGapZ;
+                      const baseZPosition = getBaseFrameCenterZ(mod);
 
                       // 커스터마이즈 가구 좌우분할: 무조건 걸래받이도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
@@ -7930,7 +7906,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: baseZPosition,
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -7946,7 +7922,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: baseZPosition,
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -7965,7 +7941,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: baseZPosition,
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -7982,7 +7958,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: centerPieceW,
                               centerXmm: centerPieceStartX + centerPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: baseZPosition,
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -7998,7 +7974,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: baseZPosition,
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -8012,11 +7988,11 @@ const Room: React.FC<RoomProps> = ({
                       // 섹션 전체 bottomPanelRaise → 걸래받이 없음
                       if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
-                      // baseFrameOffset: 양수 = 안쪽(뒤쪽)으로 들어감 (modBaseZInset으로 이미 계산됨)
+                      // baseFrameOffset: 양수 = 안쪽(뒤쪽)으로 들어감
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
                         centerXmm: modCenterXmm,
-                        zPosition: effectiveBaseZ - modBaseZInset,
+                        zPosition: baseZPosition,
                         height: modBaseH,
                         yPosition: modBaseYCenter,
                         material: baseMat,
