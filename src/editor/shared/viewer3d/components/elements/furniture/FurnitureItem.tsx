@@ -1788,6 +1788,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   const effectiveTopFrameThicknessMm = (() => {
     if (placedModule.hasTopFrame === false) return placedModule.topFrameThickness;
+    if (typeof placedModule.topFrameThickness === 'number') {
+      return placedModule.topFrameThickness;
+    }
     if (!isTallCabinetForY || placedModule.userResizedHeight !== true) {
       return placedModule.topFrameThickness;
     }
@@ -3375,7 +3378,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return {
       height: mmToThreeUnits(visibleHeightMm),
       y: mmToThreeUnits(worldY) - furnitureGroupPosition[1],
-      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits(effectiveTopFrameOffsetMm)
+      z: depth / 2 - sideFrameThickness / 2 - mmToThreeUnits(20 + effectiveTopFrameOffsetMm)
     };
   })();
   const sideBaseFrame = (() => {

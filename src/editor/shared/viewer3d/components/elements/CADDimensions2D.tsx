@@ -295,6 +295,9 @@ const resolveTopFrameDistanceMm = (
   if (mod?.hasTopFrame === false) {
     return Math.max(0, Math.round(shelfSplitTopDistance ?? fullBodyTopClearance ?? mod?.topFrameGap ?? 0));
   }
+  if (typeof mod?.topFrameThickness === 'number') {
+    return mod.topFrameThickness;
+  }
   if (mod?.userResizedHeight === true && fullBodyTopClearance !== null) {
     return fullBodyTopClearance;
   }
