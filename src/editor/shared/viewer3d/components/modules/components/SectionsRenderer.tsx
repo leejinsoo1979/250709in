@@ -269,15 +269,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
 // console.log('✅ 섹션 높이 업데이트 성공:', result);
 
+    const updatedHeight = result.updatedHeight!;
+
     // 가구 스토어 업데이트
     updatePlacedModule(placedFurnitureId, {
       customSections: result.updatedSections,
+      ...(placedModule.isFreePlacement ? { freeHeight: updatedHeight } : {}),
       // moduleData도 업데이트 (dimensions.height)
       moduleData: {
         ...placedModule.moduleData!,
         dimensions: {
           ...placedModule.moduleData!.dimensions,
-          height: result.updatedHeight!
+          height: updatedHeight
         },
         modelConfig: {
           ...placedModule.moduleData!.modelConfig,
