@@ -5438,13 +5438,20 @@ const Room: React.FC<RoomProps> = ({
                     const generalFrameZ = mod.hasDoor === false && isDoorBase
                       ? baseZWithoutDoor
                       : topZPosition;
+                    const freeTopFrameBaseZ = modCategory === 'upper'
+                      ? upperFrameZ
+                      : (modCategory === 'full'
+                        ? (fullModuleFrameZ ?? generalFrameZ)
+                        : (nSectionFrameZ !== null
+                          ? nSectionFrameZ
+                          : (shoeFrameZ !== null ? shoeFrameZ : generalFrameZ)));
                     // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
                     const modTopBackWallGapMm = (mod as any).backWallGap ?? 0;
                     const modTopBackWallGapZ = modTopBackWallGapMm > 0 ? mmToThreeUnits(modTopBackWallGapMm) : 0;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : (fullModuleFrameZ !== null ? fullModuleFrameZ : generalFrameZ)))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
+                      zPosition: freeTopFrameBaseZ + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
                       height: renderFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
