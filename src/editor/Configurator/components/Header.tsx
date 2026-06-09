@@ -301,6 +301,7 @@ const Header: React.FC<HeaderProps> = ({
       let topFrameRenderSizeFromDefaults: number | undefined;
       let topFrameAbsorbSizeFromDefaults: number | undefined;
       let topFrameOffsetFromDefaults: number | undefined;
+      let lowerBaseFrameRenderSizeFromDefaults: number | undefined;
       if (defaults) {
         topMoldingEnabledFromDefaults = defaults.topMoldingEnabled;
         topMoldingGapFromDefaults = defaults.topMoldingGap ?? 0;
@@ -309,6 +310,9 @@ const Header: React.FC<HeaderProps> = ({
           ? 0
           : topFrameAbsorbSizeFromDefaults;
         topFrameOffsetFromDefaults = defaults.topMoldingOffset ?? defaults.frameTopOffset;
+        lowerBaseFrameRenderSizeFromDefaults = defaults.baseboardLowerEnabled === false
+          ? 0
+          : (defaults.baseboardLowerSize ?? defaults.baseboardSize ?? defaults.baseHeight);
         spaceConfig = {
           ...spaceConfig,
           ...(defaults.width !== undefined && { width: defaults.width }),
@@ -345,6 +349,19 @@ const Header: React.FC<HeaderProps> = ({
           ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
           ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
           ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
+          ...(defaults.doorTopGapTall !== undefined && { doorTopGapTall: defaults.doorTopGapTall }),
+          ...(defaults.doorBottomGapTall !== undefined && { doorBottomGapTall: defaults.doorBottomGapTall }),
+          ...(defaults.doorTopGapUpper !== undefined && { doorTopGapUpper: defaults.doorTopGapUpper }),
+          ...(defaults.doorBottomGapUpper !== undefined && { doorBottomGapUpper: defaults.doorBottomGapUpper }),
+          ...(defaults.doorTopGapLower !== undefined && { doorTopGapLower: defaults.doorTopGapLower }),
+          ...(defaults.doorBottomGapLower !== undefined && { doorBottomGapLower: defaults.doorBottomGapLower }),
+          ...(defaults.doorTopGapLowerDoorLift !== undefined && { doorTopGapLowerDoorLift: defaults.doorTopGapLowerDoorLift }),
+          ...(defaults.doorBottomGapLowerDoorLift !== undefined && { doorBottomGapLowerDoorLift: defaults.doorBottomGapLowerDoorLift }),
+          ...(defaults.doorTopGapLowerTopDown !== undefined && { doorTopGapLowerTopDown: defaults.doorTopGapLowerTopDown }),
+          ...(defaults.doorBottomGapLowerTopDown !== undefined && { doorBottomGapLowerTopDown: defaults.doorBottomGapLowerTopDown }),
+          ...(lowerBaseFrameRenderSizeFromDefaults !== undefined && { baseboardLowerSize: lowerBaseFrameRenderSizeFromDefaults }),
+          ...(defaults.baseboardLowerOffset !== undefined && { baseboardLowerOffset: defaults.baseboardLowerOffset }),
+          ...(defaults.baseboardLowerGap !== undefined && { baseboardLowerGap: defaults.baseboardLowerGap }),
           ...(defaults.surroundMode ? {
             surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
             frameConfig: defaults.surroundMode === 'full-surround'

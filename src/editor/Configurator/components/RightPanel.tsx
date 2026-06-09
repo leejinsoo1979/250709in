@@ -1127,9 +1127,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
       const baseOffset = d.baseboardOffset ?? d.baseFrameOffset;
       const baseLowerOffset = d.baseboardLowerOffset ?? baseOffset;
       const baseGap = d.baseboardGap ?? d.baseFrameGap;
-      const baseLowerGap = d.baseboardLowerGap === 0 && (baseGap ?? 0) !== 0
-        ? baseGap
-        : (d.baseboardLowerGap ?? baseGap);
+      const baseLowerGap = d.baseboardLowerGap ?? baseGap;
 	      setUserDefaults({
 	        frameTop: d.topMoldingEnabled === false ? 0 : (
 	          d.topMoldingSize !== undefined ? d.topMoldingSize : d.frameTop

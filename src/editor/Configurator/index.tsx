@@ -131,12 +131,8 @@ const buildDefaultFrameResetUpdates = (
     ? defaults.baseboardSize
     : (defaults?.baseHeight ?? currentSpaceInfo.baseConfig?.height ?? 0);
   const baseOffset = defaults?.baseboardOffset ?? defaults?.baseFrameOffset ?? (currentSpaceInfo.baseConfig as any)?.offset ?? 0;
-  const lowerBaseOffset = defaults?.baseboardLowerOffset === 0 && baseOffset !== 0
-    ? baseOffset
-    : (defaults?.baseboardLowerOffset ?? currentSpaceInfo.baseboardLowerOffset ?? baseOffset);
-  const lowerBaseGap = defaults?.baseboardLowerGap === 0 && baseGap !== 0
-    ? baseGap
-    : (defaults?.baseboardLowerGap ?? currentSpaceInfo.baseboardLowerGap ?? baseGap);
+  const lowerBaseOffset = defaults?.baseboardLowerOffset ?? currentSpaceInfo.baseboardLowerOffset ?? baseOffset;
+  const lowerBaseGap = defaults?.baseboardLowerGap ?? currentSpaceInfo.baseboardLowerGap ?? baseGap;
 
   return {
     frameSize: {
@@ -2094,9 +2090,7 @@ const Configurator: React.FC = () => {
               const defRight = defaults.gapRight ?? 1.5;
               const defTopOffset = defaults.topMoldingOffset ?? defaults.frameTopOffset;
               const defBaseOffset = defaults.baseboardOffset ?? defaults.baseFrameOffset;
-              const defBaseLowerOffset = defaults.baseboardLowerOffset === 0 && (defBaseOffset ?? 0) !== 0
-                ? defBaseOffset
-                : (defaults.baseboardLowerOffset ?? defBaseOffset);
+              const defBaseLowerOffset = defaults.baseboardLowerOffset ?? defBaseOffset;
               const savedLeft = spaceConfig.gapConfig?.left;
               const savedRight = spaceConfig.gapConfig?.right;
               spaceConfig.gapConfig = {
@@ -2122,7 +2116,7 @@ const Configurator: React.FC = () => {
                   } as any;
                 }
               }
-              if (typeof defBaseLowerOffset === 'number' && defBaseLowerOffset !== 0 && (spaceConfig.baseboardLowerOffset === undefined || spaceConfig.baseboardLowerOffset === 0)) {
+              if (typeof defBaseLowerOffset === 'number' && spaceConfig.baseboardLowerOffset === undefined) {
                 spaceConfig.baseboardLowerOffset = defBaseLowerOffset;
               }
             }
@@ -2819,6 +2813,9 @@ const Configurator: React.FC = () => {
             : (defaults.topMoldingSize !== undefined
               ? defaults.topMoldingSize
               : defaults.frameTop ?? 30);
+          const defaultLowerBaseFrameSize = defaults.baseboardLowerEnabled === false
+            ? 0
+            : (defaults.baseboardLowerSize ?? defaults.baseboardSize ?? defaults.baseHeight);
           defaultSpaceConfig = {
             ...defaultSpaceConfig,
             ...(defaults.width !== undefined && { width: defaults.width }),
@@ -2858,6 +2855,19 @@ const Configurator: React.FC = () => {
             ...(defaults.furnitureDepthDefaults !== undefined && { furnitureDepthDefaults: defaults.furnitureDepthDefaults }),
             ...(defaults.doorTopGap !== undefined && { doorTopGap: defaults.doorTopGap }),
             ...(defaults.doorBottomGap !== undefined && { doorBottomGap: defaults.doorBottomGap }),
+            ...(defaults.doorTopGapTall !== undefined && { doorTopGapTall: defaults.doorTopGapTall }),
+            ...(defaults.doorBottomGapTall !== undefined && { doorBottomGapTall: defaults.doorBottomGapTall }),
+            ...(defaults.doorTopGapUpper !== undefined && { doorTopGapUpper: defaults.doorTopGapUpper }),
+            ...(defaults.doorBottomGapUpper !== undefined && { doorBottomGapUpper: defaults.doorBottomGapUpper }),
+            ...(defaults.doorTopGapLower !== undefined && { doorTopGapLower: defaults.doorTopGapLower }),
+            ...(defaults.doorBottomGapLower !== undefined && { doorBottomGapLower: defaults.doorBottomGapLower }),
+            ...(defaults.doorTopGapLowerDoorLift !== undefined && { doorTopGapLowerDoorLift: defaults.doorTopGapLowerDoorLift }),
+            ...(defaults.doorBottomGapLowerDoorLift !== undefined && { doorBottomGapLowerDoorLift: defaults.doorBottomGapLowerDoorLift }),
+            ...(defaults.doorTopGapLowerTopDown !== undefined && { doorTopGapLowerTopDown: defaults.doorTopGapLowerTopDown }),
+            ...(defaults.doorBottomGapLowerTopDown !== undefined && { doorBottomGapLowerTopDown: defaults.doorBottomGapLowerTopDown }),
+            ...(defaultLowerBaseFrameSize !== undefined && { baseboardLowerSize: defaultLowerBaseFrameSize }),
+            ...(defaults.baseboardLowerOffset !== undefined && { baseboardLowerOffset: defaults.baseboardLowerOffset }),
+            ...(defaults.baseboardLowerGap !== undefined && { baseboardLowerGap: defaults.baseboardLowerGap }),
             ...(defaults.surroundMode ? {
               surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
               frameConfig: defaults.surroundMode === 'full-surround'
@@ -5098,6 +5108,18 @@ const Configurator: React.FC = () => {
       { key: 'upper', title: '상부장 도어', modules: normalUpperDoorSettingEntries.map(entry => entry.mod) },
       { key: 'lower', title: '하부장 도어', modules: normalLowerDoorSettingEntries.map(entry => entry.mod) },
     ].filter(group => group.modules.length > 0);
+    const getGroupDoorGapDisplay = (
+      mod: any,
+      groupKey: string,
+      field: 'top' | 'bottom',
+    ) => {
+      const category = groupKey === 'upper' ? 'upper' : groupKey === 'lower' ? 'lower' : 'full';
+      const defaults = getDoorGapDefaultsForModule(mod, category as 'full' | 'upper' | 'lower', spaceInfo);
+      const legacyDefaults = getLegacyDoorGapDefaultsForModule(mod, category as 'full' | 'upper' | 'lower', spaceInfo);
+      return field === 'top'
+        ? resolveDisplayedDoorGap(mod.doorTopGap, defaults.top, legacyDefaults.top)
+        : resolveDisplayedDoorGap(mod.doorBottomGap, defaults.bottom, legacyDefaults.bottom);
+    };
 
     if (groups.length === 0) return null;
 
@@ -5121,7 +5143,7 @@ const Configurator: React.FC = () => {
               const groupIds = group.modules.map(mod => mod.id);
               const { topDistance } = computeRefDistances(firstMod);
               return <DoorGapInput key={`top-sync-${group.key}-${doorGapRefMode}`} moduleId={firstMod.id} field="doorTopGap"
-                storeValue={firstMod.doorTopGap ?? 5}
+                storeValue={getGroupDoorGapDisplay(firstMod, group.key, 'top')}
                 onCommit={handleIndividualDoorGapChange}
                 highlightModuleIds={groupIds}
                 referenceMode={doorGapRefMode}
@@ -5135,7 +5157,7 @@ const Configurator: React.FC = () => {
               const groupIds = group.modules.map(mod => mod.id);
               const { bottomDistance } = computeRefDistances(firstMod);
               return <DoorGapInput key={`bot-sync-${group.key}-${doorGapRefMode}`} moduleId={firstMod.id} field="doorBottomGap"
-                storeValue={firstMod.doorBottomGap ?? 25}
+                storeValue={getGroupDoorGapDisplay(firstMod, group.key, 'bottom')}
                 onCommit={handleIndividualDoorGapChange}
                 highlightModuleIds={groupIds}
                 referenceMode={doorGapRefMode}
@@ -7347,26 +7369,16 @@ const Configurator: React.FC = () => {
           // 자유배치 전체 토글 — 슬롯배치와 동일 동작
           // 통합 모드(allOn): 통합 행 1개. 해제 모드(allOff): 가구별 개별 행 (각자 토글/입력 가능)
           // 토글 시 모든 가구를 ON 상태로 복구하여 개별 토글 자유 유지
-          // 키큰장찬넬(insert-frame)은 채움재이므로 상단몰딩/걸레받이 전체 토글에서 제외 (전체 OFF 시 바닥 아래로 내려가는 문제 방지)
-          const isInsertFrame = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
           const topFreeMods = sorted.filter(m => {
-            if (isInsertFrame(m)) return false;
             const cat = getModuleCategory(m);
             return cat === 'upper' || cat === 'full';
           });
           const baseFreeMods = sorted.filter(m => {
-            if (isInsertFrame(m)) return false;
             const cat = getModuleCategory(m);
             return cat === 'lower' || cat === 'full';
           });
-          const topFreeFrameValueMods = sorted.filter(m => {
-            const cat = getModuleCategory(m);
-            return cat === 'upper' || cat === 'full';
-          });
-          const baseFreeFrameValueMods = sorted.filter(m => {
-            const cat = getModuleCategory(m);
-            return cat === 'lower' || cat === 'full';
-          });
+          const topFreeFrameValueMods = topFreeMods;
+          const baseFreeFrameValueMods = baseFreeMods;
           const allTopOnFree = topFrameAllMode;
           const allBaseOnFree = baseFrameAllMode;
           const toggleAllTopFree = () => {
@@ -7593,6 +7605,10 @@ const Configurator: React.FC = () => {
                         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
                       if ((mod.moduleId || '').includes('shelf-split')) {
                         updatePlacedModule(mod.id, getTopFrameSizeUpdates(mod, v, effectiveSpaceHeight));
+                        return;
+                      }
+                      if ((mod.moduleId || '').includes('insert-frame')) {
+                        updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) });
                         return;
                       }
                       const newFreeHeight = Math.max(100, effectiveSpaceHeight - baseH - revFloatH - v);
@@ -8095,11 +8111,10 @@ const Configurator: React.FC = () => {
             );
           }
           const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
-          const isInsertFrameSlot = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
-          const topSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'lower');
-          const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
-          const topSlotFrameValueMods = sorted.filter(m => getModuleCategory(m) !== 'lower');
-          const baseSlotFrameValueMods = sorted.filter(m => getModuleCategory(m) !== 'upper');
+          const topSortedMods = sorted.filter(m => getModuleCategory(m) !== 'lower');
+          const baseSortedMods = sorted.filter(m => getModuleCategory(m) !== 'upper');
+          const topSlotFrameValueMods = topSortedMods;
+          const baseSlotFrameValueMods = baseSortedMods;
           const isLowerBaseSlotModule = (m: any) => getModuleCategory(m) === 'lower';
           const allBaseSlotModsAreLower = baseSortedMods.length > 0 && baseSortedMods.every(isLowerBaseSlotModule);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
@@ -8451,7 +8466,6 @@ const Configurator: React.FC = () => {
           if (spaceInfo.isIsland) return null;
           let topNum = 0;
           let baseNum = 0;
-          // 키큰장찬넬(insert-frame)은 채움재이므로 상단몰딩/걸레받이 전체 토글에서 제외 (전체 OFF 시 바닥 아래로 내려가는 문제 방지)
           // 통합 모드: '전체' 체크박스로 제어
           const allTopOn = topFrameAllMode;
           const allBaseOn = baseFrameAllMode;
@@ -8846,9 +8860,11 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
                       {fullDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
+                        const defaults = getDoorGapDefaultsForModule(mod, 'full', spaceInfo);
+                        const legacyDefaults = getLegacyDoorGapDefaultsForModule(mod, 'full', spaceInfo);
                         const { topDistance } = computeRefDistances(mod);
                         return <DoorGapInput key={`top-${mod.id}-${doorGapRefMode}`} moduleId={mod.id} field="doorTopGap"
-                          storeValue={mod.doorTopGap ?? 5}
+                          storeValue={resolveDisplayedDoorGap(mod.doorTopGap, defaults.top, legacyDefaults.top)}
                           onCommit={handleIndividualDoorGapChange}
                           referenceMode={doorGapRefMode}
                           refDistanceMm={topDistance} />;
@@ -8858,9 +8874,11 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                       {fullDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
+                        const defaults = getDoorGapDefaultsForModule(mod, 'full', spaceInfo);
+                        const legacyDefaults = getLegacyDoorGapDefaultsForModule(mod, 'full', spaceInfo);
                         const { bottomDistance } = computeRefDistances(mod);
                         return <DoorGapInput key={`bot-${mod.id}-${doorGapRefMode}`} moduleId={mod.id} field="doorBottomGap"
-                          storeValue={mod.doorBottomGap ?? 25}
+                          storeValue={resolveDisplayedDoorGap(mod.doorBottomGap, defaults.bottom, legacyDefaults.bottom)}
                           onCommit={handleIndividualDoorGapChange}
                           referenceMode={doorGapRefMode}
                           refDistanceMm={bottomDistance} />;

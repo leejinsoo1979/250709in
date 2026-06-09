@@ -259,17 +259,13 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     // → 모든 컴포넌트가 어느 필드를 읽든 같은 값 반영됨
     const topFrameGap = values.topMoldingGap ?? 0;
     const baseFrameGap = values.baseboardGap;
-    const lowerBaseFrameGap = values.baseboardLowerGap === 0 && baseFrameGap !== 0
-      ? baseFrameGap
-      : values.baseboardLowerGap;
+    const lowerBaseFrameGap = values.baseboardLowerGap;
     const topFrameHeight = values.topMoldingEnabled ? values.topMoldingSize : 0;
     const baseFrameHeight = values.baseboardEnabled ? values.baseboardSize : 0;
     const lowerBaseFrameHeight = values.baseboardLowerEnabled ? values.baseboardLowerSize : 0;
     const previousTopFrameGap = loadedDefaults.topMoldingGap ?? 0;
     const previousBaseFrameGap = loadedDefaults.baseboardGap ?? loadedDefaults.baseFrameGap ?? 0;
-    const previousLowerBaseFrameGap = loadedDefaults.baseboardLowerGap === 0 && previousBaseFrameGap !== 0
-      ? previousBaseFrameGap
-      : (loadedDefaults.baseboardLowerGap ?? previousBaseFrameGap);
+    const previousLowerBaseFrameGap = loadedDefaults.baseboardLowerGap ?? previousBaseFrameGap;
     const previousVisibleTopFrameHeight = loadedDefaults.topMoldingSize ?? (loadedDefaults.frameTop ?? 0);
     const previousVisibleBaseFrameHeight = loadedDefaults.baseboardSize ?? (loadedDefaults.baseHeight ?? 0);
     const previousVisibleLowerBaseFrameHeight = loadedDefaults.baseboardLowerSize ?? Math.max(0, previousVisibleBaseFrameHeight);
