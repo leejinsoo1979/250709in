@@ -1264,6 +1264,7 @@ const Configurator: React.FC = () => {
     const baseAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
     const globalTopOffset = (spaceInfo.frameSize as any)?.topOffset;
     const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset;
+    const globalLowerBaseOffset = spaceInfo.baseboardLowerOffset ?? globalBaseOffset;
     placedModules.forEach(m => {
       if (m.isSurroundPanel || m.moduleId?.includes('insert-frame')) return;
       const category = getModuleCategory(m);
@@ -1271,8 +1272,9 @@ const Configurator: React.FC = () => {
       if (topAllMode && typeof globalTopOffset === 'number' && (category === 'upper' || category === 'full') && m.topFrameOffset !== globalTopOffset) {
         updates.topFrameOffset = globalTopOffset;
       }
-      if (baseAllMode && typeof globalBaseOffset === 'number' && (category === 'lower' || category === 'full') && m.baseFrameOffset !== globalBaseOffset) {
-        updates.baseFrameOffset = globalBaseOffset;
+      const targetBaseOffset = category === 'lower' ? globalLowerBaseOffset : globalBaseOffset;
+      if (baseAllMode && typeof targetBaseOffset === 'number' && (category === 'lower' || category === 'full') && m.baseFrameOffset !== targetBaseOffset) {
+        updates.baseFrameOffset = targetBaseOffset;
       }
       if (Object.keys(updates).length > 0) {
         updatePlacedModule(m.id, updates);
@@ -1284,6 +1286,7 @@ const Configurator: React.FC = () => {
     spaceInfo.guideBaseFrameAllMode,
     (spaceInfo.frameSize as any)?.topOffset,
     (spaceInfo.baseConfig as any)?.offset,
+    spaceInfo.baseboardLowerOffset,
     placedModules
   ]);
 
@@ -2093,7 +2096,12 @@ const Configurator: React.FC = () => {
               const defRight = defaults.gapRight ?? 1.5;
               const defTopOffset = defaults.topMoldingOffset ?? defaults.frameTopOffset;
               const defBaseOffset = defaults.baseboardOffset ?? defaults.baseFrameOffset;
+              const defBaseLowerSize = defaults.baseboardLowerEnabled === false
+                ? 0
+                : (defaults.baseboardLowerSize ?? defaults.baseboardSize ?? defaults.baseHeight);
               const defBaseLowerOffset = defaults.baseboardLowerOffset ?? defBaseOffset;
+              const defBaseGap = defaults.baseboardGap ?? defaults.baseFrameGap;
+              const defBaseLowerGap = defaults.baseboardLowerGap ?? defBaseGap;
               const savedLeft = spaceConfig.gapConfig?.left;
               const savedRight = spaceConfig.gapConfig?.right;
               spaceConfig.gapConfig = {
@@ -2122,6 +2130,12 @@ const Configurator: React.FC = () => {
               if (typeof defBaseLowerOffset === 'number' && spaceConfig.baseboardLowerOffset === undefined) {
                 spaceConfig.baseboardLowerOffset = defBaseLowerOffset;
               }
+              if (typeof defBaseLowerSize === 'number' && spaceConfig.baseboardLowerSize === undefined) {
+                spaceConfig.baseboardLowerSize = defBaseLowerSize;
+              }
+              if (typeof defBaseLowerGap === 'number' && spaceConfig.baseboardLowerGap === undefined) {
+                spaceConfig.baseboardLowerGap = defBaseLowerGap;
+              }
             }
           } catch { /* noop */ }
         }
@@ -2135,6 +2149,7 @@ const Configurator: React.FC = () => {
         setPreviousSpaceInfo(normalizedSpaceConfig);
         const loadedTopOffset = (normalizedSpaceConfig.frameSize as any)?.topOffset;
         const loadedBaseOffset = (normalizedSpaceConfig.baseConfig as any)?.offset;
+        const loadedLowerBaseOffset = normalizedSpaceConfig.baseboardLowerOffset ?? loadedBaseOffset;
         const loadedTopAllMode = normalizedSpaceConfig.guideTopFrameAllMode ?? true;
         const loadedBaseAllMode = normalizedSpaceConfig.guideBaseFrameAllMode ?? true;
         const migratedModules = (project.furniture?.placedModules || []).map((m: any) => {
@@ -2144,8 +2159,9 @@ const Configurator: React.FC = () => {
           if (loadedTopAllMode && typeof loadedTopOffset === 'number' && (category === 'upper' || category === 'full')) {
             updates.topFrameOffset = loadedTopOffset;
           }
-          if (loadedBaseAllMode && typeof loadedBaseOffset === 'number' && (category === 'lower' || category === 'full')) {
-            updates.baseFrameOffset = loadedBaseOffset;
+          const targetBaseOffset = category === 'lower' ? loadedLowerBaseOffset : loadedBaseOffset;
+          if (loadedBaseAllMode && typeof targetBaseOffset === 'number' && (category === 'lower' || category === 'full')) {
+            updates.baseFrameOffset = targetBaseOffset;
           }
           return Object.keys(updates).length > 0 ? { ...m, ...updates } : m;
         });
@@ -6832,13 +6848,21 @@ const Configurator: React.FC = () => {
               ? Math.max(0, guideBaseFrameAllMode ? (baseConfig.gap ?? 0) : (guideGlobalBaseSlot?.baseFrameGap ?? baseConfig.gap ?? 0))
               : 0;
             const lowerGuideBaseDefault = spaceInfo.baseboardLowerSize ?? 105;
+            const globalLowerBaseOffset = guideBaseFrameAllMode
+              ? (spaceInfo.baseboardLowerOffset ?? globalBaseOffset)
+              : (guideGlobalBaseSlot?.baseFrameOffset ?? spaceInfo.baseboardLowerOffset ?? globalBaseOffset);
+            const globalLowerBaseGap = globalBaseEnabled
+              ? Math.max(0, guideBaseFrameAllMode
+                ? (spaceInfo.baseboardLowerGap ?? globalBaseGap)
+                : (guideGlobalBaseSlot?.baseFrameGap ?? spaceInfo.baseboardLowerGap ?? globalBaseGap))
+              : 0;
             const globalBaseHeight = globalBaseEnabled
               ? resolveFrameRawSize(
                 guideBaseFrameAllMode
                   ? (allBaseGuideSlotsAreLower ? spaceInfo.baseboardLowerSize : spaceInfo.baseConfig?.height)
                   : guideGlobalBaseSlot?.baseFrameHeight,
                 allBaseGuideSlotsAreLower ? lowerGuideBaseDefault : (spaceInfo.baseConfig?.height ?? (hasSplitGuideSlots ? lowerGuideBaseDefault : 65)),
-                globalBaseGap
+                allBaseGuideSlotsAreLower ? globalLowerBaseGap : globalBaseGap
               )
               : Math.max(65, spaceInfo.baseConfig?.height || 65);
             const globalFloatHeight = globalBaseEnabled ? 0 : Math.max(0, spaceInfo.baseConfig?.floatHeight ?? 0);
@@ -6861,6 +6885,7 @@ const Configurator: React.FC = () => {
               moduleUpdates: Record<string, any>
             ) => {
               const { height: nextBaseHeight, ...baseConfigUpdatesWithoutHeight } = baseConfigUpdates;
+              const { offset: nextBaseOffset, gap: nextBaseGap } = baseConfigUpdates;
               const nextBaseConfigUpdates = allBaseGuideSlotsAreLower
                 ? baseConfigUpdatesWithoutHeight
                 : baseConfigUpdates;
@@ -6877,6 +6902,12 @@ const Configurator: React.FC = () => {
               };
               if (allBaseGuideSlotsAreLower && typeof nextBaseHeight === 'number' && nextBaseHeight > 0) {
                 nextSpaceInfo.baseboardLowerSize = nextBaseHeight;
+              }
+              if (allBaseGuideSlotsAreLower && typeof nextBaseOffset === 'number') {
+                nextSpaceInfo.baseboardLowerOffset = nextBaseOffset;
+              }
+              if (allBaseGuideSlotsAreLower && typeof nextBaseGap === 'number') {
+                nextSpaceInfo.baseboardLowerGap = nextBaseGap;
               }
               setSpaceInfo(nextSpaceInfo);
               guideBaseCandidateModules.forEach((module) => {
@@ -6903,7 +6934,9 @@ const Configurator: React.FC = () => {
               )
             );
             const getSlotBaseGap = (slot: FreePlacementGuideSlot) => (
-              getSlotBaseEnabled(slot) ? Math.max(0, defaultIfZero(slot.baseFrameGap, globalBaseGap)) : 0
+              getSlotBaseEnabled(slot)
+                ? Math.max(0, defaultIfZero(slot.baseFrameGap, (slot.guideZone || 'full') === 'lower' ? globalLowerBaseGap : globalBaseGap))
+                : 0
             );
             const parseUnsigned = (value: string) => (value === '' ? 0 : parseInt(value, 10));
 
@@ -7093,8 +7126,8 @@ const Configurator: React.FC = () => {
                         '전체',
                         globalBaseEnabled,
                         globalBaseHeight,
-                        globalBaseOffset,
-                        globalBaseGap,
+                        allBaseGuideSlotsAreLower ? globalLowerBaseOffset : globalBaseOffset,
+                        allBaseGuideSlotsAreLower ? globalLowerBaseGap : globalBaseGap,
                         globalFloatHeight,
                         () => {
                           const nextHeight = Math.max(1, globalBaseHeight || 65);
@@ -7138,11 +7171,12 @@ const Configurator: React.FC = () => {
                         const enabled = getSlotBaseEnabled(slot);
                         const gap = getSlotBaseGap(slot);
                         const baseHeightValue = getSlotBaseHeight(slot);
+                        const isLowerSlot = (slot.guideZone || 'full') === 'lower';
                         return renderBaseGuideRow(
                           `슬롯${idx + 1}`,
                           enabled,
                           baseHeightValue,
-                          defaultIfZero(slot.baseFrameOffset, globalBaseOffset),
+                          defaultIfZero(slot.baseFrameOffset, isLowerSlot ? globalLowerBaseOffset : globalBaseOffset),
                           gap,
                           slot.individualFloatHeight ?? 0,
                           () => updateGuideSlotFrame(slot.id, {
@@ -7675,8 +7709,14 @@ const Configurator: React.FC = () => {
                     const globalBaseGapLocal = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
                     const allBaseFreeModsAreLower = baseFreeMods.every(m => getModuleCategory(m) === 'lower');
                     const lowerBaseDefaultLocal = spaceInfo.baseboardLowerSize ?? 105;
+                    const effectiveBaseOffsetLocal = allBaseFreeModsAreLower
+                      ? (spaceInfo.baseboardLowerOffset ?? globalBaseOffsetLocal)
+                      : globalBaseOffsetLocal;
+                    const effectiveBaseGapLocal = allBaseFreeModsAreLower
+                      ? Math.max(0, spaceInfo.baseboardLowerGap ?? globalBaseGapLocal)
+                      : globalBaseGapLocal;
                     const globalBaseLocal = allBaseFreeModsAreLower
-                      ? resolveFrameRawSize(firstBase.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefaultLocal, globalBaseGapLocal)
+                      ? resolveFrameRawSize(firstBase.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefaultLocal, effectiveBaseGapLocal)
                       : resolveFrameRawSize(spaceInfo.baseConfig?.height, 65, globalBaseGapLocal);
                     const unifiedEnabled = baseFreeMods.every(m => m.hasBase !== false);
                     if (unifiedEnabled) {
@@ -7684,9 +7724,9 @@ const Configurator: React.FC = () => {
 	                        num={1} label="전체"
 	                        enabled={true}
 	                        sizeMM={globalBaseLocal}
-	                        offset={globalBaseOffsetLocal}
-	                        gap={globalBaseGapLocal}
-	                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: clampFloatHeightValue(defaultIfZeroFree((m as any).baseFrameGap, globalBaseGapLocal)), doorBottomGap: -5 })))}
+	                        offset={effectiveBaseOffsetLocal}
+	                        gap={effectiveBaseGapLocal}
+	                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, { hasBase: false, individualFloatHeight: clampFloatHeightValue(defaultIfZeroFree((m as any).baseFrameGap, effectiveBaseGapLocal)), doorBottomGap: -5 })))}
 	                        onSizeChange={(v) => {
 	                          handleSpaceInfoUpdate(allBaseFreeModsAreLower
                               ? { baseboardLowerSize: v }
@@ -7695,18 +7735,27 @@ const Configurator: React.FC = () => {
 	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
 	                        }}
 	                        onOffsetChange={(v) => {
-	                          handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v } as any });
+	                          handleSpaceInfoUpdate(allBaseFreeModsAreLower
+                              ? { baseboardLowerOffset: v }
+                              : { baseConfig: { ...spaceInfo.baseConfig, offset: v } as any }
+                            );
 	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
 	                        }}
 	                        onGapChange={(v, nextSize) => {
 	                          const nextGap = clampFrameGapValue(v);
-	                          handleSpaceInfoUpdate({
-	                            baseConfig: {
-	                              ...spaceInfo.baseConfig,
-	                              ...(nextSize !== undefined ? { height: nextSize } : {}),
-	                              gap: nextGap
-	                            } as any
-	                          });
+	                          handleSpaceInfoUpdate(allBaseFreeModsAreLower
+                              ? {
+                                ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
+                                baseboardLowerGap: nextGap
+                              }
+                              : {
+                                baseConfig: {
+                                  ...spaceInfo.baseConfig,
+                                  ...(nextSize !== undefined ? { height: nextSize } : {}),
+                                  gap: nextGap
+                                } as any
+                              }
+                            );
 	                          baseFreeFrameValueMods.forEach(m => updatePlacedModule(m.id, {
 	                            ...(nextSize !== undefined ? { baseFrameHeight: nextSize } : {}),
 	                            baseFrameGap: nextGap
@@ -8134,9 +8183,11 @@ const Configurator: React.FC = () => {
           const globalTop = resolveFrameRawSize(spaceInfo.frameSize?.top, 30, globalTopGap);
           const globalBaseOffset = (spaceInfo.baseConfig as any)?.offset ?? 0;
           const globalBaseGap = Math.max(0, (spaceInfo.baseConfig as any)?.gap ?? 0);
+          const globalLowerBaseOffset = spaceInfo.baseboardLowerOffset ?? globalBaseOffset;
+          const globalLowerBaseGap = Math.max(0, spaceInfo.baseboardLowerGap ?? globalBaseGap);
           const lowerBaseDefault = spaceInfo.baseboardLowerSize ?? 105;
           const globalBase = allBaseSlotModsAreLower
-            ? resolveFrameRawSize(baseSortedMods[0]?.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, globalBaseGap)
+            ? resolveFrameRawSize(baseSortedMods[0]?.baseFrameHeight ?? spaceInfo.baseboardLowerSize, lowerBaseDefault, globalLowerBaseGap)
             : resolveFrameRawSize(spaceInfo.baseConfig?.height, 65, globalBaseGap);
           const defaultIfZeroSlot = (value: number | undefined, fallback: number) => (
             value === undefined ? fallback : value
@@ -8176,7 +8227,9 @@ const Configurator: React.FC = () => {
             const bfMin = isLower ? 60 : 40;
             const bfMax = isLower ? 150 : 100;
             const bfDefault = isLower ? lowerBaseDefault : 60;
-            const baseGap = Math.max(0, defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap));
+            const baseOffsetFallback = isLower ? globalLowerBaseOffset : globalBaseOffset;
+            const baseGapFallback = isLower ? globalLowerBaseGap : globalBaseGap;
+            const baseGap = Math.max(0, defaultIfZeroSlot((mod as any).baseFrameGap, baseGapFallback));
             const rawBaseHeight = resolveFrameRawSize(
               isLower ? (mod.baseFrameHeight ?? spaceInfo.baseboardLowerSize) : mod.baseFrameHeight,
               bfDefault,
@@ -8218,17 +8271,17 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={defaultIfZeroSlot(mod.baseFrameOffset, globalBaseOffset)} placeholder={String(globalBaseOffset)}
+                        value={defaultIfZeroSlot(mod.baseFrameOffset, baseOffsetFallback)} placeholder={String(baseOffsetFallback)}
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = defaultIfZeroSlot(mod.baseFrameOffset, globalBaseOffset);
+                            const cur = defaultIfZeroSlot(mod.baseFrameOffset, baseOffsetFallback);
                             updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBaseOffset)) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || baseOffsetFallback)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -8236,14 +8289,14 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>갭</span>
                       <input
                         type="text" inputMode="numeric"
-                        defaultValue={defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap) || ''}
-                        key={`base-gap-${mod.id}-${defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap) || 0}`}
-                        placeholder={String(globalBaseGap)}
+                        defaultValue={defaultIfZeroSlot((mod as any).baseFrameGap, baseGapFallback) || ''}
+                        key={`base-gap-${mod.id}-${defaultIfZeroSlot((mod as any).baseFrameGap, baseGapFallback) || 0}`}
+                        placeholder={String(baseGapFallback)}
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = defaultIfZeroSlot((mod as any).baseFrameGap, globalBaseGap);
+                            const cur = defaultIfZeroSlot((mod as any).baseFrameGap, baseGapFallback);
                             const nextGap = clampFrameGapValue(cur + (e.key === 'ArrowUp' ? 1 : -1));
                             updatePlacedModule(mod.id, {
                               baseFrameGap: nextGap
@@ -8436,12 +8489,14 @@ const Configurator: React.FC = () => {
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasBase !== false);
                       const isLowerGroup = firstMod?.moduleId?.startsWith('lower-') || firstMod?.moduleId?.includes('-lower-');
+                      const groupBaseOffset = isLowerGroup ? globalLowerBaseOffset : globalBaseOffset;
+                      const groupBaseGap = isLowerGroup ? globalLowerBaseGap : globalBaseGap;
                       return <React.Fragment key={`merged-base-${gIdx}`}>{renderMergedFrameRow(
                         group.label,
                         allEnabled,
                         group.totalWidthMm,
                         firstMod?.baseFrameHeight ?? globalBase,
-                        defaultIfZeroSlot(firstMod?.baseFrameOffset, globalBaseOffset),
+                        defaultIfZeroSlot(firstMod?.baseFrameOffset, groupBaseOffset),
                         () => {
                           const newVal = !allEnabled;
                           group.moduleIds.forEach(id => {
@@ -8449,7 +8504,7 @@ const Configurator: React.FC = () => {
                             updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
-                            ...(newVal ? {} : { individualFloatHeight: clampFloatHeightValue(defaultIfZeroSlot((target as any)?.baseFrameGap, globalBaseGap)) }),
+                            ...(newVal ? {} : { individualFloatHeight: clampFloatHeightValue(defaultIfZeroSlot((target as any)?.baseFrameGap, groupBaseGap)) }),
                             }) : {
                               hasBase: newVal,
                               doorBottomGap: newVal ? 25 : -5,
@@ -8679,17 +8734,19 @@ const Configurator: React.FC = () => {
                         (() => {
                           const first = baseSortedMods[0];
                           const unifiedEnabled = baseSortedMods.every(m => m.hasBase !== false);
+                          const effectiveBaseOffset = allBaseSlotModsAreLower ? globalLowerBaseOffset : globalBaseOffset;
+                          const effectiveBaseGap = allBaseSlotModsAreLower ? globalLowerBaseGap : globalBaseGap;
                           if (unifiedEnabled) {
 	                            return renderSlotFrameRow(
 	                              '전체',
 	                              unifiedEnabled,
 	                              globalBase,
-	                              globalBaseOffset,
+	                              effectiveBaseOffset,
                               () => {
                                 // 하부 OFF (상단몰딩 건드리지 않음)
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
                                   hasBase: false,
-                                  individualFloatHeight: clampFloatHeightValue(defaultIfZeroSlot((m as any).baseFrameGap, globalBaseGap)),
+                                  individualFloatHeight: clampFloatHeightValue(defaultIfZeroSlot((m as any).baseFrameGap, effectiveBaseGap)),
                                   doorBottomGap: -5,
                                 })));
                               },
@@ -8701,20 +8758,20 @@ const Configurator: React.FC = () => {
 	                                baseSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, getBaseFrameSizeUpdates(m, v)));
 	                              },
 	                              (v) => {
-	                                handleSpaceInfoUpdate({ baseConfig: { ...spaceInfo.baseConfig, offset: v } as any });
+	                                handleSpaceInfoUpdate(allBaseSlotModsAreLower
+	                                  ? { baseboardLowerOffset: v }
+	                                  : { baseConfig: { ...spaceInfo.baseConfig, offset: v } as any }
+	                                );
 	                                baseSlotFrameValueMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
 	                              },
 	                              'base-all',
-	                              globalBaseGap,
+	                              effectiveBaseGap,
 	                              (v, nextSize) => {
 	                                const nextGap = clampFrameGapValue(v);
 	                                handleSpaceInfoUpdate(allBaseSlotModsAreLower
 	                                  ? {
 	                                    ...(nextSize !== undefined ? { baseboardLowerSize: nextSize } : {}),
-	                                    baseConfig: {
-	                                      ...spaceInfo.baseConfig,
-	                                      gap: nextGap
-	                                    } as any
+	                                    baseboardLowerGap: nextGap
 	                                  }
 	                                  : {
 	                                    baseConfig: {

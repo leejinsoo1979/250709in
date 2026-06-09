@@ -243,7 +243,12 @@ const resolveEffectiveBaseFrameOffsetMm = (module: any, spaceInfo: SpaceInfo): n
   if (typeof module.baseFrameOffset === 'number') {
     return module.baseFrameOffset;
   }
-  const globalOffset = (spaceInfo.baseConfig as any)?.offset;
+  const isLowerModule = getModuleCategory(module) === 'lower'
+    || module.moduleId?.startsWith('lower-')
+    || module.moduleId?.includes('dual-lower-');
+  const globalOffset = isLowerModule
+    ? (spaceInfo.baseboardLowerOffset ?? (spaceInfo.baseConfig as any)?.offset)
+    : (spaceInfo.baseConfig as any)?.offset;
   const useGlobal = spaceInfo.guideBaseFrameAllMode ?? true;
   if (useGlobal && typeof globalOffset === 'number') {
     return globalOffset;
@@ -7483,8 +7488,15 @@ const Room: React.FC<RoomProps> = ({
                 baseZPosition += mmToThreeUnits(modBaseBackWallGapMm);
               }
               const freeIsLower = getModuleCategory(mod) === 'lower';
-              const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 105 : 60));
-              const modBaseFrameGapMm = rawBaseHeightMm > 0 ? Math.max(0, Math.min(rawBaseHeightMm, mod.baseFrameGap ?? 0)) : 0;
+              const rawBaseHeightMm = mod.baseFrameHeight ?? (freeIsLower
+                ? (spaceInfo.baseboardLowerSize ?? 105)
+                : (spaceInfo.baseConfig?.height ?? 60));
+              const fallbackBaseGapMm = freeIsLower
+                ? (spaceInfo.baseboardLowerGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0)
+                : ((spaceInfo.baseConfig as any)?.gap ?? 0);
+              const modBaseFrameGapMm = rawBaseHeightMm > 0
+                ? Math.max(0, Math.min(rawBaseHeightMm, mod.baseFrameGap ?? fallbackBaseGapMm))
+                : 0;
               const modBaseHeightMm = Math.max(0, rawBaseHeightMm - modBaseFrameGapMm);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
               const modBaseGapThreeUnits = mmToThreeUnits(modBaseFrameGapMm);
@@ -7831,8 +7843,20 @@ const Room: React.FC<RoomProps> = ({
                       );
                       modWidthMM = adjustedSlotBaseBounds.rightMm - adjustedSlotBaseBounds.leftMm;
                       modCenterXmm = (adjustedSlotBaseBounds.leftMm + adjustedSlotBaseBounds.rightMm) / 2;
-                      const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
-                      const baseFrameGapMm = rawBaseHeight > 0 ? Math.max(0, Math.min(rawBaseHeight, mod.baseFrameGap ?? 0)) : 0;
+                      const slotBaseShoeMid = mod.moduleId || '';
+                      const slotBaseCategory = getModuleCategory(mod);
+                      const slotBaseIsLower = slotBaseCategory === 'lower'
+                        || slotBaseShoeMid.startsWith('lower-')
+                        || slotBaseShoeMid.includes('dual-lower-');
+                      const rawBaseHeight = mod.baseFrameHeight ?? (slotBaseIsLower
+                        ? (spaceInfo.baseboardLowerSize ?? 105)
+                        : globalBaseHeightMm);
+                      const fallbackBaseGapMm = slotBaseIsLower
+                        ? (spaceInfo.baseboardLowerGap ?? (spaceInfo.baseConfig as any)?.gap ?? 0)
+                        : ((spaceInfo.baseConfig as any)?.gap ?? 0);
+                      const baseFrameGapMm = rawBaseHeight > 0
+                        ? Math.max(0, Math.min(rawBaseHeight, mod.baseFrameGap ?? fallbackBaseGapMm))
+                        : 0;
                       const modBaseHeight = Math.max(0, rawBaseHeight - baseFrameGapMm);
                       const modBaseH = mmToThreeUnits(modBaseHeight);
                       const baseGapThreeUnits = mmToThreeUnits(baseFrameGapMm);
@@ -7840,16 +7864,11 @@ const Room: React.FC<RoomProps> = ({
                       const effectiveBaseFrameOffsetMm = resolveEffectiveBaseFrameOffsetMm(mod, spaceInfo);
                       const modBaseZInset = mmToThreeUnits(effectiveBaseFrameOffsetMm);
                       // 신발장 걸래받이 Z (앞면 기준)
-                      const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
-                      const slotBaseCategory = getModuleCategory(mod);
                       // 하부 가구: 본체(FurnitureItem)와 동일하게 "뒷면 뒷벽 고정 + 깊이" 모델로
                       // 걸래받이 앞면을 맞춘다. baseZPos는 깊이600 가구의 앞면이므로
                       // offset = −(600 − 실제깊이) (방향 무관). 앞라인 추종은 backWallGap으로 별도 적용.
                       // (computeDepthZOffset은 앞고정 시 0을 반환해 본체와 어긋났다 → 하부는 별도 계산)
-                      const slotBaseIsLower = slotBaseCategory === 'lower'
-                        || slotBaseShoeMid.startsWith('lower-')
-                        || slotBaseShoeMid.includes('dual-lower-');
                       const unifiedBaseZOffset = slotBaseIsLower
                         ? -mmToThreeUnits(getLowerDepthZOffsetMM(mod))
                         : computeDepthZOffset(mod, 'lower');

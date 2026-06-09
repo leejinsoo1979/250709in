@@ -408,7 +408,7 @@ export const SPACE_LIMITS = {
 export const FURNITURE_LIMITS = {
   DEPTH: {
     MIN: 130,           // 가구 최소 깊이
-    MAX: 780,           // 가구 최대 깊이
+    MAX: 1200,          // 가구 최대 깊이
     DEFAULT_FALLBACK: 580,  // 기본 fallback 깊이
   },
   DUAL_THRESHOLD: 1200,     // 듀얼장 사용 가능 최소 내경폭

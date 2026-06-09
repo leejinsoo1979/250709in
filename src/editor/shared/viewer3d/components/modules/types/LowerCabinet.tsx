@@ -2505,16 +2505,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     ? useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId)
                     : undefined;
                   const rawSideBaseFrameHeightMm = (placedModuleForSideBase as any)?.baseFrameHeight
+                    ?? spaceInfo?.baseboardLowerSize
                     ?? spaceInfo?.baseConfig?.height
                     ?? 65;
                   const sideBaseFrameGapMm = rawSideBaseFrameHeightMm > 0
-                    ? Math.max(0, Math.min(rawSideBaseFrameHeightMm, (placedModuleForSideBase as any)?.baseFrameGap ?? 0))
+                    ? Math.max(0, Math.min(rawSideBaseFrameHeightMm, (placedModuleForSideBase as any)?.baseFrameGap ?? spaceInfo?.baseboardLowerGap ?? 0))
                     : 0;
                   const sideBaseFrameHeightMm = Math.max(0, rawSideBaseFrameHeightMm - sideBaseFrameGapMm);
                   const sideBaseFrameHeight = mmToUnits(sideBaseFrameHeightMm);
                   const sideBaseFrameGap = mmToUnits(sideBaseFrameGapMm);
                   const sideBaseFrameDepth = frameWidth;
-                  const globalSideBaseFrameOffsetMm = (spaceInfo?.baseConfig as any)?.offset;
+                  const globalSideBaseFrameOffsetMm = spaceInfo?.baseboardLowerOffset ?? (spaceInfo?.baseConfig as any)?.offset;
                   const useGlobalSideBaseFrameOffset = spaceInfo?.guideBaseFrameAllMode ?? true;
                   const sideBaseFrameOffsetMm = useGlobalSideBaseFrameOffset && typeof globalSideBaseFrameOffsetMm === 'number'
                     ? globalSideBaseFrameOffsetMm

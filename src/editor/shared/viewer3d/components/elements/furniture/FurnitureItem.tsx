@@ -3282,13 +3282,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     : (useGlobalTopFrameOffset && typeof globalTopFrameOffsetMm === 'number'
       ? globalTopFrameOffsetMm
       : (globalTopFrameOffsetMm ?? 0));
-  const globalBaseFrameOffsetMm = (spaceInfo.baseConfig as any)?.offset;
+  const isLowerBaseModule = actualModuleData?.category === 'lower'
+    || placedModule.moduleId?.startsWith('lower-')
+    || placedModule.moduleId?.includes('dual-lower-');
+  const globalBaseFrameOffsetMm = isLowerBaseModule
+    ? (spaceInfo.baseboardLowerOffset ?? (spaceInfo.baseConfig as any)?.offset)
+    : (spaceInfo.baseConfig as any)?.offset;
+  const globalBaseFrameGapMm = isLowerBaseModule
+    ? (spaceInfo.baseboardLowerGap ?? (spaceInfo.baseConfig as any)?.gap)
+    : (spaceInfo.baseConfig as any)?.gap;
   const useGlobalBaseFrameOffset = spaceInfo.guideBaseFrameAllMode ?? true;
   const effectiveBaseFrameOffsetMm = typeof placedModule.baseFrameOffset === 'number'
     ? placedModule.baseFrameOffset
     : (useGlobalBaseFrameOffset && typeof globalBaseFrameOffsetMm === 'number'
       ? globalBaseFrameOffsetMm
       : (globalBaseFrameOffsetMm ?? 0));
+  const effectiveBaseFrameGapMm = typeof (placedModule as any).baseFrameGap === 'number'
+    ? (placedModule as any).baseFrameGap
+    : (globalBaseFrameGapMm ?? 0);
   const shouldRenderSideWallFrames = isSideWallFurniture
     && !placedModule.moduleId?.includes('insert-frame')
     && !placedModule.isSurroundPanel;
@@ -3320,7 +3331,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const rawHeightMm = placedModule.guideSlotPlacement
       ? (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65)
       : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65));
-    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm, (placedModule as any).baseFrameGap ?? 0)) : 0;
+    const gapMm = rawHeightMm > 0 ? Math.max(0, Math.min(rawHeightMm, effectiveBaseFrameGapMm)) : 0;
     const visibleHeightMm = Math.max(0, rawHeightMm - gapMm);
     if (visibleHeightMm <= 0.5) return null;
 
@@ -4631,7 +4642,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   hasBase={placedModule.hasBase}
                   baseFrameHeight={placedModule.baseFrameHeight}
                   baseFrameOffset={effectiveBaseFrameOffsetMm}
-                  baseFrameGap={(placedModule as any).baseFrameGap}
+                  baseFrameGap={effectiveBaseFrameGapMm}
                   individualFloatHeight={placedModule.individualFloatHeight}
                   isCustomizable={placedModule.isCustomizable}
                   readOnly={readOnly}
