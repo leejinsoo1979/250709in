@@ -1708,7 +1708,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (placedModule.hasTopFrame === false) {
       const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
       const topGapMm = placedModule.topFrameGap ?? 0;
-      furnitureHeightMm += Math.max(0, topFrameMm - topGapMm);
+      furnitureHeightMm = Math.max(0, furnitureHeightMm + topFrameMm - topGapMm);
     }
     if (placedModule.hasBase === false) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -1752,7 +1752,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (placedModule.hasTopFrame === false && isTallCabinetForY) {
         const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
         const topGapMm = placedModule.topFrameGap ?? 0;
-        furnitureHeightMm += Math.max(0, topFrameMm - topGapMm);
+        furnitureHeightMm = Math.max(0, furnitureHeightMm + topFrameMm - topGapMm);
       }
       // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
       // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로 개별 차이를 반영
