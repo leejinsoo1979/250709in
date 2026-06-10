@@ -649,7 +649,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           }
           if (isTopDownNew && sThk > 0) {
             const expectedGap = getTopDownDoorTopGap(sThk, module.hasTopEndPanel === true);
-            module.doorTopGap = expectedGap;
+            module.doorTopGap = configuredDoorTopGap ?? expectedGap;
             // cabH: 805 - sThk 기준 (반통/한통/2단/3단 공통)
             const expectedCabH = 805 - sThk;
             if (module.freeHeight === undefined) module.freeHeight = expectedCabH;

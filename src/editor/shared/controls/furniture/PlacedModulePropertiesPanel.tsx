@@ -2288,7 +2288,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const modId = currentPlacedModule.moduleId || '';
       const isDoorSplitForDoorGaps = isDoorSplitModuleId(modId);
       const isDoorLift = isDoorLiftTopEndPanelModuleId(modId);
-      const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
+      const isTopDown = modId.includes('lower-top-down-');
       const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(modId);
       const isLowerCategory = moduleData?.category === 'lower';
       const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
@@ -2357,13 +2357,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : isLowerCategory
               ? [2, 25]
               : [25];
+      const shouldApplyLegacyTopGap =
+        typeof rawTopGap === 'number'
+        && legacyTopGapValues.includes(rawTopGap)
+        && (!isTopDown || rawTopGap === 5);
       const initialTopGap = !isDoorSplitForDoorGaps && !isUpperCategory && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
-          : (typeof rawTopGap === 'number' && legacyTopGapValues.includes(rawTopGap))
+          : shouldApplyLegacyTopGap
             ? defaultTopGap
           : staleDoorLiftAutoTopGap
-            ? defaultTopGap
-          : (isTopDown && currentPlacedModule.hasTopEndPanel === true && rawTopGap === topDownNoEpDefaultGap)
             ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
@@ -4284,7 +4286,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (doorEnabled && mod) {
         const mId = mod.moduleId || '';
         const isDL = isDoorLiftTopEndPanelModuleId(mId);
-        const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
+        const isTD = mId.includes('lower-top-down-');
         const isBasicLowerDoorGap = isBasicLowerDoorGapModuleId(mId);
         const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
         const isUpperModule = moduleData?.category === 'upper'
@@ -9434,10 +9436,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 상판내림: 상부 EP 기본 -82, 일반 stoneThk별 10→-90, 20→-80, 30→-70
                           // cabH 변화량(±10) + 도어 상단갭 변화량(±10)으로 도어 H/위치 일정 유지
                           if (isTopDown) {
+                            const currentDefaultGap = getTopDownDoorTopGap(
+                              currentPlacedModule.stoneTopThickness,
+                              currentPlacedModule.hasTopEndPanel === true
+                            );
                             const newGap = getTopDownDoorTopGap(thickness, false);
-                            updates.doorTopGap = newGap;
-                            setDoorTopGap(newGap);
-                            setDoorTopGapInput(String(newGap));
+                            if (
+                              currentPlacedModule.doorTopGap === undefined
+                              || currentPlacedModule.doorTopGap === currentDefaultGap
+                            ) {
+                              updates.doorTopGap = newGap;
+                              setDoorTopGap(newGap);
+                              setDoorTopGapInput(String(newGap));
+                            }
                           }
                           // 뒷턱 다채움 상태이면 새 두께 기준으로 재계산
                           const prevThickness = currentPlacedModule.stoneTopThickness || 0;
@@ -9492,7 +9503,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               bulk.doorTopGap = -20;
                             }
                             if (isBulkTopDown) {
-                              bulk.doorTopGap = getTopDownDoorTopGap(thickness, false);
+                              const currentDefaultGap = getTopDownDoorTopGap(m.stoneTopThickness, m.hasTopEndPanel === true);
+                              if (m.doorTopGap === undefined || m.doorTopGap === currentDefaultGap) {
+                                bulk.doorTopGap = getTopDownDoorTopGap(thickness, false);
+                              }
                             }
                           }
                           updatePlacedModule(m.id, bulk);

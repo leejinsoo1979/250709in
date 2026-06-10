@@ -383,7 +383,7 @@ const getDoorGapDefaultsForModule = (
   const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
   const isUpper = category === 'upper' || isUpperCabinetModuleId(moduleId);
   const isDoorLift = moduleId.includes('lower-door-lift-') && !moduleId.includes('-half-');
-  const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
+  const isTopDown = moduleId.includes('lower-top-down-');
   const isBasicLower = isBasicLowerDoorGapModuleId(moduleId);
 
   if (isTopDown) {
@@ -427,10 +427,10 @@ const getLegacyDoorGapDefaultsForModule = (
   const isLower = category === 'lower' || moduleId.startsWith('lower-') || moduleId.includes('dual-lower-');
   const isUpper = category === 'upper' || isUpperCabinetModuleId(moduleId);
   const isDoorLift = moduleId.includes('lower-door-lift-') && !moduleId.includes('-half-');
-  const isTopDown = moduleId.includes('lower-top-down-') && !moduleId.includes('-half-');
+  const isTopDown = moduleId.includes('lower-top-down-');
   const isBasicLower = isBasicLowerDoorGapModuleId(moduleId);
 
-  if (isTopDown) return { top: [getTopDownDoorTopGap(mod?.stoneTopThickness, mod?.hasTopEndPanel === true), 5], bottom: [5] };
+  if (isTopDown) return { top: [5], bottom: [5] };
   if (isDoorLift) return { top: [30, 40], bottom: [5] };
   if (isBasicLower) return { top: [-20, 5], bottom: [5, 25] };
   if (isLower) return { top: [20, 5], bottom: [2, 25] };

@@ -1322,14 +1322,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     } else if (kitchenSubCategory === 'tall') {
       // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장, 키큰장찬넬)
       // 유리장 게시 (전체 노출). 빌트인 냉장고장은 개발자 계정에서만 노출 (작업 중)
-      // 키큰장찬넬은 자유배치 모드에서만 노출
-      const isFreeLayout = spaceInfo.layoutMode === 'free-placement' || spaceInfo.customGuideMode === true;
+      const isInsertFramePlacementMode = spaceInfo.layoutMode === 'free-placement'
+        || spaceInfo.customGuideMode === true
+        || ((spaceInfo.freePlacementGuides?.length || 0) > 0 && !spaceInfo.freePlacementGuideEditing);
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
         m.id.includes('pull-out-cabinet') ||
         m.id.includes('pantry-cabinet') ||
         m.id.includes('fridge-cabinet') ||
-        (isFreeLayout && m.id.includes('insert-frame')) ||
+        (isInsertFramePlacementMode && m.id.includes('insert-frame')) ||
         m.id.includes('glass-cabinet') ||
         (isDevAccount && m.id.includes('built-in-fridge'))
       );
