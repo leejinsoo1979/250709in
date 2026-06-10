@@ -112,7 +112,7 @@ export const useOrbitControlsConfig = (
       minZoom: is2DMode ? 0.5 : 0.05,
       maxZoom: is2DMode ? 1000 : 160,
       rotateSpeed: 0.5, // 회전 속도를 0.5로 낮춤 (기본값 1.0보다 느리게, 더 묵직하게)
-      zoomSpeed: isMobile && is2DMode ? -1.0 : 1.0, // 모바일 2D 모드에서 줌 제스처 반전
+      zoomSpeed: isMobile && is2DMode ? -1.0 : (is2DMode ? 1.0 : 2), // 모바일 2D 모드에서 줌 제스처 반전
       enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임
       dampingFactor: 0.05, // 관성 정도 (작을수록 더 묵직함)
       mouseButtons: {
