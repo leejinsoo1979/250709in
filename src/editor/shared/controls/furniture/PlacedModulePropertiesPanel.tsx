@@ -1891,9 +1891,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       //  (autoDroppedUpperHeight가 없을 때 freeHeight를 무시해 팝업이 옛 기본 높이를
       //   표시하던 문제 수정 — 자유배치 키큰장 높이 변경이 팝업에 반영 안 되던 원인)
       const isFreePlacementModule = !!currentPlacedModule.isFreePlacement;
+      // 자유배치 키큰장: 렌더러(FurnitureItem)는 freeHeight를 내경 최대치로 클램프해
+      // 그리므로, 표시도 동일하게 클램프해야 측정값과 일치한다
+      // (stale freeHeight 2320 → 렌더 2310인데 팝업 2320으로 표시되던 문제)
+      const freePlacementMaxHeightMm = (() => {
+        if (!isFreePlacementModule || moduleData.category !== 'full') return undefined;
+        try {
+          const internal = calculateInternalSpace(spaceInfo);
+          const floatMm = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+            ? (spaceInfo.baseConfig?.floatHeight || 0)
+            : 0;
+          return internal.height - floatMm;
+        } catch {
+          return undefined;
+        }
+      })();
+      const clampFreeHeight = (value: number) =>
+        (freePlacementMaxHeightMm !== undefined ? Math.min(value, freePlacementMaxHeightMm) : value);
       const validFreeHeight = isFreePlacementModule
         ? (typeof currentPlacedModule.freeHeight === 'number' && currentPlacedModule.freeHeight > 0
-            ? currentPlacedModule.freeHeight
+            ? clampFreeHeight(currentPlacedModule.freeHeight)
             : undefined)
         : (autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight)
             ? currentPlacedModule.freeHeight
