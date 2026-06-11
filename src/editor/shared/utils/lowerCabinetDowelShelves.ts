@@ -11,7 +11,9 @@ export const isDirectLowerDowelShelfModule = (moduleId = '') => (
   moduleId.includes('dual-lower-door-lift-half') ||
   moduleId.includes('lower-top-down-half') ||
   moduleId.includes('dual-lower-top-down-half')
-) && !moduleId.includes('right-corner') && !moduleId.includes('left-corner');
+) && !moduleId.includes('right-corner') && !moduleId.includes('left-corner')
+  // 식세기장: 내부는 식세기 본체 공간 → 다보선반 없음 (3D·CNC 공통)
+  && !moduleId.includes('dishwasher');
 
 export const hasDirectLowerTopPanel = (moduleId = '') => (
   moduleId.includes('lower-door-lift-half') ||
