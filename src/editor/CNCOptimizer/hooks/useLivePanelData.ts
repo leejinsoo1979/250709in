@@ -1030,6 +1030,16 @@ export function useLivePanelData() {
           return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor && !isExcluded;
         });
 
+        // 도어 힌지보링 제외: 해당 도어의 보링/피스 데이터를 옵티마이저 출력에서 제거
+        const hingeBoringExclusionSet = new Set<string>(placedModule.hingeBoringExclusions ?? []);
+        if (hingeBoringExclusionSet.size > 0) {
+          modulePanels = modulePanels.map((item: any) => (
+            item.isDoor && item.name && hingeBoringExclusionSet.has(item.name)
+              ? { ...item, boringPositions: undefined, boringDepthPositions: undefined, screwPositions: undefined, screwDepthPositions: undefined, screwHoleSpacing: undefined, hingeCount: 0 }
+              : item
+          ));
+        }
+
         // 유리장: 백패널은 서랍모듈 뒤(서랍 측판 H=500) 영역만 포함, 후면 보강대는 제외
         if (isGlassCabinet) {
           const GLASS_DRAWER_SIDE_H = 500;
@@ -2019,6 +2029,16 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         const isExcluded = item.name && panelExclusionSet2.has(item.name);
         return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor && !isExcluded;
       });
+
+      // 도어 힌지보링 제외: 해당 도어의 보링/피스 데이터를 옵티마이저 출력에서 제거
+      const hingeBoringExclusionSet2 = new Set<string>(placedModule.hingeBoringExclusions ?? []);
+      if (hingeBoringExclusionSet2.size > 0) {
+        modulePanels = modulePanels.map((item: any) => (
+          item.isDoor && item.name && hingeBoringExclusionSet2.has(item.name)
+            ? { ...item, boringPositions: undefined, boringDepthPositions: undefined, screwPositions: undefined, screwDepthPositions: undefined, screwHoleSpacing: undefined, hingeCount: 0 }
+            : item
+        ));
+      }
 
       // 유리장: 백패널은 서랍모듈 뒤(서랍 측판 H=500) 영역만 포함, 후면 보강대는 제외
       if (isGlassCabinetForFilter) {
