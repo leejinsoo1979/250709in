@@ -2331,9 +2331,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 개별 가구값이 최우선. 카테고리 글로벌은 개별값이 없을 때의 폴백(defaultTopGap)에만 반영한다.
       // (catTopGap을 개별값보다 우선하면 카테고리 판별이 어긋날 때 키큰장 값으로 되돌아가는 버그)
       const rawTopGap = currentPlacedModule.doorTopGap;
-      const staleDoorLiftAutoTopGap = isDoorLift
-        && typeof rawTopGap === 'number'
-        && rawTopGap === (currentPlacedModule.stoneTopThickness || 0) + 15;
+      const staleDoorLiftAutoTopGap = false;
       const topDownNoEpDefaultGap = isTopDown
         ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, false)
         : undefined;
@@ -2362,6 +2360,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         && legacyTopGapValues.includes(rawTopGap)
         && !isUpperCategory
         && !isBasicLowerDoorGap
+        && !isDoorLift
         && (!isTopDown || rawTopGap === 5);
       const initialTopGap = !isDoorSplitForDoorGaps && !isUpperCategory && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
