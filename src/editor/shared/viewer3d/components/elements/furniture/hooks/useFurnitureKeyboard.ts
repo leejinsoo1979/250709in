@@ -84,12 +84,16 @@ export const useFurnitureKeyboard = ({
           : null;
       };
 
-      const canMoveGroupedModulesOneSlot = (
+      const canMoveGroupedModulesToSlot = (
         module: typeof placedModules[number],
-        direction: 'left' | 'right'
+        nextSlot: number
       ): boolean => {
         if (!module.groupId) {
           return true;
+        }
+
+        if (typeof module.slotIndex !== 'number') {
+          return false;
         }
 
         const groupMembers = placedModules.filter(item =>
@@ -102,18 +106,18 @@ export const useFurnitureKeyboard = ({
         }
 
         const groupIds = groupMembers.map(item => item.id);
-        const delta = direction === 'left' ? -1 : 1;
+        const delta = nextSlot - module.slotIndex;
 
         return groupMembers.every(member => {
           if (typeof member.slotIndex !== 'number') {
             return false;
           }
-          const nextSlot = member.slotIndex + delta;
+          const memberNextSlot = member.slotIndex + delta;
           const isDualMember = member.isDualSlot !== undefined
             ? member.isDualSlot
             : member.moduleId.includes('dual-');
           return isSlotAvailable(
-            nextSlot,
+            memberNextSlot,
             isDualMember,
             placedModules,
             spaceInfo,
@@ -444,10 +448,6 @@ export const useFurnitureKeyboard = ({
               // editingModuleZone: editingModule.zone,
               // hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
             // });
-            if (!canMoveGroupedModulesOneSlot(editingModule, 'left')) {
-              e.preventDefault();
-              break;
-            }
             const nextSlot = getNextAvailableSlot(
               currentSlotIndex,
               'left',
@@ -459,6 +459,10 @@ export const useFurnitureKeyboard = ({
 // console.log('⌨️ ArrowLeft 결과:', { nextSlot });
 
             if (nextSlot !== null) {
+              if (!canMoveGroupedModulesToSlot(editingModule, nextSlot)) {
+                e.preventDefault();
+                break;
+              }
               let newX: number;
               if (isDualFurniture && dualPositionsToSearch) {
                 newX = dualPositionsToSearch[nextSlot];
@@ -582,10 +586,6 @@ export const useFurnitureKeyboard = ({
               // editingModuleZone: editingModule.zone,
               // hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
             // });
-            if (!canMoveGroupedModulesOneSlot(editingModule, 'right')) {
-              e.preventDefault();
-              break;
-            }
             const nextSlot = getNextAvailableSlot(
               currentSlotIndex,
               'right',
@@ -597,6 +597,10 @@ export const useFurnitureKeyboard = ({
 // console.log('⌨️ ArrowRight 결과:', { nextSlot });
 
             if (nextSlot !== null) {
+              if (!canMoveGroupedModulesToSlot(editingModule, nextSlot)) {
+                e.preventDefault();
+                break;
+              }
               let newX: number;
               if (isDualFurniture && dualPositionsToSearch) {
                 newX = dualPositionsToSearch[nextSlot];
@@ -746,11 +750,18 @@ export const useFurnitureKeyboard = ({
               const groupMembers = placedModules.filter(m => m.groupId === selectedModule.groupId && !m.isFreePlacement);
               if (groupMembers.length >= 2) {
                 const dir: 'left' | 'right' = e.key === 'ArrowLeft' ? 'left' : 'right';
-                if (!canMoveGroupedModulesOneSlot(selectedModule, dir)) { e.preventDefault(); return; }
-                const nextSlot = (selectedModule.slotIndex ?? 0) + (dir === 'left' ? -1 : 1);
                 const isDualSelected = selectedModule.isDualSlot !== undefined
                   ? selectedModule.isDualSlot
                   : selectedModule.moduleId.includes('dual-');
+                const nextSlot = getNextAvailableSlot(
+                  selectedModule.slotIndex ?? 0,
+                  dir,
+                  isDualSelected,
+                  selectedModule.moduleId,
+                  groupMembers.map(member => member.id),
+                  selectedModule.zone as 'normal' | 'dropped' | undefined
+                );
+                if (nextSlot === null || !canMoveGroupedModulesToSlot(selectedModule, nextSlot)) { e.preventDefault(); return; }
                 const newX = isDualSelected && indexing.threeUnitDualPositions
                   ? indexing.threeUnitDualPositions[nextSlot]
                   : indexing.threeUnitPositions[nextSlot];
