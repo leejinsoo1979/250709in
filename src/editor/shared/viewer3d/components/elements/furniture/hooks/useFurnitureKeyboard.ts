@@ -44,10 +44,16 @@ export const useFurnitureKeyboard = ({
   // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isHorizontalArrow = e.key === 'ArrowLeft' || e.key === 'ArrowRight';
+      const hasFurnitureMoveTarget = !!(
+        editingModuleId ||
+        selectedPlacedModuleId ||
+        (activePopup.type === 'furnitureEdit' && activePopup.id)
+      );
       const activeElement = document.activeElement as HTMLElement | null;
       const isEditingInput = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
 
-      if (isEditingInput) {
+      if (isEditingInput && !(isHorizontalArrow && hasFurnitureMoveTarget)) {
         return;
       }
 
@@ -79,9 +85,7 @@ export const useFurnitureKeyboard = ({
           moduleId,
           excludeModuleId,
           targetZone
-        )
-          ? nextSlot
-          : null;
+        );
       };
 
       const canMoveGroupedModulesToSlot = (
