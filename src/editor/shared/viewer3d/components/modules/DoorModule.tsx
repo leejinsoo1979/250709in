@@ -3850,7 +3850,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         // 수동 확장: 경첩쪽 가장자리는 기본 1.5mm 갭 위치에 고정하고,
         // 경첩 반대쪽만 갭(1.5)을 채운 뒤 사용자 입력 v만큼 확장한다.
         //   v=0 → 반대쪽이 몸통 끝과 일치(플러시), v>0 → 반대쪽으로만 v 확장
-        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(totalRaw + doorGap / 2, adjustedHingePosition);
+        // 단, 그 쪽이 바깥 열린면 보정(outerGapCompensation 1.5)으로 이미 채워져
+        // 있으면 중복 적용하지 않는다 (이중 적용 시 v=0인데 1.5mm 돌출).
+        const manualSideOuterCompMm = adjustedHingePosition === 'left'
+          ? outerRightGapCompensationMm
+          : outerLeftGapCompensationMm;
+        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(
+          totalRaw + doorGap / 2 - manualSideOuterCompMm,
+          adjustedHingePosition
+        );
         insertExtendLeft = manualAdjustment.leftMm;
         insertExtendRight = manualAdjustment.rightMm;
       }
