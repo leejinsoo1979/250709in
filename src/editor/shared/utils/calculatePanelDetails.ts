@@ -3121,7 +3121,7 @@ export const calculatePanelDetails = (
   // === 식세기장 후처리 ===
   // 바닥판/백패널 없음, 측판은 경첩 브래킷 보링·백패널 홈 없는 민판,
   // 도어는 식세기 본체 전면 부착이라 힌지 보링 없음
-  if (moduleData.id.includes('lower-dishwasher-cabinet')) {
+  if (moduleData.id.includes('dishwasher')) {
     return result
       .filter((panel: any) => {
         const name = String(panel?.name || '');

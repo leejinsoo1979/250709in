@@ -2057,7 +2057,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (isSide2DView) return null;
 
     // 식세기장: 도어가 식세기 본체 부착(힌지 없음) → 힌지 표시 안 함
-    if (moduleIdentifier.includes('lower-dishwasher-cabinet')) return null;
+    if (moduleIdentifier.includes('dishwasher')) return null;
 
     // 힌지보링 제외된 도어는 뷰어에서도 힌지 표시 안 함 (패널목록 '힌지제외' 버튼)
     const doorPanelNameForBoring = splitDoorPanelName === '상부 도어' || splitDoorPanelName === '하부 도어'
@@ -2568,7 +2568,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
 
   // 식세기장 도어: 식세기 본체 하단 힌지 — 하단 축으로 상단이 앞으로 ~30° 젖혀짐
-  const isDishwasherDoor = moduleIdentifier.includes('lower-dishwasher-cabinet');
+  const isDishwasherDoor = moduleIdentifier.includes('dishwasher');
   const dishwasherDoorSpring = useSpring({
     rotation: shouldOpenDoors ? Math.PI / 6 : 0,
     config: { tension: 90, friction: 16, clamp: true },

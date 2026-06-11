@@ -2249,6 +2249,90 @@ const createLowerDishwasherCabinet = (columnWidth: number): ModuleData => {
 };
 
 /**
+ * 식세기장 도어올림 - 도어올림 반통 외형 + 식세기 규칙
+ * ID가 'lower-door-lift-half'를 포함해 도어올림 반통의 도어/상판 지오메트리를 상속하고,
+ * 'dishwasher' 포함으로 식세기 규칙(조절발/바닥판/백패널/보링 없음, 틸트 도어) 적용
+ */
+const createLowerDoorLiftDishwasher = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 780;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-half-dishwasher-${widthForId}`,
+    `식세기장 도어올림 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    600,
+    '#e8f5e9',
+    `식세기장 도어올림 W${widthForId}xH785xD600 (조절발/바닥판/백패널 없음)`,
+    600,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 600,
+    hasDoor: false,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 식세기장 상판내림 - 상판내림 반통 외형 + 식세기 규칙
+ * ID가 'lower-top-down-half'를 포함해 상판내림 반통의 도어/상판/따내기 지오메트리를 상속하고,
+ * 'dishwasher' 포함으로 식세기 규칙(조절발/바닥판/백패널/보링 없음, 틸트 도어) 적용
+ */
+const createLowerTopDownDishwasher = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 780;
+
+  const base = createFurnitureBase(
+    `lower-top-down-half-dishwasher-${widthForId}`,
+    `식세기장 상판내림 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    600,
+    '#e8f5e9',
+    `식세기장 상판내림 W${widthForId}xH785xD600 (조절발/바닥판/백패널 없음)`,
+    600,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 600,
+    hasDoor: false,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
  * 싱크장 한통 (듀얼) - 조절발 105mm + 캐비넷 W(듀얼)xD600xH785
  * 싱크장 반통의 듀얼 버전 (칸막이 없음, 내부 선반 없음)
  */
@@ -4006,6 +4090,7 @@ export const generateShelvingModules = (
 
   // === 도어올림 하부장 가구 생성 ===
   modules.push(createLowerDoorLiftHalf(columnWidth));
+  modules.push(createLowerDoorLiftDishwasher(columnWidth));
   modules.push(createLowerDoorLift1Tier(columnWidth));
   modules.push(createLowerDoorLift2Tier(columnWidth));
   modules.push(createLowerDoorLift3Tier(columnWidth));
@@ -4017,6 +4102,7 @@ export const generateShelvingModules = (
 
   // === 상판내림 하부장 가구 생성 ===
   modules.push(createLowerTopDownHalf(columnWidth));
+  modules.push(createLowerTopDownDishwasher(columnWidth));
   modules.push(createLowerTopDown2Tier(columnWidth));
   modules.push(createLowerTopDown3Tier(columnWidth));
 

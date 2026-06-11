@@ -7181,7 +7181,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               // 상판내림은 터치형(touch)만 서랍 → 그 외(half/2tier/3tier)는 도어 모듈
               // 식세기장: 도어가 식세기 본체 부착 → 경첩 없음
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-dishwasher-cabinet-/.test(currentPlacedModule.moduleId)
+              || /dishwasher/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
               || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
               || /(^|-)lower-top-down-touch-/.test(currentPlacedModule.moduleId)
@@ -7260,7 +7260,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-dishwasher-cabinet-/.test(currentPlacedModule.moduleId)
+              || /dishwasher/.test(currentPlacedModule.moduleId)
             ))
             && (() => {
               const doorPanels = panelDetails.filter((panel: any) => panel?.isDoor && typeof panel?.height === 'number');
