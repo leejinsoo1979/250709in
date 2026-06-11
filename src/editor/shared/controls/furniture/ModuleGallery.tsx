@@ -176,11 +176,11 @@ const getTextThumbnailLabel = (moduleId: string): string | null => {
   return null;
 };
 
-const getTextThumbnailClassName = (moduleId: string): string => {
-  if (moduleId.includes('left-corner')) return `${styles.textThumbnail} ${styles.textThumbnailLeft}`;
-  if (moduleId.includes('right-corner')) return `${styles.textThumbnail} ${styles.textThumbnailRight}`;
-  return styles.textThumbnail;
-};
+const isTvCabinetModule = (module: ModuleData): boolean =>
+  module.id.includes('lower-drawer-1tier') || module.id.includes('lower-door-lift-1tier');
+
+const isBottomThumbnailModule = (module: ModuleData): boolean =>
+  isTvCabinetModule(module) || module.id.includes('dummy');
 
 const isBackOfThumbnailListModule = (module: ModuleData): boolean => {
   const id = module.id;
@@ -194,6 +194,9 @@ const arrangeModulesBySingleDualColumns = (
   singleModules: ModuleData[],
   dualModules: ModuleData[]
 ): ModuleGalleryCell[] => {
+  const isLeftCornerModule = (module: ModuleData): boolean => module.id.includes('left-corner');
+  const isRightCornerModule = (module: ModuleData): boolean => module.id.includes('right-corner');
+  const isCornerModule = (module: ModuleData): boolean => isLeftCornerModule(module) || isRightCornerModule(module);
   const getPairKey = (module: ModuleData): string => module.id
     .replace(/-[\d.]+$/, '')
     .replace(/^single-/, '')
@@ -250,12 +253,31 @@ const arrangeModulesBySingleDualColumns = (
 
   const visibleSingles = singleModules.filter(module => !isBackOfThumbnailListModule(module));
   const visibleDuals = dualModules.filter(module => !isBackOfThumbnailListModule(module));
-  const backSingles = singleModules.filter(isBackOfThumbnailListModule);
-  const backDuals = dualModules.filter(isBackOfThumbnailListModule);
+  const backSingles = singleModules.filter(module => isBackOfThumbnailListModule(module) && !isCornerModule(module) && !isBottomThumbnailModule(module));
+  const backDuals = dualModules.filter(module => isBackOfThumbnailListModule(module) && !isCornerModule(module) && !isBottomThumbnailModule(module));
+  const bottomSingles = singleModules.filter(isBottomThumbnailModule);
+  const bottomDuals = dualModules.filter(isBottomThumbnailModule);
+  const cornerModules = [...singleModules, ...dualModules].filter(isCornerModule);
+  const leftCornerModules = cornerModules.filter(isLeftCornerModule);
+  const rightCornerModules = cornerModules.filter(isRightCornerModule);
+  const cornerCells: ModuleGalleryCell[] = [];
+  const cornerRowCount = Math.max(leftCornerModules.length, rightCornerModules.length);
+  for (let index = 0; index < cornerRowCount; index += 1) {
+    const leftModule = leftCornerModules[index];
+    const rightModule = rightCornerModules[index];
+    cornerCells.push(leftModule
+      ? { type: 'module', module: leftModule }
+      : { type: 'placeholder', key: `corner-left-placeholder-${index}` });
+    cornerCells.push(rightModule
+      ? { type: 'module', module: rightModule }
+      : { type: 'placeholder', key: `corner-right-placeholder-${index}` });
+  }
 
   const cells: ModuleGalleryCell[] = [
     ...arrangeGroup(visibleSingles, visibleDuals, 'main'),
-    ...arrangeGroup(backSingles, backDuals, 'back')
+    ...arrangeGroup(backSingles, backDuals, 'back'),
+    ...cornerCells,
+    ...arrangeGroup(bottomSingles, bottomDuals, 'bottom')
   ];
 
   return cells;
@@ -1178,7 +1200,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       >
         <div className={styles.thumbnailImage}>
           {textThumbnailLabel ? (
-            <div className={getTextThumbnailClassName(module.id)}>
+            <div className={styles.textThumbnail}>
               {textThumbnailLabel}
             </div>
           ) : iconPath ? (
@@ -1194,7 +1216,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               }}
             />
           ) : (
-            <div className={getTextThumbnailClassName(module.id)}>
+            <div className={styles.textThumbnail}>
               {module.name.replace(/\s*[\d.]+mm$/, '')}
             </div>
           )}

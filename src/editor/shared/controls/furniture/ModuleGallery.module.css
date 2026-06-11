@@ -230,16 +230,6 @@
   word-break: keep-all;
 }
 
-.textThumbnailLeft {
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.textThumbnailRight {
-  justify-content: flex-end;
-  text-align: right;
-}
-
 /* 상부장/하부장 색온도 낮춤 (차가운 톤) */
 .thumbnailItem[data-category="upper"] .thumbnailImage img,
 .thumbnailItem[data-category="lower"] .thumbnailImage img {
