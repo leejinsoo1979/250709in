@@ -49,9 +49,10 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   }, [invalidate]);
 
   // 가구 충돌 감지 함수
-  const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number, targetSlotInfo: any) => {
+  const detectFurnitureCollisions = useCallback((movingModuleId: string, newSlotIndex: number, targetSlotInfo: any, excludeModuleIds?: string | string[]) => {
     const movingModule = placedModules.find(m => m.id === movingModuleId);
     if (!movingModule) return [];
+    const excludedIds = new Set(Array.isArray(excludeModuleIds) ? excludeModuleIds : excludeModuleIds ? [excludeModuleIds] : [movingModuleId]);
 
     const moduleData = getModuleById(movingModule.moduleId, internalSpace, spaceInfo);
     if (!moduleData) return [];
@@ -93,7 +94,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       : placedModules;
     
     modulesToCheck.forEach(module => {
-      if (module.id === movingModuleId) return; // 자기 자신 제외
+      if (excludedIds.has(module.id)) return; // 자기 자신/같은 그룹 제외
 
       const moduleInfo = getModuleById(module.moduleId, internalSpace, spaceInfo);
       if (!moduleInfo) return;
@@ -319,6 +320,48 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       }
 
       // 슬롯 가용성 검사 (자기 자신 제외)
+      const excludedMovingModuleIds = currentModule.groupId
+        ? placedModules
+          .filter(module => module.groupId === currentModule.groupId)
+          .map(module => module.id)
+        : currentModule.id;
+      const targetZone = currentModule.zone as 'normal' | 'dropped' | undefined;
+      const currentSlotIndex = typeof currentModule.slotIndex === 'number' ? currentModule.slotIndex : slotIndex;
+      const isTargetSlotAvailable = isSlotAvailable(
+        slotIndex,
+        isDualFurniture,
+        placedModules,
+        spaceInfo,
+        currentModule.moduleId,
+        excludedMovingModuleIds,
+        targetZone
+      );
+
+      if (!isTargetSlotAvailable) {
+        const direction = slotIndex > currentSlotIndex
+          ? 'right'
+          : slotIndex < currentSlotIndex
+            ? 'left'
+            : null;
+        if (!direction) {
+          return;
+        }
+
+        const nextAvailableSlot = findNextAvailableSlot(
+          currentSlotIndex,
+          direction,
+          isDualFurniture,
+          placedModules,
+          spaceInfo,
+          currentModule.moduleId,
+          excludedMovingModuleIds,
+          targetZone
+        );
+        if (nextAvailableSlot === null) {
+          return;
+        }
+        slotIndex = nextAvailableSlot;
+      }
 
       // 위치 계산 - zone별 배열 직접 접근
       const fullIndexing = getRecalculatedIndexing();
@@ -426,7 +469,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         // });
       }
       
-      const collidingModules = detectFurnitureCollisions(draggingModuleId, collisionCheckIndex, targetSlotInfo);
+      const collidingModules = detectFurnitureCollisions(draggingModuleId, collisionCheckIndex, targetSlotInfo, excludedMovingModuleIds);
       if (collidingModules.length > 0) {
         // 충돌하는 가구가 있으면 이동 취소
 // console.log('❌ 충돌 감지: 다른 가구가 이미 배치되어 있음', collidingModules);
