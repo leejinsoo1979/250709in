@@ -3849,11 +3849,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       } else if (slotInfo?.intrusionDirection === 'from-right' || (columnCheck.isNearColumn && columnCheck.columnSide === 'right')) {
         insertExtendRight = totalAdjusted;
       } else {
-        // 수동 확장: v + 3 을 경첩 반대쪽에 적용
-        const totalAdj = totalAdjusted;
-        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(totalAdj, adjustedHingePosition);
-        insertExtendLeft = manualAdjustment.leftMm;
-        insertExtendRight = manualAdjustment.rightMm;
+        // 수동 확장: 기본 도어갭 보정(+3)은 양쪽 1.5mm씩 균등 적용해 v=0이 몸통과
+        // 정확히 일치하도록 하고(경첩 반대쪽 1.5mm 돌출 방지), 사용자 입력 v만
+        // 경첩 반대쪽으로 확장한다.
+        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(totalRaw, adjustedHingePosition);
+        insertExtendLeft = manualAdjustment.leftMm + 1.5;
+        insertExtendRight = manualAdjustment.rightMm + 1.5;
       }
       doorWidth += insertExtendLeft + insertExtendRight;
     }
