@@ -176,6 +176,12 @@ const getTextThumbnailLabel = (moduleId: string): string | null => {
   return null;
 };
 
+const getTextThumbnailClassName = (moduleId: string): string => {
+  if (moduleId.includes('left-corner')) return `${styles.textThumbnail} ${styles.textThumbnailLeft}`;
+  if (moduleId.includes('right-corner')) return `${styles.textThumbnail} ${styles.textThumbnailRight}`;
+  return styles.textThumbnail;
+};
+
 const isBackOfThumbnailListModule = (module: ModuleData): boolean => {
   const id = module.id;
   return !!getTextThumbnailLabel(id)
@@ -1172,7 +1178,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       >
         <div className={styles.thumbnailImage}>
           {textThumbnailLabel ? (
-            <div className={styles.textThumbnail}>
+            <div className={getTextThumbnailClassName(module.id)}>
               {textThumbnailLabel}
             </div>
           ) : iconPath ? (
@@ -1188,7 +1194,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               }}
             />
           ) : (
-            <div className={styles.textThumbnail}>
+            <div className={getTextThumbnailClassName(module.id)}>
               {module.name.replace(/\s*[\d.]+mm$/, '')}
             </div>
           )}
