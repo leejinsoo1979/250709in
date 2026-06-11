@@ -252,13 +252,18 @@ const DoorGapInput: React.FC<{
 
   const commit = () => {
     setIsFocused(false);
+    const trimmed = localVal.trim();
+    if (trimmed === '' || trimmed === '-' || trimmed === '+') {
+      setLocalVal(displayFromStore(storeValue));
+      useUIStore.getState().setHighlightedDoorGap && useUIStore.getState().setHighlightedDoorGap(null);
+      return;
+    }
     let toCommit = localVal;
     if (isCf) {
       const raw = parseFloat(localVal);
       if (!isNaN(raw)) {
         // 천장/바닥 기준 입력을 몸통 기준 저장값으로 되돌린다.
-        const clamped = Math.max(0, raw);
-        toCommit = String(Math.round(isCfTopInset ? clamped - refDistanceMm : refDistanceMm - clamped));
+        toCommit = String(Math.round(isCfTopInset ? raw - refDistanceMm : refDistanceMm - raw));
       }
     }
     onCommit(moduleId, field, toCommit, highlightModuleIds);
@@ -275,7 +280,8 @@ const DoorGapInput: React.FC<{
   return (
     <td style={{ padding: '2px 3px', textAlign: 'center' }}>
       <input
-        type="number"
+        type="text"
+        inputMode="decimal"
         value={localVal}
         onChange={(e) => setLocalVal(e.target.value)}
         onFocus={handleFocus}
@@ -441,9 +447,9 @@ const getLegacyDoorGapDefaultsForModule = (
 const resolveDisplayedDoorGap = (
   current: number | undefined,
   fallback: number,
-  legacyValues: number[]
+  _legacyValues: number[]
 ) => (
-  current === undefined || legacyValues.includes(current) ? fallback : current
+  current === undefined ? fallback : current
 );
 
 /** 프레임 size/옵셋 입력 행 — 로컬 상태 기반 (편집 중 store 업데이트로 인한 덮어쓰기 방지) */
@@ -5279,6 +5285,12 @@ const Configurator: React.FC = () => {
       { key: 'upper', title: '상부장 도어', modules: normalUpperDoorSettingEntries.map(entry => entry.mod) },
       { key: 'lower', title: '하부장 도어', modules: normalLowerDoorSettingEntries.map(entry => entry.mod) },
     ].filter(group => group.modules.length > 0);
+    const getRepresentativeDoorGapModule = (modules: any[]) => {
+      const editingFurnitureId = activePopup.type === 'furnitureEdit' ? activePopup.id : null;
+      return modules.find(mod => mod.id === editingFurnitureId)
+        ?? modules.find(mod => mod.id === selectedFurnitureId)
+        ?? modules[0];
+    };
     const getGroupDoorGapDisplay = (
       mod: any,
       groupKey: string,
@@ -5310,7 +5322,7 @@ const Configurator: React.FC = () => {
           <tr>
             <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
             {groups.map(group => {
-              const firstMod = group.modules[0];
+              const firstMod = getRepresentativeDoorGapModule(group.modules);
               const groupIds = group.modules.map(mod => mod.id);
               const { topDistance } = computeRefDistances(firstMod);
               return <DoorGapInput key={`top-sync-${group.key}-${doorGapRefMode}`} moduleId={firstMod.id} field="doorTopGap"
@@ -5324,7 +5336,7 @@ const Configurator: React.FC = () => {
           <tr>
             <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
             {groups.map(group => {
-              const firstMod = group.modules[0];
+              const firstMod = getRepresentativeDoorGapModule(group.modules);
               const groupIds = group.modules.map(mod => mod.id);
               const { bottomDistance } = computeRefDistances(firstMod);
               return <DoorGapInput key={`bot-sync-${group.key}-${doorGapRefMode}`} moduleId={firstMod.id} field="doorBottomGap"

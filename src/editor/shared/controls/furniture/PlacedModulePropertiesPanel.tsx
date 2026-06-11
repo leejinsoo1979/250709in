@@ -2359,8 +2359,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         typeof rawTopGap === 'number'
         && legacyTopGapValues.includes(rawTopGap)
         && !isUpperCategory
+        && !isLowerCategory
         && !isBasicLowerDoorGap
         && !isDoorLift
+        && !isTopDown
         && (!isTopDown || rawTopGap === 5);
       const initialTopGap = !isDoorSplitForDoorGaps && !isUpperCategory && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
@@ -2373,7 +2375,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const shouldApplyLegacyBottomGap =
         typeof rawBotGap === 'number'
         && legacyBottomGapValues.includes(rawBotGap)
-        && !isUpperCategory;
+        && !isUpperCategory
+        && !isLowerCategory
+        && !isBasicLowerDoorGap
+        && !isDoorLift
+        && !isTopDown;
       const initialBottomGap = shouldApplyLegacyBottomGap
         ? defaultBottomGap
         : (rawBotGap ?? defaultBottomGap);
