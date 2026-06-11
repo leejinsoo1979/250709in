@@ -260,6 +260,10 @@ export interface PlacedModule {
   // 비어있거나 undefined면 전체 포함 (기본 동작)
   panelExclusions?: string[];
 
+  // 도어 힌지보링 제외 목록 (도어 패널 이름 배열: '도어'/'좌측 도어'/'우측 도어'/'상부 도어'/'하부 도어')
+  // 포함된 도어는 CNC 옵티마이저 보링 출력과 2D 뷰어 힌지 표시에서 제외
+  hingeBoringExclusions?: string[];
+
   // 레그라박스 마이다 개별 사이즈 (mm) — 사용자가 가구 편집 팝업에서 직접 지정
   // 인덱스: di=0(아래) → di=N(위) 순서. undefined면 모듈 기본값(fixed) 사용.
   // 적용 대상: 인덕션장, 도어올림 터치(2A/2B/3), 상판내림 터치(2/3)

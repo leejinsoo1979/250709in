@@ -4816,6 +4816,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   }
 
                   const panelChecked = isPanelChecked(panel.name);
+                  const isDoorPanelForBoring = !!panel.isDoor;
+                  const hingeBoringExcluded = isDoorPanelForBoring
+                    && (currentPlacedModule?.hingeBoringExclusions ?? []).includes(panel.name);
+                  const toggleHingeBoring = () => {
+                    if (!currentPlacedModule || !panel.name) return;
+                    const cur = currentPlacedModule.hingeBoringExclusions ?? [];
+                    const next = cur.includes(panel.name)
+                      ? cur.filter((n: string) => n !== panel.name)
+                      : [...cur, panel.name];
+                    updatePlacedModule(currentPlacedModule.id, {
+                      hingeBoringExclusions: next.length > 0 ? next : undefined,
+                    } as any);
+                  };
                   return (
                     <div
                       key={index}
@@ -4853,6 +4866,35 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           {panel.material && ` [${panel.material}]`}
                         </span>
                       </div>
+                      {isDoorPanelForBoring && (
+                        <button
+                          style={{
+                            padding: '4px 6px',
+                            background: hingeBoringExcluded ? '#f59e0b' : 'var(--theme-surface, #fff)',
+                            color: hingeBoringExcluded ? 'white' : 'var(--theme-text-secondary, #555)',
+                            border: `1px solid ${hingeBoringExcluded ? '#f59e0b' : 'var(--theme-border, #ccc)'}`,
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            height: '26px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleHingeBoring();
+                          }}
+                          title={hingeBoringExcluded
+                            ? `${panel.name} 힌지보링 복원 (옵티마이저·2D 힌지 표시)`
+                            : `${panel.name} 힌지보링 제외 (옵티마이저 보링·2D 힌지 숨김)`}
+                        >
+                          힌지{hingeBoringExcluded ? '제외' : ''}
+                        </button>
+                      )}
                       <button
                         style={{
                           padding: '4px 8px',
