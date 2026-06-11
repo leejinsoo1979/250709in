@@ -2667,12 +2667,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                        moduleData?.id?.toLowerCase().includes('door') ||
                        moduleData?.moduleId?.toLowerCase().includes('door');
 
-  // Insert 프레임 인접 시: 힌지를 인서트 반대쪽으로 자동 설정 (사용자 요구)
+  // Insert 프레임 인접 시: 기본 힌지를 인서트 반대쪽으로 자동 설정
   // 좌측 인서트 → 우측 힌지, 우측 인서트 → 좌측 힌지
-  // 기둥 로직보다 우선 적용 (싱글 도어 한정 — 듀얼은 좌/우 도어가 각각 별도 힌지)
-  if (insertFrameAdjacency.left && !insertFrameAdjacency.right) {
+  // 단, 사용자가 경첩 방향을 직접 선택한 경우(store hingePosition 존재)에는
+  // 자동값 대신 사용자 선택을 우선한다 — 키큰장 찬넬 옆 가구도 힌지 변경 가능.
+  const userSelectedHinge = storePlacedModule?.hingePosition === 'left'
+    || storePlacedModule?.hingePosition === 'right';
+  if (!userSelectedHinge && insertFrameAdjacency.left && !insertFrameAdjacency.right) {
     adjustedHingePosition = 'right';
-  } else if (insertFrameAdjacency.right && !insertFrameAdjacency.left) {
+  } else if (!userSelectedHinge && insertFrameAdjacency.right && !insertFrameAdjacency.left) {
     adjustedHingePosition = 'left';
   } else if (columnCheck.isNearColumn && isDoorModule) {
     // 기둥이 왼쪽에 있으면 왼쪽 힌지 (도어가 오른쪽으로 열림 - 기둥 반대 방향으로 열림)
