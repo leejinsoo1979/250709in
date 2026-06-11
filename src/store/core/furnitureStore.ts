@@ -461,6 +461,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         module.backWallGap = 0;
       }
 
+      // 식세기장: 좌/우 측판은 기본 꺼짐 (인접 가구 측판/EP를 공유하는 빌트인 구성)
+      // 패널목록에서 체크하면 다시 켤 수 있음
+      if (module.moduleId?.includes('dishwasher') && module.panelExclusions === undefined) {
+        module.panelExclusions = ['좌측판', '우측판'];
+      }
+
       // 우측바 백패널 두께는 배치된 가구 값으로 표시되므로, 신규 가구도 현재 값 상속
       // 기존 배치 가구가 없으면 사용자 기본설정/전역값을 폴백으로 사용한다.
       if (module.backPanelThickness === undefined) {
