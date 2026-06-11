@@ -1346,12 +1346,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const newModules = applyCurrentSlotOutsideEpAdjustments(resolved.map(m => {
       if (isUpperCabinetModuleId(m.moduleId) && m.hasDoor === true) {
         const updates: Partial<PlacedModule> = {};
-        if (m.doorTopGap === undefined || m.doorTopGap === -3 || m.doorTopGap === 5) {
+        if (m.doorTopGap === undefined) {
           if (typeof spaceInfo.doorTopGapUpper === 'number') {
             updates.doorTopGap = spaceInfo.doorTopGapUpper;
           }
         }
-        if (m.doorBottomGap === undefined || m.doorBottomGap === 28 || m.doorBottomGap === 25 || m.doorBottomGap === 5) {
+        if (m.doorBottomGap === undefined) {
           if (typeof spaceInfo.doorBottomGapUpper === 'number') {
             updates.doorBottomGap = spaceInfo.doorBottomGapUpper;
           }
@@ -1826,14 +1826,6 @@ useFurnitureStore.subscribe((state) => {
       needsMigration = true;
       break;
     }
-    if (isUpper && typeof spInfo.doorTopGapUpper === 'number' && m.doorTopGap !== spInfo.doorTopGapUpper && (m.doorTopGap === -3 || m.doorTopGap === 5)) {
-      needsMigration = true;
-      break;
-    }
-    if (isUpper && typeof spInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spInfo.doorBottomGapUpper && (m.doorBottomGap === 28 || m.doorBottomGap === 25 || m.doorBottomGap === 5)) {
-      needsMigration = true;
-      break;
-    }
   }
   if (!needsMigration) return;
   migrationRunning = true;
@@ -1848,11 +1840,6 @@ useFurnitureStore.subscribe((state) => {
 	        updates.doorTopGap = typeof spInfo.doorTopGapUpper === 'number'
 	          ? spInfo.doorTopGapUpper
 	          : (isFullSurround ? -3 : 5);
-	      } else if (typeof spInfo.doorTopGapUpper === 'number' && m.doorTopGap !== spInfo.doorTopGapUpper && (m.doorTopGap === -3 || m.doorTopGap === 5)) {
-	        updates.doorTopGap = spInfo.doorTopGapUpper;
-	      }
-	      if (typeof spInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spInfo.doorBottomGapUpper && (m.doorBottomGap === 28 || m.doorBottomGap === 25 || m.doorBottomGap === 5)) {
-	        updates.doorBottomGap = spInfo.doorBottomGapUpper;
 	      }
 	      if (Object.keys(updates).length > 0) return { ...m, ...updates };
 	    }

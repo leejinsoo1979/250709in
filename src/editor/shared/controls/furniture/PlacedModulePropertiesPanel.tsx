@@ -4296,8 +4296,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
           && spaceInfo.frameConfig?.top !== false;
         if (isUpperModule) {
-          updates.doorTopGap = spaceInfo.doorTopGapUpper ?? (isFullSurroundForDoorDefaults ? -3 : 5);
-          updates.doorBottomGap = spaceInfo.doorBottomGapUpper ?? 28;
+          if (mod.doorTopGap === undefined) {
+            updates.doorTopGap = spaceInfo.doorTopGapUpper ?? (isFullSurroundForDoorDefaults ? -3 : 5);
+          }
+          if (mod.doorBottomGap === undefined) {
+            updates.doorBottomGap = spaceInfo.doorBottomGapUpper ?? 28;
+          }
         } else if (mod.doorTopGap === undefined) {
           updates.doorTopGap = isUpperModule
             ? (spaceInfo.doorTopGapUpper ?? (isFullSurroundForDoorDefaults ? -3 : 5))

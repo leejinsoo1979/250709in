@@ -362,10 +362,10 @@ const applyUpperDoorDefaultsToLoadedModules = (
   }
 
   const updates: Record<string, number> = {};
-  if (typeof spaceConfig.doorTopGapUpper === 'number') {
+  if (module.doorTopGap === undefined && typeof spaceConfig.doorTopGapUpper === 'number') {
     updates.doorTopGap = spaceConfig.doorTopGapUpper;
   }
-  if (typeof spaceConfig.doorBottomGapUpper === 'number') {
+  if (module.doorBottomGap === undefined && typeof spaceConfig.doorBottomGapUpper === 'number') {
     updates.doorBottomGap = spaceConfig.doorBottomGapUpper;
   }
 
@@ -1349,10 +1349,10 @@ const Configurator: React.FC = () => {
 	      }
 	      if (!isShelfSplit && isUpper && m.hasDoor) {
 	        const updates: any = {};
-	        if (typeof spaceInfo.doorTopGapUpper === 'number' && m.doorTopGap !== spaceInfo.doorTopGapUpper) {
+	        if (typeof spaceInfo.doorTopGapUpper === 'number' && m.doorTopGap === undefined) {
 	          updates.doorTopGap = spaceInfo.doorTopGapUpper;
 	        }
-	        if (typeof spaceInfo.doorBottomGapUpper === 'number' && m.doorBottomGap !== spaceInfo.doorBottomGapUpper) {
+	        if (typeof spaceInfo.doorBottomGapUpper === 'number' && m.doorBottomGap === undefined) {
 	          updates.doorBottomGap = spaceInfo.doorBottomGapUpper;
 	        }
 	        if (Object.keys(updates).length > 0) {
@@ -4700,10 +4700,10 @@ const Configurator: React.FC = () => {
       const upperModulesWithDoor = currentModules.filter(m => m.hasDoor && isUpperCabinetModuleId(m.moduleId));
       upperModulesWithDoor.forEach(m => {
         const updatesForUpper: any = {};
-        if (finalUpdates.doorTopGapUpper !== undefined) {
+        if (finalUpdates.doorTopGapUpper !== undefined && m.doorTopGap === undefined) {
           updatesForUpper.doorTopGap = finalUpdates.doorTopGapUpper;
         }
-        if (finalUpdates.doorBottomGapUpper !== undefined) {
+        if (finalUpdates.doorBottomGapUpper !== undefined && m.doorBottomGap === undefined) {
           updatesForUpper.doorBottomGap = finalUpdates.doorBottomGapUpper;
         }
         if (Object.keys(updatesForUpper).length > 0) {
