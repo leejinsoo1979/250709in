@@ -5437,8 +5437,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const sectionCount = isCustom ? ccSections!.length : mcSections!.length;
             const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
             const totalH = placedBodyHeight || moduleData?.dimensions?.height || 2200;
+            // 몸통치수 W와 동일한 우선순위 사용 — slotCustomWidth(슬롯 실폭) 누락 시
+            // 섹션 너비가 모듈 기본폭(600)으로 표시되어 몸통(599.5)과 어긋난다.
             const totalW = currentPlacedModule.freeWidth
               ?? currentPlacedModule.adjustedWidth
+              ?? currentPlacedModule.slotCustomWidth
               ?? currentPlacedModule.customWidth
               ?? moduleData?.dimensions?.width
               ?? 600;
