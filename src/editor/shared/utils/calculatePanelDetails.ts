@@ -2768,7 +2768,7 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
-  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet'))) {
+  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet'))) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
@@ -2778,6 +2778,7 @@ export const calculatePanelDetails = (
     const isTopDownTouch = moduleData.id.includes('lower-top-down-touch-');
     const isHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
       || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
+      || moduleData.id.includes('lower-dishwasher-cabinet')
       || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
     // 보강대 따내기 (65mm)
     const lowerNotches: { fromBottom: number; height: number }[] = isHalfCabinet
