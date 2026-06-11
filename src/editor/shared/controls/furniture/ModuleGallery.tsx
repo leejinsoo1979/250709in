@@ -172,6 +172,7 @@ const formatThumbnailName = (module: ModuleData): string => {
 const getTextThumbnailLabel = (moduleId: string): string | null => {
   if (moduleId.includes('lower-drawer-1tier')) return 'TV장기본';
   if (moduleId.includes('lower-door-lift-1tier')) return 'TV장도어올림';
+  if (moduleId.includes('lower-dishwasher-cabinet')) return '식세기장';
   return null;
 };
 
