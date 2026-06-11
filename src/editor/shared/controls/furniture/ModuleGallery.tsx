@@ -199,6 +199,9 @@ const arrangeModulesBySingleDualColumns = (
   const isLeftCornerModule = (module: ModuleData): boolean => module.id.includes('left-corner');
   const isRightCornerModule = (module: ModuleData): boolean => module.id.includes('right-corner');
   const isCornerModule = (module: ModuleData): boolean => isLeftCornerModule(module) || isRightCornerModule(module);
+  const isStylerModule = (module: ModuleData): boolean => module.id.includes('dual-2drawer-styler');
+  const isPantsHangerModule = (module: ModuleData): boolean => module.id.includes('dual-4drawer-pantshanger');
+  const isStylerPantsPairModule = (module: ModuleData): boolean => isStylerModule(module) || isPantsHangerModule(module);
   const getPairKey = (module: ModuleData): string => module.id
     .replace(/-[\d.]+$/, '')
     .replace(/^single-/, '')
@@ -254,9 +257,23 @@ const arrangeModulesBySingleDualColumns = (
   };
 
   const visibleSingles = singleModules.filter(module => !isBackOfThumbnailListModule(module));
-  const visibleDuals = dualModules.filter(module => !isBackOfThumbnailListModule(module));
+  const visibleDuals = dualModules.filter(module => !isBackOfThumbnailListModule(module) && !isStylerPantsPairModule(module));
   const backSingles = singleModules.filter(module => isBackOfThumbnailListModule(module) && !isCornerModule(module) && !isBottomThumbnailModule(module));
   const backDuals = dualModules.filter(module => isBackOfThumbnailListModule(module) && !isCornerModule(module) && !isBottomThumbnailModule(module));
+  const stylerModules = dualModules.filter(isStylerModule);
+  const pantsHangerModules = dualModules.filter(isPantsHangerModule);
+  const stylerPantsCells: ModuleGalleryCell[] = [];
+  const stylerPantsRowCount = Math.max(stylerModules.length, pantsHangerModules.length);
+  for (let index = 0; index < stylerPantsRowCount; index += 1) {
+    const stylerModule = stylerModules[index];
+    const pantsHangerModule = pantsHangerModules[index];
+    stylerPantsCells.push(stylerModule
+      ? { type: 'module', module: stylerModule }
+      : { type: 'placeholder', key: `styler-placeholder-${index}` });
+    stylerPantsCells.push(pantsHangerModule
+      ? { type: 'module', module: pantsHangerModule }
+      : { type: 'placeholder', key: `pants-hanger-placeholder-${index}` });
+  }
   const bottomSingles = singleModules.filter(isBottomThumbnailModule);
   const bottomDuals = dualModules.filter(isBottomThumbnailModule);
   const cornerModules = [...singleModules, ...dualModules].filter(isCornerModule);
@@ -277,6 +294,7 @@ const arrangeModulesBySingleDualColumns = (
 
   const cells: ModuleGalleryCell[] = [
     ...arrangeGroup(visibleSingles, visibleDuals, 'main'),
+    ...stylerPantsCells,
     ...arrangeGroup(backSingles, backDuals, 'back'),
     ...cornerCells,
     ...arrangeGroup(bottomSingles, bottomDuals, 'bottom')
