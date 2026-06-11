@@ -569,7 +569,11 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     (placedModule as any)?.topEndPanelBackLipThickness ?? 0,
     (placedModule as any)?.topEndPanelOffset,
     (placedModule as any)?.topEndPanelBackOffset,
-    true
+    true,
+    undefined,
+    (placedModule as any)?.leftEndPanelBackOffset ?? 0,
+    (placedModule as any)?.rightEndPanelBackOffset ?? 0,
+    (placedModule as any)?.endPanelDepth
   ).flatMap(panel => applyRenderedPanelDimensions(
     applyFramePanelListWidthFallback(panel, placedModule, renderedWidthForPanels, spaceInfo),
     placedModule.id

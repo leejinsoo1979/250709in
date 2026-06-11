@@ -1002,7 +1002,14 @@ export function useLivePanelData() {
           panelDoorWidthAdjustEnabled,
           (placedModule as any).doorWidthAdjustMm ?? -1.5,
           baseFrameGapH,
-          topFrameGapH
+          topFrameGapH,
+          // (topFrame/baseFrame 폭조정, 상단EP 등 미사용 — 기본값)
+          false, 0, 0, false, 0, 0,
+          false, 0, 0, undefined, undefined, false, undefined,
+          // EP 뒤옵셋 / EP 깊이 (패널목록·렌더링과 동일)
+          (placedModule as any).leftEndPanelBackOffset ?? 0,
+          (placedModule as any).rightEndPanelBackOffset ?? 0,
+          (placedModule as any).endPanelDepth
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1988,7 +1995,14 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         panelDoorWidthAdjustEnabled2,
         (placedModule as any).doorWidthAdjustMm ?? -1.5,
         baseFrameGapH2,
-        topFrameGapH2
+        topFrameGapH2,
+        // (topFrame/baseFrame 폭조정, 상단EP 등 미사용 — 기본값)
+        false, 0, 0, false, 0, 0,
+        false, 0, 0, undefined, undefined, false, undefined,
+        // EP 뒤옵셋 / EP 깊이 (패널목록·렌더링과 동일)
+        (placedModule as any).leftEndPanelBackOffset ?? 0,
+        (placedModule as any).rightEndPanelBackOffset ?? 0,
+        (placedModule as any).endPanelDepth
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

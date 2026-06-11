@@ -103,7 +103,10 @@ export const calculatePanelDetails = (
   topEndPanelOffsetMm?: number,
   topEndPanelBackOffsetMm?: number,
   includeTopEndPanelMain: boolean = false,
-  customMaidaHeightsMode?: string
+  customMaidaHeightsMode?: string,
+  leftEndPanelBackOffsetMm: number = 0,
+  rightEndPanelBackOffsetMm: number = 0,
+  endPanelDepthMm?: number
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -2301,6 +2304,10 @@ export const calculatePanelDetails = (
     ? 0
     : (endPanelBottomOffsetMm !== undefined ? (endPanelBottomOffsetMm as number) : (baseFrameHeightMm ?? 0));
   const endPanelHeight = height + effectiveEndPanelTopOffsetMm + effectiveEndPanelBottomOffsetMm;
+  // EP 깊이: 렌더링(FurnitureItem)과 동일 — base(endPanelDepth 우선) + 앞옵셋 + 뒤옵셋
+  const epBaseDepthMm = endPanelDepthMm ?? customDepth;
+  const leftEndPanelDepthMm = Math.max(0, epBaseDepthMm + leftEndPanelFrontOffsetMm + leftEndPanelBackOffsetMm);
+  const rightEndPanelDepthMm = Math.max(0, epBaseDepthMm + rightEndPanelFrontOffsetMm + rightEndPanelBackOffsetMm);
 
   if (hasLeftEndPanel) {
     if (isEpCFrame) {
@@ -2309,7 +2316,7 @@ export const calculatePanelDetails = (
         result.push({
           name: 'EP(좌)측판',
           width: endPanelHeight,
-          height: customDepth,
+          height: leftEndPanelDepthMm,
           thickness: epT,
           material: 'PET',
           quantity: 1,
@@ -2335,7 +2342,7 @@ export const calculatePanelDetails = (
       result.push({
         name: '엔드패널(좌)',
         width: endPanelHeight,
-        height: customDepth,
+        height: leftEndPanelDepthMm,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -2348,7 +2355,7 @@ export const calculatePanelDetails = (
         result.push({
           name: 'EP(우)측판',
           width: endPanelHeight,
-          height: customDepth,
+          height: rightEndPanelDepthMm,
           thickness: epT,
           material: 'PET',
           quantity: 1,
@@ -2374,7 +2381,7 @@ export const calculatePanelDetails = (
       result.push({
         name: '엔드패널(우)',
         width: endPanelHeight,
-        height: customDepth,
+        height: rightEndPanelDepthMm,
         thickness: epT,
         material: 'PET',
         quantity: 1,

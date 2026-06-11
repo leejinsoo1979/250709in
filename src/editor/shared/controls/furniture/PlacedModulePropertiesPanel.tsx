@@ -2866,7 +2866,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       (currentPlacedModule as any)?.topEndPanelOffset,
       (currentPlacedModule as any)?.topEndPanelBackOffset,
       true,
-      (currentPlacedModule as any)?.customMaidaHeightsMode
+      (currentPlacedModule as any)?.customMaidaHeightsMode,
+      currentPlacedModule?.leftEndPanelBackOffset ?? 0,
+      currentPlacedModule?.rightEndPanelBackOffset ?? 0,
+      (currentPlacedModule as any)?.endPanelDepth
     );
     return calculatedPanels.flatMap(panel => applyRenderedPanelDimensions(
       applyFramePanelListWidthFallback(panel, currentPlacedModule, renderedWidthForPanels, spaceInfo),
