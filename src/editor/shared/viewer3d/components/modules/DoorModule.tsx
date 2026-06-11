@@ -1490,15 +1490,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (!insertFrameAdjacency.left && !insertFrameAdjacency.right) {
       return { left: false, right: false };
     }
+
+    // 실효 힌지: 사용자 선택 우선, 미선택 시 자동(찬넬 반대쪽)
+    const userHinge = storePlacedModule?.hingePosition;
+    const autoHinge: 'left' | 'right' = insertFrameAdjacency.left && !insertFrameAdjacency.right
+      ? 'right'
+      : insertFrameAdjacency.right && !insertFrameAdjacency.left
+        ? 'left'
+        : ((hingePosition ?? 'right') as 'left' | 'right');
+    const hingeSide: 'left' | 'right' = (userHinge === 'left' || userHinge === 'right') ? userHinge : autoHinge;
+
+    // 찬넬 확장은 경첩 반대쪽(손잡이쪽)으로만 가능 — 경첩 쪽 찬넬은
+    // 도어가 덮으면 회전 시 충돌하므로 확장하지 않는다.
     if (insertFrameAdjacency.left && !insertFrameAdjacency.right) {
-      return { left: true, right: false };
+      return { left: hingeSide !== 'left', right: false };
     }
     if (insertFrameAdjacency.right && !insertFrameAdjacency.left) {
-      return { left: false, right: true };
+      return { left: false, right: hingeSide !== 'right' };
     }
 
     // 양쪽에 찬넬이 있어도 도어는 힌지 반대방향 한쪽으로만 확장한다.
-    const hingeSide = (storePlacedModule?.hingePosition ?? hingePosition ?? 'right') as 'left' | 'right';
     const oppositeSide = resolveHingeOppositeDoorWidthAdjustment(1, hingeSide);
     return {
       left: oppositeSide.leftMm > 0,
