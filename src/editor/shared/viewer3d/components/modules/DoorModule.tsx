@@ -3774,6 +3774,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let doorWidth = widthBaseForDoorAdjust - doorGap + outerLeftGapCompensationMm + outerRightGapCompensationMm; // 슬롯사이즈 - 적용 갭
     const openOuterShiftX = mmToThreeUnits(outerRightGapCompensationMm - outerLeftGapCompensationMm) / 2;
 
+    // EP로 몸통이 슬롯 안에서 한쪽으로 밀린 경우: 도어확장 기준폭이 몸통(adjustedWidth)으로
+    // 줄어들면 도어 앵커도 몸통 중심으로 이동해야 한다. 폭만 몸통 기준으로 줄고 위치는
+    // 슬롯 중심에 남으면 좌우 이격(한쪽 이격 + 반대쪽 EP 침범)이 생긴다.
+    let epBodyAnchorShiftX = 0;
+    if (
+      doorAdjEnabled
+      && storePlacedModule
+      && typeof originalSlotWidth === 'number'
+      && widthBaseForDoorAdjust < originalSlotWidth
+    ) {
+      const hasLeftEp = !!storePlacedModule.hasLeftEndPanel;
+      const hasRightEp = !!storePlacedModule.hasRightEndPanel;
+      if (hasLeftEp !== hasRightEp) {
+        const bodyShiftMm = (originalSlotWidth - widthBaseForDoorAdjust) / 2;
+        epBodyAnchorShiftX = mmToThreeUnits(hasRightEp ? -bodyShiftMm : bodyShiftMm);
+      }
+    }
+
     // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금
     // 힌지가 반대쪽이면 도어가 EP 반대 방향으로 열리므로 충돌 없음 → 통과
     const singleEpIsCFrame = !!(storePlacedModule && (storePlacedModule.endPanelThickness || 18) > 20);
@@ -3855,7 +3873,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     const singleDoorOpenGeometry = calculateSingleDoorOpenGeometry({
       hingeSide: adjustedHingePosition,
-      doorGroupX: doorGroupX + openOuterShiftX,
+      doorGroupX: doorGroupX + openOuterShiftX + epBodyAnchorShiftX,
       doorYPosition,
       doorDepth,
       doorWidthUnits,
