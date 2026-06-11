@@ -1,4 +1,8 @@
 import type { PlacedModule } from '@/editor/shared/furniture/types';
+import {
+  findDoorHingeGeometry,
+  type DoorHingeGeometryField
+} from '@/editor/shared/utils/doorHingeGeometryRegistry';
 
 export type FurniturePresetCategory = 'full' | 'upper' | 'lower';
 
@@ -226,12 +230,28 @@ export const getApplicableFurniturePresetGroups = (
   )
 );
 
+const HINGE_POSITION_FIELDS: DoorHingeGeometryField[] = [
+  'hingePositionsMm',
+  'upperDoorHingePositionsMm',
+  'lowerDoorHingePositionsMm',
+];
+
 export const collectFurniturePresetProps = (placedModule: PlacedModule): Record<string, any> => {
   const allFields = FURNITURE_PRESET_FIELD_GROUPS.flatMap(g => g.fields);
   const props: Record<string, any> = {};
   const mod = placedModule as any;
   for (const f of allFields) {
     if (mod[f] !== undefined) props[f] = clonePresetValue(mod[f]);
+  }
+  // 경첩 상/하 좌표: 사용자가 직접 수정하지 않으면 store에 없으므로(기본값은 뷰어만 계산)
+  // 뷰어가 실제 표시 중인 경첩 지오메트리를 측판 좌표로 변환해 함께 저장한다.
+  for (const field of HINGE_POSITION_FIELDS) {
+    if (props[field] !== undefined) continue;
+    const geometry = findDoorHingeGeometry(placedModule.id, field);
+    if (!geometry || geometry.doorPositionsMm.length === 0) continue;
+    props[field] = geometry.doorPositionsMm.map(positionMm =>
+      Math.round((geometry.doorBottomOnSideMm + positionMm) * 1000) / 1000
+    );
   }
   return props;
 };
