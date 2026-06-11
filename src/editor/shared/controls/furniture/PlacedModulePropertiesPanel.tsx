@@ -2361,6 +2361,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         typeof rawTopGap === 'number'
         && legacyTopGapValues.includes(rawTopGap)
         && !isUpperCategory
+        && !isBasicLowerDoorGap
         && (!isTopDown || rawTopGap === 5);
       const initialTopGap = !isDoorSplitForDoorGaps && !isUpperCategory && isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
         ? -3
