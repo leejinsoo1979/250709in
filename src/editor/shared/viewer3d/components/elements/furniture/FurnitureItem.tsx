@@ -6,6 +6,7 @@ import { calculateInternalSpace, END_PANEL_RENDER_THICKNESS } from '../../../uti
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
+import BoxWithEdges from '../../modules/components/BoxWithEdges';
 import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
 import { calculateSpaceIndexing, ColumnIndexer, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
@@ -3333,6 +3334,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const sideFrameColor = spaceInfo.materialConfig?.doorColor
     || (spaceInfo.materialConfig as any)?.frameColor
     || '#D4C5A9';
+  const sideFrameMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: sideFrameColor,
+    roughness: 0.48,
+    metalness: 0.06
+  }), [sideFrameColor]);
+  useEffect(() => () => {
+    sideFrameMaterial.dispose();
+  }, [sideFrameMaterial]);
   const sideFrameThickness = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
   const globalTopFrameOffsetMm = (spaceInfo.frameSize as any)?.topOffset;
   const useGlobalTopFrameOffset = spaceInfo.guideTopFrameAllMode ?? true;
@@ -4718,23 +4727,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             })()}
 
             {sideTopFrame && (
-              <Box
+              <BoxWithEdges
                 args={[width, sideTopFrame.height, sideFrameThickness]}
                 position={[0, sideTopFrame.y, sideTopFrame.z]}
-              >
-                <meshStandardMaterial color={sideFrameColor} roughness={0.48} metalness={0.06} />
-                <Edges color={getEdgeColor(sideFrameColor)} />
-              </Box>
+                material={sideFrameMaterial}
+                renderMode={effectiveRenderMode}
+                panelName="top-frame"
+                furnitureId={placedModule.id}
+              />
             )}
 
             {sideBaseFrame && (
-              <Box
+              <BoxWithEdges
                 args={[width, sideBaseFrame.height, sideFrameThickness]}
                 position={[0, sideBaseFrame.y, sideBaseFrame.z]}
-              >
-                <meshStandardMaterial color={sideFrameColor} roughness={0.48} metalness={0.06} />
-                <Edges color={getEdgeColor(sideFrameColor)} />
-              </Box>
+                material={sideFrameMaterial}
+                renderMode={effectiveRenderMode}
+                panelName="base-frame"
+                furnitureId={placedModule.id}
+              />
             )}
 
             {/* 가구 너비 디버깅 */}
@@ -5201,8 +5212,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   position={[0, 0, 0]}
                   spaceInfo={zoneSpaceInfo}
                   renderMode={effectiveRenderMode}
+                  furnitureId={placedModule.id}
                   endPanelThicknessMm={resolvePetPanelThicknessMm(placedModule.endPanelThickness)}
                   side={panel.side as 'left' | 'right'}
+                  panelName={panel.side === 'left' ? '엔드패널(좌)' : '엔드패널(우)'}
                   adjacentFurniture={(() => {
                     // EP 방향 슬롯에 인접 가구가 있으면 측판 불필요
                     const mySlot = normalizedSlotIndex;
