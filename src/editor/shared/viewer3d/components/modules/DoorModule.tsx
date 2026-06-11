@@ -2056,6 +2056,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   ) => {
     if (isSide2DView) return null;
 
+    // 힌지보링 제외된 도어는 뷰어에서도 힌지 표시 안 함 (패널목록 '힌지제외' 버튼)
+    const doorPanelNameForBoring = splitDoorPanelName === '상부 도어' || splitDoorPanelName === '하부 도어'
+      ? splitDoorPanelName
+      : keyPrefix.startsWith('left')
+        ? '좌측 도어'
+        : keyPrefix.startsWith('right')
+          ? '우측 도어'
+          : '도어';
+    if ((storePlacedModule?.hingeBoringExclusions ?? []).includes(doorPanelNameForBoring)) {
+      return null;
+    }
+
     return positionsMm.map((positionMm, index) => (
       <Hinge
         key={`${keyPrefix}-${positionMm}-${index}`}
