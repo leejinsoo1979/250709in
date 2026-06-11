@@ -422,6 +422,60 @@ export const resolveHingeGapEditPlan = ({
   }
 }
 
+/**
+ * 경첩 간격 등분 계획: 잠긴 간격은 현재 값을 유지하고, 잠기지 않은 간격들이
+ * 남은 길이(도어 높이 − 잠긴 간격 합)를 똑같이 나눠 갖는다.
+ *
+ * - 정수 mm 유지를 위해 나머지는 위쪽 간격부터 1mm씩 추가 배분한다.
+ * - 잠기지 않은 간격이 없거나, 각 간격에 1mm도 줄 수 없으면 null.
+ *
+ * @param boundariesMm [0, 상단거리1..N, 도어높이] — 상단 기준 경계 목록(오름차순)
+ */
+export const resolveHingeGapEqualizePlan = ({
+  boundariesMm,
+  lockedSegmentIndices = [],
+}: {
+  boundariesMm: number[]
+  lockedSegmentIndices?: number[]
+}): { nextTopDistancesMm: number[] } | null => {
+  const segmentCount = boundariesMm.length - 1
+  if (segmentCount < 2) return null
+
+  const doorHeightMm = boundariesMm[boundariesMm.length - 1]
+  const lockedSet = new Set(lockedSegmentIndices)
+  const unlockedIndices: number[] = []
+  let lockedTotalMm = 0
+  for (let index = 0; index < segmentCount; index += 1) {
+    const gapMm = boundariesMm[index + 1] - boundariesMm[index]
+    if (lockedSet.has(index)) {
+      lockedTotalMm += gapMm
+    } else {
+      unlockedIndices.push(index)
+    }
+  }
+  if (unlockedIndices.length === 0) return null
+
+  const remainingMm = Math.round(doorHeightMm - lockedTotalMm)
+  if (remainingMm < unlockedIndices.length) return null
+
+  const baseGapMm = Math.floor(remainingMm / unlockedIndices.length)
+  let extraMm = remainingMm - baseGapMm * unlockedIndices.length
+
+  const nextBoundariesMm = [0]
+  for (let index = 0; index < segmentCount; index += 1) {
+    let gapMm: number
+    if (lockedSet.has(index)) {
+      gapMm = boundariesMm[index + 1] - boundariesMm[index]
+    } else {
+      gapMm = baseGapMm + (extraMm > 0 ? 1 : 0)
+      if (extraMm > 0) extraMm -= 1
+    }
+    nextBoundariesMm.push(nextBoundariesMm[index] + gapMm)
+  }
+
+  return { nextTopDistancesMm: nextBoundariesMm.slice(1, -1) }
+}
+
 export const resolveSideAnchoredDoorHingePositionsMm = ({
   doorHeightMm,
   doorBottomOnSideMm,

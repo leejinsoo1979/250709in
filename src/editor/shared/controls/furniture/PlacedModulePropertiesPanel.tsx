@@ -37,6 +37,7 @@ import {
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
   resolveHingeGapEditPlan,
+  resolveHingeGapEqualizePlan,
   resolveHingeOppositeDoorWidthAdjustment,
   resolveSideAnchoredDoorHingePositionsMm,
   type DoorCabinetCategory,
@@ -4250,6 +4251,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     updateHingePositions(field, next, doorHeightMm, doorBottomOnSideMm);
   };
 
+  // 잠긴 간격은 유지하고 나머지 간격을 균등 분배 (위아래 잠그고 가운데 등분 워크플로)
+  const handleEqualizeHingeGaps = (
+    field: HingePositionsField,
+    currentPositions: number[],
+    doorHeightMm: number,
+    doorBottomOnSideMm: number
+  ) => {
+    const doorHeight = Math.round(doorHeightMm);
+    const topDistances = getHingeTopDistancesMm(currentPositions, doorHeight);
+    if (topDistances.length === 0) return;
+    const equalizePlan = resolveHingeGapEqualizePlan({
+      boundariesMm: [0, ...topDistances, doorHeight],
+      lockedSegmentIndices: lockedHingeGaps[`${currentPlacedModule?.id}:${field}`] || []
+    });
+    if (!equalizePlan) return;
+    const nextBottomPositions = equalizePlan.nextTopDistancesMm.map(topDistanceMm =>
+      topToBottomHingePositionMm(topDistanceMm, doorHeight)
+    );
+    updateHingePositions(field, nextBottomPositions, doorHeight, doorBottomOnSideMm);
+  };
+
   const handleAddHingePosition = (
     field: HingePositionsField,
     currentPositions: number[],
@@ -7360,13 +7382,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <div key={group.field} style={{ marginTop: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', fontWeight: 600 }}>{group.label}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleAddHingePosition(group.field, positions, doorHeightMm, doorBottomOnSideMm)}
-                            style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
-                          >
-                            추가
-                          </button>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button
+                              type="button"
+                              title="잠긴 간격은 유지하고 나머지 간격을 균등 분배"
+                              onClick={() => handleEqualizeHingeGaps(group.field, positions, doorHeightMm, doorBottomOnSideMm)}
+                              style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
+                            >
+                              등분
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAddHingePosition(group.field, positions, doorHeightMm, doorBottomOnSideMm)}
+                              style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
+                            >
+                              추가
+                            </button>
+                          </div>
                         </div>
                         {displayPositions.length > 0 && (
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 6px', marginBottom: '8px' }}>

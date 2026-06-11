@@ -9,6 +9,8 @@ import {
   resolveDoorLeafDimensions,
   resolveDoorVerticalGeometry,
   resolveDefaultDoorHingePositionsMm,
+  resolveHingeGapEditPlan,
+  resolveHingeGapEqualizePlan,
   resolveHingeOppositeDoorWidthAdjustment
 } from '../doorGeometryCalculator'
 
@@ -417,5 +419,61 @@ describe('doorGeometryCalculator', () => {
     expect(result.bottomMm).toBe(-25)
     expect(result.topMm).toBe(2105)
     expect(result.centerYMm).toBe(1040)
+  })
+
+  it('중간 간격 수정은 위쪽 간격을 유지하고 아래 중간 간격이 흡수한다', () => {
+    // 경첩 3개, 간격 [150, 600, 600, 150] (도어 1500)
+    const plan = resolveHingeGapEditPlan({
+      boundariesMm: [0, 150, 750, 1350, 1500],
+      segmentIndex: 1,
+      requestedGapMm: 700
+    })
+
+    expect(plan).not.toBeNull()
+    // 1번-2번을 700으로 → 2번 경첩 이동, 2번-3번이 500으로 흡수, 상/하단 150 유지
+    expect(plan!.nextTopDistancesMm).toEqual([150, 850, 1350])
+    expect(plan!.absorberSegmentIndex).toBe(2)
+  })
+
+  it('잠긴 간격은 흡수 칸에서 제외되고 모두 잠기면 편집 불가다', () => {
+    const boundariesMm = [0, 150, 750, 1350, 1500]
+    // 2번-3번(인덱스 2) 잠금 → 1번-2번 수정 시 N번-하단(인덱스 3)이 흡수
+    const plan = resolveHingeGapEditPlan({
+      boundariesMm,
+      segmentIndex: 1,
+      requestedGapMm: 700,
+      lockedSegmentIndices: [2]
+    })
+    expect(plan!.absorberSegmentIndex).toBe(3)
+    expect(plan!.nextTopDistancesMm).toEqual([150, 850, 1450])
+
+    const blocked = resolveHingeGapEditPlan({
+      boundariesMm,
+      segmentIndex: 1,
+      requestedGapMm: 700,
+      lockedSegmentIndices: [0, 2, 3]
+    })
+    expect(blocked).toBeNull()
+  })
+
+  it('등분은 잠긴 간격을 유지하고 나머지를 균등 분배한다', () => {
+    // 간격 [150, 500, 700, 150] (도어 1500), 상단/하단 잠금 → 가운데 두 칸 600/600
+    const plan = resolveHingeGapEqualizePlan({
+      boundariesMm: [0, 150, 650, 1350, 1500],
+      lockedSegmentIndices: [0, 3]
+    })
+
+    expect(plan).not.toBeNull()
+    expect(plan!.nextTopDistancesMm).toEqual([150, 750, 1350])
+  })
+
+  it('등분 나머지는 위쪽 간격부터 1mm씩 배분해 합계를 보존한다', () => {
+    // 도어 1000, 경첩 2개, 잠금 없음 → 3칸 등분 334/333/333
+    const plan = resolveHingeGapEqualizePlan({
+      boundariesMm: [0, 100, 800, 1000]
+    })
+
+    expect(plan).not.toBeNull()
+    expect(plan!.nextTopDistancesMm).toEqual([334, 667])
   })
 })
