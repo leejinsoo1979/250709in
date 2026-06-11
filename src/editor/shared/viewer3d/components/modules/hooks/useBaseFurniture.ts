@@ -352,11 +352,15 @@ export const useBaseFurniture = (
   // 듀얼 가구 판별
   const isDualFurniture = moduleData.id.includes('dual');
   
-  // 빌트인 냉장고장(582): 항상 고정폭 (adjustedWidth/slotWidths 무시)
+  // 빌트인 냉장고장(582): 슬롯폭이 더 커도 582 고정 (상한).
+  // 단, 내치 EP 등으로 adjustedWidth가 582보다 작아진 경우에는 다른 가구처럼
+  // 축소를 반영한다 (EP 추가 시 본체가 줄지 않고 밀리기만 하던 문제 방지).
   // 키큰장찬넬(insert-frame)은 폭 조절이 가능하므로 adjustedWidth를 사용한다.
   const isBuiltInFridge = moduleData.id.includes('built-in-fridge') && !moduleData.id.includes('dual-built-in-fridge');
   if (isBuiltInFridge) {
-    actualWidthMm = 582;
+    actualWidthMm = (adjustedWidth !== undefined && adjustedWidth !== null)
+      ? Math.min(582, adjustedWidth)
+      : 582;
   } else if (adjustedWidth !== undefined && adjustedWidth !== null) {
     // adjustedWidth가 있으면 최우선 사용 (엔드패널이나 기둥 침범 시 조정된 너비)
     actualWidthMm = adjustedWidth;
