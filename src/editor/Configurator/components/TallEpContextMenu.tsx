@@ -48,6 +48,22 @@ export default function TallEpContextMenu() {
     { id: 'both', label: '양쪽 EP' },
   ];
 
+  // 경첩 방향 표시 조건: 싱글 + 도어 모듈 (편집 팝업과 동일 기준)
+  // 서랍 전용(lower-drawer/인덕션/터치 도어올림/터치 상판내림)·찬넬·더미·유리장·듀얼·코너 제외
+  const moduleIdForHinge = typeof cur.moduleId === 'string' ? cur.moduleId : '';
+  const showHingeDirection = !!cur.hasDoor
+    && !moduleIdForHinge.startsWith('dual-')
+    && !moduleIdForHinge.includes('right-corner')
+    && !moduleIdForHinge.includes('left-corner')
+    && !moduleIdForHinge.includes('insert-frame')
+    && !moduleIdForHinge.includes('dummy')
+    && !moduleIdForHinge.includes('glass-cabinet')
+    && !/^(dual-)?lower-drawer-/.test(moduleIdForHinge)
+    && !/(^|-)lower-induction-cabinet-/.test(moduleIdForHinge)
+    && !(/(^|-)lower-door-lift-/.test(moduleIdForHinge) && !moduleIdForHinge.includes('-half-'))
+    && !/(^|-)lower-top-down-touch-/.test(moduleIdForHinge);
+  const hingePosition = (cur.hingePosition ?? 'right') as 'left' | 'right';
+
   const toggleEp = (id: 'left' | 'right' | 'both', active: boolean) => {
     const next = active
       ? { hasLeftEndPanel: false, hasRightEndPanel: false }
@@ -147,6 +163,42 @@ export default function TallEpContextMenu() {
           color: '#1a1a1a',
         }}
       >
+        {/* 경첩 방향 — 싱글 도어 모듈일 때 편집 팝업과 동일하게 좌/우 변경 (최상단) */}
+        {showHingeDirection && (
+          <div style={{ padding: '4px 14px 8px', borderBottom: '1px solid #f1f3f7', marginBottom: 4 }}>
+            <div style={{ fontSize: 12, color: '#888', marginBottom: 6 }}>경첩 방향</div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {([
+                { id: 'left', label: '좌측', sub: '오른쪽으로 열림' },
+                { id: 'right', label: '우측', sub: '왼쪽으로 열림' },
+              ] as const).map((opt) => {
+                const hingeActive = hingePosition === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => updatePlacedModule(placedModule.id, { hingePosition: opt.id } as any)}
+                    style={{
+                      flex: 1,
+                      padding: '6px 0 5px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 2,
+                      cursor: 'pointer',
+                      borderRadius: 6,
+                      border: `1px solid ${hingeActive ? 'var(--theme-primary, #7269ef)' : '#d0d0d0'}`,
+                      background: hingeActive ? 'var(--theme-primary, #7269ef)' : 'transparent',
+                      color: hingeActive ? '#fff' : '#1a1a1a',
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: hingeActive ? 700 : 500 }}>{opt.label}</span>
+                    <span style={{ fontSize: 10, opacity: hingeActive ? 0.85 : 0.6 }}>{opt.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {/* 내치/외치 토글 — EP가 하나라도 켜졌을 때 (내치: EP만큼 본체 줄임=전체폭 유지 / 외치: 본체 유지+EP 추가) */}
         {(cur.hasLeftEndPanel || cur.hasRightEndPanel) && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 14px 8px' }}>
