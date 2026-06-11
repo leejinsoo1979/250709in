@@ -356,6 +356,72 @@ export const resolveDefaultDoorHingePositionsMm = ({
   )
 }
 
+/**
+ * 경첩 간격 편집 계획: 간격 합 = 도어 높이 고정이므로 한 칸은 반드시 흡수해야 한다.
+ *
+ * - 편집한 간격은 요청값이 되고, "흡수 칸" 하나만 반대로 변한다. 그 사이 경첩들은
+ *   같은 양만큼 평행 이동해 나머지 간격은 모두 유지된다.
+ * - 잠긴 간격(lockedSegmentIndices)은 절대 흡수 칸으로 선택되지 않는다.
+ * - 흡수 칸 우선순위: 아래쪽 중간 간격(가까운 순) → 위쪽 중간 간격 →
+ *   N번-하단 → 상단-1번. (잠금이 없으면 기존 동작과 동일: 상/하단 간격 보존 우선)
+ * - 흡수 가능한 칸이 없으면 null (편집 불가). 요청값은 편집/흡수 간격이 모두
+ *   1mm 이상이 되도록 클램프된다.
+ *
+ * @param boundariesMm [0, 상단거리1..N, 도어높이] — 상단 기준 경계 목록(오름차순)
+ */
+export const resolveHingeGapEditPlan = ({
+  boundariesMm,
+  segmentIndex,
+  requestedGapMm,
+  lockedSegmentIndices = [],
+}: {
+  boundariesMm: number[]
+  segmentIndex: number
+  requestedGapMm: number
+  lockedSegmentIndices?: number[]
+}): { nextTopDistancesMm: number[]; absorberSegmentIndex: number; appliedGapMm: number } | null => {
+  const segmentCount = boundariesMm.length - 1
+  const lastSegmentIndex = segmentCount - 1
+  if (segmentCount < 2 || segmentIndex < 0 || segmentIndex > lastSegmentIndex) return null
+
+  const isEdgeSegment = (index: number) => index === 0 || index === lastSegmentIndex
+  const belowIndices: number[] = []
+  for (let index = segmentIndex + 1; index <= lastSegmentIndex; index += 1) belowIndices.push(index)
+  const aboveIndices: number[] = []
+  for (let index = segmentIndex - 1; index >= 0; index -= 1) aboveIndices.push(index)
+  const absorberSegmentIndex = [
+    ...belowIndices.filter(index => !isEdgeSegment(index)),
+    ...aboveIndices.filter(index => !isEdgeSegment(index)),
+    ...belowIndices.filter(isEdgeSegment),
+    ...aboveIndices.filter(isEdgeSegment),
+  ].find(index => !lockedSegmentIndices.includes(index))
+  if (absorberSegmentIndex === undefined) return null
+
+  const currentGapMm = boundariesMm[segmentIndex + 1] - boundariesMm[segmentIndex]
+  const absorberGapMm = boundariesMm[absorberSegmentIndex + 1] - boundariesMm[absorberSegmentIndex]
+  const deltaMm = Math.max(
+    1 - currentGapMm,
+    Math.min(absorberGapMm - 1, Math.round(requestedGapMm) - currentGapMm)
+  )
+
+  const nextBoundariesMm = [...boundariesMm]
+  if (absorberSegmentIndex > segmentIndex) {
+    for (let index = segmentIndex + 1; index <= absorberSegmentIndex; index += 1) {
+      nextBoundariesMm[index] += deltaMm
+    }
+  } else {
+    for (let index = absorberSegmentIndex + 1; index <= segmentIndex; index += 1) {
+      nextBoundariesMm[index] -= deltaMm
+    }
+  }
+
+  return {
+    nextTopDistancesMm: nextBoundariesMm.slice(1, -1),
+    absorberSegmentIndex,
+    appliedGapMm: currentGapMm + deltaMm
+  }
+}
+
 export const resolveSideAnchoredDoorHingePositionsMm = ({
   doorHeightMm,
   doorBottomOnSideMm,

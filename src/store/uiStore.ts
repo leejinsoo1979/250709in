@@ -415,6 +415,12 @@ interface UIState {
   // 경첩 위치 변경 모드: 선택된 가구의 경첩 치수 가이드만 표시
   hingePositionEditModeModuleId: string | null;
   setHingePositionEditModeModuleId: (moduleId: string | null) => void;
+
+  // 경첩 간격 잠금: 잠긴 간격은 다른 간격 편집 시 절대 변하지 않음 (흡수 칸에서 제외)
+  // key: `${furnitureId}:${field}`, value: 잠긴 간격(세그먼트) 인덱스(상단-1번 = 0)
+  lockedHingeGaps: Record<string, number[]>;
+  toggleHingeGapLock: (key: string, segmentIndex: number) => void;
+  clearHingeGapLocks: (key: string) => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
@@ -526,6 +532,7 @@ const initialUIState = {
   showGizmo: true, // 기본값: 좌측 상단 ViewCube 기즈모 표시
   highlightedDoorGap: null,  // 도어 갭 하이라이트
   hingePositionEditModeModuleId: null,  // 기본값: 경첩 위치 변경 모드 비활성
+  lockedHingeGaps: {} as Record<string, number[]>,  // 경첩 간격 잠금 없음
   showFrame: true, // 기본값: 프레임 표시
   showAll: true, // 기본값: 모든 가이드 표시
   dimensionOptionsBackup: null,
@@ -826,6 +833,23 @@ export const useUIStore = create<UIState>()(
 
       setHingePositionEditModeModuleId: (moduleId) =>
         set({ hingePositionEditModeModuleId: moduleId }),
+
+      toggleHingeGapLock: (key, segmentIndex) =>
+        set((state) => {
+          const current = state.lockedHingeGaps[key] || [];
+          const next = current.includes(segmentIndex)
+            ? current.filter(index => index !== segmentIndex)
+            : [...current, segmentIndex].sort((a, b) => a - b);
+          return { lockedHingeGaps: { ...state.lockedHingeGaps, [key]: next } };
+        }),
+
+      clearHingeGapLocks: (key) =>
+        set((state) => {
+          if (!(key in state.lockedHingeGaps)) return state;
+          const next = { ...state.lockedHingeGaps };
+          delete next[key];
+          return { lockedHingeGaps: next };
+        }),
 
       setShowFrame: (show) =>
         set({ showFrame: show }),

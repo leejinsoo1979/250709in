@@ -36,12 +36,14 @@ import {
   normalizeDoorHingePositionsMm,
   resolveDefaultDoorHingePositionsMm,
   resolveDoorVerticalGeometry,
+  resolveHingeGapEditPlan,
   resolveHingeOppositeDoorWidthAdjustment,
   resolveSideAnchoredDoorHingePositionsMm,
   type DoorCabinetCategory,
   type DoorHingeMode
 } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import { Lock, Unlock } from 'lucide-react';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { isDummyModuleId } from '@/editor/shared/utils/dummyModule';
 import { FurniturePresetButtons } from './FurniturePresetButtons';
@@ -1444,6 +1446,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const setHighlightedFrame = useUIStore(state => state.setHighlightedFrame);
   const hingePositionEditModeModuleId = useUIStore(state => state.hingePositionEditModeModuleId);
   const setHingePositionEditModeModuleId = useUIStore(state => state.setHingePositionEditModeModuleId);
+  const lockedHingeGaps = useUIStore(state => state.lockedHingeGaps);
+  const toggleHingeGapLock = useUIStore(state => state.toggleHingeGapLock);
+  const clearHingeGapLocks = useUIStore(state => state.clearHingeGapLocks);
   const setViewMode = useUIStore(state => state.setViewMode);
   const setView2DDirection = useUIStore(state => state.setView2DDirection);
   const setShowDimensions = useUIStore(state => state.setShowDimensions);
@@ -4108,33 +4113,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
     const doorHeight = Math.round(editBasis?.doorHeightMm ?? doorHeightMm);
     const boundaries = [0, ...topDistances, doorHeight];
-    const lastSegmentIndex = boundaries.length - 2;
-    // 중간 간격 수정: 위쪽 경첩은 고정, 아래쪽 경첩 이동(아래 간격이 흡수).
-    // 단, 바로 아래가 마지막 간격(N번-하단)이면 위쪽 간격이 흡수해 상/하단 고정값 보존.
-    const isMiddleAbsorbUpward = segmentIndex === lastSegmentIndex - 1;
-    const targetBoundaryIndex = segmentIndex === 0
-      ? 1
-      : segmentIndex === lastSegmentIndex
-        ? boundaries.length - 2
-        : isMiddleAbsorbUpward
-          ? segmentIndex
-          : segmentIndex + 1;
-    const previousBoundary = boundaries[targetBoundaryIndex - 1] ?? 0;
-    const nextBoundary = boundaries[targetBoundaryIndex + 1] ?? doorHeight;
-    const requestedBoundary = segmentIndex === 0
-      ? valueMm
-      : segmentIndex === lastSegmentIndex
-        ? doorHeight - valueMm
-        : isMiddleAbsorbUpward
-          ? boundaries[segmentIndex + 1] - valueMm
-          : boundaries[segmentIndex] + valueMm;
-    const clampedBoundary = Math.max(
-      previousBoundary + 1,
-      Math.min(nextBoundary - 1, Math.round(requestedBoundary))
-    );
+    const editPlan = resolveHingeGapEditPlan({
+      boundariesMm: boundaries,
+      segmentIndex,
+      requestedGapMm: valueMm,
+      lockedSegmentIndices: lockedHingeGaps[`${currentPlacedModule?.id}:${field}`] || []
+    });
+    if (!editPlan) return; // 흡수 가능한 간격 없음(모두 잠김) → 편집 불가
 
-    const nextTopDistances = [...topDistances];
-    nextTopDistances[targetBoundaryIndex - 1] = clampedBoundary;
+    const nextTopDistances = editPlan.nextTopDistancesMm;
     const nextBottomPositions = nextTopDistances.map(topDistanceMm =>
       topToBottomHingePositionMm(topDistanceMm, doorHeight)
     );
@@ -4290,6 +4277,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       nextPosition = Math.round((sortedPositions[largestGapIndex] + sortedPositions[largestGapIndex + 1]) / 2);
     }
 
+    // 경첩 개수 변경 시 간격 인덱스가 어긋나므로 잠금 초기화
+    clearHingeGapLocks(`${currentPlacedModule?.id}:${field}`);
     updateHingePositions(field, [...currentPositions, nextPosition], doorHeightMm, doorBottomOnSideMm);
   };
 
@@ -4301,6 +4290,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     doorBottomOnSideMm: number
   ) => {
     if (currentPositions.length <= 1) return;
+    // 경첩 개수 변경 시 간격 인덱스가 어긋나므로 잠금 초기화
+    clearHingeGapLocks(`${currentPlacedModule?.id}:${field}`);
     updateHingePositions(field, currentPositions.filter((_, itemIndex) => itemIndex !== index), doorHeightMm, doorBottomOnSideMm);
   };
 
@@ -7412,10 +7403,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         {gapSegments.map(({ label, valueMm, segmentIndex }) => {
                           const draftKey = getHingeGapDraftKey(group.field, segmentIndex);
                           const inputValue = hingeGapDrafts[draftKey] ?? String(valueMm);
+                          const hingeLockKey = `${currentPlacedModule.id}:${group.field}`;
+                          const isGapLocked = (lockedHingeGaps[hingeLockKey] || []).includes(segmentIndex);
                           return (
                             <div key={`${group.field}-gap-${segmentIndex}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                               <label style={{ width: '72px', fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>{label}</label>
-                              <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                              <button
+                                type="button"
+                                title={isGapLocked ? '간격 잠금 해제' : '간격 잠금 (다른 간격 편집 시 고정)'}
+                                onClick={() => toggleHingeGapLock(hingeLockKey, segmentIndex)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  width: '24px',
+                                  height: '28px',
+                                  padding: 0,
+                                  border: `1px solid ${isGapLocked ? '#f59e0b' : 'var(--theme-border)'}`,
+                                  borderRadius: '4px',
+                                  background: 'var(--theme-surface)',
+                                  color: isGapLocked ? '#f59e0b' : 'var(--theme-text-tertiary)',
+                                  cursor: 'pointer',
+                                  flexShrink: 0
+                                }}
+                              >
+                                {isGapLocked ? <Lock size={13} /> : <Unlock size={13} />}
+                              </button>
+                              <div className={styles.inputWithUnit} style={{ flex: 1, opacity: isGapLocked ? 0.6 : 1 }}>
                                 <input
                                   type="number"
                                   inputMode="numeric"
@@ -7423,6 +7437,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   min={1}
                                   max={Math.max(1, doorHeightMm - 1)}
                                   value={inputValue}
+                                  disabled={isGapLocked}
                                   onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, doorHeightMm, doorBottomOnSideMm, draftKey)}
                                   onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, doorHeightMm, doorBottomOnSideMm, draftKey)}
                                   onBlur={() => clearHingeGapDraft(draftKey)}

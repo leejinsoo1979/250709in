@@ -13,6 +13,7 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings, getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line, Html } from '@react-three/drei';
+import { Lock, Unlock } from 'lucide-react';
 import NativeLine from '../elements/NativeLine';
 import { Hinge } from '../Hinge';
 import { getModuleById } from '@/data/modules';
@@ -24,6 +25,7 @@ import {
   calculateSingleDoorOpenGeometry,
   normalizeDoorHingePositionsMm,
   resolveDefaultDoorHingePositionsMm,
+  resolveHingeGapEditPlan,
   resolveHingeOppositeDoorWidthAdjustment,
   resolveSideAnchoredDoorHingePositionsMm,
   resolveSidePanelMatchedHingePositions
@@ -683,7 +685,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, isTransparentMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall } = useUIStore() as any;
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, isTransparentMode, panelSimulationPhase, panelSimulationViewBackup, activePlacementWall, lockedHingeGaps, toggleHingeGapLock } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { doorDimensionColor } = useDimensionColor(); // 도어 치수 색상
@@ -2105,33 +2107,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (topDistancesMm.length === 0) return;
 
     const boundariesMm = [0, ...topDistancesMm, doorHeightMm];
-    const lastSegmentIndex = boundariesMm.length - 2;
-    // 중간 간격 수정: 위쪽 경첩은 고정, 아래쪽 경첩 이동(아래 간격이 흡수).
-    // 단, 바로 아래가 마지막 간격(N번-하단)이면 위쪽 간격이 흡수해 상/하단 고정값 보존.
-    const isMiddleAbsorbUpward = segmentIndex === lastSegmentIndex - 1;
-    const targetBoundaryIndex = segmentIndex === 0
-      ? 1
-      : segmentIndex === lastSegmentIndex
-        ? boundariesMm.length - 2
-        : isMiddleAbsorbUpward
-          ? segmentIndex
-          : segmentIndex + 1;
-    const previousBoundary = boundariesMm[targetBoundaryIndex - 1] ?? 0;
-    const nextBoundary = boundariesMm[targetBoundaryIndex + 1] ?? doorHeightMm;
-    const requestedBoundary = segmentIndex === 0
-      ? requestedGapMm
-      : segmentIndex === lastSegmentIndex
-        ? doorHeightMm - requestedGapMm
-        : isMiddleAbsorbUpward
-          ? boundariesMm[segmentIndex + 1] - requestedGapMm
-          : boundariesMm[segmentIndex] + requestedGapMm;
-    const nextBoundaryValue = Math.max(
-      previousBoundary + 1,
-      Math.min(nextBoundary - 1, Math.round(requestedBoundary))
-    );
+    const editPlan = resolveHingeGapEditPlan({
+      boundariesMm,
+      segmentIndex,
+      requestedGapMm,
+      lockedSegmentIndices: lockedHingeGaps?.[`${furnitureId}:${hingePositionsField}`] || []
+    });
+    if (!editPlan) return; // 흡수 가능한 간격 없음(모두 잠김) → 편집 불가
 
-    const nextTopDistances = [...topDistancesMm];
-    nextTopDistances[targetBoundaryIndex - 1] = nextBoundaryValue;
+    const nextTopDistances = editPlan.nextTopDistancesMm;
     const nextBottomPositions = nextTopDistances.map(topDistanceMm =>
       Math.max(1, Math.min(doorHeightMm - 1, Math.round(doorHeightMm - topDistanceMm)))
     );
@@ -2167,6 +2151,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const textColor = view2DTheme === 'dark' ? '#E0F2FE' : '#075985';
     const yFromTop = (distanceMm: number) => doorHeight / 2 - mmToThreeUnits(distanceMm);
     const textX = dimX + direction * mmToThreeUnits(96);
+
+    const hingeLockKey = `${furnitureId}:${hingePositionsField}`;
+    const lockedSegments: number[] = lockedHingeGaps?.[hingeLockKey] || [];
 
     return (
       <group name={`${keyPrefix}-hinge-position-guides`} renderOrder={100010}>
@@ -2232,7 +2219,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     alignItems: 'center',
                     gap: '1px',
                     padding: '2px 4px',
-                    border: `1px solid ${guideColor}`,
+                    border: `1px solid ${lockedSegments.includes(index) ? '#f59e0b' : guideColor}`,
                     borderRadius: '3px',
                     background: view2DTheme === 'dark' ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.92)',
                     color: textColor,
@@ -2241,6 +2228,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   onPointerDown={(event) => event.stopPropagation()}
                   onClick={(event) => event.stopPropagation()}
                 >
+                  <button
+                    type="button"
+                    title={lockedSegments.includes(index) ? '간격 잠금 해제' : '간격 잠금 (다른 간격 편집 시 고정)'}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (furnitureId) toggleHingeGapLock(hingeLockKey, index);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '16px',
+                      height: '16px',
+                      padding: 0,
+                      border: 'none',
+                      background: 'transparent',
+                      color: lockedSegments.includes(index) ? '#f59e0b' : textColor,
+                      cursor: 'pointer',
+                      opacity: lockedSegments.includes(index) ? 1 : 0.55
+                    }}
+                  >
+                    {lockedSegments.includes(index) ? <Lock size={11} /> : <Unlock size={11} />}
+                  </button>
                   <input
                     type="number"
                     inputMode="numeric"
@@ -2248,6 +2258,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     min={1}
                     max={Math.max(1, Math.round(actualDoorHeight) - 1)}
                     value={inputValue}
+                    disabled={lockedSegments.includes(index)}
                     onChange={(event) => {
                       event.stopPropagation();
                       const value = event.target.value;
@@ -2306,7 +2317,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       color: textColor,
                       fontSize: '11px',
                       fontWeight: 700,
-                      textAlign: 'center'
+                      textAlign: 'center',
+                      opacity: lockedSegments.includes(index) ? 0.6 : 1
                     }}
                   />
                 </div>
