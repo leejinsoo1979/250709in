@@ -5,7 +5,7 @@ import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
 import { calculateSpaceIndexing, recalculateWithCustomWidths, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
+import { findNextAvailableSlot, isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { getDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 import {
@@ -62,7 +62,7 @@ export const useFurnitureKeyboard = ({
         }
       }
 
-      const getAdjacentAvailableSlot = (
+      const getNextAvailableSlot = (
         currentSlot: number,
         direction: 'left' | 'right',
         isDualFurniture: boolean,
@@ -70,9 +70,9 @@ export const useFurnitureKeyboard = ({
         excludeModuleId?: string | string[],
         targetZone?: 'normal' | 'dropped'
       ): number | null => {
-        const nextSlot = currentSlot + (direction === 'left' ? -1 : 1);
-        return isSlotAvailable(
-          nextSlot,
+        return findNextAvailableSlot(
+          currentSlot,
+          direction,
           isDualFurniture,
           placedModules,
           spaceInfo,
@@ -438,7 +438,7 @@ export const useFurnitureKeyboard = ({
 
           case 'ArrowLeft': {
             if (hasSlotCustomWidth) { e.preventDefault(); break; }
-            // 슬롯 이동은 인접한 한 칸만 허용한다. 막혀 있으면 이동하지 않는다.
+            // 인접 슬롯이 막혀 있으면 같은 방향의 다음 빈 슬롯로 점프한다.
 // console.log('⌨️ ArrowLeft 키 입력:', {
               // currentSlot: currentSlotIndex,
               // editingModuleZone: editingModule.zone,
@@ -448,7 +448,7 @@ export const useFurnitureKeyboard = ({
               e.preventDefault();
               break;
             }
-            const nextSlot = getAdjacentAvailableSlot(
+            const nextSlot = getNextAvailableSlot(
               currentSlotIndex,
               'left',
               isDualFurniture,
@@ -576,7 +576,7 @@ export const useFurnitureKeyboard = ({
 
           case 'ArrowRight': {
             if (hasSlotCustomWidth) { e.preventDefault(); break; }
-            // 슬롯 이동은 인접한 한 칸만 허용한다. 막혀 있으면 이동하지 않는다.
+            // 인접 슬롯이 막혀 있으면 같은 방향의 다음 빈 슬롯로 점프한다.
 // console.log('⌨️ ArrowRight 키 입력:', {
               // currentSlot: currentSlotIndex,
               // editingModuleZone: editingModule.zone,
@@ -586,7 +586,7 @@ export const useFurnitureKeyboard = ({
               e.preventDefault();
               break;
             }
-            const nextSlot = getAdjacentAvailableSlot(
+            const nextSlot = getNextAvailableSlot(
               currentSlotIndex,
               'right',
               isDualFurniture,
@@ -826,8 +826,8 @@ export const useFurnitureKeyboard = ({
 
             case 'ArrowLeft': {
               if (hasSlotCustomWidth2) { e.preventDefault(); break; }
-              // 슬롯 이동은 인접한 한 칸만 허용한다. 막혀 있으면 이동하지 않는다.
-              const nextSlot = getAdjacentAvailableSlot(
+              // 인접 슬롯이 막혀 있으면 같은 방향의 다음 빈 슬롯로 점프한다.
+              const nextSlot = getNextAvailableSlot(
                 currentSlotIndex,
                 'left',
                 isDualFurniture,
@@ -923,8 +923,8 @@ export const useFurnitureKeyboard = ({
               
             case 'ArrowRight': {
               if (hasSlotCustomWidth2) { e.preventDefault(); break; }
-              // 슬롯 이동은 인접한 한 칸만 허용한다. 막혀 있으면 이동하지 않는다.
-              const nextSlot = getAdjacentAvailableSlot(
+              // 인접 슬롯이 막혀 있으면 같은 방향의 다음 빈 슬롯로 점프한다.
+              const nextSlot = getNextAvailableSlot(
                 currentSlotIndex,
                 'right',
                 isDualFurniture,
