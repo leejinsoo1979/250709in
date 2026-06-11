@@ -58,7 +58,7 @@ import { getCanonicalPanelNameCandidates } from '@/editor/shared/utils/panelName
 import { useLivePanelData } from '@/editor/CNCOptimizer/hooks/useLivePanelData';
 import { optimizePanelsMultiple } from '@/editor/CNCOptimizer/utils/optimizer';
 import type { Panel as OptimizerPanel, OptimizedResult, StockPanel } from '@/editor/CNCOptimizer/types';
-import { getExcludedPanelAliases } from './context/ExcludedPanelsContext';
+import { getExcludedPanelAliases, useExcludedPanelsStore } from './context/ExcludedPanelsContext';
 import { clearPanelSimulationSources, getPanelSimulationSources } from './utils/panelSimulationRegistry';
 import {
   buildFlatPanelQuaternion,
@@ -2059,6 +2059,19 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       setRenderMode('solid');
     }
   }, [isInspectionMode3D, renderMode, setRenderMode]);
+
+  // 패널목록 체크 해제(panelExclusions)를 뷰어 패널 숨김에 동기화
+  // — 체크 해제된 패널은 옵티마이저뿐 아니라 3D/2D 뷰어에서도 숨겨져야 한다
+  const setViewerExcludedKeys = useExcludedPanelsStore(state => state.setExcludedKeys);
+  const clearViewerExcludedKeys = useExcludedPanelsStore(state => state.clearExcludedKeys);
+  useEffect(() => {
+    const keys = new Set<string>();
+    placedModules.forEach(module => {
+      (module.panelExclusions ?? []).forEach(name => keys.add(`${module.id}::${name}`));
+    });
+    setViewerExcludedKeys(keys, 'furniture-panel-exclusions');
+    return () => clearViewerExcludedKeys('furniture-panel-exclusions');
+  }, [placedModules, setViewerExcludedKeys, clearViewerExcludedKeys]);
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
