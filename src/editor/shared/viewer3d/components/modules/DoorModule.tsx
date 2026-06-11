@@ -3823,17 +3823,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const epTrimShiftX = mmToThreeUnits(epTrimLeft - epTrimRight) / 2;
 
     // Insert 프레임 인접 시 도어 확장 (해당 쪽으로)
-    // 도어 확장/축소 토글: ON 시 입력값 v(mm)는 몸통 대비 도어 전체 폭 증감값이다.
-    // 기본 도어 폭이 몸통-3mm에서 시작하므로 v=0이 몸통과 같아지도록 +3mm를 보정한다.
+    // 도어 확장/축소 토글: ON 시 입력값 v(mm)는 경첩 반대쪽 확장량이다.
+    //   경첩쪽은 도어 회전 간섭 방지를 위해 기본 1.5mm 갭을 항상 유지한다.
+    //   도어 폭 = 몸통 - 1.5 + v (v=0 → 경첩 반대쪽이 몸통 끝과 일치, 돌출 없음)
     const userDoorExtendMm = (storePlacedModule as any)?.doorWidthAdjustMm;
     const autoLeftMm = insertFrameDoorExtensionSide.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
     const autoRightMm = insertFrameDoorExtensionSide.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
     let insertExtendLeft = 0;
     let insertExtendRight = 0;
     if (doorAdjEnabled) {
-      // 입력값 의미: 도어 전체 폭 = 몸통폭 + v.
-      //   기준 doorWidth는 (몸통-3)에서 시작이므로 (v + 3)만큼 적용한다.
-      //   v=-1.5→몸통-1.5, v=0→몸통, v=40→몸통+40.
       const totalRaw = (userDoorExtendMm ?? (autoLeftMm + autoRightMm));
       const totalAdjusted = totalRaw + 3;
       if (autoLeftMm > 0 && autoRightMm > 0) {
@@ -3849,12 +3847,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       } else if (slotInfo?.intrusionDirection === 'from-right' || (columnCheck.isNearColumn && columnCheck.columnSide === 'right')) {
         insertExtendRight = totalAdjusted;
       } else {
-        // 수동 확장: 기본 도어갭 보정(+3)은 양쪽 1.5mm씩 균등 적용해 v=0이 몸통과
-        // 정확히 일치하도록 하고(경첩 반대쪽 1.5mm 돌출 방지), 사용자 입력 v만
-        // 경첩 반대쪽으로 확장한다.
-        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(totalRaw, adjustedHingePosition);
-        insertExtendLeft = manualAdjustment.leftMm + 1.5;
-        insertExtendRight = manualAdjustment.rightMm + 1.5;
+        // 수동 확장: 경첩쪽 가장자리는 기본 1.5mm 갭 위치에 고정하고,
+        // 경첩 반대쪽만 갭(1.5)을 채운 뒤 사용자 입력 v만큼 확장한다.
+        //   v=0 → 반대쪽이 몸통 끝과 일치(플러시), v>0 → 반대쪽으로만 v 확장
+        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(totalRaw + doorGap / 2, adjustedHingePosition);
+        insertExtendLeft = manualAdjustment.leftMm;
+        insertExtendRight = manualAdjustment.rightMm;
       }
       doorWidth += insertExtendLeft + insertExtendRight;
     }

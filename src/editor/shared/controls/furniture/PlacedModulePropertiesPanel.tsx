@@ -6259,11 +6259,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 }
               }
             }
-            // 도어 확장/축소 토글: 입력값 v(mm)는 몸통 대비 도어 전체 폭 증감값이다.
-            //   도어 폭 = bodyWidth + v
-            //   - v=-1.5 → 몸통보다 1.5mm 작음
-            //   - v=0    → 몸통과 동일
-            //   - v=40   → 몸통보다 40mm 확장
+            // 도어 확장/축소 토글: 입력값 v(mm)는 경첩 반대쪽(손잡이쪽) 확장량이다.
+            //   경첩쪽은 기본 1.5mm 갭 고정 → 도어 폭 = bodyWidth - 1.5 + v
+            //   - v=0  → 손잡이쪽이 몸통 끝과 일치 (돌출 없음)
+            //   - v=40 → 손잡이쪽으로 40mm 확장 (EP 커버 등)
             //   OFF 시는 기존 도어(몸통-3) 유지.
             const NOSURROUND_DEFAULT_OFFSET_MM = -1.5;
             const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
@@ -6273,11 +6272,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const effectiveUserExtension = userExtensionRaw
               ?? (autoCoverDoorWidthAdjustMm > 0 ? autoCoverDoorWidthAdjustMm : insertExtensionMm > 0 ? insertExtensionMm : NOSURROUND_DEFAULT_OFFSET_MM);
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
-            // 싱글: 도어 1장 → 도어 너비 = 몸통 + v
+            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 1.5(경첩쪽 갭 고정) + v(손잡이쪽 확장)
             const rawDoorW = isDualSlot
               ? Math.max(0, bodyWidth / 2 - 3)
               : (effectiveDoorWidthAdjustEnabled
-                ? Math.max(0, bodyWidth + effectiveUserExtension)
+                ? Math.max(0, bodyWidth - 1.5 + effectiveUserExtension)
                 : Math.max(0, bodyWidth - 3));
             const doorW = Math.max(0, roundMmToTenth(rawDoorW));
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)

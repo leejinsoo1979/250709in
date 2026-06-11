@@ -1629,8 +1629,10 @@ export const calculatePanelDetails = (
       const leftCompensation = doorOuterOpenSides?.left ? 1.5 : 0;
       const rightCompensation = doorOuterOpenSides?.right ? 1.5 : 0;
       const manualDoorWidthAdjustMm = doorWidthAdjustEnabled ? doorWidthAdjustMm + doorGap : 0;
+      // 싱글: 경첩쪽 1.5mm 갭 고정, 손잡이쪽만 (v + 1.5) 확장 (DoorModule 렌더링과 동일)
+      //   도어 폭 = 몸통 - 1.5 + v
       const manualSingleAdjustment = resolveHingeOppositeDoorWidthAdjustment(
-        manualDoorWidthAdjustMm,
+        doorWidthAdjustEnabled ? doorWidthAdjustMm + doorGap / 2 : 0,
         hingePosition ?? 'left'
       );
       if (leaf.name === 'single') {

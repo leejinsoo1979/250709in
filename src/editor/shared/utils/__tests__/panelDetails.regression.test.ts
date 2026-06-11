@@ -707,7 +707,20 @@ describe('panelDetails regression baselines', () => {
     })
     const door = findPanel(panels, '도어')
 
-    expect(door.width).toBe(540)
+    // 도어 폭 = 몸통 - 1.5(경첩쪽 갭 고정) + v(손잡이쪽 확장) = 500 - 1.5 + 40
+    expect(door.width).toBe(538.5)
+  })
+
+  it('싱글 도어 확장 0은 경첩쪽 1.5mm 갭만 남기고 손잡이쪽은 몸통과 일치한다', () => {
+    const panels = calculatePanels('lower-half-cabinet-500', 500, 650, {
+      hasDoor: true,
+      hingePosition: 'right',
+      doorWidthAdjustEnabled: true,
+      doorWidthAdjustMm: 0
+    })
+    const door = findPanel(panels, '도어')
+
+    expect(door.width).toBe(498.5)
   })
 
   it('듀얼 도어 확장값은 렌더링과 같은 leaf 패널 폭에 반영된다', () => {
