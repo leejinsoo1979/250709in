@@ -1701,12 +1701,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const hasUserResizedHeight = placedModule.userResizedHeight === true;
     furnitureHeightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 가구 상단몰딩 두께 변경 시 추가 보정
-    if (placedModule.topFrameThickness !== undefined && !hasUserResizedHeight) {
+    const isInsertFrameForH = placedModule.moduleId?.includes('insert-frame') === true;
+    if (placedModule.topFrameThickness !== undefined && !hasUserResizedHeight && !isInsertFrameForH) {
       const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
       const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
       furnitureHeightMm -= topFrameDelta;
     }
-    if (placedModule.hasTopFrame === false && !hasUserResizedHeight) {
+    if (placedModule.hasTopFrame === false && !hasUserResizedHeight && !isInsertFrameForH) {
       const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
       const topGapMm = placedModule.topFrameGap ?? 0;
       furnitureHeightMm = Math.max(0, furnitureHeightMm + topFrameMm - topGapMm);
@@ -1745,12 +1746,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
       // freeHeight가 없을 때만 topFrameThickness delta 보정
       // 단, 걸래받이이 OFF일 때는 그 공간을 가구가 차지하므로 차감하지 않는 delta 계산
-      if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined && isTallCabinetForY) {
+      const isInsertFrameForSlotH = placedModule.moduleId?.includes('insert-frame') === true;
+      if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined && isTallCabinetForY && !isInsertFrameForSlotH) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         const topDelta = placedModule.topFrameThickness - globalTop;
         furnitureHeightMm -= topDelta;
       }
-      if (placedModule.hasTopFrame === false && isTallCabinetForY) {
+      if (placedModule.hasTopFrame === false && isTallCabinetForY && !isInsertFrameForSlotH) {
         const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
         const topGapMm = placedModule.topFrameGap ?? 0;
         furnitureHeightMm = Math.max(0, furnitureHeightMm + topFrameMm - topGapMm);

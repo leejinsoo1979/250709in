@@ -2132,7 +2132,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const baseHeight = rawBaseHeight;
         // 상단몰딩 OFF 흡수분만 몸통 표시 높이에 반영한다.
         // 걸레받이 OFF는 가구 몸통 H에 더하지 않는다.
-        const shouldAbsorbTopForBodyH = moduleData.category === 'full';
+        const shouldAbsorbTopForBodyH = moduleData.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
         const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
           ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
           : 0;
@@ -2234,7 +2234,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 섹션별 높이 합은 팝업의 몸통치수 H와 같아야 한다.
             const baseBodyHeightForSections = placedBodyHeight;
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
-            const shouldAbsorbTopForSections = moduleData.category === 'full';
+            const shouldAbsorbTopForSections = moduleData.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
@@ -5503,7 +5503,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 표준 가구의 섹션 높이: 마지막(상부) 섹션이 프레임 토글 흡수분을 먹되,
             // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
-            const shouldAbsorbTopForSections = moduleData?.category === 'full';
+            const shouldAbsorbTopForSections = moduleData?.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
@@ -6343,7 +6343,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const baseBodyH = isTopDownForDoorH
               ? (moduleData.dimensions.height || 0)
               : (adjustedFreeHeight || placedBodyHeight || moduleData.dimensions.height || 0);
-            const shouldAbsorbTopForDoorH = moduleData.category === 'full';
+            const shouldAbsorbTopForDoorH = moduleData.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
             const shouldAbsorbBaseForDoorH = moduleData.category === 'full' || moduleData.category === 'lower';
             const absorbedTopH = shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
               ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
