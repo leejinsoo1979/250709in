@@ -29,7 +29,13 @@ export function toViewerPanelName(panelName: string): string {
   if (woodChannelMatch) return woodChannelMatch[1];
 
   if (panelName === '전대') return '전대(분절후방)';
-  if (panelName.includes('상단몰딩') || panelName.includes('상단 몰딩')) return 'top-frame';
+  if (
+    panelName.includes('상단몰딩') ||
+    panelName.includes('상단 몰딩') ||
+    panelName.includes('상부프레임') ||
+    panelName.includes('상부프래임') ||
+    panelName.includes('상부 프레임')
+  ) return 'top-frame';
   if (panelName.includes('걸래받이') || panelName.includes('걸레받이')) return 'base-frame';
   if (panelName === '하부마감판') return '하부 EP';
 

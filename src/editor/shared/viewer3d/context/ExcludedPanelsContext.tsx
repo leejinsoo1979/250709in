@@ -63,7 +63,7 @@ export function getExcludedPanelAliases(panelName: string): string[] {
   const withoutFurnitureLabel = trimmed.replace(/^\[\d+\]\s*/, '');
   aliases.add(withoutFurnitureLabel);
 
-  const frameMatch = withoutFurnitureLabel.match(/^(top-frame|base-frame)-\d+$/);
+  const frameMatch = withoutFurnitureLabel.match(/^(top-frame|base-frame|top-frame-return)-\d+$/);
   if (frameMatch) aliases.add(frameMatch[1]);
 
   if (withoutFurnitureLabel === '키큰장찬넬 전면프레임') aliases.add('Insert전면프레임-마감판');
@@ -89,11 +89,17 @@ export function getExcludedPanelAliases(panelName: string): string[] {
     withoutFurnitureLabel === '상단몰딩' ||
     withoutFurnitureLabel.includes('상단몰딩') ||
     withoutFurnitureLabel.includes('상단 몰딩') ||
-    withoutFurnitureLabel.includes('상부프래임')
+    withoutFurnitureLabel.includes('상부프래임') ||
+    withoutFurnitureLabel.includes('상부프레임') ||
+    withoutFurnitureLabel.includes('상부 프레임')
   ) {
     aliases.add('top-frame');
+    aliases.add('top-frame-return');
     aliases.add('Insert상단프레임');
-    for (let i = 0; i < 20; i += 1) aliases.add(`top-frame-${i}`);
+    for (let i = 0; i < 20; i += 1) {
+      aliases.add(`top-frame-${i}`);
+      aliases.add(`top-frame-return-${i}`);
+    }
   }
   // 걸래받이/걸레받이/받침대 모두 동일 mesh 가리킴 (CLAUDE.md에선 '걸래받이' 사용)
   if (withoutFurnitureLabel === '걸래받이' || withoutFurnitureLabel === '걸레받이' || withoutFurnitureLabel === '받침대') {
@@ -105,7 +111,13 @@ export function getExcludedPanelAliases(panelName: string): string[] {
     for (let i = 0; i < 20; i += 1) aliases.add(`base-frame-${i}`);
   }
   // 역방향: 3D mesh name이 들어와도 한국어 패널명 매칭
-  if (withoutFurnitureLabel === 'top-frame') aliases.add('상단몰딩');
+  if (withoutFurnitureLabel === 'top-frame' || withoutFurnitureLabel === 'top-frame-return' || withoutFurnitureLabel.startsWith('top-frame-return-')) {
+    aliases.add('top-frame');
+    aliases.add('top-frame-return');
+    aliases.add('상단몰딩');
+    aliases.add('상부프레임');
+    aliases.add('상부프래임');
+  }
   if (withoutFurnitureLabel === 'base-frame') {
     aliases.add('걸래받이');
     aliases.add('걸레받이');

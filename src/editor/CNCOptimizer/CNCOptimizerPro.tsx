@@ -499,6 +499,7 @@ function PageInner(){
             // 3D 패널 하이라이트용
             meshName: p.meshName,
             furnitureId: p.furnitureId,
+            sourceFurnitureIds: p.sourceFurnitureIds,
           };
         });
 
@@ -594,6 +595,7 @@ function PageInner(){
       p.sideBoringDiameter || '',
       p.sideBoringDepth || '',
       p.groovePositions?.map(groove => `${groove.y}:${groove.height}:${groove.depth}`).join(';') || '',
+      p.sourceFurnitureIds?.join(',') || '',
     ].join(':')).join('|');
     if (livePanelsKey === prevLivePanelsKey.current) {
       return; // 내용이 동일하면 스킵
@@ -703,6 +705,7 @@ function PageInner(){
           // 3D 패널 하이라이트용
           meshName: p.meshName,
           furnitureId: p.furnitureId,
+          sourceFurnitureIds: p.sourceFurnitureIds,
         };
       });
 
@@ -721,18 +724,20 @@ function PageInner(){
       let panel = panels.find(p => p.id === panelId);
       let meshName = panel?.meshName;
       let furnitureId = panel?.furnitureId;
+      let sourceFurnitureIds = panel?.sourceFurnitureIds;
 
-      // store panels에 meshName/furnitureId가 없으면 livePanels에서 폴백
-      if ((!meshName || !furnitureId) && livePanels.length > 0) {
+      // store panels에 3D 매칭 정보가 없으면 livePanels에서 폴백
+      if ((!meshName || !furnitureId || !sourceFurnitureIds?.length) && livePanels.length > 0) {
         const livePanel = livePanels.find(lp => lp.id === panelId);
         if (livePanel) {
           meshName = meshName || livePanel.meshName;
           furnitureId = furnitureId || livePanel.furnitureId;
+          sourceFurnitureIds = sourceFurnitureIds?.length ? sourceFurnitureIds : livePanel.sourceFurnitureIds;
         }
       }
 
-      if (meshName && panel?.sourceFurnitureIds?.length) {
-        panel.sourceFurnitureIds.forEach(sourceFurnitureId => {
+      if (meshName && sourceFurnitureIds?.length) {
+        sourceFurnitureIds.forEach(sourceFurnitureId => {
           names.add(`${sourceFurnitureId}::${meshName}`);
         });
       } else if (meshName && furnitureId) {
