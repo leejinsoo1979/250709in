@@ -1885,8 +1885,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     spaceInfo.baseConfig?.type,
   ]);
 
+  // 뷰어가 publish한 실측 몸통 치수 (RenderedBodyDimensionPublisher) — 있으면 최우선 사용
+  // 팝업 표시가 스캔 측정값과 항상 일치하도록 하는 single source of truth
+  const renderedBodyDimsRevision = React.useSyncExternalStore(
+    subscribeRenderedPanelDimensions,
+    getRenderedPanelDimensionsSnapshot,
+    getRenderedPanelDimensionsSnapshot
+  );
+  void renderedBodyDimsRevision;
+  const renderedBodyHeightMm = (() => {
+    if (!currentPlacedModule) return undefined;
+    const rendered = findRenderedPanelDimension(currentPlacedModule.id, '몸통');
+    return rendered && rendered.heightMm > 0 ? Math.round(rendered.heightMm) : undefined;
+  })();
+
   const placedBodyHeight = currentPlacedModule && moduleData
     ? (() => {
+      // 실측(렌더) 몸통 높이가 있으면 그대로 사용 — 별도 재계산 금지
+      if (renderedBodyHeightMm !== undefined) return renderedBodyHeightMm;
       // 자유배치: 사용자가 직접 조정한 freeHeight/customHeight를 항상 우선 신뢰한다.
       //  (autoDroppedUpperHeight가 없을 때 freeHeight를 무시해 팝업이 옛 기본 높이를
       //   표시하던 문제 수정 — 자유배치 키큰장 높이 변경이 팝업에 반영 안 되던 원인)
@@ -2150,7 +2166,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // 상단몰딩 OFF 흡수분만 몸통 표시 높이에 반영한다.
         // 걸레받이 OFF는 가구 몸통 H에 더하지 않는다.
         const shouldAbsorbTopForBodyH = moduleData.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
-        const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
+        const absorbedTopForH = renderedBodyHeightMm === undefined && shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
           ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
           : 0;
         const lowerBaseForDisplay = moduleData.category === 'lower' && currentPlacedModule.hasBase !== false && spaceInfo.baseConfig?.type !== 'stand'
@@ -2252,7 +2268,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const baseBodyHeightForSections = placedBodyHeight;
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
             const shouldAbsorbTopForSections = moduleData.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
-            const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
+            const absorbedTopForSections = renderedBodyHeightMm === undefined && shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
             const rawSectionBasisH = Math.max(0, baseBodyHeightForSections + absorbedTopForSections);
@@ -5521,7 +5537,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
             const shouldAbsorbTopForSections = moduleData?.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
-            const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
+            const absorbedTopForSections = renderedBodyHeightMm === undefined && shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
             const isPlainShoeShelfForSections = !isCustom
@@ -6362,10 +6378,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               : (adjustedFreeHeight || placedBodyHeight || moduleData.dimensions.height || 0);
             const shouldAbsorbTopForDoorH = moduleData.category === 'full' && !currentPlacedModule.moduleId?.includes('insert-frame');
             const shouldAbsorbBaseForDoorH = moduleData.category === 'full' || moduleData.category === 'lower';
-            const absorbedTopH = shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
+            const absorbedTopH = renderedBodyHeightMm === undefined && shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
               ? Math.max(0, (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseH = shouldAbsorbBaseForDoorH && currentPlacedModule.hasBase === false
+            const absorbedBaseH = renderedBodyHeightMm === undefined && shouldAbsorbBaseForDoorH && currentPlacedModule.hasBase === false
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;

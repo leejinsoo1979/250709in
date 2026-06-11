@@ -6,6 +6,7 @@ import { calculateInternalSpace, END_PANEL_RENDER_THICKNESS } from '../../../uti
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
+import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 import BoxWithEdges from '../../modules/components/BoxWithEdges';
 import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
@@ -319,6 +320,29 @@ interface FurnitureItemProps {
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
   ghostHighlightSlotIndex?: number | null;
 }
+
+// 실제 렌더된 가구 몸통 치수를 레지스트리에 publish — 편집 팝업/패널목록이
+// 별도 재계산 없이 측정값(렌더값)을 그대로 표시하기 위한 single source of truth
+const RenderedBodyDimensionPublisher: React.FC<{
+  furnitureId: string;
+  widthMm: number;
+  heightMm: number;
+  depthMm: number;
+}> = ({ furnitureId, widthMm, heightMm, depthMm }) => {
+  useEffect(() => {
+    if (!furnitureId || !(widthMm > 0) || !(heightMm > 0) || !(depthMm > 0)) return;
+    updateRenderedPanelDimension({
+      sourceId: 'furniture-body',
+      furnitureId,
+      panelName: '몸통',
+      widthMm,
+      heightMm,
+      depthMm,
+    });
+    return () => removeRenderedPanelDimension(furnitureId, '몸통', 'furniture-body');
+  }, [furnitureId, widthMm, heightMm, depthMm]);
+  return null;
+};
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
   placedModule,
@@ -4083,6 +4107,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           setIsHovered(false);
         }}
       >
+        {/* 실측 몸통 치수 publish — 팝업/패널목록이 렌더값을 그대로 표시 */}
+        {!isDraggingThis && (
+          <RenderedBodyDimensionPublisher
+            furnitureId={placedModule.id}
+            widthMm={furnitureWidthMm}
+            heightMm={furnitureHeightMm}
+            depthMm={actualDepthMm}
+          />
+        )}
         {/* 키큰장찬넬(insert-frame) 클릭 영역 확장: 폭이 좁아 다른 가구 사이에 끼면
             마우스로 잡기 어려운 문제를 해결. 투명 박스 메시를 가구 폭의 좌우로
             확장하여 클릭/호버 영역만 넓히고 시각 변화는 없음. (편집 모드에서만,
