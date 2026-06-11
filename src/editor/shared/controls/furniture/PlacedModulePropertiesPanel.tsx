@@ -17,6 +17,11 @@ import {
   subscribeRenderedPanelDimensions
 } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 import {
+  findDoorHingeGeometry,
+  getDoorHingeGeometrySnapshot,
+  subscribeDoorHingeGeometry
+} from '@/editor/shared/utils/doorHingeGeometryRegistry';
+import {
   applyFramePanelListWidthFallback,
   stripFramePanelListFallbackMarker
 } from '@/editor/shared/utils/framePanelListDimensions';
@@ -2741,6 +2746,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     getRenderedPanelDimensionsSnapshot
   );
 
+  // 뷰어(DoorModule)가 publish한 경첩 지오메트리 변경 시 리렌더 (뷰어-우측바 경첩 간격 동기화)
+  const doorHingeGeometryRevision = React.useSyncExternalStore(
+    subscribeDoorHingeGeometry,
+    getDoorHingeGeometrySnapshot,
+    getDoorHingeGeometrySnapshot
+  );
+  void doorHingeGeometryRevision;
+
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
     const renderedWidthForPanels =
@@ -4228,6 +4241,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     doorBottomOnSideMm: number,
     draftKey: string
   ) => {
+    event.stopPropagation();
     if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
     event.preventDefault();
     const step = event.shiftKey ? 10 : 1;
@@ -7183,7 +7197,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 || currentPlacedModule.moduleId?.includes('dual-lower-sink-cabinet');
               const isTopDownDoorCabinetHingeModule = currentPlacedModule.moduleId?.includes('lower-top-down-half')
                 || currentPlacedModule.moduleId?.includes('dual-lower-top-down-half');
-              const hasFixedSpecialHingePositions = isSinkCabinetHingeModule || isTopDownDoorCabinetHingeModule;
               const lowerTopHingeInsetMm = currentPlacedModule.moduleId?.includes('shelf-split') ? 140 : 120;
               const moduleBodyHeightMm = Math.round(adjustedFreeHeight ?? placedBodyHeight ?? moduleData?.dimensions.height ?? 0);
               const doorWidthMm = Math.round(doorOriginalWidth ?? customWidth ?? moduleData?.dimensions.width ?? 0);
@@ -7255,7 +7268,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   savedSidePositions.map((position: number) => position - doorBottomOnSideMm),
                   doorHeightMm
                 );
-                if (!(hasFixedSpecialHingePositions && field === 'hingePositionsMm') && saved.length > 0) {
+                if (saved.length > 0) {
                   return saved;
                 }
 
@@ -7325,27 +7338,70 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </label>
                   </div>
                   {isHingePositionEditMode && groups.map((group) => {
-                    const positions = buildPositions(group.field, group.doorHeightMm, group.hingeMode, group.doorBottomOnSideMm);
+                    // 뷰어(DoorModule)가 실제 표시 중인 경첩 지오메트리를 우선 사용 — 뷰어/우측바 간격 숫자 불일치 방지.
+                    // 뷰어가 publish한 값이 없을 때(도어 미렌더 등)만 자체 계산으로 폴백.
+                    const renderedGeometry = findDoorHingeGeometry(currentPlacedModule.id, group.field);
+                    const doorHeightMm = renderedGeometry
+                      ? Math.max(1, Math.round(renderedGeometry.doorHeightMm))
+                      : group.doorHeightMm;
+                    const doorBottomOnSideMm = renderedGeometry
+                      ? renderedGeometry.doorBottomOnSideMm
+                      : group.doorBottomOnSideMm;
+                    const positions = renderedGeometry && renderedGeometry.doorPositionsMm.length > 0
+                      ? normalizeDoorHingePositionsMm(renderedGeometry.doorPositionsMm, doorHeightMm)
+                      : buildPositions(group.field, doorHeightMm, group.hingeMode, doorBottomOnSideMm);
                     const displayPositions = positions
                       .map((positionMm, sourceIndex) => ({
                         positionMm,
-                        topDistanceMm: bottomToTopHingePositionMm(positionMm, group.doorHeightMm),
+                        topDistanceMm: bottomToTopHingePositionMm(positionMm, doorHeightMm),
                         sourceIndex
                       }))
                       .sort((a, b) => a.topDistanceMm - b.topDistanceMm);
-                    const gapSegments = getHingeGapSegments(positions, group.doorHeightMm);
+                    const gapSegments = getHingeGapSegments(positions, doorHeightMm);
                     return (
                       <div key={group.field} style={{ marginTop: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', fontWeight: 600 }}>{group.label}</span>
                           <button
                             type="button"
-                            onClick={() => handleAddHingePosition(group.field, positions, group.doorHeightMm, group.doorBottomOnSideMm)}
+                            onClick={() => handleAddHingePosition(group.field, positions, doorHeightMm, doorBottomOnSideMm)}
                             style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
                           >
                             추가
                           </button>
                         </div>
+                        {displayPositions.length > 0 && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 6px', marginBottom: '8px' }}>
+                            {displayPositions.map(({ sourceIndex, topDistanceMm }, displayIndex) => {
+                              const draftKey = getHingePositionDraftKey(group.field, sourceIndex);
+                              const inputValue = hingePositionDrafts[draftKey] ?? String(topDistanceMm);
+                              return (
+                                <div key={`${group.field}-position-${sourceIndex}`} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <label style={{ width: '42px', fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>
+                                    {displayIndex + 1}번
+                                  </label>
+                                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                                    <input
+                                      type="number"
+                                      inputMode="numeric"
+                                      step={1}
+                                      min={1}
+                                      max={Math.max(1, group.doorHeightMm - 1)}
+                                      value={inputValue}
+                                      onChange={(e) => handleHingePositionValueChange(group.field, sourceIndex, e.target.value, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
+                                      onKeyDownCapture={(e) => handleHingePositionKeyDown(e, group.field, sourceIndex, inputValue, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
+                                      onBlur={() => clearHingePositionDraft(draftKey)}
+                                      onFocus={(e) => e.currentTarget.select()}
+                                      className={styles.depthInput}
+                                      style={{ textAlign: 'center', fontSize: '13px', height: '28px' }}
+                                    />
+                                    <span className={styles.unit}>mm</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         {gapSegments.map(({ label, valueMm, segmentIndex }) => {
                           const draftKey = getHingeGapDraftKey(group.field, segmentIndex);
                           const inputValue = hingeGapDrafts[draftKey] ?? String(valueMm);
@@ -7358,17 +7414,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   inputMode="numeric"
                                   step={1}
                                   min={1}
-                                  max={Math.max(1, group.doorHeightMm - 1)}
+                                  max={Math.max(1, doorHeightMm - 1)}
                                   value={inputValue}
-                                  onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
-                                  onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
+                                  onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, doorHeightMm, doorBottomOnSideMm, draftKey)}
+                                  onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, doorHeightMm, doorBottomOnSideMm, draftKey)}
                                   onBlur={() => clearHingeGapDraft(draftKey)}
                                   onFocus={(e) => {
                                     setHingeGapEditBases((prev) => ({
                                       ...prev,
                                       [draftKey]: {
-                                        topDistancesMm: getHingeTopDistancesMm(positions, group.doorHeightMm),
-                                        doorHeightMm: group.doorHeightMm
+                                        topDistancesMm: getHingeTopDistancesMm(positions, doorHeightMm),
+                                        doorHeightMm
                                       }
                                     }));
                                     e.currentTarget.select();
@@ -7388,7 +7444,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 key={`${group.field}-delete-${sourceIndex}`}
                                 type="button"
                                 disabled={positions.length <= 1}
-                                onClick={() => handleRemoveHingePosition(group.field, sourceIndex, positions, group.doorHeightMm, group.doorBottomOnSideMm)}
+                                onClick={() => handleRemoveHingePosition(group.field, sourceIndex, positions, doorHeightMm, doorBottomOnSideMm)}
                                 style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: positions.length <= 1 ? 'var(--theme-text-tertiary)' : 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: positions.length <= 1 ? 'not-allowed' : 'pointer' }}
                               >
                                 {displayIndex + 1}번 삭제

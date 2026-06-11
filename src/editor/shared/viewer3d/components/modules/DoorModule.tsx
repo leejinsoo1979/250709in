@@ -43,6 +43,7 @@ import {
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 import { PET_PANEL_THICKNESS_MM, resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
 import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
+import { removeDoorHingeGeometry, updateDoorHingeGeometry } from '@/editor/shared/utils/doorHingeGeometryRegistry';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
@@ -1890,8 +1891,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isTopDownDoorCabinetHingeModule = splitDoorPanelName !== '상부 도어'
     && splitDoorPanelName !== '하부 도어'
     && (moduleIdentifier.includes('lower-top-down-half') || moduleIdentifier.includes('dual-lower-top-down-half'));
-  const hasFixedSpecialHingePositions = isSinkCabinetHingeModule || isTopDownDoorCabinetHingeModule;
-  const hasCustomHingePositions = !hasFixedSpecialHingePositions && customHingePositionsMm.length > 0;
+  const hasCustomHingePositions = customHingePositionsMm.length > 0;
   const shelfCollisionRangesMm = useMemo(() => {
     const cabinetHeightMm = effectiveInternalHeight || moduleData?.dimensions?.height || 0;
     if (!cabinetHeightMm || !moduleData) return [];
@@ -2021,6 +2021,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     : splitDoorPanelName === '하부 도어'
       ? 'lowerDoorHingePositionsMm'
       : 'hingePositionsMm';
+
+  // 뷰어가 실제 표시하는 경첩 지오메트리를 우측바와 공유 (간격 숫자 불일치 방지)
+  const effectiveHingePositionsKey = effectiveHingePositionsMm.join(',');
+  useEffect(() => {
+    if (!furnitureId || isDummyDoorModule) return;
+    updateDoorHingeGeometry({
+      furnitureId,
+      field: hingePositionsField,
+      doorHeightMm: actualDoorHeight,
+      doorBottomOnSideMm,
+      doorPositionsMm: effectiveHingePositionsMm
+    });
+    return () => {
+      removeDoorHingeGeometry(furnitureId, hingePositionsField);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [furnitureId, isDummyDoorModule, hingePositionsField, actualDoorHeight, doorBottomOnSideMm, effectiveHingePositionsKey]);
 
   useEffect(() => {
     setHingeGapDrafts({});
