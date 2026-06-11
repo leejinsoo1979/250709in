@@ -256,15 +256,15 @@ describe('panelDetails regression baselines', () => {
     expect(side.bracketBoringPositions).toEqual([120, 480])
   })
 
-  it('싱크장 반통은 저장된 기존 경첩 위치가 있어도 상단 힌지를 몸통 위에서 300mm로 고정한다', () => {
+  it('싱크장 반통도 저장된 사용자 경첩 높이를 CNC 도어/측판 보링에 반영한다', () => {
     const panels = calculatePanels('lower-sink-cabinet-500', 500, 600, {
       hasDoor: true,
       backPanelThicknessMm: 9,
       customHingePositionsMm: [120, 660]
     })
 
-    expect(findPanel(panels, '도어').boringPositions).toEqual([120, 480])
-    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 480])
+    expect(findPanel(panels, '도어').boringPositions).toEqual([120, 660])
+    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 660])
   })
 
   it('싱크장 한통은 양쪽 도어와 측판 모두 상단 힌지 보링을 몸통 위에서 300mm로 내린다', () => {
@@ -282,15 +282,15 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '우측판').bracketBoringPositions).toEqual([120, 480])
   })
 
-  it('상판내림 도어 반통은 상단 힌지 보링을 몸통 위에서 180mm로 내린다', () => {
+  it('상판내림 도어 반통도 저장된 사용자 경첩 높이를 CNC 도어/측판 보링에 반영한다', () => {
     const panels = calculatePanels('lower-top-down-half-500', 500, 600, {
       hasDoor: true,
       backPanelThicknessMm: 9,
       customHingePositionsMm: [120, 660]
     })
 
-    expect(findPanel(panels, '도어').boringPositions).toEqual([125, 605])
-    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 600])
+    expect(findPanel(panels, '도어').boringPositions).toEqual([125, 665])
+    expect(findPanel(panels, '좌측판').bracketBoringPositions).toEqual([120, 660])
   })
 
   it('상판내림 도어 한통은 양쪽 도어와 측판 모두 상단 힌지 보링을 몸통 위에서 180mm로 내린다', () => {

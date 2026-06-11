@@ -1350,7 +1350,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       doorHeightMm: doorGeometry.leafHeightMm,
       doorBottomOnSideMm: doorGeometry.bottomMm,
       shelfCollisionRangesOnSideMm: shelfCollisionRanges,
-      customSidePositionsMm: (isSinkCabinet || isTopDownDoorCabinet) ? undefined : currentPlacedModule.hingePositionsMm,
+      customSidePositionsMm: currentPlacedModule.hingePositionsMm,
       defaultDoorPositionsMm: resolveSideAnchoredDoorHingePositionsMm({
         doorHeightMm: doorGeometry.leafHeightMm,
         doorBottomOnSideMm: doorGeometry.bottomMm,

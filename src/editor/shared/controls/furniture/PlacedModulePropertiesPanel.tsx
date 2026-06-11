@@ -7386,10 +7386,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                       inputMode="numeric"
                                       step={1}
                                       min={1}
-                                      max={Math.max(1, group.doorHeightMm - 1)}
+                                      max={Math.max(1, doorHeightMm - 1)}
                                       value={inputValue}
-                                      onChange={(e) => handleHingePositionValueChange(group.field, sourceIndex, e.target.value, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
-                                      onKeyDownCapture={(e) => handleHingePositionKeyDown(e, group.field, sourceIndex, inputValue, positions, group.doorHeightMm, group.doorBottomOnSideMm, draftKey)}
+                                      onChange={(e) => handleHingePositionValueChange(group.field, sourceIndex, e.target.value, positions, doorHeightMm, doorBottomOnSideMm, draftKey)}
+                                      onKeyDownCapture={(e) => handleHingePositionKeyDown(e, group.field, sourceIndex, inputValue, positions, doorHeightMm, doorBottomOnSideMm, draftKey)}
                                       onBlur={() => clearHingePositionDraft(draftKey)}
                                       onFocus={(e) => e.currentTarget.select()}
                                       className={styles.depthInput}

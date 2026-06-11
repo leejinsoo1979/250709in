@@ -1730,7 +1730,7 @@ export const calculatePanelDetails = (
       const isSinkCabinet = moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet');
       const isTopDownDoorCabinet = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
       const topHingeInsetFromBodyTopMm = isSinkCabinet ? 300 : isTopDownDoorCabinet ? 180 : DEFAULT_HINGE_SETTINGS.topBottomMargin;
-      const effectiveCustomHingePositionsMm = (isSinkCabinet || isTopDownDoorCabinet) ? undefined : customHingePositionsMm;
+      const effectiveCustomHingePositionsMm = customHingePositionsMm;
       const bracketSidePositions: number[] = [];
       doorLeaves.forEach((leaf) => {
         const isLeftHinge = leaf.hingeSide === 'left';
