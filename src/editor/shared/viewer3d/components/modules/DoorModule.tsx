@@ -4210,9 +4210,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     return segments1;
                   }
 
-                  // 정면뷰: X 패턴
-                  const start1 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0];
-                  const end1 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
+                  // 정면뷰: 열림 방향 꺾쇠 패턴
+                  // 일반 도어: 꼭짓점 = 경첩쪽 중앙 (<, >)
+                  // 식세기장: 하단 힌지 틸트 → 꼭짓점 = 하단 중앙 (V)
+                  const start1 = isDishwasherDoor
+                    ? [-doorWidthUnits / 2, doorHeight / 2, 0]
+                    : [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0];
+                  const end1 = isDishwasherDoor
+                    ? [0, -doorHeight / 2, 0]
+                    : [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
 
                   const dx1 = end1[0] - start1[0];
                   const dy1 = end1[1] - start1[1];
@@ -4274,8 +4280,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   
                   // 두 번째 대각선: 정면뷰에만 렌더링
                   if (isFrontView) {
-                    const start2 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
-                    const end2 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0];
+                    const start2 = isDishwasherDoor
+                      ? [0, -doorHeight / 2, 0]
+                      : [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
+                    const end2 = isDishwasherDoor
+                      ? [doorWidthUnits / 2, doorHeight / 2, 0]
+                      : [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0];
                     const segments2 = [];
 
                     const dx2 = end2[0] - start2[0];
