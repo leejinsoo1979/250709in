@@ -2238,7 +2238,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               height={adjustedHeight}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              hasBackPanel={hasBackPanel}
+              hasBackPanel={moduleData.id.includes('lower-dishwasher-cabinet') ? false : hasBackPanel}
+              hideBottomPanel={moduleData.id.includes('lower-dishwasher-cabinet')}
               spaceInfo={spaceInfo}
               moduleData={moduleData}
               placedFurnitureId={placedFurnitureId}
@@ -3365,8 +3366,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}
-      {showFurniture && (
+      {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리. 식세기장은 조절발 없음 */}
+      {showFurniture && !moduleData.id.includes('lower-dishwasher-cabinet') && (
         <AdjustableFootsRenderer
           width={adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width}
           depth={baseFurniture.depth}

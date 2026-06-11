@@ -2056,6 +2056,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   ) => {
     if (isSide2DView) return null;
 
+    // 식세기장: 도어가 식세기 본체 부착(힌지 없음) → 힌지 표시 안 함
+    if (moduleIdentifier.includes('lower-dishwasher-cabinet')) return null;
+
     // 힌지보링 제외된 도어는 뷰어에서도 힌지 표시 안 함 (패널목록 '힌지제외' 버튼)
     const doorPanelNameForBoring = splitDoorPanelName === '상부 도어' || splitDoorPanelName === '하부 도어'
       ? splitDoorPanelName
@@ -2560,6 +2563,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   const dualRightDoorSpring = useSpring({
     rotation: shouldOpenDoors ? Math.PI / 2 : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: doorDelay,
+  });
+
+  // 식세기장 도어: 식세기 본체 하단 힌지 — 하단 축으로 상단이 앞으로 ~30° 젖혀짐
+  const isDishwasherDoor = moduleIdentifier.includes('lower-dishwasher-cabinet');
+  const dishwasherDoorSpring = useSpring({
+    rotation: shouldOpenDoors ? Math.PI / 6 : 0,
     config: { tension: 90, friction: 16, clamp: true },
     delay: doorDelay,
   });
@@ -3901,12 +3912,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       panelThicknessMm: panelThickness
     });
 
+    // 식세기장: 회전축을 좌/우 경첩이 아니라 도어 하단 가장자리(X축)로 변경
+    //   도어 중심 = parent + child 합 → 피벗을 도어 하단으로 내리고 child로 도어를 위로 올림
+    const doorCenterFromGeometry: [number, number, number] = [
+      singleDoorOpenGeometry.parentPosition[0] + singleDoorOpenGeometry.childPosition[0],
+      singleDoorOpenGeometry.parentPosition[1] + singleDoorOpenGeometry.childPosition[1],
+      singleDoorOpenGeometry.parentPosition[2] + singleDoorOpenGeometry.childPosition[2],
+    ];
+    const dishwasherParentPosition: [number, number, number] = [
+      doorCenterFromGeometry[0],
+      doorCenterFromGeometry[1] - doorHeight / 2,
+      doorCenterFromGeometry[2],
+    ];
+    const dishwasherChildPosition: [number, number, number] = [0, doorHeight / 2, 0];
+
     return (
       <group>
         {!isDummyDoorModule && !moduleData?.id?.includes('glass-cabinet') && renderSidePanelAnchoredHingeMarkers('single-side-panel-hinge')}
-        <group position={singleDoorOpenGeometry.parentPosition}>
-        <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
-          <group position={singleDoorOpenGeometry.childPosition}>
+        <group position={isDishwasherDoor ? dishwasherParentPosition : singleDoorOpenGeometry.parentPosition}>
+        <animated.group
+          rotation-y={isDishwasherDoor ? 0 : (singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation))}
+          rotation-x={isDishwasherDoor ? dishwasherDoorSpring.rotation : 0}
+        >
+          <group position={isDishwasherDoor ? dishwasherChildPosition : singleDoorOpenGeometry.childPosition}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
             {showDoorOverlay && (
               <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>

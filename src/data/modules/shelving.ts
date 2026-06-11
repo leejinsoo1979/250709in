@@ -2205,6 +2205,50 @@ const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
 };
 
 /**
+ * 식세기장 반통 - 식기세척기 빌트인용 (반통 전용, 듀얼 없음)
+ * 기본하부장 반통과 동일 외형이지만:
+ * - 조절발/바닥판/백패널/걸레받이 없음 (식세기 본체가 내부 공간 차지)
+ * - 측판은 경첩 브래킷 보링·백패널 홈 없는 민판
+ * - 도어는 식세기 본체 전면 부착 (힌지 보링 없음, 하단 축 틸트 열림)
+ */
+const createLowerDishwasherCabinet = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 780;
+
+  const base = createFurnitureBase(
+    `lower-dishwasher-cabinet-${widthForId}`,
+    `식세기장 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    600,
+    '#fff3e0',
+    `식세기장 반통 W${widthForId}xH785xD600 (조절발/바닥판/백패널 없음)`,
+    600,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 600,
+    hasDoor: false,
+    thumbnail: '/images/furniture-thumbnails/하부장 반통.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
  * 싱크장 한통 (듀얼) - 조절발 105mm + 캐비넷 W(듀얼)xD600xH785
  * 싱크장 반통의 듀얼 버전 (칸막이 없음, 내부 선반 없음)
  */
@@ -3954,6 +3998,7 @@ export const generateShelvingModules = (
   // === 새 하부장 가구 생성 ===
   modules.push(createLowerHalfCabinet(columnWidth));
   modules.push(createLowerSinkCabinet(columnWidth));
+  modules.push(createLowerDishwasherCabinet(columnWidth));
   modules.push(createLowerInductionCabinet(columnWidth));
   modules.push(createLowerDrawer1Tier(columnWidth));
   modules.push(createLowerDrawer2Tier(columnWidth));

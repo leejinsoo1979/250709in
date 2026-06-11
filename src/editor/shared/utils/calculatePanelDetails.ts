@@ -3117,6 +3117,37 @@ export const calculatePanelDetails = (
     }
   }
 
+  // === 식세기장 후처리 ===
+  // 바닥판/백패널 없음, 측판은 경첩 브래킷 보링·백패널 홈 없는 민판,
+  // 도어는 식세기 본체 전면 부착이라 힌지 보링 없음
+  if (moduleData.id.includes('lower-dishwasher-cabinet')) {
+    return result
+      .filter((panel: any) => {
+        const name = String(panel?.name || '');
+        if (name.startsWith('===') || panel?.isInfo) return true;
+        if (name.includes('걸레받이') || name.includes('걸래받이') || name.includes('받침대')) return false;
+        return name !== '바닥' && name !== '바닥판' && !name.includes('백패널');
+      })
+      .map((panel: any) => {
+        const name = String(panel?.name || '');
+        if (panel?.isDoor) {
+          return {
+            ...panel,
+            boringPositions: undefined,
+            boringDepthPositions: undefined,
+            screwPositions: undefined,
+            screwDepthPositions: undefined,
+            screwHoleSpacing: undefined,
+            hingeCount: 0,
+          };
+        }
+        if (name.includes('측판')) {
+          return { ...panel, bracketBoringPositions: undefined, boringPositions: undefined };
+        }
+        return panel;
+      });
+  }
+
   return result;
 };
 

@@ -60,6 +60,7 @@ export default function TallEpContextMenu() {
     && !moduleIdForHinge.includes('glass-cabinet')
     && !/^(dual-)?lower-drawer-/.test(moduleIdForHinge)
     && !/(^|-)lower-induction-cabinet-/.test(moduleIdForHinge)
+    && !/(^|-)lower-dishwasher-cabinet-/.test(moduleIdForHinge)
     && !(/(^|-)lower-door-lift-/.test(moduleIdForHinge) && !moduleIdForHinge.includes('-half-'))
     && !/(^|-)lower-top-down-touch-/.test(moduleIdForHinge);
   const hingePosition = (cur.hingePosition ?? 'right') as 'left' | 'right';

@@ -379,6 +379,7 @@ interface BaseFurnitureShellProps {
 
   // 상판 숨김 (하부장용)
   hideTopPanel?: boolean;
+  hideBottomPanel?: boolean; // 식세기장: 바닥판 없음
 
   // 상판 앞쪽 깊이 감소 (상판내림: 전대 뒤에 맞닿도록 40mm 줄임)
   topPanelFrontReduction?: number;
@@ -446,6 +447,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   panelGrainDirections,
   hideVentilationCap = true,
   hideTopPanel = false,
+  hideBottomPanel = false,
   topPanelFrontReduction = 0,
   bottomPanelFrontReduction = 0,
   topStretcher,
@@ -1892,7 +1894,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
         {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
         {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 풀깊이 (측판과 동일) */}
-        {(() => {
+        {!hideBottomPanel && (() => {
           const panelName = isMultiSectionFurniture() ? '(하)바닥' : '바닥판';
           const bottomPanelMat = getPanelMaterial(panelName);
           const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
