@@ -2156,7 +2156,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         if (cc && cc.sections && cc.sections.length > 0) {
           const pt = cc.panelThickness || 18;
           const totalDepth = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
-          const totalWidth = currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
+          // 몸통치수 W와 동일한 우선순위 (slotCustomWidth = 슬롯 실폭 포함)
+          const totalWidth = currentPlacedModule.freeWidth
+            ?? currentPlacedModule.adjustedWidth
+            ?? currentPlacedModule.slotCustomWidth
+            ?? currentPlacedModule.customWidth
+            ?? moduleData.dimensions.width;
           // 신발장: 옛 데이터의 섹션 깊이가 moduleData.dimensions.depth(600)로 stale 저장된 경우 무시
           const _isShoeCat =
             currentPlacedModule.moduleId.includes('-entryway-') ||
@@ -2239,8 +2244,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ? getRenderedSectionBasisHeight(currentPlacedModule, spaceInfo, rawSectionBasisH)
               : rawSectionBasisH;
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
+            // 몸통치수 W와 동일한 우선순위 (slotCustomWidth = 슬롯 실폭 포함)
             const totalW = currentPlacedModule.freeWidth
               ?? currentPlacedModule.adjustedWidth
+              ?? currentPlacedModule.slotCustomWidth
               ?? currentPlacedModule.customWidth
               ?? moduleData.dimensions.width;
             // 신발장: 옛 데이터의 섹션 깊이가 moduleData.dimensions.depth(600)로 stale 저장된 경우 무시
@@ -2284,7 +2291,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               if (i === 0) dInputs[i] = Math.round(_lowerSec2 ?? totalD).toString();
               else if (i === 1) dInputs[i] = Math.round(_upperSec2 ?? totalD).toString();
               else dInputs[i] = Math.round(totalD).toString();
-              wInputs[i] = Math.round(totalW).toString();
+              // 0.1mm 단위 유지 (정수 반올림 시 599.5 → 600으로 몸통치수와 어긋남)
+              wInputs[i] = (() => { const v = Math.round(totalW * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
             });
             setSectionHeightInputs(hInputs);
             setSectionDepthInputs(dInputs);
