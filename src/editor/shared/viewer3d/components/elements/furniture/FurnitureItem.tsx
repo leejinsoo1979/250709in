@@ -4866,6 +4866,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       endPanelThicknessMm={epThicknessMm}
                       side="left"
                       adjacentFurniture={leftAdjacentExists}
+                      furnitureId={placedModule.id}
+                      panelName="엔드패널(좌)"
                     />
                   )}
                   {hasRight && (
@@ -4880,6 +4882,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       endPanelThicknessMm={epThicknessMm}
                       side="right"
                       adjacentFurniture={rightAdjacentExists}
+                      furnitureId={placedModule.id}
+                      panelName="엔드패널(우)"
                     />
                   )}
                 </>

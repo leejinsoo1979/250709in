@@ -16,6 +16,9 @@ interface EndPanelWithTextureProps {
   endPanelThicknessMm?: number; // EP 물리적 두께 (mm) — >18mm이면 ㄷ자 프레임
   side?: 'left' | 'right'; // EP 위치 (ㄷ자 프레임 방향 결정)
   adjacentFurniture?: boolean; // 이 EP 방향에 인접 가구 있으면 측판 생략
+  // 패널목록 동기화용 패널 이름 (예: '엔드패널(좌)') — furnitureId와 함께 주면
+  // 렌더 치수가 renderedPanelDimensionRegistry로 publish되어 패널목록이 실측값을 따름
+  panelName?: string;
 }
 
 /**
@@ -33,7 +36,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   furnitureId,
   endPanelThicknessMm = 18,
   side = 'left',
-  adjacentFurniture = false
+  adjacentFurniture = false,
+  panelName
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
 
@@ -117,9 +121,14 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
         material={endPanelMaterial}
         renderMode={renderMode}
         furnitureId={furnitureId}
+        panelName={panelName}
       />
     );
   }
+
+  const sideKo = side === 'left' ? '좌' : '우';
+  const cFramePanelName = (part: '측판' | '전면연결판' | '후면연결판') =>
+    panelName ? `EP(${sideKo})${part}` : undefined;
 
   // ㄷ자 EP: 사용자가 EP 두께값을 18 초과로 늘렸을 때만 적용 (키큰장 찬넬과 동일 구조)
   //   패널은 규격 18mm으로 두께 고정.
@@ -171,6 +180,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
+          panelName={cFramePanelName('측판')}
         />
       )}
       {/* 안쪽 측면 ep — 가구 본체 라인 쪽 (키큰장 찬넬과 동일 구조) */}
@@ -182,6 +192,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
+          panelName={cFramePanelName('후면연결판')}
         />
       )}
       {/* 전면 ep — 양 측면 ep 앞쪽 잘린 자리까지 모두 덮음 */}
@@ -193,6 +204,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
+          panelName={cFramePanelName('전면연결판')}
         />
       )}
     </group>
