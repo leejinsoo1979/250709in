@@ -486,18 +486,19 @@ service cloud.firestore {
     }
 
     // 1:1 대화방 (conversations) — id: 정렬된 두 uid를 _로 결합 (예: uidA_uidB)
-    function isConversationMemberCreate(convId) {
-      return isSignedIn() && (
-        // 신규 대화방 생성 직후 메시지 추가 시 (request.resource 기반)
-        request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.members
-      );
-    }
     match /conversations/{convId} {
       // members: [uidA, uidB], lastMessage, lastMessageAt, lastSenderId, unread:{uidA:0,uidB:0}
       allow create: if isSignedIn() &&
                     request.auth.uid in request.resource.data.members &&
                     request.resource.data.members.size() == 2;
-      allow read: if isSignedIn() && (request.auth.uid in resource.data.members || isAdmin());
+      // getDoc() is used before creating a conversation. If the document does
+      // not exist yet, allow the signed-in client to observe that missing doc
+      // so it can proceed to the create rule below.
+      allow get: if isSignedIn() && (
+        !exists(/databases/$(database)/documents/conversations/$(convId)) ||
+        request.auth.uid in resource.data.members ||
+        isAdmin()
+      );
       allow list: if isSignedIn();
       allow update: if isSignedIn() && (
         request.auth.uid in resource.data.members ||
