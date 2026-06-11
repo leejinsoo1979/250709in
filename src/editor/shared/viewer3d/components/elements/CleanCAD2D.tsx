@@ -12639,16 +12639,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 기둥 앞 배치(front) 모드는 슬롯 전체 너비
           const isColFrontTop = (module as any).columnPlacementMode === 'front';
           const slotFullWTop = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
-          const actualWidth = (module.isFreePlacement && module.freeWidth)
+          let actualWidth = (module.isFreePlacement && module.freeWidth)
             ? module.freeWidth
             : isColFrontTop
               ? (slotFullWTop || moduleData.dimensions.width)
               : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
-          const moduleWidth = mmToThreeUnits(actualWidth);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용 (front 모드는 슬롯 중심 X)
-          const actualPositionX = isColFrontTop
+          let actualPositionX = isColFrontTop
             ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
             : ((module as any).adjustedPosition?.x ?? module.position.x);
+          // 내치 EP: 렌더 본체는 EP만큼 폭이 줄고 중심이 (좌EP−우EP)/2 이동
+          // (FurnitureItem epOffsetX와 동일) — 치수도 렌더 본체를 따라가야 어긋나지 않음
+          if (!module.customConfig && module.endPanelMode !== 'outside') {
+            const epThkTopMm = resolvePetPanelThicknessMm(module.endPanelThickness) || 18;
+            const leftEpTopMm = module.hasLeftEndPanel ? epThkTopMm : 0;
+            const rightEpTopMm = module.hasRightEndPanel ? epThkTopMm : 0;
+            if (leftEpTopMm || rightEpTopMm) {
+              actualWidth = Math.max(0, actualWidth - leftEpTopMm - rightEpTopMm);
+              actualPositionX += mmToThreeUnits((leftEpTopMm - rightEpTopMm) / 2);
+            }
+          }
+          const moduleWidth = mmToThreeUnits(actualWidth);
           const leftX = actualPositionX - moduleWidth / 2;
           const rightX = actualPositionX + moduleWidth / 2;
 
