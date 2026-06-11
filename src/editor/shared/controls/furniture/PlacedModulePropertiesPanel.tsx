@@ -4890,9 +4890,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }}
                           title={hingeBoringExcluded
                             ? `${panel.name} 힌지보링 복원 (옵티마이저·2D 힌지 표시)`
-                            : `${panel.name} 힌지보링 제외 (옵티마이저 보링·2D 힌지 숨김)`}
+                            : `${panel.name} 힌지보링 숨김 (옵티마이저 보링·2D 힌지 숨김)`}
                         >
-                          힌지{hingeBoringExcluded ? '제외' : ''}
+                          보링숨김
                         </button>
                       )}
                       <button
