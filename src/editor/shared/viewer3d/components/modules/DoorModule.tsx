@@ -2106,18 +2106,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     const boundariesMm = [0, ...topDistancesMm, doorHeightMm];
     const lastSegmentIndex = boundariesMm.length - 2;
+    // 중간 간격 수정: 위쪽 경첩은 고정, 아래쪽 경첩 이동(아래 간격이 흡수).
+    // 단, 바로 아래가 마지막 간격(N번-하단)이면 위쪽 간격이 흡수해 상/하단 고정값 보존.
+    const isMiddleAbsorbUpward = segmentIndex === lastSegmentIndex - 1;
     const targetBoundaryIndex = segmentIndex === 0
       ? 1
       : segmentIndex === lastSegmentIndex
         ? boundariesMm.length - 2
-        : segmentIndex;
+        : isMiddleAbsorbUpward
+          ? segmentIndex
+          : segmentIndex + 1;
     const previousBoundary = boundariesMm[targetBoundaryIndex - 1] ?? 0;
     const nextBoundary = boundariesMm[targetBoundaryIndex + 1] ?? doorHeightMm;
     const requestedBoundary = segmentIndex === 0
       ? requestedGapMm
       : segmentIndex === lastSegmentIndex
         ? doorHeightMm - requestedGapMm
-        : boundariesMm[segmentIndex + 1] - requestedGapMm;
+        : isMiddleAbsorbUpward
+          ? boundariesMm[segmentIndex + 1] - requestedGapMm
+          : boundariesMm[segmentIndex] + requestedGapMm;
     const nextBoundaryValue = Math.max(
       previousBoundary + 1,
       Math.min(nextBoundary - 1, Math.round(requestedBoundary))

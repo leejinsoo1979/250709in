@@ -4109,18 +4109,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const doorHeight = Math.round(editBasis?.doorHeightMm ?? doorHeightMm);
     const boundaries = [0, ...topDistances, doorHeight];
     const lastSegmentIndex = boundaries.length - 2;
+    // 중간 간격 수정: 위쪽 경첩은 고정, 아래쪽 경첩 이동(아래 간격이 흡수).
+    // 단, 바로 아래가 마지막 간격(N번-하단)이면 위쪽 간격이 흡수해 상/하단 고정값 보존.
+    const isMiddleAbsorbUpward = segmentIndex === lastSegmentIndex - 1;
     const targetBoundaryIndex = segmentIndex === 0
       ? 1
       : segmentIndex === lastSegmentIndex
         ? boundaries.length - 2
-        : segmentIndex;
+        : isMiddleAbsorbUpward
+          ? segmentIndex
+          : segmentIndex + 1;
     const previousBoundary = boundaries[targetBoundaryIndex - 1] ?? 0;
     const nextBoundary = boundaries[targetBoundaryIndex + 1] ?? doorHeight;
     const requestedBoundary = segmentIndex === 0
       ? valueMm
       : segmentIndex === lastSegmentIndex
         ? doorHeight - valueMm
-        : boundaries[segmentIndex + 1] - valueMm;
+        : isMiddleAbsorbUpward
+          ? boundaries[segmentIndex + 1] - valueMm
+          : boundaries[segmentIndex] + valueMm;
     const clampedBoundary = Math.max(
       previousBoundary + 1,
       Math.min(nextBoundary - 1, Math.round(requestedBoundary))
