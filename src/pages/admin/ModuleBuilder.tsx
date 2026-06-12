@@ -455,6 +455,8 @@ const ModuleBuilder = () => {
   const [listMode, setListMode] = useState<'gallery' | 'list'>('gallery');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');
+  // 전시/작업 분리 — 전시: 표준 + 게시된 관리자 모듈, 작업: 비공개(초안) 관리자 모듈
+  const [statusTab, setStatusTab] = useState<'published' | 'draft'>('published');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -492,6 +494,11 @@ const ModuleBuilder = () => {
   const filteredCatalog = useMemo(() => (
     catalogItems.filter(item => {
       if (categoryFilter !== 'all' && item.galleryCat !== categoryFilter) return false;
+      if (statusTab === 'published') {
+        if (item.source === 'admin' && item.enabled === false) return false;
+      } else {
+        if (!(item.source === 'admin' && item.enabled === false)) return false;
+      }
       if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
       const query = searchQuery.trim().toLowerCase();
       if (query && !item.module.name.toLowerCase().includes(query) && !item.module.id.toLowerCase().includes(query)) {
@@ -499,7 +506,7 @@ const ModuleBuilder = () => {
       }
       return true;
     })
-  ), [catalogItems, categoryFilter, searchQuery, sourceFilter]);
+  ), [catalogItems, categoryFilter, searchQuery, sourceFilter, statusTab]);
 
   // 숨김 패널 → ExcludedPanelsStore (BoxWithEdges가 매 프레임 읽어 visible 토글)
   useEffect(() => {
@@ -1351,6 +1358,26 @@ const ModuleBuilder = () => {
             </button>
           </div>
         </header>
+
+        {/* 전시 / 작업 분리 탭 */}
+        <div className={styles.statusTabs}>
+          <button
+            type="button"
+            className={statusTab === 'published' ? styles.statusTabActive : ''}
+            onClick={() => setStatusTab('published')}
+          >
+            전시 중인 모듈
+            <em>{catalogItems.filter(item => !(item.source === 'admin' && item.enabled === false)).length}</em>
+          </button>
+          <button
+            type="button"
+            className={statusTab === 'draft' ? styles.statusTabActive : ''}
+            onClick={() => setStatusTab('draft')}
+          >
+            작업 중 (비공개)
+            <em>{catalogItems.filter(item => item.source === 'admin' && item.enabled === false).length}</em>
+          </button>
+        </div>
 
         {/* 상단 필터 바 — 카테고리 / 출처 / 검색 / 갤러리·리스트 전환 */}
         <div className={styles.filterBar}>
