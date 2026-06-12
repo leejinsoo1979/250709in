@@ -1096,6 +1096,42 @@ const ModuleBuilder = () => {
     );
   };
 
+  /**
+   * 가구 높이 변경 — 외부서랍 중간 따내기를 zone 비례로 재계산.
+   * 표준 모듈과 동일 원리: 따내기 높이(65)는 고정, 서랍 zone들이 비례 확장/축소.
+   * 균등 분할 상태면 결과가 표준 공식((H−125)/2 등)과 정확히 일치, 사용자 수정 위치는 비율 유지.
+   */
+  const handleHeightChange = (nextHeight: number) => {
+    const prevHeight = height;
+    setHeight(nextHeight);
+    if (!useExternalDrawers || extDrawerType === 'legrabox' || !notchSidesLinked) return;
+    if (nextHeight <= 0 || prevHeight <= 0 || nextHeight === prevHeight) return;
+    setLeftNotches(current => {
+      if (current.length === 0) return current;
+      const sorted = [...current].sort((a, b) => a.fromBottom - b.fromBottom);
+      const topNotchH = hasTopPanel ? 0 : 60;
+      const notchSum = sorted.reduce((sum, row) => sum + row.height, 0);
+      const oldUsable = prevHeight - topNotchH - notchSum;
+      const newUsable = nextHeight - topNotchH - notchSum;
+      if (oldUsable <= 0 || newUsable <= 0) return current;
+      // 기존 zone(따내기 사이 구간) 비율대로 새 높이에 재배치
+      const zones: number[] = [];
+      let cursor = 0;
+      sorted.forEach(row => {
+        zones.push(Math.max(0, row.fromBottom - cursor));
+        cursor = row.fromBottom + row.height;
+      });
+      const scale = newUsable / oldUsable;
+      let nextBottom = 0;
+      return sorted.map((row, i) => {
+        nextBottom += zones[i] * scale;
+        const fromBottom = Math.round(nextBottom * 10) / 10;
+        nextBottom += row.height;
+        return { ...row, fromBottom };
+      });
+    });
+  };
+
   const removeNotch = (side: 'left' | 'right', notchId: string) => {
     const setter = side === 'right' ? setRightNotches : setLeftNotches;
     setter(current => current.filter(row => row.id !== notchId));
@@ -1630,7 +1666,7 @@ const ModuleBuilder = () => {
 
             <label className={styles.field}>
               <span>높이(mm)</span>
-              <input type="number" min={1} value={height} onChange={(event) => setHeight(Number(event.target.value))} />
+              <input type="number" min={1} value={height} onChange={(event) => handleHeightChange(Number(event.target.value))} />
             </label>
 
             <label className={styles.field}>
