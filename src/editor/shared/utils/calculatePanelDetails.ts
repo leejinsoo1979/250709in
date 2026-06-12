@@ -2723,6 +2723,37 @@ export const calculatePanelDetails = (
       });
       return { groupHeights, leaderOfDrawer };
     })();
+    // 마이다 정수 관례 (표준 408/409식): 아래들 반내림(half-down), 맨 위가 잔여 흡수
+    const finalizeMaidaInts = (raw: number[], totalMaida: number): number[] => {
+      const out = raw.slice(0, -1).map(v => Math.ceil(v - 0.5));
+      out.push(Math.round((totalMaida - out.reduce((a, b) => a + b, 0)) * 10) / 10);
+      return out;
+    };
+    // 목찬넬 없음: 마이다 경계 = 위 그룹 leader 서랍 이격 기준 (위 마이다 하단 = 이격 − 바닥판15 − 사이갭)
+    const adminLegraOffsetMaidas: number[] | null = (() => {
+      if (!adminLegraDrawers || !adminLegraGroupInfo) return null;
+      const specs = adminLegraDrawers.legraSpecs || [];
+      // 그룹 leader 서랍의 이격 (아래→위)
+      const leaderOffsets: number[] = [];
+      adminLegraGroupInfo.leaderOfDrawer.forEach((groupIdx, di) => {
+        if (groupIdx != null) leaderOffsets[groupIdx] = specs[di]?.offsetMm ?? 0;
+      });
+      if (leaderOffsets.length < 2) return null;
+      const gapG = adminLegraDrawers.maidaGapMm ?? 3;
+      const topGapV = adminLegraDrawers.topGap ?? -20;
+      const bottomGapV = adminLegraDrawers.bottomGap ?? 5;
+      const raw: number[] = [];
+      let prevBottom = -bottomGapV;
+      for (let gi = 1; gi < leaderOffsets.length; gi++) {
+        const boundaryBottom = leaderOffsets[gi] - 15 - gapG; // 위 그룹 마이다 하단
+        raw.push(boundaryBottom - gapG - prevBottom);
+        prevBottom = boundaryBottom;
+      }
+      raw.push((height + topGapV) - prevBottom);
+      if (raw.some(h => h <= 0)) return null;
+      const totalMaida = (height + topGapV + bottomGapV) - gapG * (raw.length - 1);
+      return finalizeMaidaInts(raw, totalMaida);
+    })();
     // 중간 목찬넬(공통 따내기) 정렬 마이다(그룹) — 3D LowerCabinet adminLegraChannelMaidas와 동일 공식
     const adminLegraChannelMaidas: number[] | null = (() => {
       if (!adminLegraDrawers || !adminLegraGroupInfo) return null;
@@ -2749,8 +2780,8 @@ export const calculatePanelDetails = (
       : isTDTouch2 ? [228, 228]
       : isTDTouch3 ? [164, 164, 164]
       : [228, 228]);
-    // 마이다 비례 (2B는 2A와 동일하게 [228, 228]) — admin은 따내기 정렬값 → 그룹 본체합 순
-    const maidaDrawerHeights = adminLegraChannelMaidas ?? adminLegraGroupInfo?.groupHeights ?? (isTouch2A ? [228, 228]
+    // 마이다 — admin: 따내기 정렬 → 이격 기준 → 그룹 본체합 비례 순
+    const maidaDrawerHeights = adminLegraChannelMaidas ?? adminLegraOffsetMaidas ?? adminLegraGroupInfo?.groupHeights ?? (isTouch2A ? [228, 228]
       : isTouch2B ? [228, 228]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]

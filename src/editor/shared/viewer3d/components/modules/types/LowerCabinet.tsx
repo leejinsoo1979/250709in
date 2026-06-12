@@ -1563,6 +1563,36 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     });
     return groups;
   })();
+  // 목찬넬 없음: 마이다 경계 = 위 그룹 leader 서랍 이격 기준 + 정수 관례(아래 반내림, 맨 위 잔여)
+  const adminLegraOffsetMaidas: number[] | null = (() => {
+    if (!adminLegraCfg) return null;
+    const specs = adminLegraCfg.legraSpecs || [];
+    const leaderOffsets: number[] = [];
+    let groupCount = 0;
+    specs.forEach(spec => {
+      if (spec.type === 'N' && groupCount > 0) return;
+      leaderOffsets[groupCount] = spec.offsetMm;
+      groupCount += 1;
+    });
+    if (groupCount < 2) return null;
+    const gapG = adminLegraCfg.maidaGapMm ?? 3;
+    const cabH = moduleData.dimensions.height || 785;
+    const topGapV = adminLegraCfg.topGap ?? -20;
+    const bottomGapV = adminLegraCfg.bottomGap ?? 5;
+    const raw: number[] = [];
+    let prevBottom = -bottomGapV;
+    for (let gi = 1; gi < groupCount; gi++) {
+      const boundaryBottom = leaderOffsets[gi] - 15 - gapG;
+      raw.push(boundaryBottom - gapG - prevBottom);
+      prevBottom = boundaryBottom;
+    }
+    raw.push((cabH + topGapV) - prevBottom);
+    if (raw.some(h => h <= 0)) return null;
+    const totalMaida = (cabH + topGapV + bottomGapV) - gapG * (raw.length - 1);
+    const out = raw.slice(0, -1).map(v => Math.ceil(v - 0.5));
+    out.push(Math.round((totalMaida - out.reduce((a, b) => a + b, 0)) * 10) / 10);
+    return out;
+  })();
   // 중간 목찬넬(공통 따내기)이 있으면 마이다(그룹) 경계를 따내기에 정렬:
   //   아래 마이다 상단 = 따내기 윗선 − 5 − 사이갭(기본 20 → 윗선−25), 위 마이다 하단 = 윗선 − 5
   const adminLegraChannelMaidas: number[] | null = (() => {
@@ -3255,7 +3285,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         return (
         <TouchDrawerAnimated
           drawerSpecsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs : undefined}
-          maidaProportionsOverride={adminLegraChannelMaidas ?? (adminLegraMaidaGroups.length > 0 ? adminLegraMaidaGroups : undefined)}
+          maidaProportionsOverride={adminLegraChannelMaidas ?? adminLegraOffsetMaidas ?? (adminLegraMaidaGroups.length > 0 ? adminLegraMaidaGroups : undefined)}
           legraTypesOverride={adminLegraCfg?.legraSpecs?.map(spec => spec.type)}
           maidaGapMm={adminLegraCfg?.maidaGapMm}
           moduleId={moduleData.id}
