@@ -63,6 +63,14 @@ const docToModule = (data: Record<string, unknown>, docId: string): ModuleData =
     normalizePercentSectionsInPlace(modelConfig.rightSections);
   }
 
+  // 구버전 저장본 정규화: 목찬넬(손잡이) 동반 외부서랍의 마이다 상단갭은 -20 상한 (목찬넬 위로 못 올라감)
+  if (modelConfig?.externalDrawers && modelConfig.topChannelNotch === true) {
+    const currentTopGap = modelConfig.externalDrawers.topGap;
+    if (currentTopGap === undefined || currentTopGap > -20) {
+      modelConfig.externalDrawers.topGap = -20;
+    }
+  }
+
   // 구버전 저장본 정규화: topChannelNotch 도입 전 모듈은 상판 없음 = 자동 목찬넬이었음 — 기존 외형 유지
   if (modelConfig && modelConfig.topChannelNotch === undefined) {
     const isLegacyAutoChannel = data.category === 'lower'

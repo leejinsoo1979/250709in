@@ -577,6 +577,7 @@ const ModuleBuilder = () => {
       ...(hasTopPanel && topPanelOffset > 0 ? { topPanelFrontOffsetMm: Math.min(topPanelOffset, depth) } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (일반 / 레그라박스)
+      // 목찬넬(손잡이) 동반 시 마이다 상단은 목찬넬 아래(H−20)를 못 넘음 — 상단갭 상한 -20
       ...(category === 'lower' && useExternalDrawers ? {
         externalDrawers: extDrawerType === 'legrabox'
           ? {
@@ -594,7 +595,7 @@ const ModuleBuilder = () => {
                   )
                 }));
               })(),
-              topGap: legraTopGap,
+              topGap: !hasTopPanel && topChannelEnabled ? Math.min(legraTopGap, -20) : legraTopGap,
               bottomGap: legraBottomGap,
               maidaGapMm: legraMaidaGap
             }
@@ -609,7 +610,7 @@ const ModuleBuilder = () => {
                   ...(extSideRest > 0 ? { rest: extSideRest } : {})
                 }
               } : {}),
-              topGap: extTopGap,
+              topGap: !hasTopPanel && topChannelEnabled ? Math.min(extTopGap, -20) : extTopGap,
               bottomGap: extBottomGap,
               maidaGapMm: extMaidaGap
             }
