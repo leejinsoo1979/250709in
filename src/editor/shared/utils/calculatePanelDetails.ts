@@ -2733,10 +2733,12 @@ export const calculatePanelDetails = (
     const adminLegraOffsetMaidas: number[] | null = (() => {
       if (!adminLegraDrawers || !adminLegraGroupInfo) return null;
       const specs = adminLegraDrawers.legraSpecs || [];
+      // 배치 후 높이 적응: 위 서랍들 이격 평행이동 (ΔH = 실높이 − 저장높이, 빌더에선 0)
+      const legraDeltaH = height - (moduleData.dimensions.height || height);
       // 그룹 leader 서랍의 이격 (아래→위)
       const leaderOffsets: number[] = [];
       adminLegraGroupInfo.leaderOfDrawer.forEach((groupIdx, di) => {
-        if (groupIdx != null) leaderOffsets[groupIdx] = specs[di]?.offsetMm ?? 0;
+        if (groupIdx != null) leaderOffsets[groupIdx] = (specs[di]?.offsetMm ?? 0) + (di > 0 ? legraDeltaH : 0);
       });
       if (leaderOffsets.length < 2) return null;
       const gapG = adminLegraDrawers.maidaGapMm ?? 3;

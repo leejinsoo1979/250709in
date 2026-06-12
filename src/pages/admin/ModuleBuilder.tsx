@@ -1181,8 +1181,16 @@ const ModuleBuilder = () => {
   const handleHeightChange = (nextHeight: number) => {
     const prevHeight = height;
     setHeight(nextHeight);
-    if (!useExternalDrawers || extDrawerType === 'legrabox' || !notchSidesLinked) return;
     if (nextHeight <= 0 || prevHeight <= 0 || nextHeight === prevHeight) return;
+    const deltaH = nextHeight - prevHeight;
+    // 레그라: 맨 아래 서랍 고정, 위 서랍들은 캐비넷 상단에 붙어 평행이동 (표준 서랍장 H 규칙)
+    if (useExternalDrawers && extDrawerType === 'legrabox') {
+      setLegraRows(rows => rows.map((row, i) => (
+        i === 0 ? row : { ...row, offsetMm: Math.round((row.offsetMm + deltaH) * 10) / 10 }
+      )));
+      return;
+    }
+    if (!useExternalDrawers || !notchSidesLinked) return;
     setLeftNotches(current => {
       if (current.length === 0) return current;
       const sorted = [...current].sort((a, b) => a.fromBottom - b.fromBottom);

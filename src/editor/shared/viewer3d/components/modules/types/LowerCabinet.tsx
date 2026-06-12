@@ -1551,8 +1551,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     ? moduleData.modelConfig.externalDrawers
     : undefined;
   const ADMIN_LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
+  // 배치 후 높이 적응: 맨 아래 서랍 고정, 위 서랍들은 상단에 붙어 평행이동 (ΔH = 실높이 − 저장높이)
+  const adminLegraHeightDeltaMm = adminLegraCfg
+    ? Math.round(adjustedHeight / 0.01) - (moduleData.dimensions.height || Math.round(adjustedHeight / 0.01))
+    : 0;
   const adminLegraSpecs: [number, number][] = (adminLegraCfg?.legraSpecs || [])
-    .map(spec => [ADMIN_LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228, spec.offsetMm]);
+    .map((spec, i) => [
+      ADMIN_LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228,
+      spec.offsetMm + (i > 0 ? adminLegraHeightDeltaMm : 0)
+    ]);
   // N(특소) = 인너서랍 — 개별 마이다 없음, 아래 서랍의 마이다가 N 구간까지 덮음 (마이다 그룹핑)
   const adminLegraMaidaGroups: number[] = (() => {
     const groups: number[] = [];
@@ -1569,14 +1576,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const specs = adminLegraCfg.legraSpecs || [];
     const leaderOffsets: number[] = [];
     let groupCount = 0;
-    specs.forEach(spec => {
+    specs.forEach((spec, i) => {
       if (spec.type === 'N' && groupCount > 0) return;
-      leaderOffsets[groupCount] = spec.offsetMm;
+      leaderOffsets[groupCount] = spec.offsetMm + (i > 0 ? adminLegraHeightDeltaMm : 0);
       groupCount += 1;
     });
     if (groupCount < 2) return null;
     const gapG = adminLegraCfg.maidaGapMm ?? 3;
-    const cabH = moduleData.dimensions.height || 785;
+    const cabH = Math.round(adjustedHeight / 0.01) || moduleData.dimensions.height || 785;
     const topGapV = adminLegraCfg.topGap ?? -20;
     const bottomGapV = adminLegraCfg.bottomGap ?? 5;
     const raw: number[] = [];
