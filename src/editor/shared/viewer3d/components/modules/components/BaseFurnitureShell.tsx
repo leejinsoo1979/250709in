@@ -1926,7 +1926,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const panelName = isMultiSectionFurniture() ? '(상)상판' : '상판';
           const topPanelMat = getPanelMaterial(panelName);
           const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
-          const frontReduction = topPanelFrontReduction ? mmToThreeUnits(topPanelFrontReduction) : 0; // 앞쪽 감소 (상판내림: 전대 뒤로)
+          // 앞쪽 감소: 호출자 prop(상판내림 전대) + 관리자 빌더 상판 앞 옵셋(modelConfig)
+          const topPanelFrontOffsetCfgMm = moduleData?.modelConfig?.topPanelFrontOffsetMm || 0;
+          const frontReduction = mmToThreeUnits((topPanelFrontReduction || 0) + topPanelFrontOffsetCfgMm);
           const widthReduction = sidePanelGap; // 좌우 각 0.5mm씩 총 1mm 줄임 (18.5/15.5mm는 0)
 
           // 인출장/팬트리장/냉장고장: sectionDepths 배열 마지막 인덱스(상부) 우선 적용

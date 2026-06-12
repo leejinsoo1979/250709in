@@ -807,10 +807,14 @@ export const calculatePanelDetails = (
             const topDownFrontReductionMm = isTopDownForTop
               ? resolveTopDownTopPanelFrontReductionMm(basicThickness, stoneTopThickness)
               : 0;
+            // 관리자 빌더: 상판 앞 옵셋 — 3D BaseFurnitureShell topPanelFrontOffsetMm와 동일
+            const adminTopFrontOffsetMm = moduleData.id.includes('-admin-')
+              ? (moduleData.modelConfig?.topPanelFrontOffsetMm || 0)
+              : 0;
             const topPanelEntry: any = {
               name: `${sectionPrefix}상판`,
               width: horizontalPanelWidth,
-              depth: customDepth - backReductionForPanelsMm - topDownFrontReductionMm, // 3D 상판내림 상판 렌더링 깊이와 동일
+              depth: customDepth - backReductionForPanelsMm - topDownFrontReductionMm - adminTopFrontOffsetMm, // 3D 상판 렌더링 깊이와 동일
               thickness: basicThickness,
               material: 'PB'
             };

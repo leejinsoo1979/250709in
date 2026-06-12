@@ -419,6 +419,8 @@ const ModuleBuilder = () => {
   const [topChannelEnabled, setTopChannelEnabled] = useState(false);
   // 판재 두께 — 18(표준 PB) / 18.5(PET 래핑 등). 가로판 갭(18=1mm, 18.5=0)·패널목록 두께에 반영
   const [panelThickness, setPanelThickness] = useState<18 | 18.5>(18);
+  // 상판 앞 옵셋(mm) — 상판 깊이를 앞에서 후퇴
+  const [topPanelOffset, setTopPanelOffset] = useState(0);
   // 레그라박스 마이다 상/하단 갭 — 터치서랍 표준 30/5
   const [legraTopGap, setLegraTopGap] = useState(30);
   const [legraBottomGap, setLegraBottomGap] = useState(5);
@@ -547,6 +549,8 @@ const ModuleBuilder = () => {
       })()),
       // 상단 목찬넬 따내기 — 상판 없음 + 사용자가 켰을 때만
       ...(!hasTopPanel && topChannelEnabled ? { topChannelNotch: true } : {}),
+      // 상판 앞 옵셋 — 상판 있을 때만
+      ...(hasTopPanel && topPanelOffset > 0 ? { topPanelFrontOffsetMm: Math.min(topPanelOffset, depth) } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (일반 / 레그라박스)
       ...(category === 'lower' && useExternalDrawers ? {
@@ -608,7 +612,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -826,6 +830,7 @@ const ModuleBuilder = () => {
     setDividersText((module.modelConfig?.verticalDividers || []).join(', '));
     setTopChannelEnabled(module.modelConfig?.topChannelNotch === true);
     setPanelThickness(module.modelConfig?.basicThickness === 18.5 ? 18.5 : 18);
+    setTopPanelOffset(module.modelConfig?.topPanelFrontOffsetMm || 0);
     setHighlightedPanelName(null);
 
     // 외부서랍 복원 (일반 / 레그라박스)
@@ -927,6 +932,7 @@ const ModuleBuilder = () => {
     setLegraTopGap(30);
     setLegraBottomGap(5);
     setPanelThickness(18);
+    setTopPanelOffset(0);
     setHiddenPanelNames(new Set());
     setDividersText('');
     setTopChannelEnabled(false);
@@ -1737,6 +1743,18 @@ const ModuleBuilder = () => {
             <input type="checkbox" checked={hasTopPanel} onChange={(event) => setHasTopPanel(event.target.checked)} />
             <span>상판 포함</span>
           </label>
+
+          {hasTopPanel && (
+            <label className={styles.compactField}>
+              <span>상판 앞 옵셋(mm) — 상판 깊이를 앞에서 후퇴 (0 = 없음)</span>
+              <input
+                type="number"
+                min={0}
+                value={topPanelOffset}
+                onChange={(event) => setTopPanelOffset(Math.max(0, Number(event.target.value)))}
+              />
+            </label>
+          )}
 
           {!hasTopPanel && (
             <label className={styles.checkbox}>

@@ -110,6 +110,8 @@ export interface ModuleData {
     // 관리자 빌더: 상단 목찬넬 따내기 — true일 때만 상단 60×40 따내기 + 가로전대(+하부장 PET 프레임) 생성.
     // 미지정(undefined)은 따내기 없음 (사용자가 추가할 때만 생성 원칙)
     topChannelNotch?: boolean;
+    // 관리자 빌더: 상판 앞 옵셋(mm) — 상판 깊이를 앞에서 후퇴 (도어/마이다 간섭 회피 등)
+    topPanelFrontOffsetMm?: number;
     // 관리자 빌더: 기본 제거 패널 (패널명 목록)
     // 배치 시 PlacedModule.panelExclusions 기본값으로 적용 — 뷰어 숨김 + 패널목록/CNC 제외,
     // 배치 후 패널목록에서 다시 켤 수 있음 (식세기장 측판 기본 꺼짐과 동일 메커니즘)
