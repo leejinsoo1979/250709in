@@ -1369,14 +1369,16 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // 서랍 본체 1단 렌더 — N(인너서랍)은 인출 애니메이션 밖(정지 그룹)에서 그려짐
   const renderTouchDrawerBody = (d: typeof drawers[number], i: number) => (
           <React.Fragment key={`touch-drawer-${i}`}>
-            {/* 바닥판 (반턱) — N(인너서랍)은 전면 속마이다(20mm 구간) 자리만큼 앞에서 감소, 뒤끝 고정 */}
+            {/* 바닥판 (반턱) — N(인너서랍): 전면 속마이다(20mm) 자리만큼 앞 감소 + 기성 뒷판 하단에 윗면 안착
+                기성 뒷판 하단 = GLB 바닥 +38.0, 레일 정렬 −13.7 → 서랍 기준 +24.3 → 바닥판(15T) 9.3mm 상승 */}
             {(() => {
               const isInnerN = resolveTouchLegraType(d.tier) === 'N';
               const frontTrim = isInnerN ? mmToThreeUnits(20) : 0;
+              const innerNLift = isInnerN ? mmToThreeUnits(9.3) : 0;
               return (
                 <BoxWithEdges
                   args={[drawerBottomWidth, drawerThickness, drawerDepth - frontTrim]}
-                  position={[0, d.bottomY + drawerThickness / 2, drawerZ - frontTrim / 2]}
+                  position={[0, d.bottomY + drawerThickness / 2 + innerNLift, drawerZ - frontTrim / 2]}
                   material={furnitureMaterial}
                   renderMode={renderMode}
                   isHighlighted={false}
