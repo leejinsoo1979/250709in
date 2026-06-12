@@ -609,6 +609,7 @@ const ModuleBuilder = () => {
       </header>
 
       <div className={styles.layout}>
+        <div className={styles.formColumn}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <Box size={20} />
@@ -1041,26 +1042,6 @@ const ModuleBuilder = () => {
           )}
         </section>
 
-        <section className={styles.previewPanel}>
-          <div className={styles.panelHeader}>
-            <div>
-              <h2>실시간 미리보기</h2>
-              <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
-            </div>
-          </div>
-
-          <div className={styles.livePreviewArea}>
-            <div className={styles.previewMeta}>
-              <strong>{moduleDraft.name}</strong>
-              <span>{width}W x {height}H x {depth}D{isDynamic ? ' · 동적 폭' : ''}</span>
-            </div>
-
-            <div className={styles.threePreviewFrame}>
-              <AdminModulePreview moduleData={moduleDraft as ModuleData} />
-            </div>
-          </div>
-        </section>
-
         <section className={`${styles.panel} ${styles.managementPanel}`}>
           <div className={styles.panelHeader}>
             <h2>저장된 모듈 ({savedDocs.length})</h2>
@@ -1116,6 +1097,27 @@ const ModuleBuilder = () => {
               ))}
             </div>
           )}
+        </section>
+        </div>
+
+        <section className={styles.previewPanel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <h2>실시간 미리보기</h2>
+              <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
+            </div>
+          </div>
+
+          <div className={styles.livePreviewArea}>
+            <div className={styles.previewMeta}>
+              <strong>{moduleDraft.name}</strong>
+              <span>{width}W x {height}H x {depth}D{isDynamic ? ' · 동적 폭' : ''}</span>
+            </div>
+
+            <div className={styles.threePreviewFrame}>
+              <AdminModulePreview moduleData={moduleDraft as ModuleData} />
+            </div>
+          </div>
         </section>
       </div>
     </div>

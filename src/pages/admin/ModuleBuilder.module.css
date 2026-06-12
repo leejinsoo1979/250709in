@@ -61,9 +61,17 @@
 
 .layout {
   display: grid;
-  grid-template-columns: 520px minmax(0, 1fr);
+  /* 좌: 설정 폼 스택 / 우: 실시간 뷰어 (화면에 고정) */
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 44%);
   align-items: start;
   gap: 20px;
+}
+
+.formColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
 }
 
 .panel,
@@ -76,11 +84,15 @@
 }
 
 .previewPanel {
-  grid-row: span 2;
   min-width: 0;
   position: sticky;
-  top: 24px;
+  top: 16px;
   align-self: start;
+  display: flex;
+  flex-direction: column;
+  /* 스크롤해도 항상 화면 안에 — 패널 설정 옆에서 실시간 확인 */
+  height: calc(100vh - 32px);
+  max-height: calc(100vh - 32px);
 }
 
 .panelHeader {
@@ -385,10 +397,12 @@
 }
 
 .livePreviewArea {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 14px;
   margin-bottom: 0;
+  flex: 1;
+  min-height: 0;
 }
 
 .previewMeta {
@@ -409,7 +423,9 @@
 }
 
 .threePreviewFrame {
-  height: clamp(560px, calc(100vh - 230px), 760px);
+  /* 패널 안 남은 높이를 전부 채움 — 뷰어 최대화 */
+  flex: 1;
+  min-height: 420px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--theme-border, #e5e7eb);
@@ -507,7 +523,7 @@
 }
 
 .managementPanel {
-  grid-column: 1 / -1;
+  min-width: 0;
 }
 
 .savedList {
@@ -611,8 +627,15 @@
   }
 
   .previewPanel {
-    grid-row: auto;
     position: static;
+    height: auto;
+    max-height: none;
+    order: -1; /* 좁은 화면에서는 뷰어를 맨 위로 */
+  }
+
+  .threePreviewFrame {
+    height: 420px;
+    flex: none;
   }
 }
 
