@@ -427,7 +427,7 @@ const ModuleBuilder = () => {
   const [legraBottomGap, setLegraBottomGap] = useState(5);
   // 마이다 사이갭 — 일반 외부서랍 표준 20(따내기65−40−5), 레그라 표준 3
   const [extMaidaGap, setExtMaidaGap] = useState(20);
-  const [legraMaidaGap, setLegraMaidaGap] = useState(3);
+  const [legraMaidaGap, setLegraMaidaGap] = useState(20); // 따내기 경계 표준: 윗선−25/−5 = 사이갭 20
   // 패널 스캔 — 뷰어에서 패널 클릭 시 에디터 스캔모드와 동일한 치수 표시
   const [scanMode, setScanMode] = useState(false);
   // 신규 모듈 추가 — 분류를 먼저 고르기 전엔 폼/프리뷰를 띄우지 않음 (임의 기본 분류 금지)
@@ -891,7 +891,7 @@ const ModuleBuilder = () => {
     if (externalDrawers?.drawerType === 'legrabox') {
       setLegraTopGap(externalDrawers?.topGap ?? -20);
       setLegraBottomGap(externalDrawers?.bottomGap ?? 5);
-      setLegraMaidaGap(externalDrawers?.maidaGapMm ?? 3);
+      setLegraMaidaGap(externalDrawers?.maidaGapMm ?? 20);
       setExtTopGap(-20);
       setExtBottomGap(5);
       setExtMaidaGap(20);
@@ -901,7 +901,7 @@ const ModuleBuilder = () => {
       setExtMaidaGap(externalDrawers?.maidaGapMm ?? 20);
       setLegraTopGap(-20);
       setLegraBottomGap(5);
-      setLegraMaidaGap(3);
+      setLegraMaidaGap(20);
     }
     const savedLeft = module.modelConfig?.leftSideNotches;
     const savedRight = module.modelConfig?.rightSideNotches;
@@ -974,7 +974,7 @@ const ModuleBuilder = () => {
     setLegraTopGap(-20);
     setLegraBottomGap(5);
     setExtMaidaGap(20);
-    setLegraMaidaGap(3);
+    setLegraMaidaGap(20);
     setPanelThickness(18);
     setTopPanelOffset(0);
     setHiddenPanelNames(new Set());

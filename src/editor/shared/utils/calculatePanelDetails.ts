@@ -2703,14 +2703,33 @@ export const calculatePanelDetails = (
     const adminLegraHeights = adminLegraDrawers
       ? (adminLegraDrawers.legraSpecs || []).map(spec => LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228)
       : undefined;
+    // 중간 목찬넬(공통 따내기) 정렬 마이다 — 3D LowerCabinet adminLegraChannelMaidas와 동일 공식
+    const adminLegraChannelMaidas: number[] | null = (() => {
+      if (!adminLegraDrawers || !adminLegraHeights) return null;
+      const notchTops = [...(moduleData.modelConfig?.sideNotches || [])]
+        .sort((a, b) => a.fromBottom - b.fromBottom)
+        .map(n => n.fromBottom + n.y);
+      if (notchTops.length !== adminLegraHeights.length - 1 || adminLegraHeights.length < 2) return null;
+      const gapG = adminLegraDrawers.maidaGapMm ?? 20;
+      const topGapV = adminLegraDrawers.topGap ?? -20;
+      const bottomGapV = adminLegraDrawers.bottomGap ?? 5;
+      const result: number[] = [];
+      let prevBottom = -bottomGapV;
+      for (const notchTop of notchTops) {
+        result.push((notchTop - 5 - gapG) - prevBottom);
+        prevBottom = notchTop - 5;
+      }
+      result.push((height + topGapV) - prevBottom);
+      return result.some(h => h <= 0) ? null : result;
+    })();
     const drawerHeights = adminLegraHeights ?? (isTouch2A ? [228, 228]
       : isTouch2B ? [228, 164]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
       : isTDTouch3 ? [164, 164, 164]
       : [228, 228]);
-    // 마이다 비례 (2B는 2A와 동일하게 [228, 228])
-    const maidaDrawerHeights = adminLegraHeights ?? (isTouch2A ? [228, 228]
+    // 마이다 비례 (2B는 2A와 동일하게 [228, 228]) — admin은 따내기 정렬값 우선
+    const maidaDrawerHeights = adminLegraChannelMaidas ?? adminLegraHeights ?? (isTouch2A ? [228, 228]
       : isTouch2B ? [228, 228]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]

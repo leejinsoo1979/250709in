@@ -63,6 +63,15 @@ const docToModule = (data: Record<string, unknown>, docId: string): ModuleData =
     normalizePercentSectionsInPlace(modelConfig.rightSections);
   }
 
+  // 구버전 저장본 정규화: 레그라+중간 따내기 모듈의 사이갭 3(한시적 기본값) → 20 (따내기 경계 25/5 표준)
+  if (
+    modelConfig?.externalDrawers?.drawerType === 'legrabox'
+    && (modelConfig.sideNotches?.length || 0) > 0
+    && (modelConfig.externalDrawers.maidaGapMm === undefined || modelConfig.externalDrawers.maidaGapMm === 3)
+  ) {
+    modelConfig.externalDrawers.maidaGapMm = 20;
+  }
+
   // 구버전 저장본 정규화: 목찬넬(손잡이) 동반 외부서랍의 마이다 상단갭은 -20 상한 (목찬넬 위로 못 올라감)
   if (modelConfig?.externalDrawers && modelConfig.topChannelNotch === true) {
     const currentTopGap = modelConfig.externalDrawers.topGap;
