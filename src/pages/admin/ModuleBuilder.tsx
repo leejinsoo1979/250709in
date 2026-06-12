@@ -534,6 +534,30 @@ const ModuleBuilder = () => {
     [panelList]
   );
 
+  // 하부/상부 섹션 실측 높이 (mm) — 고정(mm)은 그대로, 비율(%)은 남은 높이를 비율 분배
+  const sectionHeightsMm = useMemo(() => {
+    const absTotal = sections.filter(s => s.heightType === 'absolute').reduce((sum, s) => sum + Math.max(s.height, 0), 0);
+    const pctTotal = sections.filter(s => s.heightType === 'percentage').reduce((sum, s) => sum + Math.max(s.height, 0), 0);
+    const remaining = Math.max(height - absTotal, 0);
+    return sections.map(s => (
+      s.heightType === 'absolute' ? Math.max(s.height, 0) : (pctTotal > 0 ? remaining * (Math.max(s.height, 0) / pctTotal) : 0)
+    ));
+  }, [sections, height]);
+
+  const lowerZoneHeightMm = Math.round(sectionHeightsMm.slice(0, lowerSectionCount).reduce((sum, h) => sum + h, 0));
+  const upperZoneHeightMm = Math.round(sectionHeightsMm.slice(lowerSectionCount).reduce((sum, h) => sum + h, 0));
+
+  /** 기본정보에서 하부 섹션 높이 직접 입력 — 하부가 단일 칸일 때 그 칸을 고정(mm)으로 설정 */
+  const setLowerZoneHeight = (valueMm: number) => {
+    if (lowerSectionCount !== 1 || sections.length === 0) return;
+    const lowerId = sections[0].id;
+    setSections(current => current.map(section => (
+      section.id === lowerId
+        ? { ...section, heightType: 'absolute' as const, height: Math.max(1, valueMm) }
+        : section
+    )));
+  };
+
   const togglePanelHidden = (panelName: string) => {
     setHiddenPanelNames(current => {
       const next = new Set(current);
@@ -1322,6 +1346,31 @@ const ModuleBuilder = () => {
               <span>깊이(mm)</span>
               <input type="number" min={1} value={depth} onChange={(event) => setDepth(Number(event.target.value))} />
             </label>
+
+            {category === 'full' && (
+              <>
+                <label className={styles.field}>
+                  <span>하부 섹션 높이(mm)</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={lowerZoneHeightMm}
+                    disabled={lowerSectionCount !== 1}
+                    title={lowerSectionCount !== 1 ? '하부 칸이 여러 개이거나 없으면 각 칸에서 조정하세요' : '하부 칸을 고정(mm) 높이로 설정'}
+                    onChange={(event) => setLowerZoneHeight(Number(event.target.value))}
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>상부 섹션 높이(mm)</span>
+                  <input
+                    type="number"
+                    value={upperZoneHeightMm}
+                    disabled
+                    title="전체 높이 − 하부 섹션 (자동)"
+                  />
+                </label>
+              </>
+            )}
           </div>
 
           <label className={styles.checkbox}>

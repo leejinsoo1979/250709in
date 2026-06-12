@@ -119,13 +119,19 @@ const AdminModulePreview = ({
 }) => {
   const { width, height, depth } = moduleData.dimensions;
 
-  // BoxModule이 참조할 가상 공간 — 모듈 치수를 감싸는 크기로 구성
-  const previewSpaceInfo = useMemo<SpaceInfo>(() => ({
-    ...DEFAULT_SPACE_CONFIG,
-    width: Math.max(width + 200, 1200),
-    height: Math.max(height + 100, 1500),
-    depth: Math.max(depth + 100, 700)
-  }), [width, height, depth]);
+  // BoxModule이 참조할 가상 공간
+  // 키큰장 도어는 공간 기준(공간높이 − 상단프레임 − 받침대)으로 계산되므로,
+  // 공간 높이를 역산해 도어 높이가 정확히 모듈 몸통과 일치하도록 한다.
+  const previewSpaceInfo = useMemo<SpaceInfo>(() => {
+    const topFrameMm = DEFAULT_SPACE_CONFIG.frameSize?.top || 30;
+    const baseMm = DEFAULT_SPACE_CONFIG.baseConfig?.height || 60;
+    return {
+      ...DEFAULT_SPACE_CONFIG,
+      width: Math.max(width + 200, 1200),
+      height: height + topFrameMm + baseMm,
+      depth: Math.max(depth + 100, 700)
+    };
+  }, [width, height, depth]);
 
   const maxDim = Math.max(width, height, depth);
   const cameraDistance = Math.max(mmToThreeUnits(maxDim) * 1.6, 18);
