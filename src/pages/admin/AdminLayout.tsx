@@ -153,7 +153,7 @@ const AdminLayout = () => {
               className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
             >
               <HiOutlineCube size={20} />
-              <span>모듈 빌더</span>
+              <span>모듈 관리</span>
             </NavLink>
           )}
 

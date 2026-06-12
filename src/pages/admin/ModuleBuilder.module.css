@@ -69,7 +69,7 @@
 }
 
 .title::before {
-  content: 'MODULE BUILDER';
+  content: 'MODULE MANAGER';
   display: block;
   margin-bottom: 6px;
   font-family: var(--mb-mono);
@@ -146,6 +146,326 @@
 .saveButton:disabled {
   opacity: 0.55;
   cursor: wait;
+}
+
+.countChip {
+  font-family: var(--mb-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mb-ink-soft);
+  padding: 4px 9px;
+  border: 1px solid var(--mb-line);
+  border-radius: var(--mb-radius);
+  background: var(--mb-surface);
+}
+
+/* ── 모듈관리 필터 바 ─────────────────────────────────── */
+
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--mb-line);
+  border-radius: var(--mb-radius);
+  background: var(--mb-surface);
+}
+
+.filterChips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filterChip {
+  height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--mb-line);
+  border-radius: 999px;
+  background: var(--mb-surface);
+  color: var(--mb-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.filterChip:hover {
+  border-color: var(--mb-ink);
+  color: var(--mb-ink);
+}
+
+.filterChipActive {
+  background: var(--mb-ink);
+  border-color: var(--mb-ink);
+  color: #f6f7f4;
+}
+
+.filterChipActive:hover {
+  border-color: var(--mb-ink);
+  color: #f6f7f4;
+}
+
+.filterRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterSelect,
+.filterSearch {
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--mb-line);
+  border-radius: var(--mb-radius);
+  background: var(--mb-surface);
+  color: var(--mb-ink);
+  font-size: 12.5px;
+}
+
+.filterSearch {
+  width: 180px;
+}
+
+.filterSearch:focus,
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--mb-accent);
+  box-shadow: 0 0 0 2px var(--mb-accent-soft);
+}
+
+.viewToggle {
+  display: flex;
+  border: 1px solid var(--mb-line);
+  border-radius: var(--mb-radius);
+  overflow: hidden;
+}
+
+.viewToggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  border: none;
+  background: var(--mb-surface);
+  color: var(--mb-ink-soft);
+  cursor: pointer;
+}
+
+.viewToggle button + button {
+  border-left: 1px solid var(--mb-line);
+}
+
+.viewToggleActive {
+  background: var(--mb-ink) !important;
+  color: #f6f7f4 !important;
+}
+
+/* ── 모듈 카탈로그: 갤러리형 ─────────────────────────── */
+
+.moduleGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.moduleCard {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mb-line);
+  border-radius: var(--mb-radius);
+  background: var(--mb-surface);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+
+.moduleCard:hover {
+  border-color: var(--mb-accent);
+  transform: translateY(-1px);
+}
+
+.moduleCardHidden {
+  opacity: 0.55;
+}
+
+.moduleCardThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 130px;
+  background:
+    radial-gradient(circle, rgba(32, 36, 31, 0.05) 1px, transparent 1px) 0 0 / 12px 12px,
+    var(--mb-bg);
+  border-bottom: 1px solid var(--mb-line);
+  color: var(--mb-ink-soft);
+}
+
+.moduleCardThumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.moduleCardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px 8px;
+  min-width: 0;
+}
+
+.moduleCardBody strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--mb-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moduleCardId {
+  font-family: var(--mb-mono);
+  font-size: 10px;
+  color: var(--mb-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moduleCardMeta {
+  font-family: var(--mb-mono);
+  font-size: 11px;
+  color: var(--mb-ink-soft);
+}
+
+.moduleTags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.moduleTag {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--mb-bg) 70%, var(--mb-surface));
+  border: 1px solid var(--mb-line);
+  color: var(--mb-ink-soft);
+  white-space: nowrap;
+}
+
+.moduleTagAdmin {
+  background: var(--mb-accent-soft);
+  border-color: transparent;
+  color: var(--mb-accent);
+}
+
+.moduleTagHidden {
+  background: rgba(194, 71, 61, 0.08);
+  border-color: transparent;
+  color: var(--mb-danger);
+}
+
+.moduleCardActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--mb-line);
+  background: color-mix(in srgb, var(--mb-bg) 40%, var(--mb-surface));
+}
+
+.moduleCardActions .checkboxInline {
+  margin-top: 0;
+  margin-right: auto;
+  font-size: 11px;
+}
+
+/* ── 모듈 카탈로그: 리스트형 ─────────────────────────── */
+
+.moduleRows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.moduleRowItem {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--mb-line);
+  border-left: 3px solid var(--mb-line-strong);
+  border-radius: var(--mb-radius);
+  background: var(--mb-surface);
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.moduleRowItem:hover {
+  border-left-color: var(--mb-accent);
+}
+
+.moduleRowThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 3px;
+  background: var(--mb-bg);
+  border: 1px solid var(--mb-line);
+  color: var(--mb-ink-soft);
+  overflow: hidden;
+}
+
+.moduleRowThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.moduleRowName {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.moduleRowName strong {
+  font-size: 13px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moduleRowName code {
+  font-family: var(--mb-mono);
+  font-size: 10px;
+  color: var(--mb-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moduleRowDims {
+  font-family: var(--mb-mono);
+  font-size: 11px;
+  color: var(--mb-ink-soft);
+  white-space: nowrap;
 }
 
 /* ── 레이아웃 ─────────────────────────────────────────── */

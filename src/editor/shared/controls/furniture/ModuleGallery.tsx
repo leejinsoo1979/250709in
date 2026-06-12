@@ -27,7 +27,7 @@ const getImagePath = (filename: string) => {
   return `/images/furniture-thumbnails/${filename}`;
 };
 
-const FURNITURE_ICONS: Record<string, string> = {
+export const FURNITURE_ICONS: Record<string, string> = {
   // 키큰장 (주방)
   'built-in-fridge': getImagePath('single_builtin.png'),
   'insert-frame': getImagePath('insert_frame.png'),
@@ -132,7 +132,7 @@ type ModuleGalleryCell =
 // - 선반장 계열: single-shelf-*, dual-shelf-*, single-Ndrawer-shelf-*, dual-Ndrawer-shelf-*
 // - 현관장 계열: single-entryway-*, dual-entryway-*
 // 주의: upper-cabinet-shelf-*, dual-upper-cabinet-shelf-* 는 upper 카테고리이므로 여기 해당 없음
-const isShoeModuleId = (id: string): boolean => {
+export const isShoeModuleId = (id: string): boolean => {
   if (id.includes('entryway')) return true;
   // 도어분절 현관장: single-shelf-split / dual-shelf-split
   if (id.includes('shelf-split')) return true;

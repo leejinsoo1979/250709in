@@ -17,13 +17,17 @@ import {
   useExcludedPanelsStore
 } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import {
+  ArrowLeft,
   Box,
   ClipboardCopy,
   Image as ImageIcon,
+  LayoutGrid,
+  List as ListIcon,
   Pencil,
   Plus,
   Trash2
 } from 'lucide-react';
+import { FURNITURE_ICONS, isShoeModuleId } from '@/editor/shared/controls/furniture/ModuleGallery';
 import AdminModulePreview from './AdminModulePreview';
 import styles from './ModuleBuilder.module.css';
 
@@ -204,6 +208,42 @@ const GALLERY_CATEGORY_OPTIONS: Record<ModuleCategory, Array<{ value: string; la
 
 const defaultGalleryCategory = (category: ModuleCategory) => GALLERY_CATEGORY_OPTIONS[category][0].value;
 
+/** 갤러리 탭 라벨 — 모듈관리 필터/태그 공용 */
+const GALLERY_CATEGORY_LABELS: Record<string, string> = {
+  clothing: '의류장',
+  shoes: '선반장',
+  'kitchen-tall': '주방 키큰장',
+  upper: '상부장',
+  'kitchen-basic': '기본장',
+  'kitchen-door-raise': '도어올림',
+  'kitchen-top-down': '상판내림'
+};
+
+/** 표준 모듈의 갤러리 탭 판별 — ModuleGallery 탭 필터와 동일 규칙 */
+const standardGalleryCategoryOf = (module: ModuleData): string => {
+  if (module.category === 'upper') return 'upper';
+  if (module.category === 'lower') {
+    if (module.id.includes('door-lift') || module.id.includes('door-raise')) return 'kitchen-door-raise';
+    if (module.id.includes('top-down')) return 'kitchen-top-down';
+    return 'kitchen-basic';
+  }
+  if (
+    module.id.includes('pull-out-cabinet') || module.id.includes('pantry-cabinet')
+    || module.id.includes('fridge-cabinet') || module.id.includes('built-in-fridge')
+    || module.id.includes('insert-frame') || module.id.includes('glass-cabinet')
+  ) return 'kitchen-tall';
+  if (isShoeModuleId(module.id)) return 'shoes';
+  return 'clothing';
+};
+
+interface CatalogItem {
+  module: ModuleData & { thumbnail?: string };
+  source: 'standard' | 'admin';
+  enabled?: boolean;
+  galleryCat: string;
+  thumbnail?: string;
+}
+
 const sectionLabels: Record<SectionType, string> = {
   open: '오픈',
   shelf: '선반',
@@ -312,6 +352,13 @@ const ModuleBuilder = () => {
   const [highlightedPanelName, setHighlightedPanelName] = useState<string | null>(null);
   const [hiddenPanelNames, setHiddenPanelNames] = useState<Set<string>>(new Set());
 
+  // 모듈관리 뷰 — 목록(기본) / 상세(빌더)
+  const [view, setView] = useState<'list' | 'builder'>('list');
+  const [listMode, setListMode] = useState<'gallery' | 'list'>('gallery');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
   useEffect(() => {
     if (!allowed) return;
     const unsubscribe = subscribeAllAdminFurnitureModules(setSavedDocs, (error) => {
@@ -324,6 +371,37 @@ const ModuleBuilder = () => {
     generateShelvingModules({ width: 2400, height: 2400, depth: 600 })
       .filter(module => !module.id.includes('dummy'))
   ), []);
+
+  // 모듈관리 카탈로그 — 관리자 모듈 + 표준 모듈 전체
+  const catalogItems = useMemo<CatalogItem[]>(() => {
+    const adminItems: CatalogItem[] = savedDocs.map(doc => ({
+      module: doc.module,
+      source: 'admin',
+      enabled: doc.enabled,
+      galleryCat: (doc.module as ModuleData & { galleryCategory?: string }).galleryCategory
+        || defaultGalleryCategory(doc.module.category as ModuleCategory),
+      thumbnail: doc.module.thumbnail
+    }));
+    const standardItems: CatalogItem[] = templateModules.map(module => ({
+      module,
+      source: 'standard',
+      galleryCat: standardGalleryCategoryOf(module),
+      thumbnail: FURNITURE_ICONS[module.id.replace(/-[\d.]+$/, '')]
+    }));
+    return [...adminItems, ...standardItems];
+  }, [savedDocs, templateModules]);
+
+  const filteredCatalog = useMemo(() => (
+    catalogItems.filter(item => {
+      if (categoryFilter !== 'all' && item.galleryCat !== categoryFilter) return false;
+      if (sourceFilter !== 'all' && item.source !== sourceFilter) return false;
+      const query = searchQuery.trim().toLowerCase();
+      if (query && !item.module.name.toLowerCase().includes(query) && !item.module.id.toLowerCase().includes(query)) {
+        return false;
+      }
+      return true;
+    })
+  ), [catalogItems, categoryFilter, searchQuery, sourceFilter]);
 
   // 숨김 패널 → ExcludedPanelsStore (BoxWithEdges가 매 프레임 읽어 visible 토글)
   useEffect(() => {
@@ -647,6 +725,23 @@ const ModuleBuilder = () => {
     loadModuleIntoForm(module, { asSaved: true });
   };
 
+  /** 카탈로그에서 모듈 클릭 — 그 모듈이 로드된 상세(빌더) 화면으로 */
+  const openModuleDetail = (item: CatalogItem) => {
+    if (item.source === 'admin') {
+      loadSavedModule(item.module);
+    } else {
+      // 표준 모듈: 구조 열람 + 베이스로 수정 가능 (저장하면 관리자 모듈로 생성)
+      setTemplateSelection(item.module.id);
+      loadModuleIntoForm(item.module);
+    }
+    setView('builder');
+  };
+
+  const openNewModule = () => {
+    resetFormToBlank();
+    setView('builder');
+  };
+
   /** 저장 전 검증 — 실패 사유 문자열, 통과 시 null */
   const validateDraft = (): string | null => {
     if (!name.trim()) return '모듈명을 입력하세요.';
@@ -853,17 +948,216 @@ const ModuleBuilder = () => {
       <div className={styles.container}>
         <div className={styles.accessDenied}>
           <h2>접근 권한 없음</h2>
-          <p>sbbc212@gmail.com 슈퍼어드민만 모듈 빌더에 접근할 수 있습니다.</p>
+          <p>sbbc212@gmail.com 슈퍼어드민만 모듈 관리에 접근할 수 있습니다.</p>
         </div>
       </div>
     );
   }
 
+  // ─── 모듈 관리 목록 (기본 화면) ───────────────────────────────
+  if (view === 'list') {
+    return (
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <div className={styles.headerTitleGroup}>
+            <h1 className={styles.title}>모듈 관리</h1>
+            <span className={styles.countChip}>{filteredCatalog.length} / {catalogItems.length}개</span>
+          </div>
+          <div className={styles.headerActions}>
+            <button type="button" className={styles.saveButton} onClick={openNewModule}>
+              <Plus size={16} />
+              <span>신규 모듈 추가</span>
+            </button>
+          </div>
+        </header>
+
+        {/* 상단 필터 바 — 카테고리 / 출처 / 검색 / 갤러리·리스트 전환 */}
+        <div className={styles.filterBar}>
+          <div className={styles.filterChips}>
+            <button
+              type="button"
+              className={`${styles.filterChip} ${categoryFilter === 'all' ? styles.filterChipActive : ''}`}
+              onClick={() => setCategoryFilter('all')}
+            >
+              전체
+            </button>
+            {Object.entries(GALLERY_CATEGORY_LABELS).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={`${styles.filterChip} ${categoryFilter === value ? styles.filterChipActive : ''}`}
+                onClick={() => setCategoryFilter(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className={styles.filterRight}>
+            <select
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value as 'all' | 'standard' | 'admin')}
+              className={styles.filterSelect}
+            >
+              <option value="all">전체 출처</option>
+              <option value="standard">표준</option>
+              <option value="admin">관리자</option>
+            </select>
+            <input
+              className={styles.filterSearch}
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="이름 · ID 검색"
+            />
+            <div className={styles.viewToggle}>
+              <button
+                type="button"
+                className={listMode === 'gallery' ? styles.viewToggleActive : ''}
+                onClick={() => setListMode('gallery')}
+                title="갤러리형"
+              >
+                <LayoutGrid size={15} />
+              </button>
+              <button
+                type="button"
+                className={listMode === 'list' ? styles.viewToggleActive : ''}
+                onClick={() => setListMode('list')}
+                title="리스트형"
+              >
+                <ListIcon size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {filteredCatalog.length === 0 && (
+          <p className={styles.thumbnailHint}>조건에 맞는 모듈이 없습니다.</p>
+        )}
+
+        {listMode === 'gallery' ? (
+          <div className={styles.moduleGrid}>
+            {filteredCatalog.map(item => (
+              <div
+                key={`${item.source}-${item.module.id}`}
+                className={`${styles.moduleCard} ${item.source === 'admin' && !item.enabled ? styles.moduleCardHidden : ''}`}
+                onClick={() => openModuleDetail(item)}
+              >
+                <div className={styles.moduleCardThumb}>
+                  {item.thumbnail ? <img src={item.thumbnail} alt={item.module.name} /> : <Box size={26} />}
+                </div>
+                <div className={styles.moduleCardBody}>
+                  <strong>{item.module.name}</strong>
+                  <code className={styles.moduleCardId}>{item.module.id}</code>
+                  <span className={styles.moduleCardMeta}>
+                    {item.module.dimensions.width}×{item.module.dimensions.height}×{item.module.dimensions.depth}
+                  </span>
+                  <div className={styles.moduleTags}>
+                    <span className={styles.moduleTag}>{GALLERY_CATEGORY_LABELS[item.galleryCat] || item.galleryCat}</span>
+                    <span className={`${styles.moduleTag} ${item.source === 'admin' ? styles.moduleTagAdmin : ''}`}>
+                      {item.source === 'admin' ? '관리자' : '표준'}
+                    </span>
+                    {item.source === 'admin' && !item.enabled && (
+                      <span className={`${styles.moduleTag} ${styles.moduleTagHidden}`}>숨김</span>
+                    )}
+                  </div>
+                </div>
+                <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
+                  {item.source === 'admin' ? (
+                    <>
+                      <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
+                        <input
+                          type="checkbox"
+                          checked={item.enabled !== false}
+                          onChange={(event) => toggleSavedEnabled(item.module.id, event.target.checked)}
+                        />
+                        <span>게시</span>
+                      </label>
+                      <button type="button" className={styles.iconButton} onClick={() => openModuleDetail(item)} title="수정">
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => deleteSaved(item.module.id, item.module.name)}
+                        title="삭제"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" className={styles.textButton} onClick={() => openModuleDetail(item)}>
+                      베이스로 열기
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.moduleRows}>
+            {filteredCatalog.map(item => (
+              <div
+                key={`${item.source}-${item.module.id}`}
+                className={`${styles.moduleRowItem} ${item.source === 'admin' && !item.enabled ? styles.moduleCardHidden : ''}`}
+                onClick={() => openModuleDetail(item)}
+              >
+                <div className={styles.moduleRowThumb}>
+                  {item.thumbnail ? <img src={item.thumbnail} alt={item.module.name} /> : <Box size={18} />}
+                </div>
+                <div className={styles.moduleRowName}>
+                  <strong>{item.module.name}</strong>
+                  <code>{item.module.id}</code>
+                </div>
+                <span className={styles.moduleTag}>{GALLERY_CATEGORY_LABELS[item.galleryCat] || item.galleryCat}</span>
+                <span className={styles.moduleRowDims}>
+                  {item.module.dimensions.width}×{item.module.dimensions.height}×{item.module.dimensions.depth}
+                </span>
+                <span className={`${styles.moduleTag} ${item.source === 'admin' ? styles.moduleTagAdmin : ''}`}>
+                  {item.source === 'admin' ? '관리자' : '표준'}
+                </span>
+                <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
+                  {item.source === 'admin' ? (
+                    <>
+                      <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
+                        <input
+                          type="checkbox"
+                          checked={item.enabled !== false}
+                          onChange={(event) => toggleSavedEnabled(item.module.id, event.target.checked)}
+                        />
+                        <span>게시</span>
+                      </label>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => deleteSaved(item.module.id, item.module.name)}
+                        title="삭제"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <button type="button" className={styles.textButton} onClick={() => openModuleDetail(item)}>
+                      베이스로 열기
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ─── 모듈 상세 / 제작 (빌더) ───────────────────────────────
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div className={styles.headerTitleGroup}>
-          <h1 className={styles.title}>모듈 빌더</h1>
+          <button type="button" className={styles.copyButton} onClick={() => setView('list')} title="모듈 목록으로">
+            <ArrowLeft size={16} />
+            <span>목록</span>
+          </button>
+          <h1 className={styles.title}>{loadedModuleId ? '모듈 수정' : '모듈 제작'}</h1>
           <code className={styles.idChip} title="모듈 ID (식별자·폭에서 자동 생성)">{moduleDraft.id}</code>
         </div>
         <div className={styles.headerActions}>
@@ -1546,62 +1840,6 @@ const ModuleBuilder = () => {
           )}
         </section>
 
-        <section className={`${styles.panel} ${styles.managementPanel}`}>
-          <div className={styles.panelHeader}>
-            <h2>저장된 모듈 ({savedDocs.length})</h2>
-          </div>
-
-          {savedDocs.length === 0 ? (
-            <p className={styles.panelHint}>저장된 관리자 모듈이 없습니다.</p>
-          ) : (
-            <div className={styles.savedList}>
-              {savedDocs.map(({ module, enabled, updatedAt }) => (
-                <div key={module.id} className={`${styles.savedItem} ${loadedModuleId === module.id ? styles.savedItemActive : ''}`}>
-                  <div className={styles.savedThumb}>
-                    {module.thumbnail
-                      ? <img src={module.thumbnail} alt={module.name} />
-                      : <Box size={22} />}
-                  </div>
-                  <div className={styles.savedInfo}>
-                    <strong>{module.name}</strong>
-                    <span className={styles.savedId}>{module.id}</span>
-                    <span className={styles.savedMeta}>
-                      {module.dimensions.width}W x {module.dimensions.height}H x {module.dimensions.depth}D
-                      {module.isDynamic ? ' · 동적 폭' : ''}
-                      {updatedAt ? ` · ${updatedAt.toLocaleDateString('ko-KR')}` : ''}
-                    </span>
-                  </div>
-                  <div className={styles.savedActions}>
-                    <label className={styles.checkboxInline} title="가구 목록 노출">
-                      <input
-                        type="checkbox"
-                        checked={enabled}
-                        onChange={(event) => toggleSavedEnabled(module.id, event.target.checked)}
-                      />
-                      <span>노출</span>
-                    </label>
-                    <button
-                      type="button"
-                      className={styles.iconButton}
-                      onClick={() => loadSavedModule(module)}
-                      title="불러와서 수정"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => deleteSaved(module.id, module.name)}
-                      title="모듈 삭제"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
         </div>
 
         <section className={styles.previewPanel}>
