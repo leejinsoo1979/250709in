@@ -2711,8 +2711,9 @@ export const calculatePanelDetails = (
     const tdTouchStretcherH = stoneTopThickness === 10 ? 65 : stoneTopThickness === 30 ? 45 : 55;
     const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
-    const topExtMm = doorTopGap ?? defaultTopExtMm;
-    const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
+    // 관리자 레그라박스: 빌더 갭 입력 우선 (배치 후 도어갭 편집이 있으면 그쪽 우선)
+    const topExtMm = doorTopGap ?? adminLegraDrawers?.topGap ?? defaultTopExtMm;
+    const bottomExtMm = doorBottomGap ?? adminLegraDrawers?.bottomGap ?? defaultBottomExtMm;
     const totalFrontMm = height + topExtMm + bottomExtMm;
     const gapMm = 3;
     const totalGaps = (maidaDrawerHeights.length - 1) * gapMm;
