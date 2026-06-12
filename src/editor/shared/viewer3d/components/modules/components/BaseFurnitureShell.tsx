@@ -956,6 +956,46 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         />
                       );
                     })}
+
+                    {/* 관리자 빌더 공통 따내기: 목찬넬 ㄱ자 PET 프레임 (따내기 앞쪽 마감) — 가로전대는 위에서 자동 렌더
+                        LowerCabinet 표준 목찬넬프레임수평/수직과 동일 구조 (수평: 따내기 깊이, 수직: 따내기 높이 − PET) */}
+                    {!disableAutoSideNotchStretcher && configCommonNotches.map((n, idx) => {
+                      if (n.y <= PET_PANEL_THICKNESS_MM || n.z <= 0) return null;
+                      const petT = mmToThreeUnits(PET_PANEL_THICKNESS_MM);
+                      const notchZ3 = mmToThreeUnits(n.z);
+                      const fromBottom3 = mmToThreeUnits(n.fromBottom);
+                      const vertH = mmToThreeUnits(n.y - PET_PANEL_THICKNESS_MM);
+                      const lframeWidth = innerWidth + basicThickness * 2;
+                      const bottomY = -height / 2;
+                      return (
+                        <group key={`admin-notch-lframe-${idx}`}>
+                          <BoxWithEdges
+                            args={[lframeWidth, petT, notchZ3]}
+                            position={[0, bottomY + fromBottom3 + petT / 2, depth / 2 - notchZ3 / 2]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            panelName={`목찬넬프레임수평(하${idx + 1})`}
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                            textureUrl={textureUrl}
+                          />
+                          <BoxWithEdges
+                            args={[lframeWidth, vertH, petT]}
+                            position={[0, bottomY + fromBottom3 + petT + vertH / 2, depth / 2 - notchZ3 + petT / 2]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            panelName={`목찬넬프레임수직(하${idx + 1})`}
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                            textureUrl={textureUrl}
+                          />
+                        </group>
+                      );
+                    })}
                   </>
                 );
               })()

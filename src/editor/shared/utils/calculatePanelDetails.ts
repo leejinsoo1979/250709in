@@ -2853,15 +2853,36 @@ export const calculatePanelDetails = (
     });
   }
 
-  // === 관리자 빌더 modelConfig 공통 따내기: 가로전대 패널 ===
-  // 3D BaseFurnitureShell이 공통 따내기(sideNotches)마다 가로전대(하N)를 자동 렌더링하므로 패널목록도 일치시킨다.
-  // 좌우 개별 따내기(leftSideNotches/rightSideNotches)는 전대가 전폭을 가로지를 수 없어 3D에도 없음 → 제외
+  // === 관리자 빌더 modelConfig 공통 따내기: 목찬넬 ㄱ자 PET 프레임 + 가로전대 패널 ===
+  // 3D BaseFurnitureShell이 공통 따내기(sideNotches)마다 목찬넬프레임수평/수직(하N) + 가로전대(하N)를
+  // 자동 렌더링하므로 패널목록도 일치시킨다.
+  // 좌우 개별 따내기(leftSideNotches/rightSideNotches)는 프레임/전대가 전폭을 가로지를 수 없어 3D에도 없음 → 제외
   {
     const adminCommonNotches = moduleData.modelConfig?.sideNotches || [];
     if (adminCommonNotches.length > 0) {
       const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       adminCommonNotches.forEach((notch, ni) => {
         if (notch.y <= 0) return;
+        // 목찬넬 ㄱ자 PET 프레임 — 수평: 따내기 깊이, 수직: 따내기 높이 − PET 두께
+        if (notch.y > PET_PANEL_THICKNESS_MM && notch.z > 0) {
+          panels.frame.push({
+            name: `목찬넬프레임수평(하${ni + 1})`,
+            width: customWidth,
+            height: notch.z,
+            thickness: PET_PANEL_THICKNESS_MM,
+            material: 'PET',
+            quantity: 1,
+          });
+          panels.frame.push({
+            name: `목찬넬프레임수직(하${ni + 1})`,
+            width: customWidth,
+            height: notch.y - PET_PANEL_THICKNESS_MM,
+            thickness: PET_PANEL_THICKNESS_MM,
+            material: 'PET',
+            quantity: 1,
+          });
+        }
+        // 가로전대 — 목찬넬 뒤 보강 부재
         panels.frame.push({
           name: `가로전대(하${ni + 1})`,
           width: innerWidth - stretcherGap,
