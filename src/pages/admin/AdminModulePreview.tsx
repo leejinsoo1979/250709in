@@ -1,19 +1,18 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import {
-  Billboard,
   ContactShadows,
   Grid as StageGrid,
   Line,
   OrbitControls,
   PerspectiveCamera,
-  SoftShadows,
-  Text
+  SoftShadows
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
 import { getExcludedPanelAliases } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import BoxModule from '@/editor/shared/viewer3d/components/modules/BoxModule';
+import DimensionText from '@/editor/shared/viewer3d/components/modules/components/DimensionText';
 import { DEFAULT_SPACE_CONFIG, type SpaceInfo } from '@/store/core/spaceConfigStore';
 import type { ModuleData } from '@/data/modules';
 
@@ -108,90 +107,53 @@ const PreviewPanelHighlighter = ({ panelName }: { panelName: string | null }) =>
   return null;
 };
 
-const DIM_COLOR = '#0c6e54';
+const DIM_COLOR = '#10b981';
 
-/** 치수선: 본선+틱 (항상 위에 그려짐) + 카메라를 향하는 수치 라벨 */
-const DimensionLine = ({
-  from,
-  to,
-  ticks,
-  label,
-  labelPosition,
-  labelSizeMm = 110
-}: {
-  from: [number, number, number];
-  to: [number, number, number];
-  ticks: Array<[[number, number, number], [number, number, number]]>;
-  label: string;
-  labelPosition: [number, number, number];
-  labelSizeMm?: number;
-}) => (
-  <group renderOrder={999}>
-    <Line points={[from, to]} color={DIM_COLOR} lineWidth={1.6} depthTest={false} />
-    {ticks.map((tick, i) => (
-      <Line key={i} points={tick} color={DIM_COLOR} lineWidth={1.6} depthTest={false} />
-    ))}
-    <Billboard position={labelPosition}>
-      <Text
-        fontSize={mmToThreeUnits(labelSizeMm)}
-        color={DIM_COLOR}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={mmToThreeUnits(10)}
-        outlineColor="#ecedeb"
-        renderOrder={1000}
-      >
-        {label}
-      </Text>
-    </Billboard>
-  </group>
-);
-
-/** 가구 외곽 치수 가이드 — 라벨은 가구와 겹치지 않는 배경 영역에 배치 */
+/** 에디터와 동일한 치수 표기 — 가는 치수선 + 끝 틱 + DimensionText(테마 그린) */
 const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heightMm: number; depthMm: number }) => {
   const w = mmToThreeUnits(widthMm);
   const h = mmToThreeUnits(heightMm);
   const d = mmToThreeUnits(depthMm);
-  const off = mmToThreeUnits(180);
-  const tick = mmToThreeUnits(50);
+  const off = mmToThreeUnits(100);   // 가구에서 치수선까지
+  const tick = mmToThreeUnits(25);   // 끝 틱 반길이
   const floorY = 0.02;
+  const lineProps = { color: DIM_COLOR, lineWidth: 1, depthTest: false } as const;
 
   return (
     <group>
-      {/* W — 전면 바닥, 라벨은 치수선 앞 바닥 위 */}
-      <DimensionLine
-        from={[-w / 2, floorY, d / 2 + off]}
-        to={[w / 2, floorY, d / 2 + off]}
-        ticks={[
-          [[-w / 2, floorY, d / 2 + off - tick], [-w / 2, floorY, d / 2 + off + tick]],
-          [[w / 2, floorY, d / 2 + off - tick], [w / 2, floorY, d / 2 + off + tick]]
-        ]}
-        label={`W ${Math.round(widthMm)}`}
-        labelPosition={[0, mmToThreeUnits(140), d / 2 + off + mmToThreeUnits(220)]}
+      {/* W — 전면 하단 */}
+      <Line points={[[-w / 2, floorY, d / 2 + off], [w / 2, floorY, d / 2 + off]]} {...lineProps} />
+      <Line points={[[-w / 2, floorY, d / 2 + off - tick], [-w / 2, floorY, d / 2 + off + tick]]} {...lineProps} />
+      <Line points={[[w / 2, floorY, d / 2 + off - tick], [w / 2, floorY, d / 2 + off + tick]]} {...lineProps} />
+      <DimensionText
+        value={Math.round(widthMm)}
+        position={[0, floorY + mmToThreeUnits(70), d / 2 + off + mmToThreeUnits(40)]}
+        forceShow
+        color={DIM_COLOR}
       />
 
-      {/* H — 좌측 전면 세로, 라벨은 가구 상단 위 (배경 하늘 영역) */}
-      <DimensionLine
-        from={[-w / 2 - off, 0, d / 2]}
-        to={[-w / 2 - off, h, d / 2]}
-        ticks={[
-          [[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]],
-          [[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]
-        ]}
-        label={`H ${Math.round(heightMm)}`}
-        labelPosition={[-w / 2 - off - mmToThreeUnits(320), h * 0.55, d / 2]}
+      {/* H — 좌측 전면 세로 */}
+      <Line points={[[-w / 2 - off, 0, d / 2], [-w / 2 - off, h, d / 2]]} {...lineProps} />
+      <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} {...lineProps} />
+      <Line points={[[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]} {...lineProps} />
+      <DimensionText
+        value={Math.round(heightMm)}
+        position={[-w / 2 - off - mmToThreeUnits(60), h / 2, d / 2]}
+        rotation={[0, 0, Math.PI / 2]}
+        forceShow
+        color={DIM_COLOR}
       />
 
-      {/* D — 우측 바닥, 라벨은 치수선 우측 바닥 위 */}
-      <DimensionLine
-        from={[w / 2 + off, floorY, -d / 2]}
-        to={[w / 2 + off, floorY, d / 2]}
-        ticks={[
-          [[w / 2 + off - tick, floorY, -d / 2], [w / 2 + off + tick, floorY, -d / 2]],
-          [[w / 2 + off - tick, floorY, d / 2], [w / 2 + off + tick, floorY, d / 2]]
-        ]}
-        label={`D ${Math.round(depthMm)}`}
-        labelPosition={[w / 2 + off + mmToThreeUnits(320), mmToThreeUnits(140), 0]}
+      {/* D — 우측 바닥 */}
+      <Line points={[[w / 2 + off, floorY, -d / 2], [w / 2 + off, floorY, d / 2]]} {...lineProps} />
+      <Line points={[[w / 2 + off - tick, floorY, -d / 2], [w / 2 + off + tick, floorY, -d / 2]]} {...lineProps} />
+      <Line points={[[w / 2 + off - tick, floorY, d / 2], [w / 2 + off + tick, floorY, d / 2]]} {...lineProps} />
+      <DimensionText
+        value={Math.round(depthMm)}
+        position={[w / 2 + off + mmToThreeUnits(60), floorY + mmToThreeUnits(70), 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        forceShow
+        color={DIM_COLOR}
       />
     </group>
   );
