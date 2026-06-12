@@ -389,6 +389,18 @@ const ModuleBuilder = () => {
   // 표준 모듈 상세 = 열람 전용 (수정 불가 — 파생 제작은 명시적 버튼으로)
   const [readOnlyDetail, setReadOnlyDetail] = useState(false);
 
+  // 미리보기 2D/3D 전환 — 2D는 정면 직교 투영 (에디터 2D와 동일 렌더 규칙)
+  const [previewViewMode, setPreviewViewMode] = useState<'2D' | '3D'>('3D');
+  useEffect(() => {
+    if (view !== 'builder' || previewViewMode !== '2D') return;
+    const ui = useUIStore.getState();
+    const prevDirection = ui.view2DDirection;
+    ui.setView2DDirection?.('front');
+    return () => {
+      ui.setView2DDirection?.(prevDirection);
+    };
+  }, [previewViewMode, view]);
+
   // 미리보기 도어 열림/닫힘 — 전역 doorsOpen을 빌더 화면 동안만 제어, 떠날 때 복원
   const [previewDoorsOpen, setPreviewDoorsOpen] = useState(false);
   useEffect(() => {
@@ -2274,6 +2286,22 @@ const ModuleBuilder = () => {
               <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
             </div>
             <div className={styles.previewControls}>
+              <div className={styles.viewToggle}>
+                <button
+                  type="button"
+                  className={previewViewMode === '3D' ? styles.viewToggleActive : ''}
+                  onClick={() => setPreviewViewMode('3D')}
+                >
+                  3D
+                </button>
+                <button
+                  type="button"
+                  className={previewViewMode === '2D' ? styles.viewToggleActive : ''}
+                  onClick={() => setPreviewViewMode('2D')}
+                >
+                  2D
+                </button>
+              </div>
               <label className={styles.checkboxInline}>
                 <input
                   type="checkbox"
@@ -2304,6 +2332,7 @@ const ModuleBuilder = () => {
               <AdminModulePreview
                 moduleData={moduleDraft as ModuleData}
                 highlightedPanelName={highlightedPanelName}
+                viewMode={previewViewMode}
               />
             </div>
 

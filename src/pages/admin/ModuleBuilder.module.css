@@ -249,11 +249,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  min-width: 32px;
+  padding: 0 10px;
   height: 30px;
   border: none;
   background: var(--mb-surface);
   color: var(--mb-ink-soft);
+  font-size: 11px;
+  font-weight: 800;
   cursor: pointer;
 }
 

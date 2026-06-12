@@ -5,6 +5,7 @@ import {
   Grid as StageGrid,
   Line,
   OrbitControls,
+  OrthographicCamera,
   PerspectiveCamera,
   SoftShadows
 } from '@react-three/drei';
@@ -222,11 +223,14 @@ const DimensionGuides = ({
  */
 const AdminModulePreview = ({
   moduleData,
-  highlightedPanelName = null
+  highlightedPanelName = null,
+  viewMode = '3D'
 }: {
   moduleData: ModuleData;
   highlightedPanelName?: string | null;
+  viewMode?: '2D' | '3D';
 }) => {
+  const is2D = viewMode === '2D';
   const { width, height, depth } = moduleData.dimensions;
 
   // BoxModule이 참조할 가상 공간
@@ -271,24 +275,34 @@ const AdminModulePreview = ({
     <Space3DViewProvider
       spaceInfo={previewSpaceInfo}
       svgSize={{ width: 800, height: 600 }}
-      renderMode="solid"
-      viewMode="3D"
+      renderMode={is2D ? 'wireframe' : 'solid'}
+      viewMode={viewMode}
     >
       <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }}>
         {/* 스테이지: 종이톤 배경 + 원거리 포그로 그리드가 수평선으로 사라지게 */}
         <color attach="background" args={['#ecedeb']} />
         <fog attach="fog" args={['#ecedeb', cameraDistance * 2.2, cameraDistance * 5.5]} />
-        <SoftShadows size={22} samples={14} focus={0.6} />
+        {!is2D && <SoftShadows size={22} samples={14} focus={0.6} />}
 
-        <PerspectiveCamera
-          makeDefault
-          position={[cameraDistance * 0.72, centerY + cameraDistance * 0.26, cameraDistance]}
-          fov={30}
-        />
+        {is2D ? (
+          <OrthographicCamera
+            makeDefault
+            position={[0, centerY, cameraDistance]}
+            zoom={Math.max(10, 660 / Math.max(mmToThreeUnits(Math.max(width, height)) * 1.2, 1))}
+          />
+        ) : (
+          <PerspectiveCamera
+            makeDefault
+            position={[cameraDistance * 0.72, centerY + cameraDistance * 0.26, cameraDistance]}
+            fov={30}
+          />
+        )}
         <OrbitControls
+          key={viewMode}
           target={[0, centerY, 0]}
           enableDamping
           dampingFactor={0.08}
+          enableRotate={!is2D}
           minDistance={cameraDistance * 0.3}
           maxDistance={cameraDistance * 3}
           maxPolarAngle={Math.PI / 2 - 0.01}
@@ -318,8 +332,8 @@ const AdminModulePreview = ({
               // color 강제 안 함 — 실배치와 동일하게 공간 재질(내부 화이트 / 도어 그레이) 사용
               spaceInfo={previewSpaceInfo}
               hasDoor={moduleData.hasDoor === true}
-              viewMode="3D"
-              renderMode="solid"
+              viewMode={viewMode}
+              renderMode={is2D ? 'wireframe' : 'solid'}
               showFurniture
               placedFurnitureId={ADMIN_PREVIEW_FURNITURE_ID}
               // 도어/내부 폭 계산이 가상 공간이 아닌 모듈 자신의 폭을 기준으로 하도록
@@ -335,32 +349,36 @@ const AdminModulePreview = ({
           </group>
         </Suspense>
 
-        {/* 바닥: 컨택트 섀도우(접지감) + 페이드 그리드 */}
-        <ContactShadows
-          position={[0, 0.001, 0]}
-          opacity={0.38}
-          scale={Math.max(mmToThreeUnits(maxDim) * 3.2, 24)}
-          blur={2.6}
-          far={mmToThreeUnits(height) * 1.2}
-          resolution={1024}
-          color="#3a3f3a"
-        />
-        {/* 가구 외곽 치수 (W/H/D mm) */}
+        {/* 가구 외곽 치수 (W/H/D mm) — 2D/3D 공통 */}
         <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} lowerSectionHeightMm={lowerSectionHeightMm} />
 
-        <StageGrid
-          position={[0, -0.002, 0]}
-          args={[10, 10]}
-          cellSize={mmToThreeUnits(100)}
-          cellThickness={0.55}
-          cellColor="#c9ccc6"
-          sectionSize={mmToThreeUnits(1000)}
-          sectionThickness={1}
-          sectionColor="#aab0a8"
-          fadeDistance={cameraDistance * 3.2}
-          fadeStrength={1.2}
-          infiniteGrid
-        />
+        {/* 바닥: 컨택트 섀도우(접지감) + 페이드 그리드 — 3D 전용 */}
+        {!is2D && (
+          <>
+            <ContactShadows
+              position={[0, 0.001, 0]}
+              opacity={0.38}
+              scale={Math.max(mmToThreeUnits(maxDim) * 3.2, 24)}
+              blur={2.6}
+              far={mmToThreeUnits(height) * 1.2}
+              resolution={1024}
+              color="#3a3f3a"
+            />
+            <StageGrid
+              position={[0, -0.002, 0]}
+              args={[10, 10]}
+              cellSize={mmToThreeUnits(100)}
+              cellThickness={0.55}
+              cellColor="#c9ccc6"
+              sectionSize={mmToThreeUnits(1000)}
+              sectionThickness={1}
+              sectionColor="#aab0a8"
+              fadeDistance={cameraDistance * 3.2}
+              fadeStrength={1.2}
+              infiniteGrid
+            />
+          </>
+        )}
 
         <PreviewPanelHighlighter panelName={highlightedPanelName} />
       </Canvas>
