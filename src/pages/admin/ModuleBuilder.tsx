@@ -359,8 +359,14 @@ const ModuleBuilder = () => {
   const [topNotchHeight, setTopNotchHeight] = useState(60);
   const [topNotchDepth, setTopNotchDepth] = useState(40);
 
-  // 하부장 외부서랍 (레그라박스) — 서랍 구역은 공통 따내기 위치로 분할
+  // 하부장 외부서랍 — 일반(마이다+레일) 또는 레그라박스(터치)
   const [useExternalDrawers, setUseExternalDrawers] = useState(false);
+  const [extDrawerType, setExtDrawerType] = useState<'external' | 'legrabox'>('external');
+  // 레그라박스 서랍별 [종류, 바닥판 위 이격] (아래→위) — M 117 / L 164 / F 228
+  const [legraRows, setLegraRows] = useState<Array<{ id: string; type: 'M' | 'L' | 'F'; offsetMm: number }>>([
+    { id: 'legra-0', type: 'F', offsetMm: 28 },
+    { id: 'legra-1', type: 'F', offsetMm: 406 }
+  ]);
   const [extDrawerCount, setExtDrawerCount] = useState(2);
   const [extMaidaHeights, setExtMaidaHeights] = useState('');
   const [extSideAll, setExtSideAll] = useState(0);
@@ -496,21 +502,28 @@ const ModuleBuilder = () => {
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
       ...notchModelConfig,
-      // 하부장: 외부서랍 (레그라박스)
+      // 하부장: 외부서랍 (일반 / 레그라박스)
       ...(category === 'lower' && useExternalDrawers ? {
-        externalDrawers: {
-          count: Math.max(1, extDrawerCount),
-          ...(parseNumberList(extMaidaHeights).length > 0 ? { maidaHeights: parseNumberList(extMaidaHeights) } : {}),
-          ...((extSideAll > 0 || extSideFirst > 0 || extSideRest > 0) ? {
-            sideHeights: {
-              ...(extSideAll > 0 ? { all: extSideAll } : {}),
-              ...(extSideFirst > 0 ? { first: extSideFirst } : {}),
-              ...(extSideRest > 0 ? { rest: extSideRest } : {})
+        externalDrawers: extDrawerType === 'legrabox'
+          ? {
+              count: legraRows.length,
+              drawerType: 'legrabox' as const,
+              legraSpecs: legraRows.map(row => ({ type: row.type, offsetMm: row.offsetMm }))
             }
-          } : {}),
-          topGap: extTopGap,
-          bottomGap: extBottomGap
-        }
+          : {
+              count: Math.max(1, extDrawerCount),
+              drawerType: 'external' as const,
+              ...(parseNumberList(extMaidaHeights).length > 0 ? { maidaHeights: parseNumberList(extMaidaHeights) } : {}),
+              ...((extSideAll > 0 || extSideFirst > 0 || extSideRest > 0) ? {
+                sideHeights: {
+                  ...(extSideAll > 0 ? { all: extSideAll } : {}),
+                  ...(extSideFirst > 0 ? { first: extSideFirst } : {}),
+                  ...(extSideRest > 0 ? { rest: extSideRest } : {})
+                }
+              } : {}),
+              topGap: extTopGap,
+              bottomGap: extBottomGap
+            }
       } : {})
     };
 
@@ -547,7 +560,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -759,9 +772,18 @@ const ModuleBuilder = () => {
     setHiddenPanelNames(new Set(module.modelConfig?.panelExclusions || []));
     setHighlightedPanelName(null);
 
-    // 외부서랍 (레그라박스) 복원
+    // 외부서랍 복원 (일반 / 레그라박스)
     const externalDrawers = module.modelConfig?.externalDrawers;
     setUseExternalDrawers(!!externalDrawers);
+    setExtDrawerType(externalDrawers?.drawerType === 'legrabox' ? 'legrabox' : 'external');
+    setLegraRows(
+      externalDrawers?.legraSpecs?.length
+        ? externalDrawers.legraSpecs.map((spec, index) => ({ id: `legra-${Date.now()}-${index}`, type: spec.type, offsetMm: spec.offsetMm }))
+        : [
+          { id: `legra-${Date.now()}-0`, type: 'F', offsetMm: 28 },
+          { id: `legra-${Date.now()}-1`, type: 'F', offsetMm: 406 }
+        ]
+    );
     setExtDrawerCount(externalDrawers?.count || 2);
     setExtMaidaHeights(externalDrawers?.maidaHeights?.join(', ') || '');
     setExtSideAll(externalDrawers?.sideHeights?.all || 0);
@@ -825,6 +847,11 @@ const ModuleBuilder = () => {
     setLeftNotches([]);
     setRightNotches([]);
     setUseExternalDrawers(false);
+    setExtDrawerType('external');
+    setLegraRows([
+      { id: `legra-${Date.now()}-0`, type: 'F', offsetMm: 28 },
+      { id: `legra-${Date.now()}-1`, type: 'F', offsetMm: 406 }
+    ]);
     setExtDrawerCount(2);
     setExtMaidaHeights('');
     setExtSideAll(0);
@@ -914,16 +941,27 @@ const ModuleBuilder = () => {
 
     // 외부서랍 검증
     if (category === 'lower' && useExternalDrawers) {
-      if (extDrawerCount < 1) return '외부서랍 단수는 1 이상이어야 합니다.';
-      const maidaHeightList = parseNumberList(extMaidaHeights);
-      if (maidaHeightList.length > 0 && maidaHeightList.length !== extDrawerCount) {
-        return `마이다 높이 개수(${maidaHeightList.length})가 서랍 단수(${extDrawerCount})와 다릅니다.`;
-      }
-      if (!notchSidesLinked && extDrawerCount > 1) {
-        return '외부서랍은 좌우 동일 따내기 기준으로 구역이 나뉩니다. 따내기를 "좌우 동일 적용"으로 설정하세요.';
-      }
-      if (notchSidesLinked && leftNotches.length < extDrawerCount - 1) {
-        return `서랍 ${extDrawerCount}단에는 구역을 나눌 따내기가 최소 ${extDrawerCount - 1}개 필요합니다 (현재 ${leftNotches.length}개).`;
+      if (extDrawerType === 'legrabox') {
+        if (legraRows.length < 1) return '레그라박스 서랍을 1단 이상 추가하세요.';
+        const maxTop = legraRows.reduce((max, row) => {
+          const legraHeight = row.type === 'M' ? 117 : row.type === 'L' ? 164 : 228;
+          return Math.max(max, row.offsetMm + legraHeight);
+        }, 0);
+        if (maxTop > height) {
+          return `레그라박스 서랍 상단(${maxTop}mm)이 가구 높이(${height}mm)를 초과합니다.`;
+        }
+      } else {
+        if (extDrawerCount < 1) return '외부서랍 단수는 1 이상이어야 합니다.';
+        const maidaHeightList = parseNumberList(extMaidaHeights);
+        if (maidaHeightList.length > 0 && maidaHeightList.length !== extDrawerCount) {
+          return `마이다 높이 개수(${maidaHeightList.length})가 서랍 단수(${extDrawerCount})와 다릅니다.`;
+        }
+        if (!notchSidesLinked && extDrawerCount > 1) {
+          return '외부서랍은 좌우 동일 따내기 기준으로 구역이 나뉩니다. 따내기를 "좌우 동일 적용"으로 설정하세요.';
+        }
+        if (notchSidesLinked && leftNotches.length < extDrawerCount - 1) {
+          return `서랍 ${extDrawerCount}단에는 구역을 나눌 따내기가 최소 ${extDrawerCount - 1}개 필요합니다 (현재 ${leftNotches.length}개).`;
+        }
       }
     }
 
@@ -2060,12 +2098,16 @@ const ModuleBuilder = () => {
             </div>
           </details>
 
-          {/* === 하부장 외부서랍 (레그라박스) === */}
+          {/* === 하부장 외부서랍 (일반 / 레그라박스) === */}
           {category === 'lower' && (
             <details className={styles.collapse}>
               <summary className={styles.collapseSummary}>
-                <span>외부서랍 (레그라박스)</span>
-                <em>{useExternalDrawers ? `${extDrawerCount}단 사용` : '미사용'}</em>
+                <span>외부서랍</span>
+                <em>
+                  {useExternalDrawers
+                    ? (extDrawerType === 'legrabox' ? `레그라박스 ${legraRows.length}단` : `일반 ${extDrawerCount}단`)
+                    : '미사용'}
+                </em>
               </summary>
               <div className={styles.collapseBody}>
               <label className={styles.checkboxInline}>
@@ -2074,10 +2116,93 @@ const ModuleBuilder = () => {
                   checked={useExternalDrawers}
                   onChange={(event) => setUseExternalDrawers(event.target.checked)}
                 />
-                <span>외부서랍 사용 — 서랍 구역은 위 측판 따내기(공통) 위치로 나뉩니다</span>
+                <span>외부서랍 사용</span>
               </label>
 
               {useExternalDrawers && (
+                <div className={styles.sectionFields} style={{ marginTop: 10 }}>
+                  <label className={styles.compactField}>
+                    <span>서랍 타입</span>
+                    <select value={extDrawerType} onChange={(event) => setExtDrawerType(event.target.value as 'external' | 'legrabox')}>
+                      <option value="external">일반 외부서랍 (마이다 + 레일)</option>
+                      <option value="legrabox">레그라박스 (터치)</option>
+                    </select>
+                  </label>
+                </div>
+              )}
+
+              {useExternalDrawers && extDrawerType === 'legrabox' && (
+                <div className={styles.sectionCard} style={{ marginTop: 10 }}>
+                  <div className={styles.sectionCardHeader}>
+                    <div>
+                      <span className={styles.sectionBadge}>레그라박스 서랍 (아래 → 위)</span>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.iconButton}
+                      onClick={() => setLegraRows(rows => {
+                        const last = rows[rows.length - 1];
+                        const lastHeight = last ? (last.type === 'M' ? 117 : last.type === 'L' ? 164 : 228) : 0;
+                        return [...rows, {
+                          id: `legra-${Date.now()}-${rows.length}`,
+                          type: last?.type || 'F',
+                          offsetMm: last ? last.offsetMm + lastHeight + 150 : 28
+                        }];
+                      })}
+                      title="서랍 추가"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <div className={styles.sectionFields}>
+                    {legraRows.map((row, rowIndex) => (
+                      <Fragment key={row.id}>
+                        <label className={styles.compactField}>
+                          <span>서랍 {rowIndex + 1} 레그라 종류</span>
+                          <select
+                            value={row.type}
+                            onChange={(event) => setLegraRows(rows => rows.map(item => (
+                              item.id === row.id ? { ...item, type: event.target.value as 'M' | 'L' | 'F' } : item
+                            )))}
+                          >
+                            <option value="M">M — 본체 117 (측판 128.5)</option>
+                            <option value="L">L — 본체 164 (측판 177)</option>
+                            <option value="F">F — 본체 228 (측판 241)</option>
+                          </select>
+                        </label>
+                        <label className={styles.compactField}>
+                          <span>서랍 {rowIndex + 1} 이격(mm, 바닥판 위)</span>
+                          <input
+                            type="number"
+                            min={0}
+                            value={row.offsetMm}
+                            onChange={(event) => setLegraRows(rows => rows.map(item => (
+                              item.id === row.id ? { ...item, offsetMm: Number(event.target.value) } : item
+                            )))}
+                          />
+                        </label>
+                        <div className={styles.compactField} style={{ justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            className={styles.deleteButton}
+                            disabled={legraRows.length <= 1}
+                            onClick={() => setLegraRows(rows => rows.length > 1 ? rows.filter(item => item.id !== row.id) : rows)}
+                            title="서랍 삭제"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </Fragment>
+                    ))}
+                  </div>
+                  <p className={styles.thumbnailHint}>
+                    마이다는 서랍 본체 높이 비례로 자동 분할됩니다. 표준 예 — 터치 2단: F+F, 이격 28/406 ·
+                    터치 3단: F+M+M, 이격 28/357/587.
+                  </p>
+                </div>
+              )}
+
+              {useExternalDrawers && extDrawerType === 'external' && (
                 <div className={styles.sectionCard}>
                   <div className={styles.sectionFields}>
                     <label className={styles.compactField}>

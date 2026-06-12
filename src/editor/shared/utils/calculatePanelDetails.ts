@@ -2433,8 +2433,16 @@ export const calculatePanelDetails = (
   const extDrawerPanels: any[] = [];
   // 관리자 빌더 하부장: modelConfig.externalDrawers (레그라박스) — 서랍 구역은 공통 따내기로 분할
   const adminExternalDrawers = moduleData.id.includes('lower-cabinet-admin')
+    && moduleData.modelConfig?.externalDrawers?.drawerType !== 'legrabox'
     ? moduleData.modelConfig?.externalDrawers
     : undefined;
+  // 관리자 빌더 레그라박스(터치) 서랍 — 터치서랍 패널 블록에서 처리
+  const adminLegraDrawers = moduleData.id.includes('lower-cabinet-admin')
+    && moduleData.modelConfig?.externalDrawers?.drawerType === 'legrabox'
+    && (moduleData.modelConfig.externalDrawers.legraSpecs?.length || 0) > 0
+    ? moduleData.modelConfig.externalDrawers
+    : undefined;
+  const LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F', number> = { M: 117, L: 164, F: 228 };
   if (adminExternalDrawers || (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half'))))) {
     const is1TierExt = moduleData.id.includes('lower-drawer-1tier') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-top-down-1tier');
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
@@ -2640,7 +2648,7 @@ export const calculatePanelDetails = (
   }
 
   // === 터치 레그라박스 서랍 패널 (도어올림 터치 + 상판내림 터치) ===
-  if (moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) {
+  if (moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-') || adminLegraDrawers) {
     // 도어올림 터치
     const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
     const isTouch2B = moduleData.id.includes('lower-door-lift-touch-2tier-b');
@@ -2650,19 +2658,22 @@ export const calculatePanelDetails = (
     const isTDTouch3 = moduleData.id.includes('lower-top-down-touch-3tier');
     // 서랍 본체 높이 (바닥판/뒷판 제작용)
     // 상판내림 터치 3단: 1·2·3단 모두 164로 통일 (1·2단을 3단과 동일하게)
-    const drawerHeights = isTouch2A ? [228, 228]
+    const adminLegraHeights = adminLegraDrawers
+      ? (adminLegraDrawers.legraSpecs || []).map(spec => LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228)
+      : undefined;
+    const drawerHeights = adminLegraHeights ?? (isTouch2A ? [228, 228]
       : isTouch2B ? [228, 164]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
       : isTDTouch3 ? [164, 164, 164]
-      : [228, 228];
+      : [228, 228]);
     // 마이다 비례 (2B는 2A와 동일하게 [228, 228])
-    const maidaDrawerHeights = isTouch2A ? [228, 228]
+    const maidaDrawerHeights = adminLegraHeights ?? (isTouch2A ? [228, 228]
       : isTouch2B ? [228, 228]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
       : isTDTouch3 ? [164, 164, 164]
-      : [228, 228];
+      : [228, 228]);
     const drawerThicknessMm = 15;
     const bottomSideGapMm = 17;
     const backSideGapMm = 18.5;

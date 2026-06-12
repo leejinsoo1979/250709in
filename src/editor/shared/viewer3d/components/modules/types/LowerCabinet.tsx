@@ -858,6 +858,9 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
  * - 도어 오픈 시 서랍 본체 + 마이다 + 레그라 측판이 함께 Z축으로 슬라이드
  */
 interface TouchDrawerAnimatedProps {
+  // 관리자 빌더: 서랍 스펙/마이다 비례를 ID 패턴 대신 직접 지정
+  drawerSpecsOverride?: [number, number][];
+  maidaProportionsOverride?: number[];
   moduleId: string;
   moduleHeightMm: number;
   adjustedHeight: number;
@@ -883,6 +886,8 @@ interface TouchDrawerAnimatedProps {
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
+  drawerSpecsOverride,
+  maidaProportionsOverride,
   moduleId,
   moduleHeightMm,
   adjustedHeight,
@@ -978,13 +983,13 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // 도어올림 터치 2A: H ≤ 590이면 레그라 측판 228 → 164 (작은 사이즈)로 자동 전환
   const cabHmmForLegra = Math.round(adjustedHeight / 0.01);
   const touch2ASmall = isTouch2A && cabHmmForLegra <= 590;
-  const drawerSpecs: [number, number][] = isTouch2A
+  const drawerSpecs: [number, number][] = drawerSpecsOverride ?? (isTouch2A
     ? (touch2ASmall ? [[164, 28], [164, 406]] : [[228, 28], [228, 406]])
     : isTouch2B ? [[228, 28], [164, 406]]
     : isTouch3 ? [[228, 28], [117, 357], [117, 587]]
     : isTDTouch2 ? [[228, 28], [228, 356]]
     : isTDTouch3 ? [[164, 28], [164, 166.4], [164, 438]]
-    : [[228, 28], [228, 406]];
+    : [[228, 28], [228, 406]]);
 
   const bottomPanelTopY = cabinetBottomY + mmToThreeUnits(basicThicknessMm);
   // 레그라 종류 override (di=0(아래) → di=N-1(위))
@@ -1018,12 +1023,12 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const maidaZ = furnitureDepth / 2 + mmToThreeUnits(MAIDA_BACK_GAP_MM) + maidaThickness / 2;
 
   // 마이다 비례: 2B는 2A와 동일하게 [228, 228] 사용 (서랍 본체 높이만 다름)
-  const drawerHeights = isTouch2A ? [228, 228]
+  const drawerHeights = maidaProportionsOverride ?? (isTouch2A ? [228, 228]
     : isTouch2B ? [228, 228]
     : isTouch3 ? [228, 117, 117]
     : isTDTouch2 ? [228, 228]
     : isTDTouch3 ? [164, 164, 164]
-    : [228, 228];
+    : [228, 228]);
 
   // 상판내림 터치: ㄱ자 상판 하단(=가로전대 하단)과 마이다 최상단 사이 갭을 항상 20mm 유지
   // 가로전대 높이는 stoneThickness별로 다름 (10mm→65, 20mm→55, 30mm→45)
@@ -2934,7 +2939,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       })()}
 
       {/* 관리자 빌더 하부장: modelConfig 외부서랍 (레그라박스) — 서랍 구역은 공통 따내기 위치로 분할 */}
-      {showFurniture && moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.externalDrawers && (() => {
+      {showFurniture && moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.externalDrawers && moduleData.modelConfig.externalDrawers.drawerType !== 'legrabox' && (() => {
         const extCfg = moduleData.modelConfig.externalDrawers!;
         const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || [])]
           .sort((a, b) => a.fromBottom - b.fromBottom);
@@ -3158,9 +3163,22 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 터치 레그라박스 서랍 + 마이다 (도어올림 터치 + 상판내림 터치) — 인출 애니메이션 포함 */}
-      {(moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) && (showFurniture || hasDoor) && (
+      {/* 터치 레그라박스 서랍 + 마이다 (도어올림 터치 + 상판내림 터치 + 관리자 빌더 레그라박스) */}
+      {(() => {
+        const adminLegraCfg = moduleData.id.includes('lower-cabinet-admin')
+          && moduleData.modelConfig?.externalDrawers?.drawerType === 'legrabox'
+          ? moduleData.modelConfig.externalDrawers
+          : undefined;
+        const LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F', number> = { M: 117, L: 164, F: 228 };
+        const adminLegraSpecs: [number, number][] = (adminLegraCfg?.legraSpecs || [])
+          .map(spec => [LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228, spec.offsetMm]);
+        const isStandardTouch = moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-');
+        if (!isStandardTouch && adminLegraSpecs.length === 0) return null;
+        if (!(showFurniture || hasDoor)) return null;
+        return (
         <TouchDrawerAnimated
+          drawerSpecsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs : undefined}
+          maidaProportionsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs.map(spec => spec[0]) : undefined}
           moduleId={moduleData.id}
           moduleHeightMm={moduleData.dimensions.height || 785}
           adjustedHeight={adjustedHeight}
@@ -3184,7 +3202,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           maidaFrontWidthMm={maidaFrontWidthMm}
           maidaXOffset={maidaXOffset}
         />
-      )}
+        );
+      })()}
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
