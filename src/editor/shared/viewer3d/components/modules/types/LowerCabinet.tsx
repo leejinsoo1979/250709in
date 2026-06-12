@@ -1373,17 +1373,23 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         {/* 서랍 본체 + 레그라 레일 (showFurniture true일 때만) */}
         {showFurniture && drawers.map((d, i) => (
           <React.Fragment key={`touch-drawer-${i}`}>
-            {/* 바닥판 (반턱) */}
-            <BoxWithEdges
-              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-              position={[0, d.bottomY + drawerThickness / 2, drawerZ]}
-              material={furnitureMaterial}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName={`터치${d.tier}단서랍 바닥판`}
-              furnitureId={placedFurnitureId}
-              bottomRebate={{ width: rebateWidth, height: rebateHeight }}
-            />
+            {/* 바닥판 (반턱) — N(인너서랍)은 전면 속마이다(20mm 구간) 자리만큼 앞에서 감소, 뒤끝 고정 */}
+            {(() => {
+              const isInnerN = resolveTouchLegraType(d.tier) === 'N';
+              const frontTrim = isInnerN ? mmToThreeUnits(20) : 0;
+              return (
+                <BoxWithEdges
+                  args={[drawerBottomWidth, drawerThickness, drawerDepth - frontTrim]}
+                  position={[0, d.bottomY + drawerThickness / 2, drawerZ - frontTrim / 2]}
+                  material={furnitureMaterial}
+                  renderMode={renderMode}
+                  isHighlighted={false}
+                  panelName={`터치${d.tier}단서랍 바닥판`}
+                  furnitureId={placedFurnitureId}
+                  bottomRebate={{ width: rebateWidth, height: rebateHeight }}
+                />
+              );
+            })()}
             {/* 뒷판 — 자동 등급(마이다 Y좌표 기준) 높이 사용 */}
             {(() => {
               const autoType = resolveTouchLegraType(d.tier);

@@ -2839,8 +2839,10 @@ export const calculatePanelDetails = (
         }
       }
 
+      // N(인너서랍) 바닥판: 전면 속마이다(20mm) 자리만큼 깊이 감소
+      const bottomDepthMm = adminLegraTypesArr?.[di] === 'N' ? drawerDepthMm - 20 : drawerDepthMm;
       extDrawerPanels.push(
-        { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'PB' },
+        { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: bottomDepthMm, thickness: drawerThicknessMm, material: 'PB' },
         { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
         // 마이다 — 표준 터치모듈은 항상, 관리자 레그라는 '도어 설치' 시 + 그룹 leader만 (이름 = 마이다 순번)
         ...((maidaH != null && (!adminLegraDrawers || hasDoor))
