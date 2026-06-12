@@ -126,7 +126,9 @@ export interface ModuleData {
       legraSpecs?: Array<{ type: 'M' | 'L' | 'F' | 'N'; offsetMm: number }>;
       maidaHeights?: number[];        // (external) 마이다 높이 고정값 (아래→위, mm). 미지정 시 따내기 zone 기반 자동
       sideHeights?: { all?: number; first?: number; rest?: number }; // (external) 서랍 측판 높이 (mm)
-      topGap?: number;                // 맨위 마이다 상단 갭 (mm, 기본 -20)
+      topGap?: number;
+      // 마이다 사이갭(mm) — 인접 마이다 간 간격. 일반 외부서랍 기본 20(따내기65−40−5), 레그라 기본 3
+      maidaGapMm?: number;                // 맨위 마이다 상단 갭 (mm, 기본 -20)
       bottomGap?: number;             // 맨아래 마이다 하단 갭 (mm, 기본 5)
     };
   };

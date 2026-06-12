@@ -30,6 +30,8 @@ import { PET_PANEL_THICKNESS_MM } from '@/editor/shared/utils/panelThickness';
  */
 
 interface DrawerZone {
+  // 위쪽 따내기 높이(mm) — 마이다 사이갭 계산용. 합성 상단 zone은 null
+  notchAboveHeight?: number | null;
   bottomMm: number;
   topMm: number;
   notchAboveBottom: number;
@@ -104,6 +106,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   doorBottomGap,
   defaultDoorTopGap = -20,
   defaultDoorBottomGap = 5,
+  maidaGapMm,
   isTopDrawer = false,
   isBottomDrawer = false,
   maidaXOffset = 0,
@@ -169,7 +172,12 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   // doorTopGap/doorBottomGap 변경분만 적용 (모듈별 기본값 대비 델타)
   const effectiveDoorTopGap = doorTopGap ?? defaultDoorTopGap;
   const effectiveDoorBottomGap = doorBottomGap ?? defaultDoorBottomGap;
-  const maidaTopMm = zone.notchAboveBottom + 40;
+  // 마이다 상단 확장: 맨 위 서랍은 표준 +40 (cabinet top 영역), 중간 경계는 사이갭(G) 기준
+  //   확장 = 따내기높이 − 5 − G  (G=20, 따내기65 → +40 = 표준과 동일)
+  const maidaTopExtMm = (!isTopDrawer && maidaGapMm != null && zone.notchAboveHeight != null)
+    ? Math.max(0, zone.notchAboveHeight - 5 - maidaGapMm)
+    : 40;
+  const maidaTopMm = zone.notchAboveBottom + maidaTopExtMm;
   const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
   const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
   const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
@@ -386,6 +394,8 @@ interface ExternalDrawerRendererProps {
   hideTopNotch?: boolean;
   maidaHeightsMm?: number[];
   sideHeightOverrides?: { all?: number; first?: number; rest?: number };
+  // 마이다 사이갭(mm) — 인접 마이다 간 간격 (기본 20 = 따내기65−40−5). 관리자 설정
+  maidaGapMm?: number;
   doorTopGap?: number; // 상단갭 (mm) — 맨위 서랍 마이다 상단 확장
   doorBottomGap?: number; // 하단갭 (mm) — 맨아래 서랍 마이다 하단 확장
   defaultDoorTopGap?: number; // 모듈 타입별 기본 doorTopGap (delta 계산 기준)
@@ -423,6 +433,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   hideTopNotch = false,
   maidaHeightsMm,
   sideHeightOverrides,
+  maidaGapMm,
   doorTopGap,
   doorBottomGap,
   defaultDoorTopGap = -20,
@@ -612,7 +623,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     if (notch.fromBottom > cursor) {
       const notchAboveBottom = notch.fromBottom;
       const notchBelowTop = ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null;
-      zones.push({ bottomMm: cursor, topMm: notch.fromBottom, notchAboveBottom, notchBelowTop });
+      zones.push({ bottomMm: cursor, topMm: notch.fromBottom, notchAboveBottom, notchBelowTop, notchAboveHeight: notch.height });
     }
     cursor = notch.fromBottom + notch.height;
   }
@@ -628,6 +639,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       topMm: topLimit,
       notchAboveBottom: topLimit,
       notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
+      notchAboveHeight: null,
     });
   }
 
@@ -639,7 +651,10 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     const isBottomDrawer = i === 0;
     const effectiveDoorTopGap = doorTopGap ?? defaultDoorTopGap;
     const effectiveDoorBottomGap = doorBottomGap ?? defaultDoorBottomGap;
-    const maidaTopMm = zone.notchAboveBottom + 40;
+    const maidaTopExtMm = (!isTopDrawer && maidaGapMm != null && zone.notchAboveHeight != null)
+      ? Math.max(0, zone.notchAboveHeight - 5 - maidaGapMm)
+      : 40;
+    const maidaTopMm = zone.notchAboveBottom + maidaTopExtMm;
     const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
     const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
     const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
@@ -752,6 +767,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           doorBottomGap={doorBottomGap}
           defaultDoorTopGap={defaultDoorTopGap}
           defaultDoorBottomGap={defaultDoorBottomGap}
+          maidaGapMm={maidaGapMm}
           isTopDrawer={i === drawerCount - 1}
           isBottomDrawer={i === 0}
           showDrawerFrontPanel={showDrawerFrontPanel}

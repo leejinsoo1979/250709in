@@ -425,6 +425,9 @@ const ModuleBuilder = () => {
   // 레그라박스 마이다 상/하단 갭 — 터치서랍 표준 30/5
   const [legraTopGap, setLegraTopGap] = useState(30);
   const [legraBottomGap, setLegraBottomGap] = useState(5);
+  // 마이다 사이갭 — 일반 외부서랍 표준 20(따내기65−40−5), 레그라 표준 3
+  const [extMaidaGap, setExtMaidaGap] = useState(20);
+  const [legraMaidaGap, setLegraMaidaGap] = useState(3);
   // 패널 스캔 — 뷰어에서 패널 클릭 시 에디터 스캔모드와 동일한 치수 표시
   const [scanMode, setScanMode] = useState(false);
   // 신규 모듈 추가 — 분류를 먼저 고르기 전엔 폼/프리뷰를 띄우지 않음 (임의 기본 분류 금지)
@@ -592,7 +595,8 @@ const ModuleBuilder = () => {
                 }));
               })(),
               topGap: legraTopGap,
-              bottomGap: legraBottomGap
+              bottomGap: legraBottomGap,
+              maidaGapMm: legraMaidaGap
             }
           : {
               count: Math.max(1, extDrawerCount),
@@ -606,7 +610,8 @@ const ModuleBuilder = () => {
                 }
               } : {}),
               topGap: extTopGap,
-              bottomGap: extBottomGap
+              bottomGap: extBottomGap,
+              maidaGapMm: extMaidaGap
             }
       } : {})
     };
@@ -644,7 +649,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaGap, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraMaidaGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -885,13 +890,17 @@ const ModuleBuilder = () => {
     if (externalDrawers?.drawerType === 'legrabox') {
       setLegraTopGap(externalDrawers?.topGap ?? 30);
       setLegraBottomGap(externalDrawers?.bottomGap ?? 5);
+      setLegraMaidaGap(externalDrawers?.maidaGapMm ?? 3);
       setExtTopGap(-20);
       setExtBottomGap(5);
+      setExtMaidaGap(20);
     } else {
       setExtTopGap(externalDrawers?.topGap ?? -20);
       setExtBottomGap(externalDrawers?.bottomGap ?? 5);
+      setExtMaidaGap(externalDrawers?.maidaGapMm ?? 20);
       setLegraTopGap(30);
       setLegraBottomGap(5);
+      setLegraMaidaGap(3);
     }
     const savedLeft = module.modelConfig?.leftSideNotches;
     const savedRight = module.modelConfig?.rightSideNotches;
@@ -963,6 +972,8 @@ const ModuleBuilder = () => {
     setExtBottomGap(5);
     setLegraTopGap(30);
     setLegraBottomGap(5);
+    setExtMaidaGap(20);
+    setLegraMaidaGap(3);
     setPanelThickness(18);
     setTopPanelOffset(0);
     setHiddenPanelNames(new Set());
@@ -2522,6 +2533,10 @@ const ModuleBuilder = () => {
                       <span>마이다 하단갭(mm)</span>
                       <input type="number" value={legraBottomGap} onChange={(event) => setLegraBottomGap(Number(event.target.value))} />
                     </label>
+                    <label className={styles.compactField}>
+                      <span>마이다 사이갭(mm)</span>
+                      <input type="number" min={0} value={legraMaidaGap} onChange={(event) => setLegraMaidaGap(Math.max(0, Number(event.target.value)))} />
+                    </label>
                   </div>
                   <p className={styles.thumbnailHint}>
                     마이다는 서랍 본체 높이 비례로 자동 분할됩니다. 표준 예 — 터치 2단: F+F, 이격 28/406 ·
@@ -2575,6 +2590,10 @@ const ModuleBuilder = () => {
                     <label className={styles.compactField}>
                       <span>마이다 하단 갭(mm)</span>
                       <input type="number" value={extBottomGap} onChange={(event) => setExtBottomGap(Number(event.target.value))} />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>마이다 사이갭(mm)</span>
+                      <input type="number" min={0} value={extMaidaGap} onChange={(event) => setExtMaidaGap(Math.max(0, Number(event.target.value)))} />
                     </label>
                   </div>
                   <p className={styles.thumbnailHint}>

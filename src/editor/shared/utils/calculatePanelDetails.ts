@@ -2575,7 +2575,7 @@ export const calculatePanelDetails = (
       ? [...sortedNotches]
       : [...sortedNotches, { fromBottom: sidePanelHMm - upperNotchH, height: upperNotchH }];
 
-    const extZones: { notchAboveBottom: number; notchBelowTop: number | null; bottomMm: number }[] = [];
+    const extZones: { notchAboveBottom: number; notchBelowTop: number | null; bottomMm: number; notchAboveHeight?: number | null }[] = [];
     let zCursor = 0;
     for (let ni = 0; ni < allNotches.length; ni++) {
       const notch = allNotches[ni];
@@ -2584,6 +2584,7 @@ export const calculatePanelDetails = (
           notchAboveBottom: notch.fromBottom,
           notchBelowTop: ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null,
           bottomMm: zCursor,
+          notchAboveHeight: notch.height,
         });
       }
       zCursor = notch.fromBottom + notch.height;
@@ -2594,6 +2595,7 @@ export const calculatePanelDetails = (
         notchAboveBottom: sidePanelHMm - basicThickness,
         notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
         bottomMm: zCursor,
+        notchAboveHeight: null,
       });
     }
 
@@ -2638,7 +2640,13 @@ export const calculatePanelDetails = (
       if (fixedMaidaHeights && fixedMaidaHeights[di]) {
         maidaHeightMm = fixedMaidaHeights[di] + extGapTopDelta + extGapBottomDelta;
       } else if (zone) {
-        const maidaTopMm = zone.notchAboveBottom + 40;
+        // 마이다 사이갭(G): 중간 경계 상단 확장 = 따내기높이 − 5 − G (G=20 → +40 표준)
+        const extMaidaGap = adminExternalDrawers?.maidaGapMm;
+        const isTopForGap = di === extDrawerCount - 1;
+        const maidaTopExt = (!isTopForGap && extMaidaGap != null && zone.notchAboveHeight != null)
+          ? Math.max(0, zone.notchAboveHeight - 5 - extMaidaGap)
+          : 40;
+        const maidaTopMm = zone.notchAboveBottom + maidaTopExt;
         const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
         maidaHeightMm = maidaTopMm - maidaBottomMm + extGapTopDelta + extGapBottomDelta;
       } else {
@@ -2723,7 +2731,7 @@ export const calculatePanelDetails = (
     const topExtMm = doorTopGap ?? adminLegraDrawers?.topGap ?? defaultTopExtMm;
     const bottomExtMm = doorBottomGap ?? adminLegraDrawers?.bottomGap ?? defaultBottomExtMm;
     const totalFrontMm = height + topExtMm + bottomExtMm;
-    const gapMm = 3;
+    const gapMm = adminLegraDrawers?.maidaGapMm ?? 3;
     const totalGaps = (maidaDrawerHeights.length - 1) * gapMm;
     const totalMaidaMm = totalFrontMm - totalGaps;
     const totalMaidaDrawerH = maidaDrawerHeights.reduce((a: number, b: number) => a + b, 0);

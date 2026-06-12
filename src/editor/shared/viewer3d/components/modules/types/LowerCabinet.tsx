@@ -460,6 +460,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   floorY,
   maidaDimensionSide = null,
   legraTypesOverride,
+  maidaGapMm,
   maidaFrontWidthMm,
   maidaXOffset = 0,
   legraDrawerTypes,
@@ -886,6 +887,8 @@ interface TouchDrawerAnimatedProps {
   maidaXOffset?: number;
   // 관리자 레그라: 빌더에서 선택한 서랍별 종류 (GLB 등급 강제 — 자동 추정 대신)
   legraTypesOverride?: ('M' | 'L' | 'F' | 'N')[];
+  // 관리자 레그라: 마이다 사이갭(mm, 기본 3)
+  maidaGapMm?: number;
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -911,6 +914,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   floorY,
   maidaDimensionSide = null,
   legraTypesOverride,
+  maidaGapMm,
   maidaFrontWidthMm,
   maidaXOffset = 0,
 }) => {
@@ -1049,7 +1053,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const gapBottomExt = bottomExtMm - defaultBottomExtMm;
   const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
   const baseMaidaTotalFrontMm = moduleHeightMm + defaultTopExtMm + defaultBottomExtMm;
-  const gapMm = 3;
+  const gapMm = maidaGapMm ?? 3;
   const drawerCount = drawerHeights.length;
   const totalGaps = (drawerCount - 1) * gapMm;
   const totalMaidaMm = totalFrontMm - totalGaps;
@@ -2986,6 +2990,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopNotch={moduleData.modelConfig?.hideTopPanel === false || moduleData.modelConfig?.topChannelNotch !== true}
               maidaHeightsMm={extCfg.maidaHeights}
               sideHeightOverrides={extCfg.sideHeights}
+              maidaGapMm={extCfg.maidaGapMm}
               doorTopGap={(placedModuleForCorner as any)?.doorTopGap ?? adminExtTopGap}
               doorBottomGap={(placedModuleForCorner as any)?.doorBottomGap ?? adminExtBottomGap}
               defaultDoorTopGap={-20}
@@ -3201,6 +3206,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           drawerSpecsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs : undefined}
           maidaProportionsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs.map(spec => spec[0]) : undefined}
           legraTypesOverride={adminLegraCfg?.legraSpecs?.map(spec => spec.type)}
+          maidaGapMm={adminLegraCfg?.maidaGapMm}
           moduleId={moduleData.id}
           moduleHeightMm={moduleData.dimensions.height || 785}
           adjustedHeight={adjustedHeight}
