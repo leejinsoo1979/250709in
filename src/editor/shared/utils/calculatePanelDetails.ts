@@ -408,10 +408,11 @@ export const calculatePanelDetails = (
         sectionName = isLowerSection ? '하부장' : '상부장';
         targetPanel = isLowerSection ? panels.lower : panels.upper;
       }
-      // 관리자 빌더 키큰장: 다중 섹션이면 표준 2단 가구처럼 첫 섹션 = 하부장, 나머지 = 상부장
-      // (3D SectionsRenderer가 2섹션 이상에서 (하)/(상) prefix로 메시 이름을 붙이는 규칙과 일치)
+      // 관리자 빌더 키큰장: 하부/상부 경계(lowerSectionCount, 기본 1) 기준으로 그룹 분리
+      // (3D SectionsRenderer (하)/(상) prefix 규칙과 동일 경계 공유)
       else if (moduleData.id.includes('-admin-') && moduleData.category === 'full' && sections.length >= 2) {
-        if (sectionIndex === 0) {
+        const adminLowerCount = moduleData.modelConfig?.lowerSectionCount ?? 1;
+        if (sectionIndex < adminLowerCount) {
           sectionName = '하부장';
           targetPanel = panels.lower;
         } else {

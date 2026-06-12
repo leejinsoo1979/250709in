@@ -391,8 +391,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const sectionXOffset = widthDiff === 0 ? 0 : widthDir === 'right' ? widthDiff / 2 : -widthDiff / 2;
 
       // 섹션 이름 결정 (상부/하부 구분)
+      // 하부/상부 경계: modelConfig.lowerSectionCount (관리자 빌더, 기본 1 = 첫 섹션이 하부)
+      const lowerSectionCountForName = (modelConfig as { lowerSectionCount?: number })?.lowerSectionCount ?? 1;
       const sectionName = allSections.length >= 2
-        ? (index === 0 ? '(하)' : '(상)')
+        ? (index < lowerSectionCountForName ? '(하)' : '(상)')
         : '';
 
       let sectionContent = null;

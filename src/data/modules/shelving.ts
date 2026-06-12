@@ -77,6 +77,9 @@ export interface ModuleData {
     shelfCount?: number;
     // 기본 sections (싱글 가구 + 좌우 동일한 듀얼 가구)
     sections?: SectionConfig[];
+    // 키큰장 하부/상부 경계 — sections 중 앞에서 몇 개가 하부 섹션인지 (기본 1)
+    // 3D 메시 (하)/(상) prefix와 패널목록 하부장/상부장 그룹이 이 값을 공유한다
+    lowerSectionCount?: number;
     // 듀얼 전용: 좌우 비대칭 구조
     leftSections?: SectionConfig[];
     rightSections?: SectionConfig[];

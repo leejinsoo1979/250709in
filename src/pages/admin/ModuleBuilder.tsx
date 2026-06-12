@@ -88,9 +88,9 @@ const createSection = (index: number): BuilderSection => ({
   fixedTopZoneMm: 0
 });
 
-/** 키큰장 기본 구조 — 빈 깡통: 하부/상부 섹션 분리만 있고 내용물 없음 (오픈) */
+/** 키큰장 기본 구조 — 빈 깡통: 하부/상부 빈 칸(오픈) 각 1개, 높이는 비율 반반 (고정값 없음) */
 const createDefaultFullSections = (): BuilderSection[] => [
-  { ...createSection(0), type: 'open', height: 600, heightType: 'absolute', count: 0 },
+  { ...createSection(0), type: 'open', height: 100, heightType: 'percentage', count: 0 },
   { ...createSection(1), type: 'open', height: 100, heightType: 'percentage', count: 0 }
 ];
 
@@ -270,8 +270,10 @@ const ModuleBuilder = () => {
   const [thumbnail, setThumbnail] = useState('');
   // 업로드 원본 보관 — 분류/구조 변경 시 표준 규격으로 재변환
   const [originalThumbnail, setOriginalThumbnail] = useState('');
-  // 키큰장은 하부/상부 섹션 분리 구조로 시작 (표준 코트장)
+  // 키큰장은 하부/상부 섹션 분리 구조로 시작 (빈 깡통)
   const [sections, setSections] = useState<BuilderSection[]>(createDefaultFullSections());
+  // 키큰장 하부/상부 경계 — sections 앞에서 몇 개가 하부인지 (3D 메시·패널목록 그룹과 공유)
+  const [lowerSectionCount, setLowerSectionCount] = useState(1);
   const [rightSections, setRightSections] = useState<BuilderSection[]>([createSection(0)]);
   const [rightAbsoluteWidth, setRightAbsoluteWidth] = useState(0);
   const [rightAbsoluteDepth, setRightAbsoluteDepth] = useState(0);
@@ -359,6 +361,8 @@ const ModuleBuilder = () => {
       ...(category !== 'lower' && hasTopPanel && topNotchEnabled && topNotchHeight > 0 && topNotchDepth > 0
         ? { topNotch: { y: topNotchHeight, z: topNotchDepth } }
         : {}),
+      // 키큰장 하부/상부 경계 — 3D (하)/(상) 메시 이름과 패널목록 그룹이 공유
+      ...(category === 'full' ? { lowerSectionCount: Math.max(0, Math.min(lowerSectionCount, sections.length)) } : {}),
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
       ...notchModelConfig,
@@ -413,7 +417,7 @@ const ModuleBuilder = () => {
             sections: sections.map(builderSectionToConfig)
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -459,7 +463,37 @@ const ModuleBuilder = () => {
     setSectionsForSide(side, current => [...current, createSection(current.length)]);
   };
 
+  /** 키큰장 영역별 칸 추가 — 하부에 추가하면 경계도 함께 이동 */
+  const addZoneSection = (zone: 'lower' | 'upper') => {
+    setSections(current => {
+      const next = [...current];
+      const newSection = createSection(next.length);
+      if (zone === 'lower') {
+        next.splice(Math.min(lowerSectionCount, next.length), 0, newSection);
+      } else {
+        next.push(newSection);
+      }
+      return next;
+    });
+    if (zone === 'lower') {
+      setLowerSectionCount(count => count + 1);
+    }
+  };
+
+  const removeMainSection = (sectionId: string) => {
+    const index = sections.findIndex(section => section.id === sectionId);
+    if (index < 0 || sections.length <= 1) return;
+    if (category === 'full' && index < lowerSectionCount) {
+      setLowerSectionCount(count => Math.max(0, count - 1));
+    }
+    setSections(current => current.filter(section => section.id !== sectionId));
+  };
+
   const removeSection = (side: SectionSide, sectionId: string) => {
+    if (side === 'main') {
+      removeMainSection(sectionId);
+      return;
+    }
     setSectionsForSide(side, current => current.length > 1 ? current.filter(section => section.id !== sectionId) : current);
   };
 
@@ -551,6 +585,9 @@ const ModuleBuilder = () => {
       setSections(nextSections);
       setRightSections(nextSections.map((section, index) => ({ ...section, id: `right-${section.id}-${index}` })));
     }
+
+    // 하부/상부 경계 복원 — 미지정(표준 모듈)은 첫 섹션이 하부
+    setLowerSectionCount(module.modelConfig?.lowerSectionCount ?? 1);
   };
 
   /** '직접 만들기' — 불러온 베이스 모델을 완전히 비우고 초기 상태로 */
@@ -572,6 +609,7 @@ const ModuleBuilder = () => {
     setThumbnail('');
     setOriginalThumbnail('');
     setSections(createDefaultFullSections());
+    setLowerSectionCount(1);
     setRightSections([createSection(0)]);
     setRightAbsoluteWidth(0);
     setRightAbsoluteDepth(0);
@@ -982,10 +1020,12 @@ const ModuleBuilder = () => {
 
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
-            <h2>내부 구성 — 칸 (아래 → 위)</h2>
-            <button type="button" className={styles.iconButton} onClick={() => addSection('main')} title="칸 추가">
-              <Plus size={18} />
-            </button>
+            <h2>내부 구성 {category === 'full' ? '— 하부/상부 섹션' : '— 칸 (아래 → 위)'}</h2>
+            {category !== 'full' && (
+              <button type="button" className={styles.iconButton} onClick={() => addSection('main')} title="칸 추가">
+                <Plus size={18} />
+              </button>
+            )}
           </div>
 
           {layoutMode === 'dual' && (
@@ -1010,17 +1050,39 @@ const ModuleBuilder = () => {
           )}
 
           {layoutMode === 'dual' && <h3 className={styles.sectionGroupTitle}>좌측 칸 구성</h3>}
+
+          {/* 키큰장: 하부/상부 영역 — 각자 칸 추가 버튼, 경계는 lowerSectionCount */}
+          {category === 'full' && (
+            <div className={styles.sectionGroupHeader}>
+              <h3 className={styles.sectionGroupTitle}>하부 섹션 ({lowerSectionCount})</h3>
+              <button type="button" className={styles.iconButton} onClick={() => addZoneSection('lower')} title="하부 칸 추가">
+                <Plus size={16} />
+              </button>
+            </div>
+          )}
+          {category === 'full' && lowerSectionCount === 0 && (
+            <p className={styles.thumbnailHint}>하부 섹션 없음 — 위 + 버튼으로 추가</p>
+          )}
+
           <div className={styles.sectionList}>
             {sections.map((section, index) => {
               const isFullCategory = category === 'full';
-              const hasSplit = isFullCategory && sections.length >= 2;
-              const badge = hasSplit
-                ? (index === 0 ? '하부 섹션' : (sections.length > 2 ? `상부 섹션 ${index}` : '상부 섹션'))
+              const isLowerZone = isFullCategory && index < lowerSectionCount;
+              const badge = isFullCategory
+                ? (isLowerZone
+                  ? (lowerSectionCount > 1 ? `하부 칸 ${index + 1}` : '하부 섹션')
+                  : (sections.length - lowerSectionCount > 1 ? `상부 칸 ${index - lowerSectionCount + 1}` : '상부 섹션'))
                 : `칸 ${index + 1}`;
               return (
                 <Fragment key={section.id}>
-                  {hasSplit && index === 0 && <h3 className={styles.sectionGroupTitle}>하부</h3>}
-                  {hasSplit && index === 1 && <h3 className={styles.sectionGroupTitle}>상부</h3>}
+                  {isFullCategory && index === lowerSectionCount && (
+                    <div className={styles.sectionGroupHeader}>
+                      <h3 className={styles.sectionGroupTitle}>상부 섹션 ({sections.length - lowerSectionCount})</h3>
+                      <button type="button" className={styles.iconButton} onClick={() => addZoneSection('upper')} title="상부 칸 추가">
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  )}
                   <div className={styles.sectionCard}>
                     <div className={styles.sectionCardHeader}>
                       <div>
@@ -1149,6 +1211,18 @@ const ModuleBuilder = () => {
               );
             })}
           </div>
+
+          {category === 'full' && sections.length - lowerSectionCount <= 0 && (
+            <>
+              <div className={styles.sectionGroupHeader}>
+                <h3 className={styles.sectionGroupTitle}>상부 섹션 (0)</h3>
+                <button type="button" className={styles.iconButton} onClick={() => addZoneSection('upper')} title="상부 칸 추가">
+                  <Plus size={16} />
+                </button>
+              </div>
+              <p className={styles.thumbnailHint}>상부 섹션 없음 — 위 + 버튼으로 추가</p>
+            </>
+          )}
 
           {layoutMode === 'dual' && (
             <>
