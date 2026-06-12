@@ -27,23 +27,39 @@ const stripUndefined = <T,>(value: T): T => (
   JSON.parse(JSON.stringify(value)) as T
 );
 
-const docToModule = (data: Record<string, unknown>, docId: string): ModuleData => ({
-  id: (data.id as string) || docId,
-  name: data.name,
-  category: data.category,
-  dimensions: data.dimensions,
-  color: (data.color as string) || '#C8B69E',
-  description: data.description,
-  hasDoor: data.hasDoor,
-  isDynamic: data.isDynamic,
-  widthOptions: data.widthOptions,
-  type: data.type,
-  defaultDepth: data.defaultDepth,
-  slotWidths: data.slotWidths,
-  galleryCategory: data.galleryCategory,
-  thumbnail: data.thumbnail,
-  modelConfig: data.modelConfig
-} as ModuleData);
+const docToModule = (data: Record<string, unknown>, docId: string): ModuleData => {
+  const modelConfig = (data.modelConfig || undefined) as ModuleData['modelConfig'];
+
+  // 구버전 저장본 정규화: 키큰장 다중 섹션인데 하부/상부 경계가 없으면 기본 1 (첫 섹션 = 하부)
+  // — 3D 구분 패널/(하)(상) 메시 이름/패널목록 그룹이 이 필드를 게이트로 사용
+  if (
+    modelConfig
+    && data.category === 'full'
+    && Array.isArray(modelConfig.sections)
+    && modelConfig.sections.length >= 2
+    && modelConfig.lowerSectionCount === undefined
+  ) {
+    modelConfig.lowerSectionCount = 1;
+  }
+
+  return {
+    id: (data.id as string) || docId,
+    name: data.name,
+    category: data.category,
+    dimensions: data.dimensions,
+    color: (data.color as string) || '#C8B69E',
+    description: data.description,
+    hasDoor: data.hasDoor,
+    isDynamic: data.isDynamic,
+    widthOptions: data.widthOptions,
+    type: data.type,
+    defaultDepth: data.defaultDepth,
+    slotWidths: data.slotWidths,
+    galleryCategory: data.galleryCategory,
+    thumbnail: data.thumbnail,
+    modelConfig
+  } as ModuleData;
+};
 
 export async function saveAdminFurnitureModule(moduleData: ModuleData & { thumbnail?: string }) {
   const cleanModule = stripUndefined(moduleData);
