@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Box,
   ClipboardCopy,
+  Copy,
   Eye,
   Image as ImageIcon,
   LayoutGrid,
@@ -1043,6 +1044,17 @@ const ModuleBuilder = () => {
     }
   };
 
+  /** 복제 — 구성을 그대로 복사해 새 모듈(고유 식별자, 비공개 초안)로 제작 시작 */
+  const duplicateModule = (item: CatalogItem) => {
+    loadModuleIntoForm(item.module);
+    setName(`${item.module.name} 복사본`);
+    setSlug(`module-${Date.now().toString(36)}`); // 고유 식별자 — 원본 덮어쓰기 불가
+    setLoadedModuleId(null);
+    setCategoryPicked(true);
+    setReadOnlyDetail(false);
+    setView('builder');
+  };
+
   const openNewModule = () => {
     resetFormToBlank();
     setReadOnlyDetail(false);
@@ -1527,6 +1539,14 @@ const ModuleBuilder = () => {
                   >
                     <Pencil size={14} />
                   </button>
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={(event) => { event.stopPropagation(); duplicateModule(item); }}
+                    title="복제 (새 모듈로 복사 — 저장 시 비공개 초안)"
+                  >
+                    <Copy size={14} />
+                  </button>
                   {item.source === 'admin' && (
                     <button
                       type="button"
@@ -1586,6 +1606,14 @@ const ModuleBuilder = () => {
                     title={item.source === 'admin' ? '수정' : '수정 (저장 시 관리자 모듈로 생성)'}
                   >
                     <Pencil size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={(event) => { event.stopPropagation(); duplicateModule(item); }}
+                    title="복제 (새 모듈로 복사 — 저장 시 비공개 초안)"
+                  >
+                    <Copy size={14} />
                   </button>
                   {item.source === 'admin' && (
                     <button
