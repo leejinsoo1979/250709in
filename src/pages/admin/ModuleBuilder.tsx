@@ -1948,15 +1948,31 @@ const ModuleBuilder = () => {
           <details className={styles.collapse}>
             <summary className={styles.collapseSummary}>
               <span>측판 목찬넬 따내기</span>
-              <em>{leftNotches.length > 0 ? `${notchSidesLinked ? '공통' : '좌/우 개별'} ${leftNotches.length}개` : '없음'}</em>
+              <em>
+                {(() => {
+                  const hasAutoTop = !hasTopPanel;
+                  const hasManualTop = category !== 'lower' && hasTopPanel && topNotchEnabled;
+                  const parts: string[] = [];
+                  if (hasAutoTop) parts.push('상단 1 (자동)');
+                  else if (hasManualTop) parts.push('상단 1');
+                  if (leftNotches.length > 0) parts.push(`${notchSidesLinked ? '중간' : '좌/우 중간'} ${leftNotches.length}`);
+                  return parts.length > 0 ? parts.join(' · ') : '없음';
+                })()}
+              </em>
             </summary>
             <div className={styles.collapseBody}>
 
-          {/* ① 상단 모서리 따내기 — 상판이 있는 전체장/상부장에서만 (상판 없음은 자체 따내기 포함) */}
+          {/* ① 상단 모서리 따내기 — 상판 없음 구조는 자동 생성된 따내기 정보 표시 */}
           {!hasTopPanel ? (
-            <p className={styles.thumbnailHint}>
-              상판 없음 모듈 — 상단 60×40 따내기와 가로전대가 이미 포함되어 있습니다 (기본정보의 상판 체크로 제어).
-            </p>
+            <div className={styles.autoNotchInfo}>
+              <span className={styles.sectionBadge}>상단 따내기 · 자동</span>
+              <span className={styles.autoNotchDims}>
+                위치 {Math.max(0, height - 60)}mm (상단 기준 H−60) · 높이 60 · 깊이 40
+              </span>
+              <span className={styles.autoNotchNote}>
+                목찬넬 ㄱ자 프레임(PET) + 가로전대(PB) 자동 포함 — 기본정보의 '상판 포함' 체크로 제어
+              </span>
+            </div>
           ) : category !== 'lower' && (
             <label className={styles.checkboxInline}>
               <input

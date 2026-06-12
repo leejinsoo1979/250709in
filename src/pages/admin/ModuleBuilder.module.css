@@ -826,6 +826,31 @@
   gap: 10px 12px;
 }
 
+.autoNotchInfo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--mb-line);
+  border-left: 3px solid var(--mb-accent);
+  border-radius: var(--mb-radius);
+  background: var(--mb-accent-soft);
+}
+
+.autoNotchDims {
+  font-family: var(--mb-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--mb-ink);
+}
+
+.autoNotchNote {
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--mb-ink-soft);
+}
+
 .drawerSummary {
   grid-column: 1 / -1;
   display: flex;
