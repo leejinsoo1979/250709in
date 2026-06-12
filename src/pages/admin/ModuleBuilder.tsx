@@ -389,17 +389,21 @@ const ModuleBuilder = () => {
   // 표준 모듈 상세 = 열람 전용 (수정 불가 — 파생 제작은 명시적 버튼으로)
   const [readOnlyDetail, setReadOnlyDetail] = useState(false);
 
-  // 미리보기 2D/3D 전환 — 2D는 정면 직교 투영 (에디터 2D와 동일 렌더 규칙)
-  const [previewViewMode, setPreviewViewMode] = useState<'2D' | '3D'>('3D');
+  // 미리보기 뷰 — 3D(다크 스테이지) / 입면(front) / 평면(top) / 측면(left, 좌측면)
+  const [previewView, setPreviewView] = useState<'3D' | 'front' | 'top' | 'left'>('3D');
+  const previewViewMode: '2D' | '3D' = previewView === '3D' ? '3D' : '2D';
   useEffect(() => {
-    if (view !== 'builder' || previewViewMode !== '2D') return;
+    if (view !== 'builder' || previewView === '3D') return;
     const ui = useUIStore.getState();
     const prevDirection = ui.view2DDirection;
-    ui.setView2DDirection?.('front');
+    const prevTheme = ui.view2DTheme;
+    ui.setView2DDirection?.(previewView);
+    ui.setView2DTheme?.('dark'); // 2D = CAD 다크모드
     return () => {
       ui.setView2DDirection?.(prevDirection);
+      ui.setView2DTheme?.(prevTheme);
     };
-  }, [previewViewMode, view]);
+  }, [previewView, view]);
 
   // 미리보기 도어 열림/닫힘 — 전역 doorsOpen을 빌더 화면 동안만 제어, 떠날 때 복원
   const [previewDoorsOpen, setPreviewDoorsOpen] = useState(false);
@@ -2289,17 +2293,34 @@ const ModuleBuilder = () => {
               <div className={styles.viewToggle}>
                 <button
                   type="button"
-                  className={previewViewMode === '3D' ? styles.viewToggleActive : ''}
-                  onClick={() => setPreviewViewMode('3D')}
+                  className={previewView === '3D' ? styles.viewToggleActive : ''}
+                  onClick={() => setPreviewView('3D')}
                 >
                   3D
                 </button>
                 <button
                   type="button"
-                  className={previewViewMode === '2D' ? styles.viewToggleActive : ''}
-                  onClick={() => setPreviewViewMode('2D')}
+                  className={previewView === 'front' ? styles.viewToggleActive : ''}
+                  onClick={() => setPreviewView('front')}
+                  title="입면 (정면)"
                 >
-                  2D
+                  입면
+                </button>
+                <button
+                  type="button"
+                  className={previewView === 'top' ? styles.viewToggleActive : ''}
+                  onClick={() => setPreviewView('top')}
+                  title="평면 (위)"
+                >
+                  평면
+                </button>
+                <button
+                  type="button"
+                  className={previewView === 'left' ? styles.viewToggleActive : ''}
+                  onClick={() => setPreviewView('left')}
+                  title="측면 (좌측)"
+                >
+                  측면
                 </button>
               </div>
               <label className={styles.checkboxInline}>
@@ -2333,6 +2354,7 @@ const ModuleBuilder = () => {
                 moduleData={moduleDraft as ModuleData}
                 highlightedPanelName={highlightedPanelName}
                 viewMode={previewViewMode}
+                direction2D={previewView === '3D' ? 'front' : previewView}
               />
             </div>
 

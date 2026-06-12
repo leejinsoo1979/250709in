@@ -118,13 +118,24 @@ const DimensionGuides = ({
   widthMm,
   heightMm,
   depthMm,
-  lowerSectionHeightMm = 0
+  lowerSectionHeightMm = 0,
+  viewKey = '3d'
 }: {
   widthMm: number;
   heightMm: number;
   depthMm: number;
   lowerSectionHeightMm?: number;
+  viewKey?: '3d' | 'front' | 'top' | 'left';
 }) => {
+  // 방향별 표시/회전 — 에지온(보이지 않는 축) 치수는 숨기고, 텍스트는 카메라를 향하게
+  const showW = viewKey !== 'left';
+  const showH = viewKey !== 'top';
+  const showD = viewKey !== 'front';
+  const wTextRot: [number, number, number] = viewKey === 'top' ? [-Math.PI / 2, 0, 0] : [0, 0, 0];
+  const hTextRot: [number, number, number] = viewKey === 'left' ? [0, -Math.PI / 2, Math.PI / 2] : [0, 0, Math.PI / 2];
+  const dTextRot: [number, number, number] = viewKey === 'top'
+    ? [-Math.PI / 2, 0, Math.PI / 2]
+    : viewKey === 'left' ? [0, -Math.PI / 2, 0] : [0, Math.PI / 2, 0];
   const w = mmToThreeUnits(widthMm);
   const h = mmToThreeUnits(heightMm);
   const d = mmToThreeUnits(depthMm);
@@ -141,18 +152,23 @@ const DimensionGuides = ({
   return (
     <group>
       {/* W — 전면 하단 */}
-      <Line points={[[-w / 2, floorY, d / 2 + off], [w / 2, floorY, d / 2 + off]]} {...lineProps} />
-      <Line points={[[-w / 2, floorY, d / 2 + off - tick], [-w / 2, floorY, d / 2 + off + tick]]} {...lineProps} />
-      <Line points={[[w / 2, floorY, d / 2 + off - tick], [w / 2, floorY, d / 2 + off + tick]]} {...lineProps} />
-      <DimensionText
-        value={Math.round(widthMm)}
-        position={[0, floorY + mmToThreeUnits(70), d / 2 + off + mmToThreeUnits(40)]}
-        forceShow
-        color={DIM_COLOR}
-      />
+      {showW && (
+        <>
+          <Line points={[[-w / 2, floorY, d / 2 + off], [w / 2, floorY, d / 2 + off]]} {...lineProps} />
+          <Line points={[[-w / 2, floorY, d / 2 + off - tick], [-w / 2, floorY, d / 2 + off + tick]]} {...lineProps} />
+          <Line points={[[w / 2, floorY, d / 2 + off - tick], [w / 2, floorY, d / 2 + off + tick]]} {...lineProps} />
+          <DimensionText
+            value={Math.round(widthMm)}
+            position={[0, floorY + mmToThreeUnits(70), d / 2 + off + mmToThreeUnits(40)]}
+            rotation={wTextRot}
+            forceShow
+            color={DIM_COLOR}
+          />
+        </>
+      )}
 
       {/* H — 좌측 전면 세로 (하부/상부 분절 시 구간 치수 + 바깥 전체 치수) */}
-      {hasSplit ? (
+      {showH && hasSplit ? (
         <>
           {/* 구간 치수선 (안쪽): 하부 / 상부 */}
           <Line points={[[-w / 2 - off, 0, d / 2], [-w / 2 - off, h, d / 2]]} {...lineProps} />
@@ -162,14 +178,14 @@ const DimensionGuides = ({
           <DimensionText
             value={Math.round(lowerSectionHeightMm)}
             position={[-w / 2 - off - mmToThreeUnits(60), lowerH / 2, d / 2]}
-            rotation={[0, 0, Math.PI / 2]}
+            rotation={hTextRot}
             forceShow
             color={DIM_COLOR}
           />
           <DimensionText
             value={upperMm}
             position={[-w / 2 - off - mmToThreeUnits(60), lowerH + (h - lowerH) / 2, d / 2]}
-            rotation={[0, 0, Math.PI / 2]}
+            rotation={hTextRot}
             forceShow
             color={DIM_COLOR}
           />
@@ -181,12 +197,12 @@ const DimensionGuides = ({
           <DimensionText
             value={Math.round(heightMm)}
             position={[-w / 2 - off2 - mmToThreeUnits(60), h / 2, d / 2]}
-            rotation={[0, 0, Math.PI / 2]}
+            rotation={hTextRot}
             forceShow
             color={DIM_COLOR}
           />
         </>
-      ) : (
+      ) : showH ? (
         <>
           <Line points={[[-w / 2 - off, 0, d / 2], [-w / 2 - off, h, d / 2]]} {...lineProps} />
           <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} {...lineProps} />
@@ -194,24 +210,32 @@ const DimensionGuides = ({
           <DimensionText
             value={Math.round(heightMm)}
             position={[-w / 2 - off - mmToThreeUnits(60), h / 2, d / 2]}
-            rotation={[0, 0, Math.PI / 2]}
+            rotation={hTextRot}
             forceShow
             color={DIM_COLOR}
           />
         </>
-      )}
+      ) : null}
 
-      {/* D — 우측 바닥 */}
-      <Line points={[[w / 2 + off, floorY, -d / 2], [w / 2 + off, floorY, d / 2]]} {...lineProps} />
-      <Line points={[[w / 2 + off - tick, floorY, -d / 2], [w / 2 + off + tick, floorY, -d / 2]]} {...lineProps} />
-      <Line points={[[w / 2 + off - tick, floorY, d / 2], [w / 2 + off + tick, floorY, d / 2]]} {...lineProps} />
-      <DimensionText
-        value={Math.round(depthMm)}
-        position={[w / 2 + off + mmToThreeUnits(60), floorY + mmToThreeUnits(70), 0]}
-        rotation={[0, Math.PI / 2, 0]}
-        forceShow
-        color={DIM_COLOR}
-      />
+      {/* D — 우측 바닥 (좌측면 뷰에서는 좌측에 표시) */}
+      {showD && (() => {
+        const dx = viewKey === 'left' ? -(w / 2 + off) : (w / 2 + off);
+        const dTextX = viewKey === 'left' ? dx - mmToThreeUnits(60) : dx + mmToThreeUnits(60);
+        return (
+          <>
+            <Line points={[[dx, floorY, -d / 2], [dx, floorY, d / 2]]} {...lineProps} />
+            <Line points={[[dx - tick, floorY, -d / 2], [dx + tick, floorY, -d / 2]]} {...lineProps} />
+            <Line points={[[dx - tick, floorY, d / 2], [dx + tick, floorY, d / 2]]} {...lineProps} />
+            <DimensionText
+              value={Math.round(depthMm)}
+              position={[dTextX, floorY + mmToThreeUnits(70), 0]}
+              rotation={dTextRot}
+              forceShow
+              color={DIM_COLOR}
+            />
+          </>
+        );
+      })()}
     </group>
   );
 };
@@ -224,11 +248,13 @@ const DimensionGuides = ({
 const AdminModulePreview = ({
   moduleData,
   highlightedPanelName = null,
-  viewMode = '3D'
+  viewMode = '3D',
+  direction2D = 'front'
 }: {
   moduleData: ModuleData;
   highlightedPanelName?: string | null;
   viewMode?: '2D' | '3D';
+  direction2D?: 'front' | 'top' | 'left';
 }) => {
   const is2D = viewMode === '2D';
   const { width, height, depth } = moduleData.dimensions;
@@ -279,16 +305,25 @@ const AdminModulePreview = ({
       viewMode={viewMode}
     >
       <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }}>
-        {/* 스테이지: 종이톤 배경 + 원거리 포그로 그리드가 수평선으로 사라지게 */}
-        <color attach="background" args={['#ecedeb']} />
-        <fog attach="fog" args={['#ecedeb', cameraDistance * 2.2, cameraDistance * 5.5]} />
+        {/* 스테이지: 3D 다크 / 2D CAD 다크 */}
+        <color attach="background" args={[is2D ? '#1b1e21' : '#22262a']} />
+        {!is2D && <fog attach="fog" args={['#22262a', cameraDistance * 2.2, cameraDistance * 5.5]} />}
         {!is2D && <SoftShadows size={22} samples={14} focus={0.6} />}
 
         {is2D ? (
           <OrthographicCamera
+            key={direction2D}
             makeDefault
-            position={[0, centerY, cameraDistance]}
-            zoom={Math.max(10, 660 / Math.max(mmToThreeUnits(Math.max(width, height)) * 1.2, 1))}
+            position={
+              direction2D === 'top' ? [0, cameraDistance, 0.001]
+                : direction2D === 'left' ? [-cameraDistance, centerY, 0]
+                  : [0, centerY, cameraDistance]
+            }
+            zoom={Math.max(10, 660 / Math.max(mmToThreeUnits(
+              direction2D === 'top' ? Math.max(width, depth)
+                : direction2D === 'left' ? Math.max(depth, height)
+                  : Math.max(width, height)
+            ) * 1.2, 1))}
           />
         ) : (
           <PerspectiveCamera
@@ -298,8 +333,8 @@ const AdminModulePreview = ({
           />
         )}
         <OrbitControls
-          key={viewMode}
-          target={[0, centerY, 0]}
+          key={`${viewMode}-${direction2D}`}
+          target={[0, is2D && direction2D === 'top' ? 0 : centerY, 0]}
           enableDamping
           dampingFactor={0.08}
           enableRotate={!is2D}
@@ -350,7 +385,7 @@ const AdminModulePreview = ({
         </Suspense>
 
         {/* 가구 외곽 치수 (W/H/D mm) — 2D/3D 공통 */}
-        <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} lowerSectionHeightMm={lowerSectionHeightMm} />
+        <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} lowerSectionHeightMm={lowerSectionHeightMm} viewKey={is2D ? direction2D : '3d'} />
 
         {/* 바닥: 컨택트 섀도우(접지감) + 페이드 그리드 — 3D 전용 */}
         {!is2D && (
@@ -362,17 +397,17 @@ const AdminModulePreview = ({
               blur={2.6}
               far={mmToThreeUnits(height) * 1.2}
               resolution={1024}
-              color="#3a3f3a"
+              color="#000000"
             />
             <StageGrid
               position={[0, -0.002, 0]}
               args={[10, 10]}
               cellSize={mmToThreeUnits(100)}
               cellThickness={0.55}
-              cellColor="#c9ccc6"
+              cellColor="#3a4045"
               sectionSize={mmToThreeUnits(1000)}
               sectionThickness={1}
-              sectionColor="#aab0a8"
+              sectionColor="#4d555b"
               fadeDistance={cameraDistance * 3.2}
               fadeStrength={1.2}
               infiniteGrid
