@@ -2973,8 +2973,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               sideHeightOverrides={extCfg.sideHeights}
               doorTopGap={doorTopGap ?? adminExtTopGap}
               doorBottomGap={doorBottomGap ?? adminExtBottomGap}
-              defaultDoorTopGap={adminExtTopGap}
-              defaultDoorBottomGap={adminExtBottomGap}
+              defaultDoorTopGap={-20}
+              defaultDoorBottomGap={5}
               backPanelThicknessOverride={backPanelThickness}
               floorY={lowerCabinetFloorY - cabinetYPosition}
             />

@@ -2619,13 +2619,21 @@ export const calculatePanelDetails = (
       const drawerNum = di + 1;
 
       // 마이다 높이: fixedMaidaHeights 우선, 없으면 zone 기반 계산
+      // 관리자 빌더: 상단갭/하단갭 델타 적용 — 3D ExternalDrawerRenderer와 동일 공식
+      //   기본 마이다(노치 위 +40 / 하단 -5)가 topGap -20 / bottomGap 5에 해당, 변경분만 가감
+      const extGapTopDelta = adminExternalDrawers && di === extDrawerCount - 1
+        ? ((doorTopGap ?? adminExternalDrawers.topGap ?? -20) - (-20))
+        : 0;
+      const extGapBottomDelta = adminExternalDrawers && di === 0
+        ? ((doorBottomGap ?? adminExternalDrawers.bottomGap ?? 5) - 5)
+        : 0;
       let maidaHeightMm: number;
       if (fixedMaidaHeights && fixedMaidaHeights[di]) {
-        maidaHeightMm = fixedMaidaHeights[di];
+        maidaHeightMm = fixedMaidaHeights[di] + extGapTopDelta + extGapBottomDelta;
       } else if (zone) {
         const maidaTopMm = zone.notchAboveBottom + 40;
         const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-        maidaHeightMm = maidaTopMm - maidaBottomMm;
+        maidaHeightMm = maidaTopMm - maidaBottomMm + extGapTopDelta + extGapBottomDelta;
       } else {
         maidaHeightMm = 375; // 안전 기본값
       }
