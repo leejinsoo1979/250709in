@@ -1393,6 +1393,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
               const autoBackH = autoBodyH - drawerThicknessMm;
               return (
                 <>
+                  {/* N(인너서랍)은 기성 뒷판이 GLB에 포함 — 제작 뒷판 없음 */}
+                  {autoType !== 'N' && (
                   <BoxWithEdges
                     args={[drawerBackWidth, mmToThreeUnits(autoBackH), drawerThickness]}
                     position={[0, d.bottomY + drawerThickness + mmToThreeUnits(autoBackH) / 2, drawerBackZ]}
@@ -1402,6 +1404,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
                     panelName={`터치${d.tier}단서랍 뒷판`}
                     furnitureId={placedFurnitureId}
                   />
+                  )}
                   {/* 레그라 측판 (GLB) — 마이다 Y좌표 기준 자동 등급 */}
                   <LegraSideRail
                     drawerTier={d.tier}

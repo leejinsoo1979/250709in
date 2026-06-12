@@ -2843,7 +2843,10 @@ export const calculatePanelDetails = (
       const bottomDepthMm = adminLegraTypesArr?.[di] === 'N' ? drawerDepthMm - 20 : drawerDepthMm;
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: bottomDepthMm, thickness: drawerThicknessMm, material: 'PB' },
-        { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
+        // N(인너서랍)은 기성 뒷판 포함 — 제작 뒷판 없음
+        ...(adminLegraTypesArr?.[di] === 'N'
+          ? []
+          : [{ name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' }]),
         // 마이다 — 표준 터치모듈은 항상, 관리자 레그라는 '도어 설치' 시 + 그룹 leader만 (이름 = 마이다 순번)
         ...((maidaH != null && (!adminLegraDrawers || hasDoor))
           ? [{ name: `터치서랍${(maidaIdx ?? di) + 1}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' }]
