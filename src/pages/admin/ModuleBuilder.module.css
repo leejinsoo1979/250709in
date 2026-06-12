@@ -573,22 +573,36 @@
 
 /* ── 레이아웃 ─────────────────────────────────────────── */
 
+/* 빌더 화면: 페이지 스크롤 잠금 — 폼/뷰어/패널목록 각자 독립 스크롤 */
+.containerBuilder {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 20px;
+}
+
+.containerBuilder .header {
+  flex-shrink: 0;
+}
+
 .layout {
   display: grid;
   /* 좌: 설정 폼 / 중: 실시간 뷰어 (주인공 — 최대) / 우: 패널 목록 (좁게) */
   grid-template-columns: minmax(330px, 30%) minmax(0, 1fr) 286px;
-  align-items: start;
+  align-items: stretch;
   gap: 18px;
+  flex: 1;
+  min-height: 0;
 }
 
-/* 패널목록 — 우측 좁은 컬럼, 뷰어와 같은 높이로 고정 */
+/* 패널목록 — 우측 좁은 컬럼, 뷰어와 같은 높이 */
 .panelListColumn {
-  position: sticky;
-  top: 20px;
-  height: calc(100vh - 40px);
+  height: 100%;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
 }
 
 .formColumn {
@@ -600,6 +614,11 @@
   border: 0;
   padding: 0;
   margin: 0;
+  /* 독립 스크롤 — 뷰어/패널목록은 고정 */
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .formColumn:disabled {
@@ -616,13 +635,10 @@
 
 .previewPanel {
   min-width: 0;
-  position: sticky;
-  top: 14px;
-  align-self: start;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 28px);
-  max-height: calc(100vh - 28px);
+  height: 100%;
+  min-height: 0;
   padding: 16px;
 }
 

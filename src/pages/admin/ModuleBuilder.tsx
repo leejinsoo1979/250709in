@@ -1486,7 +1486,7 @@ const ModuleBuilder = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${styles.containerBuilder}`}>
       <header className={styles.header}>
         <div className={styles.headerTitleGroup}>
           <button type="button" className={styles.copyButton} onClick={() => setView('list')} title="모듈 목록으로">
