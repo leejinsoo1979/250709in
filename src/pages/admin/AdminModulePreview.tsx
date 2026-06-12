@@ -109,15 +109,33 @@ const PreviewPanelHighlighter = ({ panelName }: { panelName: string | null }) =>
 
 const DIM_COLOR = '#10b981';
 
-/** 에디터와 동일한 치수 표기 — 가는 치수선 + 끝 틱 + DimensionText(테마 그린) */
-const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heightMm: number; depthMm: number }) => {
+/**
+ * 에디터와 동일한 치수 표기 — 가는 치수선 + 끝 틱 + DimensionText(테마 그린)
+ * 키큰장 하부/상부 분리 모듈은 높이를 구간 분절(안쪽) + 전체(바깥쪽)로 표기
+ */
+const DimensionGuides = ({
+  widthMm,
+  heightMm,
+  depthMm,
+  lowerSectionHeightMm = 0
+}: {
+  widthMm: number;
+  heightMm: number;
+  depthMm: number;
+  lowerSectionHeightMm?: number;
+}) => {
   const w = mmToThreeUnits(widthMm);
   const h = mmToThreeUnits(heightMm);
   const d = mmToThreeUnits(depthMm);
-  const off = mmToThreeUnits(100);   // 가구에서 치수선까지
+  const off = mmToThreeUnits(100);   // 가구에서 1차 치수선까지
+  const off2 = mmToThreeUnits(260);  // 전체 높이 치수선 (분절 시 바깥쪽)
   const tick = mmToThreeUnits(25);   // 끝 틱 반길이
   const floorY = 0.02;
   const lineProps = { color: DIM_COLOR, lineWidth: 1, depthTest: false } as const;
+
+  const hasSplit = lowerSectionHeightMm > 0 && lowerSectionHeightMm < heightMm;
+  const lowerH = mmToThreeUnits(lowerSectionHeightMm);
+  const upperMm = Math.round(heightMm - lowerSectionHeightMm);
 
   return (
     <group>
@@ -132,17 +150,55 @@ const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heig
         color={DIM_COLOR}
       />
 
-      {/* H — 좌측 전면 세로 */}
-      <Line points={[[-w / 2 - off, 0, d / 2], [-w / 2 - off, h, d / 2]]} {...lineProps} />
-      <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} {...lineProps} />
-      <Line points={[[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]} {...lineProps} />
-      <DimensionText
-        value={Math.round(heightMm)}
-        position={[-w / 2 - off - mmToThreeUnits(60), h / 2, d / 2]}
-        rotation={[0, 0, Math.PI / 2]}
-        forceShow
-        color={DIM_COLOR}
-      />
+      {/* H — 좌측 전면 세로 (하부/상부 분절 시 구간 치수 + 바깥 전체 치수) */}
+      {hasSplit ? (
+        <>
+          {/* 구간 치수선 (안쪽): 하부 / 상부 */}
+          <Line points={[[-w / 2 - off, 0, d / 2], [-w / 2 - off, h, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off - tick, lowerH, d / 2], [-w / 2 - off + tick, lowerH, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]} {...lineProps} />
+          <DimensionText
+            value={Math.round(lowerSectionHeightMm)}
+            position={[-w / 2 - off - mmToThreeUnits(60), lowerH / 2, d / 2]}
+            rotation={[0, 0, Math.PI / 2]}
+            forceShow
+            color={DIM_COLOR}
+          />
+          <DimensionText
+            value={upperMm}
+            position={[-w / 2 - off - mmToThreeUnits(60), lowerH + (h - lowerH) / 2, d / 2]}
+            rotation={[0, 0, Math.PI / 2]}
+            forceShow
+            color={DIM_COLOR}
+          />
+
+          {/* 전체 높이 치수선 (바깥쪽) */}
+          <Line points={[[-w / 2 - off2, 0, d / 2], [-w / 2 - off2, h, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off2 - tick, 0, d / 2], [-w / 2 - off2 + tick, 0, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off2 - tick, h, d / 2], [-w / 2 - off2 + tick, h, d / 2]]} {...lineProps} />
+          <DimensionText
+            value={Math.round(heightMm)}
+            position={[-w / 2 - off2 - mmToThreeUnits(60), h / 2, d / 2]}
+            rotation={[0, 0, Math.PI / 2]}
+            forceShow
+            color={DIM_COLOR}
+          />
+        </>
+      ) : (
+        <>
+          <Line points={[[-w / 2 - off, 0, d / 2], [-w / 2 - off, h, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} {...lineProps} />
+          <Line points={[[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]} {...lineProps} />
+          <DimensionText
+            value={Math.round(heightMm)}
+            position={[-w / 2 - off - mmToThreeUnits(60), h / 2, d / 2]}
+            rotation={[0, 0, Math.PI / 2]}
+            forceShow
+            color={DIM_COLOR}
+          />
+        </>
+      )}
 
       {/* D — 우측 바닥 */}
       <Line points={[[w / 2 + off, floorY, -d / 2], [w / 2 + off, floorY, d / 2]]} {...lineProps} />
@@ -194,6 +250,22 @@ const AdminModulePreview = ({
   // 드래프트가 바뀌면 BoxModule을 리마운트 — 섹션/따내기/서랍 수정이 즉시 반영되도록
   // (moduleData는 빌더에서 useMemo로 안정화되어 있어 실제 변경 시에만 키가 바뀐다)
   const draftKey = useMemo(() => JSON.stringify(moduleData), [moduleData]);
+
+  // 키큰장 하부 섹션 실측 높이 (mm) — 높이 치수 분절용 (비율 칸은 남은 높이 비율 분배)
+  const lowerSectionHeightMm = useMemo(() => {
+    const sections = moduleData.modelConfig?.sections;
+    const lowerCount = moduleData.modelConfig?.lowerSectionCount ?? 0;
+    if (moduleData.category !== 'full' || !sections || sections.length < 2 || lowerCount <= 0 || lowerCount >= sections.length) {
+      return 0;
+    }
+    const absTotal = sections.filter(sec => sec.heightType === 'absolute').reduce((sum, sec) => sum + (sec.height || 0), 0);
+    const pctTotal = sections.filter(sec => sec.heightType !== 'absolute').reduce((sum, sec) => sum + (sec.height || 0), 0);
+    const remaining = Math.max(height - absTotal, 0);
+    const resolved = sections.map(sec => (
+      sec.heightType === 'absolute' ? (sec.height || 0) : (pctTotal > 0 ? remaining * ((sec.height || 0) / pctTotal) : 0)
+    ));
+    return Math.round(resolved.slice(0, lowerCount).reduce((sum, x) => sum + x, 0));
+  }, [moduleData, height]);
 
   return (
     <Space3DViewProvider
@@ -274,7 +346,7 @@ const AdminModulePreview = ({
           color="#3a3f3a"
         />
         {/* 가구 외곽 치수 (W/H/D mm) */}
-        <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} />
+        <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} lowerSectionHeightMm={lowerSectionHeightMm} />
 
         <StageGrid
           position={[0, -0.002, 0]}
