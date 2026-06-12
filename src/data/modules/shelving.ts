@@ -94,6 +94,10 @@ export interface ModuleData {
     sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
     leftSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
     rightSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+    // 관리자 빌더: 기본 제거 패널 (패널명 목록)
+    // 배치 시 PlacedModule.panelExclusions 기본값으로 적용 — 뷰어 숨김 + 패널목록/CNC 제외,
+    // 배치 후 패널목록에서 다시 켤 수 있음 (식세기장 측판 기본 꺼짐과 동일 메커니즘)
+    panelExclusions?: string[];
     // 관리자 빌더 하부장: 외부서랍 (레그라박스 — ExternalDrawerRenderer)
     // 서랍 구역은 공통 측판 따내기(sideNotches) 위치로 나뉜다.
     externalDrawers?: {

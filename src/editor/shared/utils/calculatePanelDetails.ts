@@ -408,6 +408,17 @@ export const calculatePanelDetails = (
         sectionName = isLowerSection ? '하부장' : '상부장';
         targetPanel = isLowerSection ? panels.lower : panels.upper;
       }
+      // 관리자 빌더 키큰장: 다중 섹션이면 표준 2단 가구처럼 첫 섹션 = 하부장, 나머지 = 상부장
+      // (3D SectionsRenderer가 2섹션 이상에서 (하)/(상) prefix로 메시 이름을 붙이는 규칙과 일치)
+      else if (moduleData.id.includes('-admin-') && moduleData.category === 'full' && sections.length >= 2) {
+        if (sectionIndex === 0) {
+          sectionName = '하부장';
+          targetPanel = panels.lower;
+        } else {
+          sectionName = '상부장';
+          targetPanel = panels.upper;
+        }
+      }
       // 일반 서랍장 (상하부장 구분 없음)
       else if (section.type === 'drawer') {
         targetPanel = panels.lower;

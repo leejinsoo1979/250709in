@@ -467,6 +467,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         module.panelExclusions = ['좌측판', '우측판'];
       }
 
+      // 관리자 빌더 모듈: 모듈빌더 패널목록에서 체크 해제한 패널을 기본 제거로 배치
+      // (뷰어 숨김 + 패널목록/CNC 제외, 배치 후 패널목록에서 다시 켤 수 있음)
+      if (module.panelExclusions === undefined && module.moduleId?.includes('-admin-')) {
+        const adminModuleData = getModuleById(module.moduleId);
+        const defaultExclusions = adminModuleData?.modelConfig?.panelExclusions;
+        if (defaultExclusions && defaultExclusions.length > 0) {
+          module.panelExclusions = [...defaultExclusions];
+        }
+      }
+
       // 우측바 백패널 두께는 배치된 가구 값으로 표시되므로, 신규 가구도 현재 값 상속
       // 기존 배치 가구가 없으면 사용자 기본설정/전역값을 폴백으로 사용한다.
       if (module.backPanelThickness === undefined) {

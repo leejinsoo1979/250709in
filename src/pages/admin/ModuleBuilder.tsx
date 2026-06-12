@@ -318,6 +318,8 @@ const ModuleBuilder = () => {
       shelfCount: sections.filter(section => section.type === 'shelf').length,
       // 하부장: 상판 포함 선택 시에만 false (기본 = 표준 하부장처럼 상판 없음 + 상단 따내기 + 목찬넬)
       ...(category === 'lower' && lowerHasTopPanel ? { hideTopPanel: false } : {}),
+      // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
+      ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (레그라박스)
       ...(category === 'lower' && useExternalDrawers ? {
@@ -369,7 +371,7 @@ const ModuleBuilder = () => {
             sections: sections.map(builderSectionToConfig)
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, isDynamic, layoutMode, leftNotches, lowerHasTopPanel, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, lowerHasTopPanel, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -457,6 +459,10 @@ const ModuleBuilder = () => {
 
     // 측판 목찬넬 따내기 복원
     setLowerHasTopPanel(module.modelConfig?.hideTopPanel === false);
+
+    // 기본 제거 패널 복원 (패널목록 체크 해제 상태)
+    setHiddenPanelNames(new Set(module.modelConfig?.panelExclusions || []));
+    setHighlightedPanelName(null);
 
     // 외부서랍 (레그라박스) 복원
     const externalDrawers = module.modelConfig?.externalDrawers;
@@ -1341,7 +1347,7 @@ const ModuleBuilder = () => {
                         checked={!isHidden}
                         onClick={(event) => event.stopPropagation()}
                         onChange={() => togglePanelHidden(name)}
-                        title={isHidden ? '뷰어에 표시' : '뷰어에서 숨기기'}
+                        title={isHidden ? '패널을 모듈에 다시 포함' : '체크 해제 = 모듈에서 기본 제거 (배치 시 빠진 상태로 저장, CNC 제외)'}
                       />
                       <span className={styles.panelRowName}>{name}</span>
                       <span className={styles.panelDims}>
