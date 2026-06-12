@@ -1410,7 +1410,9 @@ const ModuleBuilder = () => {
                 onClick={() => openModuleView(item)}
               >
                 <div className={styles.moduleCardThumb}>
-                  {item.thumbnail ? <img src={item.thumbnail} alt={item.module.name} /> : <Box size={26} />}
+                  {item.thumbnail
+                    ? <img src={item.thumbnail} alt={item.module.name} />
+                    : <span className={styles.textThumb}>{item.module.name.replace(/\s*[\d.]+mm$/, '')}</span>}
                 </div>
                 <div className={styles.moduleCardBody}>
                   <strong>{item.module.name}</strong>
@@ -1473,7 +1475,9 @@ const ModuleBuilder = () => {
                 onClick={() => openModuleView(item)}
               >
                 <div className={styles.moduleRowThumb}>
-                  {item.thumbnail ? <img src={item.thumbnail} alt={item.module.name} /> : <Box size={18} />}
+                  {item.thumbnail
+                    ? <img src={item.thumbnail} alt={item.module.name} />
+                    : <span className={styles.textThumbSmall}>{item.module.name.replace(/\s*[\d.]+mm$/, '').slice(0, 6)}</span>}
                 </div>
                 <div className={styles.moduleRowName}>
                   <strong>{item.module.name}</strong>

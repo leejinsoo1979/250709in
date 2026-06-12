@@ -1516,6 +1516,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 주방 하부 멍장은 카테고리별 이름이 보이도록 텍스트 썸네일을 사용
     if (moduleId.includes('dummy-lower')) return '';
     if (moduleId.includes('dummy')) return '/images/furniture-thumbnails/dummy.png';
+    // 관리자 모듈: 섬네일 미등록 시 텍스트 섬네일 (표준 이미지 오인 방지)
+    if (moduleId.includes('-admin-')) return '';
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
     return moduleKey in FURNITURE_ICONS ? FURNITURE_ICONS[moduleKey] : FURNITURE_ICONS['single-2drawer-hanging'];
   };
