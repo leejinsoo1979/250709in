@@ -252,9 +252,9 @@ const ModuleBuilder = () => {
   const [notchSidesLinked, setNotchSidesLinked] = useState(true);
   const [leftNotches, setLeftNotches] = useState<NotchRow[]>([]);
   const [rightNotches, setRightNotches] = useState<NotchRow[]>([]);
-  // 상단 모서리 따내기 — 기본 ON
+  // 상단 모서리 따내기 — 기본 OFF, 사용자가 체크할 때만 생성
   // 하부장: 표준 메커니즘(상판 없음 + 60×40 + 목찬넬), 전체장/상부장: modelConfig.topNotch (상단 기준 자동 위치)
-  const [topNotchEnabled, setTopNotchEnabled] = useState(true);
+  const [topNotchEnabled, setTopNotchEnabled] = useState(false);
   const [topNotchHeight, setTopNotchHeight] = useState(60);
   const [topNotchDepth, setTopNotchDepth] = useState(40);
 
