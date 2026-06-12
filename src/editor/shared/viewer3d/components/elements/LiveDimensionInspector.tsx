@@ -845,6 +845,30 @@ const LiveDimensionInspector: React.FC<LiveDimensionInspectorProps> = ({ enabled
     liveDimensionSelectedKeyRef.current = liveDimensionSelectedKey;
   }, [liveDimensionSelectedKey]);
 
+  // 외부 선택 (패널목록 클릭 등): 스토어 키만 바뀐 경우 씬에서 해당 패널을 찾아 클릭과 동일하게 표시
+  useEffect(() => {
+    if (!enabled) return;
+    if (!liveDimensionSelectedKey) {
+      setSelectedHover(prev => (prev ? null : prev));
+      selectedTargetRef.current = null;
+      return;
+    }
+    if (selectedHover?.selectionKey === liveDimensionSelectedKey) return;
+    let found: THREE.Object3D | null = null;
+    scene.updateMatrixWorld(true);
+    scene.traverse(object => {
+      if (found) return;
+      if (!shouldInspectObject(object)) return;
+      const key = findUserData(object, 'liveDimensionKey');
+      if (key && String(key) === liveDimensionSelectedKey) found = object;
+    });
+    if (!found) return;
+    const next = getHoverDimension(found);
+    if (!next) return;
+    setSelectedHover(next);
+    selectedTargetRef.current = found;
+  }, [enabled, liveDimensionSelectedKey, selectedHover, scene]);
+
   useEffect(() => {
     const canvas = gl.domElement;
     const previousCursor = canvas.style.cursor;

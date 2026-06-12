@@ -30,7 +30,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { FURNITURE_ICONS, isShoeModuleId } from '@/editor/shared/controls/furniture/ModuleGallery';
-import AdminModulePreview from './AdminModulePreview';
+import AdminModulePreview, { ADMIN_PREVIEW_FURNITURE_ID } from './AdminModulePreview';
 import styles from './ModuleBuilder.module.css';
 
 type ModuleCategory = 'full' | 'upper' | 'lower';
@@ -2395,7 +2395,10 @@ const ModuleBuilder = () => {
               <button
                 type="button"
                 className={`${styles.scanButton} ${scanMode ? styles.scanButtonActive : ''}`}
-                onClick={() => setScanMode(mode => !mode)}
+                onClick={() => setScanMode(mode => {
+                  if (mode) useUIStore.getState().setLiveDimensionSelectedKey(null);
+                  return !mode;
+                })}
                 title="뷰어에서 패널 클릭 = 패널/따내기/홈 치수 표시 (에디터 스캔모드와 동일)"
               >
                 패널 스캔
@@ -2510,7 +2513,17 @@ const ModuleBuilder = () => {
                 <div
                   key={`panel-${index}-${name}`}
                   className={`${styles.panelRow} ${isActive ? styles.panelRowActive : ''} ${isHidden ? styles.panelRowHidden : ''}`}
-                  onClick={() => setHighlightedPanelName(isActive ? null : name)}
+                  onClick={() => {
+                    // 행 클릭 = 뷰어 강조 + 스캔모드 치수 표시 (뷰어에서 클릭한 것과 동일)
+                    if (isActive) {
+                      setHighlightedPanelName(null);
+                      useUIStore.getState().setLiveDimensionSelectedKey(null);
+                      return;
+                    }
+                    setHighlightedPanelName(name);
+                    setScanMode(true);
+                    useUIStore.getState().setLiveDimensionSelectedKey(`${ADMIN_PREVIEW_FURNITURE_ID}::${name}`);
+                  }}
                 >
                   <input
                     type="checkbox"
