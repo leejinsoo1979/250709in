@@ -269,12 +269,15 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // - 띄움 차감(floatAbsorbed): 하부 섹션에서 빼고
   // - 걸레받이 흡수(baseAbsorbed): 하부 섹션에 더해 바닥 기준 1060 경계 유지
   const moduleIdForAbsorb = moduleData?.id || '';
-  const isPlainShelfModule = /(^|-)(?:single|dual)-shelf-/.test(moduleIdForAbsorb)
+  // 관리자 빌더 전체장: slug에 표준 타입 토큰이 들어가도 전용 컴포넌트로 라우팅하지 않는다
+  // (일반 sections 폴백 경로 사용 — dual-admin 좌우분할만 DualType5)
+  const isAdminBuilderFull = moduleIdForAbsorb.startsWith('single-admin-') || moduleIdForAbsorb.startsWith('dual-admin-');
+  const isPlainShelfModule = !isAdminBuilderFull && /(^|-)(?:single|dual)-shelf-/.test(moduleIdForAbsorb)
     && !moduleIdForAbsorb.includes('-4drawer-shelf-')
     && !moduleIdForAbsorb.includes('-2drawer-shelf-')
     && !moduleIdForAbsorb.includes('shelf-split');
   const isShelfSplitModule = moduleIdForAbsorb.includes('shelf-split');
-  const isHangingWardrobeModule = moduleIdForAbsorb.includes('hanging');
+  const isHangingWardrobeModule = !isAdminBuilderFull && moduleIdForAbsorb.includes('hanging');
   const shouldStabilizeShelfBoundary = isPlainShelfModule || isShelfSplitModule || isHangingWardrobeModule;
   const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
     ? (spaceInfo?.baseConfig?.height ?? 60)
@@ -637,7 +640,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
-  if (moduleData.id.includes('dual-4drawer-shelf')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('dual-4drawer-shelf'))) {
     return (
       <>
         <DualType4
@@ -689,7 +692,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-4drawer-hanging')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('dual-4drawer-hanging'))) {
     return (
       <>
         <DualType4
@@ -739,7 +742,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-2drawer-shelf')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('dual-2drawer-shelf'))) {
     return (
       <>
         <DualType1
@@ -791,7 +794,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-2drawer-hanging')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('dual-2drawer-hanging'))) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -850,7 +853,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // 듀얼 현관장 H(dual-entryway-h-)는 BaseFurnitureShell 폴백 경로에서 처리
   // (속서랍/서랍받침대/속장 ㄷ자 프레임 hardcoded 코드가 BaseFurnitureShell에 있음)
-  if ((moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-shelf-')) && !moduleData.id.includes('shelf-split')) {
+  if (!isAdminBuilderFull && ((moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-shelf-')) && !moduleData.id.includes('shelf-split'))) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -909,7 +912,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('single-4drawer-shelf')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('single-4drawer-shelf'))) {
     return (
       <>
         <SingleType4
@@ -957,7 +960,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('single-4drawer-hanging')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('single-4drawer-hanging'))) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -1007,7 +1010,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('single-2drawer-shelf')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('single-2drawer-shelf'))) {
     return (
       <>
         <SingleType1
@@ -1056,7 +1059,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('single-2drawer-hanging')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('single-2drawer-hanging'))) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -1109,7 +1112,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // 현관장 H(single-entryway-h-)는 BaseFurnitureShell 폴백 경로에서 처리
   // (속서랍/서랍받침대/속장 ㄷ자 프레임 hardcoded 코드가 BaseFurnitureShell에 있음)
-  if ((moduleData.id.includes('single-2hanging') || moduleData.id.includes('single-shelf-')) && !moduleData.id.includes('shelf-split')) {
+  if (!isAdminBuilderFull && ((moduleData.id.includes('single-2hanging') || moduleData.id.includes('single-shelf-')) && !moduleData.id.includes('shelf-split'))) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -1158,7 +1161,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // 스타일러장 + 관리자 빌더 좌우분할 모듈 (leftSections/rightSections 기반 렌더링)
   if (
-    moduleData.id.includes('dual-2drawer-styler')
+    (!isAdminBuilderFull && moduleData.id.includes('dual-2drawer-styler'))
     || (moduleData.id.startsWith('dual-admin-') && (moduleData.modelConfig as any)?.leftSections)
   ) {
 
@@ -1208,7 +1211,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-4drawer-pantshanger')) {
+  if (!isAdminBuilderFull && (moduleData.id.includes('dual-4drawer-pantshanger'))) {
     
     return (
       <>

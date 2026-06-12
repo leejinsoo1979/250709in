@@ -357,8 +357,20 @@ export const calculatePanelDetails = (
       let sectionName = '';
       let targetPanel = null;
 
+      // 관리자 빌더 키큰장: 하부/상부 경계(lowerSectionCount) 우선 — slug에 표준 토큰이 있어도 admin 규칙 적용
+      // (3D SectionsRenderer (하)/(상) prefix 규칙과 동일 경계 공유)
+      if (moduleData.id.includes('-admin-') && moduleData.category === 'full' && sections.length >= 2) {
+        const adminLowerCount = moduleData.modelConfig?.lowerSectionCount ?? 1;
+        if (sectionIndex < adminLowerCount) {
+          sectionName = '하부장';
+          targetPanel = panels.lower;
+        } else {
+          sectionName = '상부장';
+          targetPanel = panels.upper;
+        }
+      }
       // 2단 옷장/선반장 (single-2hanging, dual-2hanging, single-2shelf, dual-2shelf, single-shelf, dual-shelf): 첫 번째 섹션이 하부장, 두 번째 섹션이 상부장
-      if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging') ||
+      else if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging') ||
           moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf') ||
           moduleData.id.includes('single-shelf-') || moduleData.id.includes('dual-shelf-') ||
           moduleData.id.includes('entryway-h')) {
@@ -407,18 +419,6 @@ export const calculatePanelDetails = (
         const isLowerSection = sectionIndex === 0;
         sectionName = isLowerSection ? '하부장' : '상부장';
         targetPanel = isLowerSection ? panels.lower : panels.upper;
-      }
-      // 관리자 빌더 키큰장: 하부/상부 경계(lowerSectionCount, 기본 1) 기준으로 그룹 분리
-      // (3D SectionsRenderer (하)/(상) prefix 규칙과 동일 경계 공유)
-      else if (moduleData.id.includes('-admin-') && moduleData.category === 'full' && sections.length >= 2) {
-        const adminLowerCount = moduleData.modelConfig?.lowerSectionCount ?? 1;
-        if (sectionIndex < adminLowerCount) {
-          sectionName = '하부장';
-          targetPanel = panels.lower;
-        } else {
-          sectionName = '상부장';
-          targetPanel = panels.upper;
-        }
       }
       // 일반 서랍장 (상하부장 구분 없음)
       else if (section.type === 'drawer') {
