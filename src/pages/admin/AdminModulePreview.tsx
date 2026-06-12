@@ -190,6 +190,12 @@ const AdminModulePreview = ({
               renderMode="solid"
               showFurniture
               placedFurnitureId={ADMIN_PREVIEW_FURNITURE_ID}
+              // 도어/내부 폭 계산이 가상 공간이 아닌 모듈 자신의 폭을 기준으로 하도록
+              originalSlotWidth={width}
+              doorWidth={width}
+              adjustedWidth={width}
+              slotWidths={moduleData.slotWidths}
+              slotIndex={0}
             />
           </group>
         </Suspense>

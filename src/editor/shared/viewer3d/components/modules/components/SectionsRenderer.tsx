@@ -4,6 +4,7 @@ import { SectionConfig } from '@/data/modules/shelving';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import ShelfRenderer from '../ShelfRenderer';
 import DrawerRenderer from '../DrawerRenderer';
+import BoxWithEdges from './BoxWithEdges';
 import { Html, Text } from '@react-three/drei';
 import NativeLine from '../../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
@@ -542,6 +543,33 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       return (
         <group key={`section-${index}`} position={[sectionXOffset, 0, 0]}>
           {sectionContent}
+
+          {/* 관리자 빌더 모듈: 섹션 구분 패널 — 하부 몸통 천판 + 상부 몸통 바닥판 (표준 2단 가구와 동일 구조)
+              패널목록의 (하)상판/(상)바닥과 이름·수량 일치 */}
+          {hasDividerPanel && (modelConfig as { lowerSectionCount?: number })?.lowerSectionCount !== undefined && (() => {
+            const zonePrefixOf = (sectionIdx: number) => (sectionIdx < lowerSectionCountForName ? '(하)' : '(상)');
+            const lowerPieceY = sectionCenterY + sectionHeight / 2 - basicThickness / 2;
+            return (
+              <>
+                <BoxWithEdges
+                  args={[currentSectionInnerWidth, basicThickness, adjustedDepthForShelves]}
+                  position={[0, lowerPieceY, shelfZOffset]}
+                  material={material}
+                  renderMode={renderMode}
+                  panelName={`${zonePrefixOf(index)}상판`}
+                  furnitureId={furnitureId}
+                />
+                <BoxWithEdges
+                  args={[currentSectionInnerWidth, basicThickness, adjustedDepthForShelves]}
+                  position={[0, lowerPieceY + basicThickness, shelfZOffset]}
+                  material={material}
+                  renderMode={renderMode}
+                  panelName={`${zonePrefixOf(index + 1)}바닥`}
+                  furnitureId={furnitureId}
+                />
+              </>
+            );
+          })()}
 
           {/* 섹션 내경 치수 표시 - 2단 옷장은 하부 섹션만 표시 (상부는 안전선반 있을 때만), 듀얼 타입 중복 방지 */}
           {(() => {

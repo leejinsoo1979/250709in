@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Box,
   ClipboardCopy,
+  Eye,
   Image as ImageIcon,
   LayoutGrid,
   List as ListIcon,
@@ -727,17 +728,22 @@ const ModuleBuilder = () => {
     loadModuleIntoForm(module, { asSaved: true });
   };
 
-  /** 카탈로그에서 모듈 클릭 — 그 모듈이 로드된 상세 화면으로 (표준 = 열람 전용) */
-  const openModuleDetail = (item: CatalogItem) => {
+  /** 보기 — 카드 클릭/보기 버튼: 구조 열람 전용 (입력 잠금) */
+  const openModuleView = (item: CatalogItem) => {
     if (item.source === 'admin') {
       loadSavedModule(item.module);
-      setReadOnlyDetail(false);
     } else {
-      // 표준 모듈: 코드 생성 모듈이라 수정/삭제 불가 — 구조 열람만
       setTemplateSelection(item.module.id);
       loadModuleIntoForm(item.module);
-      setReadOnlyDetail(true);
     }
+    setReadOnlyDetail(true);
+    setView('builder');
+  };
+
+  /** 수정 — 관리자 모듈 전용: 편집 가능한 상세로 */
+  const openModuleEdit = (item: CatalogItem) => {
+    loadSavedModule(item.module);
+    setReadOnlyDetail(false);
     setView('builder');
   };
 
@@ -1050,7 +1056,7 @@ const ModuleBuilder = () => {
               <div
                 key={`${item.source}-${item.module.id}`}
                 className={`${styles.moduleCard} ${item.source === 'admin' && !item.enabled ? styles.moduleCardHidden : ''}`}
-                onClick={() => openModuleDetail(item)}
+                onClick={() => openModuleView(item)}
               >
                 <div className={styles.moduleCardThumb}>
                   {item.thumbnail ? <img src={item.thumbnail} alt={item.module.name} /> : <Box size={26} />}
@@ -1071,8 +1077,8 @@ const ModuleBuilder = () => {
                     )}
                   </div>
                 </div>
-                {item.source === 'admin' && (
-                  <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
+                <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
+                  {item.source === 'admin' && (
                     <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
                       <input
                         type="checkbox"
@@ -1081,19 +1087,26 @@ const ModuleBuilder = () => {
                       />
                       <span>게시</span>
                     </label>
-                    <button type="button" className={styles.iconButton} onClick={() => openModuleDetail(item)} title="수정">
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => deleteSaved(item.module.id, item.module.name)}
-                      title="삭제"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button type="button" className={styles.iconButton} onClick={() => openModuleView(item)} title="보기 (구조 열람)">
+                    <Eye size={14} />
+                  </button>
+                  {item.source === 'admin' && (
+                    <>
+                      <button type="button" className={styles.iconButton} onClick={() => openModuleEdit(item)} title="수정">
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => deleteSaved(item.module.id, item.module.name)}
+                        title="삭제"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -1103,7 +1116,7 @@ const ModuleBuilder = () => {
               <div
                 key={`${item.source}-${item.module.id}`}
                 className={`${styles.moduleRowItem} ${item.source === 'admin' && !item.enabled ? styles.moduleCardHidden : ''}`}
-                onClick={() => openModuleDetail(item)}
+                onClick={() => openModuleView(item)}
               >
                 <div className={styles.moduleRowThumb}>
                   {item.thumbnail ? <img src={item.thumbnail} alt={item.module.name} /> : <Box size={18} />}
@@ -1120,16 +1133,24 @@ const ModuleBuilder = () => {
                   {item.source === 'admin' ? '관리자' : '표준'}
                 </span>
                 <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
-                  {item.source === 'admin' ? (
+                  {item.source === 'admin' && (
+                    <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
+                      <input
+                        type="checkbox"
+                        checked={item.enabled !== false}
+                        onChange={(event) => toggleSavedEnabled(item.module.id, event.target.checked)}
+                      />
+                      <span>게시</span>
+                    </label>
+                  )}
+                  <button type="button" className={styles.iconButton} onClick={() => openModuleView(item)} title="보기 (구조 열람)">
+                    <Eye size={14} />
+                  </button>
+                  {item.source === 'admin' && (
                     <>
-                      <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
-                        <input
-                          type="checkbox"
-                          checked={item.enabled !== false}
-                          onChange={(event) => toggleSavedEnabled(item.module.id, event.target.checked)}
-                        />
-                        <span>게시</span>
-                      </label>
+                      <button type="button" className={styles.iconButton} onClick={() => openModuleEdit(item)} title="수정">
+                        <Pencil size={14} />
+                      </button>
                       <button
                         type="button"
                         className={styles.deleteButton}
@@ -1139,10 +1160,6 @@ const ModuleBuilder = () => {
                         <Trash2 size={14} />
                       </button>
                     </>
-                  ) : (
-                    <button type="button" className={styles.textButton} onClick={() => openModuleDetail(item)}>
-                      베이스로 열기
-                    </button>
                   )}
                 </div>
               </div>
@@ -1163,7 +1180,7 @@ const ModuleBuilder = () => {
             <span>목록</span>
           </button>
           <h1 className={styles.title}>
-            {readOnlyDetail ? '모듈 열람 (표준)' : loadedModuleId ? '모듈 수정' : '모듈 제작'}
+            {readOnlyDetail ? (loadedModuleId ? '모듈 열람' : '모듈 열람 (표준)') : loadedModuleId ? '모듈 수정' : '모듈 제작'}
           </h1>
           <code className={styles.idChip} title="모듈 ID">
             {readOnlyDetail ? templateSelection || moduleDraft.id : moduleDraft.id}
@@ -1175,9 +1192,15 @@ const ModuleBuilder = () => {
             <span>JSON</span>
           </button>
           {readOnlyDetail ? (
-            <button type="button" className={styles.saveButton} onClick={deriveFromReadOnly}>
-              이 구조로 신규 모듈 만들기
-            </button>
+            loadedModuleId ? (
+              <button type="button" className={styles.saveButton} onClick={() => setReadOnlyDetail(false)}>
+                수정하기
+              </button>
+            ) : (
+              <button type="button" className={styles.saveButton} onClick={deriveFromReadOnly}>
+                이 구조로 신규 모듈 만들기
+              </button>
+            )
           ) : (
             <button type="button" className={styles.saveButton} onClick={saveDraft} disabled={saving}>
               {saving ? '저장 중…' : (loadedModuleId === moduleDraft.id ? '수정 저장' : '저장')}
