@@ -117,12 +117,15 @@ export async function saveAdminFurnitureModule(moduleData: ModuleData & { thumbn
   const ref = doc(db, COLLECTION, cleanModule.id);
   const existing = await getDoc(ref);
   const enabled = existing.exists() ? existing.data()?.enabled === true : false;
+  // merge 금지 — merge면 빌더에서 '제거'한 설정(sideNotches/topNotch 등)이 기존 문서에 남아
+  // 다시 열 때 살아 돌아옴. 문서를 통째로 교체하되 enabled/createdAt만 보존.
   await setDoc(ref, {
     ...cleanModule,
     enabled,
     source: 'admin-module-builder',
+    createdAt: existing.exists() ? (existing.data()?.createdAt ?? serverTimestamp()) : serverTimestamp(),
     updatedAt: serverTimestamp()
-  }, { merge: true });
+  });
   return enabled;
 }
 
