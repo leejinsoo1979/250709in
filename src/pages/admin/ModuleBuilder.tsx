@@ -11,6 +11,11 @@ import {
 } from '@/firebase/adminFurnitureModules';
 import { generateShelvingModules } from '@/data/modules/shelving';
 import type { ModuleData, SectionConfig } from '@/data/modules';
+import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import {
+  getExcludedPanelAliases,
+  useExcludedPanelsStore
+} from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import {
   Box,
   ClipboardCopy,
@@ -250,10 +255,24 @@ const ModuleBuilder = () => {
   // 하부장 상판 포함 여부 — 기본 OFF (표준 하부장처럼 상판 없음 + 상단 60 따내기 + 목찬넬)
   const [lowerHasTopPanel, setLowerHasTopPanel] = useState(false);
 
+  // 하부장 외부서랍 (레그라박스) — 서랍 구역은 공통 따내기 위치로 분할
+  const [useExternalDrawers, setUseExternalDrawers] = useState(false);
+  const [extDrawerCount, setExtDrawerCount] = useState(2);
+  const [extMaidaHeights, setExtMaidaHeights] = useState('');
+  const [extSideAll, setExtSideAll] = useState(0);
+  const [extSideFirst, setExtSideFirst] = useState(0);
+  const [extSideRest, setExtSideRest] = useState(0);
+  const [extTopGap, setExtTopGap] = useState(-20);
+  const [extBottomGap, setExtBottomGap] = useState(5);
+
   // 저장된 모듈 관리
   const [savedDocs, setSavedDocs] = useState<AdminFurnitureModuleDoc[]>([]);
   const [loadedModuleId, setLoadedModuleId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // 패널목록 — 행 클릭 강조 / 체크박스 해제 시 뷰어에서 숨김
+  const [highlightedPanelName, setHighlightedPanelName] = useState<string | null>(null);
+  const [hiddenPanelNames, setHiddenPanelNames] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!allowed) return;
@@ -267,6 +286,17 @@ const ModuleBuilder = () => {
     generateShelvingModules({ width: 2400, height: 2400, depth: 600 })
       .filter(module => !module.id.includes('dummy'))
   ), []);
+
+  // 숨김 패널 → ExcludedPanelsStore (BoxWithEdges가 매 프레임 읽어 visible 토글)
+  useEffect(() => {
+    const { setExcludedKeys, clearExcludedKeys } = useExcludedPanelsStore.getState();
+    const keys = new Set<string>();
+    hiddenPanelNames.forEach(name => {
+      getExcludedPanelAliases(name).forEach(alias => keys.add(alias));
+    });
+    setExcludedKeys(keys, 'admin-module-builder');
+    return () => clearExcludedKeys('admin-module-builder');
+  }, [hiddenPanelNames]);
 
   const moduleDraft = useMemo(() => {
     const normalizedSlug = normalizeSlug(slug || name) || 'custom-module';
@@ -288,7 +318,23 @@ const ModuleBuilder = () => {
       shelfCount: sections.filter(section => section.type === 'shelf').length,
       // 하부장: 상판 포함 선택 시에만 false (기본 = 표준 하부장처럼 상판 없음 + 상단 따내기 + 목찬넬)
       ...(category === 'lower' && lowerHasTopPanel ? { hideTopPanel: false } : {}),
-      ...notchModelConfig
+      ...notchModelConfig,
+      // 하부장: 외부서랍 (레그라박스)
+      ...(category === 'lower' && useExternalDrawers ? {
+        externalDrawers: {
+          count: Math.max(1, extDrawerCount),
+          ...(parseNumberList(extMaidaHeights).length > 0 ? { maidaHeights: parseNumberList(extMaidaHeights) } : {}),
+          ...((extSideAll > 0 || extSideFirst > 0 || extSideRest > 0) ? {
+            sideHeights: {
+              ...(extSideAll > 0 ? { all: extSideAll } : {}),
+              ...(extSideFirst > 0 ? { first: extSideFirst } : {}),
+              ...(extSideRest > 0 ? { rest: extSideRest } : {})
+            }
+          } : {}),
+          topGap: extTopGap,
+          bottomGap: extBottomGap
+        }
+      } : {})
     };
 
     return {
@@ -323,7 +369,39 @@ const ModuleBuilder = () => {
             sections: sections.map(builderSectionToConfig)
           }
     };
-  }, [category, depth, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, isDynamic, layoutMode, leftNotches, lowerHasTopPanel, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, isDynamic, layoutMode, leftNotches, lowerHasTopPanel, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, useExternalDrawers, width]);
+
+  // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
+  const panelList = useMemo(() => {
+    try {
+      return calculatePanelDetails(moduleDraft as ModuleData, width, depth, hasDoor) as Array<{
+        name?: string;
+        width?: number;
+        height?: number;
+        depth?: number;
+        thickness?: number;
+        material?: string;
+        quantity?: number;
+      }>;
+    } catch (error) {
+      console.error('[ModuleBuilder] 패널목록 계산 실패:', error);
+      return [];
+    }
+  }, [moduleDraft, width, depth, hasDoor]);
+
+  const panelRowCount = useMemo(
+    () => panelList.filter(panel => panel.name && !panel.name.startsWith('===')).length,
+    [panelList]
+  );
+
+  const togglePanelHidden = (panelName: string) => {
+    setHiddenPanelNames(current => {
+      const next = new Set(current);
+      if (next.has(panelName)) next.delete(panelName);
+      else next.add(panelName);
+      return next;
+    });
+  };
 
   const setSectionsForSide = (side: SectionSide, updater: (current: BuilderSection[]) => BuilderSection[]) => {
     if (side === 'right') {
@@ -379,6 +457,17 @@ const ModuleBuilder = () => {
 
     // 측판 목찬넬 따내기 복원
     setLowerHasTopPanel(module.modelConfig?.hideTopPanel === false);
+
+    // 외부서랍 (레그라박스) 복원
+    const externalDrawers = module.modelConfig?.externalDrawers;
+    setUseExternalDrawers(!!externalDrawers);
+    setExtDrawerCount(externalDrawers?.count || 2);
+    setExtMaidaHeights(externalDrawers?.maidaHeights?.join(', ') || '');
+    setExtSideAll(externalDrawers?.sideHeights?.all || 0);
+    setExtSideFirst(externalDrawers?.sideHeights?.first || 0);
+    setExtSideRest(externalDrawers?.sideHeights?.rest || 0);
+    setExtTopGap(externalDrawers?.topGap ?? -20);
+    setExtBottomGap(externalDrawers?.bottomGap ?? 5);
     const savedLeft = module.modelConfig?.leftSideNotches;
     const savedRight = module.modelConfig?.rightSideNotches;
     if (savedLeft || savedRight) {
@@ -429,6 +518,21 @@ const ModuleBuilder = () => {
       const hasPercentage = sideSections.some(section => section.heightType === 'percentage');
       if (!hasPercentage && absoluteTotal !== height) {
         return `${label ? `${label} ` : ''}패널이 모두 고정 높이인데 합(${absoluteTotal}mm)이 전체 높이(${height}mm)와 다릅니다.`;
+      }
+    }
+
+    // 외부서랍 검증
+    if (category === 'lower' && useExternalDrawers) {
+      if (extDrawerCount < 1) return '외부서랍 단수는 1 이상이어야 합니다.';
+      const maidaHeightList = parseNumberList(extMaidaHeights);
+      if (maidaHeightList.length > 0 && maidaHeightList.length !== extDrawerCount) {
+        return `마이다 높이 개수(${maidaHeightList.length})가 서랍 단수(${extDrawerCount})와 다릅니다.`;
+      }
+      if (!notchSidesLinked && extDrawerCount > 1) {
+        return '외부서랍은 좌우 동일 따내기 기준으로 구역이 나뉩니다. 따내기를 "좌우 동일 적용"으로 설정하세요.';
+      }
+      if (notchSidesLinked && leftNotches.length < extDrawerCount - 1) {
+        return `서랍 ${extDrawerCount}단에는 구역을 나눌 따내기가 최소 ${extDrawerCount - 1}개 필요합니다 (현재 ${leftNotches.length}개).`;
       }
     }
 
@@ -1040,6 +1144,66 @@ const ModuleBuilder = () => {
               </div>
             </>
           )}
+
+          {/* === 하부장 외부서랍 (레그라박스) === */}
+          {category === 'lower' && (
+            <>
+              <div className={styles.sectionGroupHeader}>
+                <h3 className={styles.sectionGroupTitle}>외부서랍 (레그라박스)</h3>
+              </div>
+              <label className={styles.checkboxInline}>
+                <input
+                  type="checkbox"
+                  checked={useExternalDrawers}
+                  onChange={(event) => setUseExternalDrawers(event.target.checked)}
+                />
+                <span>외부서랍 사용 — 서랍 구역은 위 측판 따내기(공통) 위치로 나뉩니다</span>
+              </label>
+
+              {useExternalDrawers && (
+                <div className={styles.sectionCard}>
+                  <div className={styles.sectionFields}>
+                    <label className={styles.compactField}>
+                      <span>서랍 단수</span>
+                      <input type="number" min={1} max={5} value={extDrawerCount} onChange={(event) => setExtDrawerCount(Number(event.target.value))} />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>마이다 높이(mm)</span>
+                      <input
+                        value={extMaidaHeights}
+                        onChange={(event) => setExtMaidaHeights(event.target.value)}
+                        placeholder="예: 228, 228 (비우면 자동)"
+                      />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>측판 높이-전체(mm)</span>
+                      <input type="number" min={0} value={extSideAll} onChange={(event) => setExtSideAll(Number(event.target.value))} placeholder="0 = 자동" />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>측판 높이-1단(mm)</span>
+                      <input type="number" min={0} value={extSideFirst} onChange={(event) => setExtSideFirst(Number(event.target.value))} />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>측판 높이-나머지(mm)</span>
+                      <input type="number" min={0} value={extSideRest} onChange={(event) => setExtSideRest(Number(event.target.value))} />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>마이다 상단 갭(mm)</span>
+                      <input type="number" value={extTopGap} onChange={(event) => setExtTopGap(Number(event.target.value))} />
+                    </label>
+                    <label className={styles.compactField}>
+                      <span>마이다 하단 갭(mm)</span>
+                      <input type="number" value={extBottomGap} onChange={(event) => setExtBottomGap(Number(event.target.value))} />
+                    </label>
+                  </div>
+                  <p className={styles.thumbnailHint}>
+                    표준 레그라박스 예시 — 2단: 따내기 1개 + 마이다 228,228 / 측판 180(높이 673 초과 시 240).
+                    측판 높이 0은 표준 자동값. 마이다를 비우면 따내기 위치 기반으로 자동 계산됩니다.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </section>
 
         <section className={`${styles.panel} ${styles.managementPanel}`}>
@@ -1115,7 +1279,67 @@ const ModuleBuilder = () => {
             </div>
 
             <div className={styles.threePreviewFrame}>
-              <AdminModulePreview moduleData={moduleDraft as ModuleData} />
+              <AdminModulePreview
+                moduleData={moduleDraft as ModuleData}
+                highlightedPanelName={highlightedPanelName}
+              />
+            </div>
+
+            {/* 패널목록 — 행 클릭: 뷰어 강조 / 체크박스 해제: 뷰어에서 숨김 */}
+            <div className={styles.panelListArea}>
+              <div className={styles.panelListHeader}>
+                <h3>패널 목록 ({panelRowCount})</h3>
+                <div className={styles.panelListActions}>
+                  {highlightedPanelName && (
+                    <button type="button" className={styles.textButton} onClick={() => setHighlightedPanelName(null)}>
+                      강조 해제
+                    </button>
+                  )}
+                  {hiddenPanelNames.size > 0 && (
+                    <button type="button" className={styles.textButton} onClick={() => setHiddenPanelNames(new Set())}>
+                      모두 표시 ({hiddenPanelNames.size})
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className={styles.panelListScroll}>
+                {panelList.map((panel, index) => {
+                  const name = panel.name || '';
+                  if (!name) return null;
+                  if (name.startsWith('===')) {
+                    return (
+                      <div key={`group-${index}`} className={styles.panelGroupLabel}>
+                        {name.replace(/=/g, '').trim()}
+                      </div>
+                    );
+                  }
+                  const secondDim = panel.height ?? panel.depth;
+                  const isHidden = hiddenPanelNames.has(name);
+                  const isActive = highlightedPanelName === name;
+                  return (
+                    <div
+                      key={`panel-${index}-${name}`}
+                      className={`${styles.panelRow} ${isActive ? styles.panelRowActive : ''} ${isHidden ? styles.panelRowHidden : ''}`}
+                      onClick={() => setHighlightedPanelName(isActive ? null : name)}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={!isHidden}
+                        onClick={(event) => event.stopPropagation()}
+                        onChange={() => togglePanelHidden(name)}
+                        title={isHidden ? '뷰어에 표시' : '뷰어에서 숨기기'}
+                      />
+                      <span className={styles.panelRowName}>{name}</span>
+                      <span className={styles.panelDims}>
+                        {panel.width ?? '-'}×{secondDim ?? '-'}
+                        {panel.thickness ? ` · ${panel.thickness}T` : ''}
+                        {panel.material ? ` · ${panel.material}` : ''}
+                        {panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>

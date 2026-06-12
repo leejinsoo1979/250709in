@@ -94,6 +94,15 @@ export interface ModuleData {
     sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
     leftSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
     rightSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+    // 관리자 빌더 하부장: 외부서랍 (레그라박스 — ExternalDrawerRenderer)
+    // 서랍 구역은 공통 측판 따내기(sideNotches) 위치로 나뉜다.
+    externalDrawers?: {
+      count: number;                  // 서랍 단수
+      maidaHeights?: number[];        // 마이다(앞판) 높이 고정값 (아래→위, mm). 미지정 시 따내기 zone 기반 자동
+      sideHeights?: { all?: number; first?: number; rest?: number }; // 서랍 측판 높이 (mm)
+      topGap?: number;                // 맨위 마이다 상단 갭 (mm, 기본 -20)
+      bottomGap?: number;             // 맨아래 마이다 하단 갭 (mm, 기본 5)
+    };
   };
 }
 

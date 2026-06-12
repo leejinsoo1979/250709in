@@ -425,12 +425,117 @@
 .threePreviewFrame {
   /* 패널 안 남은 높이를 전부 채움 — 뷰어 최대화 */
   flex: 1;
-  min-height: 420px;
+  min-height: 340px;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--theme-border, #e5e7eb);
   background: #f8fafc;
   box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+}
+
+.panelListArea {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  max-height: 38%;
+  min-height: 160px;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--theme-surface, #ffffff);
+  overflow: hidden;
+}
+
+.panelListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  background: var(--theme-background, #f9fafb);
+}
+
+.panelListHeader h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--theme-text, #1f2937);
+}
+
+.panelListActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panelListScroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.panelGroupLabel {
+  position: sticky;
+  top: 0;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--theme-text-secondary, #6b7280);
+  background: var(--theme-background, #f3f4f6);
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  z-index: 1;
+}
+
+.panelRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--theme-border, #f1f5f9);
+  color: var(--theme-text, #1f2937);
+}
+
+.panelRow:hover {
+  background: var(--theme-background, #f8fafc);
+}
+
+.panelRow input[type='checkbox'] {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.panelRowActive {
+  background: rgba(37, 99, 235, 0.1);
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.panelRowActive:hover {
+  background: rgba(37, 99, 235, 0.14);
+}
+
+.panelRowHidden .panelRowName,
+.panelRowHidden .panelDims {
+  opacity: 0.42;
+  text-decoration: line-through;
+}
+
+.panelRowName {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panelDims {
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-family: monospace;
+  color: var(--theme-text-secondary, #6b7280);
 }
 
 .previewSide {

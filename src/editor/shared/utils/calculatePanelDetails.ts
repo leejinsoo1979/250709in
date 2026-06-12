@@ -2399,10 +2399,16 @@ export const calculatePanelDetails = (
 
   // === 하부장 외부서랍 패널 (ExternalDrawerRenderer 기준) ===
   const extDrawerPanels: any[] = [];
-  if (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half')))) {
+  // 관리자 빌더 하부장: modelConfig.externalDrawers (레그라박스) — 서랍 구역은 공통 따내기로 분할
+  const adminExternalDrawers = moduleData.id.includes('lower-cabinet-admin')
+    ? moduleData.modelConfig?.externalDrawers
+    : undefined;
+  if (adminExternalDrawers || (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half'))))) {
     const is1TierExt = moduleData.id.includes('lower-drawer-1tier') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-top-down-1tier');
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
-    const extDrawerCount = is3TierExt ? 3 : is1TierExt ? 1 : 2;
+    const extDrawerCount = adminExternalDrawers
+      ? Math.max(1, adminExternalDrawers.count)
+      : is3TierExt ? 3 : is1TierExt ? 1 : 2;
     // ExternalDrawerRenderer 기준 치수
     const extSideDepthMm = Math.min(customDepth - 50, 453); // 서랍 깊이 = 캐비넷깊이 - 50, 최대 453
     const sideGapMm = 6; // 좌우 갭
@@ -2426,7 +2432,17 @@ export const calculatePanelDetails = (
     let fixedSideHeightMm: number | undefined;
     let hasDrawerFrontPanel = false;
 
-    if (is1TierExt) {
+    if (adminExternalDrawers) {
+      // 관리자 빌더: 따내기(공통)가 서랍 zone을 분할 — 3D ExternalDrawerRenderer 호출과 동일 소스
+      const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || [])]
+        .sort((a, b) => a.fromBottom - b.fromBottom);
+      notchFromBottoms = adminCommonNotches.map(n => n.fromBottom);
+      notchHeightsArr = adminCommonNotches.map(n => n.y);
+      // 상판 포함(hideTopPanel === false)이면 상단 60 따내기 없음 → zone 계산에서 제외
+      hideTopNotch = moduleData.modelConfig?.hideTopPanel === false;
+      fixedMaidaHeights = adminExternalDrawers.maidaHeights;
+      fixedSideHeightMm = adminExternalDrawers.sideHeights?.all;
+    } else if (is1TierExt) {
       const isBasicOneTier = moduleData.id.includes('lower-drawer-1tier');
       const topDownOneTierStretcher = stoneTopThickness === 10 ? 65 : stoneTopThickness === 30 ? 45 : 55;
       const topDownOneTierChannelBottom = height - (topDownOneTierStretcher + 65);
@@ -2518,7 +2534,13 @@ export const calculatePanelDetails = (
 
     // 측판 높이: 1단 250mm, 2단이상 130mm (3단서랍), 2단서랍은 모두 250mm
     for (let di = 0; di < extDrawerCount; di++) {
-      const requestedExtSideHMm = fixedSideHeightMm
+      // 관리자 빌더: 측판 높이 first/rest 개별 지정 지원
+      const adminSideHeightMm = adminExternalDrawers?.sideHeights
+        ? (adminExternalDrawers.sideHeights.all
+          ?? (di === 0 ? adminExternalDrawers.sideHeights.first : adminExternalDrawers.sideHeights.rest))
+        : undefined;
+      const requestedExtSideHMm = adminSideHeightMm
+        ?? fixedSideHeightMm
         ?? (isTopDown2Tier ? 240
           : isTopDown3Tier ? (di === 0 ? 180 : 130)
           : isDoorLift3Tier ? (di === 0 ? 240 : 130)

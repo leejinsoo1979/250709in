@@ -2933,6 +2933,50 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
+      {/* 관리자 빌더 하부장: modelConfig 외부서랍 (레그라박스) — 서랍 구역은 공통 따내기 위치로 분할 */}
+      {showFurniture && moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.externalDrawers && (() => {
+        const extCfg = moduleData.modelConfig.externalDrawers!;
+        const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || [])]
+          .sort((a, b) => a.fromBottom - b.fromBottom);
+        const adminExtTopGap = extCfg.topGap ?? -20;
+        const adminExtBottomGap = extCfg.bottomGap ?? 5;
+        return (
+          <group position={[0, cabinetYPosition, 0]}>
+            <ExternalDrawerRenderer
+              drawerCount={Math.max(1, extCfg.count)}
+              moduleWidth={adjustedWidth || moduleData.dimensions.width}
+              innerWidth={baseFurniture.innerWidth}
+              height={adjustedHeight}
+              depth={baseFurniture.depth}
+              basicThickness={baseFurniture.basicThickness}
+              moduleDepthMm={baseFurniture.actualDepthMm}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              textureUrl={spaceInfo?.materialConfig?.texture}
+              doorTextureUrl={spaceInfo?.materialConfig?.doorTexture}
+              doorColor={baseFurniture.doorColor}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+              showMaida={true}
+              notchFromBottoms={adminCommonNotches.map(n => n.fromBottom)}
+              notchHeights={adminCommonNotches.map(n => n.y)}
+              isEditMode={isEditMode}
+              // 상판 포함(hideTopPanel === false)이면 상단 60 따내기가 없으므로 zone 계산에서 제외
+              hideTopNotch={moduleData.modelConfig?.hideTopPanel === false}
+              maidaHeightsMm={extCfg.maidaHeights}
+              sideHeightOverrides={extCfg.sideHeights}
+              doorTopGap={doorTopGap ?? adminExtTopGap}
+              doorBottomGap={doorBottomGap ?? adminExtBottomGap}
+              defaultDoorTopGap={adminExtTopGap}
+              defaultDoorBottomGap={adminExtBottomGap}
+              backPanelThicknessOverride={backPanelThickness}
+              floorY={lowerCabinetFloorY - cabinetYPosition}
+            />
+          </group>
+        );
+      })()}
+
       {/* 상판내림 반통/한통: L자 프레임만 렌더링 (서랍 없음, 도어는 별도) — 걸래받이 OFF 시 숨김 */}
       {showFurniture && hasBase !== false && (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half') || moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
