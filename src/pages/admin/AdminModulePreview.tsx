@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import {
+  Billboard,
   ContactShadows,
   Grid as StageGrid,
   Line,
@@ -107,22 +108,20 @@ const PreviewPanelHighlighter = ({ panelName }: { panelName: string | null }) =>
   return null;
 };
 
-const DIM_COLOR = '#0e7a5c';
-const DIM_TEXT_SIZE_MM = 90;
+const DIM_COLOR = '#0c6e54';
+const DIM_TEXT_SIZE_MM = 75;
 
-/** 치수선 한 줄: 양 끝 틱 + 본선 + 수치 라벨 */
+/** 치수선 한 줄: 본선 + 카메라를 향하는 수치 라벨 */
 const DimensionLine = ({
   from,
   to,
   label,
-  labelOffset,
-  labelRotationY = 0
+  labelOffset
 }: {
   from: [number, number, number];
   to: [number, number, number];
   label: string;
   labelOffset: [number, number, number];
-  labelRotationY?: number;
 }) => {
   const mid: [number, number, number] = [
     (from[0] + to[0]) / 2 + labelOffset[0],
@@ -131,19 +130,19 @@ const DimensionLine = ({
   ];
   return (
     <group>
-      <Line points={[from, to]} color={DIM_COLOR} lineWidth={1.5} />
-      <Text
-        position={mid}
-        rotation={[0, labelRotationY, 0]}
-        fontSize={mmToThreeUnits(DIM_TEXT_SIZE_MM)}
-        color={DIM_COLOR}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={mmToThreeUnits(6)}
-        outlineColor="#ecedeb"
-      >
-        {label}
-      </Text>
+      <Line points={[from, to]} color={DIM_COLOR} lineWidth={1.2} />
+      <Billboard position={mid}>
+        <Text
+          fontSize={mmToThreeUnits(DIM_TEXT_SIZE_MM)}
+          color={DIM_COLOR}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={mmToThreeUnits(8)}
+          outlineColor="#ecedeb"
+        >
+          {label}
+        </Text>
+      </Billboard>
     </group>
   );
 };
@@ -160,13 +159,13 @@ const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heig
     <group>
       {/* W — 전면 하단 */}
       <DimensionLine
-        from={[-w / 2, 0.001, d / 2 + off]}
-        to={[w / 2, 0.001, d / 2 + off]}
+        from={[-w / 2, 0.02, d / 2 + off]}
+        to={[w / 2, 0.02, d / 2 + off]}
         label={`${Math.round(widthMm)}`}
         labelOffset={[0, mmToThreeUnits(110), 0]}
       />
-      <Line points={[[-w / 2, 0.001, d / 2 + off - tick], [-w / 2, 0.001, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
-      <Line points={[[w / 2, 0.001, d / 2 + off - tick], [w / 2, 0.001, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[-w / 2, 0.02, d / 2 + off - tick], [-w / 2, 0.02, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[w / 2, 0.02, d / 2 + off - tick], [w / 2, 0.02, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
 
       {/* H — 좌측 전면 세로 */}
       <DimensionLine
@@ -180,14 +179,13 @@ const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heig
 
       {/* D — 우측 바닥 */}
       <DimensionLine
-        from={[w / 2 + off, 0.001, -d / 2]}
-        to={[w / 2 + off, 0.001, d / 2]}
+        from={[w / 2 + off, 0.02, -d / 2]}
+        to={[w / 2 + off, 0.02, d / 2]}
         label={`${Math.round(depthMm)}`}
         labelOffset={[mmToThreeUnits(140), mmToThreeUnits(60), 0]}
-        labelRotationY={Math.PI / 2}
       />
-      <Line points={[[w / 2 + off - tick, 0.001, -d / 2], [w / 2 + off + tick, 0.001, -d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
-      <Line points={[[w / 2 + off - tick, 0.001, d / 2], [w / 2 + off + tick, 0.001, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[w / 2 + off - tick, 0.02, -d / 2], [w / 2 + off + tick, 0.02, -d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[w / 2 + off - tick, 0.02, d / 2], [w / 2 + off + tick, 0.02, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
     </group>
   );
 };
@@ -289,6 +287,9 @@ const AdminModulePreview = ({
               adjustedWidth={width}
               slotWidths={moduleData.slotWidths}
               slotIndex={0}
+              // 프리뷰는 받침대 없이 바닥에 놓이므로 도어 갭 0 — 도어가 몸통과 정확히 일치
+              doorTopGap={0}
+              doorBottomGap={0}
             />
           </group>
         </Suspense>
