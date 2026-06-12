@@ -581,7 +581,7 @@ export const calculatePanelDetails = (
             || id.includes('lower-sink-cabinet') || id.includes('dual-lower-sink-cabinet')
             || id.includes('lower-induction-cabinet') || id.includes('dual-lower-induction-cabinet')
             || id.includes('lower-drawer-')
-            || (id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false);
+            || (id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false && moduleData.modelConfig?.topChannelNotch === true);
           // 도어올림/상판내림은 상단 따내기 없음 (상판내림 상단은 665에 포함)
           const noUpperNotch = id.includes('lower-door-lift-') || id.includes('lower-top-down-');
           if (hideTopPanel && !noUpperNotch) {
@@ -650,6 +650,7 @@ export const calculatePanelDetails = (
           moduleData.id.includes('-admin-')
           && !moduleData.id.includes('lower-cabinet-admin')
           && moduleData.modelConfig?.hideTopPanel === true
+          && moduleData.modelConfig?.topChannelNotch === true
         ) ? [{ y: 60, z: 40, fromBottom: height - 60 }] : [];
         const leftNotchesAll = [...(sidePanelNotches || []), ...configLeftNotches, ...adminTallHideTopNotch];
         const rightNotchesAll = [...(sidePanelNotches || []), ...configRightNotches, ...adminTallHideTopNotch];
@@ -2855,7 +2856,7 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
-  const isAdminLowerWithTopNotch = moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false;
+  const isAdminLowerWithTopNotch = moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false && moduleData.modelConfig?.topChannelNotch === true;
   if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || isAdminLowerWithTopNotch)) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
@@ -2982,7 +2983,8 @@ export const calculatePanelDetails = (
     // 관리자 빌더 전체장/상부장 상판 없음: 3D BaseFurnitureShell이 상단에 '가로전대'를 자동 렌더링
     const isAdminTallWithoutTopPanel = moduleData.id.includes('-admin-')
       && !moduleData.id.includes('lower-cabinet-admin')
-      && moduleData.modelConfig?.hideTopPanel === true;
+      && moduleData.modelConfig?.hideTopPanel === true
+      && moduleData.modelConfig?.topChannelNotch === true;
     if (isAdminTallWithoutTopPanel) {
       const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       panels.frame.push({

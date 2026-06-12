@@ -2967,8 +2967,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               notchFromBottoms={adminCommonNotches.map(n => n.fromBottom)}
               notchHeights={adminCommonNotches.map(n => n.y)}
               isEditMode={isEditMode}
-              // 상판 포함(hideTopPanel === false)이면 상단 60 따내기가 없으므로 zone 계산에서 제외
-              hideTopNotch={moduleData.modelConfig?.hideTopPanel === false}
+              // 상판 포함 또는 목찬넬 미사용이면 상단 60 따내기가 없으므로 zone 계산에서 제외
+              hideTopNotch={moduleData.modelConfig?.hideTopPanel === false || moduleData.modelConfig?.topChannelNotch !== true}
               maidaHeightsMm={extCfg.maidaHeights}
               sideHeightOverrides={extCfg.sideHeights}
               doorTopGap={doorTopGap ?? adminExtTopGap}
@@ -3030,7 +3030,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       })()}
 
       {/* 기본하부장/싱크장/인덕션장 반통/한통 + 관리자 빌더 하부장(상판 없음): 상단 따내기 L자 프레임 렌더링 — 걸래받이 OFF 시 숨김 */}
-      {showFurniture && hasBase !== false && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || (moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false)) && (() => {
+      {showFurniture && hasBase !== false && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || (moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false && moduleData.modelConfig?.topChannelNotch === true)) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const cabinetHeightMmLocal = cabinetHeight / 0.01;

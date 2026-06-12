@@ -407,6 +407,8 @@ const ModuleBuilder = () => {
 
   // 수직 칸막이 — 좌측판 안쪽면 기준 X(mm), 쉼표 구분 (선반 위치와 동일한 입력 방식)
   const [dividersText, setDividersText] = useState('');
+  // 상단 목찬넬 따내기 — 기본 OFF, 사용자가 켰을 때만 측판 60×40 따내기 + 가로전대(+하부장 PET 프레임)
+  const [topChannelEnabled, setTopChannelEnabled] = useState(false);
   // 신규 모듈 추가 — 분류를 먼저 고르기 전엔 폼/프리뷰를 띄우지 않음 (임의 기본 분류 금지)
   const [categoryPicked, setCategoryPicked] = useState(true);
 
@@ -524,6 +526,8 @@ const ModuleBuilder = () => {
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
       // 수직 칸막이 — 좌우 분할 (섹션 모델은 상하 분할만 가능)
       ...(parseNumberList(dividersText).length > 0 ? { verticalDividers: parseNumberList(dividersText) } : {}),
+      // 상단 목찬넬 따내기 — 상판 없음 + 사용자가 켰을 때만
+      ...(!hasTopPanel && topChannelEnabled ? { topChannelNotch: true } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (일반 / 레그라박스)
       ...(category === 'lower' && useExternalDrawers ? {
@@ -583,7 +587,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, topChannelEnabled, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -795,6 +799,7 @@ const ModuleBuilder = () => {
     // 기본 제거 패널 복원 (패널목록 체크 해제 상태)
     setHiddenPanelNames(new Set(module.modelConfig?.panelExclusions || []));
     setDividersText((module.modelConfig?.verticalDividers || []).join(', '));
+    setTopChannelEnabled(module.modelConfig?.topChannelNotch === true);
     setHighlightedPanelName(null);
 
     // 외부서랍 복원 (일반 / 레그라박스)
@@ -886,6 +891,7 @@ const ModuleBuilder = () => {
     setExtBottomGap(5);
     setHiddenPanelNames(new Set());
     setDividersText('');
+    setTopChannelEnabled(false);
     setHighlightedPanelName(null);
     setLoadedModuleId(null);
   };
@@ -1083,12 +1089,15 @@ const ModuleBuilder = () => {
     setRightNotches([]);
     if (value === 'kitchen-basic') {
       setHasTopPanel(false);
+      setTopChannelEnabled(true); // 기본장 구조 패밀리 = 상단 목찬넬 포함
       setLeftNotches([]);
     } else if (value === 'kitchen-door-raise') {
       setHasTopPanel(true);
+      setTopChannelEnabled(false);
       setLeftNotches([]);
     } else if (value === 'kitchen-top-down') {
       setHasTopPanel(true);
+      setTopChannelEnabled(false);
       setLeftNotches([{
         ...createNotchRow(Math.max(1, height - 120)),
         height: 65,
@@ -1623,8 +1632,15 @@ const ModuleBuilder = () => {
 
           <label className={styles.checkbox}>
             <input type="checkbox" checked={hasTopPanel} onChange={(event) => setHasTopPanel(event.target.checked)} />
-            <span>상판 포함 (해제 시 측판 상단 60×40 따내기 + 가로전대{category === 'lower' ? ' + 목찬넬 프레임' : ''})</span>
+            <span>상판 포함</span>
           </label>
+
+          {!hasTopPanel && (
+            <label className={styles.checkbox}>
+              <input type="checkbox" checked={topChannelEnabled} onChange={(event) => setTopChannelEnabled(event.target.checked)} />
+              <span>상단 목찬넬 따내기 (측판 60×40 + 가로전대{category === 'lower' ? ' + 목찬넬 PET 프레임' : ''})</span>
+            </label>
+          )}
 
           <label className={styles.checkbox}>
             <input type="checkbox" checked={isDynamic} onChange={(event) => setIsDynamic(event.target.checked)} />

@@ -491,8 +491,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const doorsOpen = useUIStore(state => state.doorsOpen);
   const isGlassCabinet = !!moduleData?.id?.includes('glass-cabinet');
 
-  // 상판 없음: prop(하부장 호출자) 또는 modelConfig.hideTopPanel === true (관리자 빌더 전체장/상부장)
+  // 상판 없음: prop(하부장 호출자) 또는 modelConfig.hideTopPanel === true (관리자 빌더 키큰장/상부장)
   const hideTopPanel = hideTopPanelProp || moduleData?.modelConfig?.hideTopPanel === true;
+  // 관리자 빌더 모듈: 상단 목찬넬 따내기(60×40)+가로전대는 사용자가 켰을 때만 (topChannelNotch)
+  const autoTopNotchAllowed = !moduleData?.id?.includes('-admin-')
+    || moduleData?.modelConfig?.topChannelNotch === true;
+  const showAutoTopNotch = hideTopPanel && autoTopNotchAllowed;
 
   // 관리자 빌더 모듈: modelConfig에 정의된 측판 목찬넬 따내기 (mm 단위)
   // left/right 개별 지정이 있으면 우선, 없으면 공통(sideNotches) 사용
@@ -821,13 +825,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const composeNotchProps = (configNotches: Array<{ y: number; z: number; fromBottom: number }>) => {
                   const hasMultiNotches = !!sideNotches || topDownNotches.length > 0 || configNotches.length > 0;
                   if (!hasMultiNotches) {
-                    // 기존 기본값: 상판 없는 하부장의 상단 단일 따내기
-                    return hideTopPanel ? { notch: { y: notchY, z: notchZ } } : {};
+                    // 기존 기본값: 상판 없는 하부장의 상단 단일 따내기 (관리자 모듈은 topChannelNotch 켰을 때만)
+                    return showAutoTopNotch ? { notch: { y: notchY, z: notchZ } } : {};
                   }
                   return {
                     notches: [
-                      // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
-                      ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
+                      // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음, 관리자 모듈은 opt-in)
+                      ...(showAutoTopNotch ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
                       // 추가 노치들 (mm → Three.js 단위 변환)
                       ...(sideNotches || []).map(n => ({
                         y: mmToThreeUnits(n.y),
@@ -886,8 +890,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {...rightPanelNotchProps}
                     />
 
-                    {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림은 상판이 있으므로 제외) */}
-                    {hideTopPanel && (
+                    {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림 제외, 관리자 모듈은 목찬넬 opt-in) */}
+                    {showAutoTopNotch && (
                       <BoxWithEdges
                         key={`front-stretcher-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth, notchY, basicThickness]}

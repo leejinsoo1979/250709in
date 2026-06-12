@@ -63,6 +63,14 @@ const docToModule = (data: Record<string, unknown>, docId: string): ModuleData =
     normalizePercentSectionsInPlace(modelConfig.rightSections);
   }
 
+  // 구버전 저장본 정규화: topChannelNotch 도입 전 모듈은 상판 없음 = 자동 목찬넬이었음 — 기존 외형 유지
+  if (modelConfig && modelConfig.topChannelNotch === undefined) {
+    const isLegacyAutoChannel = data.category === 'lower'
+      ? modelConfig.hideTopPanel !== false
+      : modelConfig.hideTopPanel === true;
+    if (isLegacyAutoChannel) modelConfig.topChannelNotch = true;
+  }
+
   return {
     id: (data.id as string) || docId,
     name: data.name,

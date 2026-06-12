@@ -107,6 +107,9 @@ export interface ModuleData {
     topNotch?: { y: number; z: number };
     // 관리자 빌더: 수직 칸막이 — 좌측판 안쪽면 기준 X 위치(mm) 배열 (드로잉 모드로 배치)
     verticalDividers?: number[];
+    // 관리자 빌더: 상단 목찬넬 따내기 — true일 때만 상단 60×40 따내기 + 가로전대(+하부장 PET 프레임) 생성.
+    // 미지정(undefined)은 따내기 없음 (사용자가 추가할 때만 생성 원칙)
+    topChannelNotch?: boolean;
     // 관리자 빌더: 기본 제거 패널 (패널명 목록)
     // 배치 시 PlacedModule.panelExclusions 기본값으로 적용 — 뷰어 숨김 + 패널목록/CNC 제외,
     // 배치 후 패널목록에서 다시 켤 수 있음 (식세기장 측판 기본 꺼짐과 동일 메커니즘)
