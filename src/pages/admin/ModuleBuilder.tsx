@@ -933,7 +933,8 @@ const ModuleBuilder = () => {
   /** '직접 만들기' — 불러온 베이스 모델을 완전히 비우고 초기 상태로 */
   const resetFormToBlank = () => {
     setName('신규 모듈');
-    setSlug('custom-module');
+    // 고유 식별자 자동 부여 — 한글 모듈명은 식별자에 반영되지 않아 기본값이 겹치면 기존 모듈을 덮어쓰게 됨
+    setSlug(`module-${Date.now().toString(36)}`);
     setCategory('full');
     setGalleryCategory(defaultGalleryCategory('full'));
     setLayoutMode('single');
@@ -1275,7 +1276,11 @@ const ModuleBuilder = () => {
     try {
       if (moduleDraft.id !== loadedModuleId) {
         const exists = await adminFurnitureModuleExists(moduleDraft.id);
-        if (exists && !confirm(`동일 ID(${moduleDraft.id})의 모듈이 이미 있습니다. 덮어쓸까요?`)) {
+        if (exists && !confirm(
+          `동일 ID(${moduleDraft.id})의 모듈이 이미 있습니다.\n` +
+          '확인을 누르면 기존 모듈이 이 내용으로 영구히 덮어써집니다 (복구 불가).\n' +
+          '별도 모듈로 저장하려면 취소 후 식별자를 바꾸세요.'
+        )) {
           return;
         }
       }
