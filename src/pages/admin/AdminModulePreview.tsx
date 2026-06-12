@@ -335,6 +335,8 @@ const AdminModulePreview = ({
         <OrbitControls
           key={`${viewMode}-${direction2D}`}
           target={[0, is2D && direction2D === 'top' ? 0 : centerY, 0]}
+          zoomToCursor
+
           enableDamping
           dampingFactor={0.08}
           enableRotate={!is2D}
