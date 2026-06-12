@@ -66,10 +66,16 @@ const createNotchRow = (fromBottom = 300): NotchRow => ({
   depth: 40
 });
 
-const notchRowsToConfig = (rows: NotchRow[]) => (
+const notchRowsToConfig = (rows: NotchRow[], bodyHeightMm: number, bodyDepthMm: number) => (
   rows
     .filter(row => row.height > 0 && row.depth > 0 && row.fromBottom >= 0)
-    .map(row => ({ y: row.height, z: row.depth, fromBottom: row.fromBottom }))
+    .map(row => {
+      // 목찬넬/따내기는 몸통 외곽을 벗어날 수 없음 — 높이/깊이/위치를 몸통 치수로 클램프
+      const y = Math.min(row.height, bodyHeightMm);
+      const z = Math.min(row.depth, bodyDepthMm);
+      const fromBottom = Math.min(Math.max(0, row.fromBottom), Math.max(0, bodyHeightMm - y));
+      return { y, z, fromBottom };
+    })
 );
 
 const notchConfigToRows = (notches?: Array<{ y: number; z: number; fromBottom: number }>): NotchRow[] => (
@@ -499,8 +505,8 @@ const ModuleBuilder = () => {
     const normalizedSlug = normalizeSlug(slug || name) || 'custom-module';
     const moduleId = `${getCategoryPrefix(category, layoutMode)}-${normalizedSlug}-${width}`;
     // 측판 목찬넬 따내기 — 공통(sideNotches: 가로전대 자동) 또는 좌/우 개별
-    const commonNotchConfig = notchRowsToConfig(leftNotches);
-    const rightNotchConfig = notchRowsToConfig(rightNotches);
+    const commonNotchConfig = notchRowsToConfig(leftNotches, height, depth);
+    const rightNotchConfig = notchRowsToConfig(rightNotches, height, depth);
     const notchModelConfig = notchSidesLinked
       ? (commonNotchConfig.length > 0 ? { sideNotches: commonNotchConfig } : {})
       : {
@@ -518,14 +524,18 @@ const ModuleBuilder = () => {
       ...(category !== 'lower' && !hasTopPanel ? { hideTopPanel: true } : {}),
       // 상단 모서리 따내기 (키큰장/상부장, 상판 있을 때만 — 상판 없음은 자체 따내기 포함)
       ...(category !== 'lower' && hasTopPanel && topNotchEnabled && topNotchHeight > 0 && topNotchDepth > 0
-        ? { topNotch: { y: topNotchHeight, z: topNotchDepth } }
+        ? { topNotch: { y: Math.min(topNotchHeight, height), z: Math.min(topNotchDepth, depth) } }
         : {}),
       // 키큰장 하부/상부 경계 — 3D (하)/(상) 메시 이름과 패널목록 그룹이 공유
       ...(category === 'full' ? { lowerSectionCount: Math.max(0, Math.min(lowerSectionCount, sections.length)) } : {}),
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
-      // 수직 칸막이 — 좌우 분할 (섹션 모델은 상하 분할만 가능)
-      ...(parseNumberList(dividersText).length > 0 ? { verticalDividers: parseNumberList(dividersText) } : {}),
+      // 수직 칸막이 — 좌우 분할 (섹션 모델은 상하 분할만 가능), 내경 범위로 클램프
+      ...((() => {
+        const maxX = Math.max(1, width - 18 * 2 - 18); // 내경폭 − 칸막이 두께
+        const dividerList = parseNumberList(dividersText).map(x => Math.min(Math.max(1, x), maxX));
+        return dividerList.length > 0 ? { verticalDividers: dividerList } : {};
+      })()),
       // 상단 목찬넬 따내기 — 상판 없음 + 사용자가 켰을 때만
       ...(!hasTopPanel && topChannelEnabled ? { topChannelNotch: true } : {}),
       ...notchModelConfig,
