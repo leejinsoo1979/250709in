@@ -2703,13 +2703,34 @@ export const calculatePanelDetails = (
     const adminLegraHeights = adminLegraDrawers
       ? (adminLegraDrawers.legraSpecs || []).map(spec => LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228)
       : undefined;
-    // 중간 목찬넬(공통 따내기) 정렬 마이다 — 3D LowerCabinet adminLegraChannelMaidas와 동일 공식
+    // N(특소) = 인너서랍 — 마이다 그룹핑: N은 아래 서랍 마이다에 흡수 (3D와 동일)
+    const adminLegraTypesArr = adminLegraDrawers
+      ? (adminLegraDrawers.legraSpecs || []).map(spec => spec.type)
+      : undefined;
+    // 서랍 인덱스 → 마이다 그룹 leader 여부 + 그룹 본체높이 합
+    const adminLegraGroupInfo = (() => {
+      if (!adminLegraDrawers || !adminLegraHeights || !adminLegraTypesArr) return null;
+      const groupHeights: number[] = [];
+      const leaderOfDrawer: (number | null)[] = []; // 서랍 di → 그룹 index (leader일 때만), 아니면 null
+      adminLegraHeights.forEach((bodyH, i) => {
+        if (adminLegraTypesArr[i] === 'N' && groupHeights.length > 0) {
+          groupHeights[groupHeights.length - 1] += bodyH;
+          leaderOfDrawer.push(null);
+        } else {
+          groupHeights.push(bodyH);
+          leaderOfDrawer.push(groupHeights.length - 1);
+        }
+      });
+      return { groupHeights, leaderOfDrawer };
+    })();
+    // 중간 목찬넬(공통 따내기) 정렬 마이다(그룹) — 3D LowerCabinet adminLegraChannelMaidas와 동일 공식
     const adminLegraChannelMaidas: number[] | null = (() => {
-      if (!adminLegraDrawers || !adminLegraHeights) return null;
+      if (!adminLegraDrawers || !adminLegraGroupInfo) return null;
       const notchTops = [...(moduleData.modelConfig?.sideNotches || [])]
         .sort((a, b) => a.fromBottom - b.fromBottom)
         .map(n => n.fromBottom + n.y);
-      if (notchTops.length !== adminLegraHeights.length - 1 || adminLegraHeights.length < 2) return null;
+      const groupN = adminLegraGroupInfo.groupHeights.length;
+      if (groupN < 1 || notchTops.length !== groupN - 1) return null;
       const gapG = adminLegraDrawers.maidaGapMm ?? 20;
       const topGapV = adminLegraDrawers.topGap ?? -20;
       const bottomGapV = adminLegraDrawers.bottomGap ?? 5;
@@ -2728,8 +2749,8 @@ export const calculatePanelDetails = (
       : isTDTouch2 ? [228, 228]
       : isTDTouch3 ? [164, 164, 164]
       : [228, 228]);
-    // 마이다 비례 (2B는 2A와 동일하게 [228, 228]) — admin은 따내기 정렬값 우선
-    const maidaDrawerHeights = adminLegraChannelMaidas ?? adminLegraHeights ?? (isTouch2A ? [228, 228]
+    // 마이다 비례 (2B는 2A와 동일하게 [228, 228]) — admin은 따내기 정렬값 → 그룹 본체합 순
+    const maidaDrawerHeights = adminLegraChannelMaidas ?? adminLegraGroupInfo?.groupHeights ?? (isTouch2A ? [228, 228]
       : isTouch2B ? [228, 228]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
@@ -2794,32 +2815,36 @@ export const calculatePanelDetails = (
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;
       const backH = dh - drawerThicknessMm;
-      let maidaH: number;
-      if (maidaRanges[di]) {
-        maidaH = maidaRanges[di].maidaHeightMm;
-      } else if (cmh) {
-        maidaH = cmh[di];
-      } else if (isDoorLift2Fixed) {
-        maidaH = fixedMaidaDoorLift2[di];
-      } else if (isDoorLift3Fixed) {
-        maidaH = fixedMaidaDoorLift3[di];
-      } else if (isTopDown2Fixed) {
-        maidaH = topDown2Maidas[di];
-      } else if (isTopDown3Fixed) {
-        maidaH = topDown3Maidas[di];
-      } else {
-        const maidaRef = maidaDrawerHeights[di] ?? dh;
-        // 마이다 높이는 소수점 1자리 유지
-        const maidaHRaw = (maidaRef / totalMaidaDrawerH) * totalMaidaMm;
-        maidaH = Math.round(maidaHRaw * 10) / 10;
+      // 마이다 인덱스: admin 레그라는 그룹 leader만 (N 인너서랍은 마이다 없음 — 아래 마이다가 덮음)
+      const maidaIdx = adminLegraGroupInfo ? adminLegraGroupInfo.leaderOfDrawer[di] : di;
+      let maidaH: number | null = null;
+      if (maidaIdx != null) {
+        if (!adminLegraDrawers && maidaRanges[di]) {
+          maidaH = maidaRanges[di].maidaHeightMm;
+        } else if (!adminLegraDrawers && cmh) {
+          maidaH = cmh[di];
+        } else if (isDoorLift2Fixed) {
+          maidaH = fixedMaidaDoorLift2[di];
+        } else if (isDoorLift3Fixed) {
+          maidaH = fixedMaidaDoorLift3[di];
+        } else if (isTopDown2Fixed) {
+          maidaH = topDown2Maidas[di];
+        } else if (isTopDown3Fixed) {
+          maidaH = topDown3Maidas[di];
+        } else {
+          const maidaRef = maidaDrawerHeights[maidaIdx] ?? dh;
+          // 마이다 높이는 소수점 1자리 유지
+          const maidaHRaw = (maidaRef / totalMaidaDrawerH) * totalMaidaMm;
+          maidaH = Math.round(maidaHRaw * 10) / 10;
+        }
       }
 
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'PB' },
         { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
-        // 마이다 — 표준 터치모듈은 항상, 관리자 레그라는 '도어 설치' 시에만 (3D hasDoor 게이트와 동일)
-        ...((!adminLegraDrawers || hasDoor)
-          ? [{ name: `터치서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' }]
+        // 마이다 — 표준 터치모듈은 항상, 관리자 레그라는 '도어 설치' 시 + 그룹 leader만 (이름 = 마이다 순번)
+        ...((maidaH != null && (!adminLegraDrawers || hasDoor))
+          ? [{ name: `터치서랍${(maidaIdx ?? di) + 1}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' }]
           : []),
       );
     });
