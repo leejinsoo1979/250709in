@@ -45,9 +45,8 @@ const resolveRailGlbDepth = (depthMm: number): number => {
 //  파일명 규칙: M등급 300~450은 공백 'Legra M###', 그 외(M500/L/SL)는 언더스코어 'Legra_등급###'.
 const buildRailModelPath = (grade: 'M' | 'L' | 'SL' | 'N', glbDepth: number): string => {
   if (grade === 'N') {
-    // N(특소) — 깊이별 어셈블리 GLB (Legra N300/350/450/500_o)
-    const step = glbDepth >= 500 ? 500 : glbDepth === 400 ? 350 : glbDepth; // 400 단계 미보유 → 350
-    return `/models/Legra N${step}_o.glb`;
+    // N(특소) — 깊이별 GLB (legra_N300/350/400/450/500)
+    return `/models/legra_N${glbDepth}.glb`;
   }
   if (grade === 'M') {
     return glbDepth >= 500 ? '/models/Legra_M500.glb' : `/models/Legra M${glbDepth}.glb`;
