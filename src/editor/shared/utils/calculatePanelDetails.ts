@@ -2933,6 +2933,16 @@ export const calculatePanelDetails = (
         thickness: basicThickness,
         material: 'PB',
       });
+      // 관리자 빌더: 수평전대 — 목찬넬 수평프레임 바로 아래 받침 부재 (3D LowerCabinet 수평전대(1)와 일치)
+      if (moduleData.id.includes('lower-cabinet-admin')) {
+        panels.frame.push({
+          name: `수평전대(${ni + 1})`,
+          width: innerWidth,
+          height: 40,
+          thickness: basicThickness,
+          material: 'PB',
+        });
+      }
     });
   }
 
@@ -2980,6 +2990,16 @@ export const calculatePanelDetails = (
           thickness: basicThickness,
           material: 'PB',
         });
+        // 수평전대 — 목찬넬 수평프레임 바로 아래 받침 부재 (3D BaseFurnitureShell 수평전대(하N)와 일치)
+        if (notch.y > PET_PANEL_THICKNESS_MM && notch.z > 0) {
+          panels.frame.push({
+            name: `수평전대(하${ni + 1})`,
+            width: innerWidth,
+            height: notch.z,
+            thickness: basicThickness,
+            material: 'PB',
+          });
+        }
       });
     }
 

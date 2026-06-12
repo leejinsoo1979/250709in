@@ -3095,6 +3095,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
+            {/* 관리자 빌더: 수평전대 — 목찬넬 수평프레임 바로 아래 받침 부재 */}
+            {moduleData.id.includes('lower-cabinet-admin') && (
+              <BoxWithEdges
+                args={[baseFurniture.innerWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
+                position={[0, horzY - petThickness / 2 - baseFurniture.basicThickness / 2, baseFurniture.depth / 2 - mmToThreeUnits(40) / 2]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                isHighlighted={false}
+                panelName="수평전대(1)"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+              />
+            )}
           </group>
         );
       })()}

@@ -1012,6 +1012,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
                           />
+                          {/* 수평전대 — 목찬넬 수평프레임 바로 아래 받침 부재 (수직프레임 뒤 가로전대와 한 세트) */}
+                          <BoxWithEdges
+                            args={[innerWidth, basicThickness, notchZ3]}
+                            position={[0, bottomY + fromBottom3 - basicThickness / 2, depth / 2 - notchZ3 / 2]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            panelName={`수평전대(하${idx + 1})`}
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                            textureUrl={textureUrl}
+                          />
                         </group>
                       );
                     })}
