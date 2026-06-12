@@ -8404,19 +8404,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </>
       )}
       
-      {/* 발통 심볼 - 정면뷰 */}
-      {placedModules.map((module, index) => {
+      {/* 발통 심볼 - 정면뷰 (2D 도면 전용 — 3D에서는 실제 조절발이 보이므로 심볼 숨김) */}
+      {currentViewDirection !== '3D' && placedModules.map((module, index) => {
         const moduleData = getModuleById(module.moduleId);
         if (!moduleData) return null;
-        
+
         const moduleX = module.position.x;
         const moduleWidth = ((module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.adjustedWidth || moduleData.dimensions.width)) * 0.01;
-        
+
         // 가구 하단 중앙에 발통 심볼 배치
         return (
           <group key={`footstool-front-${module.id || index}`}>
             {renderFootstoolSymbol(
-              moduleX, 
+              moduleX,
               mmToThreeUnits(100), // 바닥에서 100mm 위
               0.01
             )}
