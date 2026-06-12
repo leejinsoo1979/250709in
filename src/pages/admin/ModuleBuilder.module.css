@@ -826,6 +826,22 @@
   gap: 10px 12px;
 }
 
+.drawerSummary {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-top: 2px;
+  font-family: var(--mb-mono);
+  font-size: 11.5px;
+  color: var(--mb-ink-soft);
+}
+
+.drawerSumWarn {
+  color: var(--mb-danger);
+  font-weight: 800;
+}
+
 /* ── 아이콘/텍스트 버튼 ──────────────────────────────── */
 
 .iconButton,

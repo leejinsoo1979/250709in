@@ -584,6 +584,16 @@ const ModuleBuilder = () => {
   const lowerZoneHeightMm = Math.round(sectionHeightsMm.slice(0, lowerSectionCount).reduce((sum, h) => sum + h, 0));
   const upperZoneHeightMm = Math.round(sectionHeightsMm.slice(lowerSectionCount).reduce((sum, h) => sum + h, 0));
 
+  // 우측(듀얼) 칸 실측 높이
+  const rightSectionHeightsMm = useMemo(() => {
+    const absTotal = rightSections.filter(s => s.heightType === 'absolute').reduce((sum, s) => sum + Math.max(s.height, 0), 0);
+    const pctTotal = rightSections.filter(s => s.heightType === 'percentage').reduce((sum, s) => sum + Math.max(s.height, 0), 0);
+    const remaining = Math.max(height - absTotal, 0);
+    return rightSections.map(s => (
+      s.heightType === 'absolute' ? Math.max(s.height, 0) : (pctTotal > 0 ? remaining * (Math.max(s.height, 0) / pctTotal) : 0)
+    ));
+  }, [rightSections, height]);
+
   /** 기본정보에서 하부 섹션 높이 직접 입력 — 하부가 단일 칸일 때 그 칸을 고정(mm)으로 설정 */
   const setLowerZoneHeight = (valueMm: number) => {
     if (lowerSectionCount !== 1 || sections.length === 0) return;
@@ -659,6 +669,42 @@ const ModuleBuilder = () => {
     setSectionsForSide(side, current => current.map(section => (
       section.id === sectionId ? { ...section, [key]: value } : section
     )));
+  };
+
+  // ── 서랍 높이 편집 (서랍별 개별 입력) ──────────────────────
+  /** 서랍 개수에 맞춘 높이 배열 — 부족하면 마지막 값(없으면 255)으로 채움 */
+  const getDrawerHeightsArray = (section: BuilderSection): number[] => {
+    const parsed = parseNumberList(section.drawerHeights);
+    const count = Math.max(1, section.count || 1);
+    if (parsed.length >= count) return parsed.slice(0, count);
+    const fill = parsed.length > 0 ? parsed[parsed.length - 1] : 255;
+    return [...parsed, ...Array(count - parsed.length).fill(fill)];
+  };
+
+  const setDrawerHeightAt = (side: SectionSide, section: BuilderSection, drawerIndex: number, valueMm: number) => {
+    const heights = getDrawerHeightsArray(section);
+    heights[drawerIndex] = Math.max(0, valueMm);
+    updateSection(side, section.id, 'drawerHeights', heights.join(', '));
+  };
+
+  /** 서랍 개수 변경 — 높이 배열 길이도 함께 동기화 */
+  const setDrawerCount = (side: SectionSide, section: BuilderSection, count: number) => {
+    const nextCount = Math.max(1, Math.min(6, Math.round(count)));
+    const heights = getDrawerHeightsArray({ ...section, count: nextCount });
+    setSectionsForSide(side, current => current.map(item => (
+      item.id === section.id
+        ? { ...item, count: nextCount, drawerHeights: heights.join(', ') }
+        : item
+    )));
+  };
+
+  /** 균등 분배 — 칸 실측 높이에서 간격을 빼고 서랍 수로 나눔 */
+  const distributeDrawerHeights = (side: SectionSide, section: BuilderSection, zoneHeightMm: number) => {
+    const count = Math.max(1, section.count || 1);
+    const gap = Math.max(0, section.gapHeight || 0);
+    const usable = Math.max(0, zoneHeightMm - gap * (count + 1));
+    const each = Math.max(1, Math.floor(usable / count));
+    updateSection(side, section.id, 'drawerHeights', Array(count).fill(each).join(', '));
   };
 
   /** ModuleData → 빌더 폼 상태 복원 (템플릿 적용 + 저장 모듈 수정 공용) */
@@ -1607,36 +1653,57 @@ const ModuleBuilder = () => {
                         </>
                       )}
 
-                      {section.type === 'drawer' && (
-                        <>
-                          <label className={styles.compactField}>
-                            <span>서랍 개수</span>
-                            <input
-                              type="number"
-                              min={1}
-                              value={Math.max(1, section.count)}
-                              onChange={(event) => updateSection('main', section.id, 'count', Number(event.target.value))}
-                            />
-                          </label>
-                          <label className={styles.compactField}>
-                            <span>서랍별 높이(mm)</span>
-                            <input
-                              value={section.drawerHeights}
-                              onChange={(event) => updateSection('main', section.id, 'drawerHeights', event.target.value)}
-                              placeholder="예: 255, 255"
-                            />
-                          </label>
-                          <label className={styles.compactField}>
-                            <span>서랍 간격(mm)</span>
-                            <input
-                              type="number"
-                              min={0}
-                              value={section.gapHeight}
-                              onChange={(event) => updateSection('main', section.id, 'gapHeight', Number(event.target.value))}
-                            />
-                          </label>
-                        </>
-                      )}
+                      {section.type === 'drawer' && (() => {
+                        const drawerHeights = getDrawerHeightsArray(section);
+                        const zoneMm = Math.round(sectionHeightsMm[index] || 0);
+                        const drawerSumMm = drawerHeights.reduce((sum, value) => sum + value, 0);
+                        return (
+                          <>
+                            <label className={styles.compactField}>
+                              <span>서랍 개수</span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={6}
+                                value={Math.max(1, section.count)}
+                                onChange={(event) => setDrawerCount('main', section, Number(event.target.value))}
+                              />
+                            </label>
+                            <label className={styles.compactField}>
+                              <span>서랍 간격(mm)</span>
+                              <input
+                                type="number"
+                                min={0}
+                                value={section.gapHeight}
+                                onChange={(event) => updateSection('main', section.id, 'gapHeight', Number(event.target.value))}
+                              />
+                            </label>
+                            {drawerHeights.map((drawerHeightMm, drawerIndex) => (
+                              <label key={`drawer-h-${drawerIndex}`} className={styles.compactField}>
+                                <span>서랍 {drawerIndex + 1} 높이{drawerIndex === 0 ? ' (맨 아래)' : ''}</span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={drawerHeightMm}
+                                  onChange={(event) => setDrawerHeightAt('main', section, drawerIndex, Number(event.target.value))}
+                                />
+                              </label>
+                            ))}
+                            <div className={styles.drawerSummary}>
+                              <button
+                                type="button"
+                                className={styles.textButton}
+                                onClick={() => distributeDrawerHeights('main', section, zoneMm)}
+                              >
+                                균등 분배
+                              </button>
+                              <span className={drawerSumMm > zoneMm ? styles.drawerSumWarn : ''}>
+                                서랍 합계 {drawerSumMm}mm / 칸 {zoneMm}mm
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
 
                     <label className={styles.checkboxInline}>
@@ -1735,22 +1802,46 @@ const ModuleBuilder = () => {
                             </>
                           )}
 
-                          {section.type === 'drawer' && (
-                            <>
-                              <label className={styles.compactField}>
-                                <span>서랍 개수</span>
-                                <input type="number" min={1} value={Math.max(1, section.count)} onChange={(event) => updateSection('right', section.id, 'count', Number(event.target.value))} />
-                              </label>
-                              <label className={styles.compactField}>
-                                <span>서랍별 높이(mm)</span>
-                                <input value={section.drawerHeights} onChange={(event) => updateSection('right', section.id, 'drawerHeights', event.target.value)} placeholder="예: 255, 255" />
-                              </label>
-                              <label className={styles.compactField}>
-                                <span>서랍 간격(mm)</span>
-                                <input type="number" min={0} value={section.gapHeight} onChange={(event) => updateSection('right', section.id, 'gapHeight', Number(event.target.value))} />
-                              </label>
-                            </>
-                          )}
+                          {section.type === 'drawer' && (() => {
+                            const drawerHeights = getDrawerHeightsArray(section);
+                            const zoneMm = Math.round(rightSectionHeightsMm[index] || 0);
+                            const drawerSumMm = drawerHeights.reduce((sum, value) => sum + value, 0);
+                            return (
+                              <>
+                                <label className={styles.compactField}>
+                                  <span>서랍 개수</span>
+                                  <input type="number" min={1} max={6} value={Math.max(1, section.count)} onChange={(event) => setDrawerCount('right', section, Number(event.target.value))} />
+                                </label>
+                                <label className={styles.compactField}>
+                                  <span>서랍 간격(mm)</span>
+                                  <input type="number" min={0} value={section.gapHeight} onChange={(event) => updateSection('right', section.id, 'gapHeight', Number(event.target.value))} />
+                                </label>
+                                {drawerHeights.map((drawerHeightMm, drawerIndex) => (
+                                  <label key={`right-drawer-h-${drawerIndex}`} className={styles.compactField}>
+                                    <span>서랍 {drawerIndex + 1} 높이{drawerIndex === 0 ? ' (맨 아래)' : ''}</span>
+                                    <input
+                                      type="number"
+                                      min={1}
+                                      value={drawerHeightMm}
+                                      onChange={(event) => setDrawerHeightAt('right', section, drawerIndex, Number(event.target.value))}
+                                    />
+                                  </label>
+                                ))}
+                                <div className={styles.drawerSummary}>
+                                  <button
+                                    type="button"
+                                    className={styles.textButton}
+                                    onClick={() => distributeDrawerHeights('right', section, zoneMm)}
+                                  >
+                                    균등 분배
+                                  </button>
+                                  <span className={drawerSumMm > zoneMm ? styles.drawerSumWarn : ''}>
+                                    서랍 합계 {drawerSumMm}mm / 칸 {zoneMm}mm
+                                  </span>
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
 
                         <label className={styles.checkboxInline}>
