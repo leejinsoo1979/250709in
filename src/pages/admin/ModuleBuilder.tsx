@@ -371,7 +371,7 @@ const ModuleBuilder = () => {
   const [useExternalDrawers, setUseExternalDrawers] = useState(false);
   const [extDrawerType, setExtDrawerType] = useState<'external' | 'legrabox'>('external');
   // 레그라박스 서랍별 [종류, 바닥판 위 이격] (아래→위) — M 117 / L 164 / F 228
-  const [legraRows, setLegraRows] = useState<Array<{ id: string; type: 'M' | 'L' | 'F'; offsetMm: number }>>([
+  const [legraRows, setLegraRows] = useState<Array<{ id: string; type: 'M' | 'L' | 'F' | 'N'; offsetMm: number }>>([
     { id: 'legra-0', type: 'F', offsetMm: 28 },
     { id: 'legra-1', type: 'F', offsetMm: 406 }
   ]);
@@ -560,7 +560,7 @@ const ModuleBuilder = () => {
               drawerType: 'legrabox' as const,
               // 이격 클램프 — 서랍(측판 높이 포함)이 몸통 내경을 벗어날 수 없음
               legraSpecs: (() => {
-                const LEGRA_SIDE_H: Record<'M' | 'L' | 'F', number> = { M: 128.5, L: 177, F: 241 };
+                const LEGRA_SIDE_H: Record<'M' | 'L' | 'F' | 'N', number> = { N: 66.5, M: 128.5, L: 177, F: 241 };
                 const legraInnerH = Math.max(1, height - panelThickness * 2);
                 return legraRows.map(row => ({
                   type: row.type,
@@ -2404,8 +2404,8 @@ const ModuleBuilder = () => {
                       className={styles.iconButton}
                       onClick={() => setLegraRows(rows => {
                         const last = rows[rows.length - 1];
-                        const lastHeight = last ? (last.type === 'M' ? 117 : last.type === 'L' ? 164 : 228) : 0;
-                        const sideH = (last?.type || 'F') === 'M' ? 128.5 : (last?.type || 'F') === 'L' ? 177 : 241;
+                        const lastHeight = last ? (last.type === 'N' ? 55 : last.type === 'M' ? 117 : last.type === 'L' ? 164 : 228) : 0;
+                        const sideH = (last?.type || 'F') === 'N' ? 66.5 : (last?.type || 'F') === 'M' ? 128.5 : (last?.type || 'F') === 'L' ? 177 : 241;
                         const maxOffset = Math.max(0, height - panelThickness * 2 - sideH);
                         return [...rows, {
                           id: `legra-${Date.now()}-${rows.length}`,
@@ -2426,9 +2426,10 @@ const ModuleBuilder = () => {
                           <select
                             value={row.type}
                             onChange={(event) => setLegraRows(rows => rows.map(item => (
-                              item.id === row.id ? { ...item, type: event.target.value as 'M' | 'L' | 'F' } : item
+                              item.id === row.id ? { ...item, type: event.target.value as 'M' | 'L' | 'F' | 'N' } : item
                             )))}
                           >
+                            <option value="N">특소 (N) — 본체 55 · 측판 66.5</option>
                             <option value="M">소 (M) — 본체 117 · 측판 128.5</option>
                             <option value="L">중 (L) — 본체 164 · 측판 177</option>
                             <option value="F">대 (F) — 본체 228 · 측판 241</option>

@@ -2467,7 +2467,7 @@ export const calculatePanelDetails = (
     && (moduleData.modelConfig.externalDrawers.legraSpecs?.length || 0) > 0
     ? moduleData.modelConfig.externalDrawers
     : undefined;
-  const LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F', number> = { M: 117, L: 164, F: 228 };
+  const LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
   if (adminExternalDrawers || (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half'))))) {
     const is1TierExt = moduleData.id.includes('lower-drawer-1tier') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-top-down-1tier');
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
@@ -2673,8 +2673,9 @@ export const calculatePanelDetails = (
         ...(hasDrawerFrontPanel ? [{ name: `서랍${drawerNum} 앞판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' }] : []),
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
-      // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
-      extDrawerPanels.push(
+      // 마이다: 서랍 앞면을 덮는 판 — 표준 모듈은 항상, 관리자 모듈은 '도어 설치' 시에만 (3D showMaida와 동일)
+      const includeMaida = !adminExternalDrawers || hasDoor;
+      if (includeMaida) extDrawerPanels.push(
         { name: `서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: Math.round(maidaHeightMm * 10) / 10, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
       );
     }
@@ -2788,7 +2789,10 @@ export const calculatePanelDetails = (
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'PB' },
         { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
-        { name: `터치서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' },
+        // 마이다 — 표준 터치모듈은 항상, 관리자 레그라는 '도어 설치' 시에만 (3D hasDoor 게이트와 동일)
+        ...((!adminLegraDrawers || hasDoor)
+          ? [{ name: `터치서랍${drawerNum}(마이다)`, width: resolveExternalMaidaPanelWidthMm(), height: maidaH, thickness: PET_PANEL_THICKNESS_MM, material: 'PET' }]
+          : []),
       );
     });
   }

@@ -22,7 +22,7 @@ interface LegraSideRailProps {
   //    > 220 → F (측판 241, f500.glb)
   maidaHeightMm?: number;
   // 사용자가 직접 선택한 레그라 종류 (있으면 GLB 강제 매칭)
-  legraTypeOverride?: 'M' | 'L' | 'F';
+  legraTypeOverride?: 'M' | 'L' | 'F' | 'N';
   // 레일 깊이(mm). 지정 시 그 깊이에 맞는 깊이별 GLB(300/350/400/450/500)를 불러온다.
   railDepthMm?: number;
   // 레일 높이(mm). (현재 깊이별 GLB 방식에서는 미사용, 향후 높이 매칭용으로 받아만 둠)
@@ -43,7 +43,12 @@ const resolveRailGlbDepth = (depthMm: number): number => {
 
 // 등급(M/L/SL) × 깊이(300~500) → GLB 경로.
 //  파일명 규칙: M등급 300~450은 공백 'Legra M###', 그 외(M500/L/SL)는 언더스코어 'Legra_등급###'.
-const buildRailModelPath = (grade: 'M' | 'L' | 'SL', glbDepth: number): string => {
+const buildRailModelPath = (grade: 'M' | 'L' | 'SL' | 'N', glbDepth: number): string => {
+  if (grade === 'N') {
+    // N(특소) — 깊이별 어셈블리 GLB (Legra N300/350/450/500_o)
+    const step = glbDepth >= 500 ? 500 : glbDepth === 400 ? 350 : glbDepth; // 400 단계 미보유 → 350
+    return `/models/Legra N${step}_o.glb`;
+  }
   if (grade === 'M') {
     return glbDepth >= 500 ? '/models/Legra_M500.glb' : `/models/Legra M${glbDepth}.glb`;
   }
@@ -193,8 +198,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   const rightSourceSignatureRef = React.useRef<string | null>(null);
 
   // 등급(높이) 결정: M(낮은) / L(중간) / SL(대서랍, 높은). 기존 F는 SL로 매핑(깊이별 GLB 보유).
-  const grade: 'M' | 'L' | 'SL' = legraTypeOverride
-    ? (legraTypeOverride === 'F' ? 'SL' : legraTypeOverride === 'M' ? 'M' : 'L')
+  const grade: 'M' | 'L' | 'SL' | 'N' = legraTypeOverride
+    ? (legraTypeOverride === 'F' ? 'SL' : legraTypeOverride === 'N' ? 'N' : legraTypeOverride === 'M' ? 'M' : 'L')
     : drawerHeightMm != null
     ? (drawerHeightMm >= 200 ? 'SL' : drawerHeightMm <= 120 ? 'M' : 'L')
     : (drawerTier === 1 ? 'SL' : 'L');
