@@ -2526,10 +2526,10 @@ const ModuleBuilder = () => {
                 <input
                   type="checkbox"
                   checked={previewDoorsOpen}
-                  disabled={!hasDoor}
+                  disabled={!hasDoor && !useExternalDrawers}
                   onChange={(event) => setPreviewDoorsOpen(event.target.checked)}
                 />
-                <span>도어 열림</span>
+                <span>도어·서랍 열림</span>
               </label>
             </div>
           </div>

@@ -447,7 +447,11 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const hasDoorOnModule = useFurnitureStore(state => {
     if (!furnitureId) return true;
     const m = state.placedModules.find(p => p.id === furnitureId);
-    return m?.hasDoor === true;
+    // 스토어에 없는 가구 = 독립 프리뷰(관리자 빌더 등) — 인출 토글 허용
+    if (!m) return true;
+    // 관리자 외부서랍 모듈: 전면이 마이다(도어 차단)이므로 hasDoor와 무관하게 인출 가능
+    if (m.moduleId?.includes('lower-cabinet-admin')) return true;
+    return m.hasDoor === true;
   });
   const isDoorOpenRaw = (doorsOpen !== null && !isInteriorMaterialMode)
     ? doorsOpen
