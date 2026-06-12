@@ -121,5 +121,5 @@ export function getSuperAdminEmail(): string {
  */
 export function isSuperAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
-  return email === getSuperAdminEmail();
+  return email.toLowerCase().trim() === getSuperAdminEmail().toLowerCase().trim();
 }

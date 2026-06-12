@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useNavigate, Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
+import { isSuperAdmin as isSuperAdminEmail } from '@/firebase/admins';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
-import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2, HiOutlineKey, HiOutlineOfficeBuilding } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2, HiOutlineKey, HiOutlineOfficeBuilding, HiOutlineCube } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
 import { GiImperialCrown } from 'react-icons/gi';
 import styles from './AdminLayout.module.css';
@@ -18,6 +19,7 @@ const AdminLayout = () => {
 
   // 공장 파트너사 role: 발주 관련 메뉴만 노출
   const isFactoryRole = adminRole === 'factory';
+  const canUseModuleBuilder = isSuperAdminEmail(user?.email);
 
   useEffect(() => {
     console.log('🔐 AdminLayout 상태:', { authLoading, adminLoading, user: !!user, isAdmin, isSuperAdmin });
@@ -142,6 +144,16 @@ const AdminLayout = () => {
             >
               <HiOutlineShieldCheck size={20} />
               <span>관리자 권한 관리</span>
+            </NavLink>
+          )}
+
+          {canUseModuleBuilder && (
+            <NavLink
+              to="/admin/module-builder"
+              className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+            >
+              <HiOutlineCube size={20} />
+              <span>모듈 빌더</span>
             </NavLink>
           )}
 

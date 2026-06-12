@@ -48,6 +48,14 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // adminFurnitureModules - 슈퍼어드민이 만든 관리자용 가구 모듈
+    // 클라이언트 가구목록/배치/편집 호환을 위해 로그인 사용자는 활성 모듈을 읽을 수 있고,
+    // 생성/수정/삭제는 프로젝트 소유자 슈퍼어드민만 가능
+    match /adminFurnitureModules/{moduleId} {
+      allow read, list: if isSignedIn();
+      allow create, update, delete: if isSuperAdmin();
+    }
+
     // qna - Q&A 게시판
     // - 질문 작성: 로그인 사용자 누구나
     // - 읽기/목록: 로그인 사용자 누구나 (전체 공개)

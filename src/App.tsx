@@ -5,6 +5,7 @@ import DashboardAdminGuard from '@/auth/DashboardAdminGuard';
 import EnterpriseOrAdminGuard from '@/auth/EnterpriseOrAdminGuard';
 import EnterpriseInquiryNotice from '@/components/EnterpriseInquiryNotice';
 import FriendRequestToast from '@/components/friends/FriendRequestToast';
+import AdminFurnitureModuleRegistryLoader from '@/components/admin/AdminFurnitureModuleRegistryLoader';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
@@ -54,6 +55,7 @@ import AdminChatbot from '@/pages/admin/Chatbot';
 import AdminSettings from '@/pages/admin/Settings';
 import AdminAllApiKeys from '@/pages/admin/AllApiKeys';
 import AdminSubscriptions from '@/pages/admin/Subscriptions';
+import AdminModuleBuilder from '@/pages/admin/ModuleBuilder';
 import PlaceholderPage from '@/pages/admin/PlaceholderPage';
 import { HiOutlineCreditCard, HiOutlineLockClosed } from 'react-icons/hi';
 import { SettingsIcon } from '@/components/common/Icons';
@@ -150,6 +152,7 @@ function AppContent() {
   return (
     <>
       <RouteChangeHandler />
+      <AdminFurnitureModuleRegistryLoader />
       <EnterpriseInquiryNotice />
       <FriendRequestToast />
       <Routes>
@@ -177,6 +180,7 @@ function AppContent() {
           <Route path="logs" element={<AdminLogs />} />
           <Route path="messages" element={<AdminMessages />} />
           <Route path="chatbot" element={<AdminChatbot />} />
+          <Route path="module-builder" element={<AdminModuleBuilder />} />
           <Route path="api-keys" element={<AdminAllApiKeys />} />
           <Route path="subscriptions" element={<AdminSubscriptions />} />
           <Route path="settings" element={<AdminSettings />} />

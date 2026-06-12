@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { getModulesByCategory, getModuleById, ModuleData } from '@/data/modules';
+import { useAdminFurnitureModuleRegistryVersion } from '@/data/modules/adminModuleRegistry';
 import { useSpaceConfigStore, SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
@@ -1276,6 +1277,7 @@ interface ModuleGalleryProps {
 }
 
 const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', kitchenSubCategory = 'basic', selectedType: externalSelectedType, onSelectedTypeChange, hideTabMenu = false }) => {
+  useAdminFurnitureModuleRegistryVersion();
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const isDevAccount = authUser?.email === 'sbbc212@gmail.com';
@@ -1592,7 +1594,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
               }
 
               const { module } = cell;
-              const iconPath = getIconPath(module.id);
+              const iconPath = (module as any).thumbnail || getIconPath(module.id);
               const isValid = isModuleValid(module);
 
               return (
