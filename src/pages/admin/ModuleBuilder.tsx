@@ -269,7 +269,9 @@ const sectionLabels: Record<SectionType, string> = {
 const parseNumberList = (value: string) => (
   value
     .split(',')
-    .map(item => Number(item.trim()))
+    .map(item => item.trim())
+    .filter(item => item.length > 0) // 빈 토큰 제외 — ''가 0으로 파싱돼 유령 패널(칸막이/선반 0mm)을 만들던 버그
+    .map(item => Number(item))
     .filter(item => Number.isFinite(item) && item >= 0)
 );
 
