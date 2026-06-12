@@ -1867,7 +1867,7 @@ const createUpperCabinet1 = (columnWidth: number, maxHeight?: number): ModuleDat
     columnWidth, upperHeight, 300,
     '#e8f5e9', `상부장 선반 2단형`, 300, 'upper'
   );
-  return { ...base, hasDoor: true, thumbnail: '/images/furniture-thumbnails/상부장 3단형.png',
+  return { ...base, hasDoor: true, thumbnail: '/images/furniture-thumbnails/upper-cabinet-shelf.png',
     modelConfig: { ...base.modelConfig, sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }] }
   } as ModuleData;
 };
@@ -1881,7 +1881,7 @@ const createUpperCabinet4 = (columnWidth: number, maxHeight?: number): ModuleDat
     columnWidth, upperHeight, 300,
     '#e3f2fd', `상부장 2단형 (중간 선반 1개)`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 2단형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/upper-cabinet-2tier.png',
     modelConfig: { ...base.modelConfig, sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }] }
   } as ModuleData;
 };
@@ -1894,7 +1894,7 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
     columnWidth, 785, 300,
     '#fff3e0', `상부장 기본`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/upper-cabinet-open.png',
     modelConfig: { ...base.modelConfig, sections: [{ type: 'open', heightType: 'percentage', height: 100 }] }
   } as ModuleData;
 };
@@ -1907,7 +1907,7 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
     columnWidth, 785, 300,
     '#f3e5f5', `상부장 혼합형 (오픈+선반)`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 혼합형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/upper-cabinet-mixed.png',
     modelConfig: { ...base.modelConfig, sections: [
       { type: 'shelf', heightType: 'percentage', height: 50, count: 1 },
       { type: 'open', heightType: 'percentage', height: 50 }
@@ -1924,7 +1924,7 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
     dualWidth, 785, 300, '#c8e6c9',
     `상부장 선반 2단형`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 3단형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/dual-upper-cabinet-shelf.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }]
@@ -1939,7 +1939,7 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
     dualWidth, 785, 300, '#bbdefb',
     `상부장 2단형 (중간 선반 1개)`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장2단형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/dual-upper-cabinet-2tier.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }]
@@ -1954,7 +1954,7 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
     dualWidth, 785, 300, '#ffe0b2',
     `상부장 기본`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/dual-upper-cabinet-open.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'open', heightType: 'percentage', height: 100 }],
       rightSections: [{ type: 'open', heightType: 'percentage', height: 100 }]
@@ -1969,7 +1969,7 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
     dualWidth, 785, 300, '#e1bee7',
     `상부장 혼합형 (오픈+선반)`, 300, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 혼합형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/dual-upper-cabinet-mixed.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 50, count: 1 }, { type: 'open', heightType: 'percentage', height: 50 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 50, count: 1 }, { type: 'open', heightType: 'percentage', height: 50 }]
@@ -1987,7 +1987,7 @@ const createLowerCabinet1 = (columnWidth: number): ModuleData => {
     columnWidth, 1000, 600, '#fff3e0',
     `하부장 기본형 W${widthForId}xH1000xD600`, 600, 'lower'
   );
-  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '/images/furniture-thumbnails/하부장.png',
+  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '',
     modelConfig: { ...base.modelConfig, basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, hasOpenFront: false,
       sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }] }
   } as ModuleData;
@@ -2001,7 +2001,7 @@ const createLowerCabinet2 = (columnWidth: number): ModuleData => {
     columnWidth, 1000, 600, '#fce4ec',
     `하부장 2단형 (중간 선반 1개)`, 600, 'lower'
   );
-  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '/images/furniture-thumbnails/하부장 2단형.png',
+  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '',
     modelConfig: { ...base.modelConfig, basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, hasOpenFront: false,
       sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }] }
   } as ModuleData;
@@ -2016,7 +2016,7 @@ const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
     dualWidth, 1000, 600, '#ffcc80',
     `듀얼 하부장 기본형 W${widthForId}xH1000xD600`, 600, 'lower'
   );
-  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '/images/furniture-thumbnails/듀얼 하부장.png',
+  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '',
     modelConfig: { ...base.modelConfig, basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, hasOpenFront: false,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }]
@@ -2031,7 +2031,7 @@ const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
     dualWidth, 1000, 600, '#f8bbd0',
     `듀얼 하부장 2단형 (중간 선반 1개)`, 600, 'lower'
   );
-  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '/images/furniture-thumbnails/듀얼 하부장 2단형.png',
+  return { ...base, isDynamic: true, defaultDepth: 600, thumbnail: '',
     modelConfig: { ...base.modelConfig, basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, hasOpenFront: false,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }]
@@ -2069,7 +2069,7 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
     isDynamic: true,
     defaultDepth: 600,
     hasDoor: false,
-    thumbnail: '/images/furniture-thumbnails/하부장 반통.png',
+    thumbnail: '/images/furniture-thumbnails/lower-half-cabinet.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
@@ -2112,7 +2112,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
     defaultDepth: 600,
     hasDoor: false,
     slotWidths,
-    thumbnail: '/images/furniture-thumbnails/듀얼 하부장 한통.png',
+    thumbnail: '/images/furniture-thumbnails/dual-lower-half-cabinet.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
@@ -2278,7 +2278,7 @@ const createLowerDishwasherCabinet = (columnWidth: number): ModuleData => {
     isDynamic: true,
     defaultDepth: 600,
     hasDoor: false,
-    thumbnail: '/images/furniture-thumbnails/하부장 반통.png',
+    thumbnail: '/images/furniture-thumbnails/lower-half-cabinet.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
@@ -2657,7 +2657,7 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
     ...base,
     isDynamic: true,
     defaultDepth: 600,
-    thumbnail: '/images/furniture-thumbnails/하부장 2단.png',
+    thumbnail: '/images/furniture-thumbnails/lower-drawer-2tier.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
