@@ -354,7 +354,7 @@ const ModuleBuilder = () => {
   // 끄면(상판 없음): 표준 반통 구조 — 측판 상단 60×40 따내기 + 가로전대 (하부장은 목찬넬 PET 프레임 포함)
   const [hasTopPanel, setHasTopPanel] = useState(true);
 
-  // 상단 모서리 따내기 (전체장/상부장 + 상판 있음일 때) — 기본 OFF, 사용자가 체크할 때만 생성
+  // 상단 모서리 따내기 (키큰장/상부장 + 상판 있음일 때) — 기본 OFF, 사용자가 체크할 때만 생성
   const [topNotchEnabled, setTopNotchEnabled] = useState(false);
   const [topNotchHeight, setTopNotchHeight] = useState(60);
   const [topNotchDepth, setTopNotchDepth] = useState(40);
@@ -405,10 +405,10 @@ const ModuleBuilder = () => {
     };
   }, [previewView, view]);
 
-  // 드로잉 모드 — 뷰어에서 호버+클릭으로 패널 배치 (Tab: 수평 선반 ⇄ 수직 칸막이)
-  const [drawingMode, setDrawingMode] = useState(false);
-  // 수직 칸막이 — 좌측판 안쪽면 기준 X(mm). 폼 섹션 모델로는 표현 불가, 드로잉 전용
-  const [verticalDividers, setVerticalDividers] = useState<number[]>([]);
+  // 수직 칸막이 — 좌측판 안쪽면 기준 X(mm), 쉼표 구분 (선반 위치와 동일한 입력 방식)
+  const [dividersText, setDividersText] = useState('');
+  // 신규 모듈 추가 — 분류를 먼저 고르기 전엔 폼/프리뷰를 띄우지 않음 (임의 기본 분류 금지)
+  const [categoryPicked, setCategoryPicked] = useState(true);
 
   // 미리보기 도어 열림/닫힘 — 전역 doorsOpen을 빌더 화면 동안만 제어, 떠날 때 복원
   const [previewDoorsOpen, setPreviewDoorsOpen] = useState(false);
@@ -511,10 +511,10 @@ const ModuleBuilder = () => {
       hasOpenFront: !hasDoor,
       hasShelf: sections.some(section => section.type === 'shelf') || rightSections.some(section => section.type === 'shelf'),
       shelfCount: sections.filter(section => section.type === 'shelf').length,
-      // 상판 유무 — 사용자가 직접 결정 (undefined = 카테고리 표준: 하부장 없음 / 전체장·상부장 있음)
+      // 상판 유무 — 사용자가 직접 결정 (undefined = 카테고리 표준: 하부장 없음 / 키큰장·상부장 있음)
       ...(category === 'lower' && hasTopPanel ? { hideTopPanel: false } : {}),
       ...(category !== 'lower' && !hasTopPanel ? { hideTopPanel: true } : {}),
-      // 상단 모서리 따내기 (전체장/상부장, 상판 있을 때만 — 상판 없음은 자체 따내기 포함)
+      // 상단 모서리 따내기 (키큰장/상부장, 상판 있을 때만 — 상판 없음은 자체 따내기 포함)
       ...(category !== 'lower' && hasTopPanel && topNotchEnabled && topNotchHeight > 0 && topNotchDepth > 0
         ? { topNotch: { y: topNotchHeight, z: topNotchDepth } }
         : {}),
@@ -522,8 +522,8 @@ const ModuleBuilder = () => {
       ...(category === 'full' ? { lowerSectionCount: Math.max(0, Math.min(lowerSectionCount, sections.length)) } : {}),
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
-      // 수직 칸막이 (드로잉 모드 배치)
-      ...(verticalDividers.length > 0 ? { verticalDividers } : {}),
+      // 수직 칸막이 — 좌우 분할 (섹션 모델은 상하 분할만 가능)
+      ...(parseNumberList(dividersText).length > 0 ? { verticalDividers: parseNumberList(dividersText) } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (일반 / 레그라박스)
       ...(category === 'lower' && useExternalDrawers ? {
@@ -583,7 +583,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, verticalDividers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -655,73 +655,6 @@ const ModuleBuilder = () => {
       else next.add(panelName);
       return next;
     });
-  };
-
-  /**
-   * 드로잉 배치 — 바닥 기준 절대 Y(mm)를 받아 해당 칸의 선반으로 추가.
-   * 칸 경계는 렌더러와 동일 규칙(가용높이 = H − 상하판 36)으로 계산, 위치는 칸 바닥 기준 상대값.
-   */
-  const handlePlaceShelf = (absoluteYmm: number) => {
-    const thickness = 18;
-    const available = Math.max(height - thickness * 2, 1);
-    const absTotal = sections.filter(s2 => s2.heightType === 'absolute').reduce((sum, s2) => sum + Math.max(s2.height, 0), 0);
-    const pctTotal = sections.filter(s2 => s2.heightType === 'percentage').reduce((sum, s2) => sum + Math.max(s2.height, 0), 0);
-    const remaining = Math.max(available - absTotal, 0);
-    const resolved = sections.map(s2 => (
-      s2.heightType === 'absolute' ? Math.max(s2.height, 0) : (pctTotal > 0 ? remaining * (Math.max(s2.height, 0) / pctTotal) : 0)
-    ));
-
-    let cursor = thickness; // 바닥판 위
-    let targetIndex = -1;
-    let localY = 0;
-    for (let i = 0; i < resolved.length; i += 1) {
-      const top = cursor + resolved[i];
-      if (absoluteYmm >= cursor && absoluteYmm < top) {
-        targetIndex = i;
-        localY = Math.round(absoluteYmm - cursor);
-        break;
-      }
-      cursor = top;
-    }
-    if (targetIndex < 0) {
-      // 최상단 초과 등 — 마지막 칸으로
-      targetIndex = resolved.length - 1;
-      localY = Math.round(Math.max(10, resolved[targetIndex] - 50));
-    }
-
-    const target = sections[targetIndex];
-    if (!target) return;
-    if (target.type === 'drawer') {
-      alert('서랍 칸에는 선반을 추가할 수 없습니다.');
-      return;
-    }
-
-    setSections(current => current.map((section, index) => {
-      if (index !== targetIndex) return section;
-      const positions = parseNumberList(section.shelfPositions);
-      positions.push(localY);
-      positions.sort((a, b) => a - b);
-      return {
-        ...section,
-        // 오픈 칸에 선반을 그리면 선반 칸으로 전환, 행거는 안전선반으로 유지
-        type: section.type === 'open' ? 'shelf' : section.type,
-        count: positions.length,
-        shelfPositions: positions.join(', ')
-      };
-    }));
-  };
-
-  /** 드로잉 배치 라우터 — 수평 = 선반(섹션 모델), 수직 = 칸막이(verticalDividers) */
-  const handlePlacePanel = (placement: { orientation: 'horizontal' | 'vertical'; positionMm: number }) => {
-    if (placement.orientation === 'vertical') {
-      setVerticalDividers(current => [...current, Math.round(placement.positionMm)].sort((a, b) => a - b));
-      return;
-    }
-    handlePlaceShelf(placement.positionMm);
-  };
-
-  const removeVerticalDivider = (index: number) => {
-    setVerticalDividers(current => current.filter((_, i) => i !== index));
   };
 
   const setSectionsForSide = (side: SectionSide, updater: (current: BuilderSection[]) => BuilderSection[]) => {
@@ -829,6 +762,7 @@ const ModuleBuilder = () => {
       setLoadedModuleId(null);
     }
 
+    setCategoryPicked(true);
     setCategory(module.category as ModuleCategory);
     setGalleryCategory(
       (module as ModuleData & { galleryCategory?: string }).galleryCategory
@@ -846,21 +780,21 @@ const ModuleBuilder = () => {
     setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
     setHasSharedSafetyShelf(module.modelConfig?.hasSharedSafetyShelf === true);
 
-    // 상판 유무 복원 — undefined는 카테고리 표준 (하부장: 없음, 전체장/상부장: 있음)
+    // 상판 유무 복원 — undefined는 카테고리 표준 (하부장: 없음, 키큰장/상부장: 있음)
     if ((module.category as string) === 'lower') {
       setHasTopPanel(module.modelConfig?.hideTopPanel === false);
     } else {
       setHasTopPanel(module.modelConfig?.hideTopPanel !== true);
     }
 
-    // 상단 모서리 따내기 복원 (전체장/상부장)
+    // 상단 모서리 따내기 복원 (키큰장/상부장)
     setTopNotchEnabled(!!module.modelConfig?.topNotch);
     setTopNotchHeight(module.modelConfig?.topNotch?.y || 60);
     setTopNotchDepth(module.modelConfig?.topNotch?.z || 40);
 
     // 기본 제거 패널 복원 (패널목록 체크 해제 상태)
     setHiddenPanelNames(new Set(module.modelConfig?.panelExclusions || []));
-    setVerticalDividers(module.modelConfig?.verticalDividers || []);
+    setDividersText((module.modelConfig?.verticalDividers || []).join(', '));
     setHighlightedPanelName(null);
 
     // 외부서랍 복원 (일반 / 레그라박스)
@@ -951,7 +885,7 @@ const ModuleBuilder = () => {
     setExtTopGap(-20);
     setExtBottomGap(5);
     setHiddenPanelNames(new Set());
-    setVerticalDividers([]);
+    setDividersText('');
     setHighlightedPanelName(null);
     setLoadedModuleId(null);
   };
@@ -996,9 +930,28 @@ const ModuleBuilder = () => {
     setView('builder');
   };
 
+  /** 분류 표준값 적용: 치수 / 상판 / 노출 탭 / 기본 칸 구조 */
+  const applyCategory = (nextCategory: ModuleCategory) => {
+    setCategory(nextCategory);
+    const dims = CATEGORY_DEFAULT_DIMENSIONS[nextCategory];
+    setHeight(dims.height);
+    setDepth(dims.depth);
+    setHasTopPanel(nextCategory !== 'lower');
+    setGalleryCategory(defaultGalleryCategory(nextCategory));
+    if (nextCategory === 'full') {
+      setSections(createDefaultFullSections());
+      setLowerSectionCount(1);
+    } else {
+      // 상부장/하부장: 단일 빈 칸 (오픈)
+      setSections([{ ...createSection(0), type: 'open', height: 100, heightType: 'percentage', count: 0 }]);
+      setLowerSectionCount(1);
+    }
+  };
+
   const openNewModule = () => {
     resetFormToBlank();
     setReadOnlyDetail(false);
+    setCategoryPicked(false); // 분류 선택 게이트 — 사용자가 고르기 전엔 모듈을 만들지 않음
     setView('builder');
   };
 
@@ -1465,6 +1418,54 @@ const ModuleBuilder = () => {
   }
 
   // ─── 모듈 상세 / 제작 (빌더) ───────────────────────────────
+  // 신규 모듈: 분류 선택 게이트 — 분류를 정하기 전엔 폼/프리뷰 없음
+  if (!categoryPicked) {
+    return (
+      <div className={styles.container}>
+        <header className={styles.header}>
+          <div className={styles.headerTitleGroup}>
+            <button type="button" className={styles.copyButton} onClick={() => setView('list')} title="모듈 목록으로">
+              <ArrowLeft size={16} />
+              <span>목록</span>
+            </button>
+            <h1 className={styles.title}>모듈 제작</h1>
+          </div>
+        </header>
+        <div className={styles.categoryGate}>
+          <div className={styles.categoryGateTitleBlock}>
+            <h2>분류 선택</h2>
+            <p>분류에 따라 표준 치수와 측판 구조가 달라집니다. 선택 후 모든 값을 수정할 수 있습니다.</p>
+          </div>
+          <div className={styles.categoryGateGrid}>
+            {([
+              // 아이콘 = 갤러리와 동일한 대표 모듈 이미지
+              { value: 'full' as ModuleCategory, label: '키큰장', dims: 'H 2400 · D 600', desc: '하부/상부 섹션 분리', icon: FURNITURE_ICONS['single-2drawer-hanging'] },
+              { value: 'upper' as ModuleCategory, label: '상부장', dims: 'H 785 · D 300', desc: '벽 상부 부착', icon: FURNITURE_ICONS['upper-cabinet-shelf'] },
+              { value: 'lower' as ModuleCategory, label: '하부장', dims: 'H 780 · D 600', desc: '상판 없음 · 상단 따내기 표준', icon: FURNITURE_ICONS['lower-half-cabinet'] }
+            ]).map(option => (
+              <button
+                key={option.value}
+                type="button"
+                className={styles.categoryGateCard}
+                onClick={() => {
+                  applyCategory(option.value);
+                  setCategoryPicked(true);
+                }}
+              >
+                <span className={styles.gateSketchArea}>
+                  {option.icon && <img src={option.icon} alt={option.label} />}
+                </span>
+                <strong>{option.label}</strong>
+                <code>{option.dims}</code>
+                <span className={styles.gateDesc}>{option.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -1545,26 +1546,9 @@ const ModuleBuilder = () => {
               <span>분류</span>
               <select
                 value={category}
-                onChange={(event) => {
-                  const nextCategory = event.target.value as ModuleCategory;
-                  setCategory(nextCategory);
-                  // 분류 표준값 적용: 치수 / 상판 / 노출 탭 / 기본 칸 구조
-                  const dims = CATEGORY_DEFAULT_DIMENSIONS[nextCategory];
-                  setHeight(dims.height);
-                  setDepth(dims.depth);
-                  setHasTopPanel(nextCategory !== 'lower');
-                  setGalleryCategory(defaultGalleryCategory(nextCategory));
-                  if (nextCategory === 'full') {
-                    setSections(createDefaultFullSections());
-                    setLowerSectionCount(1);
-                  } else {
-                    // 상부장/하부장: 단일 빈 칸 (오픈)
-                    setSections([{ ...createSection(0), type: 'open', height: 100, heightType: 'percentage', count: 0 }]);
-                    setLowerSectionCount(1);
-                  }
-                }}
+                onChange={(event) => applyCategory(event.target.value as ModuleCategory)}
               >
-                <option value="full">전체장</option>
+                <option value="full">키큰장</option>
                 <option value="upper">상부장</option>
                 <option value="lower">하부장</option>
               </select>
@@ -1644,7 +1628,7 @@ const ModuleBuilder = () => {
 
           <label className={styles.checkbox}>
             <input type="checkbox" checked={isDynamic} onChange={(event) => setIsDynamic(event.target.checked)} />
-            <span>동적 폭 (배치 시 슬롯 폭에 맞춰 자동 조정, 전체장은 높이도 내경에 맞춤)</span>
+            <span>동적 폭 (배치 시 슬롯 폭에 맞춰 자동 조정, 키큰장은 높이도 내경에 맞춤)</span>
           </label>
 
           <details className={styles.collapse}>
@@ -1690,6 +1674,16 @@ const ModuleBuilder = () => {
               </button>
             )}
           </div>
+
+          <label className={styles.compactField}>
+            <span>칸막이 위치(mm, 좌측판 안쪽 기준 · 쉼표 구분, 선택)</span>
+            <input
+              type="text"
+              value={dividersText}
+              onChange={(event) => setDividersText(event.target.value)}
+              placeholder="예: 282 (칸막이 = 풀하이트 세로판, 좌우 분할)"
+            />
+          </label>
 
           {layoutMode === 'dual' && (
             <div className={styles.dualOptions}>
@@ -2366,15 +2360,6 @@ const ModuleBuilder = () => {
               <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
             </div>
             <div className={styles.previewControls}>
-              <button
-                type="button"
-                className={`${styles.drawButton} ${drawingMode ? styles.drawButtonActive : ''}`}
-                onClick={() => setDrawingMode(mode => !mode)}
-                disabled={readOnlyDetail || previewView !== '3D'}
-                title="뷰어에서 클릭으로 선반·칸막이 배치 — Tab: 선반 ⇄ 칸막이 전환, 숫자 입력 후 Enter = 정밀 위치, Shift = 32mm 스냅"
-              >
-                선반·칸막이 배치
-              </button>
               <div className={styles.viewToggle}>
                 <button
                   type="button"
@@ -2434,19 +2419,6 @@ const ModuleBuilder = () => {
               <span>W {width} · H {height} · D {depth}{isDynamic ? ' · 동적 폭' : ''}</span>
             </div>
 
-            {verticalDividers.length > 0 && (
-              <div className={styles.dividerChips}>
-                <span className={styles.dividerChipsLabel}>칸막이</span>
-                {verticalDividers.map((posMm, index) => (
-                  <span key={`divider-chip-${index}-${posMm}`} className={styles.dividerChip}>
-                    X {posMm}
-                    {!readOnlyDetail && (
-                      <button type="button" onClick={() => removeVerticalDivider(index)} title="칸막이 삭제">×</button>
-                    )}
-                  </span>
-                ))}
-              </div>
-            )}
 
             <div className={styles.threePreviewFrame}>
               <AdminModulePreview
@@ -2454,8 +2426,6 @@ const ModuleBuilder = () => {
                 highlightedPanelName={highlightedPanelName}
                 viewMode={previewViewMode}
                 direction2D={previewView === '3D' ? 'front' : previewView}
-                drawingMode={drawingMode && !readOnlyDetail && previewView === '3D'}
-                onPlacePanel={handlePlacePanel}
               />
             </div>
 
