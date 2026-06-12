@@ -644,8 +644,14 @@ export const calculatePanelDetails = (
         const configRightNotches = moduleData.modelConfig?.rightSideNotches
           ? [...moduleData.modelConfig.rightSideNotches, ...configTopNotchAsCommon]
           : configCommonNotches;
-        const leftNotchesAll = [...(sidePanelNotches || []), ...configLeftNotches];
-        const rightNotchesAll = [...(sidePanelNotches || []), ...configRightNotches];
+        // 관리자 빌더 전체장/상부장 상판 없음: 3D hideTopPanel 경로와 동일한 상단 60×40 따내기
+        const adminTallHideTopNotch = (
+          moduleData.id.includes('-admin-')
+          && !moduleData.id.includes('lower-cabinet-admin')
+          && moduleData.modelConfig?.hideTopPanel === true
+        ) ? [{ y: 60, z: 40, fromBottom: height - 60 }] : [];
+        const leftNotchesAll = [...(sidePanelNotches || []), ...configLeftNotches, ...adminTallHideTopNotch];
+        const rightNotchesAll = [...(sidePanelNotches || []), ...configRightNotches, ...adminTallHideTopNotch];
         if (leftNotchesAll.length > 0) leftSideEntry.sideNotches = leftNotchesAll;
         if (rightNotchesAll.length > 0) rightSideEntry.sideNotches = rightNotchesAll;
         targetPanel.push(leftSideEntry);
@@ -789,7 +795,9 @@ export const calculatePanelDetails = (
             || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
             || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
             || moduleData.id.includes('lower-drawer-')
-            || (moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false);
+            || (moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false)
+            // 관리자 빌더 전체장/상부장: 상판 제거 옵션
+            || (moduleData.id.includes('-admin-') && moduleData.modelConfig?.hideTopPanel === true);
           if (!noTopPanel) {
             const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
             const topDownFrontReductionMm = isTopDownForTop
@@ -2942,6 +2950,21 @@ export const calculatePanelDetails = (
           thickness: basicThickness,
           material: 'PB',
         });
+      });
+    }
+
+    // 관리자 빌더 전체장/상부장 상판 없음: 3D BaseFurnitureShell이 상단에 '가로전대'를 자동 렌더링
+    const isAdminTallWithoutTopPanel = moduleData.id.includes('-admin-')
+      && !moduleData.id.includes('lower-cabinet-admin')
+      && moduleData.modelConfig?.hideTopPanel === true;
+    if (isAdminTallWithoutTopPanel) {
+      const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+      panels.frame.push({
+        name: '가로전대',
+        width: innerWidth - stretcherGap,
+        height: 60,
+        thickness: basicThickness,
+        material: 'PB',
       });
     }
   }

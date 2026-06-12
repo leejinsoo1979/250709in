@@ -252,8 +252,11 @@ const ModuleBuilder = () => {
   const [notchSidesLinked, setNotchSidesLinked] = useState(true);
   const [leftNotches, setLeftNotches] = useState<NotchRow[]>([]);
   const [rightNotches, setRightNotches] = useState<NotchRow[]>([]);
-  // 상단 모서리 따내기 — 기본 OFF, 사용자가 체크할 때만 생성
-  // 하부장: 표준 메커니즘(상판 없음 + 60×40 + 목찬넬), 전체장/상부장: modelConfig.topNotch (상단 기준 자동 위치)
+  // 상판 포함 여부 — 사용자가 직접 결정
+  // 끄면(상판 없음): 표준 반통 구조 — 측판 상단 60×40 따내기 + 가로전대 (하부장은 목찬넬 PET 프레임 포함)
+  const [hasTopPanel, setHasTopPanel] = useState(true);
+
+  // 상단 모서리 따내기 (전체장/상부장 + 상판 있음일 때) — 기본 OFF, 사용자가 체크할 때만 생성
   const [topNotchEnabled, setTopNotchEnabled] = useState(false);
   const [topNotchHeight, setTopNotchHeight] = useState(60);
   const [topNotchDepth, setTopNotchDepth] = useState(40);
@@ -319,9 +322,11 @@ const ModuleBuilder = () => {
       hasOpenFront: !hasDoor,
       hasShelf: sections.some(section => section.type === 'shelf') || rightSections.some(section => section.type === 'shelf'),
       shelfCount: sections.filter(section => section.type === 'shelf').length,
-      // 상단 모서리 따내기 — 하부장: 표준 메커니즘(끄면 상판 포함), 전체장/상부장: topNotch (상단 기준 자동 위치)
-      ...(category === 'lower' && !topNotchEnabled ? { hideTopPanel: false } : {}),
-      ...(category !== 'lower' && topNotchEnabled && topNotchHeight > 0 && topNotchDepth > 0
+      // 상판 유무 — 사용자가 직접 결정 (undefined = 카테고리 표준: 하부장 없음 / 전체장·상부장 있음)
+      ...(category === 'lower' && hasTopPanel ? { hideTopPanel: false } : {}),
+      ...(category !== 'lower' && !hasTopPanel ? { hideTopPanel: true } : {}),
+      // 상단 모서리 따내기 (전체장/상부장, 상판 있을 때만 — 상판 없음은 자체 따내기 포함)
+      ...(category !== 'lower' && hasTopPanel && topNotchEnabled && topNotchHeight > 0 && topNotchDepth > 0
         ? { topNotch: { y: topNotchHeight, z: topNotchDepth } }
         : {}),
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
@@ -377,7 +382,7 @@ const ModuleBuilder = () => {
             sections: sections.map(builderSectionToConfig)
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -463,12 +468,15 @@ const ModuleBuilder = () => {
     setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
     setHasSharedSafetyShelf(module.modelConfig?.hasSharedSafetyShelf === true);
 
-    // 상단 모서리 따내기 복원 — 하부장: hideTopPanel 역, 전체장/상부장: topNotch 존재 여부
+    // 상판 유무 복원 — undefined는 카테고리 표준 (하부장: 없음, 전체장/상부장: 있음)
     if ((module.category as string) === 'lower') {
-      setTopNotchEnabled(module.modelConfig?.hideTopPanel !== false);
+      setHasTopPanel(module.modelConfig?.hideTopPanel === false);
     } else {
-      setTopNotchEnabled(!!module.modelConfig?.topNotch);
+      setHasTopPanel(module.modelConfig?.hideTopPanel !== true);
     }
+
+    // 상단 모서리 따내기 복원 (전체장/상부장)
+    setTopNotchEnabled(!!module.modelConfig?.topNotch);
     setTopNotchHeight(module.modelConfig?.topNotch?.y || 60);
     setTopNotchDepth(module.modelConfig?.topNotch?.z || 40);
 
@@ -779,7 +787,15 @@ const ModuleBuilder = () => {
 
             <label className={styles.field}>
               <span>분류</span>
-              <select value={category} onChange={(event) => setCategory(event.target.value as ModuleCategory)}>
+              <select
+                value={category}
+                onChange={(event) => {
+                  const nextCategory = event.target.value as ModuleCategory;
+                  setCategory(nextCategory);
+                  // 카테고리 표준 상판 기본값 (하부장: 없음, 전체장/상부장: 있음)
+                  setHasTopPanel(nextCategory !== 'lower');
+                }}
+              >
                 <option value="full">전체장</option>
                 <option value="upper">상부장</option>
                 <option value="lower">하부장</option>
@@ -813,6 +829,11 @@ const ModuleBuilder = () => {
           <label className={styles.checkbox}>
             <input type="checkbox" checked={hasDoor} onChange={(event) => setHasDoor(event.target.checked)} />
             <span>도어 포함</span>
+          </label>
+
+          <label className={styles.checkbox}>
+            <input type="checkbox" checked={hasTopPanel} onChange={(event) => setHasTopPanel(event.target.checked)} />
+            <span>상판 포함 (해제 시 측판 상단 60×40 따내기 + 가로전대{category === 'lower' ? ' + 목찬넬 프레임' : ''})</span>
           </label>
 
           <label className={styles.checkbox}>
@@ -1074,20 +1095,23 @@ const ModuleBuilder = () => {
             </summary>
             <div className={styles.collapseBody}>
 
-          {/* ① 상단 모서리 따내기 — 기본 ON, 위치는 항상 가구 상단 자동 */}
-          <label className={styles.checkboxInline}>
-            <input
-              type="checkbox"
-              checked={topNotchEnabled}
-              onChange={(event) => setTopNotchEnabled(event.target.checked)}
-            />
-            <span>
-              상단 모서리 따내기
-              {category === 'lower' ? ' — 표준 60×40 (상판 없음 + 목찬넬 프레임)' : ' — 가구 상단에 자동 위치'}
-            </span>
-          </label>
+          {/* ① 상단 모서리 따내기 — 상판이 있는 전체장/상부장에서만 (상판 없음은 자체 따내기 포함) */}
+          {!hasTopPanel ? (
+            <p className={styles.thumbnailHint}>
+              상판 없음 모듈 — 상단 60×40 따내기와 가로전대가 이미 포함되어 있습니다 (기본정보의 상판 체크로 제어).
+            </p>
+          ) : category !== 'lower' && (
+            <label className={styles.checkboxInline}>
+              <input
+                type="checkbox"
+                checked={topNotchEnabled}
+                onChange={(event) => setTopNotchEnabled(event.target.checked)}
+              />
+              <span>상단 모서리 따내기 — 가구 상단에 자동 위치 (높이 변경 추종)</span>
+            </label>
+          )}
 
-          {category !== 'lower' && topNotchEnabled && (
+          {category !== 'lower' && hasTopPanel && topNotchEnabled && (
             <div className={styles.sectionFields} style={{ marginTop: 8 }}>
               <label className={styles.compactField}>
                 <span>상단 따내기 높이(mm)</span>

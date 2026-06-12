@@ -331,6 +331,7 @@ interface BaseFurnitureShellProps {
       leftSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
       rightSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
       topNotch?: { y: number; z: number };
+      hideTopPanel?: boolean;
     };
   };
 
@@ -454,7 +455,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   textureUrl,
   panelGrainDirections,
   hideVentilationCap = true,
-  hideTopPanel = false,
+  hideTopPanel: hideTopPanelProp = false,
   hideBottomPanel = false,
   topPanelFrontReduction = 0,
   bottomPanelFrontReduction = 0,
@@ -489,6 +490,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const doorsOpen = useUIStore(state => state.doorsOpen);
   const isGlassCabinet = !!moduleData?.id?.includes('glass-cabinet');
+
+  // 상판 없음: prop(하부장 호출자) 또는 modelConfig.hideTopPanel === true (관리자 빌더 전체장/상부장)
+  const hideTopPanel = hideTopPanelProp || moduleData?.modelConfig?.hideTopPanel === true;
 
   // 관리자 빌더 모듈: modelConfig에 정의된 측판 목찬넬 따내기 (mm 단위)
   // left/right 개별 지정이 있으면 우선, 없으면 공통(sideNotches) 사용
@@ -3350,7 +3354,8 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     JSON.stringify(prevProps.moduleData?.modelConfig?.sideNotches) === JSON.stringify(nextProps.moduleData?.modelConfig?.sideNotches) &&
     JSON.stringify(prevProps.moduleData?.modelConfig?.leftSideNotches) === JSON.stringify(nextProps.moduleData?.modelConfig?.leftSideNotches) &&
     JSON.stringify(prevProps.moduleData?.modelConfig?.rightSideNotches) === JSON.stringify(nextProps.moduleData?.modelConfig?.rightSideNotches) &&
-    JSON.stringify(prevProps.moduleData?.modelConfig?.topNotch) === JSON.stringify(nextProps.moduleData?.modelConfig?.topNotch);
+    JSON.stringify(prevProps.moduleData?.modelConfig?.topNotch) === JSON.stringify(nextProps.moduleData?.modelConfig?.topNotch) &&
+    prevProps.moduleData?.modelConfig?.hideTopPanel === nextProps.moduleData?.modelConfig?.hideTopPanel;
 
   // 인출장/팬트리장/냉장고장(N섹션 가구): sectionDepths/sectionDepthDirections는 store에서 직접 읽으므로
   // memo를 우회하여 항상 리렌더링되게 함
