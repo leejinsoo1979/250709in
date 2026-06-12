@@ -65,6 +65,11 @@ export interface ModuleData {
   type?: 'basic' | 'box' | 'shelf';
   defaultDepth?: number; // 가구 타입별 기본 깊이 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비 (mm)
+  // 관리자 빌더: 갤러리 노출 카테고리(탭) — 미지정 시 분류 기본 탭
+  // full: clothing(의류장, 기본)|kitchen-tall(주방 키큰장)|shoes(선반장)
+  // lower: kitchen-basic(기본장, 기본)|kitchen-door-raise(도어올림)|kitchen-top-down(상판내림)
+  // upper: upper(상부장)
+  galleryCategory?: string;
   modelConfig?: {
     basicThickness?: number;
     hasOpenFront?: boolean;

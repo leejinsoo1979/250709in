@@ -40,6 +40,7 @@ const docToModule = (data: Record<string, unknown>, docId: string): ModuleData =
   type: data.type,
   defaultDepth: data.defaultDepth,
   slotWidths: data.slotWidths,
+  galleryCategory: data.galleryCategory,
   thumbnail: data.thumbnail,
   modelConfig: data.modelConfig
 } as ModuleData);

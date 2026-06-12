@@ -1341,6 +1341,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     _tempSlotWidths: indexing.slotWidths
   };
 
+  // 관리자 빌더 모듈: galleryCategory(노출 탭) 지정 — 미지정 시 분류 기본 탭
+  const isAdminBuilderModule = (m: ModuleData) => m.id.includes('-admin-');
+  const adminGalleryCategoryOf = (m: ModuleData) => (m as any).galleryCategory as string | undefined;
+
   // 카테고리에 따라 모듈 가져오기 (슬롯 너비 정보가 포함된 spaceInfo 사용)
   let categoryModules: ModuleData[] = [];
   if (moduleCategory === 'upper') {
@@ -1352,19 +1356,25 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   } else if (moduleCategory === 'clothing') {
     // 의류장 = 키큰장(full) 중 선반장/주방 키큰장 제외 (유리장 포함)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
-      .filter(m =>
-        !isShoeModuleId(m.id) &&
-        !m.id.includes('built-in-fridge') &&
-        !m.id.includes('insert-frame') &&
-        !m.id.includes('pull-out-cabinet') &&
-        !m.id.includes('pantry-cabinet') &&
-        !m.id.includes('fridge-cabinet') &&
-        !m.id.includes('glass-cabinet')
-      );
+      .filter(m => {
+        if (isAdminBuilderModule(m)) {
+          const gc = adminGalleryCategoryOf(m);
+          return !gc || gc === 'clothing';
+        }
+        return !isShoeModuleId(m.id) &&
+          !m.id.includes('built-in-fridge') &&
+          !m.id.includes('insert-frame') &&
+          !m.id.includes('pull-out-cabinet') &&
+          !m.id.includes('pantry-cabinet') &&
+          !m.id.includes('fridge-cabinet') &&
+          !m.id.includes('glass-cabinet');
+      });
   } else if (moduleCategory === 'shoes') {
     // 선반장 = full 카테고리 내 선반장 계열 + 현관장
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
-      .filter(m => isShoeModuleId(m.id));
+      .filter(m => isAdminBuilderModule(m)
+        ? adminGalleryCategoryOf(m) === 'shoes'
+        : isShoeModuleId(m.id));
   } else if (moduleCategory === 'kitchen') {
     // 주방 = 서브카테고리별 필터링
     if (kitchenSubCategory === 'upper') {
@@ -1378,18 +1388,27 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         || ((spaceInfo.freePlacementGuides?.length || 0) > 0 && !spaceInfo.freePlacementGuideEditing);
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
-        m.id.includes('pull-out-cabinet') ||
-        m.id.includes('pantry-cabinet') ||
-        m.id.includes('fridge-cabinet') ||
-        (isInsertFramePlacementMode && m.id.includes('insert-frame')) ||
-        m.id.includes('glass-cabinet') ||
-        (isDevAccount && m.id.includes('built-in-fridge'))
+        (isAdminBuilderModule(m) && adminGalleryCategoryOf(m) === 'kitchen-tall') ||
+        (!isAdminBuilderModule(m) && (
+          m.id.includes('pull-out-cabinet') ||
+          m.id.includes('pantry-cabinet') ||
+          m.id.includes('fridge-cabinet') ||
+          (isInsertFramePlacementMode && m.id.includes('insert-frame')) ||
+          m.id.includes('glass-cabinet') ||
+          (isDevAccount && m.id.includes('built-in-fridge'))
+        ))
       );
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
       const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = lowerMods.filter(m => {
         const id = m.id;
+        if (isAdminBuilderModule(m)) {
+          const gc = adminGalleryCategoryOf(m);
+          if (kitchenSubCategory === 'door-raise') return gc === 'kitchen-door-raise';
+          if (kitchenSubCategory === 'top-down') return gc === 'kitchen-top-down';
+          return !gc || gc === 'kitchen-basic';
+        }
         const isBasicLowerDummy = /^single-dummy-lower-half-cabinet-100(?:\.0+)?$/.test(id);
         const isDoorLiftLowerDummy = /^single-dummy-lower-door-lift-half-100(?:\.0+)?$/.test(id);
         const isTopDownLowerDummy = /^single-dummy-lower-top-down-half-100(?:\.0+)?$/.test(id);
@@ -1406,6 +1425,12 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
     categoryModules = lowerMods.filter(m => {
       const id = m.id;
+      if (isAdminBuilderModule(m)) {
+        const gc = adminGalleryCategoryOf(m);
+        if (kitchenSubCategory === 'door-raise') return gc === 'kitchen-door-raise';
+        if (kitchenSubCategory === 'top-down') return gc === 'kitchen-top-down';
+        return !gc || gc === 'kitchen-basic';
+      }
       const isBasicLowerDummy = /^single-dummy-lower-half-cabinet-100(?:\.0+)?$/.test(id);
       const isDoorLiftLowerDummy = /^single-dummy-lower-door-lift-half-100(?:\.0+)?$/.test(id);
       const isTopDownLowerDummy = /^single-dummy-lower-top-down-half-100(?:\.0+)?$/.test(id);
@@ -1418,14 +1443,18 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   } else {
     // 키큰장(전체형) 모듈 (기존 'tall' 호환) — 주방 전용 모듈 제외 (유리장 포함)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
-      .filter(m =>
-        !m.id.includes('built-in-fridge') &&
-        !m.id.includes('insert-frame') &&
-        !m.id.includes('pull-out-cabinet') &&
-        !m.id.includes('pantry-cabinet') &&
-        !m.id.includes('fridge-cabinet') &&
-        !m.id.includes('glass-cabinet')
-      );
+      .filter(m => {
+        if (isAdminBuilderModule(m)) {
+          const gc = adminGalleryCategoryOf(m);
+          return !gc || gc === 'clothing';
+        }
+        return !m.id.includes('built-in-fridge') &&
+          !m.id.includes('insert-frame') &&
+          !m.id.includes('pull-out-cabinet') &&
+          !m.id.includes('pantry-cabinet') &&
+          !m.id.includes('fridge-cabinet') &&
+          !m.id.includes('glass-cabinet');
+      });
   }
 
   // 현관장 H 임시 숨김 (선반장 카테고리 제외)
