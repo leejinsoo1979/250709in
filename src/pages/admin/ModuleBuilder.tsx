@@ -12,6 +12,7 @@ import {
 import { generateShelvingModules } from '@/data/modules/shelving';
 import type { ModuleData, SectionConfig } from '@/data/modules';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import { useUIStore } from '@/store/uiStore';
 import {
   getExcludedPanelAliases,
   useExcludedPanelsStore
@@ -357,6 +358,16 @@ const ModuleBuilder = () => {
   const [view, setView] = useState<'list' | 'builder'>('list');
   // 표준 모듈 상세 = 열람 전용 (수정 불가 — 파생 제작은 명시적 버튼으로)
   const [readOnlyDetail, setReadOnlyDetail] = useState(false);
+
+  // 미리보기 도어 열림/닫힘 — 전역 doorsOpen을 빌더 화면 동안만 제어, 떠날 때 복원
+  const [previewDoorsOpen, setPreviewDoorsOpen] = useState(false);
+  useEffect(() => {
+    if (view !== 'builder') return;
+    useUIStore.getState().setDoorsOpen(previewDoorsOpen ? true : null);
+    return () => {
+      useUIStore.getState().setDoorsOpen(null);
+    };
+  }, [previewDoorsOpen, view]);
   const [listMode, setListMode] = useState<'gallery' | 'list'>('gallery');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');
@@ -1897,6 +1908,25 @@ const ModuleBuilder = () => {
             <div>
               <h2>실시간 미리보기</h2>
               <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
+            </div>
+            <div className={styles.previewControls}>
+              <label className={styles.checkboxInline}>
+                <input
+                  type="checkbox"
+                  checked={hasDoor}
+                  onChange={(event) => setHasDoor(event.target.checked)}
+                />
+                <span>도어 설치</span>
+              </label>
+              <label className={styles.checkboxInline}>
+                <input
+                  type="checkbox"
+                  checked={previewDoorsOpen}
+                  disabled={!hasDoor}
+                  onChange={(event) => setPreviewDoorsOpen(event.target.checked)}
+                />
+                <span>도어 열림</span>
+              </label>
             </div>
           </div>
 

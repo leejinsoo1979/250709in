@@ -550,6 +550,23 @@
   color: var(--mb-ink-soft);
 }
 
+.previewControls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.previewControls .checkboxInline {
+  margin-top: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.previewControls input:disabled + span {
+  opacity: 0.45;
+}
+
 /* ── 폼 필드 ─────────────────────────────────────────── */
 
 .grid {
