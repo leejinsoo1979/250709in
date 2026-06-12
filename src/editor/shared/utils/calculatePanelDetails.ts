@@ -2728,7 +2728,8 @@ export const calculatePanelDetails = (
     const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
     // 관리자 레그라박스: 빌더 갭 입력 우선 (배치 후 도어갭 편집이 있으면 그쪽 우선)
-    const topExtMm = doorTopGap ?? adminLegraDrawers?.topGap ?? defaultTopExtMm;
+    // admin 폴백 -20: 목찬넬 동반 표준 — 마이다 상단 = H−20 (도어올림 터치의 +30과 다름)
+    const topExtMm = doorTopGap ?? adminLegraDrawers?.topGap ?? (adminLegraDrawers ? -20 : defaultTopExtMm);
     const bottomExtMm = doorBottomGap ?? adminLegraDrawers?.bottomGap ?? defaultBottomExtMm;
     const totalFrontMm = height + topExtMm + bottomExtMm;
     const gapMm = adminLegraDrawers?.maidaGapMm ?? 3;

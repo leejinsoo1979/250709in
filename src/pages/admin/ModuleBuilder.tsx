@@ -422,8 +422,8 @@ const ModuleBuilder = () => {
   const [panelThickness, setPanelThickness] = useState<18 | 18.5>(18);
   // 상판 앞 옵셋(mm) — 상판 깊이를 앞에서 후퇴
   const [topPanelOffset, setTopPanelOffset] = useState(0);
-  // 레그라박스 마이다 상/하단 갭 — 터치서랍 표준 30/5
-  const [legraTopGap, setLegraTopGap] = useState(30);
+  // 레그라박스 마이다 상/하단 갭 — 목찬넬 동반 표준 -20/5 (마이다 상단 = H−20, 목찬넬 아래)
+  const [legraTopGap, setLegraTopGap] = useState(-20);
   const [legraBottomGap, setLegraBottomGap] = useState(5);
   // 마이다 사이갭 — 일반 외부서랍 표준 20(따내기65−40−5), 레그라 표준 3
   const [extMaidaGap, setExtMaidaGap] = useState(20);
@@ -888,7 +888,7 @@ const ModuleBuilder = () => {
     setExtSideFirst(externalDrawers?.sideHeights?.first || 0);
     setExtSideRest(externalDrawers?.sideHeights?.rest || 0);
     if (externalDrawers?.drawerType === 'legrabox') {
-      setLegraTopGap(externalDrawers?.topGap ?? 30);
+      setLegraTopGap(externalDrawers?.topGap ?? -20);
       setLegraBottomGap(externalDrawers?.bottomGap ?? 5);
       setLegraMaidaGap(externalDrawers?.maidaGapMm ?? 3);
       setExtTopGap(-20);
@@ -898,7 +898,7 @@ const ModuleBuilder = () => {
       setExtTopGap(externalDrawers?.topGap ?? -20);
       setExtBottomGap(externalDrawers?.bottomGap ?? 5);
       setExtMaidaGap(externalDrawers?.maidaGapMm ?? 20);
-      setLegraTopGap(30);
+      setLegraTopGap(-20);
       setLegraBottomGap(5);
       setLegraMaidaGap(3);
     }
@@ -970,7 +970,7 @@ const ModuleBuilder = () => {
     setExtSideRest(0);
     setExtTopGap(-20);
     setExtBottomGap(5);
-    setLegraTopGap(30);
+    setLegraTopGap(-20);
     setLegraBottomGap(5);
     setExtMaidaGap(20);
     setLegraMaidaGap(3);
@@ -2540,7 +2540,8 @@ const ModuleBuilder = () => {
                   </div>
                   <p className={styles.thumbnailHint}>
                     마이다는 서랍 본체 높이 비례로 자동 분할됩니다. 표준 예 — 터치 2단: F+F, 이격 28/406 ·
-                    터치 3단: F+M+M, 이격 28/357/587. 갭 표준 30/5 (전면 총높이 = H + 상단갭 + 하단갭).
+                    터치 3단: F+M+M, 이격 28/357/587. 갭 표준 -20/5 — 마이다 상단 = H−20 (목찬넬 아래).
+                    도어올림형(본체 위로 올림)을 원하면 상단갭 +30.
                   </p>
                 </div>
               )}
