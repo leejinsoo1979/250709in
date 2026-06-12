@@ -3207,7 +3207,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
-      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-1tier') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-1tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-top-down-touch-') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
+      {hasDoor && spaceInfo && !(moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.externalDrawers) && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-1tier') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-1tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-top-down-touch-') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}

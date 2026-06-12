@@ -225,7 +225,9 @@ export const calculatePanelDetails = (
     moduleId.includes('lower-top-down-2tier') ||    // 상판내림 2단
     moduleId.includes('lower-top-down-3tier') ||    // 상판내림 3단
     moduleId.includes('lower-top-down-touch-') ||   // 상판내림 터치
-    moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
+    moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet') ||
+    // 관리자 빌더 하부장 외부서랍(일반/레그라박스): 전면은 마이다 — 통도어 금지
+    (moduleId.includes('lower-cabinet-admin') && !!moduleData.modelConfig?.externalDrawers);
   const effectiveHasDoor = isNoDoorModule ? false : hasDoor;
 
   // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
