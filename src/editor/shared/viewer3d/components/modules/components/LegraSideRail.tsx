@@ -379,7 +379,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       <NInnerAssembly
         prepared={prepared}
         sidePanelInnerX={sidePanelInnerX}
-        targetMinY={drawerBottomY - 13.7 * 0.01}
+        // 기성 뒷판 하단(GLB 바닥 +38.0) = 서랍 바닥판 윗면(이격 +15) → GLB 바닥 = 이격 −23
+        targetMinY={drawerBottomY - 23 * 0.01}
         drawerFrontZ={drawerFrontZ}
         groupRef={leftGroupRef}
       />
