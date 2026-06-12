@@ -1366,12 +1366,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     }
   }
 
-  return (
-    <group position={[0, cabinetYPosition, 0]}>
-    <animated.group position-z={spring.z}>
-      <group>
-        {/* 서랍 본체 + 레그라 레일 (showFurniture true일 때만) */}
-        {showFurniture && drawers.map((d, i) => (
+  // 서랍 본체 1단 렌더 — N(인너서랍)은 인출 애니메이션 밖(정지 그룹)에서 그려짐
+  const renderTouchDrawerBody = (d: typeof drawers[number], i: number) => (
           <React.Fragment key={`touch-drawer-${i}`}>
             {/* 바닥판 (반턱) — N(인너서랍)은 전면 속마이다(20mm 구간) 자리만큼 앞에서 감소, 뒤끝 고정 */}
             {(() => {
@@ -1426,7 +1422,20 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
               );
             })()}
           </React.Fragment>
-        ))}
+  );
+
+  return (
+    <group position={[0, cabinetYPosition, 0]}>
+    {/* N(인너서랍) 본체 — 마이다 인출과 무관하게 제자리 (속마이다 잡고 따로 여는 서랍) */}
+    {showFurniture && (
+      <group>
+        {drawers.map((d, i) => (resolveTouchLegraType(d.tier) === 'N' ? renderTouchDrawerBody(d, i) : null))}
+      </group>
+    )}
+    <animated.group position-z={spring.z}>
+      <group>
+        {/* 서랍 본체 + 레그라 레일 (showFurniture true일 때만) — N 제외 */}
+        {showFurniture && drawers.map((d, i) => (resolveTouchLegraType(d.tier) === 'N' ? null : renderTouchDrawerBody(d, i)))}
 
         {/* 마이다 (hasDoor true일 때만) */}
         {hasDoor && maidas.map((m, i) => (
