@@ -920,7 +920,8 @@ export const calculatePanelDetails = (
           if (!isLowerCabinetModule) {
             if (!isGlassCabinetModule) {
               targetPanel.push({
-                name: isType5or6 ? `${sectionPrefix}보강대` : `${sectionPrefix}후면 보강대 1`,
+                // 관리자 모듈: 3D 메시 이름(보강대 N)과 동일 표기 — 패널스캔=패널목록
+                name: isType5or6 ? `${sectionPrefix}보강대` : moduleData.id.includes('-admin-') ? `${sectionPrefix}보강대 1` : `${sectionPrefix}후면 보강대 1`,
                 width: reinforcementWidth,
                 height: reinforcementHeight,
                 thickness: reinforcementDepth,
@@ -930,7 +931,7 @@ export const calculatePanelDetails = (
           }
           if (!isGlassCabinetModule) {
             targetPanel.push({
-              name: isType5or6 ? `${sectionPrefix}보강대` : `${sectionPrefix}후면 보강대 2`,
+              name: isType5or6 ? `${sectionPrefix}보강대` : moduleData.id.includes('-admin-') ? `${sectionPrefix}보강대 2` : `${sectionPrefix}후면 보강대 2`,
               width: reinforcementWidth,
               height: reinforcementHeight,
               thickness: reinforcementDepth,
