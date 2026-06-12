@@ -1082,13 +1082,7 @@ const ModuleBuilder = () => {
     if (category === 'lower' && useExternalDrawers) {
       if (extDrawerType === 'legrabox') {
         if (legraRows.length < 1) return '레그라박스 서랍을 1단 이상 추가하세요.';
-        const maxTop = legraRows.reduce((max, row) => {
-          const legraHeight = row.type === 'M' ? 117 : row.type === 'L' ? 164 : 228;
-          return Math.max(max, row.offsetMm + legraHeight);
-        }, 0);
-        if (maxTop > height) {
-          return `레그라박스 서랍 상단(${maxTop}mm)이 가구 높이(${height}mm)를 초과합니다.`;
-        }
+        // 이격 초과는 차단하지 않음 — 직렬화에서 내경(이격+측판 ≤ H−상하판)으로 자동 클램프됨
       } else {
         if (extDrawerCount < 1) return '외부서랍 단수는 1 이상이어야 합니다.';
         const maidaHeightList = parseNumberList(extMaidaHeights);
