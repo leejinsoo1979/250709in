@@ -1,0 +1,816 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/auth/AuthProvider';
+import { isSuperAdmin } from '@/firebase/admins';
+import {
+  adminFurnitureModuleExists,
+  deleteAdminFurnitureModule,
+  saveAdminFurnitureModule,
+  setAdminFurnitureModuleEnabled,
+  subscribeAllAdminFurnitureModules,
+  type AdminFurnitureModuleDoc
+} from '@/firebase/adminFurnitureModules';
+import { generateShelvingModules } from '@/data/modules/shelving';
+import type { ModuleData, SectionConfig } from '@/data/modules';
+import {
+  Box,
+  ClipboardCopy,
+  Image as ImageIcon,
+  Pencil,
+  Plus,
+  Trash2
+} from 'lucide-react';
+import AdminModulePreview from './AdminModulePreview';
+import styles from './ModuleBuilder.module.css';
+
+type ModuleCategory = 'full' | 'upper' | 'lower';
+type SectionType = 'open' | 'shelf' | 'hanging' | 'drawer';
+type BuilderLayoutMode = 'single' | 'dual';
+type SectionSide = 'main' | 'left' | 'right';
+
+interface BuilderSection {
+  id: string;
+  type: SectionType;
+  height: number;
+  heightType: 'percentage' | 'absolute';
+  count: number;
+  shelfPositions: string;
+  drawerHeights: string;
+  gapHeight: number;
+  hasBackPanel: boolean;
+  fixedTopZoneMm: number;
+}
+
+const createSection = (index: number): BuilderSection => ({
+  id: `section-${Date.now()}-${index}`,
+  type: 'shelf',
+  height: index === 0 ? 100 : 300,
+  heightType: index === 0 ? 'percentage' : 'absolute',
+  count: 1,
+  shelfPositions: '',
+  drawerHeights: '',
+  gapHeight: 24,
+  hasBackPanel: true,
+  fixedTopZoneMm: 0
+});
+
+const normalizeSlug = (value: string) => (
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣_-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+);
+
+const getCategoryPrefix = (category: ModuleCategory, layoutMode: BuilderLayoutMode) => {
+  if (category === 'upper') return layoutMode === 'dual' ? 'dual-upper-cabinet-admin' : 'upper-cabinet-admin';
+  if (category === 'lower') return layoutMode === 'dual' ? 'dual-lower-cabinet-admin' : 'lower-cabinet-admin';
+  if (layoutMode === 'dual') return 'dual-admin';
+  return 'single-admin';
+};
+
+const ADMIN_ID_PREFIXES = [
+  'dual-upper-cabinet-admin',
+  'upper-cabinet-admin',
+  'dual-lower-cabinet-admin',
+  'lower-cabinet-admin',
+  'dual-admin',
+  'single-admin'
+];
+
+/** 저장된 admin 모듈 ID에서 slug 추출 — `${prefix}-${slug}-${width}` 역변환 */
+const extractSlugFromAdminId = (id: string) => {
+  const base = id.replace(/-[\d.]+$/, '');
+  const prefix = ADMIN_ID_PREFIXES.find(p => base.startsWith(`${p}-`));
+  return prefix ? base.slice(prefix.length + 1) : base;
+};
+
+/**
+ * 표준 모듈 ID 게이트(렌더 라우팅/패널목록/CNC 분류)에 사용되는 토큰들.
+ * slug에 포함되면 다른 가구 타입으로 오인될 수 있어 저장 전 경고한다.
+ */
+const RESERVED_ID_TOKENS = [
+  'single', 'dual', 'upper', 'lower', 'cabinet', 'shelf', 'hanging', 'drawer',
+  'styler', 'pantshanger', 'custom', 'dummy', 'fridge', 'pantry', 'glass',
+  'entryway', 'pull-out', 'door-lift', 'top-down', 'sink', 'dishwasher', 'induction'
+];
+
+const sectionLabels: Record<SectionType, string> = {
+  open: '오픈',
+  shelf: '선반',
+  hanging: '행거',
+  drawer: '서랍'
+};
+
+const parseNumberList = (value: string) => (
+  value
+    .split(',')
+    .map(item => Number(item.trim()))
+    .filter(item => Number.isFinite(item) && item >= 0)
+);
+
+const sectionConfigToBuilderSection = (section: SectionConfig, index: number): BuilderSection => ({
+  id: `section-${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
+  type: section.type,
+  height: section.height,
+  heightType: section.heightType || 'percentage',
+  count: section.count || 0,
+  shelfPositions: section.shelfPositions?.join(', ') || '',
+  drawerHeights: section.drawerHeights?.join(', ') || '',
+  gapHeight: section.gapHeight || 24,
+  hasBackPanel: section.hasBackPanel !== false,
+  fixedTopZoneMm: section.fixedTopZoneMm || 0
+});
+
+const builderSectionToConfig = (section: BuilderSection): SectionConfig => {
+  const config: SectionConfig = {
+    type: section.type,
+    height: section.height,
+    heightType: section.heightType,
+    count: section.count > 0 ? section.count : undefined
+  };
+
+  const shelfPositions = parseNumberList(section.shelfPositions);
+  const drawerHeights = parseNumberList(section.drawerHeights);
+
+  if (shelfPositions.length > 0) config.shelfPositions = shelfPositions;
+  if (drawerHeights.length > 0) config.drawerHeights = drawerHeights;
+  if (section.type === 'drawer' && section.gapHeight > 0) config.gapHeight = section.gapHeight;
+  if (!section.hasBackPanel) config.hasBackPanel = false;
+  if (section.fixedTopZoneMm > 0) config.fixedTopZoneMm = section.fixedTopZoneMm;
+
+  return config;
+};
+
+const ModuleBuilder = () => {
+  const { user } = useAuth();
+  const allowed = isSuperAdmin(user?.email);
+  const [name, setName] = useState('신규 모듈');
+  const [slug, setSlug] = useState('custom-module');
+  const [category, setCategory] = useState<ModuleCategory>('full');
+  const [layoutMode, setLayoutMode] = useState<BuilderLayoutMode>('single');
+  const [width, setWidth] = useState(600);
+  const [height, setHeight] = useState(2400);
+  const [depth, setDepth] = useState(600);
+  const [hasDoor, setHasDoor] = useState(false);
+  const [isDynamic, setIsDynamic] = useState(true);
+  const [thumbnail, setThumbnail] = useState('');
+  const [sections, setSections] = useState<BuilderSection[]>([createSection(0)]);
+  const [rightSections, setRightSections] = useState<BuilderSection[]>([createSection(0)]);
+  const [rightAbsoluteWidth, setRightAbsoluteWidth] = useState(0);
+  const [rightAbsoluteDepth, setRightAbsoluteDepth] = useState(0);
+  const [hasSharedMiddlePanel, setHasSharedMiddlePanel] = useState(false);
+  const [hasSharedSafetyShelf, setHasSharedSafetyShelf] = useState(false);
+
+  // 저장된 모듈 관리
+  const [savedDocs, setSavedDocs] = useState<AdminFurnitureModuleDoc[]>([]);
+  const [loadedModuleId, setLoadedModuleId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!allowed) return;
+    const unsubscribe = subscribeAllAdminFurnitureModules(setSavedDocs, (error) => {
+      console.error('[ModuleBuilder] 저장된 모듈 구독 실패:', error);
+    });
+    return unsubscribe;
+  }, [allowed]);
+
+  const templateModules = useMemo<ModuleData[]>(() => (
+    generateShelvingModules({ width: 2400, height: 2400, depth: 600 })
+      .filter(module => !module.id.includes('dummy'))
+  ), []);
+
+  const moduleDraft = useMemo(() => {
+    const normalizedSlug = normalizeSlug(slug || name) || 'custom-module';
+    const moduleId = `${getCategoryPrefix(category, layoutMode)}-${normalizedSlug}-${width}`;
+    const baseModelConfig = {
+      basicThickness: 18,
+      hasOpenFront: !hasDoor,
+      hasShelf: sections.some(section => section.type === 'shelf') || rightSections.some(section => section.type === 'shelf'),
+      shelfCount: sections.filter(section => section.type === 'shelf').length
+    };
+
+    return {
+      id: moduleId,
+      name: name.trim() || '신규 모듈',
+      category,
+      dimensions: {
+        width,
+        height,
+        depth
+      },
+      color: '#C8B69E',
+      thumbnail: thumbnail || undefined,
+      hasDoor,
+      type: 'box' as const,
+      isDynamic,
+      ...(isDynamic ? { widthOptions: [width] } : {}),
+      defaultDepth: depth,
+      ...(layoutMode === 'dual' ? { slotWidths: [Math.round(width / 2), Math.round(width / 2)] } : {}),
+      modelConfig: layoutMode === 'dual'
+        ? {
+            ...baseModelConfig,
+            leftSections: sections.map(builderSectionToConfig),
+            rightSections: rightSections.map(builderSectionToConfig),
+            ...(rightAbsoluteWidth > 0 ? { rightAbsoluteWidth } : {}),
+            ...(rightAbsoluteDepth > 0 ? { rightAbsoluteDepth } : {}),
+            hasSharedMiddlePanel,
+            hasSharedSafetyShelf
+          }
+        : {
+            ...baseModelConfig,
+            sections: sections.map(builderSectionToConfig)
+          }
+    };
+  }, [category, depth, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, isDynamic, layoutMode, name, rightAbsoluteDepth, rightAbsoluteWidth, rightSections, sections, slug, thumbnail, width]);
+
+  const setSectionsForSide = (side: SectionSide, updater: (current: BuilderSection[]) => BuilderSection[]) => {
+    if (side === 'right') {
+      setRightSections(updater);
+      return;
+    }
+    setSections(updater);
+  };
+
+  const addSection = (side: SectionSide) => {
+    setSectionsForSide(side, current => [...current, createSection(current.length)]);
+  };
+
+  const removeSection = (side: SectionSide, sectionId: string) => {
+    setSectionsForSide(side, current => current.length > 1 ? current.filter(section => section.id !== sectionId) : current);
+  };
+
+  const updateSection = <K extends keyof BuilderSection>(
+    side: SectionSide,
+    sectionId: string,
+    key: K,
+    value: BuilderSection[K]
+  ) => {
+    setSectionsForSide(side, current => current.map(section => (
+      section.id === sectionId ? { ...section, [key]: value } : section
+    )));
+  };
+
+  /** ModuleData → 빌더 폼 상태 복원 (템플릿 적용 + 저장 모듈 수정 공용) */
+  const loadModuleIntoForm = (module: ModuleData & { thumbnail?: string }, options?: { asSaved?: boolean }) => {
+    if (options?.asSaved) {
+      setName(module.name);
+      setSlug(extractSlugFromAdminId(module.id));
+      setLoadedModuleId(module.id);
+    } else {
+      setName(module.name.replace(/\s+\d+(?:\.\d+)?mm$/, ''));
+      setSlug(module.id.replace(/-[\d.]+$/, ''));
+      setLoadedModuleId(null);
+    }
+
+    setCategory(module.category as ModuleCategory);
+    setWidth(module.dimensions.width);
+    setHeight(module.dimensions.height);
+    setDepth(module.dimensions.depth);
+    setHasDoor(module.hasDoor === true);
+    setIsDynamic(module.isDynamic === true);
+    setThumbnail(module.thumbnail || '');
+    setRightAbsoluteWidth(module.modelConfig?.rightAbsoluteWidth || 0);
+    setRightAbsoluteDepth(module.modelConfig?.rightAbsoluteDepth || 0);
+    setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
+    setHasSharedSafetyShelf(module.modelConfig?.hasSharedSafetyShelf === true);
+
+    if (module.modelConfig?.leftSections || module.modelConfig?.rightSections) {
+      setLayoutMode('dual');
+      setSections((module.modelConfig.leftSections || [{ type: 'open', height: 100, heightType: 'percentage' }]).map(sectionConfigToBuilderSection));
+      setRightSections((module.modelConfig.rightSections || [{ type: 'open', height: 100, heightType: 'percentage' }]).map(sectionConfigToBuilderSection));
+    } else {
+      setLayoutMode(module.id.includes('dual-') ? 'dual' : 'single');
+      const nextSections = (module.modelConfig?.sections || [{ type: 'open', height: 100, heightType: 'percentage' }]).map(sectionConfigToBuilderSection);
+      setSections(nextSections);
+      setRightSections(nextSections.map((section, index) => ({ ...section, id: `right-${section.id}-${index}` })));
+    }
+  };
+
+  const applyTemplate = (templateId: string) => {
+    const template = templateModules.find(module => module.id === templateId);
+    if (!template) return;
+    loadModuleIntoForm(template);
+  };
+
+  /** 저장 전 검증 — 실패 사유 문자열, 통과 시 null */
+  const validateDraft = (): string | null => {
+    if (!name.trim()) return '모듈명을 입력하세요.';
+    if (!normalizeSlug(slug || name)) return '식별자를 입력하세요.';
+    if (width < 1 || height < 1 || depth < 1) return '폭/높이/깊이는 1mm 이상이어야 합니다.';
+
+    const sides: Array<[string, BuilderSection[]]> = layoutMode === 'dual'
+      ? [['좌측', sections], ['우측', rightSections]]
+      : [['', sections]];
+
+    for (const [label, sideSections] of sides) {
+      const absoluteTotal = sideSections
+        .filter(section => section.heightType === 'absolute')
+        .reduce((sum, section) => sum + Math.max(section.height, 0), 0);
+      if (absoluteTotal > height) {
+        return `${label ? `${label} ` : ''}패널의 고정 높이 합(${absoluteTotal}mm)이 전체 높이(${height}mm)를 초과합니다.`;
+      }
+      const hasPercentage = sideSections.some(section => section.heightType === 'percentage');
+      if (!hasPercentage && absoluteTotal !== height) {
+        return `${label ? `${label} ` : ''}패널이 모두 고정 높이인데 합(${absoluteTotal}mm)이 전체 높이(${height}mm)와 다릅니다.`;
+      }
+    }
+
+    return null;
+  };
+
+  const reservedTokensInSlug = () => {
+    const normalizedSlug = normalizeSlug(slug || name);
+    return RESERVED_ID_TOKENS.filter(token => normalizedSlug.includes(token));
+  };
+
+  const copyDraft = async () => {
+    await navigator.clipboard.writeText(JSON.stringify(moduleDraft, null, 2));
+    alert('모듈 초안 JSON이 복사되었습니다.');
+  };
+
+  const saveDraft = async () => {
+    const validationError = validateDraft();
+    if (validationError) {
+      alert(validationError);
+      return;
+    }
+
+    const reservedTokens = reservedTokensInSlug();
+    if (reservedTokens.length > 0) {
+      const proceed = confirm(
+        `식별자에 예약어(${reservedTokens.join(', ')})가 포함되어 있습니다.\n` +
+        '표준 모듈의 렌더링/패널목록/CNC 분류 규칙에 오인 매칭될 수 있습니다. 계속 저장할까요?'
+      );
+      if (!proceed) return;
+    }
+
+    setSaving(true);
+    try {
+      if (moduleDraft.id !== loadedModuleId) {
+        const exists = await adminFurnitureModuleExists(moduleDraft.id);
+        if (exists && !confirm(`동일 ID(${moduleDraft.id})의 모듈이 이미 있습니다. 덮어쓸까요?`)) {
+          return;
+        }
+      }
+      await saveAdminFurnitureModule(moduleDraft);
+      setLoadedModuleId(moduleDraft.id);
+      alert('관리자 모듈이 저장되었습니다. 가구 목록에 자동 반영됩니다.');
+    } catch (error) {
+      console.error('[ModuleBuilder] 저장 실패:', error);
+      alert('저장에 실패했습니다. 콘솔을 확인하세요.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleSavedEnabled = async (moduleId: string, enabled: boolean) => {
+    try {
+      await setAdminFurnitureModuleEnabled(moduleId, enabled);
+    } catch (error) {
+      console.error('[ModuleBuilder] 활성화 변경 실패:', error);
+      alert('활성화 상태 변경에 실패했습니다.');
+    }
+  };
+
+  const deleteSaved = async (moduleId: string, moduleName: string) => {
+    if (!confirm(`'${moduleName}' (${moduleId}) 모듈을 삭제할까요?\n이미 배치된 프로젝트에서는 해당 가구를 더 이상 불러올 수 없습니다.`)) return;
+    try {
+      await deleteAdminFurnitureModule(moduleId);
+      if (loadedModuleId === moduleId) setLoadedModuleId(null);
+    } catch (error) {
+      console.error('[ModuleBuilder] 삭제 실패:', error);
+      alert('삭제에 실패했습니다.');
+    }
+  };
+
+  const handleThumbnailChange = (file: File | undefined) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setThumbnail(typeof reader.result === 'string' ? reader.result : '');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  if (!allowed) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.accessDenied}>
+          <h2>접근 권한 없음</h2>
+          <p>sbbc212@gmail.com 슈퍼어드민만 모듈 빌더에 접근할 수 있습니다.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.container}>
+      <header className={styles.header}>
+        <div>
+          <h1 className={styles.title}>모듈 빌더</h1>
+          <p className={styles.subtitle}>관리자용 가구 모듈 정의</p>
+        </div>
+        <button type="button" className={styles.copyButton} onClick={copyDraft}>
+          <ClipboardCopy size={18} />
+          <span>JSON 복사</span>
+        </button>
+        <button type="button" className={styles.saveButton} onClick={saveDraft} disabled={saving}>
+          {saving ? '저장 중…' : (loadedModuleId === moduleDraft.id ? '수정 저장' : '저장')}
+        </button>
+      </header>
+
+      <div className={styles.layout}>
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <Box size={20} />
+            <h2>기본 정보</h2>
+          </div>
+
+          <div className={styles.grid}>
+            <label className={`${styles.field} ${styles.fullField}`}>
+              <span>기존 모듈 템플릿</span>
+              <select defaultValue="" onChange={(event) => applyTemplate(event.target.value)}>
+                <option value="">직접 만들기</option>
+                {templateModules.map(template => (
+                  <option key={template.id} value={template.id}>
+                    {template.name} / {template.id}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              <span>모듈명</span>
+              <input value={name} onChange={(event) => setName(event.target.value)} />
+            </label>
+
+            <label className={styles.field}>
+              <span>식별자</span>
+              <input value={slug} onChange={(event) => setSlug(event.target.value)} />
+            </label>
+
+            <label className={styles.field}>
+              <span>분류</span>
+              <select value={category} onChange={(event) => setCategory(event.target.value as ModuleCategory)}>
+                <option value="full">전체장</option>
+                <option value="upper">상부장</option>
+                <option value="lower">하부장</option>
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              <span>구조</span>
+              <select value={layoutMode} onChange={(event) => setLayoutMode(event.target.value as BuilderLayoutMode)}>
+                <option value="single">단일 구조(sections)</option>
+                <option value="dual">좌우 분할(left/right)</option>
+              </select>
+            </label>
+
+            <label className={styles.field}>
+              <span>폭(mm)</span>
+              <input type="number" min={1} value={width} onChange={(event) => setWidth(Number(event.target.value))} />
+            </label>
+
+            <label className={styles.field}>
+              <span>높이(mm)</span>
+              <input type="number" min={1} value={height} onChange={(event) => setHeight(Number(event.target.value))} />
+            </label>
+
+            <label className={styles.field}>
+              <span>깊이(mm)</span>
+              <input type="number" min={1} value={depth} onChange={(event) => setDepth(Number(event.target.value))} />
+            </label>
+          </div>
+
+          <label className={styles.checkbox}>
+            <input type="checkbox" checked={hasDoor} onChange={(event) => setHasDoor(event.target.checked)} />
+            <span>도어 포함</span>
+          </label>
+
+          <label className={styles.checkbox}>
+            <input type="checkbox" checked={isDynamic} onChange={(event) => setIsDynamic(event.target.checked)} />
+            <span>동적 폭 (배치 시 슬롯 폭에 맞춰 자동 조정, 전체장은 높이도 내경에 맞춤)</span>
+          </label>
+
+          <div className={styles.thumbnailUploader}>
+            <div className={styles.thumbnailHeader}>
+              <ImageIcon size={18} />
+              <span>섬네일 등록</span>
+            </div>
+            <label className={styles.thumbnailDrop}>
+              {thumbnail ? (
+                <img src={thumbnail} alt="등록된 섬네일" />
+              ) : (
+                <span>이미지 선택</span>
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => handleThumbnailChange(event.target.files?.[0])}
+              />
+            </label>
+            {thumbnail && (
+              <button type="button" className={styles.textButton} onClick={() => setThumbnail('')}>
+                섬네일 제거
+              </button>
+            )}
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div className={styles.panelHeader}>
+            <h2>패널별 세부설정</h2>
+            <button type="button" className={styles.iconButton} onClick={() => addSection('main')} title="섹션 추가">
+              <Plus size={18} />
+            </button>
+          </div>
+
+          {layoutMode === 'dual' && (
+            <div className={styles.dualOptions}>
+              <label className={styles.compactField}>
+                <span>우측 고정폭(mm)</span>
+                <input type="number" min={0} value={rightAbsoluteWidth} onChange={(event) => setRightAbsoluteWidth(Number(event.target.value))} />
+              </label>
+              <label className={styles.compactField}>
+                <span>우측 고정깊이(mm)</span>
+                <input type="number" min={0} value={rightAbsoluteDepth} onChange={(event) => setRightAbsoluteDepth(Number(event.target.value))} />
+              </label>
+              <label className={styles.checkboxInline}>
+                <input type="checkbox" checked={hasSharedMiddlePanel} onChange={(event) => setHasSharedMiddlePanel(event.target.checked)} />
+                <span>중단선반 공유</span>
+              </label>
+              <label className={styles.checkboxInline}>
+                <input type="checkbox" checked={hasSharedSafetyShelf} onChange={(event) => setHasSharedSafetyShelf(event.target.checked)} />
+                <span>안전선반 공유</span>
+              </label>
+            </div>
+          )}
+
+          {layoutMode === 'dual' && <h3 className={styles.sectionGroupTitle}>좌측 패널</h3>}
+          <div className={styles.sectionList}>
+            {sections.map((section, index) => (
+              <div key={section.id} className={styles.sectionCard}>
+                <div className={styles.sectionCardHeader}>
+                  <div>
+                    <span className={styles.sectionBadge}>패널 {index + 1}</span>
+                    <strong>{sectionLabels[section.type]}</strong>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.deleteButton}
+                    onClick={() => removeSection('main', section.id)}
+                    disabled={sections.length === 1}
+                    title="패널 삭제"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+
+                <div className={styles.sectionFields}>
+                  <label className={styles.compactField}>
+                    <span>구성 타입</span>
+                    <select
+                      value={section.type}
+                      onChange={(event) => updateSection('main', section.id, 'type', event.target.value as SectionType)}
+                    >
+                      <option value="open">오픈</option>
+                      <option value="shelf">선반</option>
+                      <option value="hanging">행거</option>
+                      <option value="drawer">서랍</option>
+                    </select>
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>높이값</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={section.height}
+                      onChange={(event) => updateSection('main', section.id, 'height', Number(event.target.value))}
+                    />
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>높이 방식</span>
+                    <select
+                      value={section.heightType}
+                      onChange={(event) => updateSection('main', section.id, 'heightType', event.target.value as BuilderSection['heightType'])}
+                    >
+                      <option value="percentage">비율(%)</option>
+                      <option value="absolute">고정(mm)</option>
+                    </select>
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>내부 수량</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={section.count}
+                      onChange={(event) => updateSection('main', section.id, 'count', Number(event.target.value))}
+                    />
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>선반 위치(mm)</span>
+                    <input
+                      value={section.shelfPositions}
+                      onChange={(event) => updateSection('main', section.id, 'shelfPositions', event.target.value)}
+                      placeholder="예: 318, 646"
+                    />
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>서랍 높이(mm)</span>
+                    <input
+                      value={section.drawerHeights}
+                      onChange={(event) => updateSection('main', section.id, 'drawerHeights', event.target.value)}
+                      placeholder="예: 255, 255"
+                    />
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>서랍 간격(mm)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={section.gapHeight}
+                      onChange={(event) => updateSection('main', section.id, 'gapHeight', Number(event.target.value))}
+                    />
+                  </label>
+
+                  <label className={styles.compactField}>
+                    <span>고정 상부영역(mm)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      value={section.fixedTopZoneMm}
+                      onChange={(event) => updateSection('main', section.id, 'fixedTopZoneMm', Number(event.target.value))}
+                    />
+                  </label>
+
+                  <label className={styles.checkboxInline}>
+                    <input
+                      type="checkbox"
+                      checked={section.hasBackPanel}
+                      onChange={(event) => updateSection('main', section.id, 'hasBackPanel', event.target.checked)}
+                    />
+                    <span>백패널</span>
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {layoutMode === 'dual' && (
+            <>
+              <div className={styles.sectionGroupHeader}>
+                <h3 className={styles.sectionGroupTitle}>우측 패널</h3>
+                <button type="button" className={styles.iconButton} onClick={() => addSection('right')} title="우측 패널 추가">
+                  <Plus size={18} />
+                </button>
+              </div>
+              <div className={styles.sectionList}>
+                {rightSections.map((section, index) => (
+                  <div key={section.id} className={styles.sectionCard}>
+                    <div className={styles.sectionCardHeader}>
+                      <div>
+                        <span className={styles.sectionBadge}>우측 {index + 1}</span>
+                        <strong>{sectionLabels[section.type]}</strong>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => removeSection('right', section.id)}
+                        disabled={rightSections.length === 1}
+                        title="패널 삭제"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+
+                    <div className={styles.sectionFields}>
+                      <label className={styles.compactField}>
+                        <span>구성 타입</span>
+                        <select value={section.type} onChange={(event) => updateSection('right', section.id, 'type', event.target.value as SectionType)}>
+                          <option value="open">오픈</option>
+                          <option value="shelf">선반</option>
+                          <option value="hanging">행거</option>
+                          <option value="drawer">서랍</option>
+                        </select>
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>높이값</span>
+                        <input type="number" min={1} value={section.height} onChange={(event) => updateSection('right', section.id, 'height', Number(event.target.value))} />
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>높이 방식</span>
+                        <select value={section.heightType} onChange={(event) => updateSection('right', section.id, 'heightType', event.target.value as BuilderSection['heightType'])}>
+                          <option value="percentage">비율(%)</option>
+                          <option value="absolute">고정(mm)</option>
+                        </select>
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>내부 수량</span>
+                        <input type="number" min={0} value={section.count} onChange={(event) => updateSection('right', section.id, 'count', Number(event.target.value))} />
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>선반 위치(mm)</span>
+                        <input value={section.shelfPositions} onChange={(event) => updateSection('right', section.id, 'shelfPositions', event.target.value)} />
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>서랍 높이(mm)</span>
+                        <input value={section.drawerHeights} onChange={(event) => updateSection('right', section.id, 'drawerHeights', event.target.value)} />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+
+        <section className={styles.previewPanel}>
+          <div className={styles.panelHeader}>
+            <div>
+              <h2>실시간 미리보기</h2>
+              <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
+            </div>
+          </div>
+
+          <div className={styles.livePreviewArea}>
+            <div className={styles.previewMeta}>
+              <strong>{moduleDraft.name}</strong>
+              <span>{width}W x {height}H x {depth}D{isDynamic ? ' · 동적 폭' : ''}</span>
+            </div>
+
+            <div className={styles.threePreviewFrame}>
+              <AdminModulePreview moduleData={moduleDraft as ModuleData} />
+            </div>
+          </div>
+        </section>
+
+        <section className={`${styles.panel} ${styles.managementPanel}`}>
+          <div className={styles.panelHeader}>
+            <h2>저장된 모듈 ({savedDocs.length})</h2>
+          </div>
+
+          {savedDocs.length === 0 ? (
+            <p className={styles.panelHint}>저장된 관리자 모듈이 없습니다.</p>
+          ) : (
+            <div className={styles.savedList}>
+              {savedDocs.map(({ module, enabled, updatedAt }) => (
+                <div key={module.id} className={`${styles.savedItem} ${loadedModuleId === module.id ? styles.savedItemActive : ''}`}>
+                  <div className={styles.savedThumb}>
+                    {module.thumbnail
+                      ? <img src={module.thumbnail} alt={module.name} />
+                      : <Box size={22} />}
+                  </div>
+                  <div className={styles.savedInfo}>
+                    <strong>{module.name}</strong>
+                    <span className={styles.savedId}>{module.id}</span>
+                    <span className={styles.savedMeta}>
+                      {module.dimensions.width}W x {module.dimensions.height}H x {module.dimensions.depth}D
+                      {module.isDynamic ? ' · 동적 폭' : ''}
+                      {updatedAt ? ` · ${updatedAt.toLocaleDateString('ko-KR')}` : ''}
+                    </span>
+                  </div>
+                  <div className={styles.savedActions}>
+                    <label className={styles.checkboxInline} title="가구 목록 노출">
+                      <input
+                        type="checkbox"
+                        checked={enabled}
+                        onChange={(event) => toggleSavedEnabled(module.id, event.target.checked)}
+                      />
+                      <span>노출</span>
+                    </label>
+                    <button
+                      type="button"
+                      className={styles.iconButton}
+                      onClick={() => loadModuleIntoForm(module, { asSaved: true })}
+                      title="불러와서 수정"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => deleteSaved(module.id, module.name)}
+                      title="모듈 삭제"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+};
+
+export default ModuleBuilder;

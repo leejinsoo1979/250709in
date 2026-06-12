@@ -1156,8 +1156,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-2drawer-styler')) {
-    
+  // 스타일러장 + 관리자 빌더 좌우분할 모듈 (leftSections/rightSections 기반 렌더링)
+  if (
+    moduleData.id.includes('dual-2drawer-styler')
+    || (moduleData.id.startsWith('dual-admin-') && (moduleData.modelConfig as any)?.leftSections)
+  ) {
+
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}

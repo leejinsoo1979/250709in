@@ -302,12 +302,11 @@ export class FurnitureSpaceAdapter {
           if (newPosition) {
             let newModuleId = module.moduleId;
             if (moduleData.isDynamic) {
+              // ID의 폭 접미사만 새 슬롯 폭으로 교체 — base 타입 유지
+              // (moduleData.type은 'box' 같은 렌더 타입이라 ID 재조합에 쓰면 잘못된 ID가 됨)
               const actualNewColumnWidth = newIndexing.columnWidth;
-              if (isDualFurniture) {
-                newModuleId = `dual-${moduleData.type}-${actualNewColumnWidth * 2}`;
-              } else {
-                newModuleId = `single-${moduleData.type}-${actualNewColumnWidth}`;
-              }
+              const baseModuleType = module.moduleId.replace(/-[\d.]+$/, '');
+              newModuleId = `${baseModuleType}-${isDualFurniture ? actualNewColumnWidth * 2 : actualNewColumnWidth}`;
             }
             
             validFurniture.push({

@@ -283,7 +283,9 @@ export const calculatePanelDetails = (
   // 듀얼 타입5,6 특별 처리 (leftSections/rightSections 구조)
   let sections;
   // 듀얼 타입5/6은 leftSections + rightSections 모두 처리
-  const isStylerCabinet = moduleData.id.includes('dual-2drawer-styler');
+  // 관리자 빌더 좌우분할 모듈(dual-admin-*)은 DualType5로 렌더링되므로 패널목록도 동일 경로 사용
+  const isStylerCabinet = moduleData.id.includes('dual-2drawer-styler')
+    || (moduleData.id.startsWith('dual-admin-') && !!moduleData.modelConfig?.leftSections);
   const isPantsHanger = moduleData.id.includes('dual-4drawer-pantshanger');
   const isType5or6 = isPantsHanger || isStylerCabinet;
   const stylerRightColumnWidth = isStylerCabinet

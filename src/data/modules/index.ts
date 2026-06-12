@@ -1,6 +1,12 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { generateShelvingModules, calculateEvenShelfPositions } from './shelving';
 import type { SectionConfig } from './shelving';
+import {
+  getAdminFurnitureModuleById,
+  getAdminFurnitureModuleByBaseId,
+  getAdminFurnitureModules,
+  stripAdminModuleWidth
+} from './adminModuleRegistry';
 
 // ModuleData를 shelving에서 import
 import type { ModuleData } from './shelving';
@@ -36,6 +42,44 @@ export const generateDynamicModules = (
  */
 export const STATIC_MODULES: ModuleData[] = [];
 
+/**
+ * 관리자 빌더 모듈을 현재 공간/슬롯 폭에 맞게 적응시킨다.
+ *
+ * - isDynamic이 아니면 저장된 고정 치수 그대로 반환
+ * - isDynamic이면: 폭 = 슬롯 폭(싱글) 또는 슬롯 폭×2(듀얼), 전체장은 높이도 내경 높이로 적응
+ * - ID는 base + 적응된 폭으로 재구성 (표준 동적 모듈과 동일한 규칙)
+ */
+const adaptAdminModule = (
+  module: ModuleData,
+  targetWidth: number,
+  targetHeight: number | null
+): ModuleData => {
+  const isDual = module.id.startsWith('dual-');
+  const width = Math.round(targetWidth * 100) / 100;
+  const height = targetHeight !== null && module.category === 'full'
+    ? targetHeight
+    : module.dimensions.height;
+
+  return {
+    ...module,
+    id: `${stripAdminModuleWidth(module.id)}-${width}`,
+    dimensions: { ...module.dimensions, width, height },
+    ...(isDual ? { slotWidths: [Math.round(width * 50) / 100, Math.round(width * 50) / 100] } : {})
+  };
+};
+
+/** 띄움 배치 시 가용 높이 차감 — generateShelvingModules와 동일한 규칙 */
+const getAdminMaxHeight = (
+  internalSpace: { height: number },
+  spaceInfo?: SpaceInfo
+) => {
+  let maxHeight = internalSpace.height;
+  if (spaceInfo?.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
+    maxHeight -= spaceInfo.baseConfig.floatHeight || 0;
+  }
+  return maxHeight;
+};
+
 export const getModulesByCategory = (
   category: ModuleData['category'], 
   internalSpace: { width: number; height: number; depth: number },
@@ -45,8 +89,19 @@ export const getModulesByCategory = (
   
   const dynamicModules = generateDynamicModules(internalSpace, spaceInfo);
   const staticModules = STATIC_MODULES;
-  
-  const allModules = [...dynamicModules, ...staticModules];
+
+  // 동적 admin 모듈은 현재 슬롯 폭에 맞게 적응 (컬럼 폭은 생성된 표준 싱글 모듈에서 추출)
+  const columnWidth = dynamicModules.find(
+    module => module.isDynamic && module.id.startsWith('single-')
+  )?.dimensions.width;
+  const fullMaxHeight = spaceInfo ? getAdminMaxHeight(internalSpace, spaceInfo) : internalSpace.height;
+  const adminModules = getAdminFurnitureModules().map(module => {
+    if (!module.isDynamic || !columnWidth) return module;
+    const isDual = module.id.startsWith('dual-');
+    return adaptAdminModule(module, isDual ? columnWidth * 2 : columnWidth, fullMaxHeight);
+  });
+
+  const allModules = [...dynamicModules, ...staticModules, ...adminModules];
   const filteredModules = allModules.filter(module => module.category === category);
   
   
@@ -59,6 +114,23 @@ export const getModuleById = (
   internalSpace?: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ) => {
+  // admin 모듈: 정확한 ID 우선, 동적 모듈은 base 매칭 후 요청 폭으로 재구성
+  const exactAdminModule = getAdminFurnitureModuleById(id);
+  const adminModule = exactAdminModule || getAdminFurnitureModuleByBaseId(stripAdminModuleWidth(id));
+  if (adminModule) {
+    if (!adminModule.isDynamic) {
+      // 고정 치수 모듈은 정확한 ID 매칭만 허용
+      if (exactAdminModule) return exactAdminModule;
+    } else {
+      const adminWidthMatch = id.match(/-([\d.]+)$/);
+      const requestedAdminWidth = adminWidthMatch
+        ? parseFloat(adminWidthMatch[1])
+        : adminModule.dimensions.width;
+      const adminMaxHeight = internalSpace ? getAdminMaxHeight(internalSpace, spaceInfo) : null;
+      return adaptAdminModule(adminModule, requestedAdminWidth, adminMaxHeight);
+    }
+  }
+
   // baseModuleType 처리: ID에서 너비를 제외한 기본 타입 추출 (소수점 포함)
   const baseType = id.replace(/-[\d.]+$/, '');
   const widthMatch = id.match(/-([\d.]+)$/);
@@ -160,7 +232,7 @@ export const getModuleById = (
     }
   }
   
-  return STATIC_MODULES.find(module => module.id === id);
+  return STATIC_MODULES.find(module => module.id === id) || getAdminFurnitureModuleById(id);
 };
 
 /**
