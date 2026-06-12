@@ -297,12 +297,27 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       group.visible = false;
     };
 
-    registerRail(leftGroupRef.current, leftRegistryKey, `레그라 서랍${drawerTier} 측판 좌`);
-    registerRail(rightGroupRef.current, rightRegistryKey, `레그라 서랍${drawerTier} 측판 우`);
+    registerRail(leftGroupRef.current, leftRegistryKey, grade === 'N' ? `레그라 서랍${drawerTier} 본체` : `레그라 서랍${drawerTier} 측판 좌`);
+    if (grade !== 'N') registerRail(rightGroupRef.current, rightRegistryKey, `레그라 서랍${drawerTier} 측판 우`);
   });
 
   if (hideAccessories) return null;
   if (viewMode === '2D' && view2DDirection === 'top') return null;
+
+  // N(특소): GLB가 좌우 측판+기성 뒷판+속마이다를 포함한 통짜 어셈블리 — 미러 없이 1회, X 중앙 정렬
+  if (grade === 'N') {
+    const box = prepared.box;
+    const centerX = -(box.min.x + box.max.x) / 2;
+    return (
+      <group
+        ref={leftGroupRef}
+        position={[centerX, leftPos.y, leftPos.z]}
+        scale={[GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}
+      >
+        <primitive object={leftScene} />
+      </group>
+    );
+  }
 
   // 좌우 미러링은 group scale로 처리. scene은 인스턴스별 경량 clone (엣지/스냅박스는 템플릿에서 이미 생성됨).
   return (
