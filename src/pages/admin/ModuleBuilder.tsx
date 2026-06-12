@@ -415,6 +415,8 @@ const ModuleBuilder = () => {
   const [dividersText, setDividersText] = useState('');
   // 상단 목찬넬 따내기 — 기본 OFF, 사용자가 켰을 때만 측판 60×40 따내기 + 가로전대(+하부장 PET 프레임)
   const [topChannelEnabled, setTopChannelEnabled] = useState(false);
+  // 패널 스캔 — 뷰어에서 패널 클릭 시 에디터 스캔모드와 동일한 치수 표시
+  const [scanMode, setScanMode] = useState(false);
   // 신규 모듈 추가 — 분류를 먼저 고르기 전엔 폼/프리뷰를 띄우지 않음 (임의 기본 분류 금지)
   const [categoryPicked, setCategoryPicked] = useState(true);
 
@@ -2390,6 +2392,14 @@ const ModuleBuilder = () => {
               <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
             </div>
             <div className={styles.previewControls}>
+              <button
+                type="button"
+                className={`${styles.scanButton} ${scanMode ? styles.scanButtonActive : ''}`}
+                onClick={() => setScanMode(mode => !mode)}
+                title="뷰어에서 패널 클릭 = 패널/따내기/홈 치수 표시 (에디터 스캔모드와 동일)"
+              >
+                패널 스캔
+              </button>
               <div className={styles.viewToggle}>
                 <button
                   type="button"
@@ -2456,6 +2466,7 @@ const ModuleBuilder = () => {
                 highlightedPanelName={highlightedPanelName}
                 viewMode={previewViewMode}
                 direction2D={previewView === '3D' ? 'front' : previewView}
+                scanMode={scanMode}
               />
             </div>
 
@@ -2515,25 +2526,6 @@ const ModuleBuilder = () => {
                     {panel.material ? ` · ${panel.material}` : ''}
                     {panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}
                   </span>
-                  {isActive && (
-                    <div className={styles.panelDetail} onClick={(event) => event.stopPropagation()}>
-                      <div><em>패널</em>{panel.width ?? '-'} × {secondDim ?? '-'} × {panel.thickness ?? '-'}T · {panel.material ?? '-'}{panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}</div>
-                      {(panel.sideNotches || []).map((notch, notchIndex) => (
-                        <div key={`notch-${notchIndex}`}>
-                          <em>따내기 {notchIndex + 1}</em>높이 {Math.round(notch.y)} · 깊이 {Math.round(notch.z)} · 바닥에서 {Math.round(notch.fromBottom)}
-                        </div>
-                      ))}
-                      {(panel.groovePositions || []).map((groove, grooveIndex) => (
-                        <div key={`groove-${grooveIndex}`}>
-                          <em>홈 {grooveIndex + 1}</em>폭 {Math.round(groove.height)} · 깊이 {groove.depth} · 하단에서 {Math.round(groove.y)}
-                        </div>
-                      ))}
-                      {panel.boringPositions && panel.boringPositions.length > 0 && (
-                        <div><em>보링</em>{panel.boringPositions.length}개 · Y {panel.boringPositions.map(value => Math.round(value)).join(', ')}</div>
-                      )}
-                      {panel.hingeCount ? <div><em>경첩</em>{panel.hingeCount}개</div> : null}
-                    </div>
-                  )}
                 </div>
               );
             })}

@@ -14,6 +14,7 @@ import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DVie
 import { getExcludedPanelAliases } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import BoxModule from '@/editor/shared/viewer3d/components/modules/BoxModule';
 import DimensionText from '@/editor/shared/viewer3d/components/modules/components/DimensionText';
+import LiveDimensionInspector from '@/editor/shared/viewer3d/components/elements/LiveDimensionInspector';
 import { DEFAULT_SPACE_CONFIG, type SpaceInfo } from '@/store/core/spaceConfigStore';
 import type { ModuleData } from '@/data/modules';
 
@@ -249,12 +250,14 @@ const AdminModulePreview = ({
   moduleData,
   highlightedPanelName = null,
   viewMode = '3D',
-  direction2D = 'front'
+  direction2D = 'front',
+  scanMode = false
 }: {
   moduleData: ModuleData;
   highlightedPanelName?: string | null;
   viewMode?: '2D' | '3D';
   direction2D?: 'front' | 'top' | 'left';
+  scanMode?: boolean;
 }) => {
   const is2D = viewMode === '2D';
   const { width, height, depth } = moduleData.dimensions;
@@ -388,6 +391,9 @@ const AdminModulePreview = ({
 
         {/* 가구 외곽 치수 (W/H/D mm) — 2D/3D 공통 */}
         <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} lowerSectionHeightMm={lowerSectionHeightMm} viewKey={is2D ? direction2D : '3d'} />
+
+        {/* 패널 스캔 — 에디터 스캔모드와 동일: 패널 클릭 시 치수/따내기/홈 표시 */}
+        <LiveDimensionInspector enabled={scanMode} />
 
         {/* 바닥: 컨택트 섀도우(접지감) + 페이드 그리드 — 3D 전용 */}
         {!is2D && (
