@@ -1169,7 +1169,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
 
   // 원본 spaceInfo 가져오기 (zone별로 분리되지 않은 전체 공간 정보)
-  const { spaceInfo: originalSpaceInfo } = useSpaceConfigStore();
+  // prop으로 받은 spaceInfo 우선 — 에디터에서는 prop == 스토어라 동작 동일,
+  // 모듈관리 프리뷰처럼 독립 공간을 쓰는 화면에서 도어 높이가 전역 공간 기준으로 어긋나지 않게 함
+  const { spaceInfo: storeSpaceInfoForDoor } = useSpaceConfigStore();
+  const originalSpaceInfo = spaceInfo || storeSpaceInfoForDoor;
 
   // doorTopGap/doorBottomGap: 몸통(cabinet) 기준 (EP와 동일)
   // 상단갭 = 몸통 상단에서 위로 확장, 하단갭 = 몸통 하단에서 아래로 확장 (0이면 도어=몸통)

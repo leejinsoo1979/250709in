@@ -368,6 +368,20 @@ const ModuleBuilder = () => {
       useUIStore.getState().setDoorsOpen(null);
     };
   }, [previewDoorsOpen, view]);
+
+  // 빌더 화면 동안 에디터용 치수 표시(도어 폭 치수 등) 끄기 — 프리뷰는 자체 W/H/D 가이드 사용
+  useEffect(() => {
+    if (view !== 'builder') return;
+    const ui = useUIStore.getState();
+    const prevShowDimensions = ui.showDimensions;
+    const prevShowDimensionsText = ui.showDimensionsText;
+    ui.setShowDimensions(false);
+    ui.setShowDimensionsText(false);
+    return () => {
+      ui.setShowDimensions(prevShowDimensions);
+      ui.setShowDimensionsText(prevShowDimensionsText);
+    };
+  }, [view]);
   const [listMode, setListMode] = useState<'gallery' | 'list'>('gallery');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');

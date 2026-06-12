@@ -179,7 +179,7 @@ const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heig
           [[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]
         ]}
         label={`H ${Math.round(heightMm)}`}
-        labelPosition={[-w / 2 - off, h + mmToThreeUnits(220), d / 2]}
+        labelPosition={[-w / 2 - off - mmToThreeUnits(320), h * 0.55, d / 2]}
       />
 
       {/* D — 우측 바닥, 라벨은 치수선 우측 바닥 위 */}
