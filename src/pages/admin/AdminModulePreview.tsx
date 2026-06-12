@@ -345,7 +345,8 @@ const AdminModulePreview = ({
           enableRotate={!is2D}
           minDistance={cameraDistance * 0.3}
           maxDistance={cameraDistance * 3}
-          maxPolarAngle={Math.PI / 2 - 0.01}
+          // 바닥 아래 시점 방지 가드는 3D 전용 — 2D 정면/측면은 정확히 90°라 클램프가 시선을 0.57° 밀어 올림
+          maxPolarAngle={is2D ? Math.PI : Math.PI / 2 - 0.01}
         />
 
         {/* 3점 조명: 키(그림자) + 필 + 림 + 하늘빛 */}
