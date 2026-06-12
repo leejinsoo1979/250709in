@@ -458,12 +458,12 @@ const ModuleBuilder = () => {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');
   // 전시/작업 분리 — 전시: 표준 + 게시된 관리자 모듈, 작업: 비공개(초안) 관리자 모듈
   const [statusTab, setStatusTab] = useState<'published' | 'draft'>('published');
+  const [searchQuery, setSearchQuery] = useState('');
   // 대량 모듈 대비 — 한 번에 60개씩 렌더, '더 보기'로 확장
   const [visibleCount, setVisibleCount] = useState(60);
   useEffect(() => {
     setVisibleCount(60);
   }, [statusTab, categoryFilter, sourceFilter, searchQuery]);
-  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!allowed) return;
