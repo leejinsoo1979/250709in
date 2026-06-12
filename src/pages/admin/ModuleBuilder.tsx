@@ -558,7 +558,18 @@ const ModuleBuilder = () => {
           ? {
               count: legraRows.length,
               drawerType: 'legrabox' as const,
-              legraSpecs: legraRows.map(row => ({ type: row.type, offsetMm: row.offsetMm })),
+              // 이격 클램프 — 서랍(측판 높이 포함)이 몸통 내경을 벗어날 수 없음
+              legraSpecs: (() => {
+                const LEGRA_SIDE_H: Record<'M' | 'L' | 'F', number> = { M: 128.5, L: 177, F: 241 };
+                const legraInnerH = Math.max(1, height - panelThickness * 2);
+                return legraRows.map(row => ({
+                  type: row.type,
+                  offsetMm: Math.min(
+                    Math.max(0, row.offsetMm),
+                    Math.max(0, legraInnerH - LEGRA_SIDE_H[row.type])
+                  )
+                }));
+              })(),
               topGap: legraTopGap,
               bottomGap: legraBottomGap
             }
@@ -2394,10 +2405,12 @@ const ModuleBuilder = () => {
                       onClick={() => setLegraRows(rows => {
                         const last = rows[rows.length - 1];
                         const lastHeight = last ? (last.type === 'M' ? 117 : last.type === 'L' ? 164 : 228) : 0;
+                        const sideH = (last?.type || 'F') === 'M' ? 128.5 : (last?.type || 'F') === 'L' ? 177 : 241;
+                        const maxOffset = Math.max(0, height - panelThickness * 2 - sideH);
                         return [...rows, {
                           id: `legra-${Date.now()}-${rows.length}`,
                           type: last?.type || 'F',
-                          offsetMm: last ? last.offsetMm + lastHeight + 150 : 28
+                          offsetMm: Math.min(last ? last.offsetMm + lastHeight + 150 : 28, maxOffset)
                         }];
                       })}
                       title="서랍 추가"
