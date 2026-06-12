@@ -475,7 +475,8 @@
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(460px, 46%);
+  /* 좌: 설정 폼 (좁게) / 우: 실시간 뷰어 (주인공 — 넓게, 화면 고정) */
+  grid-template-columns: minmax(340px, 36%) minmax(0, 1fr);
   align-items: start;
   gap: 22px;
 }
@@ -500,7 +501,7 @@
   background: var(--mb-surface);
   border: 1px solid var(--mb-line);
   border-radius: var(--mb-radius);
-  padding: 20px;
+  padding: 16px;
 }
 
 .previewPanel {
