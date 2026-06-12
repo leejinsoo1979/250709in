@@ -1075,6 +1075,27 @@ const ModuleBuilder = () => {
     });
   };
 
+  /**
+   * 외부서랍 단수 → 중간 따내기 자동 동기화 (표준 공식)
+   * 사용 가능 높이 = H − 상단따내기60 − (N−1)×65, zone 균등 분할
+   * 예: H780 2단 → 따내기 1개 @ (H−125)/2 = 327.5 (표준 lower-drawer-2tier와 동일)
+   */
+  const syncExternalDrawerNotches = (drawerCount: number) => {
+    const count = Math.max(1, Math.round(drawerCount));
+    const notchH = 65;
+    const topNotchH = hasTopPanel ? 0 : 60;
+    const usable = Math.max(1, height - topNotchH - (count - 1) * notchH);
+    const zone = usable / count;
+    setNotchSidesLinked(true);
+    setLeftNotches(
+      Array.from({ length: count - 1 }, (_, i) => ({
+        ...createNotchRow(Math.round((zone * (i + 1) + notchH * i) * 10) / 10),
+        height: notchH,
+        depth: 40
+      }))
+    );
+  };
+
   const removeNotch = (side: 'left' | 'right', notchId: string) => {
     const setter = side === 'right' ? setRightNotches : setLeftNotches;
     setter(current => current.filter(row => row.id !== notchId));
@@ -2250,7 +2271,15 @@ const ModuleBuilder = () => {
                 <input
                   type="checkbox"
                   checked={useExternalDrawers}
-                  onChange={(event) => setUseExternalDrawers(event.target.checked)}
+                  onChange={(event) => {
+                    setUseExternalDrawers(event.target.checked);
+                    if (event.target.checked) {
+                      // 외부서랍장 표준 구조: 마이다 공식이 상단 따내기(목찬넬)를 전제 — 켜면 자동 동반
+                      if (!hasTopPanel) setTopChannelEnabled(true);
+                      // 단수만큼 zone이 나뉘도록 중간 따내기 자동 동기화
+                      if (extDrawerType !== 'legrabox') syncExternalDrawerNotches(extDrawerCount);
+                    }
+                  }}
                 />
                 <span>외부서랍 사용</span>
               </label>
@@ -2343,7 +2372,18 @@ const ModuleBuilder = () => {
                   <div className={styles.sectionFields}>
                     <label className={styles.compactField}>
                       <span>서랍 단수</span>
-                      <input type="number" min={1} max={5} value={extDrawerCount} onChange={(event) => setExtDrawerCount(Number(event.target.value))} />
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={extDrawerCount}
+                        onChange={(event) => {
+                          const nextCount = Number(event.target.value);
+                          setExtDrawerCount(nextCount);
+                          // 단수만큼 zone이 나뉘도록 중간 따내기를 표준 공식 위치로 자동 동기화
+                          syncExternalDrawerNotches(nextCount);
+                        }}
+                      />
                     </label>
                     <label className={styles.compactField}>
                       <span>마이다 높이(mm)</span>

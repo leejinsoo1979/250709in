@@ -2496,8 +2496,8 @@ export const calculatePanelDetails = (
         .sort((a, b) => a.fromBottom - b.fromBottom);
       notchFromBottoms = adminCommonNotches.map(n => n.fromBottom);
       notchHeightsArr = adminCommonNotches.map(n => n.y);
-      // 상판 포함(hideTopPanel === false)이면 상단 60 따내기 없음 → zone 계산에서 제외
-      hideTopNotch = moduleData.modelConfig?.hideTopPanel === false;
+      // 상판 포함 또는 목찬넬 미사용이면 상단 60 따내기 없음 → zone 계산에서 제외 (3D LowerCabinet hideTopNotch와 동일)
+      hideTopNotch = moduleData.modelConfig?.hideTopPanel === false || moduleData.modelConfig?.topChannelNotch !== true;
       fixedMaidaHeights = adminExternalDrawers.maidaHeights;
       fixedSideHeightMm = adminExternalDrawers.sideHeights?.all;
     } else if (is1TierExt) {
