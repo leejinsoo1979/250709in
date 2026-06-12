@@ -17,6 +17,7 @@ import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/Exc
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 import { resolveDrawerRailSizingMm } from '@/editor/shared/utils/drawerRailSizing';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import { removeRenderedPanelDimension, updateRenderedPanelDimension } from '@/editor/shared/utils/renderedPanelDimensionRegistry';
 
 const toRenderedMm = (value: number) => Math.round((value / 0.01) * 10) / 10;
@@ -622,6 +623,50 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     return material;
   }, [highlightedPanel, placedFurnitureId, material, highlightMaterial]);
 
+  // 목찬넬 PET 프레임용 도어 재질 — 상단 목찬넬(ExternalDrawerRenderer doorMaterial)과 동일한 색/텍스처
+  const notchDoorColor = spaceInfo?.materialConfig?.doorColor;
+  const notchDoorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
+  const notchDoorMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const notchDoorMaterial = useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(notchDoorColor || '#E0E0E0'),
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+    });
+    notchDoorMaterialRef.current = mat;
+    return mat;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    const mat = notchDoorMaterialRef.current;
+    if (!mat) return;
+    if (notchDoorTextureUrl) {
+      const loader = new THREE.TextureLoader();
+      loader.load(notchDoorTextureUrl, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        mat.map = texture;
+        if (isOakTexture(notchDoorTextureUrl)) {
+          applyOakTextureSettings(mat);
+        } else if (isCabinetTexture1(notchDoorTextureUrl)) {
+          applyCabinetTexture1Settings(mat);
+        } else {
+          applyDefaultImageTextureSettings(mat);
+        }
+        mat.needsUpdate = true;
+      });
+    } else {
+      if (mat.map) {
+        mat.map.dispose();
+        mat.map = null;
+      }
+      mat.color.set(notchDoorColor || '#E0E0E0');
+      mat.needsUpdate = true;
+    }
+  }, [notchDoorTextureUrl, notchDoorColor]);
+
   // 좌우 프레임에 사용할 material 결정 함수
   const getSidePanelMaterial = (panelName: string) => {
     // 2D 정면뷰에서는 엔드패널 여부와 관계없이 일반 재질 사용
@@ -991,26 +1036,26 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           <BoxWithEdges
                             args={[lframeWidth, petT, notchZ3]}
                             position={[0, bottomY + fromBottom3 + petT / 2, depth / 2 - notchZ3 / 2]}
-                            material={material}
+                            material={notchDoorMaterial}
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             panelName={`목찬넬프레임수평(하${idx + 1})`}
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
+                            textureUrl={notchDoorTextureUrl || textureUrl}
                           />
                           <BoxWithEdges
                             args={[lframeWidth, vertH, petT]}
                             position={[0, bottomY + fromBottom3 + petT + vertH / 2, depth / 2 - notchZ3 + petT / 2]}
-                            material={material}
+                            material={notchDoorMaterial}
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
                             panelName={`목찬넬프레임수직(하${idx + 1})`}
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
+                            textureUrl={notchDoorTextureUrl || textureUrl}
                           />
                           {/* 수평전대 — 목찬넬 수평프레임 바로 아래 받침 부재 (수직프레임 뒤 가로전대와 한 세트) */}
                           <BoxWithEdges
