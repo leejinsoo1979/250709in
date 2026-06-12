@@ -59,6 +59,73 @@ const GLTF_SCALE = 10;
 
 type Variant = '3d' | '2dDark' | '2dLight';
 
+/** N(특소) 통짜 어셈블리 — 폭 적응 중간 늘림 렌더 */
+const N_WIDTH_CLEARANCE_M = 0.0168; // 내경 − 어셈블리 폭 (W500 실측: 464 − 447.2)
+const NInnerAssembly: React.FC<{
+  prepared: PreparedModel;
+  sidePanelInnerX: number;
+  targetMinY: number;
+  drawerFrontZ: number;
+  groupRef: React.RefObject<THREE.Group | null>;
+}> = ({ prepared, sidePanelInnerX, targetMinY, drawerFrontZ, groupRef }) => {
+  const { scene: stretched, box: sbox } = React.useMemo(() => {
+    const root = prepared.template.clone(true);
+    root.updateMatrixWorld(true);
+    const bbox = new THREE.Box3().setFromObject(root); // glb meter 공간
+    const nativeW = bbox.max.x - bbox.min.x;
+    const targetW = Math.max(nativeW * 0.3, (2 * sidePanelInnerX) / GLTF_SCALE - N_WIDTH_CLEARANCE_M);
+    const delta = targetW - nativeW;
+    const cx = (bbox.min.x + bbox.max.x) / 2;
+    if (Math.abs(delta) > 1e-6) {
+      const drawables: THREE.Object3D[] = [];
+      root.traverse(o => {
+        if ((o as THREE.Mesh).isMesh || (o as THREE.LineSegments).isLineSegments || (o as THREE.Line).isLine) drawables.push(o);
+      });
+      for (const obj of drawables) {
+        const mesh = obj as THREE.Mesh;
+        if (!mesh.geometry) continue;
+        const geo = mesh.geometry.clone();
+        const world = mesh.matrixWorld.clone();
+        geo.applyMatrix4(world); // 루트 공간으로 베이크
+        const pos = geo.attributes.position as THREE.BufferAttribute;
+        for (let i = 0; i < pos.count; i++) {
+          const x = pos.getX(i);
+          pos.setX(i, x > cx ? x + delta / 2 : x - delta / 2);
+        }
+        pos.needsUpdate = true;
+        geo.computeBoundingBox();
+        geo.computeBoundingSphere();
+        // 미러 변환 베이크 시 와인딩 뒤집힘 → 양면 렌더로 안전 처리
+        if (world.determinant() < 0 && (mesh as THREE.Mesh).material) {
+          const mat = (mesh.material as THREE.Material).clone();
+          mat.side = THREE.DoubleSide;
+          mesh.material = mat;
+        }
+        mesh.geometry = geo;
+      }
+      // 변환은 모두 지오메트리에 베이크됨 — 노드 변환 초기화
+      root.traverse(o => {
+        o.position.set(0, 0, 0);
+        o.rotation.set(0, 0, 0);
+        o.scale.set(1, 1, 1);
+        o.updateMatrix();
+      });
+    }
+    const outBox = new THREE.Box3().setFromObject(root);
+    return { scene: root, box: outBox };
+  }, [prepared, sidePanelInnerX]);
+
+  // 정렬: X 중앙 0, minY → targetMinY, 앞면 → drawerFrontZ (GLTF_SCALE 적용 후 좌표)
+  const px = -((sbox.min.x + sbox.max.x) / 2) * GLTF_SCALE;
+  const py = targetMinY - sbox.min.y * GLTF_SCALE;
+  const pz = drawerFrontZ - sbox.max.z * GLTF_SCALE;
+  return (
+    <group ref={groupRef} position={[px, py, pz]} scale={[GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}>
+      <primitive object={stretched} />
+    </group>
+  );
+};
+
 type PreparedModel = {
   template: THREE.Object3D; // variant별 1회 처리된 scene 원본. 인스턴스는 이걸 clone해서 사용.
   box: THREE.Box3; // scale(GLTF_SCALE) 적용된 바운딩
@@ -304,18 +371,18 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   if (hideAccessories) return null;
   if (viewMode === '2D' && view2DDirection === 'top') return null;
 
-  // N(특소): GLB가 좌우 측판+기성 뒷판+속마이다를 포함한 통짜 어셈블리 — 미러 없이 1회, X 중앙 정렬
+  // N(특소): GLB가 좌우 측판+기성 뒷판+속마이다를 포함한 통짜 어셈블리 — 미러 없이 1회.
+  // 가구 폭 적응: 좌/우 절반을 X 중심 기준으로 벌려 가운데 직선 구간(기성 뒷판·속마이다)만 연장.
+  // 측판·금구는 형태 그대로 이동 (스케일 왜곡 없음) — 깊이 컷과 동일 원리의 역방향.
   if (grade === 'N') {
-    const box = prepared.box;
-    const centerX = -(box.min.x + box.max.x) / 2;
     return (
-      <group
-        ref={leftGroupRef}
-        position={[centerX, leftPos.y, leftPos.z]}
-        scale={[GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}
-      >
-        <primitive object={leftScene} />
-      </group>
+      <NInnerAssembly
+        prepared={prepared}
+        sidePanelInnerX={sidePanelInnerX}
+        targetMinY={drawerBottomY - 13.7 * 0.01}
+        drawerFrontZ={drawerFrontZ}
+        groupRef={leftGroupRef}
+      />
     );
   }
 
