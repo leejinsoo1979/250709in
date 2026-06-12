@@ -2416,9 +2416,9 @@ const ModuleBuilder = () => {
                               item.id === row.id ? { ...item, type: event.target.value as 'M' | 'L' | 'F' } : item
                             )))}
                           >
-                            <option value="M">M — 본체 117 (측판 128.5)</option>
-                            <option value="L">L — 본체 164 (측판 177)</option>
-                            <option value="F">F — 본체 228 (측판 241)</option>
+                            <option value="M">소 (M) — 본체 117 · 측판 128.5</option>
+                            <option value="L">중 (L) — 본체 164 · 측판 177</option>
+                            <option value="F">대 (F) — 본체 228 · 측판 241</option>
                           </select>
                         </label>
                         <label className={styles.compactField}>
