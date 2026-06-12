@@ -564,11 +564,12 @@ export const calculatePanelDetails = (
         const id = moduleData.id;
         if (id.includes('lower-')) {
           const notches: Array<{ y: number; z: number; fromBottom: number }> = [];
-          // 상단 따내기 (60mm) — 상판이 없는 하부장 (drawer, half-cabinet, sink, induction)
+          // 상단 따내기 (60mm) — 상판이 없는 하부장 (drawer, half-cabinet, sink, induction, 관리자 빌더)
           const hideTopPanel = id.includes('lower-half-cabinet') || id.includes('dual-lower-half-cabinet')
             || id.includes('lower-sink-cabinet') || id.includes('dual-lower-sink-cabinet')
             || id.includes('lower-induction-cabinet') || id.includes('dual-lower-induction-cabinet')
-            || id.includes('lower-drawer-');
+            || id.includes('lower-drawer-')
+            || (id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false);
           // 도어올림/상판내림은 상단 따내기 없음 (상판내림 상단은 665에 포함)
           const noUpperNotch = id.includes('lower-door-lift-') || id.includes('lower-top-down-');
           if (hideTopPanel && !noUpperNotch) {
@@ -616,10 +617,14 @@ export const calculatePanelDetails = (
           thickness: sideThickness,
           material: 'PB'
         };
-        if (sidePanelNotches) {
-          leftSideEntry.sideNotches = sidePanelNotches;
-          rightSideEntry.sideNotches = sidePanelNotches;
-        }
+        // 관리자 빌더 modelConfig 측판 따내기 — 3D(BaseFurnitureShell)와 동일 소스, 측별 개별 지원
+        const configCommonNotches = moduleData.modelConfig?.sideNotches || [];
+        const configLeftNotches = moduleData.modelConfig?.leftSideNotches ?? configCommonNotches;
+        const configRightNotches = moduleData.modelConfig?.rightSideNotches ?? configCommonNotches;
+        const leftNotchesAll = [...(sidePanelNotches || []), ...configLeftNotches];
+        const rightNotchesAll = [...(sidePanelNotches || []), ...configRightNotches];
+        if (leftNotchesAll.length > 0) leftSideEntry.sideNotches = leftNotchesAll;
+        if (rightNotchesAll.length > 0) rightSideEntry.sideNotches = rightNotchesAll;
         targetPanel.push(leftSideEntry);
         targetPanel.push(rightSideEntry);
       }
@@ -760,7 +765,8 @@ export const calculatePanelDetails = (
           const noTopPanel = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
             || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
             || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
-            || moduleData.id.includes('lower-drawer-');
+            || moduleData.id.includes('lower-drawer-')
+            || (moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false);
           if (!noTopPanel) {
             const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
             const topDownFrontReductionMm = isTopDownForTop
@@ -2770,7 +2776,8 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
-  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet'))) {
+  const isAdminLowerWithTopNotch = moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false;
+  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || isAdminLowerWithTopNotch)) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
@@ -2781,7 +2788,8 @@ export const calculatePanelDetails = (
     const isHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
       || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
       || moduleData.id.includes('lower-dishwasher-cabinet')
-      || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
+      || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
+      || isAdminLowerWithTopNotch; // 관리자 빌더 하부장: 상단 따내기만 (중간 따내기는 modelConfig로 별도 지정)
     // 보강대 따내기 (65mm)
     const lowerNotches: { fromBottom: number; height: number }[] = isHalfCabinet
       ? [] // 반통/한통/싱크장/인덕션장: 중간 따내기 없음, 상단만
@@ -2843,6 +2851,26 @@ export const calculatePanelDetails = (
         material: 'PB',
       });
     });
+  }
+
+  // === 관리자 빌더 modelConfig 공통 따내기: 가로전대 패널 ===
+  // 3D BaseFurnitureShell이 공통 따내기(sideNotches)마다 가로전대(하N)를 자동 렌더링하므로 패널목록도 일치시킨다.
+  // 좌우 개별 따내기(leftSideNotches/rightSideNotches)는 전대가 전폭을 가로지를 수 없어 3D에도 없음 → 제외
+  {
+    const adminCommonNotches = moduleData.modelConfig?.sideNotches || [];
+    if (adminCommonNotches.length > 0) {
+      const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+      adminCommonNotches.forEach((notch, ni) => {
+        if (notch.y <= 0) return;
+        panels.frame.push({
+          name: `가로전대(하${ni + 1})`,
+          width: innerWidth - stretcherGap,
+          height: notch.y,
+          thickness: basicThickness,
+          material: 'PB',
+        });
+      });
+    }
   }
 
   if (moduleData.id.includes('right-corner')) {

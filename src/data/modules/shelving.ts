@@ -85,6 +85,15 @@ export interface ModuleData {
     // 듀얼 가구 안전선반 통합 옵션 (상부 옷장이 동일 용도인 경우)
     hasSharedSafetyShelf?: boolean; // 통합 선반 여부
     safetyShelfHeight?: number; // 안전선반 위치 (바닥에서 mm)
+    // 관리자 빌더 하부장: 상판 유무 (기본 undefined = 표준 하부장처럼 상판 없음 + 상단 60 따내기 + 목찬넬)
+    // false 지정 시에만 상판 포함 (따내기/목찬넬 없음)
+    hideTopPanel?: boolean;
+    // 측판 목찬넬 따내기 (관리자 빌더) — y: 따내기 높이(mm), z: 따내기 깊이(mm), fromBottom: 바닥 기준 위치(mm)
+    // sideNotches: 좌우 공통 (가로전대 자동 렌더링 포함)
+    // leftSideNotches/rightSideNotches: 측별 개별 지정 (지정 시 sideNotches보다 우선, 가로전대 자동 렌더링 없음)
+    sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+    leftSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+    rightSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
   };
 }
 

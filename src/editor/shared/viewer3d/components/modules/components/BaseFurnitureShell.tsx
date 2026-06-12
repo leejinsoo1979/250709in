@@ -324,7 +324,14 @@ interface BaseFurnitureShellProps {
   hasBackPanel?: boolean;
   
   // 가구 데이터 (ID 확인용)
-  moduleData?: { id: string };
+  moduleData?: {
+    id: string;
+    modelConfig?: {
+      sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+      leftSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+      rightSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+    };
+  };
 
   // 배치된 가구 ID (섹션 강조용)
   placedFurnitureId?: string;
@@ -481,6 +488,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const doorsOpen = useUIStore(state => state.doorsOpen);
   const isGlassCabinet = !!moduleData?.id?.includes('glass-cabinet');
+
+  // 관리자 빌더 모듈: modelConfig에 정의된 측판 목찬넬 따내기 (mm 단위)
+  // left/right 개별 지정이 있으면 우선, 없으면 공통(sideNotches) 사용
+  const configCommonNotches = moduleData?.modelConfig?.sideNotches || [];
+  const configLeftNotches = moduleData?.modelConfig?.leftSideNotches ?? configCommonNotches;
+  const configRightNotches = moduleData?.modelConfig?.rightSideNotches ?? configCommonNotches;
   const createBackPanelFaceGrooves = useCallback((
     face: 'left' | 'right',
     panelHeight: number,
@@ -742,7 +755,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         ) : (
           // 기존: 통짜 측판 (하부장은 앞쪽 상단 노치 적용)
           <>
-            {(hideTopPanel || sideNotches) ? (
+            {(hideTopPanel || sideNotches || configLeftNotches.length > 0 || configRightNotches.length > 0) ? (
               // 하부장: 측판 앞쪽 따내기 — L자형 단일 메시
               (() => {
                 const notchYmm = 60;
@@ -789,22 +802,36 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   }
                 }
 
-                // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
-                const allNotches = (sideNotches || topDownNotches.length > 0) ? [
-                  // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
-                  ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
-                  // 추가 노치들 (mm → Three.js 단위 변환)
-                  ...(sideNotches || []).map(n => ({
-                    y: mmToThreeUnits(n.y),
-                    z: mmToThreeUnits(n.z),
-                    fromBottom: mmToThreeUnits(n.fromBottom)
-                  })),
-                  // 상판내림 계단형 따내기 (앞으로 평행이동된 좌표계 기준 — notch는 패널 앞면 기준이므로 그대로)
-                  ...topDownNotches
-                ] : undefined;
-                const notchProps = allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } };
-                const leftPanelNotchProps = moduleData?.id?.includes('left-corner') ? {} : notchProps;
-                const rightPanelNotchProps = moduleData?.id?.includes('right-corner') ? {} : notchProps;
+                // 다중 노치 (sideNotches/modelConfig 따내기가 있으면 추가 노치 포함) — 측별 개별 구성
+                const composeNotchProps = (configNotches: Array<{ y: number; z: number; fromBottom: number }>) => {
+                  const hasMultiNotches = !!sideNotches || topDownNotches.length > 0 || configNotches.length > 0;
+                  if (!hasMultiNotches) {
+                    // 기존 기본값: 상판 없는 하부장의 상단 단일 따내기
+                    return hideTopPanel ? { notch: { y: notchY, z: notchZ } } : {};
+                  }
+                  return {
+                    notches: [
+                      // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
+                      ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
+                      // 추가 노치들 (mm → Three.js 단위 변환)
+                      ...(sideNotches || []).map(n => ({
+                        y: mmToThreeUnits(n.y),
+                        z: mmToThreeUnits(n.z),
+                        fromBottom: mmToThreeUnits(n.fromBottom)
+                      })),
+                      // 관리자 빌더 modelConfig 따내기 (mm → Three.js 단위 변환)
+                      ...configNotches.map(n => ({
+                        y: mmToThreeUnits(n.y),
+                        z: mmToThreeUnits(n.z),
+                        fromBottom: mmToThreeUnits(n.fromBottom)
+                      })),
+                      // 상판내림 계단형 따내기 (앞으로 평행이동된 좌표계 기준 — notch는 패널 앞면 기준이므로 그대로)
+                      ...topDownNotches
+                    ]
+                  };
+                };
+                const leftPanelNotchProps = moduleData?.id?.includes('left-corner') ? {} : composeNotchProps(configLeftNotches);
+                const rightPanelNotchProps = moduleData?.id?.includes('right-corner') ? {} : composeNotchProps(configRightNotches);
 
                 return (
                   <>
@@ -896,8 +923,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     )}
 
                     {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재
-                        단, topStretcher 영역(가구 상단 ~ stretcherH)과 겹치는 노치는 스킵 (중복 방지) */}
-                    {sideNotches && !disableAutoSideNotchStretcher && sideNotches.map((n, idx) => {
+                        단, topStretcher 영역(가구 상단 ~ stretcherH)과 겹치는 노치는 스킵 (중복 방지)
+                        modelConfig 공통 따내기(configCommonNotches)도 동일하게 가로전대 자동 렌더링
+                        (좌우 개별 지정 시에는 전대가 전폭을 가로지를 수 없으므로 제외) */}
+                    {!disableAutoSideNotchStretcher && [...(sideNotches || []), ...configCommonNotches].map((n, idx) => {
                       // topStretcher 영역과 겹치는지 검사 (mm 단위로 비교)
                       if (topStretcher) {
                         const heightMmTotal = Math.round(height / mmToThreeUnits(1));

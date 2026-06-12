@@ -40,6 +40,36 @@ interface BuilderSection {
   fixedTopZoneMm: number;
 }
 
+/** 측판 목찬넬 따내기 한 줄 — 표준 목찬넬: 높이 65 / 깊이 40 */
+interface NotchRow {
+  id: string;
+  fromBottom: number; // 따내기 하단의 바닥 기준 위치 (mm)
+  height: number;     // 따내기 높이 (mm)
+  depth: number;      // 따내기 깊이 — 측판 앞면에서 뒤로 (mm)
+}
+
+const createNotchRow = (fromBottom = 300): NotchRow => ({
+  id: `notch-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  fromBottom,
+  height: 65,
+  depth: 40
+});
+
+const notchRowsToConfig = (rows: NotchRow[]) => (
+  rows
+    .filter(row => row.height > 0 && row.depth > 0 && row.fromBottom >= 0)
+    .map(row => ({ y: row.height, z: row.depth, fromBottom: row.fromBottom }))
+);
+
+const notchConfigToRows = (notches?: Array<{ y: number; z: number; fromBottom: number }>): NotchRow[] => (
+  (notches || []).map(notch => ({
+    id: `notch-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    fromBottom: notch.fromBottom,
+    height: notch.y,
+    depth: notch.z
+  }))
+);
+
 const createSection = (index: number): BuilderSection => ({
   id: `section-${Date.now()}-${index}`,
   type: 'shelf',
@@ -213,6 +243,13 @@ const ModuleBuilder = () => {
   const [hasSharedMiddlePanel, setHasSharedMiddlePanel] = useState(false);
   const [hasSharedSafetyShelf, setHasSharedSafetyShelf] = useState(false);
 
+  // 측판 목찬넬 따내기 — 좌우 동일(공통, 가로전대 자동) 또는 좌/우 개별
+  const [notchSidesLinked, setNotchSidesLinked] = useState(true);
+  const [leftNotches, setLeftNotches] = useState<NotchRow[]>([]);
+  const [rightNotches, setRightNotches] = useState<NotchRow[]>([]);
+  // 하부장 상판 포함 여부 — 기본 OFF (표준 하부장처럼 상판 없음 + 상단 60 따내기 + 목찬넬)
+  const [lowerHasTopPanel, setLowerHasTopPanel] = useState(false);
+
   // 저장된 모듈 관리
   const [savedDocs, setSavedDocs] = useState<AdminFurnitureModuleDoc[]>([]);
   const [loadedModuleId, setLoadedModuleId] = useState<string | null>(null);
@@ -234,11 +271,24 @@ const ModuleBuilder = () => {
   const moduleDraft = useMemo(() => {
     const normalizedSlug = normalizeSlug(slug || name) || 'custom-module';
     const moduleId = `${getCategoryPrefix(category, layoutMode)}-${normalizedSlug}-${width}`;
+    // 측판 목찬넬 따내기 — 공통(sideNotches: 가로전대 자동) 또는 좌/우 개별
+    const commonNotchConfig = notchRowsToConfig(leftNotches);
+    const rightNotchConfig = notchRowsToConfig(rightNotches);
+    const notchModelConfig = notchSidesLinked
+      ? (commonNotchConfig.length > 0 ? { sideNotches: commonNotchConfig } : {})
+      : {
+          ...(commonNotchConfig.length > 0 ? { leftSideNotches: commonNotchConfig } : {}),
+          ...(rightNotchConfig.length > 0 ? { rightSideNotches: rightNotchConfig } : {})
+        };
+
     const baseModelConfig = {
       basicThickness: 18,
       hasOpenFront: !hasDoor,
       hasShelf: sections.some(section => section.type === 'shelf') || rightSections.some(section => section.type === 'shelf'),
-      shelfCount: sections.filter(section => section.type === 'shelf').length
+      shelfCount: sections.filter(section => section.type === 'shelf').length,
+      // 하부장: 상판 포함 선택 시에만 false (기본 = 표준 하부장처럼 상판 없음 + 상단 따내기 + 목찬넬)
+      ...(category === 'lower' && lowerHasTopPanel ? { hideTopPanel: false } : {}),
+      ...notchModelConfig
     };
 
     return {
@@ -273,7 +323,7 @@ const ModuleBuilder = () => {
             sections: sections.map(builderSectionToConfig)
           }
     };
-  }, [category, depth, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, isDynamic, layoutMode, name, rightAbsoluteDepth, rightAbsoluteWidth, rightSections, sections, slug, thumbnail, width]);
+  }, [category, depth, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, isDynamic, layoutMode, leftNotches, lowerHasTopPanel, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, width]);
 
   const setSectionsForSide = (side: SectionSide, updater: (current: BuilderSection[]) => BuilderSection[]) => {
     if (side === 'right') {
@@ -327,6 +377,20 @@ const ModuleBuilder = () => {
     setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
     setHasSharedSafetyShelf(module.modelConfig?.hasSharedSafetyShelf === true);
 
+    // 측판 목찬넬 따내기 복원
+    setLowerHasTopPanel(module.modelConfig?.hideTopPanel === false);
+    const savedLeft = module.modelConfig?.leftSideNotches;
+    const savedRight = module.modelConfig?.rightSideNotches;
+    if (savedLeft || savedRight) {
+      setNotchSidesLinked(false);
+      setLeftNotches(notchConfigToRows(savedLeft));
+      setRightNotches(notchConfigToRows(savedRight));
+    } else {
+      setNotchSidesLinked(true);
+      setLeftNotches(notchConfigToRows(module.modelConfig?.sideNotches));
+      setRightNotches([]);
+    }
+
     if (module.modelConfig?.leftSections || module.modelConfig?.rightSections) {
       setLayoutMode('dual');
       setSections((module.modelConfig.leftSections || [{ type: 'open', height: 100, heightType: 'percentage' }]).map(sectionConfigToBuilderSection));
@@ -368,7 +432,49 @@ const ModuleBuilder = () => {
       }
     }
 
+    // 측판 따내기 검증 — 가구 높이/깊이 안에 있어야 함
+    const notchSides: Array<[string, NotchRow[]]> = notchSidesLinked
+      ? [['공통', leftNotches]]
+      : [['좌측', leftNotches], ['우측', rightNotches]];
+    for (const [label, rows] of notchSides) {
+      for (let i = 0; i < rows.length; i += 1) {
+        const row = rows[i];
+        if (row.height <= 0 || row.depth <= 0) {
+          return `${label} 따내기 ${i + 1}: 높이/깊이는 1mm 이상이어야 합니다.`;
+        }
+        if (row.fromBottom + row.height > height) {
+          return `${label} 따내기 ${i + 1}: 상단(${row.fromBottom + row.height}mm)이 가구 높이(${height}mm)를 초과합니다.`;
+        }
+        if (row.depth >= depth) {
+          return `${label} 따내기 ${i + 1}: 깊이(${row.depth}mm)가 가구 깊이(${depth}mm) 이상입니다.`;
+        }
+      }
+    }
+
     return null;
+  };
+
+  const addNotch = (side: 'left' | 'right') => {
+    const setter = side === 'right' ? setRightNotches : setLeftNotches;
+    setter(current => [...current, createNotchRow(current.length > 0 ? current[current.length - 1].fromBottom + 200 : 300)]);
+  };
+
+  const removeNotch = (side: 'left' | 'right', notchId: string) => {
+    const setter = side === 'right' ? setRightNotches : setLeftNotches;
+    setter(current => current.filter(row => row.id !== notchId));
+  };
+
+  const updateNotch = (side: 'left' | 'right', notchId: string, key: 'fromBottom' | 'height' | 'depth', value: number) => {
+    const setter = side === 'right' ? setRightNotches : setLeftNotches;
+    setter(current => current.map(row => (row.id === notchId ? { ...row, [key]: value } : row)));
+  };
+
+  const toggleNotchSidesLinked = (linked: boolean) => {
+    setNotchSidesLinked(linked);
+    if (!linked && rightNotches.length === 0) {
+      // 개별 모드 진입 시 좌측 값을 우측에 복사해 시작
+      setRightNotches(leftNotches.map(row => ({ ...row, id: `right-${row.id}` })));
+    }
   };
 
   const reservedTokensInSlug = () => {
@@ -808,6 +914,123 @@ const ModuleBuilder = () => {
                       <label className={styles.compactField}>
                         <span>서랍 높이(mm)</span>
                         <input value={section.drawerHeights} onChange={(event) => updateSection('right', section.id, 'drawerHeights', event.target.value)} />
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* === 측판 목찬넬 따내기 === */}
+          <div className={styles.sectionGroupHeader}>
+            <h3 className={styles.sectionGroupTitle}>측판 목찬넬 따내기</h3>
+            <button type="button" className={styles.iconButton} onClick={() => addNotch('left')} title="따내기 추가">
+              <Plus size={18} />
+            </button>
+          </div>
+
+          <p className={styles.thumbnailHint}>
+            바닥 기준 위치(mm)에서 위로 [높이]만큼, 측판 앞면에서 뒤로 [깊이]만큼 따냅니다.
+            표준 목찬넬은 높이 65 / 깊이 40. 좌우 동일 적용 시 가로전대가 자동 포함됩니다.
+          </p>
+
+          {category === 'lower' && (
+            <label className={styles.checkboxInline}>
+              <input
+                type="checkbox"
+                checked={lowerHasTopPanel}
+                onChange={(event) => setLowerHasTopPanel(event.target.checked)}
+              />
+              <span>상판 포함 (체크 해제 시 표준 하부장처럼 상단 60 따내기 + 목찬넬 프레임)</span>
+            </label>
+          )}
+
+          <label className={styles.checkboxInline}>
+            <input
+              type="checkbox"
+              checked={notchSidesLinked}
+              onChange={(event) => toggleNotchSidesLinked(event.target.checked)}
+            />
+            <span>좌우측판 동일 적용</span>
+          </label>
+
+          <div className={styles.sectionList}>
+            {leftNotches.length === 0 && (
+              <p className={styles.thumbnailHint}>추가 따내기 없음 — 우측 상단 + 버튼으로 추가</p>
+            )}
+            {leftNotches.map((row, index) => (
+              <div key={row.id} className={styles.sectionCard}>
+                <div className={styles.sectionCardHeader}>
+                  <div>
+                    <span className={styles.sectionBadge}>{notchSidesLinked ? '공통' : '좌측'} 따내기 {index + 1}</span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.deleteButton}
+                    onClick={() => removeNotch('left', row.id)}
+                    title="따내기 삭제"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+                <div className={styles.sectionFields}>
+                  <label className={styles.compactField}>
+                    <span>바닥에서 위치(mm)</span>
+                    <input type="number" min={0} value={row.fromBottom} onChange={(event) => updateNotch('left', row.id, 'fromBottom', Number(event.target.value))} />
+                  </label>
+                  <label className={styles.compactField}>
+                    <span>따내기 높이(mm)</span>
+                    <input type="number" min={1} value={row.height} onChange={(event) => updateNotch('left', row.id, 'height', Number(event.target.value))} />
+                  </label>
+                  <label className={styles.compactField}>
+                    <span>따내기 깊이(mm)</span>
+                    <input type="number" min={1} value={row.depth} onChange={(event) => updateNotch('left', row.id, 'depth', Number(event.target.value))} />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {!notchSidesLinked && (
+            <>
+              <div className={styles.sectionGroupHeader}>
+                <h3 className={styles.sectionGroupTitle}>우측판 따내기</h3>
+                <button type="button" className={styles.iconButton} onClick={() => addNotch('right')} title="우측 따내기 추가">
+                  <Plus size={18} />
+                </button>
+              </div>
+              <div className={styles.sectionList}>
+                {rightNotches.length === 0 && (
+                  <p className={styles.thumbnailHint}>우측판 따내기 없음</p>
+                )}
+                {rightNotches.map((row, index) => (
+                  <div key={row.id} className={styles.sectionCard}>
+                    <div className={styles.sectionCardHeader}>
+                      <div>
+                        <span className={styles.sectionBadge}>우측 따내기 {index + 1}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className={styles.deleteButton}
+                        onClick={() => removeNotch('right', row.id)}
+                        title="따내기 삭제"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                    <div className={styles.sectionFields}>
+                      <label className={styles.compactField}>
+                        <span>바닥에서 위치(mm)</span>
+                        <input type="number" min={0} value={row.fromBottom} onChange={(event) => updateNotch('right', row.id, 'fromBottom', Number(event.target.value))} />
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>따내기 높이(mm)</span>
+                        <input type="number" min={1} value={row.height} onChange={(event) => updateNotch('right', row.id, 'height', Number(event.target.value))} />
+                      </label>
+                      <label className={styles.compactField}>
+                        <span>따내기 깊이(mm)</span>
+                        <input type="number" min={1} value={row.depth} onChange={(event) => updateNotch('right', row.id, 'depth', Number(event.target.value))} />
                       </label>
                     </div>
                   </div>

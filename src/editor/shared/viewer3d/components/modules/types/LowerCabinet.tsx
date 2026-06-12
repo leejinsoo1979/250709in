@@ -2253,7 +2253,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isFloating={isFloating}
               hideVentilationCap={true}
-              hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
+              hideTopPanel={
+                moduleData.id.includes('lower-cabinet-admin')
+                  // 관리자 빌더 하부장: modelConfig.hideTopPanel === false일 때만 상판 포함
+                  ? moduleData.modelConfig?.hideTopPanel !== false
+                  : (!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'))
+              }
               topPanelFrontReduction={(() => {
                 if (!moduleData.id.includes('lower-top-down-')) return 0;
                 return resolveTopDownTopPanelFrontReductionMm(baseFurniture.basicThickness / 0.01, stoneThickness);
@@ -2975,14 +2980,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 기본하부장/싱크장/인덕션장 반통/한통: 상단 따내기 L자 프레임 렌더링 — 걸래받이 OFF 시 숨김 */}
-      {showFurniture && hasBase !== false && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
+      {/* 기본하부장/싱크장/인덕션장 반통/한통 + 관리자 빌더 하부장(상판 없음): 상단 따내기 L자 프레임 렌더링 — 걸래받이 OFF 시 숨김 */}
+      {showFurniture && hasBase !== false && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-dishwasher-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || (moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.hideTopPanel !== false)) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const cabinetHeightMmLocal = cabinetHeight / 0.01;
         const notchHeightMm = 60;
-        // 인덕션장은 H 변경 시 따내기도 캐비넷 상단 기준 60mm 아래로 함께 이동
-        const isInductionForNotch = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
+        // 인덕션장/관리자 빌더 하부장은 H 변경 시 따내기도 캐비넷 상단 기준 60mm 아래로 함께 이동
+        const isInductionForNotch = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || moduleData.id.includes('lower-cabinet-admin');
         const notchFromBottomMm = isInductionForNotch
           ? (cabinetHeightMmLocal - notchHeightMm)
           : ((moduleData.dimensions.height || 785) - notchHeightMm);
