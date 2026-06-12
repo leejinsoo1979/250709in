@@ -492,11 +492,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             const is2TierDrawer = sectionHeight < mmToThreeUnits(700);
 
             // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 상판 - 바닥판)
-            const drawerInnerHeight = sectionHeight - basicThickness * 2;
-            // Y 위치: 2단은 바닥에 붙도록 18mm 아래로
-            const drawerYOffset = is2TierDrawer
-              ? sectionCenterY - basicThickness
-              : sectionCenterY;
+            // 관리자 모듈: 섹션 높이가 이미 몸통 상하판을 뺀 내경이므로 추가 차감 없이 꽉 채움
+            //   (의류장 Type4는 섹션 외경 기준이라 -36 유지) — 날개벽이 바닥판에서 뜨는 문제 수정
+            const isAdminDrawerSection = !!(furnitureId?.includes('-admin-'));
+            const drawerInnerHeight = isAdminDrawerSection
+              ? sectionHeight
+              : sectionHeight - basicThickness * 2;
+            // Y 위치: 2단은 바닥에 붙도록 18mm 아래로 (admin은 꽉 채움이라 센터 유지)
+            const drawerYOffset = isAdminDrawerSection
+              ? sectionCenterY
+              : is2TierDrawer
+                ? sectionCenterY - basicThickness
+                : sectionCenterY;
 
             // 섹션 깊이에 따른 Z 오프셋 계산 (방향에 따라 앞/뒤)
             // 섹션 박스 이동(directionOffset)과 동일한 값 사용 → 서랍이 섹션과 함께 이동

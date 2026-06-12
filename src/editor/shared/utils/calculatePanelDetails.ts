@@ -1107,7 +1107,10 @@ export const calculatePanelDetails = (
         //   depth = customDepth * 0.01 (Three.js) → mm: customDepth
         //   verticalPanelDepthMm = customDepth - 103 - 35 - bpt = customDepth - 138 - bpt
         const wingVerticalPanelDepthMm = customDepth - 138 - bpt;
-        const wingVerticalPanelHeightMm = sectionHeightMm - basicThickness * 2; // 서랍 섹션 내경 높이 (상판/하판 제외)
+        // 관리자 모듈: 섹션 높이가 이미 내경이므로 추가 차감 없음 (3D SectionsRenderer와 동일 규칙)
+        const wingVerticalPanelHeightMm = moduleData.id.includes('-admin-')
+          ? sectionHeightMm
+          : sectionHeightMm - basicThickness * 2; // 서랍 섹션 내경 높이 (상판/하판 제외)
         const wingVerticalPanelThickness = drawerSideThickness; // 서랍재 두께 (15mm, PET 시 15.5mm)
 
         // 좌측 수직 패널
@@ -1129,7 +1132,7 @@ export const calculatePanelDetails = (
 
         // 수평 패널 (전면/후면): 앞 프레임 폭 50mm 고정
         const wingHorizontalPanelWidthMm = 50;
-        const wingHorizontalPanelHeightMm = sectionHeightMm - basicThickness * 2; // 내경 높이
+        const wingHorizontalPanelHeightMm = wingVerticalPanelHeightMm; // 수직 패널과 동일 (admin = 칸 전체)
         const wingHorizontalPanelDepthMm = drawerSideThickness; // 서랍재 두께 (15mm, PET 시 15.5mm)
 
         // 좌측 후면 수평 패널
