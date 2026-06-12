@@ -1,6 +1,12 @@
 import { Suspense, useEffect, useMemo, useRef } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import {
+  ContactShadows,
+  Grid as StageGrid,
+  OrbitControls,
+  PerspectiveCamera,
+  SoftShadows
+} from '@react-three/drei';
 import * as THREE from 'three';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
 import { getExcludedPanelAliases } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
@@ -133,11 +139,15 @@ const AdminModulePreview = ({
       viewMode="3D"
     >
       <Canvas shadows dpr={[1, 2]} gl={{ antialias: true }}>
-        <color attach="background" args={['#f8fafc']} />
+        {/* 스테이지: 종이톤 배경 + 원거리 포그로 그리드가 수평선으로 사라지게 */}
+        <color attach="background" args={['#ecedeb']} />
+        <fog attach="fog" args={['#ecedeb', cameraDistance * 2.2, cameraDistance * 5.5]} />
+        <SoftShadows size={22} samples={14} focus={0.6} />
+
         <PerspectiveCamera
           makeDefault
-          position={[cameraDistance * 0.7, centerY + cameraDistance * 0.3, cameraDistance]}
-          fov={34}
+          position={[cameraDistance * 0.72, centerY + cameraDistance * 0.26, cameraDistance]}
+          fov={30}
         />
         <OrbitControls
           target={[0, centerY, 0]}
@@ -145,11 +155,25 @@ const AdminModulePreview = ({
           dampingFactor={0.08}
           minDistance={cameraDistance * 0.3}
           maxDistance={cameraDistance * 3}
+          maxPolarAngle={Math.PI / 2 - 0.01}
         />
-        <ambientLight intensity={0.65} />
-        <directionalLight position={[5, 12, 8]} intensity={1.4} castShadow />
-        <directionalLight position={[-6, 6, -4]} intensity={0.4} />
-        <gridHelper args={[40, 40, '#cbd5e1', '#e2e8f0']} />
+
+        {/* 3점 조명: 키(그림자) + 필 + 림 + 하늘빛 */}
+        <hemisphereLight args={['#ffffff', '#d9dbd6', 0.5]} />
+        <directionalLight
+          position={[6, 14, 9]}
+          intensity={1.5}
+          castShadow
+          shadow-mapSize={[2048, 2048]}
+          shadow-bias={-0.0002}
+          shadow-camera-left={-30}
+          shadow-camera-right={30}
+          shadow-camera-top={30}
+          shadow-camera-bottom={-30}
+        />
+        <directionalLight position={[-8, 7, -5]} intensity={0.35} />
+        <directionalLight position={[0, 5, -12]} intensity={0.25} color="#eef3ff" />
+
         <Suspense fallback={null}>
           <group position={[0, centerY, 0]}>
             <BoxModule
@@ -165,6 +189,31 @@ const AdminModulePreview = ({
             />
           </group>
         </Suspense>
+
+        {/* 바닥: 컨택트 섀도우(접지감) + 페이드 그리드 */}
+        <ContactShadows
+          position={[0, 0.001, 0]}
+          opacity={0.38}
+          scale={Math.max(mmToThreeUnits(maxDim) * 3.2, 24)}
+          blur={2.6}
+          far={mmToThreeUnits(height) * 1.2}
+          resolution={1024}
+          color="#3a3f3a"
+        />
+        <StageGrid
+          position={[0, -0.002, 0]}
+          args={[10, 10]}
+          cellSize={mmToThreeUnits(100)}
+          cellThickness={0.55}
+          cellColor="#c9ccc6"
+          sectionSize={mmToThreeUnits(1000)}
+          sectionThickness={1}
+          sectionColor="#aab0a8"
+          fadeDistance={cameraDistance * 3.2}
+          fadeStrength={1.2}
+          infiniteGrid
+        />
+
         <PreviewPanelHighlighter panelName={highlightedPanelName} />
       </Canvas>
     </Space3DViewProvider>

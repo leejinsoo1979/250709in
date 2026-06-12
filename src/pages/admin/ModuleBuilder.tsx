@@ -699,17 +699,19 @@ const ModuleBuilder = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div>
+        <div className={styles.headerTitleGroup}>
           <h1 className={styles.title}>모듈 빌더</h1>
-          <p className={styles.subtitle}>관리자용 가구 모듈 정의</p>
+          <code className={styles.idChip} title="모듈 ID (식별자·폭에서 자동 생성)">{moduleDraft.id}</code>
         </div>
-        <button type="button" className={styles.copyButton} onClick={copyDraft}>
-          <ClipboardCopy size={18} />
-          <span>JSON 복사</span>
-        </button>
-        <button type="button" className={styles.saveButton} onClick={saveDraft} disabled={saving}>
-          {saving ? '저장 중…' : (loadedModuleId === moduleDraft.id ? '수정 저장' : '저장')}
-        </button>
+        <div className={styles.headerActions}>
+          <button type="button" className={styles.copyButton} onClick={copyDraft}>
+            <ClipboardCopy size={16} />
+            <span>JSON</span>
+          </button>
+          <button type="button" className={styles.saveButton} onClick={saveDraft} disabled={saving}>
+            {saving ? '저장 중…' : (loadedModuleId === moduleDraft.id ? '수정 저장' : '저장')}
+          </button>
+        </div>
       </header>
 
       <div className={styles.layout}>
@@ -786,33 +788,38 @@ const ModuleBuilder = () => {
             <span>동적 폭 (배치 시 슬롯 폭에 맞춰 자동 조정, 전체장은 높이도 내경에 맞춤)</span>
           </label>
 
-          <div className={styles.thumbnailUploader}>
-            <div className={styles.thumbnailHeader}>
-              <ImageIcon size={18} />
-              <span>섬네일 등록</span>
+          <details className={styles.collapse}>
+            <summary className={styles.collapseSummary}>
+              <ImageIcon size={15} />
+              <span>섬네일</span>
+              <em>{thumbnailSpec.width}×{thumbnailSpec.height}px{thumbnail ? ' · 등록됨' : ''}</em>
+            </summary>
+            <div className={styles.collapseBody}>
+              <div className={styles.thumbnailUploader}>
+                <p className={styles.thumbnailHint}>
+                  표준 규격 {thumbnailSpec.width}×{thumbnailSpec.height}px (PNG, 투명 배경 권장)
+                  — 업로드 시 자동으로 규격에 맞게 변환됩니다.
+                </p>
+                <label className={styles.thumbnailDrop}>
+                  {thumbnail ? (
+                    <img src={thumbnail} alt="등록된 섬네일" />
+                  ) : (
+                    <span>이미지 선택</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => handleThumbnailChange(event.target.files?.[0])}
+                  />
+                </label>
+                {thumbnail && (
+                  <button type="button" className={styles.textButton} onClick={clearThumbnail}>
+                    섬네일 제거
+                  </button>
+                )}
+              </div>
             </div>
-            <p className={styles.thumbnailHint}>
-              표준 규격 {thumbnailSpec.width}×{thumbnailSpec.height}px (PNG, 투명 배경 권장)
-              — 업로드 시 자동으로 규격에 맞게 변환됩니다.
-            </p>
-            <label className={styles.thumbnailDrop}>
-              {thumbnail ? (
-                <img src={thumbnail} alt="등록된 섬네일" />
-              ) : (
-                <span>이미지 선택</span>
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) => handleThumbnailChange(event.target.files?.[0])}
-              />
-            </label>
-            {thumbnail && (
-              <button type="button" className={styles.textButton} onClick={clearThumbnail}>
-                섬네일 제거
-              </button>
-            )}
-          </div>
+          </details>
         </section>
 
         <section className={styles.panel}>
@@ -1028,18 +1035,21 @@ const ModuleBuilder = () => {
           )}
 
           {/* === 측판 목찬넬 따내기 === */}
-          <div className={styles.sectionGroupHeader}>
-            <h3 className={styles.sectionGroupTitle}>측판 목찬넬 따내기</h3>
-            <button type="button" className={styles.iconButton} onClick={() => addNotch('left')} title="따내기 추가">
-              <Plus size={18} />
-            </button>
-          </div>
-
-          <p className={styles.thumbnailHint}>
-            바닥 기준 위치(mm)에서 위로 [높이]만큼, 측판 앞면에서 뒤로 [깊이]만큼 따냅니다.
-            표준 목찬넬은 높이 65 / 깊이 40. 좌우 동일 적용 시 따내기마다 목찬넬 ㄱ자 프레임(PET)과
-            그 뒤 가로전대(PB)가 자동으로 포함됩니다. 좌우 개별 모드는 따내기만 생성됩니다.
-          </p>
+          <details className={styles.collapse}>
+            <summary className={styles.collapseSummary}>
+              <span>측판 목찬넬 따내기</span>
+              <em>{leftNotches.length > 0 ? `${notchSidesLinked ? '공통' : '좌/우 개별'} ${leftNotches.length}개` : '없음'}</em>
+            </summary>
+            <div className={styles.collapseBody}>
+            <div className={styles.collapseToolbar}>
+              <p className={styles.thumbnailHint}>
+                바닥 기준 위치에서 위로 [높이], 측판 앞면에서 뒤로 [깊이]만큼 따냅니다. 표준 목찬넬 65×40.
+                좌우 동일 적용 시 목찬넬 ㄱ자 프레임(PET)과 그 뒤 가로전대(PB)가 자동 포함됩니다.
+              </p>
+              <button type="button" className={styles.iconButton} onClick={() => addNotch('left')} title="따내기 추가">
+                <Plus size={16} />
+              </button>
+            </div>
 
           {category === 'lower' && (
             <label className={styles.checkboxInline}>
@@ -1144,13 +1154,17 @@ const ModuleBuilder = () => {
               </div>
             </>
           )}
+            </div>
+          </details>
 
           {/* === 하부장 외부서랍 (레그라박스) === */}
           {category === 'lower' && (
-            <>
-              <div className={styles.sectionGroupHeader}>
-                <h3 className={styles.sectionGroupTitle}>외부서랍 (레그라박스)</h3>
-              </div>
+            <details className={styles.collapse}>
+              <summary className={styles.collapseSummary}>
+                <span>외부서랍 (레그라박스)</span>
+                <em>{useExternalDrawers ? `${extDrawerCount}단 사용` : '미사용'}</em>
+              </summary>
+              <div className={styles.collapseBody}>
               <label className={styles.checkboxInline}>
                 <input
                   type="checkbox"
@@ -1202,7 +1216,8 @@ const ModuleBuilder = () => {
                   </p>
                 </div>
               )}
-            </>
+              </div>
+            </details>
           )}
         </section>
 
@@ -1273,16 +1288,15 @@ const ModuleBuilder = () => {
           </div>
 
           <div className={styles.livePreviewArea}>
-            <div className={styles.previewMeta}>
-              <strong>{moduleDraft.name}</strong>
-              <span>{width}W x {height}H x {depth}D{isDynamic ? ' · 동적 폭' : ''}</span>
-            </div>
-
             <div className={styles.threePreviewFrame}>
               <AdminModulePreview
                 moduleData={moduleDraft as ModuleData}
                 highlightedPanelName={highlightedPanelName}
               />
+              <div className={styles.previewMeta}>
+                <strong>{moduleDraft.name}</strong>
+                <span>W {width} · H {height} · D {depth}{isDynamic ? ' · 동적 폭' : ''}</span>
+              </div>
             </div>
 
             {/* 패널목록 — 행 클릭: 뷰어 강조 / 체크박스 해제: 뷰어에서 숨김 */}
