@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import {
   ContactShadows,
@@ -241,6 +241,143 @@ const DimensionGuides = ({
 };
 
 /**
+ * 드로잉 모드 — 고스트 패널을 호버로 움직이고 클릭으로 배치.
+ * Tab = 수평(선반) ⇄ 수직(칸막이) 전환 / 1mm 스냅 / Shift = 32mm 피치 / 숫자 타이핑 → Enter 정밀 입력.
+ */
+const PanelDrawingOverlay = ({
+  widthMm,
+  heightMm,
+  depthMm,
+  thicknessMm = 18,
+  onPlace
+}: {
+  widthMm: number;
+  heightMm: number;
+  depthMm: number;
+  thicknessMm?: number;
+  onPlace: (placement: { orientation: 'horizontal' | 'vertical'; positionMm: number }) => void;
+}) => {
+  const w = mmToThreeUnits(widthMm);
+  const h = mmToThreeUnits(heightMm);
+  const d = mmToThreeUnits(depthMm);
+  const t = mmToThreeUnits(thicknessMm);
+  const innerW = Math.max(w - t * 2, t);
+  const innerWidthMm = Math.max(widthMm - thicknessMm * 2, 1);
+  const innerD = Math.max(d - mmToThreeUnits(26), t);
+
+  const [orientation, setOrientation] = useState<'horizontal' | 'vertical'>('horizontal');
+  const [hoverMm, setHoverMm] = useState<number | null>(null);
+  const [typedDigits, setTypedDigits] = useState('');
+  const shiftRef = useRef(false);
+
+  // 범위: 수평 = 바닥판 위~상판 아래 (바닥 기준 Y), 수직 = 좌측판 안쪽면 기준 X
+  const minPos = orientation === 'horizontal' ? thicknessMm + 10 : 10;
+  const maxPos = orientation === 'horizontal' ? heightMm - thicknessMm - 10 : innerWidthMm - thicknessMm - 10;
+
+  const clampSnap = useCallback((rawMm: number) => {
+    let value = Math.round(rawMm);
+    if (shiftRef.current && orientation === 'horizontal') {
+      value = thicknessMm + Math.round((value - thicknessMm) / 32) * 32; // 32mm 시스템홀 피치
+    }
+    return Math.min(maxPos, Math.max(minPos, value));
+  }, [maxPos, minPos, orientation, thicknessMm]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Shift') shiftRef.current = true;
+      if (event.key === 'Tab') {
+        setOrientation(prev => (prev === 'horizontal' ? 'vertical' : 'horizontal'));
+        setHoverMm(null);
+        setTypedDigits('');
+        event.preventDefault();
+      } else if (/^[0-9]$/.test(event.key)) {
+        setTypedDigits(prev => (prev + event.key).slice(0, 4));
+        event.preventDefault();
+      } else if (event.key === 'Backspace') {
+        setTypedDigits(prev => prev.slice(0, -1));
+        event.preventDefault();
+      } else if (event.key === 'Enter' && typedDigits) {
+        onPlace({ orientation, positionMm: clampSnap(Number(typedDigits)) });
+        setTypedDigits('');
+        event.preventDefault();
+      } else if (event.key === 'Escape') {
+        setTypedDigits('');
+      }
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Shift') shiftRef.current = false;
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, [clampSnap, onPlace, orientation, typedDigits]);
+
+  const ghostMm = typedDigits ? clampSnap(Number(typedDigits)) : hoverMm;
+
+  return (
+    <group>
+      {/* 픽킹 평면 — 가구 전면 */}
+      <mesh
+        position={[0, h / 2, d / 2 + 0.01]}
+        onPointerMove={(event) => {
+          event.stopPropagation();
+          if (orientation === 'horizontal') {
+            setHoverMm(clampSnap(event.point.y / 0.01));
+          } else {
+            // 좌측판 안쪽면 기준 X (mm)
+            setHoverMm(clampSnap((event.point.x + innerW / 2) / 0.01));
+          }
+        }}
+        onPointerOut={() => setHoverMm(null)}
+        onClick={(event) => {
+          event.stopPropagation();
+          if (ghostMm !== null) {
+            onPlace({ orientation, positionMm: ghostMm });
+            setTypedDigits('');
+          }
+        }}
+      >
+        <planeGeometry args={[w * 1.4, h * 1.1]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
+      {ghostMm !== null && orientation === 'horizontal' && (
+        <group>
+          <mesh position={[0, mmToThreeUnits(ghostMm) + t / 2, mmToThreeUnits(13)]}>
+            <boxGeometry args={[innerW, t, innerD]} />
+            <meshStandardMaterial color="#10b981" transparent opacity={0.45} depthWrite={false} />
+          </mesh>
+          <DimensionText
+            value={ghostMm}
+            position={[w / 2 + mmToThreeUnits(160), mmToThreeUnits(ghostMm), d / 2]}
+            forceShow
+            color={typedDigits ? '#f59e0b' : '#10b981'}
+          />
+        </group>
+      )}
+
+      {ghostMm !== null && orientation === 'vertical' && (
+        <group>
+          <mesh position={[-innerW / 2 + mmToThreeUnits(ghostMm) + t / 2, h / 2, mmToThreeUnits(13)]}>
+            <boxGeometry args={[t, h - t * 2, innerD]} />
+            <meshStandardMaterial color="#6366f1" transparent opacity={0.45} depthWrite={false} />
+          </mesh>
+          <DimensionText
+            value={ghostMm}
+            position={[-innerW / 2 + mmToThreeUnits(ghostMm) + t / 2, h + mmToThreeUnits(160), d / 2]}
+            forceShow
+            color={typedDigits ? '#f59e0b' : '#6366f1'}
+          />
+        </group>
+      )}
+    </group>
+  );
+};
+
+/**
  * 모듈빌더 실시간 미리보기 — 실제 뷰어 렌더 파이프라인(BoxModule)을 그대로 사용한다.
  * 간이 모델이 아닌 실배치와 동일한 메시(측판/선반/서랍/백패널/도어)가 표시되므로
  * "프리뷰 = 배치 결과"가 보장된다.
@@ -249,12 +386,16 @@ const AdminModulePreview = ({
   moduleData,
   highlightedPanelName = null,
   viewMode = '3D',
-  direction2D = 'front'
+  direction2D = 'front',
+  drawingMode = false,
+  onPlacePanel
 }: {
   moduleData: ModuleData;
   highlightedPanelName?: string | null;
   viewMode?: '2D' | '3D';
   direction2D?: 'front' | 'top' | 'left';
+  drawingMode?: boolean;
+  onPlacePanel?: (placement: { orientation: 'horizontal' | 'vertical'; positionMm: number }) => void;
 }) => {
   const is2D = viewMode === '2D';
   const { width, height, depth } = moduleData.dimensions;
@@ -415,6 +556,16 @@ const AdminModulePreview = ({
               infiniteGrid
             />
           </>
+        )}
+
+        {drawingMode && onPlacePanel && (
+          <PanelDrawingOverlay
+            widthMm={width}
+            heightMm={height}
+            depthMm={depth}
+            thicknessMm={moduleData.modelConfig?.basicThickness || 18}
+            onPlace={onPlacePanel}
+          />
         )}
 
         <PreviewPanelHighlighter panelName={highlightedPanelName} />

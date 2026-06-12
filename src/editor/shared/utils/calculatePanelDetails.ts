@@ -2304,6 +2304,20 @@ export const calculatePanelDetails = (
     );
   }
 
+  // === 관리자 빌더: 수직 칸막이 패널 (드로잉 모드 배치) — 3D BoxModule '칸막이N' 메시와 일치 ===
+  // 주의: panels.upper는 바로 아래에서 result로 플랫되므로 반드시 이 지점 이전에 push
+  if (moduleData.id.includes('-admin-')) {
+    (moduleData.modelConfig?.verticalDividers || []).forEach((_posMm, dividerIndex) => {
+      panels.upper.push({
+        name: `칸막이${dividerIndex + 1}`,
+        width: customDepth - backReductionForPanelsMm,
+        height: height - basicThickness * 2,
+        thickness: basicThickness,
+        material: 'PB',
+      });
+    });
+  }
+
   // 플랫 배열로 변환하여 반환
   const result: any[] = [];
   const isLowerCabinetModule = moduleData.id.includes('lower-');
@@ -2979,6 +2993,7 @@ export const calculatePanelDetails = (
         material: 'PB',
       });
     }
+
   }
 
   if (moduleData.id.includes('right-corner')) {

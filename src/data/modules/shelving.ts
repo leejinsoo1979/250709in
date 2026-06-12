@@ -105,6 +105,8 @@ export interface ModuleData {
     // 상단 모서리 따내기 (관리자 빌더 전체장/상부장) — 위치는 항상 가구 상단 기준(H − y)으로 자동 계산
     // 하부장은 hideTopPanel 메커니즘(상판 없음 + 표준 60×40)을 사용하므로 이 필드를 쓰지 않음
     topNotch?: { y: number; z: number };
+    // 관리자 빌더: 수직 칸막이 — 좌측판 안쪽면 기준 X 위치(mm) 배열 (드로잉 모드로 배치)
+    verticalDividers?: number[];
     // 관리자 빌더: 기본 제거 패널 (패널명 목록)
     // 배치 시 PlacedModule.panelExclusions 기본값으로 적용 — 뷰어 숨김 + 패널목록/CNC 제외,
     // 배치 후 패널목록에서 다시 켤 수 있음 (식세기장 측판 기본 꺼짐과 동일 메커니즘)

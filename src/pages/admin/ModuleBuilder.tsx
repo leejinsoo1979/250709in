@@ -405,6 +405,11 @@ const ModuleBuilder = () => {
     };
   }, [previewView, view]);
 
+  // 드로잉 모드 — 뷰어에서 호버+클릭으로 패널 배치 (Tab: 수평 선반 ⇄ 수직 칸막이)
+  const [drawingMode, setDrawingMode] = useState(false);
+  // 수직 칸막이 — 좌측판 안쪽면 기준 X(mm). 폼 섹션 모델로는 표현 불가, 드로잉 전용
+  const [verticalDividers, setVerticalDividers] = useState<number[]>([]);
+
   // 미리보기 도어 열림/닫힘 — 전역 doorsOpen을 빌더 화면 동안만 제어, 떠날 때 복원
   const [previewDoorsOpen, setPreviewDoorsOpen] = useState(false);
   useEffect(() => {
@@ -517,6 +522,8 @@ const ModuleBuilder = () => {
       ...(category === 'full' ? { lowerSectionCount: Math.max(0, Math.min(lowerSectionCount, sections.length)) } : {}),
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
+      // 수직 칸막이 (드로잉 모드 배치)
+      ...(verticalDividers.length > 0 ? { verticalDividers } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (일반 / 레그라박스)
       ...(category === 'lower' && useExternalDrawers ? {
@@ -576,7 +583,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, verticalDividers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -648,6 +655,73 @@ const ModuleBuilder = () => {
       else next.add(panelName);
       return next;
     });
+  };
+
+  /**
+   * 드로잉 배치 — 바닥 기준 절대 Y(mm)를 받아 해당 칸의 선반으로 추가.
+   * 칸 경계는 렌더러와 동일 규칙(가용높이 = H − 상하판 36)으로 계산, 위치는 칸 바닥 기준 상대값.
+   */
+  const handlePlaceShelf = (absoluteYmm: number) => {
+    const thickness = 18;
+    const available = Math.max(height - thickness * 2, 1);
+    const absTotal = sections.filter(s2 => s2.heightType === 'absolute').reduce((sum, s2) => sum + Math.max(s2.height, 0), 0);
+    const pctTotal = sections.filter(s2 => s2.heightType === 'percentage').reduce((sum, s2) => sum + Math.max(s2.height, 0), 0);
+    const remaining = Math.max(available - absTotal, 0);
+    const resolved = sections.map(s2 => (
+      s2.heightType === 'absolute' ? Math.max(s2.height, 0) : (pctTotal > 0 ? remaining * (Math.max(s2.height, 0) / pctTotal) : 0)
+    ));
+
+    let cursor = thickness; // 바닥판 위
+    let targetIndex = -1;
+    let localY = 0;
+    for (let i = 0; i < resolved.length; i += 1) {
+      const top = cursor + resolved[i];
+      if (absoluteYmm >= cursor && absoluteYmm < top) {
+        targetIndex = i;
+        localY = Math.round(absoluteYmm - cursor);
+        break;
+      }
+      cursor = top;
+    }
+    if (targetIndex < 0) {
+      // 최상단 초과 등 — 마지막 칸으로
+      targetIndex = resolved.length - 1;
+      localY = Math.round(Math.max(10, resolved[targetIndex] - 50));
+    }
+
+    const target = sections[targetIndex];
+    if (!target) return;
+    if (target.type === 'drawer') {
+      alert('서랍 칸에는 선반을 추가할 수 없습니다.');
+      return;
+    }
+
+    setSections(current => current.map((section, index) => {
+      if (index !== targetIndex) return section;
+      const positions = parseNumberList(section.shelfPositions);
+      positions.push(localY);
+      positions.sort((a, b) => a - b);
+      return {
+        ...section,
+        // 오픈 칸에 선반을 그리면 선반 칸으로 전환, 행거는 안전선반으로 유지
+        type: section.type === 'open' ? 'shelf' : section.type,
+        count: positions.length,
+        shelfPositions: positions.join(', ')
+      };
+    }));
+  };
+
+  /** 드로잉 배치 라우터 — 수평 = 선반(섹션 모델), 수직 = 칸막이(verticalDividers) */
+  const handlePlacePanel = (placement: { orientation: 'horizontal' | 'vertical'; positionMm: number }) => {
+    if (placement.orientation === 'vertical') {
+      setVerticalDividers(current => [...current, Math.round(placement.positionMm)].sort((a, b) => a - b));
+      return;
+    }
+    handlePlaceShelf(placement.positionMm);
+  };
+
+  const removeVerticalDivider = (index: number) => {
+    setVerticalDividers(current => current.filter((_, i) => i !== index));
   };
 
   const setSectionsForSide = (side: SectionSide, updater: (current: BuilderSection[]) => BuilderSection[]) => {
@@ -786,6 +860,7 @@ const ModuleBuilder = () => {
 
     // 기본 제거 패널 복원 (패널목록 체크 해제 상태)
     setHiddenPanelNames(new Set(module.modelConfig?.panelExclusions || []));
+    setVerticalDividers(module.modelConfig?.verticalDividers || []);
     setHighlightedPanelName(null);
 
     // 외부서랍 복원 (일반 / 레그라박스)
@@ -876,6 +951,7 @@ const ModuleBuilder = () => {
     setExtTopGap(-20);
     setExtBottomGap(5);
     setHiddenPanelNames(new Set());
+    setVerticalDividers([]);
     setHighlightedPanelName(null);
     setLoadedModuleId(null);
   };
@@ -2290,6 +2366,15 @@ const ModuleBuilder = () => {
               <p className={styles.panelHint}>실제 뷰어 렌더러로 표시됩니다 — 배치 결과와 동일</p>
             </div>
             <div className={styles.previewControls}>
+              <button
+                type="button"
+                className={`${styles.drawButton} ${drawingMode ? styles.drawButtonActive : ''}`}
+                onClick={() => setDrawingMode(mode => !mode)}
+                disabled={readOnlyDetail || previewView !== '3D'}
+                title="뷰어에서 호버+클릭으로 배치 — Tab: 선반 ⇄ 칸막이 전환, 숫자 입력 후 Enter = 정밀 위치, Shift = 32mm 스냅"
+              >
+                패널 그리기
+              </button>
               <div className={styles.viewToggle}>
                 <button
                   type="button"
@@ -2349,12 +2434,28 @@ const ModuleBuilder = () => {
               <span>W {width} · H {height} · D {depth}{isDynamic ? ' · 동적 폭' : ''}</span>
             </div>
 
+            {verticalDividers.length > 0 && (
+              <div className={styles.dividerChips}>
+                <span className={styles.dividerChipsLabel}>칸막이</span>
+                {verticalDividers.map((posMm, index) => (
+                  <span key={`divider-chip-${index}-${posMm}`} className={styles.dividerChip}>
+                    X {posMm}
+                    {!readOnlyDetail && (
+                      <button type="button" onClick={() => removeVerticalDivider(index)} title="칸막이 삭제">×</button>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
+
             <div className={styles.threePreviewFrame}>
               <AdminModulePreview
                 moduleData={moduleDraft as ModuleData}
                 highlightedPanelName={highlightedPanelName}
                 viewMode={previewViewMode}
                 direction2D={previewView === '3D' ? 'front' : previewView}
+                drawingMode={drawingMode && !readOnlyDetail && previewView === '3D'}
+                onPlacePanel={handlePlacePanel}
               />
             </div>
 

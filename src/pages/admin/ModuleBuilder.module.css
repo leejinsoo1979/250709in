@@ -1030,6 +1030,81 @@
   flex-shrink: 0;
 }
 
+/* 드로잉 모드 토글 */
+.drawButton {
+  padding: 6px 12px;
+  border-radius: var(--mb-radius);
+  border: 1px solid var(--mb-line);
+  background: var(--mb-surface);
+  color: var(--mb-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease;
+}
+
+.drawButton:hover:not(:disabled) {
+  border-color: var(--mb-accent);
+  color: var(--mb-ink);
+}
+
+.drawButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.drawButtonActive {
+  border-color: #10b981;
+  background: color-mix(in srgb, #10b981 14%, var(--mb-surface));
+  color: #0d8a66;
+}
+
+/* 드로잉으로 배치된 수직 칸막이 칩 */
+.dividerChips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: var(--mb-radius);
+  border: 1px solid var(--mb-line);
+  background: color-mix(in srgb, var(--mb-bg) 55%, var(--mb-surface));
+}
+
+.dividerChipsLabel {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--mb-ink-soft);
+  letter-spacing: 0.04em;
+}
+
+.dividerChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #6366f1 45%, var(--mb-line));
+  background: color-mix(in srgb, #6366f1 10%, var(--mb-surface));
+  font-family: var(--mb-mono);
+  font-size: 11px;
+  color: var(--mb-ink);
+}
+
+.dividerChip button {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--mb-ink-soft);
+  cursor: pointer;
+}
+
+.dividerChip button:hover {
+  color: #dc2626;
+}
+
 /* ── 패널 목록 ───────────────────────────────────────── */
 
 .panelListArea {

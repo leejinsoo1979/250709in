@@ -1589,6 +1589,29 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           topPanelFrontReduction={moduleData?.id?.includes('glass-cabinet') ? 50 : 0}
           bottomPanelFrontReduction={moduleData?.id?.includes('glass-cabinet') ? 50 : 0}
         >
+          {/* 관리자 빌더: 수직 칸막이 (드로잉 모드 배치) — 좌측판 안쪽면 기준 X */}
+          {((moduleData.modelConfig as any)?.verticalDividers as number[] | undefined)?.map((posMm, dividerIndex) => (
+            <BoxWithEdges
+              key={`vertical-divider-${dividerIndex}-${posMm}`}
+              args={[
+                baseFurniture.basicThickness,
+                baseFurniture.height - baseFurniture.basicThickness * 2,
+                baseFurniture.depth - baseFurniture.mmToThreeUnits(26)
+              ]}
+              position={[
+                -baseFurniture.innerWidth / 2 + baseFurniture.mmToThreeUnits(posMm) + baseFurniture.basicThickness / 2,
+                0,
+                baseFurniture.mmToThreeUnits(13)
+              ]}
+              material={baseFurniture.material}
+              renderMode={renderMode || useSpace3DView().renderMode}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName={`칸막이${dividerIndex + 1}`}
+              furnitureId={placedFurnitureId}
+            />
+          ))}
+
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
             <SectionsRenderer
