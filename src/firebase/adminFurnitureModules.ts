@@ -27,6 +27,20 @@ const stripUndefined = <T,>(value: T): T => (
   JSON.parse(JSON.stringify(value)) as T
 );
 
+/** 비율(%) 칸 합계를 100으로 정규화 — 3D 렌더러는 %를 남은 높이의 리터럴 %로 해석 */
+const normalizePercentSectionsInPlace = (sections: NonNullable<ModuleData['modelConfig']>['sections']) => {
+  if (!Array.isArray(sections)) return;
+  const pctTotal = sections
+    .filter(section => (section.heightType || 'percentage') === 'percentage')
+    .reduce((sum, section) => sum + Math.max(section.height || 0, 0), 0);
+  if (pctTotal <= 0 || Math.abs(pctTotal - 100) < 0.01) return;
+  sections.forEach(section => {
+    if ((section.heightType || 'percentage') === 'percentage') {
+      section.height = Math.round((Math.max(section.height || 0, 0) / pctTotal) * 1000) / 10;
+    }
+  });
+};
+
 const docToModule = (data: Record<string, unknown>, docId: string): ModuleData => {
   const modelConfig = (data.modelConfig || undefined) as ModuleData['modelConfig'];
 
@@ -40,6 +54,13 @@ const docToModule = (data: Record<string, unknown>, docId: string): ModuleData =
     && modelConfig.lowerSectionCount === undefined
   ) {
     modelConfig.lowerSectionCount = 1;
+  }
+
+  // 구버전 저장본 정규화: 비율(%) 합계 100 보정 (100+100 같은 값은 첫 섹션이 전체를 차지하는 렌더 버그 유발)
+  if (modelConfig) {
+    normalizePercentSectionsInPlace(modelConfig.sections);
+    normalizePercentSectionsInPlace(modelConfig.leftSections);
+    normalizePercentSectionsInPlace(modelConfig.rightSections);
   }
 
   return {

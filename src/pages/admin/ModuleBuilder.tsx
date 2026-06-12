@@ -273,6 +273,23 @@ const sectionConfigToBuilderSection = (section: SectionConfig, index: number): B
   fixedTopZoneMm: section.fixedTopZoneMm || 0
 });
 
+/**
+ * 비율(%) 칸 정규화 — 합계가 100이 되도록 비율 분배.
+ * 3D 렌더러(calculateSectionHeight)는 %를 '남은 높이의 리터럴 %'로 해석하므로
+ * 사용자가 비율값(100,100 등)으로 입력해도 저장 시 50/50처럼 정규화해야 렌더가 일치한다.
+ */
+const normalizePercentSections = (configs: SectionConfig[]): SectionConfig[] => {
+  const pctTotal = configs
+    .filter(config => (config.heightType || 'percentage') === 'percentage')
+    .reduce((sum, config) => sum + Math.max(config.height || 0, 0), 0);
+  if (pctTotal <= 0 || Math.abs(pctTotal - 100) < 0.01) return configs;
+  return configs.map(config => (
+    (config.heightType || 'percentage') === 'percentage'
+      ? { ...config, height: Math.round((Math.max(config.height || 0, 0) / pctTotal) * 1000) / 10 }
+      : config
+  ));
+};
+
 const builderSectionToConfig = (section: BuilderSection): SectionConfig => {
   const config: SectionConfig = {
     type: section.type,
@@ -511,8 +528,8 @@ const ModuleBuilder = () => {
       modelConfig: layoutMode === 'dual'
         ? {
             ...baseModelConfig,
-            leftSections: sections.map(builderSectionToConfig),
-            rightSections: rightSections.map(builderSectionToConfig),
+            leftSections: normalizePercentSections(sections.map(builderSectionToConfig)),
+            rightSections: normalizePercentSections(rightSections.map(builderSectionToConfig)),
             ...(rightAbsoluteWidth > 0 ? { rightAbsoluteWidth } : {}),
             ...(rightAbsoluteDepth > 0 ? { rightAbsoluteDepth } : {}),
             hasSharedMiddlePanel,
@@ -520,7 +537,7 @@ const ModuleBuilder = () => {
           }
         : {
             ...baseModelConfig,
-            sections: sections.map(builderSectionToConfig)
+            sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
   }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
