@@ -1980,15 +1980,16 @@ const ModuleBuilder = () => {
           </div>
 
           <div className={styles.livePreviewArea}>
+            <div className={styles.previewMeta}>
+              <strong>{moduleDraft.name}</strong>
+              <span>W {width} · H {height} · D {depth}{isDynamic ? ' · 동적 폭' : ''}</span>
+            </div>
+
             <div className={styles.threePreviewFrame}>
               <AdminModulePreview
                 moduleData={moduleDraft as ModuleData}
                 highlightedPanelName={highlightedPanelName}
               />
-              <div className={styles.previewMeta}>
-                <strong>{moduleDraft.name}</strong>
-                <span>W {width} · H {height} · D {depth}{isDynamic ? ' · 동적 폭' : ''}</span>
-              </div>
             </div>
 
             {/* 패널목록 — 행 클릭: 뷰어 강조 / 체크박스 해제: 뷰어에서 숨김 */}

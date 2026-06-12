@@ -958,31 +958,31 @@
 }
 
 .previewMeta {
-  position: absolute;
-  left: 12px;
-  bottom: 12px;
+  /* 뷰어 바깥 — 프레임 위의 정보 바 */
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
   padding: 9px 13px;
-  border-radius: 5px;
-  border: 1px solid rgba(32, 36, 31, 0.1);
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  pointer-events: none;
+  border-radius: var(--mb-radius);
+  border: 1px solid var(--mb-line);
+  background: color-mix(in srgb, var(--mb-bg) 55%, var(--mb-surface));
 }
 
 .previewMeta strong {
   font-size: 13px;
   font-weight: 800;
   color: var(--mb-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .previewMeta span {
   font-family: var(--mb-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--mb-ink-soft);
+  flex-shrink: 0;
 }
 
 /* ── 패널 목록 ───────────────────────────────────────── */

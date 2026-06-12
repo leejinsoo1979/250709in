@@ -3,9 +3,11 @@ import { Canvas, useThree } from '@react-three/fiber';
 import {
   ContactShadows,
   Grid as StageGrid,
+  Line,
   OrbitControls,
   PerspectiveCamera,
-  SoftShadows
+  SoftShadows,
+  Text
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
@@ -103,6 +105,91 @@ const PreviewPanelHighlighter = ({ panelName }: { panelName: string | null }) =>
   }, [panelName, scene, invalidate]);
 
   return null;
+};
+
+const DIM_COLOR = '#0e7a5c';
+const DIM_TEXT_SIZE_MM = 90;
+
+/** 치수선 한 줄: 양 끝 틱 + 본선 + 수치 라벨 */
+const DimensionLine = ({
+  from,
+  to,
+  label,
+  labelOffset,
+  labelRotationY = 0
+}: {
+  from: [number, number, number];
+  to: [number, number, number];
+  label: string;
+  labelOffset: [number, number, number];
+  labelRotationY?: number;
+}) => {
+  const mid: [number, number, number] = [
+    (from[0] + to[0]) / 2 + labelOffset[0],
+    (from[1] + to[1]) / 2 + labelOffset[1],
+    (from[2] + to[2]) / 2 + labelOffset[2]
+  ];
+  return (
+    <group>
+      <Line points={[from, to]} color={DIM_COLOR} lineWidth={1.5} />
+      <Text
+        position={mid}
+        rotation={[0, labelRotationY, 0]}
+        fontSize={mmToThreeUnits(DIM_TEXT_SIZE_MM)}
+        color={DIM_COLOR}
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={mmToThreeUnits(6)}
+        outlineColor="#ecedeb"
+      >
+        {label}
+      </Text>
+    </group>
+  );
+};
+
+/** 가구 외곽 치수 가이드 — W(전면 하단) / H(좌측 전면) / D(우측 바닥) */
+const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heightMm: number; depthMm: number }) => {
+  const w = mmToThreeUnits(widthMm);
+  const h = mmToThreeUnits(heightMm);
+  const d = mmToThreeUnits(depthMm);
+  const off = mmToThreeUnits(140);
+  const tick = mmToThreeUnits(40);
+
+  return (
+    <group>
+      {/* W — 전면 하단 */}
+      <DimensionLine
+        from={[-w / 2, 0.001, d / 2 + off]}
+        to={[w / 2, 0.001, d / 2 + off]}
+        label={`${Math.round(widthMm)}`}
+        labelOffset={[0, mmToThreeUnits(110), 0]}
+      />
+      <Line points={[[-w / 2, 0.001, d / 2 + off - tick], [-w / 2, 0.001, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[w / 2, 0.001, d / 2 + off - tick], [w / 2, 0.001, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
+
+      {/* H — 좌측 전면 세로 */}
+      <DimensionLine
+        from={[-w / 2 - off, 0, d / 2]}
+        to={[-w / 2 - off, h, d / 2]}
+        label={`${Math.round(heightMm)}`}
+        labelOffset={[-mmToThreeUnits(160), 0, 0]}
+      />
+      <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
+
+      {/* D — 우측 바닥 */}
+      <DimensionLine
+        from={[w / 2 + off, 0.001, -d / 2]}
+        to={[w / 2 + off, 0.001, d / 2]}
+        label={`${Math.round(depthMm)}`}
+        labelOffset={[mmToThreeUnits(140), mmToThreeUnits(60), 0]}
+        labelRotationY={Math.PI / 2}
+      />
+      <Line points={[[w / 2 + off - tick, 0.001, -d / 2], [w / 2 + off + tick, 0.001, -d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
+      <Line points={[[w / 2 + off - tick, 0.001, d / 2], [w / 2 + off + tick, 0.001, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
+    </group>
+  );
 };
 
 /**
@@ -216,6 +303,9 @@ const AdminModulePreview = ({
           resolution={1024}
           color="#3a3f3a"
         />
+        {/* 가구 외곽 치수 (W/H/D mm) */}
+        <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} />
+
         <StageGrid
           position={[0, -0.002, 0]}
           args={[10, 10]}
