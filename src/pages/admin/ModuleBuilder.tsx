@@ -616,6 +616,10 @@ const ModuleBuilder = () => {
         thickness?: number;
         material?: string;
         quantity?: number;
+        sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+        groovePositions?: Array<{ y: number; height: number; depth: number }>;
+        boringPositions?: number[];
+        hingeCount?: number;
       }>;
     } catch (error) {
       console.error('[ModuleBuilder] 패널목록 계산 실패:', error);
@@ -2511,6 +2515,25 @@ const ModuleBuilder = () => {
                     {panel.material ? ` · ${panel.material}` : ''}
                     {panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}
                   </span>
+                  {isActive && (
+                    <div className={styles.panelDetail} onClick={(event) => event.stopPropagation()}>
+                      <div><em>패널</em>{panel.width ?? '-'} × {secondDim ?? '-'} × {panel.thickness ?? '-'}T · {panel.material ?? '-'}{panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}</div>
+                      {(panel.sideNotches || []).map((notch, notchIndex) => (
+                        <div key={`notch-${notchIndex}`}>
+                          <em>따내기 {notchIndex + 1}</em>높이 {Math.round(notch.y)} · 깊이 {Math.round(notch.z)} · 바닥에서 {Math.round(notch.fromBottom)}
+                        </div>
+                      ))}
+                      {(panel.groovePositions || []).map((groove, grooveIndex) => (
+                        <div key={`groove-${grooveIndex}`}>
+                          <em>홈 {grooveIndex + 1}</em>폭 {Math.round(groove.height)} · 깊이 {groove.depth} · 하단에서 {Math.round(groove.y)}
+                        </div>
+                      ))}
+                      {panel.boringPositions && panel.boringPositions.length > 0 && (
+                        <div><em>보링</em>{panel.boringPositions.length}개 · Y {panel.boringPositions.map(value => Math.round(value)).join(', ')}</div>
+                      )}
+                      {panel.hingeCount ? <div><em>경첩</em>{panel.hingeCount}개</div> : null}
+                    </div>
+                  )}
                 </div>
               );
             })}

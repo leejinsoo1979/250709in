@@ -1225,8 +1225,36 @@
   flex-shrink: 0;
 }
 
+/* 패널 세부 — 행 클릭(강조) 시 펼침: 패널/따내기/홈/보링 치수 */
+.panelDetail {
+  flex-basis: 100%;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--mb-radius);
+  border: 1px solid color-mix(in srgb, var(--mb-accent) 35%, var(--mb-line));
+  background: var(--mb-accent-soft);
+  font-family: var(--mb-mono);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--mb-ink);
+  cursor: default;
+}
+
+.panelDetail em {
+  display: inline-block;
+  min-width: 58px;
+  margin-right: 6px;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--mb-accent);
+}
+
 .panelRow {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 9px;
   padding: 6px 13px;
