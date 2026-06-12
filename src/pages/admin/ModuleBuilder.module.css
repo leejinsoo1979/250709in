@@ -575,10 +575,20 @@
 
 .layout {
   display: grid;
-  /* 좌: 설정 폼 (좁게) / 우: 실시간 뷰어 (주인공 — 넓게, 화면 고정) */
-  grid-template-columns: minmax(340px, 36%) minmax(0, 1fr);
+  /* 좌: 설정 폼 / 중: 실시간 뷰어 (주인공 — 최대) / 우: 패널 목록 (좁게) */
+  grid-template-columns: minmax(330px, 30%) minmax(0, 1fr) 286px;
   align-items: start;
-  gap: 22px;
+  gap: 18px;
+}
+
+/* 패널목록 — 우측 좁은 컬럼, 뷰어와 같은 높이로 고정 */
+.panelListColumn {
+  position: sticky;
+  top: 20px;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .formColumn {
@@ -1133,11 +1143,10 @@
 /* ── 패널 목록 ───────────────────────────────────────── */
 
 .panelListArea {
-  flex: none;
+  flex: 1;
   display: flex;
   flex-direction: column;
-  max-height: 40%;
-  min-height: 170px;
+  min-height: 0;
   border: 1px solid var(--mb-line);
   border-radius: var(--mb-radius);
   background: var(--mb-surface);
@@ -1377,6 +1386,12 @@
 @media (max-width: 1180px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .panelListColumn {
+    position: static;
+    height: auto;
+    max-height: 420px;
   }
 
   .previewPanel {

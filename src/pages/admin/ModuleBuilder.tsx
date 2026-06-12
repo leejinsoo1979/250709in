@@ -2455,64 +2455,68 @@ const ModuleBuilder = () => {
               />
             </div>
 
-            {/* 패널목록 — 행 클릭: 뷰어 강조 / 체크박스 해제: 뷰어에서 숨김 */}
-            <div className={styles.panelListArea}>
-              <div className={styles.panelListHeader}>
-                <h3>패널 목록 ({panelRowCount})</h3>
-                <div className={styles.panelListActions}>
-                  {highlightedPanelName && (
-                    <button type="button" className={styles.textButton} onClick={() => setHighlightedPanelName(null)}>
-                      강조 해제
-                    </button>
-                  )}
-                  {hiddenPanelNames.size > 0 && (
-                    <button type="button" className={styles.textButton} onClick={() => setHiddenPanelNames(new Set())}>
-                      모두 표시 ({hiddenPanelNames.size})
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className={styles.panelListScroll}>
-                {panelList.map((panel, index) => {
-                  const name = panel.name || '';
-                  if (!name) return null;
-                  if (name.startsWith('===')) {
-                    return (
-                      <div key={`group-${index}`} className={styles.panelGroupLabel}>
-                        {name.replace(/=/g, '').trim()}
-                      </div>
-                    );
-                  }
-                  const secondDim = panel.height ?? panel.depth;
-                  const isHidden = hiddenPanelNames.has(name);
-                  const isActive = highlightedPanelName === name;
-                  return (
-                    <div
-                      key={`panel-${index}-${name}`}
-                      className={`${styles.panelRow} ${isActive ? styles.panelRowActive : ''} ${isHidden ? styles.panelRowHidden : ''}`}
-                      onClick={() => setHighlightedPanelName(isActive ? null : name)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={!isHidden}
-                        onClick={(event) => event.stopPropagation()}
-                        onChange={() => togglePanelHidden(name)}
-                        title={isHidden ? '패널을 모듈에 다시 포함' : '체크 해제 = 모듈에서 기본 제거 (배치 시 빠진 상태로 저장, CNC 제외)'}
-                      />
-                      <span className={styles.panelRowName}>{name}</span>
-                      <span className={styles.panelDims}>
-                        {panel.width ?? '-'}×{secondDim ?? '-'}
-                        {panel.thickness ? ` · ${panel.thickness}T` : ''}
-                        {panel.material ? ` · ${panel.material}` : ''}
-                        {panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </section>
+
+        {/* 패널목록 — 우측 좁은 컬럼 (행 클릭: 뷰어 강조 / 체크박스 해제: 뷰어에서 숨김) */}
+        <aside className={styles.panelListColumn}>
+          {/* 패널목록 — 행 클릭: 뷰어 강조 / 체크박스 해제: 뷰어에서 숨김 */}
+          <div className={styles.panelListArea}>
+            <div className={styles.panelListHeader}>
+            <h3>패널 목록 ({panelRowCount})</h3>
+            <div className={styles.panelListActions}>
+              {highlightedPanelName && (
+                <button type="button" className={styles.textButton} onClick={() => setHighlightedPanelName(null)}>
+                  강조 해제
+                </button>
+              )}
+              {hiddenPanelNames.size > 0 && (
+                <button type="button" className={styles.textButton} onClick={() => setHiddenPanelNames(new Set())}>
+                  모두 표시 ({hiddenPanelNames.size})
+                </button>
+              )}
+            </div>
+            </div>
+            <div className={styles.panelListScroll}>
+            {panelList.map((panel, index) => {
+              const name = panel.name || '';
+              if (!name) return null;
+              if (name.startsWith('===')) {
+                return (
+                  <div key={`group-${index}`} className={styles.panelGroupLabel}>
+                    {name.replace(/=/g, '').trim()}
+                  </div>
+                );
+              }
+              const secondDim = panel.height ?? panel.depth;
+              const isHidden = hiddenPanelNames.has(name);
+              const isActive = highlightedPanelName === name;
+              return (
+                <div
+                  key={`panel-${index}-${name}`}
+                  className={`${styles.panelRow} ${isActive ? styles.panelRowActive : ''} ${isHidden ? styles.panelRowHidden : ''}`}
+                  onClick={() => setHighlightedPanelName(isActive ? null : name)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!isHidden}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={() => togglePanelHidden(name)}
+                    title={isHidden ? '패널을 모듈에 다시 포함' : '체크 해제 = 모듈에서 기본 제거 (배치 시 빠진 상태로 저장, CNC 제외)'}
+                  />
+                  <span className={styles.panelRowName}>{name}</span>
+                  <span className={styles.panelDims}>
+                    {panel.width ?? '-'}×{secondDim ?? '-'}
+                    {panel.thickness ? ` · ${panel.thickness}T` : ''}
+                    {panel.material ? ` · ${panel.material}` : ''}
+                    {panel.quantity && panel.quantity > 1 ? ` · ${panel.quantity}EA` : ''}
+                  </span>
+                </div>
+              );
+            })}
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );
