@@ -482,6 +482,14 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  /* fieldset 기본 스타일 리셋 (열람 모드 disabled 래퍼) */
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.formColumn:disabled {
+  opacity: 0.75;
 }
 
 .panel,

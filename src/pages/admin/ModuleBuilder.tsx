@@ -354,6 +354,8 @@ const ModuleBuilder = () => {
 
   // 모듈관리 뷰 — 목록(기본) / 상세(빌더)
   const [view, setView] = useState<'list' | 'builder'>('list');
+  // 표준 모듈 상세 = 열람 전용 (수정 불가 — 파생 제작은 명시적 버튼으로)
+  const [readOnlyDetail, setReadOnlyDetail] = useState(false);
   const [listMode, setListMode] = useState<'gallery' | 'list'>('gallery');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');
@@ -725,21 +727,30 @@ const ModuleBuilder = () => {
     loadModuleIntoForm(module, { asSaved: true });
   };
 
-  /** 카탈로그에서 모듈 클릭 — 그 모듈이 로드된 상세(빌더) 화면으로 */
+  /** 카탈로그에서 모듈 클릭 — 그 모듈이 로드된 상세 화면으로 (표준 = 열람 전용) */
   const openModuleDetail = (item: CatalogItem) => {
     if (item.source === 'admin') {
       loadSavedModule(item.module);
+      setReadOnlyDetail(false);
     } else {
-      // 표준 모듈: 구조 열람 + 베이스로 수정 가능 (저장하면 관리자 모듈로 생성)
+      // 표준 모듈: 코드 생성 모듈이라 수정/삭제 불가 — 구조 열람만
       setTemplateSelection(item.module.id);
       loadModuleIntoForm(item.module);
+      setReadOnlyDetail(true);
     }
     setView('builder');
   };
 
   const openNewModule = () => {
     resetFormToBlank();
+    setReadOnlyDetail(false);
     setView('builder');
+  };
+
+  /** 열람 중인 표준 모듈 구조를 복사해 신규 관리자 모듈 제작 시작 */
+  const deriveFromReadOnly = () => {
+    setReadOnlyDetail(false);
+    setLoadedModuleId(null);
   };
 
   /** 저장 전 검증 — 실패 사유 문자열, 통과 시 null */
@@ -1060,35 +1071,29 @@ const ModuleBuilder = () => {
                     )}
                   </div>
                 </div>
-                <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
-                  {item.source === 'admin' ? (
-                    <>
-                      <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
-                        <input
-                          type="checkbox"
-                          checked={item.enabled !== false}
-                          onChange={(event) => toggleSavedEnabled(item.module.id, event.target.checked)}
-                        />
-                        <span>게시</span>
-                      </label>
-                      <button type="button" className={styles.iconButton} onClick={() => openModuleDetail(item)} title="수정">
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.deleteButton}
-                        onClick={() => deleteSaved(item.module.id, item.module.name)}
-                        title="삭제"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
-                  ) : (
-                    <button type="button" className={styles.textButton} onClick={() => openModuleDetail(item)}>
-                      베이스로 열기
+                {item.source === 'admin' && (
+                  <div className={styles.moduleCardActions} onClick={(event) => event.stopPropagation()}>
+                    <label className={styles.checkboxInline} title="가구 갤러리 게시 여부">
+                      <input
+                        type="checkbox"
+                        checked={item.enabled !== false}
+                        onChange={(event) => toggleSavedEnabled(item.module.id, event.target.checked)}
+                      />
+                      <span>게시</span>
+                    </label>
+                    <button type="button" className={styles.iconButton} onClick={() => openModuleDetail(item)} title="수정">
+                      <Pencil size={14} />
                     </button>
-                  )}
-                </div>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => deleteSaved(item.module.id, item.module.name)}
+                      title="삭제"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -1157,22 +1162,33 @@ const ModuleBuilder = () => {
             <ArrowLeft size={16} />
             <span>목록</span>
           </button>
-          <h1 className={styles.title}>{loadedModuleId ? '모듈 수정' : '모듈 제작'}</h1>
-          <code className={styles.idChip} title="모듈 ID (식별자·폭에서 자동 생성)">{moduleDraft.id}</code>
+          <h1 className={styles.title}>
+            {readOnlyDetail ? '모듈 열람 (표준)' : loadedModuleId ? '모듈 수정' : '모듈 제작'}
+          </h1>
+          <code className={styles.idChip} title="모듈 ID">
+            {readOnlyDetail ? templateSelection || moduleDraft.id : moduleDraft.id}
+          </code>
         </div>
         <div className={styles.headerActions}>
           <button type="button" className={styles.copyButton} onClick={copyDraft}>
             <ClipboardCopy size={16} />
             <span>JSON</span>
           </button>
-          <button type="button" className={styles.saveButton} onClick={saveDraft} disabled={saving}>
-            {saving ? '저장 중…' : (loadedModuleId === moduleDraft.id ? '수정 저장' : '저장')}
-          </button>
+          {readOnlyDetail ? (
+            <button type="button" className={styles.saveButton} onClick={deriveFromReadOnly}>
+              이 구조로 신규 모듈 만들기
+            </button>
+          ) : (
+            <button type="button" className={styles.saveButton} onClick={saveDraft} disabled={saving}>
+              {saving ? '저장 중…' : (loadedModuleId === moduleDraft.id ? '수정 저장' : '저장')}
+            </button>
+          )}
         </div>
       </header>
 
       <div className={styles.layout}>
-        <div className={styles.formColumn}>
+        {/* 열람 모드(표준 모듈): 모든 입력 잠금 — fieldset disabled */}
+        <fieldset className={styles.formColumn} disabled={readOnlyDetail}>
         <section className={styles.panel}>
           <div className={styles.panelHeader}>
             <Box size={20} />
@@ -1840,7 +1856,7 @@ const ModuleBuilder = () => {
           )}
         </section>
 
-        </div>
+        </fieldset>
 
         <section className={styles.previewPanel}>
           <div className={styles.panelHeader}>
