@@ -1252,9 +1252,11 @@ const ModuleBuilder = () => {
           return;
         }
       }
-      await saveAdminFurnitureModule(moduleDraft);
+      const published = await saveAdminFurnitureModule(moduleDraft);
       setLoadedModuleId(moduleDraft.id);
-      alert('관리자 모듈이 저장되었습니다. 가구 목록에 자동 반영됩니다.');
+      alert(published
+        ? '수정 사항이 저장되었습니다. (게시 중 — 가구 갤러리에 즉시 반영)'
+        : '비공개 초안으로 저장되었습니다. 모듈 목록에서 "게시"를 켜면 가구 갤러리에 공개됩니다.');
     } catch (error) {
       console.error('[ModuleBuilder] 저장 실패:', error);
       alert('저장에 실패했습니다. 콘솔을 확인하세요.');
@@ -1437,7 +1439,7 @@ const ModuleBuilder = () => {
                       {item.source === 'admin' ? '관리자' : '표준'}
                     </span>
                     {item.source === 'admin' && !item.enabled && (
-                      <span className={`${styles.moduleTag} ${styles.moduleTagHidden}`}>숨김</span>
+                      <span className={`${styles.moduleTag} ${styles.moduleTagHidden}`}>비공개</span>
                     )}
                   </div>
                 </div>

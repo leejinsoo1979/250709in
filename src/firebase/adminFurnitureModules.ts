@@ -90,14 +90,23 @@ const docToModule = (data: Record<string, unknown>, docId: string): ModuleData =
   } as ModuleData;
 };
 
-export async function saveAdminFurnitureModule(moduleData: ModuleData & { thumbnail?: string }) {
+/**
+ * 저장 — 신규 모듈은 비공개 초안(enabled: false)으로 저장.
+ * 게시는 모듈관리 목록에서 관리자가 '게시'를 켰을 때만. 이미 게시 중인 모듈의 수정 저장은 게시 상태 유지.
+ * @returns 저장 후 게시 여부
+ */
+export async function saveAdminFurnitureModule(moduleData: ModuleData & { thumbnail?: string }): Promise<boolean> {
   const cleanModule = stripUndefined(moduleData);
-  await setDoc(doc(db, COLLECTION, cleanModule.id), {
+  const ref = doc(db, COLLECTION, cleanModule.id);
+  const existing = await getDoc(ref);
+  const enabled = existing.exists() ? existing.data()?.enabled === true : false;
+  await setDoc(ref, {
     ...cleanModule,
-    enabled: true,
+    enabled,
     source: 'admin-module-builder',
     updatedAt: serverTimestamp()
   }, { merge: true });
+  return enabled;
 }
 
 export function subscribeEnabledAdminFurnitureModules(
