@@ -366,6 +366,7 @@ const AdminModulePreview = ({
 
         <Suspense fallback={null}>
           <group position={[0, centerY, 0]}>
+            {/* 외부서랍 모듈: doorTopGap/doorBottomGap 미전달 — 빌더의 마이다 갭 설정이 적용되게 (전달값은 '배치 후 편집' 우선) */}
             <BoxModule
               key={draftKey}
               moduleData={moduleData}
@@ -383,8 +384,8 @@ const AdminModulePreview = ({
               slotWidths={moduleData.slotWidths}
               slotIndex={0}
               // 프리뷰는 받침대 없이 바닥에 놓이므로 도어 갭 0 — 도어가 몸통과 정확히 일치
-              doorTopGap={0}
-              doorBottomGap={0}
+              doorTopGap={moduleData.modelConfig?.externalDrawers ? undefined : 0}
+              doorBottomGap={moduleData.modelConfig?.externalDrawers ? undefined : 0}
             />
           </group>
         </Suspense>

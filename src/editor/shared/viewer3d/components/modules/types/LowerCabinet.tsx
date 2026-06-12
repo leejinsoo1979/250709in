@@ -459,6 +459,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   doorBottomGap,
   floorY,
   maidaDimensionSide = null,
+  legraTypesOverride,
   maidaFrontWidthMm,
   maidaXOffset = 0,
   legraDrawerTypes,
@@ -883,6 +884,8 @@ interface TouchDrawerAnimatedProps {
   maidaDimensionSide?: 'left' | 'right' | null;
   maidaFrontWidthMm?: number;
   maidaXOffset?: number;
+  // 관리자 레그라: 빌더에서 선택한 서랍별 종류 (GLB 등급 강제 — 자동 추정 대신)
+  legraTypesOverride?: ('M' | 'L' | 'F' | 'N')[];
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -907,6 +910,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   stoneThickness = 20,
   floorY,
   maidaDimensionSide = null,
+  legraTypesOverride,
   maidaFrontWidthMm,
   maidaXOffset = 0,
 }) => {
@@ -1290,7 +1294,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   };
   // 최종 등급: 사용자 수동 선택(legraDrawerTypesRaw[tier-1])이 있으면 우선, 없으면 마이다 기반 자동.
   const resolveTouchLegraType = (tier: number): 'M' | 'L' | 'F' | 'N' =>
-    (legraDrawerTypesRaw?.[tier - 1] as ('M' | 'L' | 'F' | 'N') | undefined) ?? touchAutoLegraType(tier);
+    legraTypesOverride?.[tier - 1]
+    ?? (legraDrawerTypesRaw?.[tier - 1] as ('M' | 'L' | 'F' | 'N') | undefined)
+    ?? touchAutoLegraType(tier);
 
   // 렌더가 계산한 "자동" 등급(수동 무시)을 store(legraDrawerTypesAuto)에 동기화한다.
   //  → 팝업 드롭다운이 수동값 없을 때 이 자동값을 그대로 표시 → 렌더와 실시간 일치.
@@ -1515,6 +1521,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const placedModuleForCorner = useFurnitureStore(state => (
     placedFurnitureId ? state.placedModules.find(p => p.id === placedFurnitureId) : undefined
   )) as any;
+
+  // 관리자 레그라박스 설정 — 인덕션/터치 호출부 공용
+  const adminLegraCfg = moduleData.id.includes('lower-cabinet-admin')
+    && moduleData.modelConfig?.externalDrawers?.drawerType === 'legrabox'
+    ? moduleData.modelConfig.externalDrawers
+    : undefined;
+  const ADMIN_LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
+  const adminLegraSpecs: [number, number][] = (adminLegraCfg?.legraSpecs || [])
+    .map(spec => [ADMIN_LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228, spec.offsetMm]);
   const placedModulesForDoorDimensions = useFurnitureStore(state => state.placedModules);
   const isCurrentModuleFocused = !!placedFurnitureId && (
     uiSelectedFurnitureId === placedFurnitureId ||
@@ -2971,8 +2986,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopNotch={moduleData.modelConfig?.hideTopPanel === false || moduleData.modelConfig?.topChannelNotch !== true}
               maidaHeightsMm={extCfg.maidaHeights}
               sideHeightOverrides={extCfg.sideHeights}
-              doorTopGap={doorTopGap ?? adminExtTopGap}
-              doorBottomGap={doorBottomGap ?? adminExtBottomGap}
+              doorTopGap={(placedModuleForCorner as any)?.doorTopGap ?? adminExtTopGap}
+              doorBottomGap={(placedModuleForCorner as any)?.doorBottomGap ?? adminExtBottomGap}
               defaultDoorTopGap={-20}
               defaultDoorBottomGap={5}
               backPanelThicknessOverride={backPanelThickness}
@@ -3178,13 +3193,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 터치 레그라박스 서랍 + 마이다 (도어올림 터치 + 상판내림 터치 + 관리자 빌더 레그라박스) */}
       {(() => {
-        const adminLegraCfg = moduleData.id.includes('lower-cabinet-admin')
-          && moduleData.modelConfig?.externalDrawers?.drawerType === 'legrabox'
-          ? moduleData.modelConfig.externalDrawers
-          : undefined;
-        const LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
-        const adminLegraSpecs: [number, number][] = (adminLegraCfg?.legraSpecs || [])
-          .map(spec => [LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228, spec.offsetMm]);
         const isStandardTouch = moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-');
         if (!isStandardTouch && adminLegraSpecs.length === 0) return null;
         if (!(showFurniture || hasDoor)) return null;
@@ -3192,6 +3200,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         <TouchDrawerAnimated
           drawerSpecsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs : undefined}
           maidaProportionsOverride={adminLegraSpecs.length > 0 ? adminLegraSpecs.map(spec => spec[0]) : undefined}
+          legraTypesOverride={adminLegraCfg?.legraSpecs?.map(spec => spec.type)}
           moduleId={moduleData.id}
           moduleHeightMm={moduleData.dimensions.height || 785}
           adjustedHeight={adjustedHeight}
@@ -3207,8 +3216,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           showFurniture={showFurniture}
           hasDoor={hasDoor}
           panelGrainDirections={panelGrainDirections}
-          doorTopGap={doorTopGap}
-          doorBottomGap={doorBottomGap}
+          doorTopGap={adminLegraCfg ? ((placedModuleForCorner as any)?.doorTopGap ?? adminLegraCfg.topGap) : doorTopGap}
+          doorBottomGap={adminLegraCfg ? ((placedModuleForCorner as any)?.doorBottomGap ?? adminLegraCfg.bottomGap) : doorBottomGap}
           stoneThickness={stoneThickness}
           floorY={lowerCabinetFloorY - cabinetYPosition}
           maidaDimensionSide={maidaDimensionSide}
