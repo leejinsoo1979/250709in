@@ -1675,6 +1675,26 @@ const ModuleBuilder = () => {
             <ClipboardCopy size={16} />
             <span>JSON</span>
           </button>
+          <button
+            type="button"
+            className={styles.copyButton}
+            onClick={() => {
+              const raw = prompt('모듈 JSON을 붙여넣으세요 (JSON 복사로 내보낸 형식)');
+              if (!raw) return;
+              try {
+                const mod = JSON.parse(raw);
+                if (!mod?.dimensions || !mod?.category) throw new Error('형식 오류');
+                loadModuleIntoForm(mod);
+                setCategoryPicked(true);
+                setReadOnlyDetail(false);
+                alert('JSON을 불러왔습니다. 확인 후 저장하세요 (식별자가 기존과 같으면 덮어쓰기 확인창이 뜹니다).');
+              } catch {
+                alert('JSON 파싱에 실패했습니다. "JSON" 버튼으로 복사한 형식 그대로 붙여넣어 주세요.');
+              }
+            }}
+          >
+            <span>가져오기</span>
+          </button>
           {readOnlyDetail ? (
             loadedModuleId ? (
               <button type="button" className={styles.saveButton} onClick={() => setReadOnlyDetail(false)}>
