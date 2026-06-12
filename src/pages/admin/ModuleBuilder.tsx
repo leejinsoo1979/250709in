@@ -2371,9 +2371,9 @@ const ModuleBuilder = () => {
                 className={`${styles.drawButton} ${drawingMode ? styles.drawButtonActive : ''}`}
                 onClick={() => setDrawingMode(mode => !mode)}
                 disabled={readOnlyDetail || previewView !== '3D'}
-                title="뷰어에서 호버+클릭으로 배치 — Tab: 선반 ⇄ 칸막이 전환, 숫자 입력 후 Enter = 정밀 위치, Shift = 32mm 스냅"
+                title="뷰어에서 클릭으로 선반·칸막이 배치 — Tab: 선반 ⇄ 칸막이 전환, 숫자 입력 후 Enter = 정밀 위치, Shift = 32mm 스냅"
               >
-                패널 그리기
+                선반·칸막이 배치
               </button>
               <div className={styles.viewToggle}>
                 <button
