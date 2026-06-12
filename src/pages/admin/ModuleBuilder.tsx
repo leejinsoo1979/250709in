@@ -210,6 +210,13 @@ const GALLERY_CATEGORY_OPTIONS: Record<ModuleCategory, Array<{ value: string; la
 
 const defaultGalleryCategory = (category: ModuleCategory) => GALLERY_CATEGORY_OPTIONS[category][0].value;
 
+/** 분류별 표준 치수 — 표준 모듈 생성 코드와 동일 (상부장 785/D300, 하부장 캐비넷 780/D600, 키큰장 2400/D600) */
+const CATEGORY_DEFAULT_DIMENSIONS: Record<ModuleCategory, { height: number; depth: number }> = {
+  full: { height: 2400, depth: 600 },
+  upper: { height: 785, depth: 300 },
+  lower: { height: 780, depth: 600 }
+};
+
 /** 갤러리 탭 라벨 — 모듈관리 필터/태그 공용 */
 const GALLERY_CATEGORY_LABELS: Record<string, string> = {
   clothing: '의류장',
@@ -1383,9 +1390,20 @@ const ModuleBuilder = () => {
                 onChange={(event) => {
                   const nextCategory = event.target.value as ModuleCategory;
                   setCategory(nextCategory);
-                  // 카테고리 표준 상판 기본값 (하부장: 없음, 전체장/상부장: 있음) + 기본 노출 탭
+                  // 분류 표준값 적용: 치수 / 상판 / 노출 탭 / 기본 칸 구조
+                  const dims = CATEGORY_DEFAULT_DIMENSIONS[nextCategory];
+                  setHeight(dims.height);
+                  setDepth(dims.depth);
                   setHasTopPanel(nextCategory !== 'lower');
                   setGalleryCategory(defaultGalleryCategory(nextCategory));
+                  if (nextCategory === 'full') {
+                    setSections(createDefaultFullSections());
+                    setLowerSectionCount(1);
+                  } else {
+                    // 상부장/하부장: 단일 빈 칸 (오픈)
+                    setSections([{ ...createSection(0), type: 'open', height: 100, heightType: 'percentage', count: 0 }]);
+                    setLowerSectionCount(1);
+                  }
                 }}
               >
                 <option value="full">전체장</option>
