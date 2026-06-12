@@ -986,6 +986,34 @@ const ModuleBuilder = () => {
     }
   };
 
+  /**
+   * 하부장 노출 카테고리 = 구조 패밀리 — 측판 상단 모서리 구조 프리셋 동시 적용
+   * - 기본장: 상판 없음 + 상단 60×40 따내기 + 목찬넬 (표준 반통)
+   * - 도어올림: 상판 있음, 상단 따내기 없음
+   * - 상판내림: 상판 있음 + 상단 가로전대 아래 65×40 따내기 (H − 120 위치, 표준 반통 규칙)
+   */
+  const applyGalleryCategoryPreset = (value: string) => {
+    setGalleryCategory(value);
+    if (category !== 'lower') return;
+
+    setNotchSidesLinked(true);
+    setRightNotches([]);
+    if (value === 'kitchen-basic') {
+      setHasTopPanel(false);
+      setLeftNotches([]);
+    } else if (value === 'kitchen-door-raise') {
+      setHasTopPanel(true);
+      setLeftNotches([]);
+    } else if (value === 'kitchen-top-down') {
+      setHasTopPanel(true);
+      setLeftNotches([{
+        ...createNotchRow(Math.max(1, height - 120)),
+        height: 65,
+        depth: 40
+      }]);
+    }
+  };
+
   const reservedTokensInSlug = () => {
     const normalizedSlug = normalizeSlug(slug || name);
     return RESERVED_ID_TOKENS.filter(token => normalizedSlug.includes(token));
@@ -1413,10 +1441,10 @@ const ModuleBuilder = () => {
             </label>
 
             <label className={styles.field}>
-              <span>노출 카테고리 (갤러리 탭)</span>
+              <span>노출 카테고리 {category === 'lower' ? '(구조 패밀리)' : '(갤러리 탭)'}</span>
               <select
                 value={galleryCategory}
-                onChange={(event) => setGalleryCategory(event.target.value)}
+                onChange={(event) => applyGalleryCategoryPreset(event.target.value)}
                 disabled={GALLERY_CATEGORY_OPTIONS[category].length === 1}
               >
                 {GALLERY_CATEGORY_OPTIONS[category].map(option => (
