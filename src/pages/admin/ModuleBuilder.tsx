@@ -740,9 +740,14 @@ const ModuleBuilder = () => {
     setView('builder');
   };
 
-  /** 수정 — 관리자 모듈 전용: 편집 가능한 상세로 */
+  /** 수정 — 관리자 모듈: 그대로 편집(수정 저장) / 표준 모듈: 구조를 편집 시작 (저장 시 관리자 모듈 생성) */
   const openModuleEdit = (item: CatalogItem) => {
-    loadSavedModule(item.module);
+    if (item.source === 'admin') {
+      loadSavedModule(item.module);
+    } else {
+      setTemplateSelection(item.module.id);
+      loadModuleIntoForm(item.module);
+    }
     setReadOnlyDetail(false);
     setView('builder');
   };
@@ -1091,20 +1096,23 @@ const ModuleBuilder = () => {
                   <button type="button" className={styles.iconButton} onClick={() => openModuleView(item)} title="보기 (구조 열람)">
                     <Eye size={14} />
                   </button>
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={() => openModuleEdit(item)}
+                    title={item.source === 'admin' ? '수정' : '수정 (저장 시 관리자 모듈로 생성)'}
+                  >
+                    <Pencil size={14} />
+                  </button>
                   {item.source === 'admin' && (
-                    <>
-                      <button type="button" className={styles.iconButton} onClick={() => openModuleEdit(item)} title="수정">
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.deleteButton}
-                        onClick={() => deleteSaved(item.module.id, item.module.name)}
-                        title="삭제"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => deleteSaved(item.module.id, item.module.name)}
+                      title="삭제"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   )}
                 </div>
               </div>
@@ -1146,20 +1154,23 @@ const ModuleBuilder = () => {
                   <button type="button" className={styles.iconButton} onClick={() => openModuleView(item)} title="보기 (구조 열람)">
                     <Eye size={14} />
                   </button>
+                  <button
+                    type="button"
+                    className={styles.iconButton}
+                    onClick={() => openModuleEdit(item)}
+                    title={item.source === 'admin' ? '수정' : '수정 (저장 시 관리자 모듈로 생성)'}
+                  >
+                    <Pencil size={14} />
+                  </button>
                   {item.source === 'admin' && (
-                    <>
-                      <button type="button" className={styles.iconButton} onClick={() => openModuleEdit(item)} title="수정">
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className={styles.deleteButton}
-                        onClick={() => deleteSaved(item.module.id, item.module.name)}
-                        title="삭제"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => deleteSaved(item.module.id, item.module.name)}
+                      title="삭제"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   )}
                 </div>
               </div>
