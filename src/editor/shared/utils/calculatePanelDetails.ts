@@ -629,9 +629,21 @@ export const calculatePanelDetails = (
           material: 'PB'
         };
         // 관리자 빌더 modelConfig 측판 따내기 — 3D(BaseFurnitureShell)와 동일 소스, 측별 개별 지원
-        const configCommonNotches = moduleData.modelConfig?.sideNotches || [];
-        const configLeftNotches = moduleData.modelConfig?.leftSideNotches ?? configCommonNotches;
-        const configRightNotches = moduleData.modelConfig?.rightSideNotches ?? configCommonNotches;
+        // topNotch는 가구 상단 기준(H − y) 위치로 자동 계산 후 공통 따내기에 합류
+        const configTopNotchAsCommon = moduleData.modelConfig?.topNotch
+          ? [{
+              y: moduleData.modelConfig.topNotch.y,
+              z: moduleData.modelConfig.topNotch.z,
+              fromBottom: height - moduleData.modelConfig.topNotch.y
+            }]
+          : [];
+        const configCommonNotches = [...(moduleData.modelConfig?.sideNotches || []), ...configTopNotchAsCommon];
+        const configLeftNotches = moduleData.modelConfig?.leftSideNotches
+          ? [...moduleData.modelConfig.leftSideNotches, ...configTopNotchAsCommon]
+          : configCommonNotches;
+        const configRightNotches = moduleData.modelConfig?.rightSideNotches
+          ? [...moduleData.modelConfig.rightSideNotches, ...configTopNotchAsCommon]
+          : configCommonNotches;
         const leftNotchesAll = [...(sidePanelNotches || []), ...configLeftNotches];
         const rightNotchesAll = [...(sidePanelNotches || []), ...configRightNotches];
         if (leftNotchesAll.length > 0) leftSideEntry.sideNotches = leftNotchesAll;
@@ -2891,7 +2903,14 @@ export const calculatePanelDetails = (
   // 자동 렌더링하므로 패널목록도 일치시킨다.
   // 좌우 개별 따내기(leftSideNotches/rightSideNotches)는 프레임/전대가 전폭을 가로지를 수 없어 3D에도 없음 → 제외
   {
-    const adminCommonNotches = moduleData.modelConfig?.sideNotches || [];
+    const adminTopNotchAsCommon = moduleData.modelConfig?.topNotch
+      ? [{
+          y: moduleData.modelConfig.topNotch.y,
+          z: moduleData.modelConfig.topNotch.z,
+          fromBottom: height - moduleData.modelConfig.topNotch.y
+        }]
+      : [];
+    const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || []), ...adminTopNotchAsCommon];
     if (adminCommonNotches.length > 0) {
       const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       adminCommonNotches.forEach((notch, ni) => {

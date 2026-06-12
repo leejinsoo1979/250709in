@@ -330,6 +330,7 @@ interface BaseFurnitureShellProps {
       sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
       leftSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
       rightSideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+      topNotch?: { y: number; z: number };
     };
   };
 
@@ -491,9 +492,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
   // 관리자 빌더 모듈: modelConfig에 정의된 측판 목찬넬 따내기 (mm 단위)
   // left/right 개별 지정이 있으면 우선, 없으면 공통(sideNotches) 사용
-  const configCommonNotches = moduleData?.modelConfig?.sideNotches || [];
-  const configLeftNotches = moduleData?.modelConfig?.leftSideNotches ?? configCommonNotches;
-  const configRightNotches = moduleData?.modelConfig?.rightSideNotches ?? configCommonNotches;
+  // topNotch는 항상 가구 상단 기준(H − y)으로 위치 자동 계산 후 공통 따내기에 합류
+  const configTopNotch = moduleData?.modelConfig?.topNotch;
+  const heightMmForTopNotch = Math.round(height / mmToThreeUnits(1));
+  const configTopNotchAsCommon = configTopNotch
+    ? [{ y: configTopNotch.y, z: configTopNotch.z, fromBottom: heightMmForTopNotch - configTopNotch.y }]
+    : [];
+  const configCommonNotches = [...(moduleData?.modelConfig?.sideNotches || []), ...configTopNotchAsCommon];
+  const configLeftNotches = moduleData?.modelConfig?.leftSideNotches
+    ? [...moduleData.modelConfig.leftSideNotches, ...configTopNotchAsCommon]
+    : configCommonNotches;
+  const configRightNotches = moduleData?.modelConfig?.rightSideNotches
+    ? [...moduleData.modelConfig.rightSideNotches, ...configTopNotchAsCommon]
+    : configCommonNotches;
   const createBackPanelFaceGrooves = useCallback((
     face: 'left' | 'right',
     panelHeight: number,
@@ -3333,7 +3344,13 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.hideTopPanel === nextProps.hideTopPanel &&
     JSON.stringify(prevProps.topStretcher) === JSON.stringify(nextProps.topStretcher) &&
     JSON.stringify(prevProps.sideNotches) === JSON.stringify(nextProps.sideNotches) &&
-    JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
+    JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections) &&
+    // 관리자 빌더: modelConfig 따내기 변경도 즉시 반영 (모듈빌더 실시간 미리보기)
+    prevProps.moduleData?.id === nextProps.moduleData?.id &&
+    JSON.stringify(prevProps.moduleData?.modelConfig?.sideNotches) === JSON.stringify(nextProps.moduleData?.modelConfig?.sideNotches) &&
+    JSON.stringify(prevProps.moduleData?.modelConfig?.leftSideNotches) === JSON.stringify(nextProps.moduleData?.modelConfig?.leftSideNotches) &&
+    JSON.stringify(prevProps.moduleData?.modelConfig?.rightSideNotches) === JSON.stringify(nextProps.moduleData?.modelConfig?.rightSideNotches) &&
+    JSON.stringify(prevProps.moduleData?.modelConfig?.topNotch) === JSON.stringify(nextProps.moduleData?.modelConfig?.topNotch);
 
   // 인출장/팬트리장/냉장고장(N섹션 가구): sectionDepths/sectionDepthDirections는 store에서 직접 읽으므로
   // memo를 우회하여 항상 리렌더링되게 함

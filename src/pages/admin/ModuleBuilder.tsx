@@ -252,8 +252,11 @@ const ModuleBuilder = () => {
   const [notchSidesLinked, setNotchSidesLinked] = useState(true);
   const [leftNotches, setLeftNotches] = useState<NotchRow[]>([]);
   const [rightNotches, setRightNotches] = useState<NotchRow[]>([]);
-  // 하부장 상판 포함 여부 — 기본 OFF (표준 하부장처럼 상판 없음 + 상단 60 따내기 + 목찬넬)
-  const [lowerHasTopPanel, setLowerHasTopPanel] = useState(false);
+  // 상단 모서리 따내기 — 기본 ON
+  // 하부장: 표준 메커니즘(상판 없음 + 60×40 + 목찬넬), 전체장/상부장: modelConfig.topNotch (상단 기준 자동 위치)
+  const [topNotchEnabled, setTopNotchEnabled] = useState(true);
+  const [topNotchHeight, setTopNotchHeight] = useState(60);
+  const [topNotchDepth, setTopNotchDepth] = useState(40);
 
   // 하부장 외부서랍 (레그라박스) — 서랍 구역은 공통 따내기 위치로 분할
   const [useExternalDrawers, setUseExternalDrawers] = useState(false);
@@ -316,8 +319,11 @@ const ModuleBuilder = () => {
       hasOpenFront: !hasDoor,
       hasShelf: sections.some(section => section.type === 'shelf') || rightSections.some(section => section.type === 'shelf'),
       shelfCount: sections.filter(section => section.type === 'shelf').length,
-      // 하부장: 상판 포함 선택 시에만 false (기본 = 표준 하부장처럼 상판 없음 + 상단 따내기 + 목찬넬)
-      ...(category === 'lower' && lowerHasTopPanel ? { hideTopPanel: false } : {}),
+      // 상단 모서리 따내기 — 하부장: 표준 메커니즘(끄면 상판 포함), 전체장/상부장: topNotch (상단 기준 자동 위치)
+      ...(category === 'lower' && !topNotchEnabled ? { hideTopPanel: false } : {}),
+      ...(category !== 'lower' && topNotchEnabled && topNotchHeight > 0 && topNotchDepth > 0
+        ? { topNotch: { y: topNotchHeight, z: topNotchDepth } }
+        : {}),
       // 패널목록에서 체크 해제한 패널 = 모듈에서 기본 제거 (배치 시 빠진 상태, CNC 제외)
       ...(hiddenPanelNames.size > 0 ? { panelExclusions: Array.from(hiddenPanelNames) } : {}),
       ...notchModelConfig,
@@ -371,7 +377,7 @@ const ModuleBuilder = () => {
             sections: sections.map(builderSectionToConfig)
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, lowerHasTopPanel, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, topNotchDepth, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -457,8 +463,14 @@ const ModuleBuilder = () => {
     setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
     setHasSharedSafetyShelf(module.modelConfig?.hasSharedSafetyShelf === true);
 
-    // 측판 목찬넬 따내기 복원
-    setLowerHasTopPanel(module.modelConfig?.hideTopPanel === false);
+    // 상단 모서리 따내기 복원 — 하부장: hideTopPanel 역, 전체장/상부장: topNotch 존재 여부
+    if ((module.category as string) === 'lower') {
+      setTopNotchEnabled(module.modelConfig?.hideTopPanel !== false);
+    } else {
+      setTopNotchEnabled(!!module.modelConfig?.topNotch);
+    }
+    setTopNotchHeight(module.modelConfig?.topNotch?.y || 60);
+    setTopNotchDepth(module.modelConfig?.topNotch?.z || 40);
 
     // 기본 제거 패널 복원 (패널목록 체크 해제 상태)
     setHiddenPanelNames(new Set(module.modelConfig?.panelExclusions || []));
@@ -567,6 +579,20 @@ const ModuleBuilder = () => {
   const addNotch = (side: 'left' | 'right') => {
     const setter = side === 'right' ? setRightNotches : setLeftNotches;
     setter(current => [...current, createNotchRow(current.length > 0 ? current[current.length - 1].fromBottom + 200 : 300)]);
+  };
+
+  /** 중간 따내기 개수 변경 — 늘리면 가구 높이 기준 균등 분배 위치로 추가, 줄이면 뒤에서 제거 */
+  const setNotchCount = (count: number) => {
+    const target = Math.max(0, Math.min(8, Math.round(count)));
+    setLeftNotches(current => {
+      if (target === current.length) return current;
+      if (target < current.length) return current.slice(0, target);
+      const next = [...current];
+      for (let i = current.length; i < target; i += 1) {
+        next.push(createNotchRow(Math.round((height * (i + 1)) / (target + 1))));
+      }
+      return next;
+    });
   };
 
   const removeNotch = (side: 'left' | 'right', notchId: string) => {
@@ -1047,35 +1073,63 @@ const ModuleBuilder = () => {
               <em>{leftNotches.length > 0 ? `${notchSidesLinked ? '공통' : '좌/우 개별'} ${leftNotches.length}개` : '없음'}</em>
             </summary>
             <div className={styles.collapseBody}>
-            <div className={styles.collapseToolbar}>
-              <p className={styles.thumbnailHint}>
-                바닥 기준 위치에서 위로 [높이], 측판 앞면에서 뒤로 [깊이]만큼 따냅니다. 표준 목찬넬 65×40.
-                좌우 동일 적용 시 목찬넬 ㄱ자 프레임(PET)과 그 뒤 가로전대(PB)가 자동 포함됩니다.
-              </p>
-              <button type="button" className={styles.iconButton} onClick={() => addNotch('left')} title="따내기 추가">
-                <Plus size={16} />
-              </button>
-            </div>
 
-          {category === 'lower' && (
-            <label className={styles.checkboxInline}>
-              <input
-                type="checkbox"
-                checked={lowerHasTopPanel}
-                onChange={(event) => setLowerHasTopPanel(event.target.checked)}
-              />
-              <span>상판 포함 (체크 해제 시 표준 하부장처럼 상단 60 따내기 + 목찬넬 프레임)</span>
-            </label>
-          )}
-
+          {/* ① 상단 모서리 따내기 — 기본 ON, 위치는 항상 가구 상단 자동 */}
           <label className={styles.checkboxInline}>
             <input
               type="checkbox"
-              checked={notchSidesLinked}
-              onChange={(event) => toggleNotchSidesLinked(event.target.checked)}
+              checked={topNotchEnabled}
+              onChange={(event) => setTopNotchEnabled(event.target.checked)}
             />
-            <span>좌우측판 동일 적용</span>
+            <span>
+              상단 모서리 따내기
+              {category === 'lower' ? ' — 표준 60×40 (상판 없음 + 목찬넬 프레임)' : ' — 가구 상단에 자동 위치'}
+            </span>
           </label>
+
+          {category !== 'lower' && topNotchEnabled && (
+            <div className={styles.sectionFields} style={{ marginTop: 8 }}>
+              <label className={styles.compactField}>
+                <span>상단 따내기 높이(mm)</span>
+                <input type="number" min={1} value={topNotchHeight} onChange={(event) => setTopNotchHeight(Number(event.target.value))} />
+              </label>
+              <label className={styles.compactField}>
+                <span>상단 따내기 깊이(mm)</span>
+                <input type="number" min={1} value={topNotchDepth} onChange={(event) => setTopNotchDepth(Number(event.target.value))} />
+              </label>
+            </div>
+          )}
+
+          {/* ② 중간 따내기 — 개수 지정 (균등 분배 기본 위치) + 행별 위치/치수 편집 */}
+          <div className={styles.collapseToolbar} style={{ marginTop: 14 }}>
+            <label className={styles.compactField}>
+              <span>중간 따내기 개수</span>
+              <input
+                type="number"
+                min={0}
+                max={8}
+                value={leftNotches.length}
+                onChange={(event) => setNotchCount(Number(event.target.value))}
+              />
+            </label>
+            <label className={styles.checkboxInline} style={{ marginTop: 0 }}>
+              <input
+                type="checkbox"
+                checked={notchSidesLinked}
+                onChange={(event) => toggleNotchSidesLinked(event.target.checked)}
+              />
+              <span>좌우측판 동일 적용</span>
+            </label>
+            <button type="button" className={styles.iconButton} onClick={() => addNotch('left')} title="따내기 추가">
+              <Plus size={16} />
+            </button>
+          </div>
+
+          <p className={styles.thumbnailHint}>
+            개수를 올리면 높이 기준 균등 위치로 추가되고, 각 따내기의 바닥 기준 위치·높이·깊이를 아래에서
+            수정할 수 있습니다. 따내기마다 목찬넬 ㄱ자 프레임(PET) + 가로전대(PB)가 자동 포함됩니다.
+            (표준 목찬넬 65×40 · 좌우 개별 모드는 따내기만 생성)
+          </p>
 
           <div className={styles.sectionList}>
             {leftNotches.length === 0 && (

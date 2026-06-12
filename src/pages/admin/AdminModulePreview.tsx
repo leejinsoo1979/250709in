@@ -131,6 +131,10 @@ const AdminModulePreview = ({
   const cameraDistance = Math.max(mmToThreeUnits(maxDim) * 1.6, 18);
   const centerY = mmToThreeUnits(height) / 2;
 
+  // 드래프트가 바뀌면 BoxModule을 리마운트 — 섹션/따내기/서랍 수정이 즉시 반영되도록
+  // (moduleData는 빌더에서 useMemo로 안정화되어 있어 실제 변경 시에만 키가 바뀐다)
+  const draftKey = useMemo(() => JSON.stringify(moduleData), [moduleData]);
+
   return (
     <Space3DViewProvider
       spaceInfo={previewSpaceInfo}
@@ -177,7 +181,7 @@ const AdminModulePreview = ({
         <Suspense fallback={null}>
           <group position={[0, centerY, 0]}>
             <BoxModule
-              key={moduleData.id}
+              key={draftKey}
               moduleData={moduleData}
               color={moduleData.color}
               spaceInfo={previewSpaceInfo}
