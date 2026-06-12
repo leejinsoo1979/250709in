@@ -923,7 +923,7 @@ export const calculatePanelDetails = (
             thickness: backPanelThickness, // 9mm
             material: 'MDF'
           });
-          if (!isLowerCabinetModule) {
+          if (!isLowerCabinetModule || moduleData.id.includes('-admin-')) {
             if (!isGlassCabinetModule) {
               targetPanel.push({
                 // 관리자 모듈: 3D 메시 이름(보강대 N)과 동일 표기 — 패널스캔=패널목록

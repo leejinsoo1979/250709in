@@ -2379,8 +2379,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
                       const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
-                      // 하부장 모듈은 하단 보강대 생략 (상단만 유지)
-                      const isLowerModule = moduleData?.id?.includes('lower-');
+                      // 하부장 모듈은 하단 보강대 생략 (상단만 유지) — 관리자 모듈은 상/하 2개
+                      const isLowerModule = moduleData?.id?.includes('lower-') && !moduleData?.id?.includes('-admin-');
                       return (
                         <>
                           {/* 하부 섹션 보강대 — 백패널 없는 섹션은 보강대도 없음 */}
@@ -2518,8 +2518,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
                       const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
-                      // 하부장 모듈은 하단 보강대 생략 (상단만 유지)
-                      const isLowerModuleSingle = moduleData?.id?.includes('lower-');
+                      // 하부장 모듈은 하단 보강대 생략 (상단만 유지) — 관리자 모듈은 상/하 2개
+                      const isLowerModuleSingle = moduleData?.id?.includes('lower-') && !moduleData?.id?.includes('-admin-');
                       return (
                         <>
                           {/* 하단 보강대 — 하부장은 생략 */}
