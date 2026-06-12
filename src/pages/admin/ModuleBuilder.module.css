@@ -415,6 +415,13 @@
   color: var(--mb-ink-soft);
 }
 
+/* 더 보기 — 대량 모듈 페이지네이션 */
+.loadMoreRow {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 4px;
+}
+
 /* ── 모듈 카탈로그: 갤러리형 ─────────────────────────── */
 
 .moduleGrid {

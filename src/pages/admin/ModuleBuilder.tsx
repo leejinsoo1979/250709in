@@ -255,6 +255,7 @@ interface CatalogItem {
   module: ModuleData & { thumbnail?: string };
   source: 'standard' | 'admin';
   enabled?: boolean;
+  updatedAt?: number;
   galleryCat: string;
   thumbnail?: string;
 }
@@ -457,6 +458,11 @@ const ModuleBuilder = () => {
   const [sourceFilter, setSourceFilter] = useState<'all' | 'standard' | 'admin'>('all');
   // 전시/작업 분리 — 전시: 표준 + 게시된 관리자 모듈, 작업: 비공개(초안) 관리자 모듈
   const [statusTab, setStatusTab] = useState<'published' | 'draft'>('published');
+  // 대량 모듈 대비 — 한 번에 60개씩 렌더, '더 보기'로 확장
+  const [visibleCount, setVisibleCount] = useState(60);
+  useEffect(() => {
+    setVisibleCount(60);
+  }, [statusTab, categoryFilter, sourceFilter, searchQuery]);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -478,10 +484,13 @@ const ModuleBuilder = () => {
       module: doc.module,
       source: 'admin',
       enabled: doc.enabled,
+      updatedAt: doc.updatedAt ? doc.updatedAt.getTime() : 0,
       galleryCat: (doc.module as ModuleData & { galleryCategory?: string }).galleryCategory
         || defaultGalleryCategory(doc.module.category as ModuleCategory),
       thumbnail: doc.module.thumbnail
     }));
+    // 최근 수정 모듈이 맨 앞 — 수천 개여도 방금 작업한 게 항상 첫 화면
+    adminItems.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     const standardItems: CatalogItem[] = templateModules.map(module => ({
       module,
       source: 'standard',
@@ -507,6 +516,11 @@ const ModuleBuilder = () => {
       return true;
     })
   ), [catalogItems, categoryFilter, searchQuery, sourceFilter, statusTab]);
+
+  const visibleCatalog = useMemo(
+    () => filteredCatalog.slice(0, visibleCount),
+    [filteredCatalog, visibleCount]
+  );
 
   // 숨김 패널 → ExcludedPanelsStore (BoxWithEdges가 매 프레임 읽어 visible 토글)
   useEffect(() => {
@@ -1261,9 +1275,11 @@ const ModuleBuilder = () => {
       }
       const published = await saveAdminFurnitureModule(moduleDraft);
       setLoadedModuleId(moduleDraft.id);
+      // 목록으로 돌아가면 방금 저장한 모듈이 보이는 탭이 열려 있도록
+      setStatusTab(published ? 'published' : 'draft');
       alert(published
         ? '수정 사항이 저장되었습니다. (게시 중 — 가구 갤러리에 즉시 반영)'
-        : '비공개 초안으로 저장되었습니다. 모듈 목록에서 "게시"를 켜면 가구 갤러리에 공개됩니다.');
+        : '비공개 초안으로 저장되었습니다. "작업중" 탭에 있습니다 — "게시"를 켜면 가구 갤러리에 공개됩니다.');
     } catch (error) {
       console.error('[ModuleBuilder] 저장 실패:', error);
       alert('저장에 실패했습니다. 콘솔을 확인하세요.');
@@ -1366,7 +1382,7 @@ const ModuleBuilder = () => {
             className={statusTab === 'published' ? styles.statusTabActive : ''}
             onClick={() => setStatusTab('published')}
           >
-            전시 중인 모듈
+            게시중
             <em>{catalogItems.filter(item => !(item.source === 'admin' && item.enabled === false)).length}</em>
           </button>
           <button
@@ -1374,7 +1390,7 @@ const ModuleBuilder = () => {
             className={statusTab === 'draft' ? styles.statusTabActive : ''}
             onClick={() => setStatusTab('draft')}
           >
-            작업 중 (비공개)
+            작업중
             <em>{catalogItems.filter(item => item.source === 'admin' && item.enabled === false).length}</em>
           </button>
         </div>
@@ -1437,13 +1453,21 @@ const ModuleBuilder = () => {
           </div>
         </div>
 
+        {filteredCatalog.length > visibleCount && (
+          <div className={styles.loadMoreRow}>
+            <button type="button" className={styles.copyButton} onClick={() => setVisibleCount(count => count + 120)}>
+              더 보기 ({visibleCount} / {filteredCatalog.length})
+            </button>
+          </div>
+        )}
+
         {filteredCatalog.length === 0 && (
           <p className={styles.thumbnailHint}>조건에 맞는 모듈이 없습니다.</p>
         )}
 
         {listMode === 'gallery' ? (
           <div className={styles.moduleGrid}>
-            {filteredCatalog.map(item => (
+            {visibleCatalog.map(item => (
               <div
                 key={`${item.source}-${item.module.id}`}
                 className={`${styles.moduleCard} ${item.source === 'admin' && !item.enabled ? styles.moduleCardHidden : ''}`}
@@ -1508,7 +1532,7 @@ const ModuleBuilder = () => {
           </div>
         ) : (
           <div className={styles.moduleRows}>
-            {filteredCatalog.map(item => (
+            {visibleCatalog.map(item => (
               <div
                 key={`${item.source}-${item.module.id}`}
                 className={`${styles.moduleRowItem} ${item.source === 'admin' && !item.enabled ? styles.moduleCardHidden : ''}`}
