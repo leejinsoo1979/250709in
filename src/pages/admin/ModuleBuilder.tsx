@@ -88,10 +88,10 @@ const createSection = (index: number): BuilderSection => ({
   fixedTopZoneMm: 0
 });
 
-/** 키큰장 기본 구조 — 표준 코트장과 동일: 하부 서랍 2단(600) + 상부 행거 */
+/** 키큰장 기본 구조 — 빈 깡통: 하부/상부 섹션 분리만 있고 내용물 없음 (오픈) */
 const createDefaultFullSections = (): BuilderSection[] => [
-  { ...createSection(0), type: 'drawer', height: 600, heightType: 'absolute', count: 2, drawerHeights: '255, 255' },
-  { ...createSection(1), type: 'hanging', height: 100, heightType: 'percentage', count: 0 }
+  { ...createSection(0), type: 'open', height: 600, heightType: 'absolute', count: 0 },
+  { ...createSection(1), type: 'open', height: 100, heightType: 'percentage', count: 0 }
 ];
 
 const normalizeSlug = (value: string) => (
