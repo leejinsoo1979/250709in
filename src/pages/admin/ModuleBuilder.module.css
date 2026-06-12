@@ -221,7 +221,16 @@
 .thumbnailDrop img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* 표준 규격으로 변환된 이미지를 자르지 않고 그대로 표시 */
+  object-fit: contain;
+}
+
+.thumbnailHint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--theme-text-secondary, #6b7280);
 }
 
 .thumbnailDrop input {

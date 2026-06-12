@@ -95,6 +95,55 @@ const RESERVED_ID_TOKENS = [
   'entryway', 'pull-out', 'door-lift', 'top-down', 'sink', 'dishwasher', 'induction'
 ];
 
+/**
+ * 카테고리별 표준 섬네일 규격 — 기존 갤러리 썸네일(public/images/furniture-thumbnails)과 동일.
+ * 업로드 이미지는 이 규격으로 자동 변환된다 (비율 유지 + 투명 여백).
+ */
+const THUMBNAIL_SPECS: Record<ModuleCategory, Record<BuilderLayoutMode, { width: number; height: number }>> = {
+  full: {
+    single: { width: 256, height: 512 },
+    dual: { width: 256, height: 512 }
+  },
+  upper: {
+    single: { width: 182, height: 134 },
+    dual: { width: 243, height: 134 }
+  },
+  lower: {
+    single: { width: 600, height: 750 },
+    dual: { width: 600, height: 750 }
+  }
+};
+
+/** 이미지를 표준 규격 캔버스에 contain 방식으로 그려 PNG dataURL로 변환 */
+const resizeThumbnail = (sourceDataUrl: string, targetWidth: number, targetHeight: number): Promise<string> => (
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        reject(new Error('캔버스 컨텍스트 생성 실패'));
+        return;
+      }
+      const scale = Math.min(targetWidth / image.width, targetHeight / image.height);
+      const drawWidth = image.width * scale;
+      const drawHeight = image.height * scale;
+      context.drawImage(
+        image,
+        (targetWidth - drawWidth) / 2,
+        (targetHeight - drawHeight) / 2,
+        drawWidth,
+        drawHeight
+      );
+      resolve(canvas.toDataURL('image/png'));
+    };
+    image.onerror = () => reject(new Error('이미지 로드 실패'));
+    image.src = sourceDataUrl;
+  })
+);
+
 const sectionLabels: Record<SectionType, string> = {
   open: '오픈',
   shelf: '선반',
@@ -155,6 +204,8 @@ const ModuleBuilder = () => {
   const [hasDoor, setHasDoor] = useState(false);
   const [isDynamic, setIsDynamic] = useState(true);
   const [thumbnail, setThumbnail] = useState('');
+  // 업로드 원본 보관 — 분류/구조 변경 시 표준 규격으로 재변환
+  const [originalThumbnail, setOriginalThumbnail] = useState('');
   const [sections, setSections] = useState<BuilderSection[]>([createSection(0)]);
   const [rightSections, setRightSections] = useState<BuilderSection[]>([createSection(0)]);
   const [rightAbsoluteWidth, setRightAbsoluteWidth] = useState(0);
@@ -270,6 +321,7 @@ const ModuleBuilder = () => {
     setHasDoor(module.hasDoor === true);
     setIsDynamic(module.isDynamic === true);
     setThumbnail(module.thumbnail || '');
+    setOriginalThumbnail('');
     setRightAbsoluteWidth(module.modelConfig?.rightAbsoluteWidth || 0);
     setRightAbsoluteDepth(module.modelConfig?.rightAbsoluteDepth || 0);
     setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
@@ -384,14 +436,43 @@ const ModuleBuilder = () => {
     }
   };
 
+  const thumbnailSpec = THUMBNAIL_SPECS[category][layoutMode];
+
   const handleThumbnailChange = (file: File | undefined) => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = () => {
-      setThumbnail(typeof reader.result === 'string' ? reader.result : '');
+    reader.onload = async () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : '';
+      if (!dataUrl) return;
+      setOriginalThumbnail(dataUrl);
+      try {
+        setThumbnail(await resizeThumbnail(dataUrl, thumbnailSpec.width, thumbnailSpec.height));
+      } catch (error) {
+        console.error('[ModuleBuilder] 섬네일 변환 실패, 원본 사용:', error);
+        setThumbnail(dataUrl);
+      }
     };
     reader.readAsDataURL(file);
+  };
+
+  // 분류/구조 변경 시 원본 이미지를 새 표준 규격으로 재변환
+  useEffect(() => {
+    if (!originalThumbnail) return;
+    let cancelled = false;
+    resizeThumbnail(originalThumbnail, thumbnailSpec.width, thumbnailSpec.height)
+      .then(resized => {
+        if (!cancelled) setThumbnail(resized);
+      })
+      .catch(error => console.error('[ModuleBuilder] 섬네일 재변환 실패:', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [originalThumbnail, thumbnailSpec.width, thumbnailSpec.height]);
+
+  const clearThumbnail = () => {
+    setThumbnail('');
+    setOriginalThumbnail('');
   };
 
   if (!allowed) {
@@ -499,6 +580,10 @@ const ModuleBuilder = () => {
               <ImageIcon size={18} />
               <span>섬네일 등록</span>
             </div>
+            <p className={styles.thumbnailHint}>
+              표준 규격 {thumbnailSpec.width}×{thumbnailSpec.height}px (PNG, 투명 배경 권장)
+              — 업로드 시 자동으로 규격에 맞게 변환됩니다.
+            </p>
             <label className={styles.thumbnailDrop}>
               {thumbnail ? (
                 <img src={thumbnail} alt="등록된 섬네일" />
@@ -512,7 +597,7 @@ const ModuleBuilder = () => {
               />
             </label>
             {thumbnail && (
-              <button type="button" className={styles.textButton} onClick={() => setThumbnail('')}>
+              <button type="button" className={styles.textButton} onClick={clearThumbnail}>
                 섬네일 제거
               </button>
             )}
