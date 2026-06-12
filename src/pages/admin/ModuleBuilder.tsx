@@ -485,7 +485,7 @@ const ModuleBuilder = () => {
         height,
         depth
       },
-      color: '#C8B69E',
+      color: '#FFFFFF',
       thumbnail: thumbnail || undefined,
       hasDoor,
       type: 'box' as const,
@@ -513,8 +513,14 @@ const ModuleBuilder = () => {
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
+    const translateGroupLabel = (key: string) => (
+      key === 'furniture.upperSection' ? '상부장'
+        : key === 'furniture.lowerSection' ? '하부장'
+          : key === 'furniture.door' ? '도어'
+            : key
+    );
     try {
-      return calculatePanelDetails(moduleDraft as ModuleData, width, depth, hasDoor) as Array<{
+      return calculatePanelDetails(moduleDraft as ModuleData, width, depth, hasDoor, translateGroupLabel) as Array<{
         name?: string;
         width?: number;
         height?: number;

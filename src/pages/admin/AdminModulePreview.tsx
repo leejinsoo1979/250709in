@@ -109,83 +109,90 @@ const PreviewPanelHighlighter = ({ panelName }: { panelName: string | null }) =>
 };
 
 const DIM_COLOR = '#0c6e54';
-const DIM_TEXT_SIZE_MM = 75;
 
-/** 치수선 한 줄: 본선 + 카메라를 향하는 수치 라벨 */
+/** 치수선: 본선+틱 (항상 위에 그려짐) + 카메라를 향하는 수치 라벨 */
 const DimensionLine = ({
   from,
   to,
+  ticks,
   label,
-  labelOffset
+  labelPosition,
+  labelSizeMm = 110
 }: {
   from: [number, number, number];
   to: [number, number, number];
+  ticks: Array<[[number, number, number], [number, number, number]]>;
   label: string;
-  labelOffset: [number, number, number];
-}) => {
-  const mid: [number, number, number] = [
-    (from[0] + to[0]) / 2 + labelOffset[0],
-    (from[1] + to[1]) / 2 + labelOffset[1],
-    (from[2] + to[2]) / 2 + labelOffset[2]
-  ];
-  return (
-    <group>
-      <Line points={[from, to]} color={DIM_COLOR} lineWidth={1.2} />
-      <Billboard position={mid}>
-        <Text
-          fontSize={mmToThreeUnits(DIM_TEXT_SIZE_MM)}
-          color={DIM_COLOR}
-          anchorX="center"
-          anchorY="middle"
-          outlineWidth={mmToThreeUnits(8)}
-          outlineColor="#ecedeb"
-        >
-          {label}
-        </Text>
-      </Billboard>
-    </group>
-  );
-};
+  labelPosition: [number, number, number];
+  labelSizeMm?: number;
+}) => (
+  <group renderOrder={999}>
+    <Line points={[from, to]} color={DIM_COLOR} lineWidth={1.6} depthTest={false} />
+    {ticks.map((tick, i) => (
+      <Line key={i} points={tick} color={DIM_COLOR} lineWidth={1.6} depthTest={false} />
+    ))}
+    <Billboard position={labelPosition}>
+      <Text
+        fontSize={mmToThreeUnits(labelSizeMm)}
+        color={DIM_COLOR}
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={mmToThreeUnits(10)}
+        outlineColor="#ecedeb"
+        renderOrder={1000}
+      >
+        {label}
+      </Text>
+    </Billboard>
+  </group>
+);
 
-/** 가구 외곽 치수 가이드 — W(전면 하단) / H(좌측 전면) / D(우측 바닥) */
+/** 가구 외곽 치수 가이드 — 라벨은 가구와 겹치지 않는 배경 영역에 배치 */
 const DimensionGuides = ({ widthMm, heightMm, depthMm }: { widthMm: number; heightMm: number; depthMm: number }) => {
   const w = mmToThreeUnits(widthMm);
   const h = mmToThreeUnits(heightMm);
   const d = mmToThreeUnits(depthMm);
-  const off = mmToThreeUnits(140);
-  const tick = mmToThreeUnits(40);
+  const off = mmToThreeUnits(180);
+  const tick = mmToThreeUnits(50);
+  const floorY = 0.02;
 
   return (
     <group>
-      {/* W — 전면 하단 */}
+      {/* W — 전면 바닥, 라벨은 치수선 앞 바닥 위 */}
       <DimensionLine
-        from={[-w / 2, 0.02, d / 2 + off]}
-        to={[w / 2, 0.02, d / 2 + off]}
-        label={`${Math.round(widthMm)}`}
-        labelOffset={[0, mmToThreeUnits(110), 0]}
+        from={[-w / 2, floorY, d / 2 + off]}
+        to={[w / 2, floorY, d / 2 + off]}
+        ticks={[
+          [[-w / 2, floorY, d / 2 + off - tick], [-w / 2, floorY, d / 2 + off + tick]],
+          [[w / 2, floorY, d / 2 + off - tick], [w / 2, floorY, d / 2 + off + tick]]
+        ]}
+        label={`W ${Math.round(widthMm)}`}
+        labelPosition={[0, mmToThreeUnits(140), d / 2 + off + mmToThreeUnits(220)]}
       />
-      <Line points={[[-w / 2, 0.02, d / 2 + off - tick], [-w / 2, 0.02, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
-      <Line points={[[w / 2, 0.02, d / 2 + off - tick], [w / 2, 0.02, d / 2 + off + tick]]} color={DIM_COLOR} lineWidth={1.5} />
 
-      {/* H — 좌측 전면 세로 */}
+      {/* H — 좌측 전면 세로, 라벨은 가구 상단 위 (배경 하늘 영역) */}
       <DimensionLine
         from={[-w / 2 - off, 0, d / 2]}
         to={[-w / 2 - off, h, d / 2]}
-        label={`${Math.round(heightMm)}`}
-        labelOffset={[-mmToThreeUnits(160), 0, 0]}
+        ticks={[
+          [[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]],
+          [[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]
+        ]}
+        label={`H ${Math.round(heightMm)}`}
+        labelPosition={[-w / 2 - off, h + mmToThreeUnits(220), d / 2]}
       />
-      <Line points={[[-w / 2 - off - tick, 0, d / 2], [-w / 2 - off + tick, 0, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
-      <Line points={[[-w / 2 - off - tick, h, d / 2], [-w / 2 - off + tick, h, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
 
-      {/* D — 우측 바닥 */}
+      {/* D — 우측 바닥, 라벨은 치수선 우측 바닥 위 */}
       <DimensionLine
-        from={[w / 2 + off, 0.02, -d / 2]}
-        to={[w / 2 + off, 0.02, d / 2]}
-        label={`${Math.round(depthMm)}`}
-        labelOffset={[mmToThreeUnits(140), mmToThreeUnits(60), 0]}
+        from={[w / 2 + off, floorY, -d / 2]}
+        to={[w / 2 + off, floorY, d / 2]}
+        ticks={[
+          [[w / 2 + off - tick, floorY, -d / 2], [w / 2 + off + tick, floorY, -d / 2]],
+          [[w / 2 + off - tick, floorY, d / 2], [w / 2 + off + tick, floorY, d / 2]]
+        ]}
+        label={`D ${Math.round(depthMm)}`}
+        labelPosition={[w / 2 + off + mmToThreeUnits(320), mmToThreeUnits(140), 0]}
       />
-      <Line points={[[w / 2 + off - tick, 0.02, -d / 2], [w / 2 + off + tick, 0.02, -d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
-      <Line points={[[w / 2 + off - tick, 0.02, d / 2], [w / 2 + off + tick, 0.02, d / 2]]} color={DIM_COLOR} lineWidth={1.5} />
     </group>
   );
 };
@@ -274,7 +281,7 @@ const AdminModulePreview = ({
             <BoxModule
               key={draftKey}
               moduleData={moduleData}
-              color={moduleData.color}
+              // color 강제 안 함 — 실배치와 동일하게 공간 재질(내부 화이트 / 도어 그레이) 사용
               spaceInfo={previewSpaceInfo}
               hasDoor={moduleData.hasDoor === true}
               viewMode="3D"
