@@ -2889,6 +2889,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           );
         }
         const halfD = args[2] / 2;
+        // 3D: depthTest 켜서 다른 패널/가구 뒤에 있으면 가려짐 (벽 뚫고 비치는 현상 방지)
+        // 2D: 평면 도면이라 항상 표시 (패널 면에 묻히지 않도록 depthTest off 유지)
+        const holeOutlineDepthTest = viewMode === '3D';
         const renderCircle = (zPos: number, keySuffix: string) => (
           <lineSegments key={keySuffix} position={[0, 0, zPos]}>
             <bufferGeometry>
@@ -2899,7 +2902,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial color={edgeColor} transparent={false} depthTest={false} depthWrite={false} />
+            <lineBasicMaterial color={edgeColor} transparent={false} depthTest={holeOutlineDepthTest} depthWrite={false} />
           </lineSegments>
         );
         return (
