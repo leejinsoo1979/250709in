@@ -2364,7 +2364,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : isTopDown ? spaceInfo.doorBottomGapLowerTopDown
               : spaceInfo.doorBottomGapLower)
           : spaceInfo.doorBottomGapTall;
-      const defaultTopGap = catTopGap ?? (isDoorLift
+      // 관리자 외부서랍/레그라(마이다 모듈): 마이다 갭은 빌더 저장값이 단일 기준
+      // 카테고리 글로벌(하부장 도어 20/2)과 기존 오염된 배치값을 모두 무시한다
+      const adminExtDrawerCfg = modId.includes('lower-cabinet-admin')
+        ? (moduleData?.modelConfig as any)?.externalDrawers
+        : undefined;
+      const defaultTopGap = adminExtDrawerCfg
+        ? (adminExtDrawerCfg.topGap ?? -20)
+        : catTopGap ?? (isDoorLift
         ? DOOR_LIFT_DOOR_TOP_GAP_DEFAULT
         : isTopDown
           ? getTopDownDoorTopGap(currentPlacedModule.stoneTopThickness, currentPlacedModule.hasTopEndPanel === true)
@@ -2373,7 +2380,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : isLowerCategory
               ? 20
               : (isFullSurroundForDoorDefaults ? -3 : 5));
-      const defaultBottomGap = catBottomGap ?? (isTopDown || isDoorLift || isBasicLowerDoorGap
+      const defaultBottomGap = adminExtDrawerCfg
+        ? (adminExtDrawerCfg.bottomGap ?? 5)
+        : catBottomGap ?? (isTopDown || isDoorLift || isBasicLowerDoorGap
         ? 5
           : isUpperCategory
             ? 28
@@ -2422,6 +2431,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ? defaultTopGap
           : staleDoorLiftAutoTopGap
             ? defaultTopGap
+          : adminExtDrawerCfg
+            ? defaultTopGap
           : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
       const shouldApplyLegacyBottomGap =
@@ -2432,7 +2443,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         && !isBasicLowerDoorGap
         && !isDoorLift
         && !isTopDown;
-      const initialBottomGap = shouldApplyLegacyBottomGap
+      const initialBottomGap = shouldApplyLegacyBottomGap || adminExtDrawerCfg
         ? defaultBottomGap
         : (rawBotGap ?? defaultBottomGap);
       // State 업데이트

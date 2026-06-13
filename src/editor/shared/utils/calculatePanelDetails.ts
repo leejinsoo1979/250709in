@@ -2631,10 +2631,10 @@ export const calculatePanelDetails = (
       // 관리자 빌더: 상단갭/하단갭 델타 적용 — 3D ExternalDrawerRenderer와 동일 공식
       //   기본 마이다(노치 위 +40 / 하단 -5)가 topGap -20 / bottomGap 5에 해당, 변경분만 가감
       const extGapTopDelta = adminExternalDrawers && di === extDrawerCount - 1
-        ? ((doorTopGap ?? adminExternalDrawers.topGap ?? -20) - (-20))
+        ? ((adminExternalDrawers.topGap ?? -20) - (-20))
         : 0;
       const extGapBottomDelta = adminExternalDrawers && di === 0
-        ? ((doorBottomGap ?? adminExternalDrawers.bottomGap ?? 5) - 5)
+        ? ((adminExternalDrawers.bottomGap ?? 5) - 5)
         : 0;
       let maidaHeightMm: number;
       if (fixedMaidaHeights && fixedMaidaHeights[di]) {
@@ -2800,10 +2800,10 @@ export const calculatePanelDetails = (
     const tdTouchStretcherH = stoneTopThickness === 10 ? 65 : stoneTopThickness === 30 ? 45 : 55;
     const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
-    // 관리자 레그라박스: 빌더 갭 입력 우선 (배치 후 도어갭 편집이 있으면 그쪽 우선)
-    // admin 폴백 -20: 목찬넬 동반 표준 — 마이다 상단 = H−20 (도어올림 터치의 +30과 다름)
-    const topExtMm = doorTopGap ?? adminLegraDrawers?.topGap ?? (adminLegraDrawers ? -20 : defaultTopExtMm);
-    const bottomExtMm = doorBottomGap ?? adminLegraDrawers?.bottomGap ?? defaultBottomExtMm;
+    // 관리자 레그라박스: 마이다 갭은 빌더 저장값이 단일 기준
+    // 공간 도어셋팅/프레임 토글이 배치 모듈 doorTopGap에 일괄 기록되어 오염되므로 무시
+    const topExtMm = adminLegraDrawers ? (adminLegraDrawers.topGap ?? -20) : (doorTopGap ?? defaultTopExtMm);
+    const bottomExtMm = adminLegraDrawers ? (adminLegraDrawers.bottomGap ?? 5) : (doorBottomGap ?? defaultBottomExtMm);
     const totalFrontMm = height + topExtMm + bottomExtMm;
     const gapMm = adminLegraDrawers?.maidaGapMm ?? 3;
     const totalGaps = (maidaDrawerHeights.length - 1) * gapMm;

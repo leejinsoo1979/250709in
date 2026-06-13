@@ -3080,8 +3080,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               maidaHeightsMm={extCfg.maidaHeights}
               sideHeightOverrides={extCfg.sideHeights}
               maidaGapMm={extCfg.maidaGapMm}
-              doorTopGap={(placedModuleForCorner as any)?.doorTopGap ?? adminExtTopGap}
-              doorBottomGap={(placedModuleForCorner as any)?.doorBottomGap ?? adminExtBottomGap}
+              // 마이다 갭은 빌더 저장값이 단일 기준 — 공간 도어셋팅/프레임 토글이
+              // placedModule.doorTopGap에 일괄 기록(20/5/-3 등)되어 오염되므로 배치값 무시
+              doorTopGap={adminExtTopGap}
+              doorBottomGap={adminExtBottomGap}
               defaultDoorTopGap={-20}
               defaultDoorBottomGap={5}
               backPanelThicknessOverride={backPanelThickness}
@@ -3311,8 +3313,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           showFurniture={showFurniture}
           hasDoor={hasDoor}
           panelGrainDirections={panelGrainDirections}
-          doorTopGap={adminLegraCfg ? ((placedModuleForCorner as any)?.doorTopGap ?? adminLegraCfg.topGap) : doorTopGap}
-          doorBottomGap={adminLegraCfg ? ((placedModuleForCorner as any)?.doorBottomGap ?? adminLegraCfg.bottomGap) : doorBottomGap}
+          doorTopGap={adminLegraCfg ? (adminLegraCfg.topGap ?? -20) : doorTopGap}
+          doorBottomGap={adminLegraCfg ? (adminLegraCfg.bottomGap ?? 5) : doorBottomGap}
           stoneThickness={stoneThickness}
           floorY={lowerCabinetFloorY - cabinetYPosition}
           maidaDimensionSide={maidaDimensionSide}
