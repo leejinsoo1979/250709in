@@ -7,6 +7,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
+import { SettingsIcon } from '@/components/common/Icons';
 import {
   isCabinetTexture1,
   applyCabinetTexture1Settings,
@@ -74,7 +75,25 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, setSelectedFurnitureId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, setIsDraggingColumn, viewMode: uiViewMode } = useUIStore();
+  const {
+    selectedColumnId,
+    setSelectedColumnId,
+    setSelectedFurnitureId,
+    openColumnEditModal,
+    openColumnPopup,
+    activePopup,
+    view2DDirection,
+    setFurnitureDragging,
+    setIsDraggingColumn,
+    viewMode: uiViewMode,
+    showFurnitureEditHandles,
+    showDimensions,
+    isLayoutBuilderOpen,
+    panelSimulationPhase,
+    panelSimulationViewBackup,
+    isLiveDimensionMode,
+    isTapeMeasureMode
+  } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
@@ -594,6 +613,19 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
     return null;
   }
+  const showColumnSettingsIcon = showFurnitureEditHandles
+    && showDimensions
+    && !isLayoutBuilderOpen
+    && panelSimulationPhase !== 'layout'
+    && !panelSimulationViewBackup
+    && !(viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode));
+  const columnSettingsIconPosition: [number, number, number] = [
+    0,
+    -3.2,
+    viewMode === '2D' && view2DDirection === 'top'
+      ? (depth * 0.01) / 2 + 0.85
+      : (depth * 0.01) / 2 + 0.5
+  ];
 
   return (
     <group position={position}>
@@ -1220,6 +1252,55 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           </>
         );
       })()}
+
+      {showColumnSettingsIcon && (
+        <Html
+          position={columnSettingsIconPosition}
+          center
+          style={{
+            userSelect: 'none',
+            pointerEvents: 'auto',
+            zIndex: 100,
+            background: 'transparent'
+          }}
+        >
+          <button
+            type="button"
+            title="기둥 설정"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+              (window as any).__r3fClickHandled = true;
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              (window as any).__r3fClickHandled = true;
+              setSelectedFurnitureId(null);
+              setSelectedColumnId(id);
+              openColumnEditModal(id);
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '32px',
+              height: '32px',
+              border: `2px solid ${isSelected ? '#4CAF50' : '#10b981'}`,
+              borderRadius: '50%',
+              backgroundColor: viewMode === '2D' ? '#ffffff' : 'rgba(255, 255, 255, 0.96)',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.14)',
+              padding: 0,
+              opacity: isHovered || isSelected ? 1 : 0.86,
+              transform: isHovered || isSelected ? 'scale(1.08)' : 'scale(1)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <SettingsIcon color={isSelected ? '#4CAF50' : '#10b981'} size={18} />
+          </button>
+        </Html>
+      )}
     </group>
   );
 };
