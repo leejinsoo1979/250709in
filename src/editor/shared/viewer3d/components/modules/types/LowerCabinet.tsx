@@ -1728,7 +1728,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     : undefined;
   const ADMIN_LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
   const adminLegraActualH = Math.round(adjustedHeight / 0.01);
-  const adminLegraSavedH = moduleData.dimensions.height || adminLegraActualH;
+  const adminOriginalHeightMm = (() => {
+    const renderSourceDimensions = (moduleData as ModuleData & {
+      originalDimensions?: { height?: number };
+    }).originalDimensions;
+    if (typeof renderSourceDimensions?.height === 'number' && renderSourceDimensions.height > 0) {
+      return renderSourceDimensions.height;
+    }
+    const originalDimensions = placedModuleForCorner?.moduleData?.originalDimensions;
+    if (typeof originalDimensions?.height === 'number' && originalDimensions.height > 0) {
+      return originalDimensions.height;
+    }
+    const storedDimensions = placedModuleForCorner?.moduleData?.dimensions;
+    if (typeof storedDimensions?.height === 'number' && storedDimensions.height > 0) {
+      return storedDimensions.height;
+    }
+    return moduleData.dimensions.height || adminLegraActualH;
+  })();
+  const adminLegraSavedH = adminOriginalHeightMm;
   // 배치 후 높이 적응: 맨 아래 서랍 고정, 위 서랍/마이다 묶음은 높이 변화량만큼 평행이동
   const adminLegraHeightDeltaMm = adminLegraCfg ? adminLegraActualH - adminLegraSavedH : 0;
   const adaptLegraOffset = (offsetMm: number, i: number) =>

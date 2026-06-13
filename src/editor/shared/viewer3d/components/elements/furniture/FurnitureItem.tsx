@@ -1207,6 +1207,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const directModuleHeight = moduleData?.category === 'upper'
     ? (validUpperCustomHeight ?? validFreeHeight)
     : validFreeHeight;
+  const sourceModuleDimensionsForRender = moduleData?.dimensions
+    ? { ...((moduleData as any).originalDimensions ?? moduleData.dimensions) }
+    : undefined;
 
   if (moduleData && directModuleHeight
       && !isCustomFurniture && !isCustomizableModuleId(placedModule.moduleId)) {
@@ -3178,14 +3181,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     : rawActualDepthMm;
   const depth = mmToThreeUnits(actualDepthMm);
   const renderModuleData: ModuleData | null = actualModuleData
-    ? {
+    ? ({
         ...actualModuleData,
+        originalDimensions: (actualModuleData as any).originalDimensions
+          ?? sourceModuleDimensionsForRender
+          ?? actualModuleData.dimensions,
         dimensions: {
           ...actualModuleData.dimensions,
           height: furnitureHeightMm,
           depth: actualDepthMm,
         },
-      }
+      } as ModuleData)
     : actualModuleData;
 
 
