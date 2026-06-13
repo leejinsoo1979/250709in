@@ -591,6 +591,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   // 드래그 중일 때는 프레임마다 업데이트하지 않음 (성능 최적화)
   // React Three Fiber가 자동으로 처리하도록 함
+  if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+    return null;
+  }
 
   return (
     <group position={position}>
