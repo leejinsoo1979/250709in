@@ -4,6 +4,14 @@ export interface LowerCabinetMaidaRange {
   maidaTopMm: number;
 }
 
+export type LowerCabinetDrawerFamily = 'basic' | 'doorLift' | 'topDown';
+
+export interface LowerCabinetStandardDrawerNotch {
+  y: number;
+  z: number;
+  fromBottom: number;
+}
+
 interface LowerCabinetMaidaGeometryOptions {
   moduleId: string;
   moduleHeightMm: number;
@@ -18,6 +26,66 @@ interface LowerCabinetMaidaGeometryOptions {
 }
 
 const roundMm = (value: number): number => Math.round(value * 10) / 10;
+
+const resolveTopDownStretcherHeightMm = (stoneTopThicknessMm: number): number => (
+  stoneTopThicknessMm === 10 ? 65 : stoneTopThicknessMm === 30 ? 45 : 55
+);
+
+export const resolveLowerCabinetStandardDrawerNotches = ({
+  family,
+  drawerCount,
+  moduleHeightMm,
+  stoneTopThicknessMm = 20,
+}: {
+  family: LowerCabinetDrawerFamily;
+  drawerCount: number;
+  moduleHeightMm: number;
+  stoneTopThicknessMm?: number;
+}): LowerCabinetStandardDrawerNotch[] | null => {
+  const count = Math.round(drawerCount);
+  if (count < 1 || count > 3) return null;
+
+  const heightMm = Math.round(moduleHeightMm);
+  const notchH = 65;
+  const notchZ = 40;
+  const drawer3TierDelta = heightMm - 785;
+  const topDownStretcherH = resolveTopDownStretcherHeightMm(stoneTopThicknessMm);
+  const topDownStretcherDelta = topDownStretcherH - 55;
+
+  let fromBottoms: number[];
+  if (family === 'doorLift') {
+    fromBottoms = count === 1
+      ? []
+      : count === 2
+        ? [Math.max(0, Math.round((heightMm - 75) / 2))]
+        : [315, Math.max(380, Math.max(0, Math.round((heightMm - 365) / 2)) + 335)];
+  } else if (family === 'topDown') {
+    fromBottoms = count === 1
+      ? [heightMm - (topDownStretcherH + notchH)]
+      : count === 2
+        ? [
+            Math.round((heightMm + stoneTopThicknessMm - 20 - 185) / 2),
+            heightMm - (topDownStretcherH + notchH)
+          ]
+        : [
+            225 + drawer3TierDelta - topDownStretcherDelta,
+            445 + drawer3TierDelta - topDownStretcherDelta,
+            665 + drawer3TierDelta - topDownStretcherDelta
+          ];
+  } else {
+    fromBottoms = count === 1
+      ? []
+      : count === 2
+        ? [(heightMm - 125) / 2]
+        : [295 + drawer3TierDelta, 510 + drawer3TierDelta];
+  }
+
+  return fromBottoms.map(fromBottom => ({
+    y: notchH,
+    z: notchZ,
+    fromBottom
+  }));
+};
 
 export const isLowerCabinetExternalMaidaModuleId = (moduleId?: string): boolean => {
   if (!moduleId) return false;

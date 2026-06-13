@@ -19,7 +19,11 @@ import { resolveDrawerRailSizingMm } from './drawerRailSizing';
 import { isDummyModuleId } from './dummyModule';
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from './panelThickness';
 import { resolveSplitDoorGeometry } from './splitDoorGeometry';
-import { computeLowerCabinetExternalMaidaRanges } from './lowerCabinetMaidaGeometry';
+import {
+  computeLowerCabinetExternalMaidaRanges,
+  resolveLowerCabinetStandardDrawerNotches,
+  type LowerCabinetDrawerFamily
+} from './lowerCabinetMaidaGeometry';
 
 const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10;
 
@@ -2467,7 +2471,34 @@ export const calculatePanelDetails = (
     && (moduleData.modelConfig.externalDrawers.legraSpecs?.length || 0) > 0
     ? moduleData.modelConfig.externalDrawers
     : undefined;
+  const adminLowerDrawerFamily: LowerCabinetDrawerFamily = (() => {
+    const galleryCategory = (moduleData as ModuleData & { galleryCategory?: string }).galleryCategory;
+    if (galleryCategory === 'kitchen-door-raise') return 'doorLift';
+    if (galleryCategory === 'kitchen-top-down') return 'topDown';
+    return 'basic';
+  })();
+  const adminStandardExternalNotches = adminExternalDrawers
+    ? resolveLowerCabinetStandardDrawerNotches({
+        family: adminLowerDrawerFamily,
+        drawerCount: Math.max(1, adminExternalDrawers.count || 1),
+        moduleHeightMm: height,
+        stoneTopThicknessMm: stoneTopThickness || 20
+      })
+    : null;
   const LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
+  const adminLegraSavedHForNotches = moduleData.dimensions.height || height;
+  const adminLegraHeightDeltaForNotches = adminLegraDrawers ? height - adminLegraSavedHForNotches : 0;
+  const adminLegraAdaptedCommonNotches = adminLegraDrawers
+    ? (moduleData.modelConfig?.sideNotches || []).map(notch => ({
+        ...notch,
+        fromBottom: Math.round(
+          Math.min(
+            Math.max(0, notch.fromBottom + adminLegraHeightDeltaForNotches),
+            Math.max(0, height - notch.y)
+          ) * 10
+        ) / 10
+      }))
+    : null;
   if (adminExternalDrawers || (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half'))))) {
     const is1TierExt = moduleData.id.includes('lower-drawer-1tier') || moduleData.id.includes('lower-door-lift-1tier') || moduleData.id.includes('lower-top-down-1tier');
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
@@ -2499,7 +2530,7 @@ export const calculatePanelDetails = (
 
     if (adminExternalDrawers) {
       // 관리자 빌더: 따내기(공통)가 서랍 zone을 분할 — 3D ExternalDrawerRenderer 호출과 동일 소스
-      const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || [])]
+      const adminCommonNotches = [...(adminStandardExternalNotches || moduleData.modelConfig?.sideNotches || [])]
         .sort((a, b) => a.fromBottom - b.fromBottom);
       notchFromBottoms = adminCommonNotches.map(n => n.fromBottom);
       notchHeightsArr = adminCommonNotches.map(n => n.y);
@@ -2723,6 +2754,17 @@ export const calculatePanelDetails = (
       });
       return { groupHeights, leaderOfDrawer };
     })();
+    const adminLegraActualH = height;
+    const adminLegraSavedH = moduleData.dimensions.height || adminLegraActualH;
+    const adminLegraHeightDeltaMm = adminLegraDrawers
+      ? adminLegraActualH - adminLegraSavedH
+      : adminLegraHeightDeltaForNotches;
+    const adaptAdminLegraOffset = (offsetMm: number, i: number) => (
+      i === 0 ? offsetMm : offsetMm + adminLegraHeightDeltaMm
+    );
+    const adminLegraAdaptedOffsets = adminLegraDrawers
+      ? (adminLegraDrawers.legraSpecs || []).map((spec, i) => adaptAdminLegraOffset(spec.offsetMm, i))
+      : [];
     // 마이다 정수 관례 (표준 408/409식): 아래들 반내림(half-down), 맨 위가 잔여 흡수
     const finalizeMaidaInts = (raw: number[], totalMaida: number): number[] => {
       const out = raw.slice(0, -1).map(v => Math.ceil(v - 0.5));
@@ -2733,12 +2775,12 @@ export const calculatePanelDetails = (
     const adminLegraOffsetMaidas: number[] | null = (() => {
       if (!adminLegraDrawers || !adminLegraGroupInfo) return null;
       const specs = adminLegraDrawers.legraSpecs || [];
-      // 배치 후 높이 적응: 위 서랍들 이격 평행이동 (ΔH = 실높이 − 저장높이, 빌더에선 0)
-      const legraDeltaH = height - (moduleData.dimensions.height || height);
       // 그룹 leader 서랍의 이격 (아래→위)
       const leaderOffsets: number[] = [];
       adminLegraGroupInfo.leaderOfDrawer.forEach((groupIdx, di) => {
-        if (groupIdx != null) leaderOffsets[groupIdx] = (specs[di]?.offsetMm ?? 0) + (di > 0 ? legraDeltaH : 0);
+        if (groupIdx != null) {
+          leaderOffsets[groupIdx] = adminLegraAdaptedOffsets[di] ?? specs[di]?.offsetMm ?? 0;
+        }
       });
       if (leaderOffsets.length < 2) return null;
       const gapG = adminLegraDrawers.maidaGapMm ?? 3;
@@ -2759,7 +2801,7 @@ export const calculatePanelDetails = (
     // 중간 목찬넬(공통 따내기) 정렬 마이다(그룹) — 3D LowerCabinet adminLegraChannelMaidas와 동일 공식
     const adminLegraChannelMaidas: number[] | null = (() => {
       if (!adminLegraDrawers || !adminLegraGroupInfo) return null;
-      const notchTops = [...(moduleData.modelConfig?.sideNotches || [])]
+      const notchTops = [...(adminLegraAdaptedCommonNotches || [])]
         .sort((a, b) => a.fromBottom - b.fromBottom)
         .map(n => n.fromBottom + n.y);
       const groupN = adminLegraGroupInfo.groupHeights.length;
@@ -2845,9 +2887,39 @@ export const calculatePanelDetails = (
       customMaidaHeightsMode,
     });
 
+    let adminAutoMaidaBottomCursor = -5;
+    const capLegraType = (
+      autoType: 'M' | 'L' | 'F',
+      maxType?: 'M' | 'L' | 'F' | 'N'
+    ): 'M' | 'L' | 'F' | 'N' => {
+      if (!maxType) return autoType;
+      if (maxType === 'N') return 'N';
+      const rank: Record<'M' | 'L' | 'F', number> = { M: 1, L: 2, F: 3 };
+      return rank[autoType] <= rank[maxType] ? autoType : maxType;
+    };
+    const resolveAdminLegraPanelType = (
+      di: number,
+      maidaHeightMm: number | null,
+      maidaBottomMm: number | null
+    ): 'M' | 'L' | 'F' | 'N' => {
+      const maxType = adminLegraTypesArr?.[di];
+      if (maxType === 'N') return 'N';
+      const offsetMm = adminLegraAdaptedOffsets[di] ?? 0;
+      const sideBottomMm = basicThickness + offsetMm;
+      const sideTop = (bodyMm: number) => sideBottomMm + bodyMm;
+      const isTopDrawer = di === drawerHeights.length - 1;
+      const limitMm = isTopDrawer
+        ? height - basicThickness - 15
+        : maidaHeightMm != null && maidaBottomMm != null
+          ? maidaBottomMm + maidaHeightMm
+          : height - basicThickness - 15;
+      const autoType = sideTop(228) <= limitMm ? 'F' : sideTop(164) <= limitMm ? 'L' : 'M';
+      return capLegraType(autoType, maxType);
+    };
+    const bodyHeightByLegraType: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
+
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;
-      const backH = dh - drawerThicknessMm;
       // 마이다 인덱스: admin 레그라는 그룹 leader만 (N 인너서랍은 마이다 없음 — 아래 마이다가 덮음)
       const maidaIdx = adminLegraGroupInfo ? adminLegraGroupInfo.leaderOfDrawer[di] : di;
       let maidaH: number | null = null;
@@ -2871,13 +2943,23 @@ export const calculatePanelDetails = (
           maidaH = Math.round(maidaHRaw * 10) / 10;
         }
       }
+      let maidaBottomForAuto: number | null = null;
+      if (adminLegraDrawers && maidaH != null) {
+        maidaBottomForAuto = adminAutoMaidaBottomCursor;
+        adminAutoMaidaBottomCursor += maidaH + gapMm;
+      }
+      const finalLegraType = adminLegraDrawers
+        ? resolveAdminLegraPanelType(di, maidaH, maidaBottomForAuto)
+        : undefined;
+      const effectiveDrawerBodyH = finalLegraType ? bodyHeightByLegraType[finalLegraType] : dh;
+      const backH = effectiveDrawerBodyH - drawerThicknessMm;
 
       // N(인너서랍) 바닥판: 전면 속마이다(20mm) 자리만큼 깊이 감소
-      const bottomDepthMm = adminLegraTypesArr?.[di] === 'N' ? drawerDepthMm - 20 : drawerDepthMm;
+      const bottomDepthMm = finalLegraType === 'N' || adminLegraTypesArr?.[di] === 'N' ? drawerDepthMm - 20 : drawerDepthMm;
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: bottomDepthMm, thickness: drawerThicknessMm, material: 'PB' },
         // N(인너서랍)은 기성 뒷판 포함 — 제작 뒷판 없음
-        ...(adminLegraTypesArr?.[di] === 'N'
+        ...(finalLegraType === 'N' || adminLegraTypesArr?.[di] === 'N'
           ? []
           : [{ name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' }]),
         // 마이다 — 표준 터치모듈은 항상, 관리자 레그라는 '도어 설치' 시 + 그룹 leader만 (이름 = 마이다 순번)
@@ -3069,7 +3151,7 @@ export const calculatePanelDetails = (
           fromBottom: height - moduleData.modelConfig.topNotch.y
         }]
       : [];
-    const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || []), ...adminTopNotchAsCommon];
+    const adminCommonNotches = [...(adminStandardExternalNotches || adminLegraAdaptedCommonNotches || moduleData.modelConfig?.sideNotches || []), ...adminTopNotchAsCommon];
     if (adminCommonNotches.length > 0) {
       const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       adminCommonNotches.forEach((notch, ni) => {

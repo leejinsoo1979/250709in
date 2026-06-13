@@ -12,6 +12,10 @@ import {
 import { generateShelvingModules } from '@/data/modules/shelving';
 import type { ModuleData, SectionConfig } from '@/data/modules';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import {
+  resolveLowerCabinetStandardDrawerNotches,
+  type LowerCabinetDrawerFamily
+} from '@/editor/shared/utils/lowerCabinetMaidaGeometry';
 import { useUIStore } from '@/store/uiStore';
 import {
   getExcludedPanelAliases,
@@ -216,6 +220,12 @@ const GALLERY_CATEGORY_OPTIONS: Record<ModuleCategory, Array<{ value: string; la
 };
 
 const defaultGalleryCategory = (category: ModuleCategory) => GALLERY_CATEGORY_OPTIONS[category][0].value;
+
+const lowerDrawerFamilyForGalleryCategory = (galleryCategory: string): LowerCabinetDrawerFamily => {
+  if (galleryCategory === 'kitchen-door-raise') return 'doorLift';
+  if (galleryCategory === 'kitchen-top-down') return 'topDown';
+  return 'basic';
+};
 
 /** 분류별 표준 치수 — 표준 모듈 생성 코드와 동일 (상부장 785/D300, 하부장 캐비넷 780/D600, 키큰장 2400/D600) */
 const CATEGORY_DEFAULT_DIMENSIONS: Record<ModuleCategory, { height: number; depth: number }> = {
@@ -1157,20 +1167,37 @@ const ModuleBuilder = () => {
    * 사용 가능 높이 = H − 상단따내기60 − (N−1)×65, zone 균등 분할
    * 예: H780 2단 → 따내기 1개 @ (H−125)/2 = 327.5 (표준 lower-drawer-2tier와 동일)
    */
-  const syncExternalDrawerNotches = (drawerCount: number) => {
+  const syncExternalDrawerNotches = (
+    drawerCount: number,
+    bodyHeight = height,
+    family = lowerDrawerFamilyForGalleryCategory(galleryCategory)
+  ) => {
     const count = Math.max(1, Math.round(drawerCount));
+    const standardNotches = resolveLowerCabinetStandardDrawerNotches({
+      family,
+      drawerCount: count,
+      moduleHeightMm: bodyHeight,
+      stoneTopThicknessMm: 20
+    });
+    setNotchSidesLinked(true);
+    if (standardNotches) {
+      setLeftNotches(standardNotches.map(notch => ({
+        ...createNotchRow(Math.round(notch.fromBottom * 10) / 10),
+        height: notch.y,
+        depth: notch.z
+      })));
+      return;
+    }
+
     const notchH = 65;
     const topNotchH = hasTopPanel ? 0 : 60;
-    const usable = Math.max(1, height - topNotchH - (count - 1) * notchH);
+    const usable = Math.max(1, bodyHeight - topNotchH - (count - 1) * notchH);
     const zone = usable / count;
-    setNotchSidesLinked(true);
-    setLeftNotches(
-      Array.from({ length: count - 1 }, (_, i) => ({
-        ...createNotchRow(Math.round((zone * (i + 1) + notchH * i) * 10) / 10),
-        height: notchH,
-        depth: 40
-      }))
-    );
+    setLeftNotches(Array.from({ length: count - 1 }, (_, i) => ({
+      ...createNotchRow(Math.round((zone * (i + 1) + notchH * i) * 10) / 10),
+      height: notchH,
+      depth: 40
+    })));
   };
 
   /**
@@ -1178,19 +1205,61 @@ const ModuleBuilder = () => {
    * 표준 모듈과 동일 원리: 따내기 높이(65)는 고정, 서랍 zone들이 비례 확장/축소.
    * 균등 분할 상태면 결과가 표준 공식((H−125)/2 등)과 정확히 일치, 사용자 수정 위치는 비율 유지.
    */
+  const [heightInput, setHeightInput] = useState(String(2400));
+  useEffect(() => { setHeightInput(String(height)); }, [height]);
+  const commitHeightInput = () => {
+    const next = Number(heightInput);
+    if (!Number.isFinite(next) || next <= 0) { setHeightInput(String(height)); return; }
+    if (next !== height) handleHeightChange(next);
+  };
+  const handleHeightInputChange = (value: string) => {
+    setHeightInput(value);
+    const next = Number(value);
+    if (Number.isFinite(next) && next > 0 && next !== height) {
+      handleHeightChange(next);
+    }
+  };
+
   const handleHeightChange = (nextHeight: number) => {
     const prevHeight = height;
     setHeight(nextHeight);
     if (nextHeight <= 0 || prevHeight <= 0 || nextHeight === prevHeight) return;
-    const deltaH = nextHeight - prevHeight;
-    // 레그라: 맨 아래 서랍 고정, 위 서랍들은 캐비넷 상단에 붙어 평행이동 (표준 서랍장 H 규칙)
+    // 레그라: 맨 아래 서랍 고정, 위 서랍/마이다 묶음은 높이 변화량만큼 평행이동
     if (useExternalDrawers && extDrawerType === 'legrabox') {
+      const deltaH = nextHeight - prevHeight;
+      const shiftNotchRows = (rows: NotchRow[]) => rows.map(row => ({
+        ...row,
+        fromBottom: Math.round(
+          Math.min(
+            Math.max(0, row.fromBottom + deltaH),
+            Math.max(0, nextHeight - row.height)
+          ) * 10
+        ) / 10
+      }));
       setLegraRows(rows => rows.map((row, i) => (
         i === 0 ? row : { ...row, offsetMm: Math.round((row.offsetMm + deltaH) * 10) / 10 }
       )));
+      setLeftNotches(shiftNotchRows);
+      if (!notchSidesLinked) setRightNotches(shiftNotchRows);
       return;
     }
     if (!useExternalDrawers || !notchSidesLinked) return;
+    const standardNotches = extDrawerType === 'external'
+      ? resolveLowerCabinetStandardDrawerNotches({
+          family: lowerDrawerFamilyForGalleryCategory(galleryCategory),
+          drawerCount: extDrawerCount,
+          moduleHeightMm: nextHeight,
+          stoneTopThicknessMm: 20
+        })
+      : null;
+    if (standardNotches) {
+      setLeftNotches(standardNotches.map(notch => ({
+        ...createNotchRow(Math.round(notch.fromBottom * 10) / 10),
+        height: notch.y,
+        depth: notch.z
+      })));
+      return;
+    }
     setLeftNotches(current => {
       if (current.length === 0) return current;
       const sorted = [...current].sort((a, b) => a.fromBottom - b.fromBottom);
@@ -1250,19 +1319,31 @@ const ModuleBuilder = () => {
     if (value === 'kitchen-basic') {
       setHasTopPanel(false);
       setTopChannelEnabled(true); // 기본장 구조 패밀리 = 상단 목찬넬 포함
-      setLeftNotches([]);
+      if (useExternalDrawers && extDrawerType === 'external') {
+        syncExternalDrawerNotches(extDrawerCount, height, 'basic');
+      } else {
+        setLeftNotches([]);
+      }
     } else if (value === 'kitchen-door-raise') {
       setHasTopPanel(true);
       setTopChannelEnabled(false);
-      setLeftNotches([]);
+      if (useExternalDrawers && extDrawerType === 'external') {
+        syncExternalDrawerNotches(extDrawerCount, height, 'doorLift');
+      } else {
+        setLeftNotches([]);
+      }
     } else if (value === 'kitchen-top-down') {
       setHasTopPanel(true);
       setTopChannelEnabled(false);
-      setLeftNotches([{
-        ...createNotchRow(Math.max(1, height - 120)),
-        height: 65,
-        depth: 40
-      }]);
+      if (useExternalDrawers && extDrawerType === 'external') {
+        syncExternalDrawerNotches(extDrawerCount, height, 'topDown');
+      } else {
+        setLeftNotches([{
+          ...createNotchRow(Math.max(1, height - 120)),
+          height: 65,
+          depth: 40
+        }]);
+      }
     }
   };
 
@@ -1827,7 +1908,14 @@ const ModuleBuilder = () => {
 
             <label className={styles.field}>
               <span>높이(mm)</span>
-              <input type="number" min={1} value={height} onChange={(event) => handleHeightChange(Number(event.target.value))} />
+              <input
+                type="number"
+                min={1}
+                value={heightInput}
+                onChange={(event) => handleHeightInputChange(event.target.value)}
+                onBlur={commitHeightInput}
+                onKeyDown={(event) => { if (event.key === 'Enter') (event.target as HTMLInputElement).blur(); }}
+              />
             </label>
 
             <label className={styles.field}>

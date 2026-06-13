@@ -32,6 +32,10 @@ import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateSh
 import { PET_PANEL_THICKNESS_MM, resolveNominalBackPanelOffsetThicknessMm, resolvePetPanelThicknessMm, resolveTopEndPanelFrontOffsetMm } from '@/editor/shared/utils/panelThickness';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
 import { isDoorDimensionCandidate, resolveDoorDimensionCategory, resolveDoorHeightDimensionSides } from '@/editor/shared/utils/doorDimensionGuides';
+import {
+  resolveLowerCabinetStandardDrawerNotches,
+  type LowerCabinetDrawerFamily
+} from '@/editor/shared/utils/lowerCabinetMaidaGeometry';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -1296,11 +1300,22 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const sideTopY = (bodyMm: number) => sideBottomY + mmToThreeUnits(bodyMm);
     return sideTopY(228) <= limitY ? 'F' : sideTopY(164) <= limitY ? 'L' : 'M';
   };
-  // 최종 등급: 사용자 수동 선택(legraDrawerTypesRaw[tier-1])이 있으면 우선, 없으면 마이다 기반 자동.
-  const resolveTouchLegraType = (tier: number): 'M' | 'L' | 'F' | 'N' =>
-    legraTypesOverride?.[tier - 1]
-    ?? (legraDrawerTypesRaw?.[tier - 1] as ('M' | 'L' | 'F' | 'N') | undefined)
-    ?? touchAutoLegraType(tier);
+  const capLegraType = (
+    autoType: 'M' | 'L' | 'F' | 'N',
+    maxType?: 'M' | 'L' | 'F' | 'N'
+  ): 'M' | 'L' | 'F' | 'N' => {
+    if (!maxType) return autoType;
+    if (maxType === 'N') return 'N';
+    const rank: Record<'M' | 'L' | 'F' | 'N', number> = { M: 1, L: 2, F: 3, N: 0 };
+    return rank[autoType] <= rank[maxType] ? autoType : maxType;
+  };
+  // admin 레그라의 선택 등급은 최대값이다. 높이 축소로 충돌하면 F→L→M으로 자동 다운그레이드된다.
+  const resolveTouchLegraType = (tier: number): 'M' | 'L' | 'F' | 'N' => (
+    capLegraType(
+      touchAutoLegraType(tier),
+      legraTypesOverride?.[tier - 1] ?? (legraDrawerTypesRaw?.[tier - 1] as ('M' | 'L' | 'F' | 'N') | undefined)
+    )
+  );
 
   // 렌더가 계산한 "자동" 등급(수동 무시)을 store(legraDrawerTypesAuto)에 동기화한다.
   //  → 팝업 드롭다운이 수동값 없을 때 이 자동값을 그대로 표시 → 렌더와 실시간 일치.
@@ -1694,20 +1709,45 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   // 띄움 배치 시에도 캐비넷 높이는 변경하지 않음
   const adjustedHeight = baseFurniture.height;
 
+  const adminExternalDrawerCfg = moduleData.id.includes('lower-cabinet-admin')
+    && moduleData.modelConfig?.externalDrawers
+    && moduleData.modelConfig.externalDrawers.drawerType !== 'legrabox'
+    ? moduleData.modelConfig.externalDrawers
+    : undefined;
+  const adminLowerDrawerFamily: LowerCabinetDrawerFamily = (() => {
+    const galleryCategory = (moduleData as ModuleData & { galleryCategory?: string }).galleryCategory;
+    if (galleryCategory === 'kitchen-door-raise') return 'doorLift';
+    if (galleryCategory === 'kitchen-top-down') return 'topDown';
+    return 'basic';
+  })();
+
   // 관리자 레그라박스 설정 — 인덕션/터치 호출부 공용
   const adminLegraCfg = moduleData.id.includes('lower-cabinet-admin')
     && moduleData.modelConfig?.externalDrawers?.drawerType === 'legrabox'
     ? moduleData.modelConfig.externalDrawers
     : undefined;
   const ADMIN_LEGRA_HEIGHT_BY_TYPE: Record<'M' | 'L' | 'F' | 'N', number> = { M: 117, L: 164, F: 228, N: 55 };
-  // 배치 후 높이 적응: 맨 아래 서랍 고정, 위 서랍들은 상단에 붙어 평행이동 (ΔH = 실높이 − 저장높이)
-  const adminLegraHeightDeltaMm = adminLegraCfg
-    ? Math.round(adjustedHeight / 0.01) - (moduleData.dimensions.height || Math.round(adjustedHeight / 0.01))
-    : 0;
+  const adminLegraActualH = Math.round(adjustedHeight / 0.01);
+  const adminLegraSavedH = moduleData.dimensions.height || adminLegraActualH;
+  // 배치 후 높이 적응: 맨 아래 서랍 고정, 위 서랍/마이다 묶음은 높이 변화량만큼 평행이동
+  const adminLegraHeightDeltaMm = adminLegraCfg ? adminLegraActualH - adminLegraSavedH : 0;
+  const adaptLegraOffset = (offsetMm: number, i: number) =>
+    i === 0 ? offsetMm : offsetMm + adminLegraHeightDeltaMm;
+  const adminLegraAdaptedCommonNotches = adminLegraCfg
+    ? (moduleData.modelConfig?.sideNotches || []).map(notch => ({
+        ...notch,
+        fromBottom: Math.round(
+          Math.min(
+            Math.max(0, notch.fromBottom + adminLegraHeightDeltaMm),
+            Math.max(0, adminLegraActualH - notch.y)
+          ) * 10
+        ) / 10
+      }))
+    : null;
   const adminLegraSpecs: [number, number][] = (adminLegraCfg?.legraSpecs || [])
     .map((spec, i) => [
       ADMIN_LEGRA_HEIGHT_BY_TYPE[spec.type] ?? 228,
-      spec.offsetMm + (i > 0 ? adminLegraHeightDeltaMm : 0)
+      adaptLegraOffset(spec.offsetMm, i)
     ]);
   // N(특소) = 인너서랍 — 개별 마이다 없음, 아래 서랍의 마이다가 N 구간까지 덮음 (마이다 그룹핑)
   const adminLegraMaidaGroups: number[] = (() => {
@@ -1727,7 +1767,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     let groupCount = 0;
     specs.forEach((spec, i) => {
       if (spec.type === 'N' && groupCount > 0) return;
-      leaderOffsets[groupCount] = spec.offsetMm + (i > 0 ? adminLegraHeightDeltaMm : 0);
+      leaderOffsets[groupCount] = adaptLegraOffset(spec.offsetMm, i);
       groupCount += 1;
     });
     if (groupCount < 2) return null;
@@ -1753,13 +1793,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   //   아래 마이다 상단 = 따내기 윗선 − 5 − 사이갭(기본 20 → 윗선−25), 위 마이다 하단 = 윗선 − 5
   const adminLegraChannelMaidas: number[] | null = (() => {
     if (!adminLegraCfg) return null;
-    const notchTops = [...(moduleData.modelConfig?.sideNotches || [])]
+    const notchTops = [...(adminLegraAdaptedCommonNotches || [])]
       .sort((a, b) => a.fromBottom - b.fromBottom)
       .map(n => n.fromBottom + n.y);
     const groupN = adminLegraMaidaGroups.length;
     if (groupN < 1 || notchTops.length !== groupN - 1) return null;
     const gapG = adminLegraCfg.maidaGapMm ?? 20;
-    const cabH = moduleData.dimensions.height || 785;
+    const cabH = Math.round(adjustedHeight / 0.01) || moduleData.dimensions.height || 785;
     const topGapV = adminLegraCfg.topGap ?? -20;
     const bottomGapV = adminLegraCfg.bottomGap ?? 5;
     const heights: number[] = [];
@@ -1807,6 +1847,23 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (mat === 'pet') return userThk > 0 ? petMappedThk : 0;
     return userThk;
   });
+  const adminStandardExternalNotches = adminExternalDrawerCfg
+    ? resolveLowerCabinetStandardDrawerNotches({
+        family: adminLowerDrawerFamily,
+        drawerCount: Math.max(1, adminExternalDrawerCfg.count || 1),
+        moduleHeightMm: Math.round(adjustedHeight / 0.01),
+        stoneTopThicknessMm: stoneThickness || 20
+      })
+    : null;
+  const shellModuleData = adminStandardExternalNotches || adminLegraAdaptedCommonNotches
+    ? {
+        ...moduleData,
+        modelConfig: {
+          ...moduleData.modelConfig,
+          sideNotches: adminStandardExternalNotches || adminLegraAdaptedCommonNotches || []
+        }
+      }
+    : moduleData;
 
   const maidaFrontWidthMm = useMemo(() => {
     let frontWidth = typeof doorWidth === 'number' && doorWidth > 0
@@ -2354,7 +2411,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hasBackPanel={moduleData.id.includes('dishwasher') ? false : hasBackPanel}
               hideBottomPanel={moduleData.id.includes('dishwasher')}
               spaceInfo={spaceInfo}
-              moduleData={moduleData}
+              moduleData={shellModuleData}
               placedFurnitureId={placedFurnitureId}
               lowerSectionDepthMm={baseFurniture.lowerSectionDepthMm}
               upperSectionDepthMm={baseFurniture.upperSectionDepthMm}
@@ -3049,7 +3106,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 관리자 빌더 하부장: modelConfig 외부서랍 (레그라박스) — 서랍 구역은 공통 따내기 위치로 분할 */}
       {showFurniture && moduleData.id.includes('lower-cabinet-admin') && moduleData.modelConfig?.externalDrawers && moduleData.modelConfig.externalDrawers.drawerType !== 'legrabox' && (() => {
         const extCfg = moduleData.modelConfig.externalDrawers!;
-        const adminCommonNotches = [...(moduleData.modelConfig?.sideNotches || [])]
+        const adminCommonNotches = [...(adminStandardExternalNotches || adminLegraAdaptedCommonNotches || moduleData.modelConfig?.sideNotches || [])]
           .sort((a, b) => a.fromBottom - b.fromBottom);
         const adminExtTopGap = extCfg.topGap ?? -20;
         const adminExtBottomGap = extCfg.bottomGap ?? 5;
@@ -3299,7 +3356,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           legraTypesOverride={adminLegraCfg?.legraSpecs?.map(spec => spec.type)}
           maidaGapMm={adminLegraCfg?.maidaGapMm}
           moduleId={moduleData.id}
-          moduleHeightMm={moduleData.dimensions.height || 785}
+          moduleHeightMm={adminLegraCfg ? Math.round(adjustedHeight / 0.01) : (moduleData.dimensions.height || 785)}
           adjustedHeight={adjustedHeight}
           adjustedWidth={adjustedWidth || moduleData.dimensions.width}
           basicThickness={baseFurniture.basicThickness}
