@@ -36,6 +36,7 @@ export default function AdminOrders() {
       const list: OrderRecord[] = snap.docs.map((d) => {
         const x = d.data();
         const ts = (v: unknown) => (v instanceof Timestamp ? v.toDate() : null);
+        const designs = Array.isArray(x.designs) ? x.designs : [];
         return {
           id: d.id,
           ordererId: x.ordererId,
@@ -45,6 +46,8 @@ export default function AdminOrders() {
           factoryName: x.factoryName,
           designId: x.designId,
           designName: x.designName || '',
+          designs,
+          orderScope: x.orderScope,
           projectId: x.projectId,
           projectName: x.projectName,
           thumbnailUrl: x.thumbnailUrl,
@@ -155,6 +158,11 @@ export default function AdminOrders() {
                     </td>
                     <td style={td}>
                       <strong>{o.designName}</strong>
+                      {o.designs.length > 1 && (
+                        <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>
+                          디자인 {o.designs.length}개
+                        </div>
+                      )}
                       {o.projectName && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.projectName}</div>}
                     </td>
                     <td style={td}>

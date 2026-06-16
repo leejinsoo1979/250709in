@@ -4,7 +4,7 @@
  * - [인쇄] / [PDF로 저장] / [닫기]
  * - 인쇄 시 모달 외 영역 숨김 처리 (전역 @media print 스타일)
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -136,6 +136,14 @@ interface Props {
   onSendMessage?: (peerUid: string) => void;
 }
 
+type OrderPlacedModule = {
+  module: PlacedModule;
+  designId: string;
+  designName: string;
+  projectId?: string;
+  spaceConfig?: any;
+};
+
 export default function OrderDocumentModal({ order, onClose, onSendMessage }: Props) {
   const navigate = useNavigate();
   const [orderer, setOrderer] = useState<PartyInfo>({
@@ -146,10 +154,28 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
     name: order.factoryName,
   });
   const [loading, setLoading] = useState(true);
-  const [placedModules, setPlacedModules] = useState<PlacedModule[]>([]);
-  const [spaceConfig, setSpaceConfig] = useState<any>(null);
+  const [placedModules, setPlacedModules] = useState<OrderPlacedModule[]>([]);
   const [loadingModules, setLoadingModules] = useState(true);
   const printRootRef = useRef<HTMLDivElement>(null);
+  const orderDesigns = useMemo(() => order.designs.length > 0
+    ? order.designs
+    : [{
+      designId: order.designId,
+      designName: order.designName,
+      projectId: order.projectId,
+      projectName: order.projectName,
+      thumbnailUrl: order.thumbnailUrl,
+    }].filter(item => item.designId), [order]);
+  const placedModuleGroups = useMemo(() => {
+    return orderDesigns
+      .map((design) => ({
+        design,
+        modules: placedModules.filter(item => item.designId === design.designId),
+      }));
+  }, [orderDesigns, placedModules]);
+  const designSummaryText = orderDesigns.length > 1
+    ? `디자인 파일 ${orderDesigns.length}개`
+    : orderDesigns[0]?.designName || order.designName;
 
   // 디자인 파일에서 placedModules 로드
   useEffect(() => {
@@ -157,11 +183,21 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
     (async () => {
       setLoadingModules(true);
       try {
-        const { designFile } = await getDesignFileById(order.designId);
+        const loaded = await Promise.all(
+          orderDesigns.map(async (design) => {
+            const { designFile } = await getDesignFileById(design.designId);
+            const modules = (designFile?.furniture?.placedModules as PlacedModule[]) || [];
+            return modules.map((module) => ({
+              module,
+              designId: design.designId,
+              designName: design.designName,
+              projectId: design.projectId,
+              spaceConfig: designFile?.spaceConfig || null,
+            }));
+          })
+        );
         if (cancelled) return;
-        const list = (designFile?.furniture?.placedModules as PlacedModule[]) || [];
-        setPlacedModules(list);
-        setSpaceConfig(designFile?.spaceConfig || null);
+        setPlacedModules(loaded.flat());
       } catch (e) {
         console.error('[발주서 가구 로드 실패]', e);
       } finally {
@@ -169,11 +205,11 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
       }
     })();
     return () => { cancelled = true; };
-  }, [order.designId]);
+  }, [orderDesigns]);
 
-  const handleViewItem = (placedId: string) => {
-    const projectId = order.projectId || '';
-    navigate(`/configurator?designFileId=${order.designId}&projectId=${projectId}&readonly=1&focusModuleId=${encodeURIComponent(placedId)}`);
+  const handleViewItem = (item: OrderPlacedModule) => {
+    const projectId = item.projectId || order.projectId || '';
+    navigate(`/configurator?designFileId=${item.designId}&projectId=${projectId}&readonly=1&focusModuleId=${encodeURIComponent(item.module.id)}`);
   };
 
   useEffect(() => {
@@ -298,14 +334,24 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                 <PartyBox title="발 주 자 (발신)" info={orderer} />
               </div>
 
-              {/* 품목 표 — 디자인 명 / 프로젝트 / 납기 (요약) */}
+              {/* 품목 표 — 디자인 파일 / 프로젝트 / 납기 (요약) */}
               <h3 style={sectionTitle}>발 주 요 약</h3>
               <table style={table}>
                 <tbody>
                   <tr>
                     <td style={{ ...thLabel, width: 110 }}>디자인</td>
                     <td style={td}>
-                      <div style={{ fontWeight: 600 }}>{order.designName}</div>
+                      <div style={{ fontWeight: 600 }}>{designSummaryText}</div>
+                      {orderDesigns.length > 1 && (
+                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {orderDesigns.map((item, idx) => (
+                            <div key={`${item.projectId || ''}:${item.designId}`} style={{ fontSize: 11, color: '#6b7280' }}>
+                              {idx + 1}. {item.designName}
+                              {item.projectName && item.projectName !== order.projectName ? ` · ${item.projectName}` : ''}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       {order.projectName && (
                         <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>프로젝트: {order.projectName}</div>
                       )}
@@ -317,7 +363,9 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
               </table>
 
               {/* 가구 모듈 목록 — 가구별로 한 행, 우측 보기 버튼 */}
-              <h3 style={{ ...sectionTitle, marginTop: 24 }}>품 목 내 역 ({placedModules.length}점)</h3>
+              <h3 style={{ ...sectionTitle, marginTop: 24 }}>
+                품 목 내 역 ({orderDesigns.length > 1 ? `${orderDesigns.length}개 파일 · ` : ''}{placedModules.length}점)
+              </h3>
               <table style={table}>
                 <thead>
                   <tr>
@@ -335,6 +383,71 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                         가구 목록 불러오는 중…
                       </td>
                     </tr>
+                  ) : orderDesigns.length > 1 ? (
+                    placedModuleGroups.flatMap((group, groupIdx) => [
+                      <tr key={`design:${group.design.projectId || ''}:${group.design.designId}`}>
+                        <td style={{
+                          ...td,
+                          background: '#f9fafb',
+                          fontWeight: 700,
+                          color: '#111827',
+                        }}>
+                          {groupIdx + 1}
+                        </td>
+                        <td colSpan={4} style={{
+                          ...td,
+                          background: '#f9fafb',
+                          fontWeight: 700,
+                          color: '#111827',
+                        }}>
+                          <span style={{ display: 'inline-block', marginRight: 8 }}>▾</span>
+                          {group.design.designName}
+                          {group.design.projectName && group.design.projectName !== order.projectName && (
+                            <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 400, color: '#6b7280' }}>
+                              {group.design.projectName}
+                            </span>
+                          )}
+                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: '#6b7280' }}>
+                            {group.modules.length}점
+                          </span>
+                        </td>
+                      </tr>,
+                      ...(group.modules.length > 0
+                        ? group.modules.map((item, moduleIdx) => (
+                          <tr key={`${item.designId}:${item.module.id || moduleIdx}`}>
+                            <td style={tdCenter}>{groupIdx + 1}.{moduleIdx + 1}</td>
+                            <td style={td}>
+                              <div style={{ paddingLeft: 22, position: 'relative' }}>
+                                <span style={{ position: 'absolute', left: 4, color: '#9ca3af' }}>└</span>
+                                <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(item.module.moduleId, item.module)}</div>
+                                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
+                                  {item.module.moduleId}
+                                </div>
+                              </div>
+                            </td>
+                            <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
+                              {formatDimensions(item.module, item.spaceConfig) || '-'}
+                            </td>
+                            <td style={tdCenter}>{item.module.hasDoor ? '있음' : '없음'}</td>
+                            <td className="order-doc-no-print" style={tdCenter}>
+                              <button onClick={() => handleViewItem(item)} style={btnViewItem}>
+                                보기
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                        : [
+                          <tr key={`empty:${group.design.projectId || ''}:${group.design.designId}`}>
+                            <td style={tdCenter}>{groupIdx + 1}.1</td>
+                            <td colSpan={4} style={{ ...td, color: '#9ca3af' }}>
+                              <div style={{ paddingLeft: 22, position: 'relative' }}>
+                                <span style={{ position: 'absolute', left: 4 }}>└</span>
+                                등록된 가구가 없습니다.
+                              </div>
+                            </td>
+                          </tr>,
+                        ]),
+                    ])
                   ) : placedModules.length === 0 ? (
                     <tr>
                       <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
@@ -342,21 +455,26 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                       </td>
                     </tr>
                   ) : (
-                    placedModules.map((p, idx) => (
-                      <tr key={p.id || idx}>
+                    placedModules.map((item, idx) => (
+                      <tr key={`${item.designId}:${item.module.id || idx}`}>
                         <td style={tdCenter}>{idx + 1}</td>
                         <td style={td}>
-                          <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(p.moduleId, p)}</div>
+                          <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(item.module.moduleId, item.module)}</div>
+                          {orderDesigns.length > 1 && (
+                            <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>
+                              {item.designName}
+                            </div>
+                          )}
                           <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
-                            {p.moduleId}
+                            {item.module.moduleId}
                           </div>
                         </td>
                         <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
-                          {formatDimensions(p, spaceConfig) || '-'}
+                          {formatDimensions(item.module, item.spaceConfig) || '-'}
                         </td>
-                        <td style={tdCenter}>{p.hasDoor ? '있음' : '없음'}</td>
+                        <td style={tdCenter}>{item.module.hasDoor ? '있음' : '없음'}</td>
                         <td className="order-doc-no-print" style={tdCenter}>
-                          <button onClick={() => handleViewItem(p.id)} style={btnViewItem}>
+                          <button onClick={() => handleViewItem(item)} style={btnViewItem}>
                             보기
                           </button>
                         </td>

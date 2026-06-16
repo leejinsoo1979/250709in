@@ -1276,114 +1276,177 @@ exports.sendPartnerRegistrationRequest = onCall(
  *  - 마스터 텔레그램 알림
  */
 exports.createOrder = onCall(
-  { secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID], region: 'asia-northeast3' },
+  { secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID], region: 'asia-northeast3', cors: true, invoker: 'public' },
   async (request) => {
-    const callerUid = request.auth?.uid;
-    if (!callerUid) throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    try {
+      const callerUid = request.auth?.uid;
+      if (!callerUid) throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
 
-    const data = request.data || {};
-    const factoryId = String(data.factoryId || '').trim();
-    const designId = String(data.designId || '').trim();
-    const designName = String(data.designName || '').trim();
-    if (!factoryId || !designId) {
-      throw new HttpsError('invalid-argument', '공장 또는 디자인 정보가 없습니다.');
-    }
+      const data = request.data || {};
+      const factoryId = String(data.factoryId || '').trim();
+      const requestedDesigns = Array.isArray(data.designs) ? data.designs : [];
+      const designs = requestedDesigns
+        .map((item) => ({
+          designId: String(item?.designId || item?.id || '').trim(),
+          designName: String(item?.designName || item?.name || '').trim(),
+          projectId: String(item?.projectId || data.projectId || '').trim(),
+          projectName: String(item?.projectName || data.projectName || '').trim(),
+          thumbnailUrl: String(item?.thumbnailUrl || item?.thumbnail || '').trim(),
+        }))
+        .filter((item) => item.designId);
+      if (designs.length === 0) {
+        const legacyDesignId = String(data.designId || '').trim();
+        if (legacyDesignId) {
+          designs.push({
+            designId: legacyDesignId,
+            designName: String(data.designName || '').trim(),
+            projectId: String(data.projectId || '').trim(),
+            projectName: String(data.projectName || '').trim(),
+            thumbnailUrl: String(data.thumbnailUrl || '').trim(),
+          });
+        }
+      }
+      const firstDesign = designs[0];
+      const designId = firstDesign?.designId || '';
+      const designName = designs.length > 1
+        ? `${firstDesign?.designName || '디자인'} 외 ${designs.length - 1}개`
+        : firstDesign?.designName || String(data.designName || '').trim();
+      const orderScope = data.orderScope === 'project'
+        ? 'project'
+        : designs.length > 1
+          ? 'multi-design'
+          : 'design';
+      console.log('[createOrder] start', {
+        callerUid,
+        factoryId,
+        designId,
+        designCount: designs.length,
+        orderScope,
+        hasDesignName: Boolean(designName),
+        hasFormData: Boolean(data.formData),
+      });
+      if (!factoryId || !designId) {
+        throw new HttpsError('invalid-argument', '공장 또는 디자인 정보가 없습니다.');
+      }
 
-    const db = admin.firestore();
+      const db = admin.firestore();
 
     // 발주자 정보만 조회 (권한 체크는 프론트 가드 + Firestore 룰이 이미 보장)
     // - EnterpriseOrAdminGuard: 대시보드 진입 자체가 기업회원/관리자만 가능
     // - 따라서 createOrder 호출 시점에는 이미 권한이 검증된 상태
-    const ordererSnap = await db.doc(`users/${callerUid}`).get();
-    const ordererData = ordererSnap.exists ? ordererSnap.data() : {};
+      const ordererSnap = await db.doc(`users/${callerUid}`).get();
+      const ordererData = ordererSnap.exists ? ordererSnap.data() : {};
+      console.log('[createOrder] orderer loaded', {
+        exists: ordererSnap.exists,
+        role: ordererData.role || '',
+        plan: ordererData.plan || '',
+      });
 
     // 부수효과: enterprise_inquiries 가 승인됐는데 users.plan 이 누락된 경우 자동 복구
-    if (ordererData.role !== 'superadmin' && ordererData.plan !== 'enterprise') {
+      if (ordererData.role !== 'superadmin' && ordererData.plan !== 'enterprise') {
+        try {
+          const inqSnap = await db.collection('enterprise_inquiries')
+            .where('uid', '==', callerUid)
+            .where('status', '==', 'approved')
+            .limit(1)
+            .get();
+          if (!inqSnap.empty) {
+            await db.doc(`users/${callerUid}`).set({
+              plan: 'enterprise',
+              planUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+            }, { merge: true });
+            ordererData.plan = 'enterprise';
+            console.log('[createOrder] users.plan 자동 복구: enterprise');
+          }
+        } catch (e) {
+          console.warn('plan 자동 복구 실패:', e?.message);
+        }
+      }
+
+      // 공장 검증
+      const factorySnap = await db.doc(`users/${factoryId}`).get();
+      const factoryData = factorySnap.exists ? factorySnap.data() : {};
+      console.log('[createOrder] factory loaded', {
+        exists: factorySnap.exists,
+        isPartner: Boolean(factoryData.isPartner),
+      });
+      if (!factoryData.isPartner) {
+        throw new HttpsError('failed-precondition', '선택한 회사는 등록된 공장이 아닙니다.');
+      }
+
+      // orders 문서 생성
+      const orderRef = await db.collection('orders').add({
+        ordererId: callerUid,
+        ordererName: ordererData.displayName || '',
+        ordererEmail: ordererData.email || '',
+        factoryId,
+        factoryName: factoryData.displayName || '',
+        designId,
+        designName,
+        designs,
+        orderScope,
+        designCount: designs.length,
+        projectId: data.projectId || firstDesign?.projectId || '',
+        projectName: data.projectName || firstDesign?.projectName || '',
+        thumbnailUrl: data.thumbnailUrl || firstDesign?.thumbnailUrl || '',
+        formData: data.formData || {},
+        status: 'pending',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+      console.log('[createOrder] order created', { orderId: orderRef.id });
+
+      // 공장에게 알림
       try {
-        const inqSnap = await db.collection('enterprise_inquiries')
-          .where('uid', '==', callerUid)
-          .where('status', '==', 'approved')
-          .limit(1)
-          .get();
-        if (!inqSnap.empty) {
-          await db.doc(`users/${callerUid}`).set({
-            plan: 'enterprise',
-            planUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
-          }, { merge: true });
-          ordererData.plan = 'enterprise';
-          console.log('[createOrder] users.plan 자동 복구: enterprise');
+        await db.collection('notifications').add({
+          userId: factoryId,
+          type: 'order',
+          title: '새 발주 요청',
+          message: `${ordererData.displayName || '발주자'} 님으로부터 ${designName} 발주 요청이 접수되었습니다.`,
+          link: `/factory/orders/${orderRef.id}`,
+          relatedId: orderRef.id,
+          isRead: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        console.warn('공장 알림 생성 실패:', e?.message);
+      }
+
+      // 마스터 텔레그램 알림
+      try {
+        const token = TELEGRAM_BOT_TOKEN.value();
+        const chatId = String(TELEGRAM_CHAT_ID.value() || '');
+        if (token && chatId) {
+          const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+          const fd = data.formData || {};
+          const text = [
+            '📦 새 발주 요청',
+            '',
+            `📌 발주자: ${ordererData.displayName || ordererData.email || ''}`,
+            `🏭 공장: ${factoryData.displayName || factoryData.email || ''}`,
+            `🎨 디자인: ${designName}`,
+            fd.materialSpec ? `🧱 자재 스펙: ${fd.materialSpec}` : '',
+            fd.dueDate ? `📅 납기: ${fd.dueDate}` : '',
+            fd.deliveryAddress ? `📍 배송지: ${fd.deliveryAddress}` : '',
+            `🕐 ${time}`,
+          ].filter(Boolean).join('\n');
+          await tgApi(token, 'sendMessage', { chat_id: chatId, text }).catch(() => {});
         }
       } catch (e) {
-        console.warn('plan 자동 복구 실패:', e?.message);
+        console.warn('텔레그램 알림 실패:', e?.message);
       }
-    }
 
-    // 공장 검증
-    const factorySnap = await db.doc(`users/${factoryId}`).get();
-    const factoryData = factorySnap.exists ? factorySnap.data() : {};
-    if (!factoryData.isPartner) {
-      throw new HttpsError('failed-precondition', '선택한 회사는 등록된 공장이 아닙니다.');
-    }
-
-    // orders 문서 생성
-    const orderRef = await db.collection('orders').add({
-      ordererId: callerUid,
-      ordererName: ordererData.displayName || '',
-      ordererEmail: ordererData.email || '',
-      factoryId,
-      factoryName: factoryData.displayName || '',
-      designId,
-      designName,
-      projectId: data.projectId || '',
-      projectName: data.projectName || '',
-      thumbnailUrl: data.thumbnailUrl || '',
-      formData: data.formData || {},
-      status: 'pending',
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-    // 공장에게 알림
-    try {
-      await db.collection('notifications').add({
-        userId: factoryId,
-        type: 'order',
-        title: '새 발주 요청',
-        message: `${ordererData.displayName || '발주자'} 님으로부터 ${designName} 발주 요청이 접수되었습니다.`,
-        link: `/factory/orders/${orderRef.id}`,
-        relatedId: orderRef.id,
-        isRead: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      console.log('[createOrder] success', { orderId: orderRef.id });
+      return { ok: true, orderId: orderRef.id };
+    } catch (e) {
+      console.error('[createOrder] failed', {
+        code: e?.code,
+        message: e?.message,
+        stack: e?.stack,
       });
-    } catch (e) {
-      console.warn('공장 알림 생성 실패:', e?.message);
+      if (e instanceof HttpsError) throw e;
+      throw new HttpsError('internal', e?.message || '발주 생성 중 오류가 발생했습니다.');
     }
-
-    // 마스터 텔레그램 알림
-    try {
-      const token = TELEGRAM_BOT_TOKEN.value();
-      const chatId = String(TELEGRAM_CHAT_ID.value() || '');
-      if (token && chatId) {
-        const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        const fd = data.formData || {};
-        const text = [
-          '📦 새 발주 요청',
-          '',
-          `📌 발주자: ${ordererData.displayName || ordererData.email || ''}`,
-          `🏭 공장: ${factoryData.displayName || factoryData.email || ''}`,
-          `🎨 디자인: ${designName}`,
-          fd.materialSpec ? `🧱 자재 스펙: ${fd.materialSpec}` : '',
-          fd.dueDate ? `📅 납기: ${fd.dueDate}` : '',
-          fd.deliveryAddress ? `📍 배송지: ${fd.deliveryAddress}` : '',
-          `🕐 ${time}`,
-        ].filter(Boolean).join('\n');
-        await tgApi(token, 'sendMessage', { chat_id: chatId, text }).catch(() => {});
-      }
-    } catch (e) {
-      console.warn('텔레그램 알림 실패:', e?.message);
-    }
-
-    return { ok: true, orderId: orderRef.id };
   }
 );
 
@@ -1394,7 +1457,7 @@ exports.createOrder = onCall(
  * 출력: { ok: boolean, status: string }
  */
 exports.processOrder = onCall(
-  { region: 'asia-northeast3' },
+  { region: 'asia-northeast3', cors: true, invoker: 'public' },
   async (request) => {
     const callerUid = request.auth?.uid;
     if (!callerUid) throw new HttpsError('unauthenticated', '로그인이 필요합니다.');

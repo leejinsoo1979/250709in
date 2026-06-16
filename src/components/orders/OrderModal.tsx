@@ -2,13 +2,15 @@
  * 발주 신청 모달 — 기업회원이 디자인에서 공장(파트너)에게 발주
  */
 import { useEffect, useState } from 'react';
-import { listFactories, createOrder, type FactoryInfo, type OrderFormData } from '@/firebase/orders';
+import { listFactories, createOrder, type FactoryInfo, type OrderDesignItem, type OrderFormData } from '@/firebase/orders';
 
 interface OrderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  designId: string;
-  designName: string;
+  designId?: string;
+  designName?: string;
+  designs?: OrderDesignItem[];
+  orderScope?: 'design' | 'multi-design' | 'project';
   projectId?: string;
   projectName?: string;
   thumbnailUrl?: string;
@@ -20,11 +22,26 @@ export default function OrderModal({
   onClose,
   designId,
   designName,
+  designs,
+  orderScope,
   projectId,
   projectName,
   thumbnailUrl,
   onSuccess,
 }: OrderModalProps) {
+  const orderDesigns: OrderDesignItem[] = designs?.length
+    ? designs
+    : designId
+      ? [{ designId, designName: designName || '', projectId, projectName, thumbnailUrl }]
+      : [];
+  const firstDesign = orderDesigns[0];
+  const displayDesignName = orderDesigns.length > 1
+    ? `${firstDesign?.designName || '디자인'} 외 ${orderDesigns.length - 1}개`
+    : firstDesign?.designName || designName || '';
+  const orderFileCount = orderDesigns.length;
+  const displayOrderSummary = orderFileCount > 1
+    ? `디자인 파일 ${orderFileCount}개`
+    : displayDesignName;
   const [factories, setFactories] = useState<FactoryInfo[]>([]);
   const [factoriesLoading, setFactoriesLoading] = useState(false);
   const [selectedFactoryId, setSelectedFactoryId] = useState<string>('');
@@ -63,23 +80,39 @@ export default function OrderModal({
       setError('납기일을 입력해주세요.');
       return;
     }
+    if (orderDesigns.length === 0) {
+      setError('발주할 디자인이 없습니다.');
+      return;
+    }
     setError(null);
     setSubmitting(true);
     try {
       const r = await createOrder({
         factoryId: selectedFactoryId,
-        designId,
-        designName,
+        designId: firstDesign?.designId,
+        designName: displayDesignName,
+        designs: orderDesigns,
+        orderScope: orderScope || (orderDesigns.length > 1 ? 'multi-design' : 'design'),
         projectId,
         projectName,
-        thumbnailUrl,
+        thumbnailUrl: firstDesign?.thumbnailUrl || thumbnailUrl,
         formData: form,
       });
-      alert('발주 요청이 전송되었습니다.');
+      const successLines = [
+        '발주 요청이 전송되었습니다.',
+        '',
+        `총 발주 파일: ${orderFileCount}개`,
+        orderScope === 'project' ? '발주 범위: 프로젝트 전체' : orderFileCount > 1 ? '발주 범위: 선택한 디자인 파일' : '',
+        projectName ? `프로젝트: ${projectName}` : '',
+        orderFileCount === 1 && firstDesign?.designName ? `디자인: ${firstDesign.designName}` : '',
+      ].filter(Boolean);
+      alert(successLines.join('\n'));
       onSuccess?.(r.orderId);
       onClose();
     } catch (e) {
-      const msg = (e as { message?: string }).message || '알 수 없는 오류';
+      const err = e as { code?: string; message?: string; details?: unknown };
+      console.error('발주 실패 상세:', err);
+      const msg = [err.code, err.message].filter(Boolean).join(' - ') || '알 수 없는 오류';
       setError('발주 실패: ' + msg);
     } finally {
       setSubmitting(false);
@@ -122,9 +155,21 @@ export default function OrderModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* 디자인 정보 */}
           <div style={{ padding: '12px 14px', background: 'var(--theme-surface-alt, #f9fafb)', borderRadius: 10, border: '1px solid var(--theme-border, #e5e7eb)' }}>
-            <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)', marginBottom: 4 }}>디자인</div>
-            <div style={{ fontWeight: 600 }}>{designName}</div>
+            <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)', marginBottom: 4 }}>
+              {orderScope === 'project' ? '프로젝트 발주' : orderDesigns.length > 1 ? '다중 디자인 발주' : '디자인'}
+            </div>
+            <div style={{ fontWeight: 600 }}>{displayOrderSummary}</div>
             {projectName && <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>프로젝트: {projectName}</div>}
+            {orderDesigns.length > 1 && (
+              <div style={{ marginTop: 10, maxHeight: 112, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {orderDesigns.map((item, idx) => (
+                  <div key={`${item.projectId || ''}:${item.designId}`} style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>
+                    {idx + 1}. {item.designName}
+                    {item.projectName && item.projectName !== projectName ? ` · ${item.projectName}` : ''}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* 공장 선택 */}

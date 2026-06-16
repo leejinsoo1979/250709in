@@ -18,6 +18,7 @@ import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
 import DeleteConfirmModal from '@/components/common/DeleteConfirmModal';
 import { PopupManager } from '@/components/PopupManager';
+import type { OrderDesignItem } from '@/firebase/orders';
 // import { Chatbot } from '@/components/Chatbot';
 import { useResponsive } from '@/hooks/useResponsive';
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
@@ -172,8 +173,10 @@ const SimpleDashboard: React.FC = () => {
 
   // 발주 모달
   const [orderModal, setOrderModal] = useState<{
-    designId: string;
-    designName: string;
+    designId?: string;
+    designName?: string;
+    designs: OrderDesignItem[];
+    orderScope?: 'design' | 'multi-design' | 'project';
     projectId?: string;
     projectName?: string;
     thumbnailUrl?: string;
@@ -723,6 +726,87 @@ const SimpleDashboard: React.FC = () => {
     }
     return [item];
   }, [actions.selectedItems, data.currentItems]);
+
+  const getProjectName = useCallback((projectId?: string) => {
+    if (!projectId) return undefined;
+    return data.projects.find(project => project.id === projectId)?.title;
+  }, [data.projects]);
+
+  const getOrderDesignsFromItems = useCallback((items: ExplorerItem[]) => {
+    const designs: OrderDesignItem[] = [];
+    const seen = new Set<string>();
+    const pushDesign = (item: OrderDesignItem) => {
+      const key = `${item.projectId || ''}:${item.designId}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      designs.push(item);
+    };
+
+    items.forEach(item => {
+      if (item.type === 'design') {
+        const projectId = item.projectId || nav.currentProjectId || undefined;
+        pushDesign({
+          designId: item.id,
+          designName: item.name,
+          projectId,
+          projectName: getProjectName(projectId),
+          thumbnailUrl: item.thumbnail,
+        });
+        return;
+      }
+
+      if (item.type === 'project') {
+        const projectId = item.id;
+        const projectName = item.name || getProjectName(projectId);
+        (data.projectDesignFiles[projectId] || [])
+          .filter((designFile: any) => !designFile.isDeleted)
+          .forEach((designFile: any) => {
+            pushDesign({
+              designId: designFile.id,
+              designName: designFile.name || '이름 없는 디자인',
+              projectId,
+              projectName,
+              thumbnailUrl: designFile.thumbnail,
+            });
+          });
+      }
+    });
+
+    return designs;
+  }, [data.projectDesignFiles, getProjectName, nav.currentProjectId]);
+
+  const openOrderModalForItems = useCallback((targetItem: ExplorerItem) => {
+    const selected = getSelectedExplorerItems();
+    const items = actions.selectedItems.size > 1 && actions.selectedItems.has(targetItem.id)
+      ? selected
+      : [targetItem];
+    const orderDesigns = getOrderDesignsFromItems(items);
+    if (orderDesigns.length === 0) {
+      alert(targetItem.type === 'project'
+        ? '이 프로젝트에 발주할 디자인 파일이 없습니다.'
+        : '발주할 디자인 파일이 없습니다.');
+      return;
+    }
+
+    const projectIds = Array.from(new Set(orderDesigns.map(item => item.projectId).filter(Boolean)));
+    const firstDesign = orderDesigns[0];
+    const projectId = targetItem.type === 'project' && projectIds.length === 1
+      ? targetItem.id
+      : projectIds.length === 1
+        ? projectIds[0]
+        : undefined;
+    const projectName = projectId ? getProjectName(projectId) || firstDesign.projectName : undefined;
+
+    setOrderModal({
+      designId: firstDesign.designId,
+      designName: orderDesigns.length > 1 ? `${firstDesign.designName} 외 ${orderDesigns.length - 1}개` : firstDesign.designName,
+      designs: orderDesigns,
+      orderScope: targetItem.type === 'project' && items.length === 1 ? 'project' : orderDesigns.length > 1 ? 'multi-design' : 'design',
+      projectId,
+      projectName,
+      thumbnailUrl: firstDesign.thumbnailUrl,
+    });
+  }, [actions.selectedItems, getOrderDesignsFromItems, getProjectName, getSelectedExplorerItems]);
 
   const moveContextProjectsToStatus = useCallback(async (
     item: ExplorerItem,
@@ -1297,6 +1381,8 @@ const SimpleDashboard: React.FC = () => {
           onClose={() => setOrderModal(null)}
           designId={orderModal.designId}
           designName={orderModal.designName}
+          designs={orderModal.designs}
+          orderScope={orderModal.orderScope}
           projectId={orderModal.projectId}
           projectName={orderModal.projectName}
           thumbnailUrl={orderModal.thumbnailUrl}
@@ -1470,8 +1556,8 @@ const SimpleDashboard: React.FC = () => {
               열기
             </button>
 
-            {/* 발주하기 (디자인만) */}
-            {contextMenu.item.type === 'design' && (
+            {/* 발주하기 */}
+            {(contextMenu.item.type === 'design' || contextMenu.item.type === 'project') && (
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
@@ -1481,16 +1567,7 @@ const SimpleDashboard: React.FC = () => {
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 onClick={() => {
-                  const item = contextMenu.item;
-                  const projectId = item.projectId || nav.currentProjectId || '';
-                  const project = data.projects.find((p) => p.id === projectId);
-                  setOrderModal({
-                    designId: item.id,
-                    designName: item.name,
-                    projectId: projectId || undefined,
-                    projectName: project?.title,
-                    thumbnailUrl: item.thumbnail || undefined,
-                  });
+                  openOrderModalForItems(contextMenu.item);
                   setContextMenu(null);
                 }}
               >

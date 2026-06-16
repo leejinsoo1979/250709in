@@ -22,6 +22,14 @@ export interface OrderFormData {
   notes?: string;
 }
 
+export interface OrderDesignItem {
+  designId: string;
+  designName: string;
+  projectId?: string;
+  projectName?: string;
+  thumbnailUrl?: string;
+}
+
 export interface OrderRecord {
   id: string;
   ordererId: string;
@@ -31,6 +39,8 @@ export interface OrderRecord {
   factoryName?: string;
   designId: string;
   designName: string;
+  designs: OrderDesignItem[];
+  orderScope?: 'design' | 'multi-design' | 'project';
   projectId?: string;
   projectName?: string;
   thumbnailUrl?: string;
@@ -76,8 +86,10 @@ export async function listFactories(): Promise<FactoryInfo[]> {
  */
 export async function createOrder(input: {
   factoryId: string;
-  designId: string;
-  designName: string;
+  designId?: string;
+  designName?: string;
+  designs?: OrderDesignItem[];
+  orderScope?: 'design' | 'multi-design' | 'project';
   projectId?: string;
   projectName?: string;
   thumbnailUrl?: string;
@@ -134,6 +146,19 @@ function toOrderRecord(d: { id: string; data: () => Record<string, unknown> }): 
     const t = v as { toDate?: () => Date };
     return t?.toDate?.() || null;
   };
+  const designs = Array.isArray(x.designs)
+    ? (x.designs as OrderDesignItem[])
+    : [{
+      designId: x.designId as string,
+      designName: (x.designName as string) || '',
+      projectId: x.projectId as string | undefined,
+      projectName: x.projectName as string | undefined,
+      thumbnailUrl: x.thumbnailUrl as string | undefined,
+    }].filter(item => item.designId);
+  const firstDesign = designs[0];
+  const designName = (x.designName as string)
+    || (designs.length > 1 && firstDesign ? `${firstDesign.designName} 외 ${designs.length - 1}개` : firstDesign?.designName)
+    || '';
   return {
     id: d.id,
     ordererId: x.ordererId as string,
@@ -141,8 +166,10 @@ function toOrderRecord(d: { id: string; data: () => Record<string, unknown> }): 
     ordererEmail: x.ordererEmail as string | undefined,
     factoryId: x.factoryId as string,
     factoryName: x.factoryName as string | undefined,
-    designId: x.designId as string,
-    designName: (x.designName as string) || '',
+    designId: (x.designId as string) || firstDesign?.designId || '',
+    designName,
+    designs,
+    orderScope: x.orderScope as OrderRecord['orderScope'],
     projectId: x.projectId as string | undefined,
     projectName: x.projectName as string | undefined,
     thumbnailUrl: x.thumbnailUrl as string | undefined,
