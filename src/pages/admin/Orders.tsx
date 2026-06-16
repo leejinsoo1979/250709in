@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { collection, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import type { OrderRecord, OrderStatus } from '@/firebase/orders';
+import OrderDesignTree from '@/components/orders/OrderDesignTree';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '대기',
@@ -157,20 +158,14 @@ export default function AdminOrders() {
                       {o.reason && <div style={{ marginTop: 4, fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.reason}</div>}
                     </td>
                     <td style={td}>
-                      <strong>{o.designName}</strong>
-                      {o.designs.length > 1 && (
-                        <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>
-                          디자인 {o.designs.length}개
-                        </div>
-                      )}
-                      {o.projectName && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.projectName}</div>}
+                      <OrderDesignTree order={o} />
                     </td>
                     <td style={td}>
                       {o.ordererName || '-'}
                       {o.ordererEmail && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.ordererEmail}</div>}
                     </td>
                     <td style={td}>{o.factoryName || '-'}</td>
-                    <td style={td}>{o.formData.quantity || '-'}</td>
+                    <td style={td}>{(o.formData as { quantity?: string | number }).quantity || '-'}</td>
                     <td style={td}>{o.formData.dueDate || '-'}</td>
                     <td style={td}>{o.createdAt ? o.createdAt.toLocaleString('ko-KR') : '-'}</td>
                     <td style={td}>{o.processedAt ? o.processedAt.toLocaleString('ko-KR') : '-'}</td>

@@ -16,6 +16,7 @@ import {
 import { ensureConversation } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import OrderDocumentModal from '@/components/orders/OrderDocumentModal';
+import OrderDesignTree from '@/components/orders/OrderDesignTree';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '대기',
@@ -224,6 +225,7 @@ export default function FactoryOrders() {
                 <tr>
                   <th style={th}>상태</th>
                   <th style={th}>발주일시</th>
+                  <th style={th}>디자인</th>
                   <th style={th}>발주자</th>
                   <th style={th}>납기</th>
                   <th style={{ ...th, textAlign: 'right' }}>액션</th>
@@ -239,6 +241,12 @@ export default function FactoryOrders() {
                     </td>
                     <td style={{ ...td, whiteSpace: 'nowrap', color: 'var(--theme-text-secondary, #6b7280)' }}>
                       {o.createdAt?.toLocaleString('ko-KR') || '-'}
+                    </td>
+                    <td style={{ ...td, verticalAlign: 'top' }}>
+                      <OrderDesignTree
+                        order={o}
+                        onOpenDesign={(design) => navigate(`/configurator?designFileId=${design.designId}&projectId=${design.projectId || o.projectId || ''}&readonly=1`)}
+                      />
                     </td>
                     <td style={td}>
                       <button

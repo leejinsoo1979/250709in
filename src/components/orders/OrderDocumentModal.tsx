@@ -173,9 +173,18 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
         modules: placedModules.filter(item => item.designId === design.designId),
       }));
   }, [orderDesigns, placedModules]);
-  const designSummaryText = orderDesigns.length > 1
-    ? `디자인 파일 ${orderDesigns.length}개`
-    : orderDesigns[0]?.designName || order.designName;
+  const orderDocumentPages = placedModuleGroups.length > 0
+    ? placedModuleGroups
+    : [{
+      design: {
+        designId: order.designId,
+        designName: order.designName || '디자인',
+        projectId: order.projectId,
+        projectName: order.projectName,
+        thumbnailUrl: order.thumbnailUrl,
+      },
+      modules: [],
+    }];
 
   // 디자인 파일에서 placedModules 로드
   useEffect(() => {
@@ -281,6 +290,162 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
     }, 50);
   };
 
+  const renderOrderPaper = (
+    page: { design: typeof orderDocumentPages[number]['design']; modules: OrderPlacedModule[] },
+    pageIdx: number
+  ) => {
+    const pageOrderNo = orderDocumentPages.length > 1 ? `${orderNo}-${pageIdx + 1}` : orderNo;
+    const projectName = page.design.projectName || order.projectName;
+
+    return (
+      <div
+        key={`${page.design.projectId || ''}:${page.design.designId || pageIdx}`}
+        className={`order-doc-paper${pageIdx < orderDocumentPages.length - 1 ? ' order-doc-page-break' : ''}`}
+        style={paper}
+      >
+        {/* 헤더 */}
+        <div style={headerArea}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: '#6b7280', letterSpacing: 2 }}>ORDER FORM</div>
+            <h1 style={{ margin: '4px 0 0', fontSize: 30, fontWeight: 800, letterSpacing: 8, color: '#111827' }}>발 주 서</h1>
+          </div>
+          <div style={{ textAlign: 'right', fontSize: 11, color: '#374151' }}>
+            <div><strong style={{ marginRight: 6 }}>No.</strong>{pageOrderNo}</div>
+            <div><strong style={{ marginRight: 6 }}>발행일</strong>{issuedDate}</div>
+            {orderDocumentPages.length > 1 && (
+              <div><strong style={{ marginRight: 6 }}>문서</strong>{pageIdx + 1} / {orderDocumentPages.length}</div>
+            )}
+            <div style={{ marginTop: 6, fontSize: 16, fontWeight: 700, letterSpacing: 1, color: '#111827' }}>ttt craft</div>
+          </div>
+        </div>
+
+        <div style={hr} />
+
+        {/* 공급자(공장) / 발주자 표 */}
+        <div style={partyGrid}>
+          <PartyBox title="공 급 자 (수신)" info={factory} highlight />
+          <PartyBox title="발 주 자 (발신)" info={orderer} />
+        </div>
+
+        {/* 품목 표 — 디자인 파일 / 프로젝트 / 납기 (요약) */}
+        <h3 style={sectionTitle}>발 주 요 약</h3>
+        <table style={table}>
+          <tbody>
+            <tr>
+              <td style={{ ...thLabel, width: 110 }}>디자인</td>
+              <td style={td}>
+                <div style={{ fontWeight: 600 }}>{page.design.designName}</div>
+                {projectName && (
+                  <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>프로젝트: {projectName}</div>
+                )}
+              </td>
+              <td style={{ ...thLabel, width: 80 }}>납기</td>
+              <td style={{ ...td, width: 140, textAlign: 'center' }}>{order.formData.dueDate || '-'}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* 가구 모듈 목록 — 디자인별 한 문서 안에서 가구별로 한 행 */}
+        <h3 style={{ ...sectionTitle, marginTop: 24 }}>품 목 내 역 ({page.modules.length}점)</h3>
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={{ ...th, width: 40 }}>No.</th>
+              <th style={th}>품명</th>
+              <th style={{ ...th, width: 220 }}>치수 (W × H × D, mm)</th>
+              <th style={{ ...th, width: 90 }}>도어</th>
+              <th className="order-doc-no-print" style={{ ...th, width: 80 }}>보기</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loadingModules ? (
+              <tr>
+                <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
+                  가구 목록 불러오는 중…
+                </td>
+              </tr>
+            ) : page.modules.length === 0 ? (
+              <tr>
+                <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
+                  등록된 가구가 없습니다.
+                </td>
+              </tr>
+            ) : (
+              page.modules.map((item, idx) => (
+                <tr key={`${item.designId}:${item.module.id || idx}`}>
+                  <td style={tdCenter}>{idx + 1}</td>
+                  <td style={td}>
+                    <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(item.module.moduleId, item.module)}</div>
+                    <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
+                      {item.module.moduleId}
+                    </div>
+                  </td>
+                  <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
+                    {formatDimensions(item.module, item.spaceConfig) || '-'}
+                  </td>
+                  <td style={tdCenter}>{item.module.hasDoor ? '있음' : '없음'}</td>
+                  <td className="order-doc-no-print" style={tdCenter}>
+                    <button onClick={() => handleViewItem(item)} style={btnViewItem}>
+                      보기
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {/* 자재 스펙 / 배송지 / 설치 일정 / 요청사항 */}
+        <table style={{ ...table, marginTop: 12 }}>
+          <tbody>
+            {order.formData.materialSpec && (
+              <tr>
+                <td style={{ ...thLabel, width: 110 }}>자재 스펙</td>
+                <td style={{ ...td, whiteSpace: 'pre-wrap' }}>{order.formData.materialSpec}</td>
+              </tr>
+            )}
+            {order.formData.deliveryAddress && (
+              <tr>
+                <td style={{ ...thLabel, width: 110 }}>배송지</td>
+                <td style={td}>{order.formData.deliveryAddress}</td>
+              </tr>
+            )}
+            {order.formData.installSchedule && (
+              <tr>
+                <td style={thLabel}>설치 일정</td>
+                <td style={td}>{order.formData.installSchedule}</td>
+              </tr>
+            )}
+            {order.formData.notes && (
+              <tr>
+                <td style={thLabel}>요청사항</td>
+                <td style={{ ...td, whiteSpace: 'pre-wrap' }}>{order.formData.notes}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* 푸터 */}
+        <div style={footerArea}>
+          <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.7 }}>
+            ※ 본 발주서는 ttt craft 시스템에서 자동 발행되었으며, 별도의 서명 없이도 양 당사자 간 합의의 효력을 가집니다.<br />
+            ※ 발주 내용에 대한 문의는 메신저 또는 위 연락처로 부탁드립니다.
+          </div>
+          <div style={{ fontSize: 12, color: '#374151', marginTop: 16, display: 'flex', justifyContent: 'space-between' }}>
+            <span>발행 시스템 · ttt craft (tttcraft.com)</span>
+            <span>발행일자 · {issuedDate}</span>
+          </div>
+        </div>
+
+        {loading && (
+          <div style={{ textAlign: 'center', padding: 12, fontSize: 12, color: '#9ca3af' }}>
+            당사자 정보 불러오는 중…
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       {/* 인쇄 전용 글로벌 스타일 */}
@@ -290,7 +455,9 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
           .order-doc-print-portal .order-doc-overlay { position: static !important; background: #fff !important; padding: 0 !important; }
           .order-doc-print-portal .order-doc-modal { box-shadow: none !important; max-height: none !important; height: auto !important; width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }
           .order-doc-print-portal .order-doc-toolbar { display: none !important; }
-          .order-doc-print-portal .order-doc-paper { padding: 24mm 18mm !important; }
+          .order-doc-print-portal .order-doc-scroll { overflow: visible !important; background: #fff !important; padding: 0 !important; display: block !important; }
+          .order-doc-print-portal .order-doc-paper { padding: 24mm 18mm !important; margin: 0 !important; width: auto !important; min-height: auto !important; box-shadow: none !important; }
+          .order-doc-print-portal .order-doc-page-break { break-after: page; page-break-after: always; }
           .order-doc-print-portal .order-doc-no-print { display: none !important; }
           @page { size: A4; margin: 0; }
         }
@@ -312,225 +479,8 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
             </div>
 
             {/* 발주서 본체 (인쇄용) */}
-            <div className="order-doc-paper" style={paper}>
-              {/* 헤더 */}
-              <div style={headerArea}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: '#6b7280', letterSpacing: 2 }}>ORDER FORM</div>
-                  <h1 style={{ margin: '4px 0 0', fontSize: 30, fontWeight: 800, letterSpacing: 8, color: '#111827' }}>발 주 서</h1>
-                </div>
-                <div style={{ textAlign: 'right', fontSize: 11, color: '#374151' }}>
-                  <div><strong style={{ marginRight: 6 }}>No.</strong>{orderNo}</div>
-                  <div><strong style={{ marginRight: 6 }}>발행일</strong>{issuedDate}</div>
-                  <div style={{ marginTop: 6, fontSize: 16, fontWeight: 700, letterSpacing: 1, color: '#111827' }}>ttt craft</div>
-                </div>
-              </div>
-
-              <div style={hr} />
-
-              {/* 공급자(공장) / 발주자 표 */}
-              <div style={partyGrid}>
-                <PartyBox title="공 급 자 (수신)" info={factory} highlight />
-                <PartyBox title="발 주 자 (발신)" info={orderer} />
-              </div>
-
-              {/* 품목 표 — 디자인 파일 / 프로젝트 / 납기 (요약) */}
-              <h3 style={sectionTitle}>발 주 요 약</h3>
-              <table style={table}>
-                <tbody>
-                  <tr>
-                    <td style={{ ...thLabel, width: 110 }}>디자인</td>
-                    <td style={td}>
-                      <div style={{ fontWeight: 600 }}>{designSummaryText}</div>
-                      {orderDesigns.length > 1 && (
-                        <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                          {orderDesigns.map((item, idx) => (
-                            <div key={`${item.projectId || ''}:${item.designId}`} style={{ fontSize: 11, color: '#6b7280' }}>
-                              {idx + 1}. {item.designName}
-                              {item.projectName && item.projectName !== order.projectName ? ` · ${item.projectName}` : ''}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {order.projectName && (
-                        <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>프로젝트: {order.projectName}</div>
-                      )}
-                    </td>
-                    <td style={{ ...thLabel, width: 80 }}>납기</td>
-                    <td style={{ ...td, width: 140, textAlign: 'center' }}>{order.formData.dueDate || '-'}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* 가구 모듈 목록 — 가구별로 한 행, 우측 보기 버튼 */}
-              <h3 style={{ ...sectionTitle, marginTop: 24 }}>
-                품 목 내 역 ({orderDesigns.length > 1 ? `${orderDesigns.length}개 파일 · ` : ''}{placedModules.length}점)
-              </h3>
-              <table style={table}>
-                <thead>
-                  <tr>
-                    <th style={{ ...th, width: 40 }}>No.</th>
-                    <th style={th}>품명</th>
-                    <th style={{ ...th, width: 220 }}>치수 (W × H × D, mm)</th>
-                    <th style={{ ...th, width: 90 }}>도어</th>
-                    <th className="order-doc-no-print" style={{ ...th, width: 80 }}>보기</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loadingModules ? (
-                    <tr>
-                      <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
-                        가구 목록 불러오는 중…
-                      </td>
-                    </tr>
-                  ) : orderDesigns.length > 1 ? (
-                    placedModuleGroups.flatMap((group, groupIdx) => [
-                      <tr key={`design:${group.design.projectId || ''}:${group.design.designId}`}>
-                        <td style={{
-                          ...td,
-                          background: '#f9fafb',
-                          fontWeight: 700,
-                          color: '#111827',
-                        }}>
-                          {groupIdx + 1}
-                        </td>
-                        <td colSpan={4} style={{
-                          ...td,
-                          background: '#f9fafb',
-                          fontWeight: 700,
-                          color: '#111827',
-                        }}>
-                          <span style={{ display: 'inline-block', marginRight: 8 }}>▾</span>
-                          {group.design.designName}
-                          {group.design.projectName && group.design.projectName !== order.projectName && (
-                            <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 400, color: '#6b7280' }}>
-                              {group.design.projectName}
-                            </span>
-                          )}
-                          <span style={{ marginLeft: 8, fontSize: 11, fontWeight: 500, color: '#6b7280' }}>
-                            {group.modules.length}점
-                          </span>
-                        </td>
-                      </tr>,
-                      ...(group.modules.length > 0
-                        ? group.modules.map((item, moduleIdx) => (
-                          <tr key={`${item.designId}:${item.module.id || moduleIdx}`}>
-                            <td style={tdCenter}>{groupIdx + 1}.{moduleIdx + 1}</td>
-                            <td style={td}>
-                              <div style={{ paddingLeft: 22, position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: 4, color: '#9ca3af' }}>└</span>
-                                <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(item.module.moduleId, item.module)}</div>
-                                <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
-                                  {item.module.moduleId}
-                                </div>
-                              </div>
-                            </td>
-                            <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
-                              {formatDimensions(item.module, item.spaceConfig) || '-'}
-                            </td>
-                            <td style={tdCenter}>{item.module.hasDoor ? '있음' : '없음'}</td>
-                            <td className="order-doc-no-print" style={tdCenter}>
-                              <button onClick={() => handleViewItem(item)} style={btnViewItem}>
-                                보기
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                        : [
-                          <tr key={`empty:${group.design.projectId || ''}:${group.design.designId}`}>
-                            <td style={tdCenter}>{groupIdx + 1}.1</td>
-                            <td colSpan={4} style={{ ...td, color: '#9ca3af' }}>
-                              <div style={{ paddingLeft: 22, position: 'relative' }}>
-                                <span style={{ position: 'absolute', left: 4 }}>└</span>
-                                등록된 가구가 없습니다.
-                              </div>
-                            </td>
-                          </tr>,
-                        ]),
-                    ])
-                  ) : placedModules.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
-                        등록된 가구가 없습니다.
-                      </td>
-                    </tr>
-                  ) : (
-                    placedModules.map((item, idx) => (
-                      <tr key={`${item.designId}:${item.module.id || idx}`}>
-                        <td style={tdCenter}>{idx + 1}</td>
-                        <td style={td}>
-                          <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(item.module.moduleId, item.module)}</div>
-                          {orderDesigns.length > 1 && (
-                            <div style={{ fontSize: 10, color: '#6b7280', marginTop: 2 }}>
-                              {item.designName}
-                            </div>
-                          )}
-                          <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
-                            {item.module.moduleId}
-                          </div>
-                        </td>
-                        <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
-                          {formatDimensions(item.module, item.spaceConfig) || '-'}
-                        </td>
-                        <td style={tdCenter}>{item.module.hasDoor ? '있음' : '없음'}</td>
-                        <td className="order-doc-no-print" style={tdCenter}>
-                          <button onClick={() => handleViewItem(item)} style={btnViewItem}>
-                            보기
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-
-              {/* 자재 스펙 / 배송지 / 설치 일정 / 요청사항 */}
-              <table style={{ ...table, marginTop: 12 }}>
-                <tbody>
-                  {order.formData.materialSpec && (
-                    <tr>
-                      <td style={{ ...thLabel, width: 110 }}>자재 스펙</td>
-                      <td style={{ ...td, whiteSpace: 'pre-wrap' }}>{order.formData.materialSpec}</td>
-                    </tr>
-                  )}
-                  {order.formData.deliveryAddress && (
-                    <tr>
-                      <td style={{ ...thLabel, width: 110 }}>배송지</td>
-                      <td style={td}>{order.formData.deliveryAddress}</td>
-                    </tr>
-                  )}
-                  {order.formData.installSchedule && (
-                    <tr>
-                      <td style={thLabel}>설치 일정</td>
-                      <td style={td}>{order.formData.installSchedule}</td>
-                    </tr>
-                  )}
-                  {order.formData.notes && (
-                    <tr>
-                      <td style={thLabel}>요청사항</td>
-                      <td style={{ ...td, whiteSpace: 'pre-wrap' }}>{order.formData.notes}</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-
-              {/* 푸터 */}
-              <div style={footerArea}>
-                <div style={{ fontSize: 11, color: '#6b7280', lineHeight: 1.7 }}>
-                  ※ 본 발주서는 ttt craft 시스템에서 자동 발행되었으며, 별도의 서명 없이도 양 당사자 간 합의의 효력을 가집니다.<br />
-                  ※ 발주 내용에 대한 문의는 메신저 또는 위 연락처로 부탁드립니다.
-                </div>
-                <div style={{ fontSize: 12, color: '#374151', marginTop: 16, display: 'flex', justifyContent: 'space-between' }}>
-                  <span>발행 시스템 · ttt craft (tttcraft.com)</span>
-                  <span>발행일자 · {issuedDate}</span>
-                </div>
-              </div>
-
-              {loading && (
-                <div style={{ textAlign: 'center', padding: 12, fontSize: 12, color: '#9ca3af' }}>
-                  당사자 정보 불러오는 중…
-                </div>
-              )}
+            <div className="order-doc-scroll" style={documentScroll}>
+              {orderDocumentPages.map((page, idx) => renderOrderPaper(page, idx))}
             </div>
           </div>
         </div>
@@ -600,8 +550,16 @@ const toolbar: React.CSSProperties = {
   padding: '12px 16px', borderBottom: '1px solid #e5e7eb', background: '#f9fafb',
   flexShrink: 0,
 };
+const documentScroll: React.CSSProperties = {
+  flex: 1,
+  overflowY: 'auto',
+  background: '#e5e7eb',
+  padding: 24,
+};
 const paper: React.CSSProperties = {
-  padding: '40px 56px', overflowY: 'auto', flex: 1, background: '#fff', color: '#111827',
+  padding: '40px 56px', background: '#fff', color: '#111827',
+  width: 'min(100%, 794px)', minHeight: 1123, margin: '0 auto 24px',
+  boxShadow: '0 8px 28px rgba(15, 23, 42, 0.14)',
 };
 const headerArea: React.CSSProperties = {
   display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 16,
