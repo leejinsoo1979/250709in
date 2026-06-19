@@ -4,7 +4,14 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { listMyOrders, type OrderRecord, type OrderStatus } from '@/firebase/orders';
+import {
+  getOrderDesignKey,
+  listMyOrders,
+  removeOrderDesign,
+  type OrderDesignItem,
+  type OrderRecord,
+  type OrderStatus
+} from '@/firebase/orders';
 import { ensureConversation } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import OrderDocumentModal from '@/components/orders/OrderDocumentModal';
@@ -34,6 +41,7 @@ export default function MyOrders() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [docOrder, setDocOrder] = useState<OrderRecord | null>(null);
+  const [removingDesignKey, setRemovingDesignKey] = useState<string | null>(null);
 
   const handleSendMessageToFactory = async (factoryUid: string) => {
     if (!user?.uid) {
@@ -66,6 +74,33 @@ export default function MyOrders() {
       .then(setOrders)
       .finally(() => setLoading(false));
   }, [user?.uid]);
+
+  const handleRemoveDesign = async (order: OrderRecord, design: OrderDesignItem) => {
+    if (order.status !== 'pending') {
+      alert('대기 상태의 발주에서만 디자인을 삭제할 수 있습니다.');
+      return;
+    }
+    const designCount = order.designs.length || (order.designId ? 1 : 0);
+    if (designCount <= 1) {
+      alert('마지막 디자인은 개별 삭제할 수 없습니다. 발주 취소를 사용하세요.');
+      return;
+    }
+    if (!confirm(`"${design.designName || '디자인'}"을 이 발주 목록에서 삭제할까요?`)) return;
+
+    const key = `${order.id}:${getOrderDesignKey(design)}`;
+    setRemovingDesignKey(key);
+    try {
+      await removeOrderDesign(order, design);
+      if (user?.uid) {
+        const nextOrders = await listMyOrders(user.uid);
+        setOrders(nextOrders);
+      }
+    } catch (e) {
+      alert('디자인 삭제 실패: ' + (e as Error).message);
+    } finally {
+      setRemovingDesignKey(null);
+    }
+  };
 
   if (authLoading) return <LoadingSpinner fullscreen message="확인 중..." />;
   if (!user) return <Navigate to="/login" replace />;
@@ -142,6 +177,15 @@ export default function MyOrders() {
                       <OrderDesignTree
                         order={o}
                         onOpenDesign={(design) => navigate(`/configurator?designFileId=${design.designId}&projectId=${design.projectId || o.projectId || ''}&readonly=1`)}
+                        showCheckboxes
+                        showRemoveButton
+                        onRemoveDesign={(design) => handleRemoveDesign(o, design)}
+                        removingDesignKey={removingDesignKey?.startsWith(`${o.id}:`) ? removingDesignKey.slice(o.id.length + 1) : null}
+                        getRemoveDisabledReason={(_design, designs) => {
+                          if (designs.length <= 1) return '마지막 디자인은 개별 삭제할 수 없습니다';
+                          if (o.status !== 'pending') return '대기 상태의 발주에서만 삭제할 수 있습니다';
+                          return null;
+                        }}
                       />
                     </td>
                     <td style={td}>{o.factoryName || '-'}</td>

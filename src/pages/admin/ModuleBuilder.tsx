@@ -42,6 +42,7 @@ type ModuleCategory = 'full' | 'upper' | 'lower';
 type SectionType = 'open' | 'shelf' | 'hanging' | 'drawer';
 type BuilderLayoutMode = 'single' | 'dual';
 type SectionSide = 'main' | 'left' | 'right';
+type ResizeGuideConfig = NonNullable<NonNullable<ModuleData['modelConfig']>['resizeGuide']>;
 
 interface BuilderSection {
   id: string;
@@ -90,6 +91,10 @@ const notchConfigToRows = (notches?: Array<{ y: number; z: number; fromBottom: n
     height: notch.y,
     depth: notch.z
   }))
+);
+
+const clampResizeGuideY = (value: number, bodyHeightMm: number) => (
+  Math.round(Math.min(Math.max(0, Number.isFinite(value) ? value : 0), Math.max(0, bodyHeightMm)) * 10) / 10
 );
 
 const createSection = (index: number): BuilderSection => ({
@@ -433,6 +438,10 @@ const ModuleBuilder = () => {
   const [panelThickness, setPanelThickness] = useState<18 | 18.5>(18);
   // 상판 앞 옵셋(mm) — 상판 깊이를 앞에서 후퇴
   const [topPanelOffset, setTopPanelOffset] = useState(0);
+  // 높이 변경 기준 가이드 — 확정된 선 위 요소만 높이 변화량만큼 이동
+  const [resizeGuideEnabled, setResizeGuideEnabled] = useState(false);
+  const [resizeGuideY, setResizeGuideY] = useState(1200);
+  const [resizeGuideConfirmed, setResizeGuideConfirmed] = useState(false);
   // 레그라박스 마이다 상/하단 갭 — 목찬넬 동반 표준 -20/5 (마이다 상단 = H−20, 목찬넬 아래)
   const [legraTopGap, setLegraTopGap] = useState(-20);
   const [legraBottomGap, setLegraBottomGap] = useState(5);
@@ -559,6 +568,14 @@ const ModuleBuilder = () => {
           ...(commonNotchConfig.length > 0 ? { leftSideNotches: commonNotchConfig } : {}),
           ...(rightNotchConfig.length > 0 ? { rightSideNotches: rightNotchConfig } : {})
         };
+    const resizeGuideConfig: ResizeGuideConfig | null = resizeGuideEnabled && resizeGuideConfirmed
+      ? {
+          enabled: true,
+          y: clampResizeGuideY(resizeGuideY, height),
+          anchor: 'user-guide',
+          behavior: 'shift-above'
+        }
+      : null;
 
     const baseModelConfig = {
       basicThickness: panelThickness,
@@ -586,6 +603,7 @@ const ModuleBuilder = () => {
       ...(!hasTopPanel && topChannelEnabled ? { topChannelNotch: true } : {}),
       // 상판 앞 옵셋 — 상판 있을 때만
       ...(hasTopPanel && topPanelOffset > 0 ? { topPanelFrontOffsetMm: Math.min(topPanelOffset, depth) } : {}),
+      ...(resizeGuideConfig ? { resizeGuide: resizeGuideConfig } : {}),
       ...notchModelConfig,
       // 하부장: 외부서랍 (일반 / 레그라박스)
       // 목찬넬(손잡이) 동반 시 마이다 상단은 목찬넬 아래(H−20)를 못 넘음 — 상단갭 상한 -20
@@ -661,7 +679,7 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaGap, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraMaidaGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaGap, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, resizeGuideConfirmed, resizeGuideEnabled, resizeGuideY, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraMaidaGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -880,6 +898,10 @@ const ModuleBuilder = () => {
     setTopChannelEnabled(module.modelConfig?.topChannelNotch === true);
     setPanelThickness(module.modelConfig?.basicThickness === 18.5 ? 18.5 : 18);
     setTopPanelOffset(module.modelConfig?.topPanelFrontOffsetMm || 0);
+    const resizeGuide = module.modelConfig?.resizeGuide;
+    setResizeGuideEnabled(resizeGuide?.enabled === true);
+    setResizeGuideY(clampResizeGuideY(resizeGuide?.y ?? Math.round(module.dimensions.height / 2), module.dimensions.height));
+    setResizeGuideConfirmed(resizeGuide?.enabled === true);
     setHighlightedPanelName(null);
 
     // 외부서랍 복원 (일반 / 레그라박스)
@@ -989,6 +1011,9 @@ const ModuleBuilder = () => {
     setLegraMaidaGap(20);
     setPanelThickness(18);
     setTopPanelOffset(0);
+    setResizeGuideEnabled(false);
+    setResizeGuideY(1200);
+    setResizeGuideConfirmed(false);
     setHiddenPanelNames(new Set());
     setDividersText('');
     setTopChannelEnabled(false);
@@ -1041,6 +1066,7 @@ const ModuleBuilder = () => {
     setCategory(nextCategory);
     const dims = CATEGORY_DEFAULT_DIMENSIONS[nextCategory];
     setHeight(dims.height);
+    setResizeGuideY(current => clampResizeGuideY(current || Math.round(dims.height / 2), dims.height));
     setDepth(dims.depth);
     setHasTopPanel(nextCategory !== 'lower');
     setGalleryCategory(defaultGalleryCategory(nextCategory));
@@ -1219,11 +1245,31 @@ const ModuleBuilder = () => {
       handleHeightChange(next);
     }
   };
+  const updateResizeGuideY = (value: number) => {
+    setResizeGuideY(clampResizeGuideY(value, height));
+    setResizeGuideConfirmed(false);
+  };
+  const enableResizeGuide = (enabled: boolean) => {
+    setResizeGuideEnabled(enabled);
+    if (enabled) {
+      setResizeGuideY(current => clampResizeGuideY(current || Math.round(height / 2), height));
+      setResizeGuideConfirmed(false);
+    } else {
+      setResizeGuideConfirmed(false);
+    }
+  };
 
   const handleHeightChange = (nextHeight: number) => {
     const prevHeight = height;
     setHeight(nextHeight);
+    setResizeGuideY(current => clampResizeGuideY(current, nextHeight));
     if (nextHeight <= 0 || prevHeight <= 0 || nextHeight === prevHeight) return;
+    const guideY = resizeGuideEnabled && resizeGuideConfirmed
+      ? clampResizeGuideY(resizeGuideY, prevHeight)
+      : null;
+    const shouldShiftAboveGuide = (fromBottom: number, itemHeight = 0) => (
+      guideY === null || fromBottom + itemHeight / 2 >= guideY
+    );
     // 레그라: 맨 아래 서랍 고정, 위 서랍/마이다 묶음은 높이 변화량만큼 평행이동
     if (useExternalDrawers && extDrawerType === 'legrabox') {
       const deltaH = nextHeight - prevHeight;
@@ -1231,19 +1277,34 @@ const ModuleBuilder = () => {
         ...row,
         fromBottom: Math.round(
           Math.min(
-            Math.max(0, row.fromBottom + deltaH),
+            Math.max(0, shouldShiftAboveGuide(row.fromBottom, row.height) ? row.fromBottom + deltaH : row.fromBottom),
             Math.max(0, nextHeight - row.height)
           ) * 10
         ) / 10
       }));
       setLegraRows(rows => rows.map((row, i) => (
-        i === 0 ? row : { ...row, offsetMm: Math.round((row.offsetMm + deltaH) * 10) / 10 }
+        (guideY === null ? i === 0 : !shouldShiftAboveGuide(row.offsetMm))
+          ? row
+          : { ...row, offsetMm: Math.round((row.offsetMm + deltaH) * 10) / 10 }
       )));
       setLeftNotches(shiftNotchRows);
       if (!notchSidesLinked) setRightNotches(shiftNotchRows);
       return;
     }
     if (!useExternalDrawers || !notchSidesLinked) return;
+    if (guideY !== null) {
+      const deltaH = nextHeight - prevHeight;
+      setLeftNotches(current => current.map(row => ({
+        ...row,
+        fromBottom: Math.round(
+          Math.min(
+            Math.max(0, shouldShiftAboveGuide(row.fromBottom, row.height) ? row.fromBottom + deltaH : row.fromBottom),
+            Math.max(0, nextHeight - row.height)
+          ) * 10
+        ) / 10
+      })));
+      return;
+    }
     const standardNotches = extDrawerType === 'external'
       ? resolveLowerCabinetStandardDrawerNotches({
           family: lowerDrawerFamilyForGalleryCategory(galleryCategory),
@@ -1930,6 +1991,56 @@ const ModuleBuilder = () => {
                 <option value={18.5}>18.5T (갭 없음)</option>
               </select>
             </label>
+
+            <div className={`${styles.guideControl} ${styles.fullField}`}>
+              <label className={styles.checkboxInline}>
+                <input
+                  type="checkbox"
+                  checked={resizeGuideEnabled}
+                  onChange={(event) => enableResizeGuide(event.target.checked)}
+                />
+                <span>높이 기준 가이드 사용</span>
+              </label>
+              {resizeGuideEnabled && (
+                <div className={styles.guideInputs}>
+                  <label className={styles.compactField}>
+                    <span>기준 높이 Y(mm, 바닥 기준)</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={height}
+                      value={resizeGuideY}
+                      onChange={(event) => updateResizeGuideY(Number(event.target.value))}
+                    />
+                  </label>
+                  <input
+                    className={styles.guideRange}
+                    type="range"
+                    min={0}
+                    max={Math.max(1, height)}
+                    step={1}
+                    value={clampResizeGuideY(resizeGuideY, height)}
+                    onChange={(event) => updateResizeGuideY(Number(event.target.value))}
+                    aria-label="높이 기준 가이드 위치"
+                  />
+                  <div className={styles.guideActions}>
+                    <button
+                      type="button"
+                      className={styles.saveButton}
+                      onClick={() => {
+                        setResizeGuideY(current => clampResizeGuideY(current, height));
+                        setResizeGuideConfirmed(true);
+                      }}
+                    >
+                      확정
+                    </button>
+                    <span className={resizeGuideConfirmed ? styles.guideStatusConfirmed : styles.guideStatusPending}>
+                      {resizeGuideConfirmed ? '확정됨' : '미확정'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {category === 'full' && (
               <>
@@ -2839,6 +2950,9 @@ const ModuleBuilder = () => {
                 viewMode={previewViewMode}
                 direction2D={previewView === '3D' ? 'front' : previewView}
                 scanMode={scanMode}
+                showResizeGuide={resizeGuideEnabled}
+                resizeGuideY={resizeGuideY}
+                resizeGuideConfirmed={resizeGuideConfirmed}
               />
             </div>
 

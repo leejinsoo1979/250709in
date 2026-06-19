@@ -7,6 +7,8 @@ import {
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
@@ -58,6 +60,24 @@ export interface FactoryInfo {
   email: string;
   photoURL?: string;
 }
+
+export const getOrderDesignKey = (design: Pick<OrderDesignItem, 'designId' | 'projectId'>) => (
+  `${design.projectId || ''}:${design.designId}`
+);
+
+export const getOrderDesignItems = (order: OrderRecord): OrderDesignItem[] => (
+  order.designs.length > 0
+    ? order.designs
+    : order.designId
+      ? [{
+        designId: order.designId,
+        designName: order.designName || '디자인',
+        projectId: order.projectId,
+        projectName: order.projectName,
+        thumbnailUrl: order.thumbnailUrl,
+      }]
+      : []
+);
 
 /**
  * 등록된 공장(파트너) 목록 조회 — users.isPartner === true
@@ -111,6 +131,48 @@ export async function processOrder(input: {
   const fn = httpsCallable<typeof input, { ok: boolean; status: string }>(functions, 'processOrder');
   const r = await fn(input);
   return r.data;
+}
+
+/**
+ * 발주 안의 디자인 1개 제거 — 다중/프로젝트 발주 목록에서 개별 정리용.
+ * 마지막 1개는 발주 자체를 취소해야 하므로 여기서는 제거하지 않는다.
+ */
+export async function removeOrderDesign(order: OrderRecord, design: OrderDesignItem): Promise<void> {
+  const currentDesigns = getOrderDesignItems(order);
+  if (currentDesigns.length <= 1) {
+    throw new Error('마지막 디자인은 개별 삭제할 수 없습니다. 발주 취소를 사용하세요.');
+  }
+
+  const removeKey = getOrderDesignKey(design);
+  const nextDesigns = currentDesigns.filter(item => getOrderDesignKey(item) !== removeKey);
+  if (nextDesigns.length === currentDesigns.length) {
+    throw new Error('삭제할 디자인을 찾지 못했습니다.');
+  }
+  if (nextDesigns.length === 0) {
+    throw new Error('발주에는 최소 1개의 디자인이 필요합니다.');
+  }
+
+  const firstDesign = nextDesigns[0];
+  const nextDesignName = nextDesigns.length > 1
+    ? `${firstDesign.designName || '디자인'} 외 ${nextDesigns.length - 1}개`
+    : firstDesign.designName || '디자인';
+  const nextOrderScope = order.orderScope === 'project' && nextDesigns.length > 1
+    ? 'project'
+    : nextDesigns.length > 1
+      ? 'multi-design'
+      : 'design';
+
+  await updateDoc(doc(db, 'orders', order.id), {
+    designs: nextDesigns,
+    designCount: nextDesigns.length,
+    designId: firstDesign.designId,
+    designName: nextDesignName,
+    orderScope: nextOrderScope,
+    projectId: firstDesign.projectId || order.projectId || '',
+    projectName: firstDesign.projectName || order.projectName || '',
+    thumbnailUrl: firstDesign.thumbnailUrl || '',
+    updatedAt: serverTimestamp(),
+  });
 }
 
 /**

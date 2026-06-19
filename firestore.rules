@@ -436,6 +436,25 @@ service cloud.firestore {
         isAdmin()
       );
     }
+    function isOrdererDesignListUpdate() {
+      return isSignedIn() &&
+        resource.data.ordererId == request.auth.uid &&
+        resource.data.status == 'pending' &&
+        request.resource.data.status == resource.data.status &&
+        request.resource.data.designs is list &&
+        request.resource.data.designs.size() >= 1 &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'designs',
+          'designCount',
+          'designId',
+          'designName',
+          'orderScope',
+          'projectId',
+          'projectName',
+          'thumbnailUrl',
+          'updatedAt'
+        ]);
+    }
     match /orders/{orderId} {
       allow create: if isEnterpriseOrAdmin() &&
                     request.resource.data.ordererId == request.auth.uid;
@@ -447,6 +466,7 @@ service cloud.firestore {
       allow update: if isSignedIn() && (
         isAdmin() ||
         resource.data.factoryId == request.auth.uid ||
+        isOrdererDesignListUpdate() ||
         (resource.data.ordererId == request.auth.uid &&
          request.resource.data.status == 'cancelled')
       );

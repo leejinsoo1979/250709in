@@ -4,7 +4,13 @@
 import { useEffect, useState } from 'react';
 import { collection, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import type { OrderRecord, OrderStatus } from '@/firebase/orders';
+import {
+  getOrderDesignKey,
+  removeOrderDesign,
+  type OrderDesignItem,
+  type OrderRecord,
+  type OrderStatus
+} from '@/firebase/orders';
 import OrderDesignTree from '@/components/orders/OrderDesignTree';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -29,6 +35,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [search, setSearch] = useState('');
+  const [removingDesignKey, setRemovingDesignKey] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -68,6 +75,26 @@ export default function AdminOrders() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleRemoveDesign = async (order: OrderRecord, design: OrderDesignItem) => {
+    const designCount = order.designs.length || (order.designId ? 1 : 0);
+    if (designCount <= 1) {
+      alert('마지막 디자인은 개별 삭제할 수 없습니다.');
+      return;
+    }
+    if (!confirm(`"${design.designName || '디자인'}"을 이 발주 목록에서 삭제할까요?`)) return;
+
+    const key = `${order.id}:${getOrderDesignKey(design)}`;
+    setRemovingDesignKey(key);
+    try {
+      await removeOrderDesign(order, design);
+      await load();
+    } catch (e) {
+      alert('디자인 삭제 실패: ' + (e as Error).message);
+    } finally {
+      setRemovingDesignKey(null);
+    }
+  };
 
   const filtered = orders
     .filter((o) => filter === 'all' ? true : o.status === filter)
@@ -158,7 +185,16 @@ export default function AdminOrders() {
                       {o.reason && <div style={{ marginTop: 4, fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.reason}</div>}
                     </td>
                     <td style={td}>
-                      <OrderDesignTree order={o} />
+                      <OrderDesignTree
+                        order={o}
+                        showCheckboxes
+                        showRemoveButton
+                        onRemoveDesign={(design) => handleRemoveDesign(o, design)}
+                        removingDesignKey={removingDesignKey?.startsWith(`${o.id}:`) ? removingDesignKey.slice(o.id.length + 1) : null}
+                        getRemoveDisabledReason={(_design, designs) => (
+                          designs.length <= 1 ? '마지막 디자인은 개별 삭제할 수 없습니다' : null
+                        )}
+                      />
                     </td>
                     <td style={td}>
                       {o.ordererName || '-'}

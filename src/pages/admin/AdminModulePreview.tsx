@@ -241,6 +241,65 @@ const DimensionGuides = ({
   );
 };
 
+const ResizeGuideLine = ({
+  widthMm,
+  heightMm,
+  depthMm,
+  guideY,
+  confirmed,
+  viewKey = '3d'
+}: {
+  widthMm: number;
+  heightMm: number;
+  depthMm: number;
+  guideY: number;
+  confirmed: boolean;
+  viewKey?: '3d' | 'front' | 'top' | 'left';
+}) => {
+  if (viewKey === 'top') return null;
+
+  const w = mmToThreeUnits(widthMm);
+  const d = mmToThreeUnits(depthMm);
+  const y = mmToThreeUnits(Math.min(Math.max(0, guideY), heightMm));
+  const offset = mmToThreeUnits(24);
+  const color = confirmed ? '#22c55e' : '#f59e0b';
+  const lineProps = { color, lineWidth: 2, depthTest: false } as const;
+
+  return (
+    <group>
+      {viewKey !== 'left' && (
+        <Line
+          points={[
+            [-w / 2 - offset, y, d / 2 + offset],
+            [w / 2 + offset, y, d / 2 + offset]
+          ]}
+          {...lineProps}
+        />
+      )}
+      {viewKey !== 'front' && (
+        <Line
+          points={[
+            [-w / 2 - offset, y, -d / 2 - offset],
+            [-w / 2 - offset, y, d / 2 + offset]
+          ]}
+          {...lineProps}
+        />
+      )}
+      <DimensionText
+        value={Math.round(guideY)}
+        position={[
+          viewKey === 'left' ? -w / 2 - offset - mmToThreeUnits(70) : w / 2 + offset + mmToThreeUnits(70),
+          y,
+          viewKey === 'left' ? 0 : d / 2 + offset
+        ]}
+        rotation={viewKey === 'left' ? [0, -Math.PI / 2, Math.PI / 2] : [0, 0, Math.PI / 2]}
+        forceShow
+        color={color}
+      />
+    </group>
+  );
+};
+
 /**
  * 모듈빌더 실시간 미리보기 — 실제 뷰어 렌더 파이프라인(BoxModule)을 그대로 사용한다.
  * 간이 모델이 아닌 실배치와 동일한 메시(측판/선반/서랍/백패널/도어)가 표시되므로
@@ -251,13 +310,19 @@ const AdminModulePreview = ({
   highlightedPanelName = null,
   viewMode = '3D',
   direction2D = 'front',
-  scanMode = false
+  scanMode = false,
+  showResizeGuide = false,
+  resizeGuideY = 0,
+  resizeGuideConfirmed = false
 }: {
   moduleData: ModuleData;
   highlightedPanelName?: string | null;
   viewMode?: '2D' | '3D';
   direction2D?: 'front' | 'top' | 'left';
   scanMode?: boolean;
+  showResizeGuide?: boolean;
+  resizeGuideY?: number;
+  resizeGuideConfirmed?: boolean;
 }) => {
   const is2D = viewMode === '2D';
   const { width, height, depth } = moduleData.dimensions;
@@ -393,6 +458,16 @@ const AdminModulePreview = ({
 
         {/* 가구 외곽 치수 (W/H/D mm) — 2D/3D 공통 */}
         <DimensionGuides widthMm={width} heightMm={height} depthMm={depth} lowerSectionHeightMm={lowerSectionHeightMm} viewKey={is2D ? direction2D : '3d'} />
+        {showResizeGuide && (
+          <ResizeGuideLine
+            widthMm={width}
+            heightMm={height}
+            depthMm={depth}
+            guideY={resizeGuideY}
+            confirmed={resizeGuideConfirmed}
+            viewKey={is2D ? direction2D : '3d'}
+          />
+        )}
 
         {/* 패널 스캔 — 에디터 스캔모드와 동일: 패널 클릭 시 치수/따내기/홈 표시 */}
         <LiveDimensionInspector enabled={scanMode} />

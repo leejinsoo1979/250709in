@@ -112,6 +112,13 @@ export interface ModuleData {
     topChannelNotch?: boolean;
     // 관리자 빌더: 상판 앞 옵셋(mm) — 상판 깊이를 앞에서 후퇴 (도어/마이다 간섭 회피 등)
     topPanelFrontOffsetMm?: number;
+    // 관리자 빌더: 높이 변경 기준 가이드 — 이 선 위 요소만 높이 변화량만큼 이동시키는 기준
+    resizeGuide?: {
+      enabled: boolean;
+      y: number; // 바닥 기준 높이(mm)
+      anchor: 'user-guide';
+      behavior: 'shift-above';
+    };
     // 관리자 빌더: 기본 제거 패널 (패널명 목록)
     // 배치 시 PlacedModule.panelExclusions 기본값으로 적용 — 뷰어 숨김 + 패널목록/CNC 제외,
     // 배치 후 패널목록에서 다시 켤 수 있음 (식세기장 측판 기본 꺼짐과 동일 메커니즘)
