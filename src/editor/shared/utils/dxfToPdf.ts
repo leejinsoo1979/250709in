@@ -703,6 +703,66 @@ const buildActualDoorHingeDimensionData = (
   return { lines, texts };
 };
 
+const buildActualBodyFrontHingeDimensionData = (
+  base: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const bodyLayers = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
+  const bodyBounds = getParsedLineBounds(base.lines.filter(line => bodyLayers.has(line.layer)));
+  if (!bodyBounds) return { lines: [], texts: [] };
+
+  const lines: ParsedLine[] = [];
+  const texts: ParsedText[] = [];
+  const baseGuideOffset = Math.max(36, bodyBounds.width * 0.04);
+  const hingedModules = placedModules.filter(isHingedDoorModule);
+
+  hingedModules.forEach(module => {
+    const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+    const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+    if (!doorDrawingItem) return;
+
+    const doorItems = doorDrawingItem.items.filter(item => item.type === 'door');
+    if (doorItems.length === 0) return;
+
+    const itemPositions = doorItems.flatMap(item => {
+      const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, item.y, item.height);
+      return sidePositionsMm;
+    });
+    const uniqueSidePositionsMm = Array.from(new Set(
+      itemPositions
+        .filter(position => Number.isFinite(position))
+        .map(position => Math.round(position))
+    )).sort((a, b) => a - b);
+    if (uniqueSidePositionsMm.length === 0) return;
+
+    const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
+    const moduleLeftX = doorDrawingItem.furnitureX;
+    const moduleRightX = doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth;
+    const hingeSide = doorItems[0]?.hingeSide ?? module.hingePosition ?? 'right';
+    const referenceX = hingeSide === 'left' ? moduleLeftX : moduleRightX;
+    const dimensionX = hingeSide === 'left'
+      ? moduleLeftX - baseGuideOffset
+      : moduleRightX + baseGuideOffset;
+    const textSide: 'left' | 'right' = hingeSide === 'left' ? 'left' : 'right';
+    const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
+    const hingeYs = uniqueSidePositionsMm.map(positionMm => {
+      const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
+      return bodyBounds.minY + moduleHeightMm * ratio;
+    });
+
+    addVerticalChainDimensionGuide(lines, texts, {
+      referenceX,
+      dimensionX,
+      anchorsY: [bodyBounds.minY + moduleHeightMm, ...hingeYs, bodyBounds.minY],
+      labels,
+      textSide
+    });
+  });
+
+  return { lines, texts };
+};
+
 const buildActualBodyHingeDimensionData = (
   base: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
@@ -771,6 +831,10 @@ const buildActualHingeDimensionData = (
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   if (target === 'door') {
     return buildActualDoorHingeDimensionData(base, spaceInfo, placedModules);
+  }
+
+  if (target === 'body-front') {
+    return buildActualBodyFrontHingeDimensionData(base, spaceInfo, placedModules);
   }
 
   return buildActualBodyHingeDimensionData(base, spaceInfo, placedModules, target);
