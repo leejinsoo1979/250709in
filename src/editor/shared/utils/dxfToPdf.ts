@@ -861,6 +861,8 @@ const buildActualBodyFrontHingeDimensionData = (
   });
 
   if (actualHingeGroups.length > 0) {
+    const lineCountBeforeActualHinges = lines.length;
+
     actualHingeGroups.forEach(group => {
       const candidate = dimensionCandidates
         .filter(item => group.x >= item.leftX - 36 && group.x <= item.rightX + 36)
@@ -888,7 +890,9 @@ const buildActualBodyFrontHingeDimensionData = (
       });
     });
 
-    return { lines, texts };
+    if (lines.length > lineCountBeforeActualHinges) {
+      return { lines, texts };
+    }
   }
 
   dimensionCandidates.forEach(candidate => {
