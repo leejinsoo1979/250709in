@@ -23,7 +23,7 @@ import { captureExportUiState, createExportViewUiPatch, shouldApplyExportUiPatch
 import { getSideViewSlotGroups } from './sideViewModuleFilter';
 import { getCategoryDefaultFurnitureDepth } from './furnitureDepthDefaults';
 import { buildModuleDataFromPlacedModule, getModuleById } from '@/data/modules';
-import { calculateInternalSpace } from '../viewer3d/utils/geometry';
+import { calculateBaseFrameHeight, calculateInternalSpace } from '../viewer3d/utils/geometry';
 import { calculateHingePositions } from '@/domain/boring/calculators/hingeCalculator';
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import { findDoorHingeGeometry } from './doorHingeGeometryRegistry';
@@ -434,6 +434,26 @@ const buildTopToBottomChainLabels = (
     .map(segmentMm => String(segmentMm));
 };
 
+const resolveBodyBottomOffsetMm = (
+  spaceInfo: SpaceInfo,
+  module: PlacedModule,
+  moduleData?: PdfDoorDrawingModuleData
+): number => {
+  const category = moduleData?.category;
+  const isBaseModule = category === 'lower' || category === 'full' || module.moduleId.includes('lower');
+  if (!isBaseModule) return 0;
+
+  if (module.hasBase === false) {
+    return Math.max(0, module.individualFloatHeight ?? 0);
+  }
+
+  if (spaceInfo.baseConfig?.type === 'stand') {
+    return 0;
+  }
+
+  return Math.max(0, module.baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo));
+};
+
 export const buildPdfHingeCoordinateDrawingData = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
@@ -714,7 +734,6 @@ const buildActualBodyFrontHingeDimensionData = (
 
   const lines: ParsedLine[] = [];
   const texts: ParsedText[] = [];
-  const baseGuideOffset = Math.max(36, bodyBounds.width * 0.04);
   const hingedModules = placedModules.filter(isHingedDoorModule);
 
   hingedModules.forEach(module => {
@@ -739,22 +758,24 @@ const buildActualBodyFrontHingeDimensionData = (
     const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
     const moduleLeftX = doorDrawingItem.furnitureX;
     const moduleRightX = doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth;
+    const bodyBottomY = bodyBounds.minY + resolveBodyBottomOffsetMm(spaceInfo, module, moduleData as PdfDoorDrawingModuleData);
+    const bodyTopY = bodyBottomY + moduleHeightMm;
+    const basicThickness = moduleData?.modelConfig?.basicThickness || spaceInfo.panelThickness || 18;
     const hingeSide = doorItems[0]?.hingeSide ?? module.hingePosition ?? 'right';
-    const referenceX = hingeSide === 'left' ? moduleLeftX : moduleRightX;
+    const referenceX = hingeSide === 'left'
+      ? moduleLeftX + basicThickness / 2
+      : moduleRightX - basicThickness / 2;
     const dimensionX = hingeSide === 'left'
-      ? moduleLeftX - baseGuideOffset
-      : moduleRightX + baseGuideOffset;
-    const textSide: 'left' | 'right' = hingeSide === 'left' ? 'left' : 'right';
+      ? referenceX + 30
+      : referenceX - 30;
+    const textSide: 'left' | 'right' = hingeSide === 'left' ? 'right' : 'left';
     const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
-    const hingeYs = uniqueSidePositionsMm.map(positionMm => {
-      const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
-      return bodyBounds.minY + moduleHeightMm * ratio;
-    });
+    const hingeYs = uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
 
     addVerticalChainDimensionGuide(lines, texts, {
       referenceX,
       dimensionX,
-      anchorsY: [bodyBounds.minY + moduleHeightMm, ...hingeYs, bodyBounds.minY],
+      anchorsY: [bodyTopY, ...hingeYs, bodyBottomY],
       labels,
       textSide
     });
