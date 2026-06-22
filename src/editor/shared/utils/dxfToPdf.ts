@@ -273,6 +273,14 @@ const resolveModuleDataForHingeCoordinates = (
   ) || buildModuleDataFromPlacedModule(module, spaceInfo.panelThickness);
 };
 
+const resolvePdfDoorDrawingItemForHingeCoordinates = (
+  module: PlacedModule,
+  moduleData?: PdfDoorDrawingModuleData
+) => resolvePdfDoorDrawingItem({
+  ...module,
+  hasDoor: true
+}, moduleData);
+
 const addCross = (
   lines: ParsedLine[],
   x: number,
@@ -487,7 +495,7 @@ export const buildPdfHingeCoordinateDrawingData = (
     .filter(isHingedDoorModule)
     .forEach((module, moduleIndex) => {
       const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-      const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+      const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
       if (!doorDrawingItem) return;
 
       doorDrawingItem.items
@@ -718,7 +726,7 @@ const buildActualDoorHingeDimensionData = (
     .filter(isHingedDoorModule)
     .flatMap(module => {
       const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-      const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+      const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
       if (!doorDrawingItem) return [];
 
       return doorDrawingItem.items
@@ -758,7 +766,7 @@ const buildActualBodyFrontHingeDimensionData = (
 
   hingedModules.forEach(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-    const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+    const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
     if (!doorDrawingItem) return;
 
     const doorItems = doorDrawingItem.items.filter(item => item.type === 'door');
@@ -831,7 +839,7 @@ const buildActualBodyHingeDimensionData = (
 
   hingedModules.forEach(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-    const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+    const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
     if (!doorDrawingItem) return;
 
     const doorItems = doorDrawingItem.items.filter(item => item.type === 'door');
