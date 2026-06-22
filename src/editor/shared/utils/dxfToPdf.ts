@@ -758,16 +758,21 @@ const buildActualBodyFrontHingeDimensionData = (
     const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
     const moduleLeftX = doorDrawingItem.furnitureX;
     const moduleRightX = doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth;
+    const moduleWidthMm = Math.max(1, doorDrawingItem.furnitureWidth);
     const bodyBottomY = bodyBounds.minY + resolveBodyBottomOffsetMm(spaceInfo, module, moduleData as PdfDoorDrawingModuleData);
     const bodyTopY = bodyBottomY + moduleHeightMm;
     const basicThickness = moduleData?.modelConfig?.basicThickness || spaceInfo.panelThickness || 18;
+    const innerGuideInsetMm = Math.min(
+      Math.max(basicThickness + 48, 66),
+      Math.max(basicThickness + 12, moduleWidthMm * 0.28)
+    );
     const hingeSide = doorItems[0]?.hingeSide ?? module.hingePosition ?? 'right';
     const referenceX = hingeSide === 'left'
       ? moduleLeftX + basicThickness / 2
       : moduleRightX - basicThickness / 2;
     const dimensionX = hingeSide === 'left'
-      ? referenceX + 30
-      : referenceX - 30;
+      ? moduleLeftX + innerGuideInsetMm
+      : moduleRightX - innerGuideInsetMm;
     const textSide: 'left' | 'right' = hingeSide === 'left' ? 'right' : 'left';
     const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
     const hingeYs = uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
