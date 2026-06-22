@@ -250,8 +250,6 @@ export const filterVisiblePdfDrawingItems = <
 type HingeCoordinateDrawingTarget = 'door' | 'body-front' | 'body-side';
 
 const isHingedDoorModule = (module: PlacedModule): boolean => {
-  if (!module.hasDoor) return false;
-
   const moduleId = module.moduleId || '';
   return !(
     moduleId.includes('lower-drawer-') ||
