@@ -1393,16 +1393,9 @@ export const downloadDxfAsPdf = async (
 
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
       // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
-      const frontWithDoorReferenceData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
       const frontNoDoorData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
       const doorlessData = filterDoorlessDrawingData(frontNoDoorData.lines, frontNoDoorData.texts);
-      const { lines, texts } = appendHingeCoordinateDrawingData(
-        doorlessData,
-        spaceInfo,
-        placedModules,
-        'body-front',
-        frontWithDoorReferenceData
-      );
+      const { lines, texts } = doorlessData;
 
       // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
       const doorLines = lines.filter(l => l.layer === 'DOOR');
@@ -1853,13 +1846,7 @@ const renderSheetContent = async (
   const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
   const frontNoRaw = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
   const frontNoDoorless = filterDoorlessDrawingData(frontNoRaw.lines, frontNoRaw.texts);
-  const frontNo = appendHingeCoordinateDrawingData(
-    frontNoDoorless,
-    spaceInfo,
-    placedModules,
-    'body-front',
-    frontWith
-  );
+  const frontNo = frontNoDoorless;
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
   const { lines: doorOnlyLines, texts: doorOnlyTexts } = appendHingeCoordinateDrawingData(
     filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts),
