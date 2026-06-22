@@ -438,7 +438,7 @@ export const buildPdfHingeCoordinateDrawingData = (
                 dimensionX,
                 fromY: doorBottomY,
                 toY: cupY,
-                label: `${hingeLabel} ${formatMm(doorPositionMm)}`,
+                label: `DOOR ${hingeLabel} ${formatMm(doorPositionMm)}`,
                 textSide
               });
               if (hingeIndex === 0) {
@@ -487,7 +487,7 @@ export const buildPdfHingeCoordinateDrawingData = (
                 dimensionX,
                 fromY: 0,
                 toY: sideY,
-                label: `${hingeLabel} ${formatMm(sidePositionMm)}`,
+                label: `BODY ${hingeLabel} ${formatMm(sidePositionMm)}`,
                 textSide: hingeSide === 'left' ? 'left' : 'right'
               });
               return;
@@ -515,7 +515,7 @@ export const buildPdfHingeCoordinateDrawingData = (
               dimensionX,
               fromY: 0,
               toY: sideY,
-              label: `${hingeLabel} ${formatMm(sidePositionMm)}`,
+              label: `BODY ${hingeLabel} ${formatMm(sidePositionMm)}`,
               textSide: 'right'
             });
             if (hingeIndex === 0) {
@@ -1181,9 +1181,7 @@ export const downloadDxfAsPdf = async (
       // 일반 뷰 (front, top)
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const baseData = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
-      const { lines, texts } = viewDirection === 'front'
-        ? appendHingeCoordinateDrawingData(baseData, spaceInfo, placedModules, 'door')
-        : baseData;
+      const { lines, texts } = baseData;
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
 
       if (!hasPdfDrawingData(lines, texts)) {
@@ -1609,12 +1607,7 @@ const renderSheetContent = async (
 
   // ─ 1) Front (with/without doors + door-only)
   await switchSceneViewMode('2D', 'front', 'wireframe');
-  const frontWith = appendHingeCoordinateDrawingData(
-    generateViewDataFromDxf(spaceInfo, placedModules, 'front', false),
-    spaceInfo,
-    placedModules,
-    'door'
-  );
+  const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
   const frontNo = appendHingeCoordinateDrawingData(
     generateViewDataFromDxf(spaceInfo, placedModules, 'front', true),
     spaceInfo,
