@@ -673,32 +673,47 @@ const buildActualBodyHingeDimensionData = (
 
   const lines: ParsedLine[] = [];
   const texts: ParsedText[] = [];
-  const guideX = target === 'body-side'
-    ? bodyBounds.maxX + Math.max(24, bodyBounds.width * 0.08)
-    : bodyBounds.minX - Math.max(36, bodyBounds.width * 0.04);
   const textSide: 'left' | 'right' = target === 'body-side' ? 'right' : 'left';
-  const module = placedModules.find(isHingedDoorModule);
-  if (!module) return { lines, texts };
+  const baseGuideOffset = target === 'body-side'
+    ? Math.max(24, bodyBounds.width * 0.08)
+    : Math.max(36, bodyBounds.width * 0.04);
+  const guideStep = Math.max(22, bodyBounds.width * 0.045);
+  const hingedModules = placedModules.filter(isHingedDoorModule);
 
-  const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-  const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
-  if (!doorDrawingItem) return { lines, texts };
+  hingedModules.forEach((module, moduleIndex) => {
+    const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+    const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+    if (!doorDrawingItem) return;
 
-  const doorItem = doorDrawingItem.items.find(item => item.type === 'door');
-  if (!doorItem) return { lines, texts };
+    const doorItems = doorDrawingItem.items.filter(item => item.type === 'door');
+    if (doorItems.length === 0) return;
 
-  const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, doorItem.y, doorItem.height);
-  const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
+    const itemPositions = doorItems.flatMap(item => {
+      const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, item.y, item.height);
+      return sidePositionsMm;
+    });
+    const uniqueSidePositionsMm = Array.from(new Set(
+      itemPositions
+        .filter(position => Number.isFinite(position))
+        .map(position => Math.round(position))
+    )).sort((a, b) => a - b);
+    if (uniqueSidePositionsMm.length === 0) return;
 
-  const hingeYs = sidePositionsMm.map(positionMm => {
-    const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
-    return bodyBounds.minY + bodyBounds.height * ratio;
-  });
-  addVerticalChainDimensionGuide(lines, texts, {
-    referenceX: target === 'body-side' ? bodyBounds.maxX : bodyBounds.minX,
-    dimensionX: guideX,
-    anchorsY: [bodyBounds.maxY, ...hingeYs, bodyBounds.minY],
-    textSide
+    const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
+    const hingeYs = uniqueSidePositionsMm.map(positionMm => {
+      const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
+      return bodyBounds.minY + bodyBounds.height * ratio;
+    });
+    const dimensionX = target === 'body-side'
+      ? bodyBounds.maxX + baseGuideOffset + guideStep * moduleIndex
+      : bodyBounds.minX - baseGuideOffset - guideStep * moduleIndex;
+
+    addVerticalChainDimensionGuide(lines, texts, {
+      referenceX: target === 'body-side' ? bodyBounds.maxX : bodyBounds.minX,
+      dimensionX,
+      anchorsY: [bodyBounds.maxY, ...hingeYs, bodyBounds.minY],
+      textSide
+    });
   });
 
   return { lines, texts };
