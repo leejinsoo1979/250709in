@@ -658,9 +658,10 @@ const appendHingeCoordinateDrawingData = (
   base: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  target: HingeCoordinateDrawingTarget
+  target: HingeCoordinateDrawingTarget,
+  hingeReference?: { lines: ParsedLine[]; texts: ParsedText[] }
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  const hingeData = buildActualHingeDimensionData(base, spaceInfo, placedModules, target);
+  const hingeData = buildActualHingeDimensionData(base, spaceInfo, placedModules, target, hingeReference);
   return {
     lines: [...base.lines, ...hingeData.lines],
     texts: [...base.texts, ...hingeData.texts]
@@ -720,6 +721,31 @@ const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number;
   ));
 };
 
+const groupActualHingeCentersByX = (
+  centers: Array<{ x: number; y: number }>
+): Array<{ x: number; centers: Array<{ x: number; y: number }> }> => {
+  const groups: Array<{ xValues: number[]; centers: Array<{ x: number; y: number }> }> = [];
+
+  centers
+    .slice()
+    .sort((a, b) => a.x - b.x)
+    .forEach(center => {
+      const group = groups.find(candidate => Math.abs(candidate.xValues[0] - center.x) <= 24);
+      if (group) {
+        group.xValues.push(center.x);
+        group.centers.push(center);
+        return;
+      }
+
+      groups.push({ xValues: [center.x], centers: [center] });
+    });
+
+  return groups.map(group => ({
+    x: group.xValues.reduce((sum, x) => sum + x, 0) / group.xValues.length,
+    centers: group.centers.slice().sort((a, b) => a.y - b.y)
+  }));
+};
+
 const buildActualDoorHingeDimensionData = (
   base: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
@@ -770,7 +796,8 @@ const buildActualDoorHingeDimensionData = (
 const buildActualBodyFrontHingeDimensionData = (
   base: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[]
+  placedModules: PlacedModule[],
+  hingeReference?: { lines: ParsedLine[]; texts: ParsedText[] }
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const bodyLayers = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
   const bodyBounds = getParsedLineBounds(base.lines.filter(line => bodyLayers.has(line.layer)));
@@ -780,6 +807,9 @@ const buildActualBodyFrontHingeDimensionData = (
   const texts: ParsedText[] = [];
   const hingedModules = placedModules.filter(isHingedDoorModule);
   const frontOffsetX = spaceInfo.width / 2;
+  const actualHingeGroups = groupActualHingeCentersByX(clusterActualHingeCenters(
+    (hingeReference?.lines ?? base.lines).filter(line => line.layer === 'DOOR' && isActualHingeLine(line))
+  ));
 
   hingedModules.forEach(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
@@ -806,20 +836,29 @@ const buildActualBodyFrontHingeDimensionData = (
       const doorLeftX = frontOffsetX + doorDrawingItem.furnitureX + item.x;
       const doorRightX = doorLeftX + item.width;
       const doorWidthMm = Math.max(1, item.width);
+      const doorCenterX = (doorLeftX + doorRightX) / 2;
       const innerGuideInsetMm = Math.min(
         Math.max(basicThickness + 80, doorWidthMm * 0.35),
         Math.max(basicThickness + 12, doorWidthMm / 2 - 24)
       );
       const hingeSide = module.hingePosition ?? (doorItems.length > 1 ? item.hingeSide : undefined) ?? 'right';
-      const referenceX = hingeSide === 'left'
+      const fallbackReferenceX = hingeSide === 'left'
         ? doorLeftX + basicThickness / 2
         : doorRightX - basicThickness / 2;
-      const dimensionX = hingeSide === 'left'
-        ? doorLeftX + innerGuideInsetMm
-        : doorRightX - innerGuideInsetMm;
-      const textSide: 'left' | 'right' = hingeSide === 'left' ? 'right' : 'left';
+      const matchedHingeGroup = actualHingeGroups
+        .filter(group => group.x >= doorLeftX - 36 && group.x <= doorRightX + 36)
+        .sort((a, b) => Math.abs(a.x - fallbackReferenceX) - Math.abs(b.x - fallbackReferenceX))[0];
+      const referenceX = matchedHingeGroup?.x ?? fallbackReferenceX;
+      const actualHingeYs = matchedHingeGroup?.centers
+        .map(center => center.y)
+        .filter(y => y > bodyBottomY && y < bodyTopY);
+      const guideDirection = referenceX < doorCenterX ? 1 : -1;
+      const dimensionX = referenceX + guideDirection * innerGuideInsetMm;
+      const textSide: 'left' | 'right' = guideDirection > 0 ? 'right' : 'left';
       const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
-      const hingeYs = uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
+      const hingeYs = actualHingeYs && actualHingeYs.length === uniqueSidePositionsMm.length
+        ? actualHingeYs
+        : uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
 
       addVerticalChainDimensionGuide(lines, texts, {
         referenceX,
@@ -899,14 +938,15 @@ const buildActualHingeDimensionData = (
   base: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  target: HingeCoordinateDrawingTarget
+  target: HingeCoordinateDrawingTarget,
+  hingeReference?: { lines: ParsedLine[]; texts: ParsedText[] }
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   if (target === 'door') {
     return buildActualDoorHingeDimensionData(base, spaceInfo, placedModules);
   }
 
   if (target === 'body-front') {
-    return buildActualBodyFrontHingeDimensionData(base, spaceInfo, placedModules);
+    return buildActualBodyFrontHingeDimensionData(base, spaceInfo, placedModules, hingeReference);
   }
 
   return buildActualBodyHingeDimensionData(base, spaceInfo, placedModules, target);
@@ -1272,9 +1312,16 @@ export const downloadDxfAsPdf = async (
 
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
       // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
+      const frontWithDoorReferenceData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
       const frontNoDoorData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
       const doorlessData = filterDoorlessDrawingData(frontNoDoorData.lines, frontNoDoorData.texts);
-      const { lines, texts } = appendHingeCoordinateDrawingData(doorlessData, spaceInfo, placedModules, 'body-front');
+      const { lines, texts } = appendHingeCoordinateDrawingData(
+        doorlessData,
+        spaceInfo,
+        placedModules,
+        'body-front',
+        frontWithDoorReferenceData
+      );
 
       // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
       const doorLines = lines.filter(l => l.layer === 'DOOR');
@@ -1729,7 +1776,8 @@ const renderSheetContent = async (
     frontNoDoorless,
     spaceInfo,
     placedModules,
-    'body-front'
+    'body-front',
+    frontWith
   );
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
   const { lines: doorOnlyLines, texts: doorOnlyTexts } = appendHingeCoordinateDrawingData(
