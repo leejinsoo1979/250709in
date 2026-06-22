@@ -252,10 +252,8 @@ type HingeCoordinateDrawingTarget = 'door' | 'body-front' | 'body-side';
 const isHingedDoorModule = (module: PlacedModule): boolean => {
   const moduleId = module.moduleId || '';
   return !(
-    moduleId.includes('lower-drawer-') ||
     moduleId.includes('lower-induction-cabinet') ||
     moduleId.includes('dual-lower-induction-cabinet') ||
-    moduleId.includes('lower-touch-drawer-') ||
     moduleId.includes('dishwasher')
   );
 };
@@ -276,10 +274,29 @@ const resolveModuleDataForHingeCoordinates = (
 const resolvePdfDoorDrawingItemForHingeCoordinates = (
   module: PlacedModule,
   moduleData?: PdfDoorDrawingModuleData
-) => resolvePdfDoorDrawingItem({
-  ...module,
-  hasDoor: true
-}, moduleData);
+) => {
+  const shouldBuildDoor = module.hasDoor === true || (
+    module.hasDoor !== false &&
+    moduleData?.hasDoor === true
+  );
+  const doorOnlyModuleData = shouldBuildDoor && moduleData
+    ? {
+        ...moduleData,
+        hasDoor: true,
+        modelConfig: moduleData.modelConfig
+          ? {
+              ...moduleData.modelConfig,
+              sections: moduleData.modelConfig.sections?.filter(section => section.type !== 'drawer')
+            }
+          : moduleData.modelConfig
+      }
+    : moduleData;
+
+  return resolvePdfDoorDrawingItem({
+    ...module,
+    ...(shouldBuildDoor ? { hasDoor: true } : {})
+  }, doorOnlyModuleData);
+};
 
 const addCross = (
   lines: ParsedLine[],
