@@ -672,6 +672,17 @@ const isActualHingeLine = (line: ParsedLine): boolean => (
   `${line.sourceName ?? ''} ${line.sourcePath ?? ''}`.toLowerCase().includes('door-hinge')
 );
 
+const isPotentialDoorHingeLine = (line: ParsedLine): boolean => {
+  if (isActualHingeLine(line)) return true;
+  if (line.layer !== 'DOOR') return false;
+
+  const dx = Math.abs(line.x2 - line.x1);
+  const dy = Math.abs(line.y2 - line.y1);
+  const length = Math.hypot(dx, dy);
+
+  return length > 0 && length <= 45 && dx <= 45 && dy <= 45;
+};
+
 const getParsedLineBounds = (lines: ParsedLine[]) => {
   if (lines.length === 0) return null;
   let minX = Infinity;
@@ -703,7 +714,12 @@ const getParsedLineBounds = (lines: ParsedLine[]) => {
 const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number; y: number }> => {
   const sourceBounds = new Map<string, ParsedLine[]>();
   hingeLines.forEach(line => {
-    const key = `${line.sourcePath ?? line.sourceName ?? 'door-hinge'}:${Math.round((line.y1 + line.y2) / 2 / 80)}`;
+    const sourceKey = line.sourcePath ?? line.sourceName;
+    const centerX = (line.x1 + line.x2) / 2;
+    const centerY = (line.y1 + line.y2) / 2;
+    const key = sourceKey
+      ? `${sourceKey}:${Math.round(centerY / 80)}`
+      : `door-hinge:${Math.round(centerX / 80)}:${Math.round(centerY / 80)}`;
     sourceBounds.set(key, [...(sourceBounds.get(key) ?? []), line]);
   });
 
@@ -714,10 +730,12 @@ const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number;
       x: (bounds.minX + bounds.maxX) / 2,
       y: (bounds.minY + bounds.maxY) / 2
     }))
-    .sort((a, b) => a.y - b.y);
+    .sort((a, b) => a.x - b.x || a.y - b.y);
 
   return centers.filter((center, index) => (
-    index === 0 || Math.abs(center.y - centers[index - 1].y) > 40
+    index === 0
+      || Math.abs(center.x - centers[index - 1].x) > 40
+      || Math.abs(center.y - centers[index - 1].y) > 40
   ));
 };
 
@@ -808,7 +826,7 @@ const buildActualBodyFrontHingeDimensionData = (
   const hingedModules = placedModules.filter(isHingedDoorModule);
   const frontOffsetX = spaceInfo.width / 2;
   const actualHingeGroups = groupActualHingeCentersByX(clusterActualHingeCenters(
-    (hingeReference?.lines ?? base.lines).filter(line => line.layer === 'DOOR' && isActualHingeLine(line))
+    (hingeReference?.lines ?? base.lines).filter(isPotentialDoorHingeLine)
   ));
   const dimensionCandidates = hingedModules.flatMap(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
@@ -859,6 +877,11 @@ const buildActualBodyFrontHingeDimensionData = (
       }];
     });
   });
+  const fallbackInsetMm = Math.min(
+    Math.max(52, bodyBounds.width * 0.08),
+    Math.max(52, bodyBounds.width / 2 - 24),
+    96
+  );
 
   if (actualHingeGroups.length > 0) {
     const lineCountBeforeActualHinges = lines.length;
@@ -870,22 +893,33 @@ const buildActualBodyFrontHingeDimensionData = (
         ?? dimensionCandidates
           .slice()
           .sort((a, b) => Math.abs(group.x - a.fallbackReferenceX) - Math.abs(group.x - b.fallbackReferenceX))[0];
-      if (!candidate) return;
 
       const hingeYs = group.centers
         .map(center => center.y)
-        .filter(y => y > candidate.bodyBottomY && y < candidate.bodyTopY);
-      const guideDirection = group.x < candidate.centerX ? 1 : -1;
+        .filter(y => (
+          candidate
+            ? y > candidate.bodyBottomY && y < candidate.bodyTopY
+            : y > bodyBounds.minY && y < bodyBounds.maxY
+        ));
+      const guideDirection = candidate
+        ? (group.x < candidate.centerX ? 1 : -1)
+        : (group.x < bodyBounds.minX + bodyBounds.width / 2 ? 1 : -1);
+      const fallbackHingeYs = candidate?.fallbackHingeYs ?? [];
+      const effectiveHingeYs = hingeYs.length > 0 ? hingeYs : fallbackHingeYs;
+      if (effectiveHingeYs.length === 0) return;
+      const labels = candidate && effectiveHingeYs.length === candidate.fallbackHingeYs.length
+        ? candidate.labels
+        : undefined;
 
       addVerticalChainDimensionGuide(lines, texts, {
         referenceX: group.x,
-        dimensionX: group.x + guideDirection * candidate.insetMm,
+        dimensionX: group.x + guideDirection * (candidate?.insetMm ?? fallbackInsetMm),
         anchorsY: [
-          candidate.bodyTopY,
-          ...(hingeYs.length === candidate.fallbackHingeYs.length ? hingeYs : candidate.fallbackHingeYs),
-          candidate.bodyBottomY
+          candidate?.bodyTopY ?? bodyBounds.maxY,
+          ...effectiveHingeYs,
+          candidate?.bodyBottomY ?? bodyBounds.minY
         ],
-        labels: candidate.labels,
+        labels,
         textSide: guideDirection > 0 ? 'right' : 'left'
       });
     });
