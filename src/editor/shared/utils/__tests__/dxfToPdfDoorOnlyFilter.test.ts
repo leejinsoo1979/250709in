@@ -17,7 +17,7 @@ describe('PDF door-only layer filter', () => {
     const texts = [
       { layer: 'DOOR_DIMENSIONS', text: '2360' },
       { layer: 'DOOR', text: 'hinge-label' },
-      { layer: 'HINGE_MATCH_DIMENSIONS', text: 'H1 CUP X=22.5 Y=120' },
+      { layer: 'HINGE_MATCH_DIMENSIONS', text: 'H1 120' },
       { layer: 'DRAWER', text: 'drawer-label' },
       { layer: 'FURNITURE_PANEL', text: 'body-label' }
     ]
@@ -25,7 +25,7 @@ describe('PDF door-only layer filter', () => {
     const result = filterDoorOnlyDrawingData(lines, texts)
 
     expect(result.lines.map(line => line.id)).toEqual(['hinge', 'door-width', 'door-hinge-coordinate', 'hinge-coordinate-dim'])
-    expect(result.texts.map(text => text.text)).toEqual(['2360', 'hinge-label', 'H1 CUP X=22.5 Y=120'])
+    expect(result.texts.map(text => text.text)).toEqual(['2360', 'hinge-label', 'H1 120'])
   })
 
   it('도어 도면 레이어 판정은 도어 형상과 힌지 좌표 레이어만 true이다', () => {
@@ -62,8 +62,10 @@ describe('PDF door-only layer filter', () => {
     const body = buildPdfHingeCoordinateDrawingData(spaceInfo, placedModules, 'body-side')
 
     expect(door.lines.some(line => line.layer === 'HINGE_MATCH_DOOR')).toBe(true)
-    expect(door.texts.some(text => text.text.includes('CUP'))).toBe(true)
+    expect(door.texts.some(text => text.text === 'CUP D35')).toBe(true)
+    expect(door.texts.some(text => /^H1\s+\d/.test(text.text))).toBe(true)
     expect(body.lines.some(line => line.layer === 'HINGE_MATCH_BODY')).toBe(true)
-    expect(body.texts.some(text => text.text.includes('BODY'))).toBe(true)
+    expect(body.texts.some(text => /^H1\s+\d/.test(text.text))).toBe(true)
+    expect(body.texts.some(text => text.text === 'F20')).toBe(true)
   })
 })

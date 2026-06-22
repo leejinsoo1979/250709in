@@ -269,6 +269,83 @@ const addCross = (
 };
 
 const roundMm = (value: number): number => Math.round(value * 10) / 10;
+const formatMm = (value: number): string => String(roundMm(value));
+
+const addGuideLine = (
+  lines: ParsedLine[],
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  layer = HINGE_MATCH_DIMENSIONS_LAYER
+) => {
+  lines.push({ x1, y1, x2, y2, layer, color: 1 });
+};
+
+const addGuideTick = (
+  lines: ParsedLine[],
+  x: number,
+  y: number,
+  layer = HINGE_MATCH_DIMENSIONS_LAYER
+) => {
+  const size = 5;
+  lines.push({ x1: x - size, y1: y - size, x2: x + size, y2: y + size, layer, color: 1 });
+};
+
+const addVerticalDimensionGuide = (
+  lines: ParsedLine[],
+  texts: ParsedText[],
+  options: {
+    referenceX: number;
+    dimensionX: number;
+    fromY: number;
+    toY: number;
+    label: string;
+    textSide: 'left' | 'right';
+  }
+) => {
+  const { referenceX, dimensionX, fromY, toY, label, textSide } = options;
+  addGuideLine(lines, referenceX, fromY, dimensionX, fromY);
+  addGuideLine(lines, referenceX, toY, dimensionX, toY);
+  addGuideLine(lines, dimensionX, fromY, dimensionX, toY);
+  addGuideTick(lines, dimensionX, fromY);
+  addGuideTick(lines, dimensionX, toY);
+  texts.push({
+    x: dimensionX + (textSide === 'right' ? 14 : -14),
+    y: (fromY + toY) / 2,
+    text: label,
+    height: 18,
+    layer: HINGE_MATCH_DIMENSIONS_LAYER,
+    color: 1
+  });
+};
+
+const addHorizontalDimensionGuide = (
+  lines: ParsedLine[],
+  texts: ParsedText[],
+  options: {
+    fromX: number;
+    toX: number;
+    referenceY: number;
+    dimensionY: number;
+    label: string;
+  }
+) => {
+  const { fromX, toX, referenceY, dimensionY, label } = options;
+  addGuideLine(lines, fromX, referenceY, fromX, dimensionY);
+  addGuideLine(lines, toX, referenceY, toX, dimensionY);
+  addGuideLine(lines, fromX, dimensionY, toX, dimensionY);
+  addGuideTick(lines, fromX, dimensionY);
+  addGuideTick(lines, toX, dimensionY);
+  texts.push({
+    x: (fromX + toX) / 2,
+    y: dimensionY + 12,
+    text: label,
+    height: 18,
+    layer: HINGE_MATCH_DIMENSIONS_LAYER,
+    color: 1
+  });
+};
 
 const resolveDoorHingePositionsForPdf = (
   module: PlacedModule,
@@ -325,6 +402,9 @@ export const buildPdfHingeCoordinateDrawingData = (
         .filter(item => item.type === 'door')
         .forEach((item, doorIndex) => {
           const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
+          const doorLeftX = doorDrawingItem.furnitureX + item.x;
+          const doorRightX = doorLeftX + item.width;
+          const doorBottomY = item.y;
           const { doorPositionsMm, sidePositionsMm } = resolveDoorHingePositionsForPdf(
             module,
             item.y,
@@ -336,13 +416,15 @@ export const buildPdfHingeCoordinateDrawingData = (
             const hingeLabel = `H${hingeIndex + 1}`;
 
             if (target === 'door') {
-              const cupX = doorDrawingItem.furnitureX + item.x + (
+              const cupX = doorLeftX + (
                 hingeSide === 'left'
                   ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
                   : item.width - DEFAULT_HINGE_SETTINGS.cupEdgeDistance
               );
               const cupY = item.y + doorPositionMm;
               const layer = HINGE_MATCH_DOOR_LAYER;
+              const dimensionX = hingeSide === 'left' ? doorLeftX - 38 - hingeIndex * 16 : doorRightX + 38 + hingeIndex * 16;
+              const textSide = hingeSide === 'left' ? 'left' : 'right';
 
               addCross(lines, cupX, cupY, 10, layer);
               lines.push(
@@ -351,14 +433,33 @@ export const buildPdfHingeCoordinateDrawingData = (
                 { x1: cupX + 17.5, y1: cupY + 17.5, x2: cupX - 17.5, y2: cupY + 17.5, layer, color: 1 },
                 { x1: cupX - 17.5, y1: cupY + 17.5, x2: cupX - 17.5, y2: cupY - 17.5, layer, color: 1 }
               );
-              texts.push({
-                x: cupX + (hingeSide === 'left' ? 48 : -48),
-                y: cupY + 6,
-                text: `${hingeLabel} CUP X=${roundMm(hingeSide === 'left' ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance : item.width - DEFAULT_HINGE_SETTINGS.cupEdgeDistance)} Y=${roundMm(doorPositionMm)}`,
-                height: 18,
-                layer: HINGE_MATCH_DIMENSIONS_LAYER,
-                color: 1
+              addVerticalDimensionGuide(lines, texts, {
+                referenceX: cupX,
+                dimensionX,
+                fromY: doorBottomY,
+                toY: cupY,
+                label: `${hingeLabel} ${formatMm(doorPositionMm)}`,
+                textSide
               });
+              if (hingeIndex === 0) {
+                const hingeEdgeX = hingeSide === 'left' ? doorLeftX : doorRightX;
+                const edgeGuideY = cupY + 34;
+                addHorizontalDimensionGuide(lines, texts, {
+                  fromX: hingeEdgeX,
+                  toX: cupX,
+                  referenceY: cupY,
+                  dimensionY: edgeGuideY,
+                  label: `EDGE ${formatMm(DEFAULT_HINGE_SETTINGS.cupEdgeDistance)}`
+                });
+                texts.push({
+                  x: cupX + (hingeSide === 'left' ? 36 : -36),
+                  y: cupY - 22,
+                  text: 'CUP D35',
+                  height: 18,
+                  layer: HINGE_MATCH_DIMENSIONS_LAYER,
+                  color: 1
+                });
+              }
               return;
             }
 
@@ -368,6 +469,9 @@ export const buildPdfHingeCoordinateDrawingData = (
                 : doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth - basicThickness / 2;
               const sideY = sidePositionMm;
               const layer = HINGE_MATCH_BODY_LAYER;
+              const dimensionX = hingeSide === 'left'
+                ? doorDrawingItem.furnitureX - 38 - hingeIndex * 16
+                : doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth + 38 + hingeIndex * 16;
 
               lines.push({
                 x1: sideX - basicThickness / 2,
@@ -378,13 +482,13 @@ export const buildPdfHingeCoordinateDrawingData = (
                 color: 1
               });
               addCross(lines, sideX, sideY, 7, layer);
-              texts.push({
-                x: sideX + (hingeSide === 'left' ? 55 : -55),
-                y: sideY + 5,
-                text: `${hingeLabel} BODY Y=${roundMm(sidePositionMm)}`,
-                height: 18,
-                layer: HINGE_MATCH_DIMENSIONS_LAYER,
-                color: 1
+              addVerticalDimensionGuide(lines, texts, {
+                referenceX: sideX,
+                dimensionX,
+                fromY: 0,
+                toY: sideY,
+                label: `${hingeLabel} ${formatMm(sidePositionMm)}`,
+                textSide: hingeSide === 'left' ? 'left' : 'right'
               });
               return;
             }
@@ -392,6 +496,7 @@ export const buildPdfHingeCoordinateDrawingData = (
             const moduleDepthMm = resolvePlacedModuleExportDepth(spaceInfo, module);
             const sideY = sidePositionMm;
             const layer = HINGE_MATCH_BODY_LAYER;
+            const dimensionX = moduleDepthMm + 32 + hingeIndex * 14;
 
             sideDepthOffsetsMm.forEach(offsetFromFrontMm => {
               const x = moduleDepthMm - offsetFromFrontMm;
@@ -405,14 +510,26 @@ export const buildPdfHingeCoordinateDrawingData = (
               layer,
               color: 1
             });
-            texts.push({
-              x: Math.max(12, moduleDepthMm - 118 - (doorIndex + moduleIndex) * 12),
-              y: sideY + 7,
-              text: `${hingeLabel} BODY Y=${roundMm(sidePositionMm)} F=${sideDepthOffsetsMm.join('/')}`,
-              height: 18,
-              layer: HINGE_MATCH_DIMENSIONS_LAYER,
-              color: 1
+            addVerticalDimensionGuide(lines, texts, {
+              referenceX: moduleDepthMm - sideDepthOffsetsMm[0],
+              dimensionX,
+              fromY: 0,
+              toY: sideY,
+              label: `${hingeLabel} ${formatMm(sidePositionMm)}`,
+              textSide: 'right'
             });
+            if (hingeIndex === 0) {
+              const depthGuideY = sideY + 32 + (doorIndex + moduleIndex) * 16;
+              sideDepthOffsetsMm.forEach(offsetFromFrontMm => {
+                addHorizontalDimensionGuide(lines, texts, {
+                  fromX: moduleDepthMm,
+                  toX: moduleDepthMm - offsetFromFrontMm,
+                  referenceY: sideY,
+                  dimensionY: depthGuideY + offsetFromFrontMm / 4,
+                  label: `F${formatMm(offsetFromFrontMm)}`
+                });
+              });
+            }
           });
         });
     });
