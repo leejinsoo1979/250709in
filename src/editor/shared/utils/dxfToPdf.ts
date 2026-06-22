@@ -400,7 +400,7 @@ export const buildPdfHingeCoordinateDrawingData = (
 
       doorDrawingItem.items
         .filter(item => item.type === 'door')
-        .forEach((item, doorIndex) => {
+        .forEach(item => {
           const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
           const doorLeftX = doorDrawingItem.furnitureX + item.x;
           const doorRightX = doorLeftX + item.width;
@@ -423,7 +423,7 @@ export const buildPdfHingeCoordinateDrawingData = (
               );
               const cupY = item.y + doorPositionMm;
               const layer = HINGE_MATCH_DOOR_LAYER;
-              const dimensionX = hingeSide === 'left' ? doorLeftX - 38 - hingeIndex * 16 : doorRightX + 38 + hingeIndex * 16;
+              const dimensionX = hingeSide === 'left' ? doorLeftX - 38 : doorRightX + 38;
               const textSide = hingeSide === 'left' ? 'left' : 'right';
 
               addCross(lines, cupX, cupY, 10, layer);
@@ -470,8 +470,8 @@ export const buildPdfHingeCoordinateDrawingData = (
               const sideY = sidePositionMm;
               const layer = HINGE_MATCH_BODY_LAYER;
               const dimensionX = hingeSide === 'left'
-                ? doorDrawingItem.furnitureX - 38 - hingeIndex * 16
-                : doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth + 38 + hingeIndex * 16;
+                ? doorDrawingItem.furnitureX - 38
+                : doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth + 38;
 
               lines.push({
                 x1: sideX - basicThickness / 2,
@@ -496,7 +496,7 @@ export const buildPdfHingeCoordinateDrawingData = (
             const moduleDepthMm = resolvePlacedModuleExportDepth(spaceInfo, module);
             const sideY = sidePositionMm;
             const layer = HINGE_MATCH_BODY_LAYER;
-            const dimensionX = moduleDepthMm + 32 + hingeIndex * 14;
+            const dimensionX = moduleDepthMm + 32;
 
             sideDepthOffsetsMm.forEach(offsetFromFrontMm => {
               const x = moduleDepthMm - offsetFromFrontMm;
@@ -519,7 +519,7 @@ export const buildPdfHingeCoordinateDrawingData = (
               textSide: 'right'
             });
             if (hingeIndex === 0) {
-              const depthGuideY = sideY + 32 + (doorIndex + moduleIndex) * 16;
+              const depthGuideY = sideY + 32 + moduleIndex * 16;
               sideDepthOffsetsMm.forEach(offsetFromFrontMm => {
                 addHorizontalDimensionGuide(lines, texts, {
                   fromX: moduleDepthMm,
