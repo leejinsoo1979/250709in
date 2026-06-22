@@ -850,15 +850,17 @@ const buildActualBodyFrontHingeDimensionData = (
       )).sort((a, b) => a - b);
       if (uniqueSidePositionsMm.length === 0) return [];
 
-      const doorLeftX = frontOffsetX + doorDrawingItem.furnitureX + item.x;
+      const furnitureLeftX = frontOffsetX + doorDrawingItem.furnitureX - doorDrawingItem.furnitureWidth / 2;
+      const doorLeftX = furnitureLeftX + item.x;
       const doorRightX = doorLeftX + item.width;
       const doorWidthMm = Math.max(1, item.width);
       const doorCenterX = (doorLeftX + doorRightX) / 2;
       const innerGuideInsetMm = Math.min(
-        Math.max(basicThickness + 80, doorWidthMm * 0.35),
-        Math.max(basicThickness + 12, doorWidthMm / 2 - 24)
+        Math.max(basicThickness + 34, doorWidthMm * 0.12),
+        Math.max(basicThickness + 12, doorWidthMm / 2 - 24),
+        84
       );
-      const hingeSide = module.hingePosition ?? (doorItems.length > 1 ? item.hingeSide : undefined) ?? 'right';
+      const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
       const fallbackReferenceX = hingeSide === 'left'
         ? doorLeftX + basicThickness / 2
         : doorRightX - basicThickness / 2;
@@ -887,12 +889,20 @@ const buildActualBodyFrontHingeDimensionData = (
     const lineCountBeforeActualHinges = lines.length;
 
     actualHingeGroups.forEach(group => {
+      const groupYs = group.centers.map(center => center.y);
       const candidate = dimensionCandidates
-        .filter(item => group.x >= item.leftX - 36 && group.x <= item.rightX + 36)
-        .sort((a, b) => Math.abs(group.x - a.centerX) - Math.abs(group.x - b.centerX))[0]
-        ?? dimensionCandidates
-          .slice()
-          .sort((a, b) => Math.abs(group.x - a.fallbackReferenceX) - Math.abs(group.x - b.fallbackReferenceX))[0];
+        .map(item => ({
+          item,
+          containsX: group.x >= item.leftX - 24 && group.x <= item.rightX + 24,
+          xDistance: Math.abs(group.x - item.fallbackReferenceX),
+          yHitCount: groupYs.filter(y => y > item.bodyBottomY && y < item.bodyTopY).length
+        }))
+        .filter(match => match.yHitCount > 0 && (match.containsX || match.xDistance <= 120))
+        .sort((a, b) => {
+          if (a.containsX !== b.containsX) return a.containsX ? -1 : 1;
+          if (a.yHitCount !== b.yHitCount) return b.yHitCount - a.yHitCount;
+          return a.xDistance - b.xDistance;
+        })[0]?.item;
 
       const hingeYs = group.centers
         .map(center => center.y)
