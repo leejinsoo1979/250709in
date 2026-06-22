@@ -22,6 +22,12 @@ import { useUIStore } from '@/store/uiStore';
 import { captureExportUiState, createExportViewUiPatch, shouldApplyExportUiPatch } from './exportStateSnapshot';
 import { getSideViewSlotGroups } from './sideViewModuleFilter';
 import { getCategoryDefaultFurnitureDepth } from './furnitureDepthDefaults';
+import { buildModuleDataFromPlacedModule, getModuleById } from '@/data/modules';
+import { calculateInternalSpace } from '../viewer3d/utils/geometry';
+import { calculateHingePositions } from '@/domain/boring/calculators/hingeCalculator';
+import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
+import { findDoorHingeGeometry } from './doorHingeGeometryRegistry';
+import { resolvePdfDoorDrawingItem, type PdfDoorDrawingModuleData } from './pdfDoorDrawingGeometry';
 
 /**
  * PDF 생성 전 씬을 올바른 뷰 모드로 전환하는 헬퍼
@@ -80,7 +86,7 @@ export interface PdfExportOptions {
 }
 
 // DXF에서 추출한 라인 정보
-interface ParsedLine {
+export interface ParsedLine {
   x1: number;
   y1: number;
   x2: number;
@@ -90,7 +96,7 @@ interface ParsedLine {
 }
 
 // DXF에서 추출한 텍스트 정보
-interface ParsedText {
+export interface ParsedText {
   x: number;
   y: number;
   text: string;
@@ -105,7 +111,12 @@ const PDF_LAYER_COLORS = {
   channel: [37, 99, 235] as [number, number, number],
   dimension: [0, 0, 0] as [number, number, number],
   accessory: [96, 96, 96] as [number, number, number],
+  hinge: [220, 38, 38] as [number, number, number],
 };
+
+const HINGE_MATCH_BODY_LAYER = 'HINGE_MATCH_BODY';
+const HINGE_MATCH_DOOR_LAYER = 'HINGE_MATCH_DOOR';
+const HINGE_MATCH_DIMENSIONS_LAYER = 'HINGE_MATCH_DIMENSIONS';
 
 const resolvePdfLineColor = (
   line: ParsedLine,
@@ -122,6 +133,14 @@ const resolvePdfLineColor = (
 
   if (layer === 'DIMENSIONS' || layer === 'DOOR_DIMENSIONS') {
     return PDF_LAYER_COLORS.dimension;
+  }
+
+  if (
+    layer === HINGE_MATCH_BODY_LAYER ||
+    layer === HINGE_MATCH_DOOR_LAYER ||
+    layer === HINGE_MATCH_DIMENSIONS_LAYER
+  ) {
+    return PDF_LAYER_COLORS.hinge;
   }
 
   if (isDiagonalDoorGuide) {
@@ -166,11 +185,22 @@ const resolvePdfTextColor = (
     return PDF_LAYER_COLORS.door;
   }
 
+  if (
+    text.layer === HINGE_MATCH_BODY_LAYER ||
+    text.layer === HINGE_MATCH_DOOR_LAYER ||
+    text.layer === HINGE_MATCH_DIMENSIONS_LAYER
+  ) {
+    return PDF_LAYER_COLORS.hinge;
+  }
+
   return PDF_LAYER_COLORS.dimension;
 };
 
 export const isDoorDrawingLayer = (layer: string): boolean =>
-  layer === 'DOOR' || layer === 'DOOR_DIMENSIONS';
+  layer === 'DOOR' ||
+  layer === 'DOOR_DIMENSIONS' ||
+  layer === HINGE_MATCH_DOOR_LAYER ||
+  layer === HINGE_MATCH_DIMENSIONS_LAYER;
 
 export const filterDoorOnlyDrawingData = <
   TLine extends { layer: string },
@@ -188,6 +218,220 @@ export const hasPdfDrawingData = (
 export const filterVisiblePdfDrawingItems = <
   TItem extends { lines: readonly unknown[]; texts: readonly unknown[] }
 >(items: readonly TItem[]): TItem[] => items.filter(item => hasPdfDrawingData(item.lines, item.texts));
+
+type HingeCoordinateDrawingTarget = 'door' | 'body-front' | 'body-side';
+
+const isHingedDoorModule = (module: PlacedModule): boolean => {
+  if (!module.hasDoor) return false;
+
+  const moduleId = module.moduleId || '';
+  return !(
+    moduleId.includes('lower-drawer-') ||
+    moduleId.includes('lower-door-lift-1tier') ||
+    moduleId.includes('lower-door-lift-2tier') ||
+    moduleId.includes('lower-door-lift-3tier') ||
+    moduleId.includes('lower-door-lift-touch-') ||
+    moduleId.includes('lower-top-down-1tier') ||
+    moduleId.includes('lower-top-down-2tier') ||
+    moduleId.includes('lower-top-down-3tier') ||
+    moduleId.includes('lower-top-down-touch-') ||
+    moduleId.includes('lower-induction-cabinet') ||
+    moduleId.includes('dual-lower-induction-cabinet') ||
+    moduleId.includes('lower-touch-drawer-') ||
+    moduleId.includes('dishwasher')
+  );
+};
+
+const resolveModuleDataForHingeCoordinates = (
+  spaceInfo: SpaceInfo,
+  module: PlacedModule
+) => {
+  const internalSpace = calculateInternalSpace(spaceInfo);
+
+  return getModuleById(
+    module.moduleId,
+    { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+    spaceInfo
+  ) || buildModuleDataFromPlacedModule(module, spaceInfo.panelThickness);
+};
+
+const addCross = (
+  lines: ParsedLine[],
+  x: number,
+  y: number,
+  size: number,
+  layer: string
+) => {
+  lines.push(
+    { x1: x - size, y1: y, x2: x + size, y2: y, layer, color: 1 },
+    { x1: x, y1: y - size, x2: x, y2: y + size, layer, color: 1 }
+  );
+};
+
+const roundMm = (value: number): number => Math.round(value * 10) / 10;
+
+const resolveDoorHingePositionsForPdf = (
+  module: PlacedModule,
+  doorBottomOnBodyMm: number,
+  doorHeightMm: number
+): { doorPositionsMm: number[]; sidePositionsMm: number[] } => {
+  const registryGeometry = findDoorHingeGeometry(module.id, 'hingePositionsMm');
+
+  if (registryGeometry && registryGeometry.doorPositionsMm.length > 0) {
+    return {
+      doorPositionsMm: registryGeometry.doorPositionsMm,
+      sidePositionsMm: registryGeometry.doorPositionsMm.map(position => registryGeometry.doorBottomOnSideMm + position)
+    };
+  }
+
+  if (Array.isArray(module.hingePositionsMm) && module.hingePositionsMm.length > 0) {
+    const sidePositionsMm = module.hingePositionsMm
+      .filter(position => Number.isFinite(position))
+      .sort((a, b) => a - b);
+
+    return {
+      doorPositionsMm: sidePositionsMm
+        .map(position => position - doorBottomOnBodyMm)
+        .filter(position => position >= 0 && position <= doorHeightMm),
+      sidePositionsMm
+    };
+  }
+
+  const doorPositionsMm = calculateHingePositions(doorHeightMm);
+  return {
+    doorPositionsMm,
+    sidePositionsMm: doorPositionsMm.map(position => doorBottomOnBodyMm + position)
+  };
+};
+
+export const buildPdfHingeCoordinateDrawingData = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  target: HingeCoordinateDrawingTarget
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const lines: ParsedLine[] = [];
+  const texts: ParsedText[] = [];
+  const basicThickness = spaceInfo.panelThickness || 18;
+  const sideDepthOffsetsMm = [20, 52];
+
+  placedModules
+    .filter(isHingedDoorModule)
+    .forEach((module, moduleIndex) => {
+      const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+      const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+      if (!doorDrawingItem) return;
+
+      doorDrawingItem.items
+        .filter(item => item.type === 'door')
+        .forEach((item, doorIndex) => {
+          const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
+          const { doorPositionsMm, sidePositionsMm } = resolveDoorHingePositionsForPdf(
+            module,
+            item.y,
+            item.height
+          );
+
+          doorPositionsMm.forEach((doorPositionMm, hingeIndex) => {
+            const sidePositionMm = sidePositionsMm[hingeIndex] ?? item.y + doorPositionMm;
+            const hingeLabel = `H${hingeIndex + 1}`;
+
+            if (target === 'door') {
+              const cupX = doorDrawingItem.furnitureX + item.x + (
+                hingeSide === 'left'
+                  ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
+                  : item.width - DEFAULT_HINGE_SETTINGS.cupEdgeDistance
+              );
+              const cupY = item.y + doorPositionMm;
+              const layer = HINGE_MATCH_DOOR_LAYER;
+
+              addCross(lines, cupX, cupY, 10, layer);
+              lines.push(
+                { x1: cupX - 17.5, y1: cupY - 17.5, x2: cupX + 17.5, y2: cupY - 17.5, layer, color: 1 },
+                { x1: cupX + 17.5, y1: cupY - 17.5, x2: cupX + 17.5, y2: cupY + 17.5, layer, color: 1 },
+                { x1: cupX + 17.5, y1: cupY + 17.5, x2: cupX - 17.5, y2: cupY + 17.5, layer, color: 1 },
+                { x1: cupX - 17.5, y1: cupY + 17.5, x2: cupX - 17.5, y2: cupY - 17.5, layer, color: 1 }
+              );
+              texts.push({
+                x: cupX + (hingeSide === 'left' ? 48 : -48),
+                y: cupY + 6,
+                text: `${hingeLabel} CUP X=${roundMm(hingeSide === 'left' ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance : item.width - DEFAULT_HINGE_SETTINGS.cupEdgeDistance)} Y=${roundMm(doorPositionMm)}`,
+                height: 18,
+                layer: HINGE_MATCH_DIMENSIONS_LAYER,
+                color: 1
+              });
+              return;
+            }
+
+            if (target === 'body-front') {
+              const sideX = hingeSide === 'left'
+                ? doorDrawingItem.furnitureX + basicThickness / 2
+                : doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth - basicThickness / 2;
+              const sideY = sidePositionMm;
+              const layer = HINGE_MATCH_BODY_LAYER;
+
+              lines.push({
+                x1: sideX - basicThickness / 2,
+                y1: sideY,
+                x2: sideX + basicThickness / 2,
+                y2: sideY,
+                layer,
+                color: 1
+              });
+              addCross(lines, sideX, sideY, 7, layer);
+              texts.push({
+                x: sideX + (hingeSide === 'left' ? 55 : -55),
+                y: sideY + 5,
+                text: `${hingeLabel} BODY Y=${roundMm(sidePositionMm)}`,
+                height: 18,
+                layer: HINGE_MATCH_DIMENSIONS_LAYER,
+                color: 1
+              });
+              return;
+            }
+
+            const moduleDepthMm = resolvePlacedModuleExportDepth(spaceInfo, module);
+            const sideY = sidePositionMm;
+            const layer = HINGE_MATCH_BODY_LAYER;
+
+            sideDepthOffsetsMm.forEach(offsetFromFrontMm => {
+              const x = moduleDepthMm - offsetFromFrontMm;
+              addCross(lines, x, sideY, 7, layer);
+            });
+            lines.push({
+              x1: moduleDepthMm - sideDepthOffsetsMm[sideDepthOffsetsMm.length - 1],
+              y1: sideY,
+              x2: moduleDepthMm - sideDepthOffsetsMm[0],
+              y2: sideY,
+              layer,
+              color: 1
+            });
+            texts.push({
+              x: Math.max(12, moduleDepthMm - 118 - (doorIndex + moduleIndex) * 12),
+              y: sideY + 7,
+              text: `${hingeLabel} BODY Y=${roundMm(sidePositionMm)} F=${sideDepthOffsetsMm.join('/')}`,
+              height: 18,
+              layer: HINGE_MATCH_DIMENSIONS_LAYER,
+              color: 1
+            });
+          });
+        });
+    });
+
+  return { lines, texts };
+};
+
+const appendHingeCoordinateDrawingData = (
+  base: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  target: HingeCoordinateDrawingTarget
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const hingeData = buildPdfHingeCoordinateDrawingData(spaceInfo, placedModules, target);
+  return {
+    lines: [...base.lines, ...hingeData.lines],
+    texts: [...base.texts, ...hingeData.texts]
+  };
+};
 
 export const resolvePlacedModuleExportDepth = (
   spaceInfo: SpaceInfo,
@@ -424,6 +668,11 @@ const renderToPdf = (
   lines.forEach(line => {
     let lw = 0.1;
     if (line.layer === 'DIMENSIONS') lw = 0.08;
+    else if (
+      line.layer === HINGE_MATCH_BODY_LAYER ||
+      line.layer === HINGE_MATCH_DOOR_LAYER ||
+      line.layer === HINGE_MATCH_DIMENSIONS_LAYER
+    ) lw = 0.09;
     else if (line.layer === 'SPACE_FRAME') lw = 0.15;
     else if (line.layer === 'FURNITURE_PANEL' || line.layer === 'WOOD_CHANNEL') lw = 0.12;
     else if (line.layer === 'BACK_PANEL') lw = 0.05;
@@ -601,7 +850,8 @@ export const downloadDxfAsPdf = async (
           await new Promise(resolve => setTimeout(resolve, 600));
 
           const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-          const { lines, texts } = generateViewDataFromDxf(spaceInfo, group.modules, dxfViewDirection);
+          const baseData = generateViewDataFromDxf(spaceInfo, group.modules, dxfViewDirection);
+          const { lines, texts } = appendHingeCoordinateDrawingData(baseData, spaceInfo, group.modules, 'body-side');
           console.log(`[DXF] left (슬롯 ${group.titleIndex}): ${lines.length} lines, ${texts.length} texts`);
 
           if (!hasPdfDrawingData(lines, texts)) {
@@ -632,7 +882,8 @@ export const downloadDxfAsPdf = async (
       console.log('[DXF] door-only: line layers:', [...new Set(lines.map(l => l.layer))]);
 
       // DOOR + DOOR_DIMENSIONS 레이어 필터링 (도어 형상 + 도어 높이/너비 치수선)
-      const { lines: doorOnlyLines, texts: doorTexts } = filterDoorOnlyDrawingData(lines, texts);
+      const filteredDoorData = filterDoorOnlyDrawingData(lines, texts);
+      const { lines: doorOnlyLines, texts: doorTexts } = appendHingeCoordinateDrawingData(filteredDoorData, spaceInfo, placedModules, 'door');
 
       console.log('[DXF] door-only: original ' + lines.length + ' lines -> DOOR layer ' + doorOnlyLines.length + ' lines, ' + doorTexts.length + ' texts');
 
@@ -652,7 +903,8 @@ export const downloadDxfAsPdf = async (
 
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
       // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
+      const frontNoDoorData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
+      const { lines, texts } = appendHingeCoordinateDrawingData(frontNoDoorData, spaceInfo, placedModules, 'body-front');
 
       // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
       const doorLines = lines.filter(l => l.layer === 'DOOR');
@@ -673,7 +925,10 @@ export const downloadDxfAsPdf = async (
     else {
       // 일반 뷰 (front, top)
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
+      const baseData = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
+      const { lines, texts } = viewDirection === 'front'
+        ? appendHingeCoordinateDrawingData(baseData, spaceInfo, placedModules, 'door')
+        : baseData;
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
 
       if (!hasPdfDrawingData(lines, texts)) {
@@ -781,6 +1036,11 @@ const renderToPdfWithSlotInfo = (
   filteredLines.forEach(line => {
     let lw = 0.1;
     if (line.layer === 'DIMENSIONS') lw = 0.08;
+    else if (
+      line.layer === HINGE_MATCH_BODY_LAYER ||
+      line.layer === HINGE_MATCH_DOOR_LAYER ||
+      line.layer === HINGE_MATCH_DIMENSIONS_LAYER
+    ) lw = 0.09;
     else if (line.layer === 'SPACE_FRAME') lw = 0.15;
     else if (line.layer === 'FURNITURE_PANEL' || line.layer === 'WOOD_CHANNEL') lw = 0.12;
     else if (line.layer === 'BACK_PANEL') lw = 0.05;
@@ -858,6 +1118,11 @@ const renderViewToRect = (
   lines.forEach(line => {
     let lw = 0.08;
     if (line.layer === 'DIMENSIONS') lw = 0.06;
+    else if (
+      line.layer === HINGE_MATCH_BODY_LAYER ||
+      line.layer === HINGE_MATCH_DOOR_LAYER ||
+      line.layer === HINGE_MATCH_DIMENSIONS_LAYER
+    ) lw = 0.07;
     else if (line.layer === 'SPACE_FRAME') lw = 0.12;
     else if (line.layer === 'FURNITURE_PANEL' || line.layer === 'WOOD_CHANNEL') lw = 0.1;
     else if (line.layer === 'BACK_PANEL') lw = 0.04;
@@ -1089,10 +1354,25 @@ const renderSheetContent = async (
 
   // ─ 1) Front (with/without doors + door-only)
   await switchSceneViewMode('2D', 'front', 'wireframe');
-  const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
-  const frontNo   = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
+  const frontWith = appendHingeCoordinateDrawingData(
+    generateViewDataFromDxf(spaceInfo, placedModules, 'front', false),
+    spaceInfo,
+    placedModules,
+    'door'
+  );
+  const frontNo = appendHingeCoordinateDrawingData(
+    generateViewDataFromDxf(spaceInfo, placedModules, 'front', true),
+    spaceInfo,
+    placedModules,
+    'body-front'
+  );
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
-  const { lines: doorOnlyLines, texts: doorOnlyTexts } = filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts);
+  const { lines: doorOnlyLines, texts: doorOnlyTexts } = appendHingeCoordinateDrawingData(
+    filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts),
+    spaceInfo,
+    placedModules,
+    'door'
+  );
 
   // ─ 2) Top view
   await switchSceneViewMode('2D', 'top', 'wireframe');
@@ -1108,7 +1388,12 @@ const renderSheetContent = async (
     for (const group of sideSlotGroups) {
       applyExportUiPatchIfChanged(createExportViewUiPatch('left', group.selectedSlotIndex));
       await new Promise(resolve => setTimeout(resolve, 600));
-      const data = generateViewDataFromDxf(spaceInfo, group.modules, 'left');
+      const data = appendHingeCoordinateDrawingData(
+        generateViewDataFromDxf(spaceInfo, group.modules, 'left'),
+        spaceInfo,
+        group.modules,
+        'body-side'
+      );
       sideDataListRaw.push({ slotTitle: group.titleIndex, modules: group.modules, lines: data.lines, texts: data.texts });
     }
   } finally {
