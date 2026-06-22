@@ -830,14 +830,15 @@ const buildActualBodyHingeDimensionData = (
 
   const lines: ParsedLine[] = [];
   const texts: ParsedText[] = [];
-  const textSide: 'left' | 'right' = target === 'body-side' ? 'right' : 'left';
-  const baseGuideOffset = target === 'body-side'
-    ? Math.max(24, bodyBounds.width * 0.08)
-    : Math.max(36, bodyBounds.width * 0.04);
-  const guideStep = Math.max(22, bodyBounds.width * 0.045);
+  const textSide: 'left' | 'right' = 'left';
+  const sideGuideInset = Math.min(
+    Math.max(24, bodyBounds.width * 0.12),
+    Math.max(24, bodyBounds.width - 24),
+    52
+  );
   const hingedModules = placedModules.filter(isHingedDoorModule);
 
-  hingedModules.forEach((module, moduleIndex) => {
+  hingedModules.forEach(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
     const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
     if (!doorDrawingItem) return;
@@ -858,18 +859,18 @@ const buildActualBodyHingeDimensionData = (
 
     const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
     const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
-    const hingeYs = uniqueSidePositionsMm.map(positionMm => {
-      const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
-      return bodyBounds.minY + bodyBounds.height * ratio;
-    });
+    const bodyBottomY = bodyBounds.minY + resolveBodyBottomOffsetMm(spaceInfo, module, moduleData as PdfDoorDrawingModuleData);
+    const bodyTopY = bodyBottomY + moduleHeightMm;
+    const hingeYs = uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
+    const referenceX = target === 'body-side' ? bodyBounds.maxX : bodyBounds.minX;
     const dimensionX = target === 'body-side'
-      ? bodyBounds.maxX + baseGuideOffset + guideStep * moduleIndex
-      : bodyBounds.minX - baseGuideOffset - guideStep * moduleIndex;
+      ? bodyBounds.maxX - sideGuideInset
+      : bodyBounds.minX + sideGuideInset;
 
     addVerticalChainDimensionGuide(lines, texts, {
-      referenceX: target === 'body-side' ? bodyBounds.maxX : bodyBounds.minX,
+      referenceX,
       dimensionX,
-      anchorsY: [bodyBounds.maxY, ...hingeYs, bodyBounds.minY],
+      anchorsY: [bodyTopY, ...hingeYs, bodyBottomY],
       labels,
       textSide
     });
