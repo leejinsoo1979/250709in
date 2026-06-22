@@ -209,6 +209,35 @@ export const filterDoorOnlyDrawingData = <
   texts: texts.filter(text => isDoorDrawingLayer(text.layer))
 });
 
+const isDoorSourceLine = (line: { sourceName?: string; sourcePath?: string }): boolean => {
+  const source = `${line.sourceName ?? ''} ${line.sourcePath ?? ''}`.toLowerCase();
+  return [
+    'door-edge',
+    'door-diagonal',
+    'door-hinge',
+    'door-dimension',
+    'door_dimension',
+    'door_height',
+    'door-top-width',
+    'door-edge-banding'
+  ].some(pattern => source.includes(pattern));
+};
+
+export const filterDoorlessDrawingData = <
+  TLine extends { layer: string; sourceName?: string; sourcePath?: string },
+  TText extends { layer: string }
+>(lines: TLine[], texts: TText[]): { lines: TLine[]; texts: TText[] } => ({
+  lines: lines.filter(line => (
+    !isDoorDrawingLayer(line.layer) &&
+    line.layer !== HINGE_MATCH_DOOR_LAYER &&
+    !isDoorSourceLine(line)
+  )),
+  texts: texts.filter(text => (
+    !isDoorDrawingLayer(text.layer) &&
+    text.layer !== HINGE_MATCH_DOOR_LAYER
+  ))
+});
+
 export const hasPdfDrawingData = (
   lines: readonly unknown[],
   texts: readonly unknown[]
@@ -763,8 +792,8 @@ const buildActualBodyFrontHingeDimensionData = (
     const bodyTopY = bodyBottomY + moduleHeightMm;
     const basicThickness = moduleData?.modelConfig?.basicThickness || spaceInfo.panelThickness || 18;
     const innerGuideInsetMm = Math.min(
-      Math.max(basicThickness + 48, 66),
-      Math.max(basicThickness + 12, moduleWidthMm * 0.28)
+      Math.max(basicThickness + 80, moduleWidthMm * 0.35),
+      Math.max(basicThickness + 12, moduleWidthMm / 2 - 24)
     );
     const hingeSide = doorItems[0]?.hingeSide ?? module.hingePosition ?? 'right';
     const referenceX = hingeSide === 'left'
@@ -1227,7 +1256,8 @@ export const downloadDxfAsPdf = async (
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
       // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
       const frontNoDoorData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
-      const { lines, texts } = appendHingeCoordinateDrawingData(frontNoDoorData, spaceInfo, placedModules, 'body-front');
+      const doorlessData = filterDoorlessDrawingData(frontNoDoorData.lines, frontNoDoorData.texts);
+      const { lines, texts } = appendHingeCoordinateDrawingData(doorlessData, spaceInfo, placedModules, 'body-front');
 
       // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
       const doorLines = lines.filter(l => l.layer === 'DOOR');
@@ -1676,8 +1706,10 @@ const renderSheetContent = async (
   // ─ 1) Front (with/without doors + door-only)
   await switchSceneViewMode('2D', 'front', 'wireframe');
   const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
+  const frontNoRaw = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
+  const frontNoDoorless = filterDoorlessDrawingData(frontNoRaw.lines, frontNoRaw.texts);
   const frontNo = appendHingeCoordinateDrawingData(
-    generateViewDataFromDxf(spaceInfo, placedModules, 'front', true),
+    frontNoDoorless,
     spaceInfo,
     placedModules,
     'body-front'
