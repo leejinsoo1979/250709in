@@ -13,7 +13,7 @@ import { jsPDF } from 'jspdf';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import {
-  generateDxfFromData,
+  generateDxfDrawingData,
   type ViewDirection,
   type SideViewFilter
 } from './dxfDataRenderer';
@@ -93,6 +93,8 @@ export interface ParsedLine {
   y2: number;
   layer: string;
   color?: number;
+  sourceName?: string;
+  sourcePath?: string;
 }
 
 // DXF에서 추출한 텍스트 정보
@@ -279,16 +281,6 @@ const addGuideLine = (
   lines.push({ x1, y1, x2, y2, layer, color: 1 });
 };
 
-const addGuideTick = (
-  lines: ParsedLine[],
-  x: number,
-  y: number,
-  layer = HINGE_MATCH_DIMENSIONS_LAYER
-) => {
-  const size = 5;
-  lines.push({ x1: x - size, y1: y - size, x2: x + size, y2: y + size, layer, color: 1 });
-};
-
 const addVerticalDimensionGuide = (
   lines: ParsedLine[],
   texts: ParsedText[],
@@ -305,8 +297,6 @@ const addVerticalDimensionGuide = (
   addGuideLine(lines, referenceX, fromY, dimensionX, fromY);
   addGuideLine(lines, referenceX, toY, dimensionX, toY);
   addGuideLine(lines, dimensionX, fromY, dimensionX, toY);
-  addGuideTick(lines, dimensionX, fromY);
-  addGuideTick(lines, dimensionX, toY);
   texts.push({
     x: dimensionX + (textSide === 'right' ? 14 : -14),
     y: (fromY + toY) / 2,
@@ -332,8 +322,6 @@ const addHorizontalDimensionGuide = (
   addGuideLine(lines, fromX, referenceY, fromX, dimensionY);
   addGuideLine(lines, toX, referenceY, toX, dimensionY);
   addGuideLine(lines, fromX, dimensionY, toX, dimensionY);
-  addGuideTick(lines, fromX, dimensionY);
-  addGuideTick(lines, toX, dimensionY);
   texts.push({
     x: (fromX + toX) / 2,
     y: dimensionY + 12,
@@ -342,6 +330,51 @@ const addHorizontalDimensionGuide = (
     layer: HINGE_MATCH_DIMENSIONS_LAYER,
     color: 1
   });
+};
+
+const addVerticalChainDimensionGuide = (
+  lines: ParsedLine[],
+  texts: ParsedText[],
+  options: {
+    referenceX: number;
+    dimensionX: number;
+    anchorsY: number[];
+    textSide: 'left' | 'right';
+  }
+) => {
+  const anchorsY = Array.from(new Set(
+    options.anchorsY
+      .filter(value => Number.isFinite(value))
+      .map(value => Math.round(value * 10) / 10)
+  )).sort((a, b) => b - a);
+
+  if (anchorsY.length < 2) return;
+
+  const tickSize = 10;
+  const topY = anchorsY[0];
+  const bottomY = anchorsY[anchorsY.length - 1];
+  addGuideLine(lines, options.dimensionX, topY, options.dimensionX, bottomY);
+
+  anchorsY.forEach(y => {
+    addGuideLine(lines, options.referenceX, y, options.dimensionX, y);
+    addGuideLine(lines, options.dimensionX - tickSize / 2, y, options.dimensionX + tickSize / 2, y);
+  });
+
+  for (let index = 0; index < anchorsY.length - 1; index += 1) {
+    const fromY = anchorsY[index];
+    const toY = anchorsY[index + 1];
+    const segmentMm = Math.round(Math.abs(fromY - toY));
+    if (segmentMm <= 0) continue;
+
+    texts.push({
+      x: options.dimensionX + (options.textSide === 'right' ? 14 : -14),
+      y: (fromY + toY) / 2,
+      text: String(segmentMm),
+      height: 18,
+      layer: HINGE_MATCH_DIMENSIONS_LAYER,
+      color: 1
+    });
+  }
 };
 
 const resolveDoorHingePositionsForPdf = (
@@ -540,10 +573,148 @@ const appendHingeCoordinateDrawingData = (
   placedModules: PlacedModule[],
   target: HingeCoordinateDrawingTarget
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  void spaceInfo;
-  void placedModules;
-  void target;
-  return base;
+  const hingeData = buildActualHingeDimensionData(base, spaceInfo, placedModules, target);
+  return {
+    lines: [...base.lines, ...hingeData.lines],
+    texts: [...base.texts, ...hingeData.texts]
+  };
+};
+
+const isActualHingeLine = (line: ParsedLine): boolean => (
+  `${line.sourceName ?? ''} ${line.sourcePath ?? ''}`.toLowerCase().includes('door-hinge')
+);
+
+const getParsedLineBounds = (lines: ParsedLine[]) => {
+  if (lines.length === 0) return null;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  lines.forEach(line => {
+    minX = Math.min(minX, line.x1, line.x2);
+    maxX = Math.max(maxX, line.x1, line.x2);
+    minY = Math.min(minY, line.y1, line.y2);
+    maxY = Math.max(maxY, line.y1, line.y2);
+  });
+
+  if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) {
+    return null;
+  }
+
+  return {
+    minX,
+    maxX,
+    minY,
+    maxY,
+    width: maxX - minX,
+    height: maxY - minY
+  };
+};
+
+const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number; y: number }> => {
+  const sourceBounds = new Map<string, ParsedLine[]>();
+  hingeLines.forEach(line => {
+    const key = `${line.sourcePath ?? line.sourceName ?? 'door-hinge'}:${Math.round((line.y1 + line.y2) / 2 / 80)}`;
+    sourceBounds.set(key, [...(sourceBounds.get(key) ?? []), line]);
+  });
+
+  const centers = Array.from(sourceBounds.values())
+    .map(lines => getParsedLineBounds(lines))
+    .filter((bounds): bounds is NonNullable<ReturnType<typeof getParsedLineBounds>> => Boolean(bounds))
+    .map(bounds => ({
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2
+    }))
+    .sort((a, b) => a.y - b.y);
+
+  return centers.filter((center, index) => (
+    index === 0 || Math.abs(center.y - centers[index - 1].y) > 40
+  ));
+};
+
+const buildActualDoorHingeDimensionData = (
+  base: { lines: ParsedLine[]; texts: ParsedText[] }
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const hingeLines = base.lines.filter(line => line.layer === 'DOOR' && isActualHingeLine(line));
+  if (hingeLines.length === 0) return { lines: [], texts: [] };
+
+  const doorBounds = getParsedLineBounds(base.lines.filter(line => line.layer === 'DOOR' && !isActualHingeLine(line)));
+  if (!doorBounds) return { lines: [], texts: [] };
+
+  const centers = clusterActualHingeCenters(hingeLines);
+  const lines: ParsedLine[] = [];
+  const texts: ParsedText[] = [];
+  const guideX = doorBounds.minX - Math.max(36, doorBounds.width * 0.04);
+  const textSide: 'left' | 'right' = 'left';
+  const hingeYs = centers
+    .map(center => center.y)
+    .filter(y => y > doorBounds.minY && y < doorBounds.maxY);
+
+  addVerticalChainDimensionGuide(lines, texts, {
+    referenceX: doorBounds.minX,
+    dimensionX: guideX,
+    anchorsY: [doorBounds.maxY, ...hingeYs, doorBounds.minY],
+    textSide
+  });
+
+  return { lines, texts };
+};
+
+const buildActualBodyHingeDimensionData = (
+  base: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  target: HingeCoordinateDrawingTarget
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const bodyLayers = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
+  const bodyBounds = getParsedLineBounds(base.lines.filter(line => bodyLayers.has(line.layer)));
+  if (!bodyBounds) return { lines: [], texts: [] };
+
+  const lines: ParsedLine[] = [];
+  const texts: ParsedText[] = [];
+  const guideX = target === 'body-side'
+    ? bodyBounds.maxX + Math.max(24, bodyBounds.width * 0.08)
+    : bodyBounds.minX - Math.max(36, bodyBounds.width * 0.04);
+  const textSide: 'left' | 'right' = target === 'body-side' ? 'right' : 'left';
+  const module = placedModules.find(isHingedDoorModule);
+  if (!module) return { lines, texts };
+
+  const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+  const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+  if (!doorDrawingItem) return { lines, texts };
+
+  const doorItem = doorDrawingItem.items.find(item => item.type === 'door');
+  if (!doorItem) return { lines, texts };
+
+  const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, doorItem.y, doorItem.height);
+  const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
+
+  const hingeYs = sidePositionsMm.map(positionMm => {
+    const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
+    return bodyBounds.minY + bodyBounds.height * ratio;
+  });
+  addVerticalChainDimensionGuide(lines, texts, {
+    referenceX: target === 'body-side' ? bodyBounds.maxX : bodyBounds.minX,
+    dimensionX: guideX,
+    anchorsY: [bodyBounds.maxY, ...hingeYs, bodyBounds.minY],
+    textSide
+  });
+
+  return { lines, texts };
+};
+
+const buildActualHingeDimensionData = (
+  base: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  target: HingeCoordinateDrawingTarget
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  if (target === 'door') {
+    return buildActualDoorHingeDimensionData(base);
+  }
+
+  return buildActualBodyHingeDimensionData(base, spaceInfo, placedModules, target);
 };
 
 export const resolvePlacedModuleExportDepth = (
@@ -588,114 +759,6 @@ export const resolveMaxPlacedModuleExportDepth = (
   }
 
   return Math.max(...placedModules.map(module => resolvePlacedModuleExportDepth(spaceInfo, module)));
-};
-
-/**
- * DXF 문자열에서 LINE 엔티티 파싱
- */
-const parseDxfLines = (dxfString: string): ParsedLine[] => {
-  const lines: ParsedLine[] = [];
-  const entitySection = dxfString.split('ENTITIES')[1]?.split('ENDSEC')[0];
-  if (!entitySection) return lines;
-
-  // LINE 엔티티 찾기
-  const lineRegex = /\s+0\nLINE\n([\s\S]*?)(?=\s+0\n(?:LINE|TEXT|MTEXT|ENDSEC))/g;
-  let match;
-
-  while ((match = lineRegex.exec(entitySection)) !== null) {
-    const lineData = match[1];
-
-    // 레이어 추출
-    const layerMatch = lineData.match(/\s+8\n([^\n]+)/);
-    const layer = layerMatch ? layerMatch[1].trim() : 'DEFAULT';
-
-    // 좌표 추출
-    const x1Match = lineData.match(/\s+10\n([-\d.]+)/);
-    const y1Match = lineData.match(/\s+20\n([-\d.]+)/);
-    const x2Match = lineData.match(/\s+11\n([-\d.]+)/);
-    const y2Match = lineData.match(/\s+21\n([-\d.]+)/);
-    const colorMatch = lineData.match(/\s+62\n(-?\d+)/);
-
-    if (x1Match && y1Match && x2Match && y2Match) {
-      lines.push({
-        x1: parseFloat(x1Match[1]),
-        y1: parseFloat(y1Match[1]),
-        x2: parseFloat(x2Match[1]),
-        y2: parseFloat(y2Match[1]),
-        layer,
-        color: colorMatch ? parseInt(colorMatch[1], 10) : undefined
-      });
-    }
-  }
-
-  return lines;
-};
-
-/**
- * DXF 문자열에서 TEXT/MTEXT 엔티티 파싱
- */
-const parseDxfTexts = (dxfString: string): ParsedText[] => {
-  const texts: ParsedText[] = [];
-  const entitySection = dxfString.split('ENTITIES')[1]?.split('ENDSEC')[0];
-  if (!entitySection) return texts;
-
-  // TEXT 엔티티 찾기
-  const textRegex = /\s+0\nTEXT\n([\s\S]*?)(?=\s+0\n(?:LINE|TEXT|MTEXT|ENDSEC))/g;
-  let match;
-
-  while ((match = textRegex.exec(entitySection)) !== null) {
-    const textData = match[1];
-
-    // 레이어 추출
-    const layerMatch = textData.match(/\s+8\n([^\n]+)/);
-    const layer = layerMatch ? layerMatch[1].trim() : 'DEFAULT';
-
-    // 좌표 추출
-    const xMatch = textData.match(/\s+10\n([-\d.]+)/);
-    const yMatch = textData.match(/\s+20\n([-\d.]+)/);
-    const heightMatch = textData.match(/\s+40\n([-\d.]+)/);
-    const contentMatch = textData.match(/\s+1\n([^\n]+)/);
-    const colorMatch = textData.match(/\s+62\n(-?\d+)/);
-
-    if (xMatch && yMatch && contentMatch) {
-      texts.push({
-        x: parseFloat(xMatch[1]),
-        y: parseFloat(yMatch[1]),
-        text: contentMatch[1].trim(),
-        height: heightMatch ? parseFloat(heightMatch[1]) : 25,
-        layer,
-        color: colorMatch ? parseInt(colorMatch[1], 10) : undefined
-      });
-    }
-  }
-
-  // MTEXT 엔티티도 찾기
-  const mtextRegex = /\s+0\nMTEXT\n([\s\S]*?)(?=\s+0\n(?:LINE|TEXT|MTEXT|ENDSEC))/g;
-  while ((match = mtextRegex.exec(entitySection)) !== null) {
-    const textData = match[1];
-
-    const layerMatch = textData.match(/\s+8\n([^\n]+)/);
-    const layer = layerMatch ? layerMatch[1].trim() : 'DEFAULT';
-
-    const xMatch = textData.match(/\s+10\n([-\d.]+)/);
-    const yMatch = textData.match(/\s+20\n([-\d.]+)/);
-    const heightMatch = textData.match(/\s+40\n([-\d.]+)/);
-    const contentMatch = textData.match(/\s+1\n([^\n]+)/);
-    const colorMatch = textData.match(/\s+62\n(-?\d+)/);
-
-    if (xMatch && yMatch && contentMatch) {
-      texts.push({
-        x: parseFloat(xMatch[1]),
-        y: parseFloat(yMatch[1]),
-        text: contentMatch[1].trim(),
-        height: heightMatch ? parseFloat(heightMatch[1]) : 25,
-        layer,
-        color: colorMatch ? parseInt(colorMatch[1], 10) : undefined
-      });
-    }
-  }
-
-  return texts;
 };
 
 // 뷰 제목 (jsPDF는 한글 미지원, 영문만 사용)
@@ -813,7 +876,7 @@ const renderToPdf = (
 
 /**
  * 단일 뷰에 대한 DXF 생성 및 파싱
- * generateDxfFromData를 직접 호출하여 DXF 문자열 생성 후 파싱
+ * generateDxfDrawingData를 직접 호출하여 씬에서 추출한 라인/텍스트를 사용
  * @param excludeDoor 도어 관련 객체 제외 여부 (front-no-door용)
  */
 export const generateViewDataFromDxf = (
@@ -824,11 +887,10 @@ export const generateViewDataFromDxf = (
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const sideViewFilter = getSideViewFilter(viewDirection);
 
-  console.log('[DXF] ' + viewDirection + ': calling generateDxfFromData... (excludeDoor=' + excludeDoor + ')');
+  console.log('[DXF] ' + viewDirection + ': calling generateDxfDrawingData... (excludeDoor=' + excludeDoor + ')');
 
   try {
-    // DXF 문자열 생성 (generateDXFFromScene과 동일한 방식)
-    const dxfString = generateDxfFromData(
+    const drawingData = generateDxfDrawingData(
       spaceInfo,
       placedModules,
       viewDirection as ViewDirection,
@@ -836,11 +898,10 @@ export const generateViewDataFromDxf = (
       excludeDoor
     );
 
-    // DXF 파싱
-    const lines = parseDxfLines(dxfString);
-    const texts = parseDxfTexts(dxfString);
+    const lines = drawingData.lines;
+    const texts = drawingData.texts;
 
-    console.log('[DXF] ' + viewDirection + ': parsed ' + lines.length + ' lines, ' + texts.length + ' texts from DXF');
+    console.log('[DXF] ' + viewDirection + ': extracted ' + lines.length + ' lines, ' + texts.length + ' texts from scene data');
 
     return { lines, texts };
   } catch (error) {

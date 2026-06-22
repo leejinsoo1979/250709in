@@ -311,6 +311,8 @@ export interface DxfLine {
   y2: number;
   layer: string;
   color: number; // DXF ACI color code
+  sourceName?: string;
+  sourcePath?: string;
 }
 
 export interface DxfText {
@@ -332,6 +334,16 @@ export interface DxfDrawingData {
   width: number;
   height: number;
 }
+
+const attachSourceMetadata = (
+  lines: DxfLine[],
+  objectName: string,
+  objectPath: string
+): DxfLine[] => lines.map(line => ({
+  ...line,
+  sourceName: objectName,
+  sourcePath: objectPath,
+}));
 
 export interface CombinedDxfDrawingInput {
   title: string;
@@ -1492,7 +1504,7 @@ export const extractFromScene = (
 
       const extractedLines = extractFromLine2(object, matrix, scale, line2Layer, line2Color);
       if (extractedLines.length > 0) {
-        lines.push(...extractedLines);
+        lines.push(...attachSourceMetadata(extractedLines, name, combinedNames));
         line2Objects++;
 
         // 치수선 전용 로깅
@@ -1672,7 +1684,7 @@ export const extractFromScene = (
         }
 
         const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, lsLayer, lsColor, skipBackFilter);
-        lines.push(...extractedLines);
+        lines.push(...attachSourceMetadata(extractedLines, name, combinedNames));
         lineSegmentsObjects++;
 
         // 가구/프레임 관련 객체는 항상 로깅
@@ -1765,7 +1777,7 @@ export const extractFromScene = (
         }
 
         const extractedLines = extractFromLine(lineObj, matrix, scale, lineLayer, lineColor);
-        lines.push(...extractedLines);
+        lines.push(...attachSourceMetadata(extractedLines, name, lineCombinedNames));
         lineObjects++;
       }
       return;

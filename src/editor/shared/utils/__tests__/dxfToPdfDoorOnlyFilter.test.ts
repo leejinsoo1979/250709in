@@ -15,7 +15,7 @@ describe('PDF door-only layer filter', () => {
     const texts = [
       { layer: 'DOOR_DIMENSIONS', text: '2360' },
       { layer: 'DOOR', text: 'hinge-label' },
-      { layer: 'HINGE_MATCH_DIMENSIONS', text: 'DOOR H1 120' },
+      { layer: 'HINGE_MATCH_DIMENSIONS', text: '120' },
       { layer: 'DRAWER', text: 'drawer-label' },
       { layer: 'FURNITURE_PANEL', text: 'body-label' }
     ]
