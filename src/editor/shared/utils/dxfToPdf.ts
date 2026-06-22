@@ -339,6 +339,7 @@ const addVerticalChainDimensionGuide = (
     referenceX: number;
     dimensionX: number;
     anchorsY: number[];
+    labels?: string[];
     textSide: 'left' | 'right';
   }
 ) => {
@@ -364,12 +365,13 @@ const addVerticalChainDimensionGuide = (
     const fromY = anchorsY[index];
     const toY = anchorsY[index + 1];
     const segmentMm = Math.round(Math.abs(fromY - toY));
-    if (segmentMm <= 0) continue;
+    const label = options.labels?.[index] ?? String(segmentMm);
+    if (segmentMm <= 0 || label.trim().length === 0) continue;
 
     texts.push({
       x: options.dimensionX + (options.textSide === 'right' ? 14 : -14),
       y: (fromY + toY) / 2,
-      text: String(segmentMm),
+      text: label,
       height: 18,
       layer: HINGE_MATCH_DIMENSIONS_LAYER,
       color: 1
@@ -409,6 +411,27 @@ const resolveDoorHingePositionsForPdf = (
     doorPositionsMm,
     sidePositionsMm: doorPositionsMm.map(position => doorBottomOnBodyMm + position)
   };
+};
+
+const buildTopToBottomChainLabels = (
+  heightMm: number,
+  positionsFromBottomMm: number[]
+): string[] => {
+  const roundedHeightMm = Math.max(0, Math.round(heightMm));
+  if (roundedHeightMm <= 0) return [];
+
+  const topDistancesMm = Array.from(new Set(
+    positionsFromBottomMm
+      .filter(position => Number.isFinite(position))
+      .map(position => Math.max(0, Math.min(roundedHeightMm, Math.round(roundedHeightMm - position))))
+  )).sort((a, b) => a - b);
+  const anchorsMm = [0, ...topDistancesMm, roundedHeightMm];
+
+  return anchorsMm
+    .slice(0, -1)
+    .map((distanceMm, index) => Math.max(0, anchorsMm[index + 1] - distanceMm))
+    .filter(segmentMm => segmentMm > 0)
+    .map(segmentMm => String(segmentMm));
 };
 
 export const buildPdfHingeCoordinateDrawingData = (
@@ -634,7 +657,9 @@ const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number;
 };
 
 const buildActualDoorHingeDimensionData = (
-  base: { lines: ParsedLine[]; texts: ParsedText[] }
+  base: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const hingeLines = base.lines.filter(line => line.layer === 'DOOR' && isActualHingeLine(line));
   if (hingeLines.length === 0) return { lines: [], texts: [] };
@@ -650,11 +675,28 @@ const buildActualDoorHingeDimensionData = (
   const hingeYs = centers
     .map(center => center.y)
     .filter(y => y > doorBounds.minY && y < doorBounds.maxY);
+  const labelCandidates = placedModules
+    .filter(isHingedDoorModule)
+    .flatMap(module => {
+      const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+      const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
+      if (!doorDrawingItem) return [];
+
+      return doorDrawingItem.items
+        .filter(item => item.type === 'door')
+        .map(item => {
+          const { doorPositionsMm } = resolveDoorHingePositionsForPdf(module, item.y, item.height);
+          return buildTopToBottomChainLabels(item.height, doorPositionsMm);
+        })
+        .filter(labels => labels.length > 0);
+    });
+  const labels = labelCandidates.find(candidate => candidate.length === hingeYs.length + 1);
 
   addVerticalChainDimensionGuide(lines, texts, {
     referenceX: doorBounds.minX,
     dimensionX: guideX,
     anchorsY: [doorBounds.maxY, ...hingeYs, doorBounds.minY],
+    labels,
     textSide
   });
 
@@ -700,6 +742,7 @@ const buildActualBodyHingeDimensionData = (
     if (uniqueSidePositionsMm.length === 0) return;
 
     const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
+    const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
     const hingeYs = uniqueSidePositionsMm.map(positionMm => {
       const ratio = Math.max(0, Math.min(1, positionMm / moduleHeightMm));
       return bodyBounds.minY + bodyBounds.height * ratio;
@@ -712,6 +755,7 @@ const buildActualBodyHingeDimensionData = (
       referenceX: target === 'body-side' ? bodyBounds.maxX : bodyBounds.minX,
       dimensionX,
       anchorsY: [bodyBounds.maxY, ...hingeYs, bodyBounds.minY],
+      labels,
       textSide
     });
   });
@@ -726,7 +770,7 @@ const buildActualHingeDimensionData = (
   target: HingeCoordinateDrawingTarget
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   if (target === 'door') {
-    return buildActualDoorHingeDimensionData(base);
+    return buildActualDoorHingeDimensionData(base, spaceInfo, placedModules);
   }
 
   return buildActualBodyHingeDimensionData(base, spaceInfo, placedModules, target);
