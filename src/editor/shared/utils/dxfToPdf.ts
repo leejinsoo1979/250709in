@@ -197,10 +197,7 @@ const resolvePdfTextColor = (
 };
 
 export const isDoorDrawingLayer = (layer: string): boolean =>
-  layer === 'DOOR' ||
-  layer === 'DOOR_DIMENSIONS' ||
-  layer === HINGE_MATCH_DOOR_LAYER ||
-  layer === HINGE_MATCH_DIMENSIONS_LAYER;
+  layer === 'DOOR' || layer === 'DOOR_DIMENSIONS';
 
 export const filterDoorOnlyDrawingData = <
   TLine extends { layer: string },
@@ -537,155 +534,16 @@ export const buildPdfHingeCoordinateDrawingData = (
   return { lines, texts };
 };
 
-interface PdfDrawingBounds {
-  minX: number;
-  maxX: number;
-  minY: number;
-  maxY: number;
-  width: number;
-  height: number;
-}
-
-const toBounds = (
-  minX: number,
-  maxX: number,
-  minY: number,
-  maxY: number
-): PdfDrawingBounds | null => {
-  if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) {
-    return null;
-  }
-
-  const width = maxX - minX;
-  const height = maxY - minY;
-  if (width <= 0 || height <= 0) return null;
-
-  return { minX, maxX, minY, maxY, width, height };
-};
-
-const getLineBounds = (lines: ParsedLine[]): PdfDrawingBounds | null => {
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-
-  lines.forEach(line => {
-    minX = Math.min(minX, line.x1, line.x2);
-    maxX = Math.max(maxX, line.x1, line.x2);
-    minY = Math.min(minY, line.y1, line.y2);
-    maxY = Math.max(maxY, line.y1, line.y2);
-  });
-
-  return toBounds(minX, maxX, minY, maxY);
-};
-
-const getActualHingeReferenceBounds = (
-  base: { lines: ParsedLine[] },
-  target: HingeCoordinateDrawingTarget
-): PdfDrawingBounds | null => {
-  const bodyLayers = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
-  const referenceLines = target === 'door'
-    ? base.lines.filter(line => line.layer === 'DOOR')
-    : base.lines.filter(line => bodyLayers.has(line.layer));
-
-  return getLineBounds(referenceLines.length > 0 ? referenceLines : base.lines);
-};
-
-const getSyntheticHingeReferenceBounds = (
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[],
-  target: HingeCoordinateDrawingTarget
-): PdfDrawingBounds | null => {
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minY = Infinity;
-  let maxY = -Infinity;
-
-  placedModules
-    .filter(isHingedDoorModule)
-    .forEach(module => {
-      const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-      const doorDrawingItem = resolvePdfDoorDrawingItem(module, moduleData as PdfDoorDrawingModuleData);
-      if (!doorDrawingItem) return;
-
-      if (target === 'body-side') {
-        const moduleDepthMm = resolvePlacedModuleExportDepth(spaceInfo, module);
-        minX = Math.min(minX, 0);
-        maxX = Math.max(maxX, moduleDepthMm);
-        minY = Math.min(minY, 0);
-        maxY = Math.max(maxY, doorDrawingItem.furnitureHeight);
-        return;
-      }
-
-      if (target === 'body-front') {
-        minX = Math.min(minX, doorDrawingItem.furnitureX);
-        maxX = Math.max(maxX, doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth);
-        minY = Math.min(minY, 0);
-        maxY = Math.max(maxY, doorDrawingItem.furnitureHeight);
-        return;
-      }
-
-      doorDrawingItem.items
-        .filter(item => item.type === 'door')
-        .forEach(item => {
-          const left = doorDrawingItem.furnitureX + item.x;
-          const right = left + item.width;
-          minX = Math.min(minX, left);
-          maxX = Math.max(maxX, right);
-          minY = Math.min(minY, item.y);
-          maxY = Math.max(maxY, item.y + item.height);
-        });
-    });
-
-  return toBounds(minX, maxX, minY, maxY);
-};
-
-const alignHingeDrawingDataToReference = (
-  hingeData: { lines: ParsedLine[]; texts: ParsedText[] },
-  syntheticBounds: PdfDrawingBounds | null,
-  actualBounds: PdfDrawingBounds | null
-): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  if (!syntheticBounds || !actualBounds || hingeData.lines.length + hingeData.texts.length === 0) {
-    return hingeData;
-  }
-
-  const scaleX = actualBounds.width / syntheticBounds.width;
-  const scaleY = actualBounds.height / syntheticBounds.height;
-  const mapX = (x: number) => actualBounds.minX + (x - syntheticBounds.minX) * scaleX;
-  const mapY = (y: number) => actualBounds.minY + (y - syntheticBounds.minY) * scaleY;
-
-  return {
-    lines: hingeData.lines.map(line => ({
-      ...line,
-      x1: mapX(line.x1),
-      y1: mapY(line.y1),
-      x2: mapX(line.x2),
-      y2: mapY(line.y2)
-    })),
-    texts: hingeData.texts.map(text => ({
-      ...text,
-      x: mapX(text.x),
-      y: mapY(text.y)
-    }))
-  };
-};
-
 const appendHingeCoordinateDrawingData = (
   base: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   target: HingeCoordinateDrawingTarget
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  const rawHingeData = buildPdfHingeCoordinateDrawingData(spaceInfo, placedModules, target);
-  const hingeData = alignHingeDrawingDataToReference(
-    rawHingeData,
-    getSyntheticHingeReferenceBounds(spaceInfo, placedModules, target),
-    getActualHingeReferenceBounds(base, target)
-  );
-  return {
-    lines: [...base.lines, ...hingeData.lines],
-    texts: [...base.texts, ...hingeData.texts]
-  };
+  void spaceInfo;
+  void placedModules;
+  void target;
+  return base;
 };
 
 export const resolvePlacedModuleExportDepth = (
