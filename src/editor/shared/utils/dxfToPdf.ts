@@ -730,7 +730,7 @@ const groupActualHingeCentersByX = (
     .slice()
     .sort((a, b) => a.x - b.x)
     .forEach(center => {
-      const group = groups.find(candidate => Math.abs(candidate.xValues[0] - center.x) <= 24);
+      const group = groups.find(candidate => Math.abs(candidate.xValues[0] - center.x) <= 8);
       if (group) {
         group.xValues.push(center.x);
         group.centers.push(center);
@@ -810,28 +810,27 @@ const buildActualBodyFrontHingeDimensionData = (
   const actualHingeGroups = groupActualHingeCentersByX(clusterActualHingeCenters(
     (hingeReference?.lines ?? base.lines).filter(line => line.layer === 'DOOR' && isActualHingeLine(line))
   ));
-
-  hingedModules.forEach(module => {
+  const dimensionCandidates = hingedModules.flatMap(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
     const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
-    if (!doorDrawingItem) return;
+    if (!doorDrawingItem) return [];
 
     const doorItems = doorDrawingItem.items.filter(item => item.type === 'door');
-    if (doorItems.length === 0) return;
+    if (doorItems.length === 0) return [];
 
     const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
     const bodyBottomY = bodyBounds.minY + resolveBodyBottomOffsetMm(spaceInfo, module, moduleData as PdfDoorDrawingModuleData);
     const bodyTopY = bodyBottomY + moduleHeightMm;
     const basicThickness = moduleData?.modelConfig?.basicThickness || spaceInfo.panelThickness || 18;
 
-    doorItems.forEach(item => {
+    return doorItems.flatMap(item => {
       const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, item.y, item.height);
       const uniqueSidePositionsMm = Array.from(new Set(
         sidePositionsMm
           .filter(position => Number.isFinite(position))
           .map(position => Math.round(position))
       )).sort((a, b) => a - b);
-      if (uniqueSidePositionsMm.length === 0) return;
+      if (uniqueSidePositionsMm.length === 0) return [];
 
       const doorLeftX = frontOffsetX + doorDrawingItem.furnitureX + item.x;
       const doorRightX = doorLeftX + item.width;
@@ -845,28 +844,62 @@ const buildActualBodyFrontHingeDimensionData = (
       const fallbackReferenceX = hingeSide === 'left'
         ? doorLeftX + basicThickness / 2
         : doorRightX - basicThickness / 2;
-      const matchedHingeGroup = actualHingeGroups
-        .filter(group => group.x >= doorLeftX - 36 && group.x <= doorRightX + 36)
-        .sort((a, b) => Math.abs(a.x - fallbackReferenceX) - Math.abs(b.x - fallbackReferenceX))[0];
-      const referenceX = matchedHingeGroup?.x ?? fallbackReferenceX;
-      const actualHingeYs = matchedHingeGroup?.centers
-        .map(center => center.y)
-        .filter(y => y > bodyBottomY && y < bodyTopY);
-      const guideDirection = referenceX < doorCenterX ? 1 : -1;
-      const dimensionX = referenceX + guideDirection * innerGuideInsetMm;
-      const textSide: 'left' | 'right' = guideDirection > 0 ? 'right' : 'left';
       const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
-      const hingeYs = actualHingeYs && actualHingeYs.length === uniqueSidePositionsMm.length
-        ? actualHingeYs
-        : uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
+
+      return [{
+        leftX: doorLeftX,
+        rightX: doorRightX,
+        centerX: doorCenterX,
+        bodyBottomY,
+        bodyTopY,
+        fallbackReferenceX,
+        fallbackHingeYs: uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm),
+        labels,
+        insetMm: innerGuideInsetMm
+      }];
+    });
+  });
+
+  if (actualHingeGroups.length > 0) {
+    actualHingeGroups.forEach(group => {
+      const candidate = dimensionCandidates
+        .filter(item => group.x >= item.leftX - 36 && group.x <= item.rightX + 36)
+        .sort((a, b) => Math.abs(group.x - a.centerX) - Math.abs(group.x - b.centerX))[0]
+        ?? dimensionCandidates
+          .slice()
+          .sort((a, b) => Math.abs(group.x - a.fallbackReferenceX) - Math.abs(group.x - b.fallbackReferenceX))[0];
+      if (!candidate) return;
+
+      const hingeYs = group.centers
+        .map(center => center.y)
+        .filter(y => y > candidate.bodyBottomY && y < candidate.bodyTopY);
+      const guideDirection = group.x < candidate.centerX ? 1 : -1;
 
       addVerticalChainDimensionGuide(lines, texts, {
-        referenceX,
-        dimensionX,
-        anchorsY: [bodyTopY, ...hingeYs, bodyBottomY],
-        labels,
-        textSide
+        referenceX: group.x,
+        dimensionX: group.x + guideDirection * candidate.insetMm,
+        anchorsY: [
+          candidate.bodyTopY,
+          ...(hingeYs.length === candidate.fallbackHingeYs.length ? hingeYs : candidate.fallbackHingeYs),
+          candidate.bodyBottomY
+        ],
+        labels: candidate.labels,
+        textSide: guideDirection > 0 ? 'right' : 'left'
       });
+    });
+
+    return { lines, texts };
+  }
+
+  dimensionCandidates.forEach(candidate => {
+    const guideDirection = candidate.fallbackReferenceX < candidate.centerX ? 1 : -1;
+
+    addVerticalChainDimensionGuide(lines, texts, {
+      referenceX: candidate.fallbackReferenceX,
+      dimensionX: candidate.fallbackReferenceX + guideDirection * candidate.insetMm,
+      anchorsY: [candidate.bodyTopY, ...candidate.fallbackHingeYs, candidate.bodyBottomY],
+      labels: candidate.labels,
+      textSide: guideDirection > 0 ? 'right' : 'left'
     });
   });
 
