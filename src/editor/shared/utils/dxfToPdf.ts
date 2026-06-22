@@ -255,14 +255,6 @@ const isHingedDoorModule = (module: PlacedModule): boolean => {
   const moduleId = module.moduleId || '';
   return !(
     moduleId.includes('lower-drawer-') ||
-    moduleId.includes('lower-door-lift-1tier') ||
-    moduleId.includes('lower-door-lift-2tier') ||
-    moduleId.includes('lower-door-lift-3tier') ||
-    moduleId.includes('lower-door-lift-touch-') ||
-    moduleId.includes('lower-top-down-1tier') ||
-    moduleId.includes('lower-top-down-2tier') ||
-    moduleId.includes('lower-top-down-3tier') ||
-    moduleId.includes('lower-top-down-touch-') ||
     moduleId.includes('lower-induction-cabinet') ||
     moduleId.includes('dual-lower-induction-cabinet') ||
     moduleId.includes('lower-touch-drawer-') ||
@@ -764,6 +756,7 @@ const buildActualBodyFrontHingeDimensionData = (
   const lines: ParsedLine[] = [];
   const texts: ParsedText[] = [];
   const hingedModules = placedModules.filter(isHingedDoorModule);
+  const frontOffsetX = spaceInfo.width / 2;
 
   hingedModules.forEach(module => {
     const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
@@ -787,7 +780,7 @@ const buildActualBodyFrontHingeDimensionData = (
       )).sort((a, b) => a - b);
       if (uniqueSidePositionsMm.length === 0) return;
 
-      const doorLeftX = doorDrawingItem.furnitureX + item.x;
+      const doorLeftX = frontOffsetX + doorDrawingItem.furnitureX + item.x;
       const doorRightX = doorLeftX + item.width;
       const doorWidthMm = Math.max(1, item.width);
       const innerGuideInsetMm = Math.min(
