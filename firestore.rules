@@ -348,9 +348,9 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // 팝업 - 관리자만 접근 가능
+    // 팝업 - 로그인 사용자는 공지 팝업 조회 가능, 관리는 관리자만 가능
     match /popups/{popupId} {
-      allow read, list: if isAdmin();
+      allow read, list: if isSignedIn();
       allow create: if isAdmin();
       allow update, delete: if isAdmin();
     }
@@ -562,12 +562,9 @@ service cloud.firestore {
       allow create: if isSignedIn() &&
                     request.resource.data.broadcasterUid == request.auth.uid &&
                     isLiveSessionMember(request.resource.data.convId);
-      // 읽기/목록: 부모 대화방 member (members 컬렉션 쿼리 시 where convId in [...] 사용)
-      allow read: if isSignedIn() && (
-        resource.data.broadcasterUid == request.auth.uid ||
-        isLiveSessionMember(resource.data.convId)
-      );
-      allow list: if isSignedIn();
+      // 읽기/목록: 부모 대화방 member만 가능
+      allow read, list: if isSignedIn() &&
+        isLiveSessionMember(resource.data.convId);
       // 수정: 시연자만 (status, endedAt 등)
       allow update: if isSignedIn() && resource.data.broadcasterUid == request.auth.uid;
       // 삭제: 시연자 또는 관리자
@@ -577,8 +574,10 @@ service cloud.firestore {
 
       // 시청자 등록
       match /viewers/{viewerUid} {
-        // 본인이 자기 viewer 문서 생성/삭제
-        allow create: if isSignedIn() && viewerUid == request.auth.uid;
+        // 본인이 자기 viewer 문서 생성/삭제 가능, 단 부모 대화방 member여야 함
+        allow create: if isSignedIn() &&
+          viewerUid == request.auth.uid &&
+          isLiveSessionMember(get(/databases/$(database)/documents/live-sessions/$(sessionId)).data.convId);
         allow delete: if isSignedIn() && viewerUid == request.auth.uid;
         // 시연자 + 자기 자신 읽기 가능
         allow read, list: if isSignedIn() && (
