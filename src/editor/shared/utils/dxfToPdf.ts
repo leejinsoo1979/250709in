@@ -773,45 +773,45 @@ const buildActualBodyFrontHingeDimensionData = (
     const doorItems = doorDrawingItem.items.filter(item => item.type === 'door');
     if (doorItems.length === 0) return;
 
-    const itemPositions = doorItems.flatMap(item => {
-      const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, item.y, item.height);
-      return sidePositionsMm;
-    });
-    const uniqueSidePositionsMm = Array.from(new Set(
-      itemPositions
-        .filter(position => Number.isFinite(position))
-        .map(position => Math.round(position))
-    )).sort((a, b) => a - b);
-    if (uniqueSidePositionsMm.length === 0) return;
-
     const moduleHeightMm = Math.max(doorDrawingItem.furnitureHeight, 1);
-    const moduleLeftX = doorDrawingItem.furnitureX;
-    const moduleRightX = doorDrawingItem.furnitureX + doorDrawingItem.furnitureWidth;
-    const moduleWidthMm = Math.max(1, doorDrawingItem.furnitureWidth);
     const bodyBottomY = bodyBounds.minY + resolveBodyBottomOffsetMm(spaceInfo, module, moduleData as PdfDoorDrawingModuleData);
     const bodyTopY = bodyBottomY + moduleHeightMm;
     const basicThickness = moduleData?.modelConfig?.basicThickness || spaceInfo.panelThickness || 18;
-    const innerGuideInsetMm = Math.min(
-      Math.max(basicThickness + 80, moduleWidthMm * 0.35),
-      Math.max(basicThickness + 12, moduleWidthMm / 2 - 24)
-    );
-    const hingeSide = doorItems[0]?.hingeSide ?? module.hingePosition ?? 'right';
-    const referenceX = hingeSide === 'left'
-      ? moduleLeftX + basicThickness / 2
-      : moduleRightX - basicThickness / 2;
-    const dimensionX = hingeSide === 'left'
-      ? moduleLeftX + innerGuideInsetMm
-      : moduleRightX - innerGuideInsetMm;
-    const textSide: 'left' | 'right' = hingeSide === 'left' ? 'right' : 'left';
-    const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
-    const hingeYs = uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
 
-    addVerticalChainDimensionGuide(lines, texts, {
-      referenceX,
-      dimensionX,
-      anchorsY: [bodyTopY, ...hingeYs, bodyBottomY],
-      labels,
-      textSide
+    doorItems.forEach(item => {
+      const { sidePositionsMm } = resolveDoorHingePositionsForPdf(module, item.y, item.height);
+      const uniqueSidePositionsMm = Array.from(new Set(
+        sidePositionsMm
+          .filter(position => Number.isFinite(position))
+          .map(position => Math.round(position))
+      )).sort((a, b) => a - b);
+      if (uniqueSidePositionsMm.length === 0) return;
+
+      const doorLeftX = doorDrawingItem.furnitureX + item.x;
+      const doorRightX = doorLeftX + item.width;
+      const doorWidthMm = Math.max(1, item.width);
+      const innerGuideInsetMm = Math.min(
+        Math.max(basicThickness + 80, doorWidthMm * 0.35),
+        Math.max(basicThickness + 12, doorWidthMm / 2 - 24)
+      );
+      const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
+      const referenceX = hingeSide === 'left'
+        ? doorLeftX + basicThickness / 2
+        : doorRightX - basicThickness / 2;
+      const dimensionX = hingeSide === 'left'
+        ? doorLeftX + innerGuideInsetMm
+        : doorRightX - innerGuideInsetMm;
+      const textSide: 'left' | 'right' = hingeSide === 'left' ? 'right' : 'left';
+      const labels = buildTopToBottomChainLabels(moduleHeightMm, uniqueSidePositionsMm);
+      const hingeYs = uniqueSidePositionsMm.map(positionMm => bodyBottomY + positionMm);
+
+      addVerticalChainDimensionGuide(lines, texts, {
+        referenceX,
+        dimensionX,
+        anchorsY: [bodyTopY, ...hingeYs, bodyBottomY],
+        labels,
+        textSide
+      });
     });
   });
 
