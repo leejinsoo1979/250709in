@@ -810,7 +810,7 @@ const buildActualBodyFrontHingeDimensionData = (
         Math.max(basicThickness + 80, doorWidthMm * 0.35),
         Math.max(basicThickness + 12, doorWidthMm / 2 - 24)
       );
-      const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
+      const hingeSide = module.hingePosition ?? (doorItems.length > 1 ? item.hingeSide : undefined) ?? 'right';
       const referenceX = hingeSide === 'left'
         ? doorLeftX + basicThickness / 2
         : doorRightX - basicThickness / 2;
