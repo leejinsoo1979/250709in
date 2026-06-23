@@ -2106,9 +2106,22 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       topFrameGuideSlots.some((slot) => slot.hasTopFrame === false)
       || guideTopFrameModules.some((module) => module.hasTopFrame === false)
     );
+    const isStaleCopiedTopGap = (slot: FreePlacementGuideSlot) => {
+      if (guideTopFrameAllMode || slot.hasTopFrame !== false || slot.topFrameGapUserSet === true) return false;
+      const gapValue = Math.max(0, Math.round(slot.topFrameGap ?? 0));
+      if (gapValue <= 0) return false;
+      const thicknessValue = Math.max(0, Math.round(slot.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30));
+      return gapValue === thicknessValue || gapValue === 30;
+    };
+    const resolveGuideSlotTopGap = (slot: FreePlacementGuideSlot) => {
+      if (isStaleCopiedTopGap(slot)) return 0;
+      return Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? gMoldingGap : 0));
+    };
     const topGapFromGuideState = Math.max(0,
       rawGlobalTopGap
-        ?? topFrameGuideSlots.find((slot) => slot.hasTopFrame === false && typeof slot.topFrameGap === 'number')?.topFrameGap
+        ?? (topFrameGuideSlots.find((slot) => slot.hasTopFrame === false && typeof slot.topFrameGap === 'number')
+          ? resolveGuideSlotTopGap(topFrameGuideSlots.find((slot) => slot.hasTopFrame === false && typeof slot.topFrameGap === 'number')!)
+          : undefined)
         ?? guideTopFrameModules.find((module) => module.hasTopFrame === false && typeof module.topFrameGap === 'number')?.topFrameGap
         ?? 0
     );
@@ -2616,9 +2629,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       )
     );
     const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-      getSlotTopEnabled(slot)
-        ? (slot.topFrameGap ?? 0)
-        : (slot.topFrameGap ?? (guideTopFrameAllMode ? gMoldingGap : 0))
+      getSlotTopEnabled(slot) ? (slot.topFrameGap ?? 0) : resolveGuideSlotTopGap(slot)
     );
     const getSlotTopVisibleSize = (slot: FreePlacementGuideSlot) => (
       getSlotTopEnabled(slot) ? Math.max(0, getSlotTopThickness(slot)) : 0
@@ -2911,14 +2922,16 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                       topGap,
                       () => updateGuideSlotFrame(slot.id, {
                         hasTopFrame: !enabled,
-                        topFrameGap: enabled ? (slot.topFrameGap ?? 0) : 0,
+                        topFrameGap: 0,
+                        topFrameGapUserSet: false,
                         topFrameThickness: thickness
                       }),
                       (v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v }),
                       (v) => updateGuideSlotFrame(slot.id, { topFrameOffset: v }),
                       (v, nextSize) => updateGuideSlotFrame(slot.id, {
                         ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
-                        topFrameGap: Math.max(0, v)
+                        topFrameGap: Math.max(0, v),
+                        topFrameGapUserSet: true
                       }),
                       true
                     )}

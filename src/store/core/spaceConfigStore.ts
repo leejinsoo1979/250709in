@@ -159,6 +159,7 @@ export interface FreePlacementGuideSlot {
   topFrameThickness?: number; // 슬롯별 상단몰딩 높이(mm)
   topFrameOffset?: number; // 슬롯별 상단몰딩 옵셋(mm)
   topFrameGap?: number; // 슬롯별 상단몰딩 갭/상단갭(mm)
+  topFrameGapUserSet?: boolean; // 사용자가 슬롯별 상단갭을 직접 입력했는지 여부
   hasBase?: boolean; // 슬롯별 걸레받이 사용 여부
   baseFrameHeight?: number; // 슬롯별 걸레받이 높이(mm)
   baseFrameOffset?: number; // 슬롯별 걸레받이 옵셋(mm)

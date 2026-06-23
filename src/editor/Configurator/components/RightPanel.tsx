@@ -1796,9 +1796,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   getSlotTopGap(slot)
                 )
               );
-              const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-                Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? globalTopGap : 0))
-              );
+              const isStaleCopiedTopGap = (slot: FreePlacementGuideSlot) => {
+                if (guideTopFrameAllMode || slot.hasTopFrame !== false || slot.topFrameGapUserSet === true) return false;
+                const gapValue = Math.max(0, Math.round(slot.topFrameGap ?? 0));
+                if (gapValue <= 0) return false;
+                const thicknessValue = Math.max(0, Math.round(slot.topFrameThickness ?? spaceInfo.frameSize?.top ?? userDefaults.frameTop ?? 30));
+                return gapValue === thicknessValue || gapValue === 30;
+              };
+              const getSlotTopGap = (slot: FreePlacementGuideSlot) => {
+                if (isStaleCopiedTopGap(slot)) return 0;
+                return Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? globalTopGap : 0));
+              };
               const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
               const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
                 resolveDefaultBackedRawSize(
@@ -1925,14 +1933,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             gap={gap}
                             onToggle={() => updateGuideSlotFrame(slot.id, {
                               hasTopFrame: !enabled,
-                              topFrameGap: enabled ? (slot.topFrameGap ?? 0) : 0,
+                              topFrameGap: 0,
+                              topFrameGapUserSet: false,
                               topFrameThickness: thickness
                             })}
                             onSizeChange={(v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v })}
                             onOffsetChange={(v) => updateGuideSlotFrame(slot.id, { topFrameOffset: v })}
                             onGapChange={(v, nextSize) => updateGuideSlotFrame(slot.id, {
                               ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
-                              topFrameGap: Math.max(0, v)
+                              topFrameGap: Math.max(0, v),
+                              topFrameGapUserSet: true
                             })}
                           />
                         );
