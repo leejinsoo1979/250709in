@@ -275,26 +275,29 @@ const resolveTopPlanFurnitureDepthGuide = (
   };
 };
 
-const getTopPlanModuleSourceBounds = (
-  bodyLines: ParsedLine[],
-  centerX: number,
-  moduleWidth: number
-): NonNullable<ReturnType<typeof getParsedLineBounds>> | null => {
-  const leftX = centerX - moduleWidth / 2;
-  const rightX = centerX + moduleWidth / 2;
-  const tolerance = Math.max(8, Math.min(35, moduleWidth * 0.035));
-  const matchingLines = bodyLines.filter(line => {
-    const minX = Math.min(line.x1, line.x2);
-    const maxX = Math.max(line.x1, line.x2);
-    const centerLineX = (line.x1 + line.x2) / 2;
-    const overlapsModule = maxX >= leftX - tolerance && minX <= rightX + tolerance;
-    const centerInsideModule = centerLineX >= leftX - tolerance && centerLineX <= rightX + tolerance;
-    return overlapsModule && centerInsideModule;
-  });
-  const bounds = getParsedLineBounds(matchingLines);
+const resolveTopPlanModuleDepthForPdf = (
+  spaceInfo: SpaceInfo,
+  module: PlacedModule
+): number => {
+  const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+  const sectionDepths = Array.isArray(module.sectionDepths)
+    ? module.sectionDepths.filter((depth): depth is number => typeof depth === 'number' && Number.isFinite(depth) && depth > 0)
+    : [];
+  const sectionDepth = sectionDepths.length > 0 ? Math.max(...sectionDepths) : undefined;
+  const depth = [
+    module.customDepth,
+    module.freeDepth,
+    sectionDepth,
+    module.upperSectionDepth,
+    module.lowerSectionDepth,
+    module.lowerLeftSectionDepth,
+    module.lowerRightSectionDepth,
+    moduleData?.dimensions?.depth,
+    getCategoryDefaultFurnitureDepth(spaceInfo.depth, module.moduleId, spaceInfo.furnitureDepthDefaults),
+    Math.min(spaceInfo.depth || 600, 600)
+  ].find(value => typeof value === 'number' && Number.isFinite(value) && value > 0);
 
-  if (!bounds || bounds.width <= 0 || bounds.height <= 0) return null;
-  return bounds;
+  return depth ?? 600;
 };
 
 const simplifyTopPlanFurnitureBodies = (
@@ -315,14 +318,12 @@ const simplifyTopPlanFurnitureBodies = (
     if (moduleWidth <= 0) return;
 
     const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
-    const sourceBounds = getTopPlanModuleSourceBounds(bodyLines, centerX, moduleWidth);
-    const frontY = sourceBounds?.minY ?? depthGuide.frontY;
-    const moduleDepth = sourceBounds?.height ?? resolvePlacedModuleExportDepth(spaceInfo, module);
+    const moduleDepth = resolveTopPlanModuleDepthForPdf(spaceInfo, module);
     appendRectangleOutline(lines, {
       minX: centerX - moduleWidth / 2,
       maxX: centerX + moduleWidth / 2,
-      minY: frontY,
-      maxY: frontY + moduleDepth,
+      minY: depthGuide.frontY,
+      maxY: depthGuide.frontY + moduleDepth,
       width: moduleWidth,
       height: moduleDepth
     }, 'FURNITURE_PANEL', 30);
