@@ -28,6 +28,12 @@ export interface SideViewSlotGroup {
   modules: PlacedModule[]
 }
 
+export interface SideViewSlotGroupOptions {
+  spaceInfo?: Pick<SpaceInfo, 'customColumnCount' | 'droppedCeiling' | 'freePlacementGuides' | 'width'>
+  zones?: SideViewZoneInfo | null
+  isFreePlacement?: boolean
+}
+
 export interface SideViewGuideSlotGroup {
   displayIndex: number
   label: string
@@ -352,17 +358,63 @@ export const filterSideViewModules = ({
   return filterToEdgeModules(filtered, viewDirection)
 }
 
+const getGlobalSlotKeyForSideViewGroup = (
+  module: PlacedModule,
+  options: SideViewSlotGroupOptions = {}
+): number | null => {
+  if (typeof module.slotIndex !== 'number') return null
+
+  const hasDroppedCeiling = options.spaceInfo?.droppedCeiling?.enabled || false
+  const normalSlotCount = options.zones?.normal?.columnCount || (options.spaceInfo?.customColumnCount || 4)
+  let isInDroppedZone = module.zone === 'dropped'
+
+  if (hasDroppedCeiling && !isInDroppedZone && module.zone !== 'normal' && options.zones?.dropped && options.zones?.normal) {
+    const droppedPosition = options.spaceInfo?.droppedCeiling?.position || 'right'
+    const moduleXMm = getModuleX(module) * 100
+    isInDroppedZone = droppedPosition === 'left'
+      ? moduleXMm < (options.zones.dropped.width ?? 0)
+      : moduleXMm >= (options.zones.normal.width ?? 0)
+  }
+
+  return hasDroppedCeiling && isInDroppedZone
+    ? normalSlotCount + module.slotIndex
+    : module.slotIndex
+}
+
 export const getSideViewSlotGroups = (
-  placedModules: PlacedModule[]
+  placedModules: PlacedModule[],
+  options: SideViewSlotGroupOptions = {}
 ): SideViewSlotGroup[] => {
   const visibleModules = placedModules.filter(module => !module.isSurroundPanel)
+  const isFreePlacement = options.isFreePlacement ?? visibleModules.some(module =>
+    module.isFreePlacement || module.guideSlotPlacement || module.slotIndex === undefined
+  )
+
+  if (isFreePlacement) {
+    const guideGroups = options.spaceInfo?.freePlacementGuides?.length
+      ? getSideViewGuideSlotGroups(options.spaceInfo.freePlacementGuides)
+      : getSideViewFreePlacementSlotGroups(visibleModules, options.spaceInfo?.width || 0)
+
+    return guideGroups
+      .map(group => ({
+        slotKey: group.selectedSlotIndex,
+        titleIndex: group.displayIndex,
+        selectedSlotIndex: group.selectedSlotIndex,
+        modules: options.spaceInfo?.freePlacementGuides?.length
+          ? (getGuidePlacementSlotModules(visibleModules, group.selectedSlotIndex, options.spaceInfo) ?? [])
+          : getFreePlacementSlotModules(visibleModules, group.selectedSlotIndex, options.spaceInfo)
+      }))
+      .filter(group => group.modules.length > 0)
+  }
+
   const grouped = new Map<number, PlacedModule[]>()
 
   visibleModules.forEach(module => {
-    if (typeof module.slotIndex === 'number') {
+    const globalSlotKey = getGlobalSlotKeyForSideViewGroup(module, options)
+    if (globalSlotKey !== null) {
       const occupiedSlots = module.isDualSlot
-        ? [module.slotIndex, module.slotIndex + 1]
-        : [module.slotIndex]
+        ? [globalSlotKey, globalSlotKey + 1]
+        : [globalSlotKey]
 
       occupiedSlots.forEach(slotKey => {
         const modules = grouped.get(slotKey) ?? []

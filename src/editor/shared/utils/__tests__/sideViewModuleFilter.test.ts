@@ -255,4 +255,25 @@ describe('filterSideViewModules', () => {
       { titleIndex: 4, selectedSlotIndex: 3, moduleIds: ['slot-3'] }
     ])
   })
+
+  it('단내림 가구는 일반 슬롯 뒤의 전역 슬롯 번호를 selectedSlotIndex로 사용한다', () => {
+    const modules = [
+      createModule('normal-0', -2, 0, { zone: 'normal' }),
+      createModule('dropped-0', 2, 0, { zone: 'dropped' })
+    ]
+
+    expect(getSideViewSlotGroups(modules, {
+      spaceInfo: {
+        customColumnCount: 3,
+        droppedCeiling: { enabled: true, columnCount: 2, position: 'right' } as any
+      }
+    }).map(group => ({
+      titleIndex: group.titleIndex,
+      selectedSlotIndex: group.selectedSlotIndex,
+      moduleIds: group.modules.map(module => module.id)
+    }))).toEqual([
+      { titleIndex: 1, selectedSlotIndex: 0, moduleIds: ['normal-0'] },
+      { titleIndex: 4, selectedSlotIndex: 3, moduleIds: ['dropped-0'] }
+    ])
+  })
 })

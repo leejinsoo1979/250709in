@@ -511,7 +511,7 @@ export function usePDFExport() {
       const totalSlotCount = normalSlotCount + (hasDroppedCeiling ? droppedSlotCount : 0);
       const allSlotIndices = Array.from({ length: totalSlotCount }, (_, i) => i);
 
-      const sideSlotGroups = getSideViewSlotGroups(placedModules);
+      const sideSlotGroups = getSideViewSlotGroups(placedModules, { spaceInfo });
       const fallbackSideSlotGroups: SideViewSlotGroup[] = allSlotIndices.map(slotIndex => ({
         slotKey: slotIndex,
         titleIndex: slotIndex + 1,

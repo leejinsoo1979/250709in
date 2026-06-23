@@ -1506,7 +1506,10 @@ export const downloadDxfAsPdf = async (
 
     // 측면도(left)는 슬롯별 그룹 기준으로 페이지 생성
     if (viewDirection === 'left' && placedModules.length > 0) {
-      const sideSlotGroups = getSideViewSlotGroups(placedModules);
+      const sideSlotGroups = getSideViewSlotGroups(placedModules, {
+        spaceInfo,
+        zones: indexing.zones
+      });
 
       try {
         for (const group of sideSlotGroups) {
@@ -2048,7 +2051,10 @@ const renderSheetContent = async (
 
   // ─ 3) Side views (슬롯별) — selectedSlotIndex 필터로 슬롯별 측면 렌더
   await switchSceneViewMode('2D', 'left', 'wireframe');
-  const sideSlotGroups = getSideViewSlotGroups(placedModules);
+  const sideSlotGroups = getSideViewSlotGroups(placedModules, {
+    spaceInfo,
+    zones: ColumnIndexer.calculateSpaceIndexing(spaceInfo).zones
+  });
   const sideDataListRaw: Array<{ slotTitle: number; modules: PlacedModule[]; lines: ParsedLine[]; texts: ParsedText[] }> = [];
   const uiStoreForSheet = useUIStore.getState();
   const originalSelectedSlotForSheet = uiStoreForSheet.selectedSlotIndex;

@@ -121,7 +121,7 @@ export const useDXFExport = () => {
       const downloadedFilenames: string[] = [];
 
       if (drawingType === 'side' || drawingType === 'sideLeft') {
-        const sideSlotGroups = getSideViewSlotGroups(placedModules);
+        const sideSlotGroups = getSideViewSlotGroups(placedModules, { spaceInfo });
         if (sideSlotGroups.length === 0) {
           throw new Error('측면도에 포함할 가구가 없습니다.');
         }
@@ -288,7 +288,7 @@ export const useDXFExport = () => {
       }
 
       if (drawingTypes.includes('side') || drawingTypes.includes('sideLeft')) {
-        const sideSlotGroups = getSideViewSlotGroups(placedModules);
+        const sideSlotGroups = getSideViewSlotGroups(placedModules, { spaceInfo });
 
         for (const group of sideSlotGroups) {
           const slotPatch = { selectedSlotIndex: group.selectedSlotIndex };
