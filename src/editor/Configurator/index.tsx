@@ -7157,6 +7157,12 @@ const Configurator: React.FC = () => {
                         <span style={numLabelStyle}>갭</span>
                         <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-gap-${label}-${gap || 0}`}
                           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || value === '-' || /^-?\d+$/.test(value)) {
+                              onGap(value === '' || value === '-' ? 0 : clampFrameGapValue(parseInt(value, 10)));
+                            }
+                          }}
                           onBlur={(e) => {
                             const nextGap = clampFrameGapValue(parseInt(e.target.value, 10) || 0);
                             onGap(nextGap);
@@ -7167,8 +7173,14 @@ const Configurator: React.FC = () => {
                   ) : (
                     <div style={numCellStyle}>
                       <span style={numLabelStyle}>상단갭</span>
-                      <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-off-gap-${label}-${gap || 0}`}
+                      <input type="text" inputMode="numeric" defaultValue={gap || ''}
                         onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || value === '-' || /^-?\d+$/.test(value)) {
+                            onGap(value === '' || value === '-' ? 0 : clampFrameGapValue(parseInt(value, 10)));
+                          }
+                        }}
                         onBlur={(e) => {
                           const nextGap = clampFrameGapValue(parseInt(e.target.value, 10) || 0);
                           onGap(nextGap);

@@ -8609,12 +8609,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
+            const explicitTopFrameGapMm = typeof topFrameRefMod?.topFrameGap === 'number'
+              ? Math.max(0, Math.round(topFrameRefMod.topFrameGap))
+              : null;
+            const topFrameOffClearanceMm = Math.max(0, Math.round(
+              explicitTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
+            ));
             const topFrameHeight = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              ? topFrameOffClearanceMm
               : Math.max(0, effectiveTopFrameDistance - baseFrameAbsorbed);
             const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
             const topFrameDimensionValue = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              ? topFrameOffClearanceMm
               : Math.max(0, Math.round((hasUpperTopFrameRef ? effectiveTopFrameDistance : topFrameHeight) ?? 0));
             const topFrameDimensionHeight = isTopFrameOff ? topFrameHeight : (topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue);
             const topSegmentColor = frameDimensionColor;
@@ -10353,12 +10359,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
+            const explicitTopFrameGapMm = typeof topFrameRefMod?.topFrameGap === 'number'
+              ? Math.max(0, Math.round(topFrameRefMod.topFrameGap))
+              : null;
+            const topFrameOffClearanceMm = Math.max(0, Math.round(
+              explicitTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
+            ));
             const topFrameHeight = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              ? topFrameOffClearanceMm
               : Math.max(0, effectiveTopFrameDistance - baseFrameAbsorbed);
             const hasUpperTopFrameRef = getSideCategory(topFrameRefMod) === 'upper';
             const topFrameDimensionValue = isTopFrameOff
-              ? Math.max(0, Math.round(shelfSplitDynamicTopFrame ?? computedTopClearance ?? topFrameRefMod?.topFrameGap ?? 0))
+              ? topFrameOffClearanceMm
               : Math.max(0, Math.round((hasUpperTopFrameRef ? effectiveTopFrameDistance : topFrameHeight) ?? 0));
             const topFrameDimensionHeight = isTopFrameOff ? topFrameHeight : (topFrameHeight > 0 ? topFrameHeight : topFrameDimensionValue);
             const topSegmentColor = frameDimensionColor;

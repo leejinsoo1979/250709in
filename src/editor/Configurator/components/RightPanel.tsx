@@ -1045,7 +1045,12 @@ const GuideSlotFrameRow = React.memo(({
                 type="text"
                 inputMode="numeric"
                 defaultValue={gap || ''}
-                key={`${label}-${type}-gap-${gap}`}
+                key={`${label}-${type}-gap`}
+                onChange={(e) => {
+                  if (e.target.value === '' || e.target.value === '-' || /^-?\d+$/.test(e.target.value)) {
+                    commitGap(e.target.value);
+                  }
+                }}
                 onBlur={(e) => commitGap(e.target.value)}
                 style={inputStyle}
               />
@@ -1060,7 +1065,12 @@ const GuideSlotFrameRow = React.memo(({
               type="text"
               inputMode="numeric"
               defaultValue={(type === 'top' ? gap : floatHeight) || ''}
-              key={`${label}-${type}-off-${type === 'top' ? gap : floatHeight}`}
+              key={`${label}-${type}-off`}
+              onChange={(e) => {
+                if (e.target.value === '' || e.target.value === '-' || /^-?\d+$/.test(e.target.value)) {
+                  commit(e.target.value, type === 'top' ? onGapChange : (onFloatChange || (() => undefined)), 0, 2000);
+                }
+              }}
               onBlur={(e) => commit(e.target.value, type === 'top' ? onGapChange : (onFloatChange || (() => undefined)), 0, 2000)}
               style={inputStyle}
             />
