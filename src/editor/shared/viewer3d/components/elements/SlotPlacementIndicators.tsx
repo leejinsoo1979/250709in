@@ -2076,7 +2076,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // 비분할 키큰장 슬롯 = 몰딩 + 상부섹션 + 하부섹션 + 하단 구간(걸레받이 또는 띄움)
     // 상단몰딩/하단 구간은 우측바와 연동되도록 frameSize.top / baseConfig 사용
     const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
-    const rawGlobalTopGap = (spaceInfo.frameSize as any)?.topGap;
+    const rawGlobalTopGap = guideTopFrameAllMode ? (spaceInfo.frameSize as any)?.topGap : undefined;
     const gMoldingGap = Math.max(0, rawGlobalTopGap ?? 0);
     const resolveFrameRawSize = (
       rawSize: number | undefined,
@@ -2616,7 +2616,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       )
     );
     const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-      getSlotTopEnabled(slot) ? (slot.topFrameGap ?? 0) : (slot.topFrameGap ?? gMoldingGap)
+      getSlotTopEnabled(slot)
+        ? (slot.topFrameGap ?? 0)
+        : (slot.topFrameGap ?? (guideTopFrameAllMode ? gMoldingGap : 0))
     );
     const getSlotTopVisibleSize = (slot: FreePlacementGuideSlot) => (
       getSlotTopEnabled(slot) ? Math.max(0, getSlotTopThickness(slot)) : 0
@@ -2909,7 +2911,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                       topGap,
                       () => updateGuideSlotFrame(slot.id, {
                         hasTopFrame: !enabled,
-                        topFrameGap: enabled ? topGap : 0,
+                        topFrameGap: enabled ? (slot.topFrameGap ?? 0) : 0,
                         topFrameThickness: thickness
                       }),
                       (v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v }),

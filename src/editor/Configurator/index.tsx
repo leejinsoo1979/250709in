@@ -7118,7 +7118,7 @@ const Configurator: React.FC = () => {
               )
             );
             const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-              Math.max(0, defaultIfZero(slot.topFrameGap, globalTopGap))
+              Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? globalTopGap : 0))
             );
             const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
             const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
@@ -7345,7 +7345,7 @@ const Configurator: React.FC = () => {
                           gap,
                           () => updateGuideSlotFrame(slot.id, {
                             hasTopFrame: !enabled,
-                            topFrameGap: enabled ? gap : 0,
+                            topFrameGap: enabled ? (slot.topFrameGap ?? 0) : 0,
                             topFrameThickness: thickness
                           }),
                           (v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v }),

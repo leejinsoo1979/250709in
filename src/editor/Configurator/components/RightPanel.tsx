@@ -1797,7 +1797,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 )
               );
               const getSlotTopGap = (slot: FreePlacementGuideSlot) => (
-                Math.max(0, defaultIfZero(slot.topFrameGap, globalTopGap))
+                Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? globalTopGap : 0))
               );
               const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
               const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
@@ -1925,7 +1925,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             gap={gap}
                             onToggle={() => updateGuideSlotFrame(slot.id, {
                               hasTopFrame: !enabled,
-                              topFrameGap: enabled ? gap : 0,
+                              topFrameGap: enabled ? (slot.topFrameGap ?? 0) : 0,
                               topFrameThickness: thickness
                             })}
                             onSizeChange={(v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v })}
