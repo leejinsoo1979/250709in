@@ -1924,7 +1924,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         const thickness = getSlotTopThickness(slot);
                         return (
                           <GuideSlotFrameRow
-                            key={`guide-top-${slot.id}`}
+                            key={`guide-top-${slot.id}-${enabled ? 'on' : 'off'}`}
                             label={`슬롯 ${idx + 1}`}
                             enabled={enabled}
                             type="top"

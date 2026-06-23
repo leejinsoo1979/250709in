@@ -2726,9 +2726,22 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       transition: 'left 0.2s',
       boxShadow: enabled ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.22)'
     });
-    const frameField = (labelText: string, value: number, commit: (v: number) => void, keyName: string, min = 0, max = 9999, compact = false) => (
+    const frameField = (
+      labelText: string,
+      value: number,
+      commit: (v: number) => void,
+      keyName: string,
+      min = 0,
+      max = 9999,
+      compact = false,
+      forceLabel = false
+    ) => (
       <label key={keyName} style={{ display: 'flex', alignItems: 'center', gap: compact ? 1 : 2 }}>
-        {labelText && !compact && <span style={{ fontSize: 9, fontWeight: 800, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap' }}>{labelText}</span>}
+        {labelText && (!compact || forceLabel) && (
+          <span style={{ fontSize: compact ? 8 : 9, fontWeight: 800, color: guideColor, lineHeight: 1, whiteSpace: 'nowrap' }}>
+            {labelText}
+          </span>
+        )}
         <input
           type="number"
           aria-label={labelText || keyName}
@@ -2768,7 +2781,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           {frameField('갭', gap, onGap, `${labelText}-top-gap`, 0, 2000, compact)}
         </>
       ) : (
-        frameField(compact ? '갭' : '상단갭', gap, onGap, `${labelText}-top-clearance`, 0, 2000, compact)
+        frameField('상단갭', gap, onGap, `${labelText}-top-clearance`, 0, 2000, compact, true)
       );
 
       if (compact) {
@@ -2909,7 +2922,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               const slotTopControlY = getSlotFrameControlY(slot, 'top');
               return (
                 <Html
-                  key={`guide-top-frame-slot-${slot.id}`}
+                  key={`guide-top-frame-slot-${slot.id}-${enabled ? 'on' : 'off'}`}
                   position={[slotCenterX, slotTopControlY, guideZ]}
                   center zIndexRange={[200, 0]} style={{ pointerEvents: 'auto', userSelect: 'none' }}
                 >

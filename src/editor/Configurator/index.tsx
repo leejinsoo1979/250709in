@@ -7154,7 +7154,7 @@ const Configurator: React.FC = () => {
               onOffset: (value: number) => void,
               onGap: (value: number, nextSize?: number) => void
             ) => (
-              <div key={`guide-top-row-${label}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+              <div key={`guide-top-row-${label}-${enabled ? 'on' : 'off'}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
                 <button onClick={onToggle} className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`} />
                 <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
