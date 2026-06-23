@@ -8618,7 +8618,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? Math.max(0, Math.round(topFrameRefMod.topFrameGap))
               : null;
             const topFrameOffClearanceMm = Math.max(0, Math.round(
-              explicitTopFrameGapMm ?? globalTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
+              globalTopFrameGapMm ?? explicitTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
             ));
             const topFrameHeight = isTopFrameOff
               ? topFrameOffClearanceMm
@@ -10380,7 +10380,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? Math.max(0, Math.round(topFrameRefMod.topFrameGap))
               : null;
             const topFrameOffClearanceMm = Math.max(0, Math.round(
-              explicitTopFrameGapMm ?? globalTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
+              globalTopFrameGapMm ?? explicitTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
             ));
             const topFrameHeight = isTopFrameOff
               ? topFrameOffClearanceMm
