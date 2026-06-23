@@ -8563,7 +8563,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? bottomFrameRefMod
               : findSideCompanion('lower');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
-            const isTopFrameOff = topFrameRefMod?.hasTopFrame === false;
+            const isGlobalTopFrameOff = (spaceInfo.guideTopFrameAllMode ?? true)
+              && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
+            const isTopFrameOff = topFrameRefMod?.hasTopFrame === false || isGlobalTopFrameOff;
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
             // 하부 OFF 시 상단몰딩에 흡수된 걸래받이 크기 (FurnitureItem의 topDelta 계산과 동일)
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -8609,11 +8611,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
+            const globalTopFrameGapMm = isGlobalTopFrameOff && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+              ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
+              : null;
             const explicitTopFrameGapMm = typeof topFrameRefMod?.topFrameGap === 'number'
               ? Math.max(0, Math.round(topFrameRefMod.topFrameGap))
               : null;
             const topFrameOffClearanceMm = Math.max(0, Math.round(
-              explicitTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
+              explicitTopFrameGapMm ?? globalTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
             ));
             const topFrameHeight = isTopFrameOff
               ? topFrameOffClearanceMm
@@ -8673,6 +8678,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
               const mid = viewMod.moduleId || '';
               const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+              const hasExplicitCustomSections = Array.isArray((viewMod as any)?.customSections);
               const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
               if (sections.length < 2) return [] as number[];
               const bodyBottomMm = sideBodyStartMm;
@@ -8689,6 +8695,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 && !mid.includes('shelf-split');
               const isShelfSplit = mid.includes('shelf-split');
               if (isEntryway) {
+                if (hasExplicitCustomSections) {
+                  return rawHeights.map(h => Math.max(0, Math.round(h || 0)));
+                }
                 const fixedSum = rawHeights.slice(1).reduce((sum, h) => sum + h, 0);
                 return [Math.max(0, sectionBasisH - fixedSum), ...rawHeights.slice(1)];
               }
@@ -8714,6 +8723,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? Math.min(remainingUpperH, Math.max(0, Math.round(rawHeights[1] || 0)))
                   : remainingUpperH;
                 return [newLowerH, upperH];
+              }
+              if (hasExplicitCustomSections) {
+                return rawHeights.map(h => Math.max(0, Math.round(h || 0)));
               }
               const fixedSum = rawHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
               return [...rawHeights.slice(0, -1), Math.max(0, sectionBasisH - fixedSum)];
@@ -10314,7 +10326,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? bottomFrameRefMod
               : findSideCompanion('lower');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
-            const isTopFrameOff = topFrameRefMod?.hasTopFrame === false;
+            const isGlobalTopFrameOff = (spaceInfo.guideTopFrameAllMode ?? true)
+              && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
+            const isTopFrameOff = topFrameRefMod?.hasTopFrame === false || isGlobalTopFrameOff;
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const canAbsorbBaseInSideView = bottomFrameRefCategory === 'full' || bottomFrameRefCategory === 'lower';
@@ -10359,11 +10373,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
+            const globalTopFrameGapMm = isGlobalTopFrameOff && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+              ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
+              : null;
             const explicitTopFrameGapMm = typeof topFrameRefMod?.topFrameGap === 'number'
               ? Math.max(0, Math.round(topFrameRefMod.topFrameGap))
               : null;
             const topFrameOffClearanceMm = Math.max(0, Math.round(
-              explicitTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
+              explicitTopFrameGapMm ?? globalTopFrameGapMm ?? shelfSplitDynamicTopFrame ?? computedTopClearance ?? 0
             ));
             const topFrameHeight = isTopFrameOff
               ? topFrameOffClearanceMm
@@ -10422,6 +10439,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (!viewMod || viewModCategoryForFrame !== 'full') return [] as number[];
               const mid = viewMod.moduleId || '';
               const modData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+              const hasExplicitCustomSections = Array.isArray((viewMod as any)?.customSections);
               const sections = (((viewMod as any).customSections || modData?.modelConfig?.sections) as any[] | undefined) || [];
               if (sections.length < 2) return [] as number[];
               const bodyBottomMm = sideBodyStartMm;
@@ -10438,6 +10456,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 && !mid.includes('shelf-split');
               const isShelfSplit = mid.includes('shelf-split');
               if (isEntryway) {
+                if (hasExplicitCustomSections) {
+                  return rawHeights.map(h => Math.max(0, Math.round(h || 0)));
+                }
                 const fixedSum = rawHeights.slice(1).reduce((sum, h) => sum + h, 0);
                 return [Math.max(0, sectionBasisH - fixedSum), ...rawHeights.slice(1)];
               }
@@ -10463,6 +10484,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? Math.min(remainingUpperH, Math.max(0, Math.round(rawHeights[1] || 0)))
                   : remainingUpperH;
                 return [newLowerH, upperH];
+              }
+              if (hasExplicitCustomSections) {
+                return rawHeights.map(h => Math.max(0, Math.round(h || 0)));
               }
               const fixedSum = rawHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
               return [...rawHeights.slice(0, -1), Math.max(0, sectionBasisH - fixedSum)];
