@@ -249,6 +249,8 @@ export const filterVisiblePdfDrawingItems = <
 
 type HingeCoordinateDrawingTarget = 'door' | 'body-front' | 'body-side';
 
+const PDF_BODY_DRAWING_LAYERS = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
+
 const isHingedDoorModule = (module: PlacedModule): boolean => {
   const moduleId = module.moduleId || '';
   return !(
@@ -296,6 +298,23 @@ const resolvePdfDoorDrawingItemForHingeCoordinates = (
     ...module,
     ...(shouldBuildDoor ? { hasDoor: true } : {})
   }, doorOnlyModuleData);
+};
+
+const resolvePlacedModuleWidthForPdf = (
+  spaceInfo: SpaceInfo,
+  module: PlacedModule
+): number => {
+  const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+  const width = [
+    module.freeWidth,
+    module.customWidth,
+    module.adjustedWidth,
+    module.slotCustomWidth,
+    module.moduleWidth,
+    moduleData?.dimensions?.width
+  ].find(value => typeof value === 'number' && Number.isFinite(value) && value > 0);
+
+  return width ?? 0;
 };
 
 const addCross = (
@@ -711,6 +730,57 @@ const getParsedLineBounds = (lines: ParsedLine[]) => {
   };
 };
 
+const appendFrontNoDoorFurnitureWidthDimensions = (
+  data: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const bodyBounds = getParsedLineBounds(data.lines.filter(line => PDF_BODY_DRAWING_LAYERS.has(line.layer)));
+  if (!bodyBounds || placedModules.length === 0) return data;
+
+  const lines = [...data.lines];
+  const texts = [...data.texts];
+  const dimensionY = bodyBounds.maxY + Math.max(48, Math.min(90, bodyBounds.height * 0.035));
+  const extensionTopY = dimensionY - 8;
+  const tickSize = 8;
+  const centerOffsetX = spaceInfo.width / 2;
+
+  placedModules.forEach(module => {
+    const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
+    if (moduleWidth <= 0) return;
+
+    const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
+    const leftX = centerX - moduleWidth / 2;
+    const rightX = centerX + moduleWidth / 2;
+    const label = String(Math.round(moduleWidth));
+    const alreadyHasTopWidth = texts.some(text => (
+      text.layer === 'DIMENSIONS' &&
+      text.text === label &&
+      text.y > bodyBounds.maxY &&
+      Math.abs(text.x - centerX) <= Math.max(24, moduleWidth * 0.08)
+    ));
+    if (alreadyHasTopWidth) return;
+
+    lines.push(
+      { x1: leftX, y1: dimensionY, x2: rightX, y2: dimensionY, layer: 'DIMENSIONS', color: 1 },
+      { x1: leftX, y1: bodyBounds.maxY, x2: leftX, y2: extensionTopY, layer: 'DIMENSIONS', color: 1 },
+      { x1: rightX, y1: bodyBounds.maxY, x2: rightX, y2: extensionTopY, layer: 'DIMENSIONS', color: 1 },
+      { x1: leftX, y1: dimensionY - tickSize / 2, x2: leftX, y2: dimensionY + tickSize / 2, layer: 'DIMENSIONS', color: 1 },
+      { x1: rightX, y1: dimensionY - tickSize / 2, x2: rightX, y2: dimensionY + tickSize / 2, layer: 'DIMENSIONS', color: 1 }
+    );
+    texts.push({
+      x: centerX,
+      y: dimensionY + 14,
+      text: label,
+      height: 20,
+      layer: 'DIMENSIONS',
+      color: 1
+    });
+  });
+
+  return { lines, texts };
+};
+
 const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number; y: number }> => {
   const sourceBounds = new Map<string, ParsedLine[]>();
   hingeLines.forEach(line => {
@@ -817,8 +887,7 @@ const buildActualBodyFrontHingeDimensionData = (
   placedModules: PlacedModule[],
   hingeReference?: { lines: ParsedLine[]; texts: ParsedText[] }
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  const bodyLayers = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
-  const bodyBounds = getParsedLineBounds(base.lines.filter(line => bodyLayers.has(line.layer)));
+  const bodyBounds = getParsedLineBounds(base.lines.filter(line => PDF_BODY_DRAWING_LAYERS.has(line.layer)));
   if (!bodyBounds) return { lines: [], texts: [] };
 
   const lines: ParsedLine[] = [];
@@ -960,8 +1029,7 @@ const buildActualBodyHingeDimensionData = (
   placedModules: PlacedModule[],
   target: HingeCoordinateDrawingTarget
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  const bodyLayers = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
-  const bodyBounds = getParsedLineBounds(base.lines.filter(line => bodyLayers.has(line.layer)));
+  const bodyBounds = getParsedLineBounds(base.lines.filter(line => PDF_BODY_DRAWING_LAYERS.has(line.layer)));
   if (!bodyBounds) return { lines: [], texts: [] };
 
   const lines: ParsedLine[] = [];
@@ -1395,7 +1463,7 @@ export const downloadDxfAsPdf = async (
       // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
       const frontNoDoorData = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
       const doorlessData = filterDoorlessDrawingData(frontNoDoorData.lines, frontNoDoorData.texts);
-      const { lines, texts } = doorlessData;
+      const { lines, texts } = appendFrontNoDoorFurnitureWidthDimensions(doorlessData, spaceInfo, placedModules);
 
       // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
       const doorLines = lines.filter(l => l.layer === 'DOOR');
@@ -1846,7 +1914,7 @@ const renderSheetContent = async (
   const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
   const frontNoRaw = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
   const frontNoDoorless = filterDoorlessDrawingData(frontNoRaw.lines, frontNoRaw.texts);
-  const frontNo = frontNoDoorless;
+  const frontNo = appendFrontNoDoorFurnitureWidthDimensions(frontNoDoorless, spaceInfo, placedModules);
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
   const { lines: doorOnlyLines, texts: doorOnlyTexts } = appendHingeCoordinateDrawingData(
     filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts),
