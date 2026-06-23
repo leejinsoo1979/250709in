@@ -105,6 +105,30 @@ const getModuleDepthMm = (
   return module.upperSectionDepth || module.lowerSectionDepth || module.customDepth || module.freeDepth || moduleData?.dimensions.depth || 600;
 };
 
+const getTopViewModuleDepthMm = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null
+): number => {
+  const sectionDepths = Array.isArray((module as any).sectionDepths)
+    ? (module as any).sectionDepths.filter((depth: unknown): depth is number =>
+        typeof depth === 'number' && Number.isFinite(depth) && depth > 0
+      )
+    : [];
+  const sectionDepth = sectionDepths.length > 0 ? Math.max(...sectionDepths) : undefined;
+  const depth = [
+    module.customDepth,
+    module.freeDepth,
+    sectionDepth,
+    module.upperSectionDepth,
+    module.lowerSectionDepth,
+    module.lowerLeftSectionDepth,
+    module.lowerRightSectionDepth,
+    getModuleDepthMm(module, moduleData)
+  ].find(value => typeof value === 'number' && Number.isFinite(value) && value > 0);
+
+  return depth ?? 600;
+};
+
 const getModuleWidthMm = (
   module: PlacedModule,
   moduleData: ReturnType<typeof getModuleById> | null
@@ -2515,7 +2539,10 @@ export const generateExternalDimensions = (
       // 측면뷰에서 씬에서 추출한 실제 가구 깊이 사용
       furnitureDepthMm = actualFurnitureDepth;
     } else if (placedModules && placedModules.length > 0) {
-      const moduleDepths = placedModules.map(m => m.customDepth || 600);
+      const moduleDepths = placedModules.map(m => {
+        const moduleData = resolveModuleData(m, spaceInfo);
+        return getTopViewModuleDepthMm(m, moduleData);
+      });
       furnitureDepthMm = Math.max(...moduleDepths);
     }
 
