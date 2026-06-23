@@ -4407,6 +4407,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상하부장 동시배치 시 leftmostMod가 상부장이면 leftLowerMod(하부장)의 hasBase 참조
           const baseRefMod = leftLowerMod ?? leftmostMod;
           const topRefMod_L = leftUpperMod ?? leftmostMod;
+          const isGlobalTopFrameOff_L = (spaceInfo.guideTopFrameAllMode ?? true)
+            && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
+          const globalTopGapForDim_L = isGlobalTopFrameOff_L && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+            ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
+            : null;
+          const isTopFrameOff_L = topRefMod_L?.hasTopFrame === false || isGlobalTopFrameOff_L;
+          const topGapClearance_L = isTopFrameOff_L
+            ? Math.max(0, Math.round(globalTopGapForDim_L ?? topRefMod_L?.topFrameGap ?? 0))
+            : 0;
           const actualBottomSize = baseRefMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
           const resolvedTopClearance_L = (() => {
             if (!topRefMod_L) return null;
@@ -4419,9 +4428,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
             return Math.max(0, Math.round(effectiveH - floorFinishHeightMmGlobal - actualBottomSize - bodyHeight));
           })();
-          const actualTopSize = topRefMod_L?.hasTopFrame === false ? 0 : (resolvedTopClearance_L ?? (topRefMod_L?.topFrameThickness !== undefined ? topRefMod_L.topFrameThickness : globalTopFrame));
-          const actualTopClearance = topRefMod_L?.hasTopFrame === false
-            ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
+          const actualTopSize = isTopFrameOff_L ? 0 : (resolvedTopClearance_L ?? (topRefMod_L?.topFrameThickness !== undefined ? topRefMod_L.topFrameThickness : globalTopFrame));
+          const actualTopClearance = isTopFrameOff_L
+            ? topGapClearance_L
             : actualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -4449,11 +4458,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (isLeftGlassForH) {
               // 유리장은 슬롯/자유배치 모두 다른 키큰장처럼 공간 기준으로 측면 H를 산출한다.
               // 기존 배치값 freeHeight/customHeight가 남아 있어도 상하부 토글 흡수분이 치수가이드에 반영되어야 한다.
-              const topFrameMm = topRefMod_L?.hasTopFrame === false
+              const topFrameMm = isTopFrameOff_L
                 ? 0
                 : (topRefMod_L?.topFrameThickness ?? globalTopFrame ?? 0);
-              const topGapMm = topRefMod_L?.hasTopFrame === false
-                ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
+              const topGapMm = isTopFrameOff_L
+                ? topGapClearance_L
                 : 0;
               const bottomClearanceMm = leftmostMod?.hasBase === false
                 ? Math.max(0, Math.round(leftmostMod?.individualFloatHeight ?? 0))
@@ -4564,15 +4573,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? 0
             : Math.max(0, Math.min(bottomFrameH, (baseRefMod as any)?.baseFrameGap ?? 0));
           const bottomFrameVisibleH = Math.max(0, bottomFrameH - bottomFrameGapH);
-          const leftTopGapForDim = topRefMod_L?.hasTopFrame === false
-            ? Math.max(0, Math.round(topRefMod_L?.topFrameGap ?? 0))
+          const leftTopGapForDim = isTopFrameOff_L
+            ? topGapClearance_L
             : 0;
           if (isFreePlacement && leftmostMod?.hasBase === false && topRefMod_L?.hasTopFrame !== false && leftCategoryResolved === 'full') {
             const absorbedBase = leftmostMod.baseFrameHeight ?? globalBottomFrameH;
             const floatH = leftmostMod.individualFloatHeight ?? 0;
             furnitureH += (absorbedBase - floatH);
           }
-          if (isFreePlacement && topRefMod_L?.hasTopFrame === false && leftCategoryResolved === 'full') {
+          if (isFreePlacement && isTopFrameOff_L && leftCategoryResolved === 'full') {
             furnitureH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - leftTopGapForDim);
           }
           // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값(actualTopSize), 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
@@ -4599,8 +4608,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (sections && sections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이 - 띄움)
               // 상단몰딩 OFF: 슬롯/자유 모두 topFrameGap만큼 공간이 비므로 섹션 영역에서 차감
-              const realTopFrame = topRefMod_L?.hasTopFrame === false
-                ? (isFreePlacement ? leftTopGapForDim : ((topRefMod_L as any).topFrameGap ?? 0))
+              const realTopFrame = isTopFrameOff_L
+                ? leftTopGapForDim
                 : (topRefMod_L?.topFrameThickness ?? globalTopFrame);
               // 띄움 배치: hasBase=false 이면 걸래받이 자리가 띄움 공간으로 대체됨
               // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
@@ -5228,14 +5237,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? Math.max(0, Math.round(effectiveH - floorFinishForHeight - bottomFrameH - sectionHeights.reduce((sum, h) => sum + h, 0)))
                   : null;
                 // 토글 OFF + 사용자 입력 상단갭이 있으면 그 값을 표시 (몰딩 자리가 빈 공간)
-                const userTopGap = topRefMod_L?.hasTopFrame === false
-                  ? Math.max(0, Math.round(shelfSplitTopFrameForDim ?? topRefMod_L?.topFrameGap ?? 0))
+                const userTopGap = isTopFrameOff_L
+                  ? topGapClearance_L
                   : 0;
-                const displayTopFrame = topRefMod_L?.hasTopFrame === false
+                const displayTopFrame = isTopFrameOff_L
                   ? userTopGap
                   : Math.max(0, Math.round(actualTopSize));
                 if (displayTopFrame <= 0) return null;
-                const topGapH = topRefMod_L?.hasTopFrame === false
+                const topGapH = isTopFrameOff_L
                   ? Math.max(0, Math.min(displayTopFrame, userTopGap))
                   : 0;
                 const visibleTopFrameH = Math.max(0, displayTopFrame - topGapH);
@@ -5243,7 +5252,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const sectionSplitTopRef = hasSectionSplit
                   ? mmToThreeUnits(floorFinishForHeight + bottomFrameH + sectionHeights.reduce((sum, h) => sum + h, 0))
                   : singleLowerTopRef;
-                const topFrameBottomRef = topRefMod_L?.hasTopFrame === false
+                const topFrameBottomRef = isTopFrameOff_L
                   ? effectiveCeilingY - mmToThreeUnits(userTopGap)
                   : (isShelfSplitTopDim ? effectiveCeilingY - mmToThreeUnits(displayTopFrame) : (hasDualCabinet ? upperCabinetTopY : sectionSplitTopRef));
                 const topGapBottomRef = effectiveCeilingY - mmToThreeUnits(topGapH);
@@ -5500,6 +5509,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
           // 상하부장 동시배치 시 rightmostMod가 하부장이면 rightUpperMod(상부장)의 hasTopFrame 참조
           const topRefMod_R = rightUpperMod ?? rightmostMod;
+          const isGlobalTopFrameOff_R = (spaceInfo.guideTopFrameAllMode ?? true)
+            && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
+          const globalTopGapForDim_R = isGlobalTopFrameOff_R && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+            ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
+            : null;
+          const isTopFrameOff_R = topRefMod_R?.hasTopFrame === false || isGlobalTopFrameOff_R;
+          const topGapClearance_R = isTopFrameOff_R
+            ? Math.max(0, Math.round(globalTopGapForDim_R ?? topRefMod_R?.topFrameGap ?? 0))
+            : 0;
           const rActualBottomSize = rightLowerMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
           const rResolvedTopClearance = (() => {
             if (!topRefMod_R) return null;
@@ -5512,9 +5530,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (typeof bodyHeight !== 'number' || bodyHeight <= 0) return null;
             return Math.max(0, Math.round(rEffectiveH - floorFinishHeightMmGlobal - rActualBottomSize - bodyHeight));
           })();
-          const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (rResolvedTopClearance ?? (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame));
-          const rActualTopClearance = topRefMod_R?.hasTopFrame === false
-            ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
+          const rActualTopSize = isTopFrameOff_R ? 0 : (rResolvedTopClearance ?? (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame));
+          const rActualTopClearance = isTopFrameOff_R
+            ? topGapClearance_R
             : rActualTopSize;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -5541,11 +5559,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const isRightGlassForH = !!rightmostMod.moduleId?.includes('glass-cabinet');
             if (isRightGlassForH) {
               // 유리장은 슬롯/자유배치 모두 다른 키큰장처럼 공간 기준으로 측면 H를 산출한다.
-              const topFrameMm = topRefMod_R?.hasTopFrame === false
+              const topFrameMm = isTopFrameOff_R
                 ? 0
                 : (topRefMod_R?.topFrameThickness ?? rGlobalTopFrame ?? 0);
-              const topGapMm = topRefMod_R?.hasTopFrame === false
-                ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
+              const topGapMm = isTopFrameOff_R
+                ? topGapClearance_R
                 : 0;
               const bottomClearanceMm = rightLowerMod?.hasBase === false
                 ? Math.max(0, Math.round(rightLowerMod?.individualFloatHeight ?? 0))
@@ -5653,15 +5671,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? 0
             : Math.max(0, Math.min(rBottomFrameH, (rBaseRefMod as any)?.baseFrameGap ?? 0));
           const rBottomFrameVisibleH = Math.max(0, rBottomFrameH - rBottomFrameGapH);
-          const rTopGapForDim = topRefMod_R?.hasTopFrame === false
-            ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
+          const rTopGapForDim = isTopFrameOff_R
+            ? topGapClearance_R
             : 0;
           if (isFreePlacement && rightmostMod?.hasBase === false && topRefMod_R?.hasTopFrame !== false && rightCategoryResolved === 'full') {
             const rAbsorbedBase = rightmostMod.baseFrameHeight ?? rGlobalBottomFrameH;
             const rFloatH = rightmostMod.individualFloatHeight ?? 0;
             rFurnitureH += (rAbsorbedBase - rFloatH);
           }
-          if (isFreePlacement && topRefMod_R?.hasTopFrame === false && rightCategoryResolved === 'full') {
+          if (isFreePlacement && isTopFrameOff_R && rightCategoryResolved === 'full') {
             rFurnitureH = Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rTopGapForDim);
           }
           // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값, 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
@@ -5683,8 +5701,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
               // 상단몰딩 OFF: 슬롯/자유 모두 topFrameGap만큼 공간이 비므로 섹션 영역에서 차감
-              const rRealTopFrame = topRefMod_R?.hasTopFrame === false
-                ? (isFreePlacement ? rTopGapForDim : ((topRefMod_R as any).topFrameGap ?? 0))
+              const rRealTopFrame = isTopFrameOff_R
+                ? rTopGapForDim
                 : (topRefMod_R?.topFrameThickness ?? rGlobalTopFrame);
               const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
                 ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)
@@ -6272,14 +6290,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 상단몰딩/상단갭 구분 틱 & 치수 — 좌측과 동일하게 표시 */}
               {(() => {
                 const rIsShelfSplitTopDim = !!rightmostMod?.moduleId?.includes('shelf-split') && rSectionHeights.length >= 2;
-                const userTopGap = topRefMod_R?.hasTopFrame === false
-                  ? Math.max(0, Math.round(topRefMod_R?.topFrameGap ?? 0))
+                const userTopGap = isTopFrameOff_R
+                  ? topGapClearance_R
                   : 0;
-                const displayTopFrame = topRefMod_R?.hasTopFrame === false
+                const displayTopFrame = isTopFrameOff_R
                   ? userTopGap
                   : Math.max(0, Math.round(rActualTopSize));
                 if (displayTopFrame <= 0) return null;
-                const topGapH = topRefMod_R?.hasTopFrame === false
+                const topGapH = isTopFrameOff_R
                   ? Math.max(0, Math.min(displayTopFrame, userTopGap))
                   : 0;
                 const visibleTopFrameH = Math.max(0, displayTopFrame - topGapH);
@@ -6287,7 +6305,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const rSectionSplitTopRef = rHasSectionSplit
                   ? mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rSectionHeights.reduce((sum, h) => sum + h, 0))
                   : rSingleLowerTopRef;
-                const topFrameBottomRef = topRefMod_R?.hasTopFrame === false
+                const topFrameBottomRef = isTopFrameOff_R
                   ? rEffectiveCeilingY - mmToThreeUnits(userTopGap)
                   : (rIsShelfSplitTopDim ? rEffectiveCeilingY - mmToThreeUnits(displayTopFrame) : (rHasDualCabinet ? rUpperCabinetTopY : rSectionSplitTopRef));
                 const topGapBottomRef = rEffectiveCeilingY - mmToThreeUnits(topGapH);

@@ -955,6 +955,23 @@ const GuideSlotFrameRow = React.memo(({
   onFloatChange?: (v: number) => void;
 }) => {
   const visibleSize = Math.max(0, size);
+  const displayOffValue = type === 'top' ? gap : floatHeight;
+  const [sizeText, setSizeText] = React.useState(visibleSize ? String(visibleSize) : '');
+  const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+  const [gapText, setGapText] = React.useState(gap ? String(gap) : '');
+  const [offText, setOffText] = React.useState(displayOffValue ? String(displayOffValue) : '');
+  React.useEffect(() => {
+    setSizeText(visibleSize ? String(visibleSize) : '');
+  }, [visibleSize]);
+  React.useEffect(() => {
+    setOffsetText(offset !== 0 ? String(offset) : '');
+  }, [offset]);
+  React.useEffect(() => {
+    setGapText(gap ? String(gap) : '');
+  }, [gap]);
+  React.useEffect(() => {
+    setOffText(displayOffValue ? String(displayOffValue) : '');
+  }, [displayOffValue]);
   const numberBoxStyle: React.CSSProperties = {
     flex: 1,
     display: 'flex',
@@ -1022,8 +1039,10 @@ const GuideSlotFrameRow = React.memo(({
               <input
                 type="text"
                 inputMode="numeric"
-                defaultValue={visibleSize || ''}
-                key={`${label}-${type}-size-${visibleSize}`}
+                value={sizeText}
+                onChange={(e) => {
+                  if (e.target.value === '' || /^\d+$/.test(e.target.value)) setSizeText(e.target.value);
+                }}
                 onBlur={(e) => commit(e.target.value, onSizeChange)}
                 style={inputStyle}
               />
@@ -1033,8 +1052,10 @@ const GuideSlotFrameRow = React.memo(({
               <input
                 type="text"
                 inputMode="numeric"
-                defaultValue={offset || ''}
-                key={`${label}-${type}-offset-${offset}`}
+                value={offsetText}
+                onChange={(e) => {
+                  if (e.target.value === '' || e.target.value === '-' || /^-?\d+$/.test(e.target.value)) setOffsetText(e.target.value);
+                }}
                 onBlur={(e) => commit(e.target.value, onOffsetChange, -500, 500)}
                 style={inputStyle}
               />
@@ -1044,10 +1065,10 @@ const GuideSlotFrameRow = React.memo(({
               <input
                 type="text"
                 inputMode="numeric"
-                defaultValue={gap || ''}
-                key={`${label}-${type}-gap`}
+                value={gapText}
                 onChange={(e) => {
                   if (e.target.value === '' || e.target.value === '-' || /^-?\d+$/.test(e.target.value)) {
+                    setGapText(e.target.value);
                     commitGap(e.target.value);
                   }
                 }}
@@ -1064,10 +1085,10 @@ const GuideSlotFrameRow = React.memo(({
             <input
               type="text"
               inputMode="numeric"
-              defaultValue={(type === 'top' ? gap : floatHeight) || ''}
-              key={`${label}-${type}-off`}
+              value={offText}
               onChange={(e) => {
                 if (e.target.value === '' || e.target.value === '-' || /^-?\d+$/.test(e.target.value)) {
+                  setOffText(e.target.value);
                   commit(e.target.value, type === 'top' ? onGapChange : (onFloatChange || (() => undefined)), 0, 2000);
                 }
               }}
