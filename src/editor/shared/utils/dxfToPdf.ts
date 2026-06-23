@@ -781,6 +781,71 @@ const appendFrontNoDoorFurnitureWidthDimensions = (
   return { lines, texts };
 };
 
+const addRectOutline = (
+  lines: ParsedLine[],
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  layer: string,
+  color: number
+) => {
+  lines.push(
+    { x1, y1, x2, y2: y1, layer, color },
+    { x1: x2, y1, x2, y2, layer, color },
+    { x1: x2, y1: y2, x2: x1, y2, layer, color },
+    { x1, y1: y2, x2: x1, y2: y1, layer, color }
+  );
+};
+
+const buildSimplifiedTopPlanDrawingData = (
+  source: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const lines = source.lines.filter(line => line.layer === 'DIMENSIONS');
+  const texts = source.texts.filter(text => text.layer === 'DIMENSIONS');
+  const centerOffsetX = spaceInfo.width / 2;
+  const doorThicknessMm = 20;
+
+  placedModules.forEach(module => {
+    const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
+    const moduleDepth = resolvePlacedModuleExportDepth(spaceInfo, module);
+    if (moduleWidth <= 0 || moduleDepth <= 0) return;
+
+    const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
+    const leftX = centerX - moduleWidth / 2;
+    const rightX = centerX + moduleWidth / 2;
+    const frontY = 0;
+    const backY = moduleDepth;
+
+    addRectOutline(lines, leftX, frontY, rightX, backY, 'FURNITURE_PANEL', 1);
+
+    const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
+    const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
+    const doorItems = doorDrawingItem?.items.filter(item => item.type === 'door') ?? [];
+    doorItems.forEach(item => {
+      const doorLeftX = leftX + item.x;
+      const doorRightX = doorLeftX + item.width;
+      const doorFrontY = frontY - doorThicknessMm;
+
+      addRectOutline(lines, doorLeftX, doorFrontY, doorRightX, frontY, 'DOOR', 3);
+
+      const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
+      lines.push({
+        x1: hingeSide === 'left' ? doorLeftX : doorRightX,
+        y1: frontY,
+        x2: hingeSide === 'left' ? doorRightX : doorLeftX,
+        y2: doorFrontY,
+        layer: 'DOOR',
+        color: 3
+      });
+    });
+  });
+
+  return { lines, texts };
+};
+
 const clusterActualHingeCenters = (hingeLines: ParsedLine[]): Array<{ x: number; y: number }> => {
   const sourceBounds = new Map<string, ParsedLine[]>();
   hingeLines.forEach(line => {
@@ -1485,7 +1550,9 @@ export const downloadDxfAsPdf = async (
       // 일반 뷰 (front, top)
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const baseData = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
-      const { lines, texts } = baseData;
+      const { lines, texts } = viewDirection === 'top'
+        ? buildSimplifiedTopPlanDrawingData(baseData, spaceInfo, placedModules)
+        : baseData;
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
 
       if (!hasPdfDrawingData(lines, texts)) {
@@ -1925,7 +1992,11 @@ const renderSheetContent = async (
 
   // ─ 2) Top view
   await switchSceneViewMode('2D', 'top', 'wireframe');
-  const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
+  const topView = buildSimplifiedTopPlanDrawingData(
+    generateViewDataFromDxf(spaceInfo, placedModules, 'top'),
+    spaceInfo,
+    placedModules
+  );
 
   // ─ 3) Side views (슬롯별) — selectedSlotIndex 필터로 슬롯별 측면 렌더
   await switchSceneViewMode('2D', 'left', 'wireframe');
