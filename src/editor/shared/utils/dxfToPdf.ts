@@ -223,6 +223,19 @@ const isDoorSourceLine = (line: { sourceName?: string; sourcePath?: string }): b
   ].some(pattern => source.includes(pattern));
 };
 
+const isDoorDiagonalSourceLine = (line: { sourceName?: string; sourcePath?: string }): boolean => {
+  const source = `${line.sourceName ?? ''} ${line.sourcePath ?? ''}`.toLowerCase();
+  return source.includes('door-diagonal') || source.includes('door_diagonal');
+};
+
+const filterPdfDoorGuideLines = <
+  TLine extends { sourceName?: string; sourcePath?: string },
+  TText
+>(lines: TLine[], texts: TText[]): { lines: TLine[]; texts: TText[] } => ({
+  lines: lines.filter(line => !isDoorDiagonalSourceLine(line)),
+  texts
+});
+
 export const filterDoorlessDrawingData = <
   TLine extends { layer: string; sourceName?: string; sourcePath?: string },
   TText extends { layer: string }
@@ -775,71 +788,6 @@ const appendFrontNoDoorFurnitureWidthDimensions = (
       height: 20,
       layer: 'DIMENSIONS',
       color: 1
-    });
-  });
-
-  return { lines, texts };
-};
-
-const addRectOutline = (
-  lines: ParsedLine[],
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-  layer: string,
-  color: number
-) => {
-  lines.push(
-    { x1, y1, x2, y2: y1, layer, color },
-    { x1: x2, y1, x2, y2, layer, color },
-    { x1: x2, y1: y2, x2: x1, y2, layer, color },
-    { x1, y1: y2, x2: x1, y2: y1, layer, color }
-  );
-};
-
-const buildSimplifiedTopPlanDrawingData = (
-  source: { lines: ParsedLine[]; texts: ParsedText[] },
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[]
-): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  const lines = source.lines.filter(line => line.layer === 'DIMENSIONS');
-  const texts = source.texts.filter(text => text.layer === 'DIMENSIONS');
-  const centerOffsetX = spaceInfo.width / 2;
-  const doorThicknessMm = 20;
-
-  placedModules.forEach(module => {
-    const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
-    const moduleDepth = resolvePlacedModuleExportDepth(spaceInfo, module);
-    if (moduleWidth <= 0 || moduleDepth <= 0) return;
-
-    const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
-    const leftX = centerX - moduleWidth / 2;
-    const rightX = centerX + moduleWidth / 2;
-    const frontY = 0;
-    const backY = moduleDepth;
-
-    addRectOutline(lines, leftX, frontY, rightX, backY, 'FURNITURE_PANEL', 1);
-
-    const moduleData = resolveModuleDataForHingeCoordinates(spaceInfo, module);
-    const doorDrawingItem = resolvePdfDoorDrawingItemForHingeCoordinates(module, moduleData as PdfDoorDrawingModuleData);
-    const doorItems = doorDrawingItem?.items.filter(item => item.type === 'door') ?? [];
-    doorItems.forEach(item => {
-      const doorLeftX = leftX + item.x;
-      const doorRightX = doorLeftX + item.width;
-      const doorFrontY = frontY - doorThicknessMm;
-
-      addRectOutline(lines, doorLeftX, doorFrontY, doorRightX, frontY, 'DOOR', 3);
-
-      const hingeSide = item.hingeSide ?? module.hingePosition ?? 'right';
-      lines.push({
-        x1: hingeSide === 'left' ? doorLeftX : doorRightX,
-        y1: frontY,
-        x2: hingeSide === 'left' ? doorRightX : doorLeftX,
-        y2: doorFrontY,
-        layer: 'DOOR',
-        color: 3
-      });
     });
   });
 
@@ -1506,7 +1454,8 @@ export const downloadDxfAsPdf = async (
 
       // DOOR + DOOR_DIMENSIONS 레이어 필터링 (도어 형상 + 도어 높이/너비 치수선)
       const filteredDoorData = filterDoorOnlyDrawingData(lines, texts);
-      const { lines: doorOnlyLines, texts: doorTexts } = appendHingeCoordinateDrawingData(filteredDoorData, spaceInfo, placedModules, 'door');
+      const filteredDoorDataWithoutGuides = filterPdfDoorGuideLines(filteredDoorData.lines, filteredDoorData.texts);
+      const { lines: doorOnlyLines, texts: doorTexts } = appendHingeCoordinateDrawingData(filteredDoorDataWithoutGuides, spaceInfo, placedModules, 'door');
 
       console.log('[DXF] door-only: original ' + lines.length + ' lines -> DOOR layer ' + doorOnlyLines.length + ' lines, ' + doorTexts.length + ' texts');
 
@@ -1551,8 +1500,8 @@ export const downloadDxfAsPdf = async (
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const baseData = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
       const { lines, texts } = viewDirection === 'top'
-        ? buildSimplifiedTopPlanDrawingData(baseData, spaceInfo, placedModules)
-        : baseData;
+        ? baseData
+        : filterPdfDoorGuideLines(baseData.lines, baseData.texts);
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
 
       if (!hasPdfDrawingData(lines, texts)) {
@@ -1978,13 +1927,16 @@ const renderSheetContent = async (
 
   // ─ 1) Front (with/without doors + door-only)
   await switchSceneViewMode('2D', 'front', 'wireframe');
-  const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
+  const frontWithRaw = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
+  const frontWith = filterPdfDoorGuideLines(frontWithRaw.lines, frontWithRaw.texts);
   const frontNoRaw = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
   const frontNoDoorless = filterDoorlessDrawingData(frontNoRaw.lines, frontNoRaw.texts);
   const frontNo = appendFrontNoDoorFurnitureWidthDimensions(frontNoDoorless, spaceInfo, placedModules);
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
+  const doorOnly = filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts);
+  const doorOnlyWithoutGuides = filterPdfDoorGuideLines(doorOnly.lines, doorOnly.texts);
   const { lines: doorOnlyLines, texts: doorOnlyTexts } = appendHingeCoordinateDrawingData(
-    filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts),
+    doorOnlyWithoutGuides,
     spaceInfo,
     placedModules,
     'door'
@@ -1992,11 +1944,7 @@ const renderSheetContent = async (
 
   // ─ 2) Top view
   await switchSceneViewMode('2D', 'top', 'wireframe');
-  const topView = buildSimplifiedTopPlanDrawingData(
-    generateViewDataFromDxf(spaceInfo, placedModules, 'top'),
-    spaceInfo,
-    placedModules
-  );
+  const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
 
   // ─ 3) Side views (슬롯별) — selectedSlotIndex 필터로 슬롯별 측면 렌더
   await switchSceneViewMode('2D', 'left', 'wireframe');
