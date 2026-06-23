@@ -254,44 +254,48 @@ const appendRectangleOutline = (
 
 const simplifyTopPlanFurnitureBodies = (
   source: { lines: ParsedLine[]; texts: ParsedText[] },
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[]
+  _spaceInfo: SpaceInfo,
+  _placedModules: PlacedModule[]
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const bodyLines = source.lines.filter(line => TOP_PLAN_BODY_LAYERS.has(line.layer));
-  if (bodyLines.length === 0 || placedModules.length === 0) return source;
+  if (bodyLines.length === 0) return source;
 
   const lines = source.lines.filter(line => !TOP_PLAN_BODY_LAYERS.has(line.layer));
-  const centerOffsetX = spaceInfo.width / 2;
-  const sortedModules = [...placedModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+  const toleranceMm = 1.5;
+  const pointKey = (x: number, y: number): string =>
+    `${Math.round(x / toleranceMm)}:${Math.round(y / toleranceMm)}`;
+  const pointToLineIndexes = new Map<string, number[]>();
 
-  sortedModules.forEach((module, index) => {
-    const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
-    if (moduleWidth <= 0) return;
-
-    const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
-    const nominalLeftX = centerX - moduleWidth / 2;
-    const nominalRightX = centerX + moduleWidth / 2;
-    const prevCenterX = index > 0
-      ? centerOffsetX + (sortedModules[index - 1].position?.x ?? 0) * 100
-      : -Infinity;
-    const nextCenterX = index < sortedModules.length - 1
-      ? centerOffsetX + (sortedModules[index + 1].position?.x ?? 0) * 100
-      : Infinity;
-    const rangeLeft = Number.isFinite(prevCenterX)
-      ? (prevCenterX + centerX) / 2
-      : nominalLeftX - 40;
-    const rangeRight = Number.isFinite(nextCenterX)
-      ? (centerX + nextCenterX) / 2
-      : nominalRightX + 40;
-    const tolerance = Math.max(24, Math.min(80, moduleWidth * 0.08));
-
-    const moduleBodyLines = bodyLines.filter(line => {
-      const lineCenterX = (line.x1 + line.x2) / 2;
-      return lineCenterX >= rangeLeft - tolerance && lineCenterX <= rangeRight + tolerance;
+  bodyLines.forEach((line, index) => {
+    [pointKey(line.x1, line.y1), pointKey(line.x2, line.y2)].forEach(key => {
+      pointToLineIndexes.set(key, [...(pointToLineIndexes.get(key) ?? []), index]);
     });
-    const bounds = getParsedLineBounds(moduleBodyLines);
-    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+  });
 
+  const visited = new Set<number>();
+  bodyLines.forEach((_, startIndex) => {
+    if (visited.has(startIndex)) return;
+
+    const stack = [startIndex];
+    const component: ParsedLine[] = [];
+
+    while (stack.length > 0) {
+      const index = stack.pop();
+      if (index === undefined || visited.has(index)) continue;
+      visited.add(index);
+
+      const line = bodyLines[index];
+      component.push(line);
+
+      [pointKey(line.x1, line.y1), pointKey(line.x2, line.y2)].forEach(key => {
+        (pointToLineIndexes.get(key) ?? []).forEach(nextIndex => {
+          if (!visited.has(nextIndex)) stack.push(nextIndex);
+        });
+      });
+    }
+
+    const bounds = getParsedLineBounds(component);
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
     appendRectangleOutline(lines, bounds, 'FURNITURE_PANEL', 30);
   });
 
