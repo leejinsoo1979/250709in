@@ -252,6 +252,26 @@ const appendRectangleOutline = (
   );
 };
 
+const resolveTopPlanFurnitureFrontY = (
+  lines: ParsedLine[],
+  bodyBounds: NonNullable<ReturnType<typeof getParsedLineBounds>>,
+  spaceInfo: SpaceInfo
+): number => {
+  const maxExpectedDepth = Math.max(spaceInfo.depth || 0, 600) + 120;
+  const depthGuide = lines
+    .filter(line => {
+      if (line.layer !== 'DIMENSIONS') return false;
+      const dx = Math.abs(line.x2 - line.x1);
+      const dy = Math.abs(line.y2 - line.y1);
+      const x = (line.x1 + line.x2) / 2;
+      return dx < 1 && dy > 80 && dy <= maxExpectedDepth && x < bodyBounds.minX - 20;
+    })
+    .sort((a, b) => Math.abs(b.y2 - b.y1) - Math.abs(a.y2 - a.y1))[0];
+
+  if (!depthGuide) return bodyBounds.minY;
+  return Math.min(depthGuide.y1, depthGuide.y2);
+};
+
 const simplifyTopPlanFurnitureBodies = (
   source: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
@@ -261,7 +281,7 @@ const simplifyTopPlanFurnitureBodies = (
   if (!bodyBounds || placedModules.length === 0) return source;
 
   const lines = source.lines.filter(line => !TOP_PLAN_REMOVED_BODY_LAYERS.has(line.layer));
-  const frontY = bodyBounds.maxY;
+  const frontY = resolveTopPlanFurnitureFrontY(source.lines, bodyBounds, spaceInfo);
   const centerOffsetX = spaceInfo.width / 2;
 
   placedModules.forEach(module => {
@@ -273,8 +293,8 @@ const simplifyTopPlanFurnitureBodies = (
     appendRectangleOutline(lines, {
       minX: centerX - moduleWidth / 2,
       maxX: centerX + moduleWidth / 2,
-      minY: frontY - moduleDepth,
-      maxY: frontY,
+      minY: frontY,
+      maxY: frontY + moduleDepth,
       width: moduleWidth,
       height: moduleDepth
     }, 'FURNITURE_PANEL', 30);
