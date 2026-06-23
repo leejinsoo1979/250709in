@@ -236,7 +236,8 @@ const filterPdfDoorGuideLines = <
   texts
 });
 
-const TOP_PLAN_BODY_LAYERS = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
+const TOP_PLAN_REMOVED_BODY_LAYERS = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
+const TOP_PLAN_OUTLINE_SOURCE_LAYERS = new Set(['FURNITURE_PANEL', 'END_PANEL']);
 
 const appendRectangleOutline = (
   lines: ParsedLine[],
@@ -254,48 +255,42 @@ const appendRectangleOutline = (
 
 const simplifyTopPlanFurnitureBodies = (
   source: { lines: ParsedLine[]; texts: ParsedText[] },
-  _spaceInfo: SpaceInfo,
-  _placedModules: PlacedModule[]
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
-  const bodyLines = source.lines.filter(line => TOP_PLAN_BODY_LAYERS.has(line.layer));
-  if (bodyLines.length === 0) return source;
+  const outlineSourceLines = source.lines.filter(line => TOP_PLAN_OUTLINE_SOURCE_LAYERS.has(line.layer));
+  if (outlineSourceLines.length === 0 || placedModules.length === 0) return source;
 
-  const lines = source.lines.filter(line => !TOP_PLAN_BODY_LAYERS.has(line.layer));
-  const toleranceMm = 1.5;
-  const pointKey = (x: number, y: number): string =>
-    `${Math.round(x / toleranceMm)}:${Math.round(y / toleranceMm)}`;
-  const pointToLineIndexes = new Map<string, number[]>();
+  const lines = source.lines.filter(line => !TOP_PLAN_REMOVED_BODY_LAYERS.has(line.layer));
+  const sortedModules = [...placedModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
 
-  bodyLines.forEach((line, index) => {
-    [pointKey(line.x1, line.y1), pointKey(line.x2, line.y2)].forEach(key => {
-      pointToLineIndexes.set(key, [...(pointToLineIndexes.get(key) ?? []), index]);
+  sortedModules.forEach((module, index) => {
+    const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
+    if (moduleWidth <= 0) return;
+
+    const centerX = (module.position?.x ?? 0) * 100;
+    const nominalLeftX = centerX - moduleWidth / 2;
+    const nominalRightX = centerX + moduleWidth / 2;
+    const prevCenterX = index > 0
+      ? (sortedModules[index - 1].position?.x ?? 0) * 100
+      : -Infinity;
+    const nextCenterX = index < sortedModules.length - 1
+      ? (sortedModules[index + 1].position?.x ?? 0) * 100
+      : Infinity;
+    const rangeLeft = Number.isFinite(prevCenterX)
+      ? (prevCenterX + centerX) / 2
+      : nominalLeftX - 40;
+    const rangeRight = Number.isFinite(nextCenterX)
+      ? (centerX + nextCenterX) / 2
+      : nominalRightX + 40;
+    const tolerance = Math.max(12, Math.min(45, moduleWidth * 0.04));
+    const moduleBodyLines = outlineSourceLines.filter(line => {
+      const lineCenterX = (line.x1 + line.x2) / 2;
+      return lineCenterX >= rangeLeft - tolerance && lineCenterX <= rangeRight + tolerance;
     });
-  });
-
-  const visited = new Set<number>();
-  bodyLines.forEach((_, startIndex) => {
-    if (visited.has(startIndex)) return;
-
-    const stack = [startIndex];
-    const component: ParsedLine[] = [];
-
-    while (stack.length > 0) {
-      const index = stack.pop();
-      if (index === undefined || visited.has(index)) continue;
-      visited.add(index);
-
-      const line = bodyLines[index];
-      component.push(line);
-
-      [pointKey(line.x1, line.y1), pointKey(line.x2, line.y2)].forEach(key => {
-        (pointToLineIndexes.get(key) ?? []).forEach(nextIndex => {
-          if (!visited.has(nextIndex)) stack.push(nextIndex);
-        });
-      });
-    }
-
-    const bounds = getParsedLineBounds(component);
+    const bounds = getParsedLineBounds(moduleBodyLines);
     if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+
     appendRectangleOutline(lines, bounds, 'FURNITURE_PANEL', 30);
   });
 
