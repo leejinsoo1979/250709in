@@ -1684,6 +1684,15 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const baseFrameSlots = guideSlots
                 .filter((slot) => (slot.guideZone || 'full') !== 'upper')
                 .sort((a, b) => a.x - b.x || a.index - b.index);
+              const guideTopCandidateModules = placedModules.filter((module) => (
+                !module.isSurroundPanel
+                && (
+                  module.guideSlotPlacement === true
+                  || module.guideDepthPlacement === true
+                  || spaceInfo.customGuideMode === true
+                )
+                && (getModuleCategory(module) === 'upper' || getModuleCategory(module) === 'full')
+              ));
               const allBaseGuideSlotsAreLower = baseFrameSlots.length > 0 && baseFrameSlots.every(slot => (slot.guideZone || 'full') === 'lower');
               const frameSize = (spaceInfo.frameSize || {}) as any;
               const baseConfig = (spaceInfo.baseConfig || {}) as any;
@@ -1714,6 +1723,26 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   freePlacementGuides: guideSlots.map((slot) => (
                     slot.id === slotId ? { ...slot, ...updates } : slot
                   ))
+                });
+              };
+              const syncGuideTopFrameAll = (
+                frameSizeUpdates: Record<string, any>,
+                slotUpdates: Partial<FreePlacementGuideSlot>,
+                buildModuleUpdates: (module: any) => Record<string, any>
+              ) => {
+                setSpaceInfo({
+                  frameSize: {
+                    ...frameSize,
+                    ...frameSizeUpdates
+                  },
+                  freePlacementGuides: guideSlots.map((slot) => (
+                    (slot.guideZone || 'full') === 'lower'
+                      ? slot
+                      : { ...slot, ...slotUpdates }
+                  ))
+                });
+                guideTopCandidateModules.forEach((module) => {
+                  updatePlacedModule(module.id, buildModuleUpdates(module));
                 });
               };
               const getSlotTopEnabled = (slot: FreePlacementGuideSlot) => slot.hasTopFrame ?? globalTopEnabled;
@@ -1782,21 +1811,59 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         offset={globalTopOffset}
                         gap={globalTopEnabled ? globalTopGap : Math.max(0, globalTopGap || globalTopThickness)}
                         onToggle={() => {
-                          setSpaceInfo({
-                            frameSize: globalTopEnabled
-                              ? { ...frameSize, top: 0, topGap: Math.max(0, globalTopGap || globalTopThickness) }
-                              : { ...frameSize, top: Math.max(1, globalTopGap || globalTopThickness || 30), topGap: 0 }
-                          });
+                          const nextGap = Math.max(0, globalTopGap || globalTopThickness);
+                          const nextTop = Math.max(1, globalTopGap || globalTopThickness || 30);
+                          syncGuideTopFrameAll(
+                            globalTopEnabled
+                              ? { top: 0, topGap: nextGap }
+                              : { top: nextTop, topGap: 0 },
+                            globalTopEnabled
+                              ? { hasTopFrame: false, topFrameGap: nextGap, topFrameThickness: globalTopThickness }
+                              : { hasTopFrame: true, topFrameGap: 0, topFrameThickness: nextTop },
+                            (module) => globalTopEnabled
+                              ? {
+                                hasTopFrame: false,
+                                topFrameGap: nextGap,
+                                topFrameThickness: module.topFrameThickness ?? globalTopThickness,
+                                doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, module)
+                              }
+                              : {
+                                hasTopFrame: true,
+                                topFrameGap: 0,
+                                topFrameThickness: nextTop,
+                                doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, module)
+                              }
+                          );
                         }}
-                        onSizeChange={(v) => setSpaceInfo({ frameSize: { ...frameSize, top: v } })}
-                        onOffsetChange={(v) => setSpaceInfo({ frameSize: { ...frameSize, topOffset: v } })}
-                        onGapChange={(v, nextSize) => setSpaceInfo({
-                          frameSize: {
-                            ...frameSize,
-                            ...(nextSize !== undefined ? { top: nextSize } : {}),
-                            topGap: Math.max(0, v)
-                          }
-                        })}
+                        onSizeChange={(v) => syncGuideTopFrameAll(
+                          { top: v },
+                          { topFrameThickness: v },
+                          () => ({ topFrameThickness: v })
+                        )}
+                        onOffsetChange={(v) => syncGuideTopFrameAll(
+                          { topOffset: v },
+                          { topFrameOffset: v },
+                          () => ({ topFrameOffset: v })
+                        )}
+                        onGapChange={(v, nextSize) => {
+                          const nextGap = Math.max(0, v);
+                          syncGuideTopFrameAll(
+                            {
+                              ...(nextSize !== undefined ? { top: nextSize } : {}),
+                              topGap: nextGap
+                            },
+                            {
+                              ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
+                              topFrameGap: nextGap,
+                              ...(globalTopEnabled ? {} : { hasTopFrame: false })
+                            },
+                            () => ({
+                              ...(nextSize !== undefined ? { topFrameThickness: nextSize } : {}),
+                              topFrameGap: nextGap,
+                              ...(globalTopEnabled ? {} : { hasTopFrame: false })
+                            })
+                          );
+                        }}
                       />
                     ) : (
                       topFrameSlots.map((slot, idx) => {
