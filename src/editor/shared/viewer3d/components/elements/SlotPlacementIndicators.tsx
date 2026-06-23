@@ -2909,7 +2909,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                       topGap,
                       () => updateGuideSlotFrame(slot.id, {
                         hasTopFrame: !enabled,
-                        topFrameGap: enabled ? thickness : 0,
+                        topFrameGap: enabled ? topGap : 0,
                         topFrameThickness: thickness
                       }),
                       (v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v }),

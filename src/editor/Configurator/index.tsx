@@ -7345,7 +7345,7 @@ const Configurator: React.FC = () => {
                           gap,
                           () => updateGuideSlotFrame(slot.id, {
                             hasTopFrame: !enabled,
-                            topFrameGap: enabled ? thickness : 0,
+                            topFrameGap: enabled ? gap : 0,
                             topFrameThickness: thickness
                           }),
                           (v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v }),

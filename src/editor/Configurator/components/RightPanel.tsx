@@ -1925,7 +1925,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             gap={gap}
                             onToggle={() => updateGuideSlotFrame(slot.id, {
                               hasTopFrame: !enabled,
-                              topFrameGap: enabled ? thickness : 0,
+                              topFrameGap: enabled ? gap : 0,
                               topFrameThickness: thickness
                             })}
                             onSizeChange={(v) => updateGuideSlotFrame(slot.id, { topFrameThickness: v })}
