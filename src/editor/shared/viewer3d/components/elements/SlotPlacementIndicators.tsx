@@ -2075,7 +2075,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     // 분할 슬롯 = 몰딩 + 상부장 + 미드웨이 + 하부장 + 하단 구간(걸레받이 또는 띄움)
     // 비분할 키큰장 슬롯 = 몰딩 + 상부섹션 + 하부섹션 + 하단 구간(걸레받이 또는 띄움)
     // 상단몰딩/하단 구간은 우측바와 연동되도록 frameSize.top / baseConfig 사용
-    const gMoldingGap = (spaceInfo.frameSize as any)?.topGap ?? 0;
+    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+    const rawGlobalTopGap = (spaceInfo.frameSize as any)?.topGap;
+    const gMoldingGap = Math.max(0, rawGlobalTopGap ?? 0);
     const resolveFrameRawSize = (
       rawSize: number | undefined,
       fallbackRawSize: number | undefined,
@@ -2083,9 +2085,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     ) => {
       return Math.max(0, rawSize ?? fallbackRawSize ?? 0);
     };
-    const gTopMolding = resolveFrameRawSize(spaceInfo.frameSize?.top, undefined, gMoldingGap);
-    const gTopGap = Math.max(0, gMoldingGap);
-    const gTopClearance = Math.max(0, gTopMolding > 0 ? gTopMolding : gTopGap);
     const guideInternalSpace = calculateInternalSpace(spaceInfo);
     const getGuideModuleCategory = (module: typeof placedModules[number]) => {
       const moduleData = getModuleById(module.moduleId, guideInternalSpace, spaceInfo);
@@ -2093,6 +2092,31 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         ?? (module.moduleId.includes('upper') ? 'upper'
           : module.moduleId.includes('lower') ? 'lower' : 'full');
     };
+    const topFrameGuideSlots = guideSlots.filter((slot) => (slot.guideZone || 'full') !== 'lower');
+    const guideTopFrameModules = placedModules.filter((module) => (
+      !module.isSurroundPanel
+      && (
+        module.guideSlotPlacement === true
+        || module.guideDepthPlacement === true
+        || ((spaceInfo.customGuideMode === true || guideSlots.length > 0) && module.isFreePlacement === true)
+      )
+      && (getGuideModuleCategory(module) === 'upper' || getGuideModuleCategory(module) === 'full')
+    ));
+    const guideTopFrameOffOverride = guideTopFrameAllMode && (
+      topFrameGuideSlots.some((slot) => slot.hasTopFrame === false)
+      || guideTopFrameModules.some((module) => module.hasTopFrame === false)
+    );
+    const topGapFromGuideState = Math.max(0,
+      rawGlobalTopGap
+        ?? topFrameGuideSlots.find((slot) => slot.hasTopFrame === false && typeof slot.topFrameGap === 'number')?.topFrameGap
+        ?? guideTopFrameModules.find((module) => module.hasTopFrame === false && typeof module.topFrameGap === 'number')?.topFrameGap
+        ?? 0
+    );
+    const gTopMolding = guideTopFrameOffOverride
+      ? 0
+      : resolveFrameRawSize(spaceInfo.frameSize?.top, undefined, topGapFromGuideState);
+    const gTopGap = topGapFromGuideState;
+    const gTopClearance = Math.max(0, gTopMolding > 0 ? gTopMolding : gTopGap);
     const activePlacedFurnitureId = activePopup.type === 'furnitureEdit' && activePopup.id
       ? activePopup.id
       : (uiSelectedFurnitureId ?? selectedFurnitureIds[selectedFurnitureIds.length - 1] ?? selectedFurnitureId);
@@ -2117,7 +2141,6 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 	    const guideBaseReferenceModule = guideSelectedBaseModule ?? guideLowerBaseModule ?? guideFullBaseModule;
 	    const guideLowerBaseSlot = guideSlots.find((slot) => (slot.guideZone || 'full') === 'lower');
 	    const guideBaseFrameSlot = guideLowerBaseSlot ?? guideSlots.find((slot) => (slot.guideZone || 'full') === 'full');
-	    const guideTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
 	    const guideBaseFrameAllMode = spaceInfo.guideBaseFrameAllMode ?? true;
     const resolveGuideBaseHeight = (module: typeof placedModules[number] | undefined) => {
       if (!module) {

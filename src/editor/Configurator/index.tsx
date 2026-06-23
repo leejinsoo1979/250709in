@@ -6999,8 +6999,17 @@ const Configurator: React.FC = () => {
             const allBaseGuideSlotsAreLower = baseFrameSlots.length > 0 && baseFrameSlots.every(slot => (slot.guideZone || 'full') === 'lower');
             const frameSize = (spaceInfo.frameSize || {}) as any;
             const baseConfig = (spaceInfo.baseConfig || {}) as any;
-            const globalTopGap = Math.max(0, frameSize.topGap ?? 0);
-            const globalTopRaw = spaceInfo.frameSize?.top === undefined && globalTopGap > 0
+            const globalTopGap = Math.max(0,
+              frameSize.topGap
+                ?? topFrameSlots.find((slot) => slot.hasTopFrame === false && typeof slot.topFrameGap === 'number')?.topFrameGap
+                ?? guideTopCandidateModules.find((module) => module.hasTopFrame === false && typeof module.topFrameGap === 'number')?.topFrameGap
+                ?? 0
+            );
+            const guideTopFrameOffOverride = guideTopFrameAllMode && (
+              topFrameSlots.some((slot) => slot.hasTopFrame === false)
+              || guideTopCandidateModules.some((module) => module.hasTopFrame === false)
+            );
+            const globalTopRaw = guideTopFrameOffOverride || (spaceInfo.frameSize?.top === undefined && globalTopGap > 0)
               ? 0
               : resolveFrameRawSize(spaceInfo.frameSize?.top, 30, globalTopGap);
             const globalTopEnabled = globalTopRaw > 0;
