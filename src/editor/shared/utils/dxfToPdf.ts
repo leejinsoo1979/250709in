@@ -236,6 +236,68 @@ const filterPdfDoorGuideLines = <
   texts
 });
 
+const TOP_PLAN_BODY_LAYERS = new Set(['FURNITURE_PANEL', 'BACK_PANEL', 'DRAWER', 'WOOD_CHANNEL', 'END_PANEL']);
+
+const appendRectangleOutline = (
+  lines: ParsedLine[],
+  bounds: NonNullable<ReturnType<typeof getParsedLineBounds>>,
+  layer: string,
+  color?: number
+): void => {
+  lines.push(
+    { x1: bounds.minX, y1: bounds.minY, x2: bounds.maxX, y2: bounds.minY, layer, color },
+    { x1: bounds.maxX, y1: bounds.minY, x2: bounds.maxX, y2: bounds.maxY, layer, color },
+    { x1: bounds.maxX, y1: bounds.maxY, x2: bounds.minX, y2: bounds.maxY, layer, color },
+    { x1: bounds.minX, y1: bounds.maxY, x2: bounds.minX, y2: bounds.minY, layer, color }
+  );
+};
+
+const simplifyTopPlanFurnitureBodies = (
+  source: { lines: ParsedLine[]; texts: ParsedText[] },
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
+  const bodyLines = source.lines.filter(line => TOP_PLAN_BODY_LAYERS.has(line.layer));
+  if (bodyLines.length === 0 || placedModules.length === 0) return source;
+
+  const lines = source.lines.filter(line => !TOP_PLAN_BODY_LAYERS.has(line.layer));
+  const centerOffsetX = spaceInfo.width / 2;
+  const sortedModules = [...placedModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+
+  sortedModules.forEach((module, index) => {
+    const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
+    if (moduleWidth <= 0) return;
+
+    const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
+    const nominalLeftX = centerX - moduleWidth / 2;
+    const nominalRightX = centerX + moduleWidth / 2;
+    const prevCenterX = index > 0
+      ? centerOffsetX + (sortedModules[index - 1].position?.x ?? 0) * 100
+      : -Infinity;
+    const nextCenterX = index < sortedModules.length - 1
+      ? centerOffsetX + (sortedModules[index + 1].position?.x ?? 0) * 100
+      : Infinity;
+    const rangeLeft = Number.isFinite(prevCenterX)
+      ? (prevCenterX + centerX) / 2
+      : nominalLeftX - 40;
+    const rangeRight = Number.isFinite(nextCenterX)
+      ? (centerX + nextCenterX) / 2
+      : nominalRightX + 40;
+    const tolerance = Math.max(24, Math.min(80, moduleWidth * 0.08));
+
+    const moduleBodyLines = bodyLines.filter(line => {
+      const lineCenterX = (line.x1 + line.x2) / 2;
+      return lineCenterX >= rangeLeft - tolerance && lineCenterX <= rangeRight + tolerance;
+    });
+    const bounds = getParsedLineBounds(moduleBodyLines);
+    if (!bounds || bounds.width <= 0 || bounds.height <= 0) return;
+
+    appendRectangleOutline(lines, bounds, 'FURNITURE_PANEL', 30);
+  });
+
+  return { lines, texts: source.texts };
+};
+
 export const filterDoorlessDrawingData = <
   TLine extends { layer: string; sourceName?: string; sourcePath?: string },
   TText extends { layer: string }
@@ -1500,7 +1562,7 @@ export const downloadDxfAsPdf = async (
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const baseData = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
       const { lines, texts } = viewDirection === 'top'
-        ? baseData
+        ? simplifyTopPlanFurnitureBodies(baseData, spaceInfo, placedModules)
         : filterPdfDoorGuideLines(baseData.lines, baseData.texts);
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
 
@@ -1944,7 +2006,11 @@ const renderSheetContent = async (
 
   // ─ 2) Top view
   await switchSceneViewMode('2D', 'top', 'wireframe');
-  const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
+  const topView = simplifyTopPlanFurnitureBodies(
+    generateViewDataFromDxf(spaceInfo, placedModules, 'top'),
+    spaceInfo,
+    placedModules
+  );
 
   // ─ 3) Side views (슬롯별) — selectedSlotIndex 필터로 슬롯별 측면 렌더
   await switchSceneViewMode('2D', 'left', 'wireframe');
