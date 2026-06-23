@@ -252,11 +252,11 @@ const appendRectangleOutline = (
   );
 };
 
-const resolveTopPlanFurnitureFrontY = (
+const resolveTopPlanFurnitureDepthGuide = (
   lines: ParsedLine[],
   bodyBounds: NonNullable<ReturnType<typeof getParsedLineBounds>>,
   spaceInfo: SpaceInfo
-): number => {
+): { frontY: number; depth?: number } => {
   const maxExpectedDepth = Math.max(spaceInfo.depth || 0, 600) + 120;
   const depthGuide = lines
     .filter(line => {
@@ -268,8 +268,11 @@ const resolveTopPlanFurnitureFrontY = (
     })
     .sort((a, b) => Math.abs(b.y2 - b.y1) - Math.abs(a.y2 - a.y1))[0];
 
-  if (!depthGuide) return bodyBounds.minY;
-  return Math.min(depthGuide.y1, depthGuide.y2);
+  if (!depthGuide) return { frontY: bodyBounds.minY };
+  return {
+    frontY: Math.min(depthGuide.y1, depthGuide.y2),
+    depth: Math.abs(depthGuide.y2 - depthGuide.y1)
+  };
 };
 
 const simplifyTopPlanFurnitureBodies = (
@@ -281,14 +284,15 @@ const simplifyTopPlanFurnitureBodies = (
   if (!bodyBounds || placedModules.length === 0) return source;
 
   const lines = source.lines.filter(line => !TOP_PLAN_REMOVED_BODY_LAYERS.has(line.layer));
-  const frontY = resolveTopPlanFurnitureFrontY(source.lines, bodyBounds, spaceInfo);
+  const depthGuide = resolveTopPlanFurnitureDepthGuide(source.lines, bodyBounds, spaceInfo);
+  const frontY = depthGuide.frontY;
   const centerOffsetX = spaceInfo.width / 2;
 
   placedModules.forEach(module => {
     const moduleWidth = resolvePlacedModuleWidthForPdf(spaceInfo, module);
     if (moduleWidth <= 0) return;
 
-    const moduleDepth = resolvePlacedModuleExportDepth(spaceInfo, module);
+    const moduleDepth = Math.max(resolvePlacedModuleExportDepth(spaceInfo, module), depthGuide.depth ?? 0);
     const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
     appendRectangleOutline(lines, {
       minX: centerX - moduleWidth / 2,
