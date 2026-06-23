@@ -1728,9 +1728,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const frameSize = (spaceInfo.frameSize || {}) as any;
               const baseConfig = (spaceInfo.baseConfig || {}) as any;
               const globalTopGap = Math.max(0, frameSize.topGap ?? userDefaults.topGap ?? 0);
-              const globalTopRaw = resolveDefaultBackedRawSize(spaceInfo.frameSize?.top, userDefaults.frameTop ?? 30, globalTopGap);
+              const globalTopRaw = spaceInfo.frameSize?.top === undefined && globalTopGap > 0
+                ? 0
+                : resolveDefaultBackedRawSize(spaceInfo.frameSize?.top, userDefaults.frameTop ?? 30, globalTopGap);
               const globalTopEnabled = globalTopRaw > 0;
-              const globalTopThickness = globalTopRaw > 0 ? globalTopRaw : Math.max(30, globalTopGap);
+              const globalTopThickness = globalTopRaw > 0 ? globalTopRaw : globalTopGap;
               const globalTopOffset = frameSize.topOffset ?? userDefaults.topOffset ?? 0;
               const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
               const globalBaseGap = globalBaseEnabled ? Math.max(0, baseConfig.gap ?? userDefaults.baseGap ?? 0) : 0;
@@ -1780,7 +1782,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
                 resolveDefaultBackedRawSize(
                   slot.topFrameThickness,
-                  globalTopRaw > 0 ? globalTopRaw : Math.max(30, defaultIfZero(slot.topFrameGap, globalTopGap)),
+                  globalTopRaw > 0 ? globalTopRaw : defaultIfZero(slot.topFrameGap, globalTopGap),
                   getSlotTopGap(slot)
                 )
               );
@@ -1840,7 +1842,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         type="top"
                         size={globalTopThickness}
                         offset={globalTopOffset}
-                        gap={globalTopEnabled ? globalTopGap : Math.max(0, globalTopGap || globalTopThickness)}
+                        gap={globalTopGap}
                         onToggle={() => {
                           const nextGap = Math.max(0, globalTopGap || globalTopThickness);
                           const nextTop = Math.max(1, globalTopGap || globalTopThickness || 30);
@@ -1880,6 +1882,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           const nextGap = Math.max(0, v);
                           syncGuideTopFrameAll(
                             {
+                              ...(globalTopEnabled ? {} : { top: 0 }),
                               ...(nextSize !== undefined ? { top: nextSize } : {}),
                               topGap: nextGap
                             },
@@ -2182,9 +2185,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 	                return resolveDefaultBackedRawSize(m?.topFrameThickness, globalTop, enabledGap);
 	              };
               const getTopOffGapDisplay = (m: any) => (
-                m?.userResizedHeight === true
-                  ? (computeShelfSplitTopDistance(m) ?? computeBodyHeightTopOffGap(m) ?? defaultIfZero(m?.topFrameGap, getTopSizeDisplay(m)))
-                  : (computeShelfSplitTopDistance(m) ?? defaultIfZero(m?.topFrameGap, getTopSizeDisplay(m)))
+                m?.topFrameGap ?? computeShelfSplitTopDistance(m) ?? computeBodyHeightTopOffGap(m) ?? getTopSizeDisplay(m)
               );
               const getTopGapDisplay = (m: any) => (
                 m?.hasTopFrame === false

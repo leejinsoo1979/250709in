@@ -4407,9 +4407,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상하부장 동시배치 시 leftmostMod가 상부장이면 leftLowerMod(하부장)의 hasBase 참조
           const baseRefMod = leftLowerMod ?? leftmostMod;
           const topRefMod_L = leftUpperMod ?? leftmostMod;
-          const isGlobalTopFrameOff_L = (spaceInfo.guideTopFrameAllMode ?? true)
+          const isGlobalTopFrameAllMode_L = spaceInfo.guideTopFrameAllMode ?? true;
+          const isGlobalTopFrameOff_L = isGlobalTopFrameAllMode_L
             && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
-          const globalTopGapForDim_L = isGlobalTopFrameOff_L && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+          const globalTopGapForDim_L = isGlobalTopFrameAllMode_L && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
             ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
             : null;
           const isTopFrameOff_L = topRefMod_L?.hasTopFrame === false || isGlobalTopFrameOff_L;
@@ -5509,9 +5510,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
           // 상하부장 동시배치 시 rightmostMod가 하부장이면 rightUpperMod(상부장)의 hasTopFrame 참조
           const topRefMod_R = rightUpperMod ?? rightmostMod;
-          const isGlobalTopFrameOff_R = (spaceInfo.guideTopFrameAllMode ?? true)
+          const isGlobalTopFrameAllMode_R = spaceInfo.guideTopFrameAllMode ?? true;
+          const isGlobalTopFrameOff_R = isGlobalTopFrameAllMode_R
             && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
-          const globalTopGapForDim_R = isGlobalTopFrameOff_R && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+          const globalTopGapForDim_R = isGlobalTopFrameAllMode_R && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
             ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
             : null;
           const isTopFrameOff_R = topRefMod_R?.hasTopFrame === false || isGlobalTopFrameOff_R;
@@ -8581,7 +8583,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? bottomFrameRefMod
               : findSideCompanion('lower');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
-            const isGlobalTopFrameOff = (spaceInfo.guideTopFrameAllMode ?? true)
+            const isGlobalTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+            const isGlobalTopFrameOff = isGlobalTopFrameAllMode
               && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
             const isTopFrameOff = topFrameRefMod?.hasTopFrame === false || isGlobalTopFrameOff;
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
@@ -8629,7 +8632,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
-            const globalTopFrameGapMm = isGlobalTopFrameOff && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+            const globalTopFrameGapMm = isGlobalTopFrameAllMode && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
               ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
               : null;
             const explicitTopFrameGapMm = typeof topFrameRefMod?.topFrameGap === 'number'
@@ -9185,17 +9188,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
-                {!isTopFrameOff && topFrameDimensionHeight > 0 && (() => {
+                {topFrameDimensionHeight > 0 && (() => {
                   // EP 모드: ㄱ자 EP 전면 세로(=80) + 도어 상단~EP 안쪽 갭 두 개로 분리 표시
                   // 인조대리석 모드 등 EP 미설치: 기존대로 한 줄(상단몰딩 높이) 표시
                   const epRefMod = topFrameRefMod ?? viewMod;
                   const epEnabled = epRefMod?.hasTopEndPanel === true;
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
-	                  const topGapMm = 0;
-                  const visibleTopMm = Math.max(0, totalMm);
+                  const topGapMm = isTopFrameOff ? Math.max(0, Math.round(totalMm)) : 0;
+                  const visibleTopMm = isTopFrameOff ? 0 : Math.max(0, totalMm);
                   const topGapBottomY = topFrameTopY - mmToThreeUnits(topGapMm);
-                  const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
+                  const isEpSplit = !isTopFrameOff && epEnabled && totalMm > epFrontHeightMm + 1;
 
                   if (!isEpSplit) {
                     return (
@@ -9745,7 +9748,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.3}
                 />
                 )}
-                {!isTopFrameOff && topFrameDimensionHeight > 0 && (
+                {topFrameDimensionHeight > 0 && (
                   <>
                     <Line
                       points={[[0, cabinetAreaTopY, upperGuideFrontZ], [0, cabinetAreaTopY, rightDimensionZ - mmToThreeUnits(20)]]}
@@ -10344,7 +10347,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ? bottomFrameRefMod
               : findSideCompanion('lower');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
-            const isGlobalTopFrameOff = (spaceInfo.guideTopFrameAllMode ?? true)
+            const isGlobalTopFrameAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+            const isGlobalTopFrameOff = isGlobalTopFrameAllMode
               && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
             const isTopFrameOff = topFrameRefMod?.hasTopFrame === false || isGlobalTopFrameOff;
             const rawTopFrame = topFrameRefMod?.topFrameThickness ?? globalTopFrame;
@@ -10391,7 +10395,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 .reduce((sum: number, section: any) => sum + (Number(section?.height) || 0), 0);
               return Math.max(0, Math.round(spaceInfo.height - bodyTopMm));
             })();
-            const globalTopFrameGapMm = isGlobalTopFrameOff && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+            const globalTopFrameGapMm = isGlobalTopFrameAllMode && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
               ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
               : null;
             const explicitTopFrameGapMm = typeof topFrameRefMod?.topFrameGap === 'number'
@@ -10955,16 +10959,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
-                {!isTopFrameOff && topFrameDimensionHeight > 0 && (() => {
+                {topFrameDimensionHeight > 0 && (() => {
                   // EP 모드: ㄱ자 EP 전면 세로(=80) + 도어 상단~EP 안쪽 갭 두 개로 분리 표시
                   const epRefMod = topFrameRefMod ?? viewMod;
                   const epEnabled = epRefMod?.hasTopEndPanel === true;
                   const epFrontHeightMm = 80;
                   const totalMm = topFrameDimensionValue || topFrameDimensionHeight;
-	                  const topGapMm = 0;
-                  const visibleTopMm = Math.max(0, totalMm);
+                  const topGapMm = isTopFrameOff ? Math.max(0, Math.round(totalMm)) : 0;
+                  const visibleTopMm = isTopFrameOff ? 0 : Math.max(0, totalMm);
                   const topGapBottomY = topFrameLineTopY - mmToThreeUnits(topGapMm);
-                  const isEpSplit = epEnabled && totalMm > epFrontHeightMm + 1;
+                  const isEpSplit = !isTopFrameOff && epEnabled && totalMm > epFrontHeightMm + 1;
 
                   if (!isEpSplit) {
                     return (
@@ -11154,7 +11158,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.3}
                 />
                 )}
-                {!isTopFrameOff && topFrameDimensionHeight > 0 && (
+                {topFrameDimensionHeight > 0 && (
                   <>
                     <Line
                       points={[[spaceWidth, cabinetAreaTopY, upperGuideFrontZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}

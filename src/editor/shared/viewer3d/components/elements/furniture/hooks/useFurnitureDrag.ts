@@ -489,7 +489,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       if (isUpperCabinet) {
         // 상부장: 항상 천장에 붙음
-        const topFrameHeightMm = spaceInfo.frameSize?.top || 30;
+        const configuredTopFrameMm = spaceInfo.frameSize?.top;
+        const topFrameHeightMm = configuredTopFrameMm === undefined
+          ? 30
+          : configuredTopFrameMm > 0
+            ? configuredTopFrameMm
+            : Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
         const upperCabinetHeight = moduleData.dimensions.height || 0;
         const upperCabinetTopY = spaceInfo.height - topFrameHeightMm;
         yPosition = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;

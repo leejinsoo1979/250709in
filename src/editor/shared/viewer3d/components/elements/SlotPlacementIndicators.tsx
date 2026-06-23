@@ -915,7 +915,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const calculateYPosition = (zone: 'normal' | 'dropped'): number => {
       if (selectedCategory === 'upper') {
         // 상부장: 천장 근처
-        const topFrameHeightMm = spaceInfo.frameSize?.top || 30;
+        const configuredTopFrameMm = spaceInfo.frameSize?.top;
+        const topFrameHeightMm = configuredTopFrameMm === undefined
+          ? 30
+          : configuredTopFrameMm > 0
+            ? configuredTopFrameMm
+            : Math.max(0, (spaceInfo.frameSize as any)?.topGap ?? 0);
 
         // 천장 높이 결정 (단내림 영역이면 단내림 천장 높이 사용)
         const ceilingHeight = (spaceInfo.droppedCeiling?.enabled && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight !== undefined)
@@ -2583,7 +2588,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
       resolveFrameRawSize(
         slot.topFrameThickness,
-        (spaceInfo.frameSize?.top ?? 0) > 0 ? spaceInfo.frameSize?.top : Math.max(30, slot.topFrameGap ?? gMoldingGap),
+        (spaceInfo.frameSize?.top ?? 0) > 0 ? spaceInfo.frameSize?.top : (slot.topFrameGap ?? gMoldingGap),
         getSlotTopGap(slot)
       )
     );
@@ -2834,6 +2839,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                   (v, nextSize) => setSpaceInfo({
                     frameSize: {
                       ...(spaceInfo.frameSize as any),
+                      ...(isGlobalTopFrameEnabled ? {} : { top: 0 }),
                       ...(nextSize !== undefined ? { top: nextSize } : {}),
                       topGap: Math.max(0, v)
                     }

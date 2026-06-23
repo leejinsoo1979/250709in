@@ -1614,7 +1614,7 @@ const Configurator: React.FC = () => {
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
   const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
-  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top || 30));
+  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top ?? 30));
   const isEditingFrameRef = useRef<{ left: boolean; right: boolean; top: boolean }>({ left: false, right: false, top: false });
 
   // 외부 spaceInfo.frameSize가 변경되면 로컬 상태 동기화 (편집 중이 아닐 때만)
@@ -1626,7 +1626,7 @@ const Configurator: React.FC = () => {
       setFrameInputRight(String(spaceInfo.frameSize?.right || 50));
     }
     if (!isEditingFrameRef.current.top) {
-      setFrameInputTop(String(spaceInfo.frameSize?.top || 30));
+      setFrameInputTop(String(spaceInfo.frameSize?.top ?? 30));
     }
   }, [spaceInfo.frameSize?.left, spaceInfo.frameSize?.right, spaceInfo.frameSize?.top]);
 
@@ -4405,7 +4405,7 @@ const Configurator: React.FC = () => {
     if (updates.surroundType && updates.surroundType !== spaceInfo.surroundType) {
       const currentInstallType = finalUpdates.installType || spaceInfo.installType;
       const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
-      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+      const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top ?? 30 };
 
       if (updates.surroundType === 'surround') {
         // 서라운드 모드 — 벽없는 쪽에는 EP 자동 생성하지 않음 (0으로 설정)
@@ -5984,7 +5984,7 @@ const Configurator: React.FC = () => {
                 const currentWallConfig = spaceInfo.wallConfig || { left: true, right: true };
                 if (preUpdates.surroundType === 'no-surround' && spaceInfo.surroundType !== 'no-surround') {
                   // 서라운드 → 노서라운드: gapConfig + frameSize 미리 반영
-                  const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+                  const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top ?? 30 };
                   // 벽없는 쪽에는 EP 자동 생성 안함 (모두 0)
                   newFrameSize.left = 0;
                   newFrameSize.right = 0;
@@ -5996,7 +5996,7 @@ const Configurator: React.FC = () => {
                   };
                 } else if (preUpdates.surroundType === 'surround' && spaceInfo.surroundType !== 'surround') {
                   // 노서라운드 → 서라운드: frameSize 미리 반영 (벽없는 쪽에는 EP 자동 생성 안함)
-                  const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
+                  const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top ?? 30 };
                   if (currentInstallType === 'builtin' || currentInstallType === 'built-in') {
                     newFrameSize.left = 50; newFrameSize.right = 50;
                   } else if (currentInstallType === 'semistanding' || currentInstallType === 'semi-standing') {
@@ -6706,11 +6706,11 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30);
+                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top ?? 30);
                         const newVal = Math.max(0, current - 1);
                         handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: newVal } });
                       }}
-                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)) <= 0}
+                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top ?? 30)) <= 0}
                     >
                       −
                     </button>
@@ -6718,7 +6718,7 @@ const Configurator: React.FC = () => {
                       type="text"
                       inputMode="numeric"
                       pattern="[0-9]*"
-                      value={spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)}
+                      value={spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top ?? 30)}
                       onChange={(e) => {
                         const val = parseInt(e.target.value);
                         if (!isNaN(val)) {
@@ -6735,11 +6735,11 @@ const Configurator: React.FC = () => {
                     <button
                       className={styles.frameButton}
                       onClick={() => {
-                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30);
+                        const current = spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top ?? 30);
                         const newVal = Math.min(200, current + 1);
                         handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, topFrame: newVal } });
                       }}
-                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top || 30)) >= 200}
+                      disabled={(spaceInfo.droppedCeiling?.topFrame ?? (spaceInfo.frameSize?.top ?? 30)) >= 200}
                     >
                       +
                     </button>
@@ -7000,9 +7000,11 @@ const Configurator: React.FC = () => {
             const frameSize = (spaceInfo.frameSize || {}) as any;
             const baseConfig = (spaceInfo.baseConfig || {}) as any;
             const globalTopGap = Math.max(0, frameSize.topGap ?? 0);
-            const globalTopRaw = resolveFrameRawSize(spaceInfo.frameSize?.top, 30, globalTopGap);
+            const globalTopRaw = spaceInfo.frameSize?.top === undefined && globalTopGap > 0
+              ? 0
+              : resolveFrameRawSize(spaceInfo.frameSize?.top, 30, globalTopGap);
             const globalTopEnabled = globalTopRaw > 0;
-            const globalTopThickness = globalTopRaw > 0 ? globalTopRaw : Math.max(30, globalTopGap);
+            const globalTopThickness = globalTopRaw > 0 ? globalTopRaw : globalTopGap;
             const globalTopOffset = frameSize.topOffset ?? 0;
             const globalBaseEnabled = spaceInfo.baseConfig?.type !== 'stand' && (spaceInfo.baseConfig?.height ?? 0) > 0;
             const globalBaseOffset = guideBaseFrameAllMode
@@ -7102,7 +7104,7 @@ const Configurator: React.FC = () => {
             const getSlotTopThickness = (slot: FreePlacementGuideSlot) => (
               resolveFrameRawSize(
                 slot.topFrameThickness,
-                globalTopRaw > 0 ? globalTopRaw : Math.max(30, defaultIfZero(slot.topFrameGap, globalTopGap)),
+                globalTopRaw > 0 ? globalTopRaw : defaultIfZero(slot.topFrameGap, globalTopGap),
                 getSlotTopGap(slot)
               )
             );
@@ -7155,7 +7157,7 @@ const Configurator: React.FC = () => {
                       </div>
                       <div style={numCellStyle}>
                         <span style={numLabelStyle}>갭</span>
-                        <input type="text" inputMode="numeric" defaultValue={gap || ''} key={`guide-top-gap-${label}-${gap || 0}`}
+                        <input type="text" inputMode="numeric" value={gap || ''}
                           onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                           onChange={(e) => {
                             const value = e.target.value;
@@ -7173,7 +7175,7 @@ const Configurator: React.FC = () => {
                   ) : (
                     <div style={numCellStyle}>
                       <span style={numLabelStyle}>상단갭</span>
-                      <input type="text" inputMode="numeric" defaultValue={gap || ''}
+                      <input type="text" inputMode="numeric" value={gap || ''}
                         onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                         onChange={(e) => {
                           const value = e.target.value;
@@ -7265,7 +7267,7 @@ const Configurator: React.FC = () => {
                         globalTopEnabled,
                         globalTopThickness,
                         globalTopOffset,
-                        globalTopEnabled ? globalTopGap : Math.max(0, globalTopGap || globalTopThickness),
+                        globalTopGap,
                         () => {
                           const nextGap = Math.max(0, globalTopGap || globalTopThickness);
                           const nextTop = Math.max(1, globalTopGap || globalTopThickness || 30);
@@ -7305,6 +7307,7 @@ const Configurator: React.FC = () => {
                           const nextGap = clampFrameGapValue(v);
                           syncGuideTopFrameAll(
                             {
+                              ...(globalTopEnabled ? {} : { top: 0 }),
                               ...(nextSize !== undefined ? { top: nextSize } : {}),
                               topGap: nextGap
                             },
@@ -7533,7 +7536,7 @@ const Configurator: React.FC = () => {
                                   handleSpaceInfoUpdate({
                                     frameSize: {
                                       ...spaceInfo.frameSize,
-                                      top: Math.max(0, globalTopEmpty + globalTopGapEmpty - nextGap),
+                                      top: 0,
                                       topGap: nextGap
                                     } as any
                                   });
@@ -7783,9 +7786,7 @@ const Configurator: React.FC = () => {
                         return md?.dimensions.height ?? 0;
                       })();
 	                    const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
-	                    const currentGap = firstTop.userResizedHeight === true
-	                      ? (computeShelfSplitTopDistance(firstTop) ?? computedGap)
-	                      : (firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap);
+	                    const currentGap = firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap;
                     return (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
@@ -8297,7 +8298,7 @@ const Configurator: React.FC = () => {
                                   handleSpaceInfoUpdate({
                                     frameSize: {
                                       ...spaceInfo.frameSize,
-                                      top: Math.max(0, globalTopEmpty + globalTopGapEmpty - nextGap),
+                                      top: 0,
                                       topGap: nextGap
                                     } as any
                                   });
@@ -8732,14 +8733,15 @@ const Configurator: React.FC = () => {
 	                            const newVal = !allEnabled;
 	                            group.moduleIds.forEach(id => {
 	                              const target = sorted.find(m => m.id === id);
+	                            const targetTopGap = target?.topFrameGap ?? computeShelfSplitTopDistance(target) ?? globalTopGap;
 	                            updatePlacedModule(id, target ? getShelfSplitTopClearanceUpdates(target, newVal ? {
-	                              ...getTopFrameSizeUpdates(target, computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap)),
+	                              ...getTopFrameSizeUpdates(target, targetTopGap),
 	                              hasTopFrame: true,
 	                              topFrameGap: 0,
 		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, true, target),
 	                            } : {
 	                              hasTopFrame: false,
-	                              topFrameGap: computeShelfSplitTopDistance(target) ?? defaultIfZeroSlot(target.topFrameGap, globalTopGap),
+	                              topFrameGap: targetTopGap,
 		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, false, target),
 	                            }) : { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, target) });
 	                          });
@@ -8867,9 +8869,9 @@ const Configurator: React.FC = () => {
 	                              hasTopFrame: newVal,
 		                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal, m),
 	                              ...(newVal
-	                                ? getTopFrameSizeUpdates(m, computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap))
+	                                ? getTopFrameSizeUpdates(m, m.topFrameGap ?? computeShelfSplitTopDistance(m) ?? globalTopGap)
 	                                : {}),
-	                              topFrameGap: newVal ? 0 : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap)),
+	                              topFrameGap: newVal ? 0 : (m.topFrameGap ?? computeShelfSplitTopDistance(m) ?? globalTopGap),
 	                            })));
 	                          },
 	                          (v) => {
@@ -8914,9 +8916,7 @@ const Configurator: React.FC = () => {
                             return md?.dimensions.height ?? 0;
                           })();
 	                        const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
-	                        const currentGap = firstTop.userResizedHeight === true
-	                          ? (computeShelfSplitTopDistance(firstTop) ?? computedGap)
-	                          : (firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap);
+	                        const currentGap = firstTop.topFrameGap ?? computeShelfSplitTopDistance(firstTop) ?? computedGap;
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
@@ -8933,9 +8933,7 @@ const Configurator: React.FC = () => {
 		                                      const md = getModuleById(m.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
 		                                      return md?.dimensions.height ?? 0;
 		                                    })();
-		                                  const nextTopSize = m.userResizedHeight === true
-		                                    ? (computeShelfSplitTopDistance(m) ?? Math.max(0, spaceInfo.height - furnitureHForMod - bottomForMod - floorFinishForMod))
-		                                    : (computeShelfSplitTopDistance(m) ?? defaultIfZeroSlot(m.topFrameGap, globalTopGap));
+		                                  const nextTopSize = m.topFrameGap ?? computeShelfSplitTopDistance(m) ?? Math.max(0, spaceInfo.height - furnitureHForMod - bottomForMod - floorFinishForMod);
 		                                  updatePlacedModule(m.id, getShelfSplitTopClearanceUpdates(m, {
 		                                    ...getTopFrameSizeUpdates(m, nextTopSize),
 		                                    hasTopFrame: true,
@@ -8994,9 +8992,7 @@ const Configurator: React.FC = () => {
 	                            return md?.dimensions.height ?? 0;
 	                          })();
 	                        const computedTopOffGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
-	                        const displayedTopOffGap = mod.userResizedHeight === true
-	                          ? (computeShelfSplitTopDistance(mod) ?? computedTopOffGap)
-	                          : (computeShelfSplitTopDistance(mod) ?? defaultIfZeroSlot(mod.topFrameGap, globalTopGap));
+	                        const displayedTopOffGap = mod.topFrameGap ?? computeShelfSplitTopDistance(mod) ?? computedTopOffGap;
 	                        return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
                           `${toAlpha(topNum)}(상)`,
                           mod.hasTopFrame !== false,
