@@ -1,5 +1,41 @@
 import { resolvePetPanelThicknessMm } from './panelThickness';
 
+export const resolveCabinetBodyWidthDimension = (
+  module: any,
+  moduleWidthMm: number | undefined
+) => {
+  const outerWidthMm = Number(moduleWidthMm);
+  if (!Number.isFinite(outerWidthMm) || outerWidthMm <= 0) {
+    return {
+      widthMm: 0,
+      centerShiftMm: 0,
+      leftInsetMm: 0,
+      rightInsetMm: 0,
+    };
+  }
+
+  if (!module || module.customConfig || module.endPanelMode === 'outside') {
+    return {
+      widthMm: outerWidthMm,
+      centerShiftMm: 0,
+      leftInsetMm: 0,
+      rightInsetMm: 0,
+    };
+  }
+
+  const epThicknessMm = resolvePetPanelThicknessMm(module.endPanelThickness);
+  const leftInsetMm = module.hasLeftEndPanel === true ? epThicknessMm : 0;
+  const rightInsetMm = module.hasRightEndPanel === true ? epThicknessMm : 0;
+  const bodyWidthMm = Math.max(1, outerWidthMm - leftInsetMm - rightInsetMm);
+
+  return {
+    widthMm: Math.round(bodyWidthMm * 10) / 10,
+    centerShiftMm: (leftInsetMm - rightInsetMm) / 2,
+    leftInsetMm,
+    rightInsetMm,
+  };
+};
+
 export const getFramePanelKind = (panelName?: string): 'top' | 'base' | null => {
   if (!panelName) return null;
   const name = panelName.toLowerCase();

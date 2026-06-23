@@ -21,6 +21,7 @@ import { calcInsertFrameResizedPositionX, calcResizedPositionX, getColumnObstacl
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import { resolvePetPanelThicknessMm } from '@/editor/shared/utils/panelThickness';
+import { resolveCabinetBodyWidthDimension } from '@/editor/shared/utils/framePanelListDimensions';
 
 const formatMmValue = (value: number): string => {
   const rounded = Math.round(value * 10) / 10;
@@ -6862,14 +6863,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const stepDownWidthLocal = isFreePlacement
           ? (spaceInfo.stepCeiling?.width || 0)
           : (spaceInfo.droppedCeiling?.width || 0);
-        // 외치(outside) EP: 본체 폭은 그대로지만 EP가 좌/우 바깥에 추가되므로
-        // 폭 치수가이드는 본체폭 + EP두께(좌/우 각각)만큼 늘어나야 한다. (내치는 전체폭 유지 → 보정 없음)
+        const cabinetBodyWidthDim = resolveCabinetBodyWidthDimension(module, actualWidth);
+        // 외치(outside) EP는 기존처럼 외곽 치수에 포함하고, 숨은/내치 EP는 장 본체 폭에서 제외한다.
         const epDimThkMm = (module.endPanelMode === 'outside')
           ? resolvePetPanelThicknessMm(module.endPanelThickness) : 0;
         const leftEpDimMm = (epDimThkMm && module.hasLeftEndPanel) ? epDimThkMm : 0;
         const rightEpDimMm = (epDimThkMm && module.hasRightEndPanel) ? epDimThkMm : 0;
-        const dimWidthMm = actualWidth + leftEpDimMm + rightEpDimMm; // 치수 표시용 전체폭
-        const epDimCenterShift = mmToThreeUnits((rightEpDimMm - leftEpDimMm) / 2); // 좌우 비대칭 시 외곽 중심 이동
+        const dimWidthMm = cabinetBodyWidthDim.widthMm + leftEpDimMm + rightEpDimMm;
+        const epDimCenterShift = mmToThreeUnits(cabinetBodyWidthDim.centerShiftMm + ((rightEpDimMm - leftEpDimMm) / 2));
         const moduleWidth = mmToThreeUnits(dimWidthMm);
         const leftX = actualPositionX + epDimCenterShift - moduleWidth / 2;
         const rightX = actualPositionX + epDimCenterShift + moduleWidth / 2;
@@ -8523,9 +8524,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // useMemo로 메모이제이션된 값 사용
             const {
-              maxLowerCabinetHeightMm,
-              maxUpperCabinetHeightMm,
-              adjustedUpperCabinetHeightMm,
               isFloating,
               floatHeight,
               floorFinishHeightMm,
@@ -8550,7 +8548,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const bothHaveSlot = m.slotIndex !== undefined && viewMod.slotIndex !== undefined;
                 const samePos = bothHaveSlot
                   ? m.slotIndex === viewMod.slotIndex
-                  : Math.abs((m.position?.x ?? 0) - (viewMod.position?.x ?? 0)) < 300;
+                  : Math.abs((m.position?.x ?? 0) - (viewMod.position?.x ?? 0)) < 0.015;
                 return samePos && getSideCategory(m) === targetCategory;
               });
             };
@@ -8622,6 +8620,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
               ? resolveLowerTopFinishThicknessMm(lowerTopFinishRefMod, spaceInfo)
+              : 0;
+            const resolveSideModuleHeightMm = (mod: typeof viewMod | undefined) => {
+              if (!mod) return 0;
+              const modData = getModuleById(mod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+              const category = getSideCategory(mod);
+              const isGlassCabinetForSideDim = mod.moduleId?.includes('glass-cabinet') && category === 'full';
+              const heightMm = isGlassCabinetForSideDim
+                ? resolveGlassCabinetBodyHeightMm(mod, modData, topFrameHeight)
+                : category === 'upper'
+                  ? (mod.customHeight
+                    ?? mod.freeHeight
+                    ?? modData?.dimensions.height
+                    ?? (mod.customConfig?.totalHeight || 0))
+                  : (mod.freeHeight
+                    ?? mod.customHeight
+                    ?? modData?.dimensions.height
+                    ?? (mod.customConfig?.totalHeight || 0));
+              return Math.max(0, Math.round(Number(heightMm) || 0));
+            };
+            const sideLowerCabinetHeightMm = resolveSideModuleHeightMm(
+              bottomFrameRefCategory === 'lower' ? bottomFrameRefMod : findSideCompanion('lower')
+            );
+            const sideUpperCabinetHeightMm = resolveSideModuleHeightMm(
+              getSideCategory(topFrameRefMod) === 'upper' ? topFrameRefMod : findSideCompanion('upper')
+            );
+            const sideAdjustedUpperCabinetHeightMm = sideIsFloating && sideUpperCabinetHeightMm > 0
+              ? Math.max(0, Math.round(sideUpperCabinetHeightMm - (sideFloatHeight - bottomFrameHeight)))
               : 0;
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
@@ -8896,10 +8921,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {sideIsFloating && viewModCategoryForFrame !== 'full' && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !isLowerSideMeasure && !hasSideSectionSplit && sideLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, lowerSideMeasureStartY, rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ]]}
+                    points={[[0, lowerSideMeasureStartY, rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -8909,14 +8934,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, lowerSideMeasureStartY + (mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, lowerSideMeasureStartY + (mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8925,7 +8950,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {Math.round(threeUnitsToMm(mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY))}
+                    {Math.round(threeUnitsToMm(mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY))}
                   </Text>
                 </group>
                 )}
@@ -9001,27 +9026,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && sideAdjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + sideAdjustedUpperCabinetHeightMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + sideAdjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + sideAdjustedUpperCabinetHeightMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm) + mmToThreeUnits(sideAdjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -9030,21 +9055,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {adjustedUpperCabinetHeightMm}
+                    {sideAdjustedUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
+                {!sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && sideUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
+                    points={[[0, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm) + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -9056,7 +9081,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -9065,7 +9090,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {maxUpperCabinetHeightMm}
+                    {sideUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
@@ -10244,9 +10269,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // useMemo로 메모이제이션된 값 사용
             const {
-              maxLowerCabinetHeightMm,
-              maxUpperCabinetHeightMm,
-              adjustedUpperCabinetHeightMm,
               isFloating,
               floatHeight,
               floorFinishHeightMm,
@@ -10271,7 +10293,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const bothHaveSlot = m.slotIndex !== undefined && viewMod.slotIndex !== undefined;
                 const samePos = bothHaveSlot
                   ? m.slotIndex === viewMod.slotIndex
-                  : Math.abs((m.position?.x ?? 0) - (viewMod.position?.x ?? 0)) < 300;
+                  : Math.abs((m.position?.x ?? 0) - (viewMod.position?.x ?? 0)) < 0.015;
                 return samePos && getSideCategory(m) === targetCategory;
               });
             };
@@ -10342,6 +10364,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topSegmentColor = frameDimensionColor;
             const topFinishThicknessMm = lowerTopFinishRefMod
               ? resolveLowerTopFinishThicknessMm(lowerTopFinishRefMod, spaceInfo)
+              : 0;
+            const resolveSideModuleHeightMm = (mod: typeof viewMod | undefined) => {
+              if (!mod) return 0;
+              const modData = getModuleById(mod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+              const category = getSideCategory(mod);
+              const isGlassCabinetForSideDim = mod.moduleId?.includes('glass-cabinet') && category === 'full';
+              const heightMm = isGlassCabinetForSideDim
+                ? resolveGlassCabinetBodyHeightMm(mod, modData, topFrameHeight)
+                : category === 'upper'
+                  ? (mod.customHeight
+                    ?? mod.freeHeight
+                    ?? modData?.dimensions.height
+                    ?? (mod.customConfig?.totalHeight || 0))
+                  : (mod.freeHeight
+                    ?? mod.customHeight
+                    ?? modData?.dimensions.height
+                    ?? (mod.customConfig?.totalHeight || 0));
+              return Math.max(0, Math.round(Number(heightMm) || 0));
+            };
+            const sideLowerCabinetHeightMm = resolveSideModuleHeightMm(
+              bottomFrameRefCategory === 'lower' ? bottomFrameRefMod : findSideCompanion('lower')
+            );
+            const sideUpperCabinetHeightMm = resolveSideModuleHeightMm(
+              getSideCategory(topFrameRefMod) === 'upper' ? topFrameRefMod : findSideCompanion('upper')
+            );
+            const sideAdjustedUpperCabinetHeightMm = sideIsFloating && sideUpperCabinetHeightMm > 0
+              ? Math.max(0, Math.round(sideUpperCabinetHeightMm - (sideFloatHeight - bottomFrameHeight)))
               : 0;
             // console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
@@ -10624,10 +10673,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
                 {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
-                {sideIsFloating && viewModCategoryForFrame !== 'full' && !isLowerSideMeasure && !hasSideSectionSplit && maxLowerCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !isLowerSideMeasure && !hasSideSectionSplit && sideLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, lowerSideMeasureStartY, leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ]]}
+                    points={[[spaceWidth, lowerSideMeasureStartY, leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -10637,14 +10686,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, lowerSideMeasureStartY + (mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, lowerSideMeasureStartY + (mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10653,7 +10702,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {Math.round(threeUnitsToMm(mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY))}
+                    {Math.round(threeUnitsToMm(mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + topFinishThicknessMm) - lowerSideMeasureStartY))}
                   </Text>
                 </group>
                 )}
@@ -10729,27 +10778,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && adjustedUpperCabinetHeightMm > 0 && (
+                {sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && sideAdjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + sideAdjustedUpperCabinetHeightMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + sideAdjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm + sideAdjustedUpperCabinetHeightMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(sideBodyStartMm + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(sideBodyStartMm + sideLowerCabinetHeightMm) + mmToThreeUnits(sideAdjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10758,21 +10807,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {adjustedUpperCabinetHeightMm}
+                    {sideAdjustedUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
 
                 {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
-                {!sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && maxUpperCabinetHeightMm > 0 && (
+                {!sideIsFloating && viewModCategoryForFrame !== 'full' && !hasSideSectionSplit && sideUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}
+                    points={[[spaceWidth, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm) + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -10784,7 +10833,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Text
                     renderOrder={100001}
                     depthTest={false}
-                    position={[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, cabinetAreaTopY - mmToThreeUnits(sideUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -10793,7 +10842,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {maxUpperCabinetHeightMm}
+                    {sideUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
@@ -12639,21 +12688,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 기둥 앞 배치(front) 모드는 슬롯 전체 너비
           const isColFrontTop = (module as any).columnPlacementMode === 'front';
           const slotFullWTop = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
-          // 내치 EP 포함 전체 외곽 폭 기준 (본체+EP = 저장 폭, 중심 = position.x)
-          // — 본체 축소/이동(epOffsetX)은 useBaseFurniture/FurnitureItem에서 처리되어
-          //   전체 외곽이 저장 폭·위치와 일치하므로 치수는 외곽 폭을 그대로 표시
           const actualWidth = (module.isFreePlacement && module.freeWidth)
             ? module.freeWidth
             : isColFrontTop
               ? (slotFullWTop || moduleData.dimensions.width)
               : (module.adjustedWidth || module.customWidth || moduleData.dimensions.width);
-          const moduleWidth = mmToThreeUnits(actualWidth);
+          const cabinetBodyWidthDim = resolveCabinetBodyWidthDimension(module, actualWidth);
+          const dimensionWidthMm = cabinetBodyWidthDim.widthMm || actualWidth;
+          const moduleWidth = mmToThreeUnits(dimensionWidthMm);
           // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용 (front 모드는 슬롯 중심 X)
           const actualPositionX = isColFrontTop
             ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
             : ((module as any).adjustedPosition?.x ?? module.position.x);
-          const leftX = actualPositionX - moduleWidth / 2;
-          const rightX = actualPositionX + moduleWidth / 2;
+          const dimensionCenterX = actualPositionX + mmToThreeUnits(cabinetBodyWidthDim.centerShiftMm);
+          const leftX = dimensionCenterX - moduleWidth / 2;
+          const rightX = dimensionCenterX + moduleWidth / 2;
 
           // 4단: 개별 가구 치수선 — DIM_GAP 기반 (입면 slotDimensionY에 대응)
           const dimZ = topSlotDimZ;
@@ -12680,7 +12729,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <Text
                   renderOrder={100000}
                   depthTest={false}
-                position={[actualPositionX, spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
+                position={[dimensionCenterX, spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
                 anchorX="center"
@@ -12688,7 +12737,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 rotation={[-Math.PI / 2, 0, 0]}
               >
                 {(() => {
-                  const w = Math.round(actualWidth * 10) / 10;
+                  const w = Math.round(dimensionWidthMm * 10) / 10;
                   return w % 1 === 0 ? w : w.toFixed(1);
                 })()}
               </Text>

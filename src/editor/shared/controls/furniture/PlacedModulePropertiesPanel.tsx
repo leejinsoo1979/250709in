@@ -23,6 +23,7 @@ import {
 } from '@/editor/shared/utils/doorHingeGeometryRegistry';
 import {
   applyFramePanelListWidthFallback,
+  resolveCabinetBodyWidthDimension,
   stripFramePanelListFallbackMarker
 } from '@/editor/shared/utils/framePanelListDimensions';
 import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
@@ -2830,6 +2831,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         : typeof currentPlacedModule?.customDepth === 'number' && currentPlacedModule.customDepth > 0
           ? currentPlacedModule.customDepth
           : getDefaultDepth(moduleData);
+    const renderedBodyWidthForPanels = resolveCabinetBodyWidthDimension(
+      currentPlacedModule,
+      renderedWidthForPanels
+    ).widthMm || renderedWidthForPanels;
     const renderedHasDoor = currentPlacedModule?.hasDoor ?? hasDoor;
     const doorOuterOpenSides = resolveDoorOuterOpenSides({
       spaceInfo,
@@ -2852,7 +2857,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       ? false
       : rawDoorWidthAdjustEnabled;
     const calculatedPanels = calculatePanelDetails(
-      moduleData, renderedWidthForPanels, renderedDepthForPanels, renderedHasDoor, t, panelDoorOriginalWidth,
+      moduleData, renderedBodyWidthForPanels, renderedDepthForPanels, renderedHasDoor, t, panelDoorOriginalWidth,
       currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
