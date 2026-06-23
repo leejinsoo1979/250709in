@@ -300,6 +300,14 @@ const resolveTopPlanModuleDepthForPdf = (
   return depth ?? 600;
 };
 
+const alignTopPlanModuleDepthToGuide = (moduleDepth: number, guideDepth?: number): number => {
+  if (!guideDepth || guideDepth <= moduleDepth) return moduleDepth;
+
+  const shortage = guideDepth - moduleDepth;
+  const snapTolerance = Math.max(25, Math.min(40, guideDepth * 0.06));
+  return shortage <= snapTolerance ? guideDepth : moduleDepth;
+};
+
 const simplifyTopPlanFurnitureBodies = (
   source: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
@@ -318,7 +326,10 @@ const simplifyTopPlanFurnitureBodies = (
     if (moduleWidth <= 0) return;
 
     const centerX = centerOffsetX + (module.position?.x ?? 0) * 100;
-    const moduleDepth = resolveTopPlanModuleDepthForPdf(spaceInfo, module);
+    const moduleDepth = alignTopPlanModuleDepthToGuide(
+      resolveTopPlanModuleDepthForPdf(spaceInfo, module),
+      depthGuide.depth
+    );
     appendRectangleOutline(lines, {
       minX: centerX - moduleWidth / 2,
       maxX: centerX + moduleWidth / 2,
@@ -839,6 +850,47 @@ const getParsedLineBounds = (lines: ParsedLine[]) => {
   };
 };
 
+const getDimensionLaneYsAboveBounds = (
+  lines: ParsedLine[],
+  bodyBounds: NonNullable<ReturnType<typeof getParsedLineBounds>>
+): number[] => {
+  const minHorizontalLength = Math.max(40, bodyBounds.width * 0.08);
+  const rawYs = lines
+    .filter(line => {
+      if (line.layer !== 'DIMENSIONS') return false;
+      const dx = Math.abs(line.x2 - line.x1);
+      const dy = Math.abs(line.y2 - line.y1);
+      const y = (line.y1 + line.y2) / 2;
+      return dy <= 1 && dx >= minHorizontalLength && y > bodyBounds.maxY + 5;
+    })
+    .map(line => (line.y1 + line.y2) / 2)
+    .sort((a, b) => b - a);
+
+  return rawYs.reduce<number[]>((lanes, y) => {
+    if (!lanes.some(existing => Math.abs(existing - y) <= 8)) {
+      lanes.push(y);
+    }
+    return lanes;
+  }, []);
+};
+
+const resolveFrontNoDoorFurnitureWidthDimensionY = (
+  lines: ParsedLine[],
+  bodyBounds: NonNullable<ReturnType<typeof getParsedLineBounds>>
+): number => {
+  const laneYs = getDimensionLaneYsAboveBounds(lines, bodyBounds);
+  const minY = bodyBounds.maxY + 24;
+  const laneGap = laneYs.length >= 2
+    ? Math.max(60, Math.min(140, Math.abs(laneYs[0] - laneYs[1])))
+    : 120;
+
+  if (laneYs.length >= 3) return Math.max(minY, laneYs[2]);
+  if (laneYs.length === 2) return Math.max(minY, laneYs[1] - laneGap);
+  if (laneYs.length === 1) return Math.max(minY, laneYs[0] - laneGap * 2);
+
+  return bodyBounds.maxY + Math.max(48, Math.min(90, bodyBounds.height * 0.035));
+};
+
 const appendFrontNoDoorFurnitureWidthDimensions = (
   data: { lines: ParsedLine[]; texts: ParsedText[] },
   spaceInfo: SpaceInfo,
@@ -849,8 +901,8 @@ const appendFrontNoDoorFurnitureWidthDimensions = (
 
   const lines = [...data.lines];
   const texts = [...data.texts];
-  const dimensionY = bodyBounds.maxY + Math.max(48, Math.min(90, bodyBounds.height * 0.035));
-  const extensionTopY = dimensionY - 8;
+  const dimensionY = resolveFrontNoDoorFurnitureWidthDimensionY(data.lines, bodyBounds);
+  const extensionTopY = Math.max(bodyBounds.maxY + 8, dimensionY - 8);
   const tickSize = 8;
   const centerOffsetX = spaceInfo.width / 2;
 
