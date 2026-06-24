@@ -293,7 +293,12 @@ const resolveTopFrameDistanceMm = (
   const shelfSplitTopDistance = resolveShelfSplitTopDistanceMm(mod, spaceInfo, effectiveHeightMm);
   const fullBodyTopClearance = resolveFullBodyTopClearanceMm(mod, spaceInfo, effectiveHeightMm);
   if (mod?.hasTopFrame === false) {
-    return Math.max(0, Math.round(shelfSplitTopDistance ?? fullBodyTopClearance ?? mod?.topFrameGap ?? 0));
+    // 사용자가 입력한 상단갭(topFrameGap)을 최우선으로 사용한다.
+    // 그렇지 않으면 freeHeight 기반 fullBodyTopClearance(이전 몰딩값)가 남아 입력한 갭이 무시된다.
+    if (typeof mod?.topFrameGap === 'number') {
+      return Math.max(0, Math.round(mod.topFrameGap));
+    }
+    return Math.max(0, Math.round(shelfSplitTopDistance ?? fullBodyTopClearance ?? 0));
   }
   if (mod?.userResizedHeight === true && fullBodyTopClearance !== null) {
     return fullBodyTopClearance;
@@ -1274,17 +1279,33 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // 좌측뷰 연장선 시작점
   const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(70);
   const getVisibleTopGapMm = () => {
+    // 정면뷰(CleanCAD2D)와 동일하게 전역 상단몰딩 OFF(전체 토글 OFF)도 인식한다.
+    const isGlobalTopAllMode = spaceInfo.guideTopFrameAllMode ?? true;
+    const isGlobalTopOff = isGlobalTopAllMode
+      && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
+    const globalTopGapForDim = isGlobalTopAllMode && typeof (spaceInfo.frameSize as any)?.topGap === 'number'
+      ? Math.max(0, Math.round((spaceInfo.frameSize as any).topGap))
+      : null;
+
     const target = visibleFurniture.find(module => {
       const mod = module as PlacedModule;
       const cat = getModuleCategory(mod);
-      return mod.hasTopFrame === false
-        && (cat === 'full' || cat === 'upper')
-        && Number((mod as any).topFrameGap ?? 0) > 0;
+      const isTopFrameOff = mod.hasTopFrame === false || isGlobalTopOff;
+      const gapMm = isTopFrameOff
+        ? Math.max(0, Math.round(globalTopGapForDim ?? Number((mod as any).topFrameGap ?? 0)))
+        : 0;
+      return isTopFrameOff && (cat === 'full' || cat === 'upper') && gapMm > 0;
     }) as PlacedModule | undefined;
 
     if (!target) return 0;
+    // 사용자가 입력한 상단갭(topFrameGap)을 최우선으로 사용한다.
+    // freeHeight 기반 clearance(이전 몰딩값)를 우선하면 입력한 갭이 무시되거나, 가구가 천장까지 차서 갭선이 안 그려진다.
+    if (typeof (target as any).topFrameGap === 'number' || globalTopGapForDim !== null) {
+      const gapMm = Math.max(0, Math.round(globalTopGapForDim ?? Number((target as any).topFrameGap ?? 0)));
+      return Math.min(displaySpaceHeightMm, gapMm);
+    }
     const resolvedTopClearance = resolveFullBodyTopClearanceMm(target, spaceInfo, displaySpaceHeightMm);
-    return Math.min(displaySpaceHeightMm, Math.max(0, Math.round(resolvedTopClearance ?? Number((target as any).topFrameGap ?? 0))));
+    return Math.min(displaySpaceHeightMm, Math.max(0, Math.round(resolvedTopClearance ?? 0)));
   };
 
   if (currentViewDirection === 'left') {
@@ -1482,25 +1503,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 상부장/키큰장(full): 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
             if (modCat_l2 === 'upper' || modCat_l2 === 'full') {
+              // 전역 상단몰딩 OFF(전체 토글 OFF)도 인식 — 모듈 hasTopFrame이 true여도 OFF로 취급.
+              // OFF면 몰딩 세그먼트(30) 미표시. 빈 상단갭은 별도 getVisibleTopGapMm 치수선이 담당.
+              const isGlobalTopAllMode_l2 = spaceInfo.guideTopFrameAllMode ?? true;
+              const isGlobalTopOff_l2 = isGlobalTopAllMode_l2
+                && Math.max(0, Math.round(spaceInfo.frameSize?.top ?? 0)) <= 0;
+              const isTopFrameOff_l2 = mod.hasTopFrame === false || isGlobalTopOff_l2;
               const topFrameVal = resolveTopFrameDistanceMm(mod, spaceInfo, spaceInfo.frameSize?.top ?? 30, effectiveH_l2);
-              const topGapVal = mod.hasTopFrame === false
-                ? topFrameVal
-                : 0;
-              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
+              const visibleTopFrameVal = isTopFrameOff_l2 ? 0 : Math.max(0, topFrameVal);
               if (visibleTopFrameVal > 0) {
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(effectiveH_l2 - topGapVal),
+                  topY: mmToThreeUnits(effectiveH_l2),
                   heightMm: Math.round(visibleTopFrameVal),
                   key: `upper-topframe-${moduleIndex}`
-                });
-              }
-              if (mod.hasTopFrame !== false && topGapVal > 0) {
-                segments_l2.push({
-                  bottomY: mmToThreeUnits(effectiveH_l2 - topGapVal),
-                  topY: mmToThreeUnits(effectiveH_l2),
-                  heightMm: Math.round(topGapVal),
-                  key: `upper-topgap-${moduleIndex}`
                 });
               }
             }

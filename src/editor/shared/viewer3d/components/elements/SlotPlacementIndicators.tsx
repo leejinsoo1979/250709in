@@ -2130,6 +2130,27 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       : resolveFrameRawSize(spaceInfo.frameSize?.top, undefined, topGapFromGuideState);
     const gTopGap = topGapFromGuideState;
     const gTopClearance = Math.max(0, gTopMolding > 0 ? gTopMolding : gTopGap);
+    const setGuideTopFrameAllMode = (next: boolean) => {
+      if (next) {
+        setSpaceInfo({ guideTopFrameAllMode: true });
+        return;
+      }
+
+      setSpaceInfo({
+        guideTopFrameAllMode: false,
+        freePlacementGuides: guideSlots.map((slot) => {
+          if ((slot.guideZone || 'full') === 'lower') return slot;
+          const slotEnabled = slot.hasTopFrame ?? (gTopMolding > 0);
+          return {
+            ...slot,
+            hasTopFrame: slotEnabled,
+            topFrameThickness: slot.topFrameThickness ?? Math.max(0, gTopMolding || gTopGap),
+            topFrameGap: slotEnabled ? (slot.topFrameGap ?? 0) : resolveGuideSlotTopGap(slot),
+            topFrameGapUserSet: slot.topFrameGapUserSet ?? false
+          };
+        })
+      });
+    };
     const activePlacedFurnitureId = activePopup.type === 'furnitureEdit' && activePopup.id
       ? activePopup.id
       : (uiSelectedFurnitureId ?? selectedFurnitureIds[selectedFurnitureIds.length - 1] ?? selectedFurnitureId);
@@ -2864,7 +2885,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 <input
                   type="checkbox"
                   checked={guideTopFrameAllMode}
-                  onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                  onChange={(e) => setGuideTopFrameAllMode(e.target.checked)}
                   style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
                 />
                 <span>전체</span>
@@ -2908,7 +2929,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
                 <input
                   type="checkbox"
                   checked={guideTopFrameAllMode}
-                  onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                  onChange={(e) => setGuideTopFrameAllMode(e.target.checked)}
                   style={{ width: 12, height: 12, margin: 0, accentColor: guideColor }}
                 />
                 <span>전체</span>

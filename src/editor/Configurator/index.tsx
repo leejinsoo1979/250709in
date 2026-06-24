@@ -539,7 +539,30 @@ const FrameOffsetRow: React.FC<{
             </div>
           )}
         </div>
-      ) : null}
+      ) : (
+        // 토글 OFF(몰딩 없음)여도 상단갭은 입력 가능해야 한다.
+        // 천장~가구 사이 빈 공간(상단갭)을 사용자가 지정한다.
+        showGap ? (
+          <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+            <div className={styles.frameItemInput} style={{ flex: 1 }}>
+              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>상단갭</span>
+              <input type="text" inputMode="numeric" value={gapText} placeholder="0"
+                onFocus={() => { gapFocusRef.current = true; setHighlightedFrame(highlightKey); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = clampFrameGapValue((gap || 0) + (e.key === 'ArrowUp' ? 1 : -1));
+                    setGapText(String(next)); commitGap(next);
+                  } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                }}
+                onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setGapText(v); }}
+                onBlur={(e) => { gapFocusRef.current = false; setHighlightedFrame(null); const c = clampFrameGapValue(parseInt(e.target.value) || 0); setGapText(String(c)); commitGap(c); }}
+                className={styles.frameNumberInput}
+              />
+            </div>
+          </div>
+        ) : null
+      )}
     </div>
   );
 };
@@ -7128,6 +7151,27 @@ const Configurator: React.FC = () => {
               if (isStaleCopiedTopGap(slot)) return 0;
               return Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? globalTopGap : 0));
             };
+            const setGuideTopFrameAllMode = (next: boolean) => {
+              if (next) {
+                setSpaceInfo({ guideTopFrameAllMode: true });
+                return;
+              }
+
+              setSpaceInfo({
+                guideTopFrameAllMode: false,
+                freePlacementGuides: guideSlots.map((slot) => {
+                  if ((slot.guideZone || 'full') === 'lower') return slot;
+                  const slotEnabled = slot.hasTopFrame ?? globalTopEnabled;
+                  return {
+                    ...slot,
+                    hasTopFrame: slotEnabled,
+                    topFrameThickness: slot.topFrameThickness ?? globalTopThickness,
+                    topFrameGap: slotEnabled ? (slot.topFrameGap ?? 0) : getSlotTopGap(slot),
+                    topFrameGapUserSet: slot.topFrameGapUserSet ?? false
+                  };
+                })
+              });
+            };
             const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
             const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
               resolveFrameRawSize(
@@ -7272,7 +7316,7 @@ const Configurator: React.FC = () => {
                     <span className={styles.sectionDot}></span>
                     <h3 className={styles.sectionTitle}>상단몰딩</h3>
                     <label onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}>
-                      <input type="checkbox" checked={guideTopFrameAllMode} onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                      <input type="checkbox" checked={guideTopFrameAllMode} onChange={(e) => setGuideTopFrameAllMode(e.target.checked)} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                       <span>전체</span>
                     </label>
                     <HelpBtn title="상단몰딩" text="커스텀 슬롯의 상단몰딩을 전체 또는 슬롯별로 설정합니다." />

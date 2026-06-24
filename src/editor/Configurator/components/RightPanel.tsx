@@ -1807,6 +1807,27 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 if (isStaleCopiedTopGap(slot)) return 0;
                 return Math.max(0, slot.topFrameGap ?? (guideTopFrameAllMode ? globalTopGap : 0));
               };
+              const setGuideTopFrameAllMode = (next: boolean) => {
+                if (next) {
+                  setSpaceInfo({ guideTopFrameAllMode: true });
+                  return;
+                }
+
+                setSpaceInfo({
+                  guideTopFrameAllMode: false,
+                  freePlacementGuides: guideSlots.map((slot) => {
+                    if ((slot.guideZone || 'full') === 'lower') return slot;
+                    const slotEnabled = slot.hasTopFrame ?? globalTopEnabled;
+                    return {
+                      ...slot,
+                      hasTopFrame: slotEnabled,
+                      topFrameThickness: slot.topFrameThickness ?? globalTopThickness,
+                      topFrameGap: slotEnabled ? (slot.topFrameGap ?? 0) : getSlotTopGap(slot),
+                      topFrameGapUserSet: slot.topFrameGapUserSet ?? false
+                    };
+                  })
+                });
+              };
               const getSlotBaseEnabled = (slot: FreePlacementGuideSlot) => slot.hasBase ?? globalBaseEnabled;
               const getSlotBaseHeight = (slot: FreePlacementGuideSlot) => (
                 resolveDefaultBackedRawSize(
@@ -1848,7 +1869,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       <input
                         type="checkbox"
                         checked={guideTopFrameAllMode}
-                        onChange={(e) => setSpaceInfo({ guideTopFrameAllMode: e.target.checked })}
+                        onChange={(e) => setGuideTopFrameAllMode(e.target.checked)}
                         style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
                       />
                       <span>전체</span>
