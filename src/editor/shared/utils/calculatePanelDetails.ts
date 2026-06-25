@@ -24,6 +24,7 @@ import {
   resolveLowerCabinetStandardDrawerNotches,
   type LowerCabinetDrawerFamily
 } from './lowerCabinetMaidaGeometry';
+import { collectWoolimDraftBoxParts, collectWoolimMokchanelSideNotches, woolimPartToPanel } from './woolimDraftParts';
 
 const roundMmToTenth = (value: number): number => Math.round(value * 10) / 10;
 
@@ -264,6 +265,87 @@ export const calculatePanelDetails = (
   const backPanelTopClearance = 1; // 백패널 상단 조립 공차 1mm
   const backPanelOffsetThickness = resolveNominalBackPanelOffsetThicknessMm(basicThickness);
   const backReductionForPanelsMm = backPanelThickness + backPanelOffsetThickness - 1;
+
+  if (moduleData.woolimDraft?.params) {
+    const params = moduleData.woolimDraft.params as Record<string, any>;
+    const options = (params.options || {}) as Record<string, any>;
+    const topValue = options.top?.value;
+    const bottomValue = options.bottom?.value;
+    const sideZStart = bottomValue === 'demband' ? basicThickness : 0;
+    const sideZEnd = topValue === 'demband' ? height - basicThickness : height;
+    const sideHeight = Math.max(0, sideZEnd - sideZStart);
+    const sideNotches = collectWoolimMokchanelSideNotches(moduleData.woolimDraft.params, {
+      depth: customDepth,
+      height,
+      boardThick: basicThickness
+    });
+    const result: any[] = [{ name: '=== WOOLIM Draft ===' }];
+    result.push({
+      name: '좌측판',
+      width: customDepth,
+      height: sideHeight,
+      thickness: basicThickness,
+      material: 'PB',
+      ...(sideNotches.length ? { sideNotches } : {})
+    });
+    result.push({
+      name: '우측판',
+      width: customDepth,
+      height: sideHeight,
+      thickness: basicThickness,
+      material: 'PB',
+      ...(sideNotches.length ? { sideNotches } : {})
+    });
+    collectWoolimDraftBoxParts(moduleData.woolimDraft.params, {
+      width: customWidth,
+      depth: customDepth,
+      height,
+      boardThick: basicThickness
+    }).forEach(part => {
+      const panel = woolimPartToPanel(part);
+      result.push({
+        ...panel,
+        material: part.role === 'BACK' ? 'MDF' : part.role.includes('MOK') ? 'PB' : 'PB',
+        quantity: 1
+      });
+    });
+
+    const externalDrawers = moduleData.modelConfig?.externalDrawers;
+    if (externalDrawers?.drawerType !== 'legrabox' && externalDrawers?.slots?.length) {
+      const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+      const drawerDepth = Math.max(0, customDepth - 50);
+      const drawerInnerWidth = Math.max(0, customWidth - basicThickness * 2 - drawerSideThickness * 2);
+      const bottomWidth = Math.max(0, drawerInnerWidth + 14);
+      result.push({ name: '=== 서랍 및 도어 ===' });
+      externalDrawers.slots.forEach((slot, index) => {
+        const drawerNum = index + 1;
+        const slotH = Number.isFinite(slot.slot_h)
+          ? Number(slot.slot_h)
+          : Number(slot.slot_top || 0) - Number(slot.slot_bot || 0);
+        const sideH = Math.max(0, Math.min(250, slotH || 250));
+        const backH = Math.max(0, sideH - 15 - backPanelThickness);
+        result.push(
+          { name: `서랍${drawerNum} 좌측판`, width: drawerDepth, height: sideH, thickness: drawerSideThickness, material: 'PB' },
+          { name: `서랍${drawerNum} 우측판`, width: drawerDepth, height: sideH, thickness: drawerSideThickness, material: 'PB' },
+          { name: `서랍${drawerNum} 뒷판`, width: Math.round(drawerInnerWidth), height: Math.round(backH), thickness: drawerSideThickness, material: 'PB' },
+          { name: `서랍${drawerNum} 바닥`, width: Math.round(bottomWidth), depth: drawerDepth, thickness: backPanelThickness, material: 'MDF' }
+        );
+        if (hasDoor) {
+          result.push({
+            name: `서랍${drawerNum}(마이다)`,
+            width: Math.max(0, maidaWidthAdjustEnabled
+              ? customWidth + maidaOuterOpenCompensationMm + maidaWidthAdjustMm
+              : customWidth + maidaOuterOpenCompensationMm - 3),
+            height: Math.round(Math.max(0, slotH) * 10) / 10,
+            thickness: PET_PANEL_THICKNESS_MM,
+            material: 'PET'
+          });
+        }
+      });
+    }
+
+    return result;
+  }
   
   // 선반 앞면 30mm 옵셋 (다보선반: 상부장·하부장 공통)
   const isUpperCabinet = moduleData.category === 'upper';
@@ -2606,7 +2688,7 @@ export const calculatePanelDetails = (
       ? [...sortedNotches]
       : [...sortedNotches, { fromBottom: sidePanelHMm - upperNotchH, height: upperNotchH }];
 
-    const extZones: { notchAboveBottom: number; notchBelowTop: number | null; bottomMm: number; notchAboveHeight?: number | null }[] = [];
+    const extZones: { notchAboveBottom: number; notchBelowTop: number | null; bottomMm: number; notchAboveHeight?: number | null; explicitSlot?: boolean }[] = [];
     let zCursor = 0;
     for (let ni = 0; ni < allNotches.length; ni++) {
       const notch = allNotches[ni];
@@ -2620,7 +2702,7 @@ export const calculatePanelDetails = (
       }
       zCursor = notch.fromBottom + notch.height;
     }
-    if (hideTopNotch && zCursor < sidePanelHMm && extZones.length < extDrawerCount) {
+    if (hideTopNotch && zCursor < sidePanelHMm && (extZones.length < extDrawerCount || adminExternalDrawers?.placement === 'top')) {
       const lastNotch = allNotches[allNotches.length - 1];
       extZones.push({
         notchAboveBottom: sidePanelHMm - basicThickness,
@@ -2629,6 +2711,33 @@ export const calculatePanelDetails = (
         notchAboveHeight: null,
       });
     }
+    if (adminExternalDrawers?.slots?.length) {
+      extZones.length = 0;
+      adminExternalDrawers.slots
+        .map(slot => {
+          const bottomMm = Number(slot.slot_bot);
+          const topMm = Number.isFinite(slot.slot_top)
+            ? Number(slot.slot_top)
+            : bottomMm + Number(slot.slot_h || 0);
+          if (!Number.isFinite(bottomMm) || !Number.isFinite(topMm) || topMm <= bottomMm) return null;
+          return {
+            bottomMm,
+            notchAboveBottom: topMm,
+            notchBelowTop: bottomMm,
+            notchAboveHeight: null,
+            explicitSlot: true,
+          };
+        })
+        .filter((zone): zone is { notchAboveBottom: number; notchBelowTop: number; bottomMm: number; notchAboveHeight: null; explicitSlot: true } => !!zone)
+        .sort((a, b) => a.bottomMm - b.bottomMm)
+        .forEach(zone => extZones.push(zone));
+    }
+
+    const resolvedExtZones = adminExternalDrawers?.slots?.length
+      ? extZones
+      : adminExternalDrawers?.placement === 'top'
+        ? extZones.slice(Math.max(0, extZones.length - extDrawerCount))
+        : extZones;
 
     // 측판 높이: 1단 250mm, 2단이상 130mm (3단서랍), 2단서랍은 모두 250mm
     for (let di = 0; di < extDrawerCount; di++) {
@@ -2647,8 +2756,10 @@ export const calculatePanelDetails = (
           : isBasicDrawer3Tier ? (di === 0 ? 240 : 130)
           : extDrawerCount >= 3 ? (di === 0 ? 250 : 130)
           : 250);
-      const zone = extZones[di];
-      const sideBottomReferenceMm = di === 0
+      const zone = resolvedExtZones[di];
+      const sideBottomReferenceMm = zone?.explicitSlot
+        ? zone.bottomMm
+        : di === 0
         ? basicThickness
         : (zone?.notchBelowTop ?? zone?.bottomMm ?? 0);
       const maxExtSideHMm = zone

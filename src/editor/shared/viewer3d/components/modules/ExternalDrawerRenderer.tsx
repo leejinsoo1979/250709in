@@ -36,6 +36,15 @@ interface DrawerZone {
   topMm: number;
   notchAboveBottom: number;
   notchBelowTop: number | null;
+  explicitSlot?: boolean;
+  maidaBottomMm?: number;
+  maidaHeightMm?: number;
+}
+
+interface ExternalDrawerSlot {
+  slot_bot: number;
+  slot_top?: number;
+  slot_h?: number;
 }
 
 /** 서랍 한 칸 (useSpring 사용을 위해 별도 컴포넌트) */
@@ -133,9 +142,11 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const basicThicknessMm = basicThickness / 0.01;
   const bottomGapMm = bottomGap / 0.01;
   const topClearanceMm = 5;
-  const sideBottomReferenceMm = index === 0
-    ? basicThicknessMm
-    : (zone.notchBelowTop ?? zone.bottomMm);
+  const sideBottomReferenceMm = zone.explicitSlot
+    ? zone.bottomMm
+    : index === 0
+      ? basicThicknessMm
+      : (zone.notchBelowTop ?? zone.bottomMm);
   const maxSideHeightMm = Math.max(
     0,
     zone.notchAboveBottom - sideBottomReferenceMm - bottomGapMm - topClearanceMm
@@ -145,9 +156,11 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   const bottomPanelTopY = cabinetBottomY + basicThickness;
   // 측판 하단: 1단=바닥판에서 15mm 위, 2단이상=따내기 상단에서 15mm 위
-  const sideBottomY = index === 0
-    ? bottomPanelTopY + bottomGap
-    : drawerBottomY + bottomGap;
+  const sideBottomY = zone.explicitSlot
+    ? drawerBottomY + bottomGap
+    : index === 0
+      ? bottomPanelTopY + bottomGap
+      : drawerBottomY + bottomGap;
   const sideCenterY = sideBottomY + sideHeight / 2;
 
   const cX = 0;
@@ -178,11 +191,14 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
     ? Math.max(0, zone.notchAboveHeight - 5 - maidaGapMm)
     : 40;
   const maidaTopMm = zone.notchAboveBottom + maidaTopExtMm;
-  const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+  const defaultMaidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+  const maidaBottomMm = zone.maidaBottomMm ?? defaultMaidaBottomMm;
   const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
   const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
-  const maidaHeightMm = fixedMaidaHeightMm != null ? (fixedMaidaHeightMm + gapTopExt + gapBottomExt) : defaultMaidaHeightMm;
+  const maidaHeightMm = zone.maidaHeightMm != null
+    ? zone.maidaHeightMm
+    : fixedMaidaHeightMm != null ? (fixedMaidaHeightMm + gapTopExt + gapBottomExt) : defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
   const maidaBottomActualMm = maidaBottomMm - gapBottomExt;
   const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomActualMm) + maidaHeight / 2;
@@ -406,6 +422,8 @@ interface ExternalDrawerRendererProps {
   maidaXOffset?: number;
   showDrawerFrontPanel?: boolean;
   showMaidaGapDimensions?: boolean;
+  explicitSlots?: ExternalDrawerSlot[];
+  placement?: 'bottom' | 'top';
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -444,6 +462,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   maidaXOffset = 0,
   showDrawerFrontPanel = false,
   showMaidaGapDimensions = true,
+  explicitSlots,
+  placement = 'bottom',
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -631,7 +651,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   // hideTopNotch: 마지막 노치 ~ 상판 안쪽까지 남은 영역도 서랍 zone으로 추가
   // 상판 두께(basicThicknessMm)를 빼서 서랍이 상판 안쪽까지만 차지하도록
   // 단, zone이 이미 drawerCount만큼 있으면 추가하지 않음 (상판내림: 665 위는 전대+상판)
-  if (hideTopNotch && cursor < sidePanelHeightMm && zones.length < drawerCount) {
+  if (hideTopNotch && cursor < sidePanelHeightMm && (zones.length < drawerCount || placement === 'top')) {
     const lastNotch = allNotches[allNotches.length - 1];
     const topLimit = sidePanelHeightMm - basicThicknessMm;
     zones.push({
@@ -643,11 +663,39 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     });
   }
 
+  const explicitDrawerZones: DrawerZone[] = (explicitSlots || [])
+    .map(slot => {
+      const bot = Number(slot.slot_bot);
+      const top = Number.isFinite(slot.slot_top)
+        ? Number(slot.slot_top)
+        : bot + Number(slot.slot_h || 0);
+      const slotH = Number.isFinite(slot.slot_h)
+        ? Number(slot.slot_h)
+        : top - bot;
+      if (!Number.isFinite(bot) || !Number.isFinite(top) || top <= bot || slotH <= 0) return null;
+      return {
+        bottomMm: bot,
+        topMm: top,
+        notchAboveBottom: top,
+        notchBelowTop: bot,
+        notchAboveHeight: null,
+        explicitSlot: true,
+        maidaBottomMm: bot,
+        maidaHeightMm: slotH,
+      };
+    })
+    .filter((zone): zone is DrawerZone => !!zone)
+    .sort((a, b) => a.bottomMm - b.bottomMm);
+  const inferredZones = placement === 'top'
+    ? zones.slice(Math.max(0, zones.length - drawerCount))
+    : zones.slice(0, Math.max(drawerCount, zones.length));
+  const renderedZones = explicitDrawerZones.length > 0 ? explicitDrawerZones : inferredZones;
+
   const cabinetBottomY = -height / 2;
   const floorLineY = floorY ?? cabinetBottomY;
   const DRAWER_OPEN_DISTANCE = mmToThreeUnits(300);
-  const maidaRanges = zones.map((zone, i) => {
-    const isTopDrawer = i === zones.length - 1;
+  const maidaRanges = renderedZones.map((zone, i) => {
+    const isTopDrawer = i === renderedZones.length - 1;
     const isBottomDrawer = i === 0;
     const effectiveDoorTopGap = doorTopGap ?? defaultDoorTopGap;
     const effectiveDoorBottomGap = doorBottomGap ?? defaultDoorBottomGap;
@@ -659,10 +707,12 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
     const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
     const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
-    const heightMm = maidaHeightsMm?.[i] != null
-      ? maidaHeightsMm[i] + gapTopExt + gapBottomExt
-      : defaultMaidaHeightMm;
-    const bottomMm = maidaBottomMm - gapBottomExt;
+    const heightMm = zone.maidaHeightMm != null
+      ? zone.maidaHeightMm
+      : maidaHeightsMm?.[i] != null
+        ? maidaHeightsMm[i] + gapTopExt + gapBottomExt
+        : defaultMaidaHeightMm;
+    const bottomMm = zone.maidaBottomMm ?? (maidaBottomMm - gapBottomExt);
     const bottomY = cabinetBottomY + mmToThreeUnits(bottomMm);
     const topY = bottomY + mmToThreeUnits(heightMm);
     return {
@@ -724,12 +774,12 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 
   return (
     <group>
-      {zones.map((zone, i) => (
+      {renderedZones.map((zone, i) => (
         <SingleDrawer
           key={`ext-drawer-${i}`}
           zone={zone}
           index={i}
-          drawerCount={drawerCount}
+          drawerCount={renderedZones.length}
           shouldOpen={shouldOpenDrawers}
           openDistance={DRAWER_OPEN_DISTANCE}
           cabinetBottomY={cabinetBottomY}
@@ -768,7 +818,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           defaultDoorTopGap={defaultDoorTopGap}
           defaultDoorBottomGap={defaultDoorBottomGap}
           maidaGapMm={maidaGapMm}
-          isTopDrawer={i === drawerCount - 1}
+          isTopDrawer={i === renderedZones.length - 1}
           isBottomDrawer={i === 0}
           showDrawerFrontPanel={showDrawerFrontPanel}
         />
@@ -839,9 +889,9 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       })}
 
       {/* 마이다 하단 폭 치수 (1단 마이다 기준) — 공통 컴포넌트 */}
-      {showDimensions && showMaida && zones.length > 0 && (() => {
-        const zone0 = zones[0];
-        const maidaBottomMm0 = zone0.notchBelowTop != null ? (zone0.notchBelowTop - 5) : -5;
+      {showDimensions && showMaida && renderedZones.length > 0 && (() => {
+        const zone0 = renderedZones[0];
+        const maidaBottomMm0 = zone0.maidaBottomMm ?? (zone0.notchBelowTop != null ? (zone0.notchBelowTop - 5) : -5);
         const maidaBottomY = cabinetBottomY + mmToThreeUnits(maidaBottomMm0);
         return (
         <group position={[maidaXOffset, maidaBottomY, 0]}>

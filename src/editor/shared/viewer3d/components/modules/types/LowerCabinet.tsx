@@ -36,6 +36,7 @@ import {
   resolveLowerCabinetStandardDrawerNotches,
   type LowerCabinetDrawerFamily
 } from '@/editor/shared/utils/lowerCabinetMaidaGeometry';
+import { collectWoolimMokchanelSideNotches } from '@/editor/shared/utils/woolimDraftParts';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import {
   buildFlatPanelQuaternion,
@@ -48,6 +49,234 @@ import {
   MIN_SIMULATION_BOX_SIZE,
   resolvePanelSimulationTarget
 } from '../../../utils/panelSimulationMotion';
+
+type WoolimPart = {
+  role: string;
+  x1: number;
+  y1: number;
+  z1: number;
+  x2: number;
+  y2: number;
+  z2: number;
+  color: string;
+};
+
+const asWoolimRecord = (value: unknown): Record<string, any> => (
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, any>
+    : {}
+);
+
+const woolimNum = (value: unknown, fallback = 0): number => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const woolimText = (value: unknown, fallback = ''): string => (
+  typeof value === 'string' && value.trim() ? value.trim() : fallback
+);
+
+const resolveWoolimBandSizes = (item: Record<string, any>) => {
+  let bottomBand = woolimNum(item.bottom_band ?? item.band_size, 0);
+  let backBand = woolimNum(item.back_band ?? item.band_size, 0);
+  const kind = woolimText(item.band_kind, 'both');
+  if (kind !== 'both' && kind !== 'bottom') bottomBand = 0;
+  if (kind !== 'both' && kind !== 'back') backBand = 0;
+  return { bottomBand, backBand };
+};
+
+const woolimMokInset = (options: Record<string, any>, sideHeightMm: number, side: 'top' | 'bot') => {
+  const mokchanel = asWoolimRecord(options.mokchanel);
+  const items = Array.isArray(mokchanel.items) ? mokchanel.items.map(asWoolimRecord) : [];
+  let maxInset = 0;
+  items.forEach(item => {
+    const ref = woolimText(item.z_ref, 'top');
+    const position = woolimNum(item.position, 0);
+    const sizeY = woolimNum(item.size_y, 0);
+    const sizeX = woolimNum(item.size_x, 0);
+    const zEdge = side === 'top'
+      ? (ref === 'top' ? sideHeightMm - position : position + sizeY)
+      : (ref === 'top' ? sideHeightMm - position - sizeY : position);
+    const reaches = side === 'top' ? zEdge >= sideHeightMm - 0.01 : zEdge <= 0.01;
+    if (reaches && sizeX > maxInset) maxInset = sizeX;
+  });
+  return maxInset;
+};
+
+const collectWoolimDraftBoxParts = (
+  params: unknown,
+  dimensions: { width: number; depth: number; height: number; boardThick: number }
+): WoolimPart[] => {
+  const p = asWoolimRecord(params);
+  const options = asWoolimRecord(p.options);
+  if (!Object.keys(options).length) return [];
+
+  const width = dimensions.width;
+  const depth = dimensions.depth;
+  const height = dimensions.height;
+  const bt = dimensions.boardThick;
+  const parts: WoolimPart[] = [];
+
+  const push = (role: string, x1: number, y1: number, z1: number, x2: number, y2: number, z2: number, color: string) => {
+    if (x2 <= x1 || y2 <= y1 || z2 <= z1) return;
+    parts.push({ role, x1, y1, z1, x2, y2, z2, color });
+  };
+
+  const back = asWoolimRecord(options.back);
+  const backFields = asWoolimRecord(back.fields);
+  const top = asWoolimRecord(options.top);
+  const topFields = asWoolimRecord(top.fields);
+  const bottom = asWoolimRecord(options.bottom);
+  const bottomFields = asWoolimRecord(bottom.fields);
+  const installBand = asWoolimRecord(options.install_band);
+  const installFields = asWoolimRecord(installBand.fields);
+
+  const topValue = woolimText(top.value, 'solid');
+  const bottomValue = woolimText(bottom.value, 'solid');
+  const backValue = woolimText(back.value, 'groove');
+  const topDemband = topValue === 'demband';
+  const bottomDemband = bottomValue === 'demband';
+  const sideZStart = bottomDemband ? bt : 0;
+  const sideZEnd = topDemband ? height - bt : height;
+  const sideHeight = sideZEnd - sideZStart;
+  const backThick = woolimNum(backFields.thick, 3);
+  const grooveStart = woolimNum(backFields.groove_start, 17);
+  const grooveDepth = woolimNum(backFields.groove_depth, 7);
+  const yMaxPanel = backValue === 'groove'
+    ? Math.max(0, depth - grooveStart - backThick)
+    : depth;
+  const topInset = woolimMokInset(options, sideHeight, 'top');
+  const bottomInset = woolimMokInset(options, sideHeight, 'bot');
+
+  if (topValue === 'solid' || topValue === 'demband') {
+    push('TOP', topValue === 'demband' ? 0 : bt, topInset, height - bt, topValue === 'demband' ? width : width - bt, yMaxPanel, height, '#cfcfd2');
+  } else if (topValue === 'band') {
+    const frontWidth = woolimNum(topFields.front_width, 60);
+    const backWidth = woolimNum(topFields.back_width, 60);
+    push('BAND_TOP_F', bt, topInset, height - bt, width - bt, Math.min(yMaxPanel, topInset + frontWidth), height, '#cfcfd2');
+    push('BAND_TOP_B', bt, Math.max(topInset, yMaxPanel - backWidth), height - bt, width - bt, yMaxPanel, height, '#cfcfd2');
+  }
+
+  if (bottomValue === 'solid' || bottomValue === 'demband') {
+    push('BOTTOM', bottomValue === 'demband' ? 0 : bt, bottomInset, 0, bottomValue === 'demband' ? width : width - bt, yMaxPanel, bt, '#cfcfd2');
+  } else if (bottomValue === 'band') {
+    const frontWidth = woolimNum(bottomFields.front_width, 60);
+    const backWidth = woolimNum(bottomFields.back_width, 60);
+    push('BAND_BOT_F', bt, bottomInset, 0, width - bt, Math.min(yMaxPanel, bottomInset + frontWidth), bt, '#cfcfd2');
+    push('BAND_BOT_B', bt, Math.max(bottomInset, yMaxPanel - backWidth), 0, width - bt, yMaxPanel, bt, '#cfcfd2');
+  }
+
+  if (backValue === 'groove') {
+    const clearanceV = woolimNum(backFields.clearance_v, 1);
+    const backWidth = width - 2 * bt + 2 * grooveDepth;
+    const backHeight = Math.max(0, sideHeight - clearanceV);
+    push(
+      'BACK',
+      bt - grooveDepth,
+      depth - grooveStart - backThick,
+      sideZStart + clearanceV / 2,
+      bt - grooveDepth + backWidth,
+      depth - grooveStart,
+      sideZStart + clearanceV / 2 + backHeight,
+      '#a8b8c6'
+    );
+  } else {
+    const clearanceV = woolimNum(backFields.clearance_v ?? backFields.clearance, 0);
+    const clearanceH = woolimNum(backFields.clearance_h ?? backFields.clearance, 0);
+    push('BACK', clearanceH / 2, depth, clearanceV / 2, width - clearanceH / 2, depth + backThick, height - clearanceV / 2, '#a8b8c6');
+  }
+
+  if (installBand.enabled === true && backValue === 'groove') {
+    const cleatW = woolimNum(installFields.width, 60);
+    const cleatT = woolimNum(installFields.thick, bt);
+    const zTop = topDemband ? height - bt : height;
+    push('CLEAT_BACK', bt, depth - cleatT, zTop - cleatW, width - bt, depth, zTop, '#9bc49b');
+  }
+
+  const mokchanel = asWoolimRecord(options.mokchanel);
+  const mokItems = Array.isArray(mokchanel.items) ? mokchanel.items.map(asWoolimRecord) : [];
+  mokItems.forEach((item, index) => {
+    const ref = woolimText(item.z_ref, 'top');
+    const position = woolimNum(item.position, 0);
+    const sizeY = woolimNum(item.size_y, 0);
+    const sizeX = woolimNum(item.size_x, 40);
+    const zBotLocal = ref === 'top'
+      ? sideHeight - position - sizeY
+      : position;
+    const zBot = sideZStart + zBotLocal;
+    const { bottomBand, backBand } = resolveWoolimBandSizes(item);
+    if (bottomBand > 0) {
+      push(`MOK_BOTTOM_${index + 1}`, bt, 0, zBot - bt, width - bt, bottomBand, zBot, '#e3b478');
+    }
+    if (backBand > 0) {
+      push(`MOK_BACK_${index + 1}`, bt, sizeX, zBot, width - bt, sizeX + bt, zBot + backBand, '#b698d4');
+    }
+  });
+
+  return parts;
+};
+
+const WoolimDraftBoxParts: React.FC<{
+  params: unknown;
+  widthMm: number;
+  depthMm: number;
+  heightMm: number;
+  boardThickMm: number;
+  renderMode: 'solid' | 'wireframe';
+  isDragging?: boolean;
+  panelGrainDirections?: any;
+  furnitureId?: string;
+}> = ({ params, widthMm, depthMm, heightMm, boardThickMm, renderMode, isDragging, panelGrainDirections, furnitureId }) => {
+  const parts = useMemo(() => collectWoolimDraftBoxParts(params, {
+    width: widthMm,
+    depth: depthMm,
+    height: heightMm,
+    boardThick: boardThickMm
+  }), [params, widthMm, depthMm, heightMm, boardThickMm]);
+
+  const materials = useMemo(() => {
+    const map = new Map<string, THREE.Material>();
+    parts.forEach(part => {
+      if (!map.has(part.color)) {
+        map.set(part.color, new THREE.MeshStandardMaterial({
+          color: part.color,
+          roughness: 0.62,
+          metalness: 0.02,
+          transparent: part.role === 'BACK',
+          opacity: part.role === 'BACK' ? 0.58 : 1
+        }));
+      }
+    });
+    return map;
+  }, [parts]);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        const partW = (part.x2 - part.x1) * 0.01;
+        const partH = (part.z2 - part.z1) * 0.01;
+        const partD = (part.y2 - part.y1) * 0.01;
+        const posX = ((part.x1 + part.x2) / 2 - widthMm / 2) * 0.01;
+        const posY = ((part.z1 + part.z2) / 2 - heightMm / 2) * 0.01;
+        const posZ = (depthMm / 2 - (part.y1 + part.y2) / 2) * 0.01;
+        return (
+          <BoxWithEdges
+            key={`woolim-${part.role}-${index}`}
+            args={[partW, partH, partD]}
+            position={[posX, posY, posZ]}
+            material={materials.get(part.color)}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isHighlighted={false}
+            panelName={`WOOLIM ${part.role}`}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })}
+    </>
+  );
+};
 
 const applyLowerPanelSimulation = ({
   group,
@@ -1708,8 +1937,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   
   // 띄움 배치 시에도 캐비넷 높이는 변경하지 않음
   const adjustedHeight = baseFurniture.height;
+  const woolimDraftParams = moduleData.woolimDraft?.params;
+  const isWoolimDraftCabinet = !!woolimDraftParams;
+  const woolimWidthMm = adjustedWidth || moduleData.dimensions.width;
+  const woolimDepthMm = baseFurniture.actualDepthMm || moduleData.dimensions.depth;
+  const woolimHeightMm = Math.round(adjustedHeight / 0.01) || moduleData.dimensions.height;
+  const woolimBoardThickMm = moduleData.modelConfig?.basicThickness || baseFurniture.basicThickness / 0.01;
+  const woolimSideNotches = useMemo(() => (
+    woolimDraftParams
+      ? collectWoolimMokchanelSideNotches(woolimDraftParams, {
+          depth: woolimDepthMm,
+          height: woolimHeightMm,
+          boardThick: woolimBoardThickMm
+        })
+      : []
+  ), [woolimDraftParams, woolimDepthMm, woolimHeightMm, woolimBoardThickMm]);
 
-  const adminExternalDrawerCfg = moduleData.id.includes('lower-cabinet-admin')
+  const adminExternalDrawerCfg = !isWoolimDraftCabinet
+    && moduleData.id.includes('lower-cabinet-admin')
     && moduleData.modelConfig?.externalDrawers
     && moduleData.modelConfig.externalDrawers.drawerType !== 'legrabox'
     ? moduleData.modelConfig.externalDrawers
@@ -1722,7 +1967,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   })();
 
   // 관리자 레그라박스 설정 — 인덕션/터치 호출부 공용
-  const adminLegraCfg = moduleData.id.includes('lower-cabinet-admin')
+  const adminLegraCfg = !isWoolimDraftCabinet
+    && moduleData.id.includes('lower-cabinet-admin')
     && moduleData.modelConfig?.externalDrawers?.drawerType === 'legrabox'
     ? moduleData.modelConfig.externalDrawers
     : undefined;
@@ -1872,15 +2118,31 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         stoneTopThicknessMm: stoneThickness || 20
       })
     : null;
-  const shellModuleData = adminStandardExternalNotches || adminLegraAdaptedCommonNotches
+  const shellModuleData = isWoolimDraftCabinet
     ? {
         ...moduleData,
-        modelConfig: {
-          ...moduleData.modelConfig,
-          sideNotches: adminStandardExternalNotches || adminLegraAdaptedCommonNotches || []
-        }
+        modelConfig: moduleData.modelConfig
+          ? (() => {
+              const {
+                sideNotches: _sideNotches,
+                leftSideNotches: _leftSideNotches,
+                rightSideNotches: _rightSideNotches,
+                topNotch: _topNotch,
+                ...restModelConfig
+              } = moduleData.modelConfig;
+              return restModelConfig;
+            })()
+          : moduleData.modelConfig
       }
-    : moduleData;
+    : adminStandardExternalNotches || adminLegraAdaptedCommonNotches
+      ? {
+          ...moduleData,
+          modelConfig: {
+            ...moduleData.modelConfig,
+            sideNotches: adminStandardExternalNotches || adminLegraAdaptedCommonNotches || []
+          }
+        }
+      : moduleData;
 
   const maidaFrontWidthMm = useMemo(() => {
     let frontWidth = typeof doorWidth === 'number' && doorWidth > 0
@@ -2425,8 +2687,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               height={adjustedHeight}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              hasBackPanel={moduleData.id.includes('dishwasher') ? false : hasBackPanel}
-              hideBottomPanel={moduleData.id.includes('dishwasher')}
+              hasBackPanel={isWoolimDraftCabinet ? false : moduleData.id.includes('dishwasher') ? false : hasBackPanel}
+              hideBottomPanel={isWoolimDraftCabinet || moduleData.id.includes('dishwasher')}
               spaceInfo={spaceInfo}
               moduleData={shellModuleData}
               placedFurnitureId={placedFurnitureId}
@@ -2441,18 +2703,23 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isFloating={isFloating}
               hideVentilationCap={true}
               hideTopPanel={
-                moduleData.id.includes('lower-cabinet-admin')
+                isWoolimDraftCabinet
+                  ? true
+                  : moduleData.id.includes('lower-cabinet-admin')
                   // 관리자 빌더 하부장: modelConfig.hideTopPanel === false일 때만 상판 포함
                   ? moduleData.modelConfig?.hideTopPanel !== false
                   : (!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'))
               }
+              disableAutoSideNotchStretcher={isWoolimDraftCabinet}
               topPanelFrontReduction={(() => {
                 if (!moduleData.id.includes('lower-top-down-')) return 0;
                 return resolveTopDownTopPanelFrontReductionMm(baseFurniture.basicThickness / 0.01, stoneThickness);
               })()}
               topStretcher={isTopDownModule ? { heightMm: topDownStretcherHeightMm, depthMm: 40 } : undefined}
               stoneTopThickness={stoneThickness}
-              {...(moduleData.id.includes('lower-door-lift-touch-') ? {
+              {...(isWoolimDraftCabinet ? {
+                ...(woolimSideNotches.length > 0 ? { sideNotches: woolimSideNotches } : {})
+              } : moduleData.id.includes('lower-door-lift-touch-') ? {
                 // 도어올림 터치: 따내기 없음
               } : moduleData.id.includes('lower-top-down-touch-') ? (() => {
                 // 상판내림 터치: 측판 따내기는 가로전대 바로 아래에 위치
@@ -2527,6 +2794,20 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               })() : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
+                {isWoolimDraftCabinet && (
+                  <WoolimDraftBoxParts
+                    params={woolimDraftParams}
+                    widthMm={woolimWidthMm}
+                    depthMm={woolimDepthMm}
+                    heightMm={woolimHeightMm}
+                    boardThickMm={woolimBoardThickMm}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
+                  />
+                )}
+
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
                 {baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections ? (
                   <>
@@ -3152,6 +3433,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               // 상판 포함 또는 목찬넬 미사용이면 상단 60 따내기가 없으므로 zone 계산에서 제외
               hideTopNotch={moduleData.modelConfig?.hideTopPanel === false || moduleData.modelConfig?.topChannelNotch !== true}
               maidaHeightsMm={extCfg.maidaHeights}
+              explicitSlots={extCfg.slots}
+              placement={extCfg.placement}
               sideHeightOverrides={extCfg.sideHeights}
               maidaGapMm={extCfg.maidaGapMm}
               // 마이다 갭은 빌더 저장값이 단일 기준 — 공간 도어셋팅/프레임 토글이

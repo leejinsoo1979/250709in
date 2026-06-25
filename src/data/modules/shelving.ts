@@ -57,6 +57,19 @@ export interface ModuleData {
     height: number;
     depth: number;
   };
+  // WOOLIM Draft(SketchUp Ruby) 원본 옵션 보존. tttcraft 표시/가공용 modelConfig와 별도로
+  // Ruby 좌측 메뉴의 params/operations를 손실 없이 왕복시키기 위한 호환 데이터.
+  woolimDraft?: {
+    formatVersion?: number;
+    pluginVersion?: string;
+    catalogId?: string;
+    catalogVersion?: number;
+    cabinetNo?: string;
+    drawingNo?: string;
+    definitionName?: string;
+    params?: Record<string, unknown>;
+    operations?: unknown[];
+  };
   color: string;
   description?: string;
   hasDoor?: boolean;
@@ -129,6 +142,17 @@ export interface ModuleData {
       count: number;                  // 서랍 단수
       // 서랍 타입: external = 일반 외부서랍 (마이다+레일), legrabox = 레그라박스 터치서랍
       drawerType?: 'external' | 'legrabox';
+      // 일반 외부서랍 배치 방향. 기본 bottom = 아래 구역부터, top = 위 구역부터 채움
+      placement?: 'bottom' | 'top';
+      // Ruby(WOOLIM Draft) 호환: 실제 서랍 슬롯 위치(mm, 캐비닛 바닥 기준)를 보존
+      slots?: Array<{
+        slot_bot: number;
+        slot_top?: number;
+        slot_h?: number;
+        slot_y?: number;
+        box_d?: number;
+        variant_code?: string;
+      }>;
       // 레그라박스 전용: 서랍별 [레그라 종류, 바닥판 위 이격] (아래→위) — M 117 / L 164 / F 228
       legraSpecs?: Array<{ type: 'M' | 'L' | 'F' | 'N'; offsetMm: number }>;
       maidaHeights?: number[];        // (external) 마이다 높이 고정값 (아래→위, mm). 미지정 시 따내기 zone 기반 자동

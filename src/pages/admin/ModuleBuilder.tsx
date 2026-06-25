@@ -1,6 +1,6 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
-import { isSuperAdmin } from '@/firebase/admins';
+import { canAccessModuleBuilder } from '@/firebase/admins';
 import {
   adminFurnitureModuleExists,
   deleteAdminFurnitureModule,
@@ -12,6 +12,11 @@ import {
 import { generateShelvingModules } from '@/data/modules/shelving';
 import type { ModuleData, SectionConfig } from '@/data/modules';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import {
+  convertWoolimCabinetSetToModule,
+  isWoolimCabinetSetPayload
+} from '@/editor/shared/utils/woolimCabinetImport';
+import { collectWoolimMokchanelSideNotches } from '@/editor/shared/utils/woolimDraftParts';
 import {
   resolveLowerCabinetStandardDrawerNotches,
   type LowerCabinetDrawerFamily
@@ -32,7 +37,8 @@ import {
   List as ListIcon,
   Pencil,
   Plus,
-  Trash2
+  Trash2,
+  Upload
 } from 'lucide-react';
 import { FURNITURE_ICONS, isShoeModuleId } from '@/editor/shared/controls/furniture/ModuleGallery';
 import AdminModulePreview, { ADMIN_PREVIEW_FURNITURE_ID } from './AdminModulePreview';
@@ -43,6 +49,8 @@ type SectionType = 'open' | 'shelf' | 'hanging' | 'drawer';
 type BuilderLayoutMode = 'single' | 'dual';
 type SectionSide = 'main' | 'left' | 'right';
 type ResizeGuideConfig = NonNullable<NonNullable<ModuleData['modelConfig']>['resizeGuide']>;
+type ExternalDrawerSlot = NonNullable<NonNullable<NonNullable<ModuleData['modelConfig']>['externalDrawers']>['slots']>[number];
+type WoolimDraftCompat = NonNullable<ModuleData['woolimDraft']>;
 
 interface BuilderSection {
   id: string;
@@ -232,6 +240,101 @@ const lowerDrawerFamilyForGalleryCategory = (galleryCategory: string): LowerCabi
   return 'basic';
 };
 
+const IMPORTABLE_MODULE_CATEGORIES: ModuleCategory[] = ['full', 'upper', 'lower'];
+
+const recordOf = (value: unknown): Record<string, unknown> => (
+  value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+);
+
+const textOf = (value: unknown, fallback = '-') => {
+  if (typeof value === 'number' && Number.isFinite(value)) return `${value}`;
+  if (typeof value === 'string' && value.trim()) return value;
+  if (typeof value === 'boolean') return value ? 'ON' : 'OFF';
+  return fallback;
+};
+
+const cloneJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+
+const createDefaultWoolimDraftCompat = (
+  width: number,
+  depth: number,
+  height: number,
+  panelThickness: number
+): WoolimDraftCompat => ({
+  formatVersion: 1,
+  pluginVersion: 'tttcraft',
+  catalogId: 'kitchen_lower',
+  catalogVersion: 3,
+  cabinetNo: 'K001',
+  drawingNo: 'D001',
+  definitionName: `CAB_K001_D001_${width}x${depth}x${height}`,
+  params: {
+    catalog_id: 'kitchen_lower',
+    cabinet_no: 'K001',
+    drawing_no: 'D001',
+    dimensions: {
+      width,
+      depth,
+      height,
+      board_thick: panelThickness
+    },
+    options: {
+      back: {
+        value: 'groove',
+        fields: {
+          thick: 3,
+          groove_start: 17,
+          groove_depth: 7,
+          clearance_v: 1,
+          groove_extra: 0.5,
+          groove_width_extra: 0.5
+        }
+      },
+      install_band: {
+        enabled: true,
+        fields: {
+          width: 60,
+          thick: panelThickness
+        }
+      },
+      top: {
+        value: 'solid',
+        fields: {
+          front_inset: 0,
+          back_inset: 20,
+          front_width: 60,
+          back_width: 60
+        }
+      },
+      bottom: {
+        value: 'solid',
+        fields: {
+          front_inset: 0,
+          back_inset: 20,
+          front_width: 60,
+          back_width: 60
+        }
+      },
+      mokchanel: {
+        count: 1,
+        items: [{
+          z_ref: 'top',
+          position: 180,
+          size_x: 40,
+          size_y: 70,
+          band_kind: 'bottom',
+          bottom_band: 60,
+          back_band: 60
+        }],
+        _auto_distribute: false
+      }
+    }
+  },
+  operations: []
+});
+
 /** 분류별 표준 치수 — 표준 모듈 생성 코드와 동일 (상부장 785/D300, 하부장 캐비넷 780/D600, 키큰장 2400/D600) */
 const CATEGORY_DEFAULT_DIMENSIONS: Record<ModuleCategory, { height: number; depth: number }> = {
   full: { height: 2400, depth: 600 },
@@ -344,7 +447,8 @@ const builderSectionToConfig = (section: BuilderSection): SectionConfig => {
 
 const ModuleBuilder = () => {
   const { user } = useAuth();
-  const allowed = isSuperAdmin(user?.email);
+  const allowed = canAccessModuleBuilder(user?.email);
+  const jsonFileInputRef = useRef<HTMLInputElement | null>(null);
   const [name, setName] = useState('신규 모듈');
   const [slug, setSlug] = useState('custom-module');
   // 베이스 모델(템플릿) 선택 상태 — '직접 만들기'('') 선택 시 폼 초기화와 함께 표시도 비움
@@ -361,6 +465,7 @@ const ModuleBuilder = () => {
   const [thumbnail, setThumbnail] = useState('');
   // 업로드 원본 보관 — 분류/구조 변경 시 표준 규격으로 재변환
   const [originalThumbnail, setOriginalThumbnail] = useState('');
+  const [woolimDraftCompat, setWoolimDraftCompat] = useState<WoolimDraftCompat | null>(null);
   // 키큰장은 하부/상부 섹션 분리 구조로 시작 (빈 깡통)
   const [sections, setSections] = useState<BuilderSection[]>(createDefaultFullSections());
   // 키큰장 하부/상부 경계 — sections 앞에서 몇 개가 하부인지 (3D 메시·패널목록 그룹과 공유)
@@ -394,6 +499,8 @@ const ModuleBuilder = () => {
   ]);
   const [extDrawerCount, setExtDrawerCount] = useState(2);
   const [extMaidaHeights, setExtMaidaHeights] = useState('');
+  const [extDrawerSlots, setExtDrawerSlots] = useState<ExternalDrawerSlot[]>([]);
+  const [extDrawerPlacement, setExtDrawerPlacement] = useState<'bottom' | 'top'>('bottom');
   const [extSideAll, setExtSideAll] = useState(0);
   const [extSideFirst, setExtSideFirst] = useState(0);
   const [extSideRest, setExtSideRest] = useState(0);
@@ -562,12 +669,21 @@ const ModuleBuilder = () => {
     // 측판 목찬넬 따내기 — 공통(sideNotches: 가로전대 자동) 또는 좌/우 개별
     const commonNotchConfig = notchRowsToConfig(leftNotches, height, depth);
     const rightNotchConfig = notchRowsToConfig(rightNotches, height, depth);
-    const notchModelConfig = notchSidesLinked
-      ? (commonNotchConfig.length > 0 ? { sideNotches: commonNotchConfig } : {})
-      : {
-          ...(commonNotchConfig.length > 0 ? { leftSideNotches: commonNotchConfig } : {}),
-          ...(rightNotchConfig.length > 0 ? { rightSideNotches: rightNotchConfig } : {})
-        };
+    const woolimSideNotchConfig = woolimDraftCompat?.params
+      ? collectWoolimMokchanelSideNotches(woolimDraftCompat.params, {
+          depth,
+          height,
+          boardThick: panelThickness
+        })
+      : [];
+    const notchModelConfig = woolimDraftCompat
+      ? (woolimSideNotchConfig.length > 0 ? { sideNotches: woolimSideNotchConfig } : {})
+      : notchSidesLinked
+        ? (commonNotchConfig.length > 0 ? { sideNotches: commonNotchConfig } : {})
+        : {
+            ...(commonNotchConfig.length > 0 ? { leftSideNotches: commonNotchConfig } : {}),
+            ...(rightNotchConfig.length > 0 ? { rightSideNotches: rightNotchConfig } : {})
+          };
     const resizeGuideConfig: ResizeGuideConfig | null = resizeGuideEnabled && resizeGuideConfirmed
       ? {
           enabled: true,
@@ -629,8 +745,10 @@ const ModuleBuilder = () => {
               maidaGapMm: legraMaidaGap
             }
           : {
-              count: Math.max(1, extDrawerCount),
+              count: extDrawerSlots.length > 0 ? extDrawerSlots.length : Math.max(1, extDrawerCount),
               drawerType: 'external' as const,
+              ...(extDrawerPlacement === 'top' ? { placement: 'top' as const } : {}),
+              ...(extDrawerSlots.length > 0 ? { slots: extDrawerSlots } : {}),
               ...(parseNumberList(extMaidaHeights).length > 0 ? { maidaHeights: parseNumberList(extMaidaHeights) } : {}),
               ...((extSideAll > 0 || extSideFirst > 0 || extSideRest > 0) ? {
                 sideHeights: {
@@ -657,6 +775,7 @@ const ModuleBuilder = () => {
       },
       color: '#FFFFFF',
       thumbnail: thumbnail || undefined,
+      ...(woolimDraftCompat ? { woolimDraft: woolimDraftCompat } : {}),
       hasDoor,
       type: 'box' as const,
       galleryCategory,
@@ -679,7 +798,168 @@ const ModuleBuilder = () => {
             sections: normalizePercentSections(sections.map(builderSectionToConfig))
           }
     };
-  }, [category, depth, extBottomGap, extDrawerCount, extDrawerType, extMaidaGap, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, resizeGuideConfirmed, resizeGuideEnabled, resizeGuideY, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraMaidaGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width]);
+  }, [category, depth, extBottomGap, extDrawerCount, extDrawerPlacement, extDrawerSlots, extDrawerType, extMaidaGap, extMaidaHeights, extSideAll, extSideFirst, extSideRest, extTopGap, galleryCategory, hasDoor, hasSharedMiddlePanel, hasSharedSafetyShelf, hasTopPanel, height, hiddenPanelNames, isDynamic, layoutMode, leftNotches, legraRows, lowerSectionCount, name, notchSidesLinked, resizeGuideConfirmed, resizeGuideEnabled, resizeGuideY, rightAbsoluteDepth, rightAbsoluteWidth, rightNotches, rightSections, sections, slug, thumbnail, dividersText, legraBottomGap, legraMaidaGap, legraTopGap, panelThickness, topChannelEnabled, topNotchDepth, topPanelOffset, topNotchEnabled, topNotchHeight, useExternalDrawers, width, woolimDraftCompat]);
+
+  const woolimDraftRows = useMemo(() => {
+    if (!woolimDraftCompat?.params) return [];
+
+    const params = recordOf(woolimDraftCompat.params);
+    const dims = recordOf(params.dimensions);
+    const options = recordOf(params.options);
+    const back = recordOf(options.back);
+    const backFields = recordOf(back.fields);
+    const installBand = recordOf(options.install_band);
+    const installBandFields = recordOf(installBand.fields);
+    const top = recordOf(options.top);
+    const topFields = recordOf(top.fields);
+    const bottom = recordOf(options.bottom);
+    const bottomFields = recordOf(bottom.fields);
+    const mokchanel = recordOf(options.mokchanel);
+    const mokItems = Array.isArray(mokchanel.items) ? mokchanel.items.map(recordOf) : [];
+    const firstMok = mokItems[0] || {};
+
+    return [
+      { label: '카탈로그', value: textOf(woolimDraftCompat.catalogId) },
+      { label: '캐비닛/도면', value: `${textOf(woolimDraftCompat.cabinetNo)} / ${textOf(woolimDraftCompat.drawingNo)}` },
+      { label: '외형 치수', value: `W ${textOf(dims.width)} · D ${textOf(dims.depth)} · H ${textOf(dims.height)} · T ${textOf(dims.board_thick)}` },
+      { label: '뒷판', value: `${textOf(back.value)} · T ${textOf(backFields.thick)} · 홈 ${textOf(backFields.groove_start)}/${textOf(backFields.groove_depth)}` },
+      { label: '시공밴드', value: `${textOf(installBand.enabled)} · 폭 ${textOf(installBandFields.width)} · T ${textOf(installBandFields.thick)}` },
+      { label: '상단 구조', value: `${textOf(top.value)} · 앞 ${textOf(topFields.front_width ?? topFields.front_inset, '0')} · 뒤 ${textOf(topFields.back_width ?? topFields.back_inset, '0')}` },
+      { label: '하단 구조', value: `${textOf(bottom.value)} · 앞 ${textOf(bottomFields.front_width ?? bottomFields.front_inset, '0')} · 뒤 ${textOf(bottomFields.back_width ?? bottomFields.back_inset, '0')}` },
+      { label: '목찬넬', value: `${mokItems.length}개${mokItems.length > 0 ? ` · ${textOf(firstMok.z_ref)} ${textOf(firstMok.position)} · ${textOf(firstMok.size_x)}×${textOf(firstMok.size_y)} · ${textOf(firstMok.band_kind)}` : ''}` },
+      { label: '작업', value: `${woolimDraftCompat.operations?.length || 0}개` }
+    ];
+  }, [woolimDraftCompat]);
+
+  const woolimParams = recordOf(woolimDraftCompat?.params);
+  const woolimOptions = recordOf(woolimParams.options);
+  const woolimBack = recordOf(woolimOptions.back);
+  const woolimBackFields = recordOf(woolimBack.fields);
+  const woolimInstallBand = recordOf(woolimOptions.install_band);
+  const woolimInstallFields = recordOf(woolimInstallBand.fields);
+  const woolimTop = recordOf(woolimOptions.top);
+  const woolimTopFields = recordOf(woolimTop.fields);
+  const woolimBottom = recordOf(woolimOptions.bottom);
+  const woolimBottomFields = recordOf(woolimBottom.fields);
+  const woolimMokchanel = recordOf(woolimOptions.mokchanel);
+  const woolimMokItems = Array.isArray(woolimMokchanel.items) ? woolimMokchanel.items.map(recordOf) : [];
+
+  const updateWoolimDraft = (updater: (draft: WoolimDraftCompat) => void) => {
+    setWoolimDraftCompat(current => {
+      const next = cloneJson(current || createDefaultWoolimDraftCompat(width, depth, height, panelThickness));
+      next.params = recordOf(next.params);
+      const params = next.params as Record<string, unknown>;
+      params.dimensions = {
+        ...recordOf(params.dimensions),
+        width,
+        depth,
+        height,
+        board_thick: panelThickness
+      };
+      params.options = recordOf(params.options);
+      updater(next);
+      return next;
+    });
+  };
+
+  const setWoolimOptionValue = (key: 'back' | 'top' | 'bottom', value: string) => {
+    updateWoolimDraft(draft => {
+      const params = draft.params as Record<string, unknown>;
+      const options = recordOf(params.options);
+      const option = recordOf(options[key]);
+      option.value = value;
+      option.fields = recordOf(option.fields);
+      options[key] = option;
+      params.options = options;
+    });
+  };
+
+  const setWoolimField = (optionKey: 'back' | 'install_band' | 'top' | 'bottom', fieldKey: string, value: number) => {
+    updateWoolimDraft(draft => {
+      const params = draft.params as Record<string, unknown>;
+      const options = recordOf(params.options);
+      const option = recordOf(options[optionKey]);
+      const fields = recordOf(option.fields);
+      fields[fieldKey] = value;
+      option.fields = fields;
+      options[optionKey] = option;
+      params.options = options;
+    });
+  };
+
+  const setWoolimInstallEnabled = (enabled: boolean) => {
+    updateWoolimDraft(draft => {
+      const params = draft.params as Record<string, unknown>;
+      const options = recordOf(params.options);
+      const install = recordOf(options.install_band);
+      install.enabled = enabled;
+      install.fields = recordOf(install.fields);
+      options.install_band = install;
+      params.options = options;
+    });
+  };
+
+  const setWoolimMeta = (key: 'cabinetNo' | 'drawingNo', value: string) => {
+    updateWoolimDraft(draft => {
+      draft[key] = value;
+      const params = draft.params as Record<string, unknown>;
+      if (key === 'cabinetNo') params.cabinet_no = value;
+      if (key === 'drawingNo') params.drawing_no = value;
+      draft.definitionName = `CAB_${draft.cabinetNo || 'K001'}_${draft.drawingNo || 'D001'}_${width}x${depth}x${height}`;
+    });
+  };
+
+  const setWoolimMokItem = (index: number, key: string, value: string | number) => {
+    updateWoolimDraft(draft => {
+      const params = draft.params as Record<string, unknown>;
+      const options = recordOf(params.options);
+      const mok = recordOf(options.mokchanel);
+      const items = Array.isArray(mok.items) ? mok.items.map(recordOf) : [];
+      const item = recordOf(items[index]);
+      item[key] = value;
+      items[index] = item;
+      mok.items = items;
+      mok.count = items.length;
+      options.mokchanel = mok;
+      params.options = options;
+    });
+  };
+
+  const addWoolimMokItem = () => {
+    updateWoolimDraft(draft => {
+      const params = draft.params as Record<string, unknown>;
+      const options = recordOf(params.options);
+      const mok = recordOf(options.mokchanel);
+      const items = Array.isArray(mok.items) ? mok.items.map(recordOf) : [];
+      items.push({
+        z_ref: 'top',
+        position: 180,
+        size_x: 40,
+        size_y: 70,
+        band_kind: items.length === 0 ? 'bottom' : 'back',
+        bottom_band: 60,
+        back_band: 60
+      });
+      mok.items = items;
+      mok.count = items.length;
+      options.mokchanel = mok;
+      params.options = options;
+    });
+  };
+
+  const removeWoolimMokItem = (index: number) => {
+    updateWoolimDraft(draft => {
+      const params = draft.params as Record<string, unknown>;
+      const options = recordOf(params.options);
+      const mok = recordOf(options.mokchanel);
+      const items = Array.isArray(mok.items) ? mok.items.map(recordOf) : [];
+      items.splice(index, 1);
+      mok.items = items;
+      mok.count = items.length;
+      options.mokchanel = mok;
+      params.options = options;
+    });
+  };
 
   // 실시간 패널목록 — 실배치/CNC와 동일한 calculatePanelDetails 사용
   const panelList = useMemo(() => {
@@ -858,7 +1138,7 @@ const ModuleBuilder = () => {
       setLoadedModuleId(module.id);
     } else {
       setName(module.name.replace(/\s+\d+(?:\.\d+)?mm$/, ''));
-      setSlug(module.id.replace(/-[\d.]+$/, ''));
+      setSlug(extractSlugFromAdminId(module.id));
       setLoadedModuleId(null);
     }
 
@@ -875,6 +1155,7 @@ const ModuleBuilder = () => {
     setIsDynamic(module.isDynamic === true);
     setThumbnail(module.thumbnail || '');
     setOriginalThumbnail('');
+    setWoolimDraftCompat(module.woolimDraft ? { ...module.woolimDraft } : null);
     setRightAbsoluteWidth(module.modelConfig?.rightAbsoluteWidth || 0);
     setRightAbsoluteDepth(module.modelConfig?.rightAbsoluteDepth || 0);
     setHasSharedMiddlePanel(module.modelConfig?.hasSharedMiddlePanel === true);
@@ -908,6 +1189,12 @@ const ModuleBuilder = () => {
     const externalDrawers = module.modelConfig?.externalDrawers;
     setUseExternalDrawers(!!externalDrawers);
     setExtDrawerType(externalDrawers?.drawerType === 'legrabox' ? 'legrabox' : 'external');
+    setExtDrawerPlacement(externalDrawers?.placement === 'top' ? 'top' : 'bottom');
+    setExtDrawerSlots(
+      externalDrawers?.drawerType !== 'legrabox' && externalDrawers?.slots?.length
+        ? externalDrawers.slots.map(slot => ({ ...slot }))
+        : []
+    );
     setLegraRows(
       externalDrawers?.legraSpecs?.length
         ? externalDrawers.legraSpecs.map((spec, index) => ({ id: `legra-${Date.now()}-${index}`, type: spec.type, offsetMm: spec.offsetMm }))
@@ -982,6 +1269,7 @@ const ModuleBuilder = () => {
     setTopNotchDepth(40);
     setThumbnail('');
     setOriginalThumbnail('');
+    setWoolimDraftCompat(null);
     setSections(createDefaultFullSections());
     setLowerSectionCount(1);
     setRightSections([createSection(0)]);
@@ -994,6 +1282,8 @@ const ModuleBuilder = () => {
     setRightNotches([]);
     setUseExternalDrawers(false);
     setExtDrawerType('external');
+    setExtDrawerPlacement('bottom');
+    setExtDrawerSlots([]);
     setLegraRows([
       { id: `legra-${Date.now()}-0`, type: 'F', offsetMm: 28 },
       { id: `legra-${Date.now()}-1`, type: 'F', offsetMm: 406 }
@@ -1418,6 +1708,141 @@ const ModuleBuilder = () => {
     alert('모듈 초안 JSON이 복사되었습니다.');
   };
 
+  const restoreLossyWoolimModuleData = (module: ModuleData & { thumbnail?: string }): ModuleData & { thumbnail?: string } => {
+    const modelConfig = module.modelConfig;
+    const externalDrawers = modelConfig?.externalDrawers;
+    const maidaHeight = externalDrawers?.maidaHeights?.[0];
+    const isSingleTopRubyDrawer = module.category === 'lower'
+      && !!modelConfig
+      && !!externalDrawers
+      && externalDrawers.drawerType !== 'legrabox'
+      && !externalDrawers.slots?.length
+      && (externalDrawers.count ?? 1) === 1
+      && Number.isFinite(maidaHeight)
+      && (externalDrawers.topGap === -20 || externalDrawers.bottomGap === 5)
+      && Array.isArray(modelConfig.sideNotches)
+      && modelConfig.sideNotches.length > 0;
+
+    if (!isSingleTopRubyDrawer || !maidaHeight || maidaHeight <= 0) {
+      return module;
+    }
+
+    const basicThickness = modelConfig.basicThickness || 18;
+    const slotTop = module.dimensions.height - basicThickness;
+    const slotBot = slotTop - maidaHeight;
+    const slots: ExternalDrawerSlot[] = [{
+      slot_bot: Math.round(slotBot * 10) / 10,
+      slot_top: Math.round(slotTop * 10) / 10,
+      slot_h: Math.round(maidaHeight * 10) / 10
+    }];
+
+    const sideNotches = modelConfig.sideNotches?.map(notch => {
+      const expectedFromBottom = slotBot - notch.y;
+      const notchTop = notch.fromBottom + notch.y;
+      const closeToRecoveredSlot = Math.abs(notchTop - slotBot) <= Math.max(35, notch.y);
+      if (!Number.isFinite(expectedFromBottom) || expectedFromBottom < 0 || !closeToRecoveredSlot) {
+        return notch;
+      }
+      return {
+        ...notch,
+        fromBottom: Math.round(expectedFromBottom * 10) / 10
+      };
+    });
+
+    return {
+      ...module,
+      modelConfig: {
+        ...modelConfig,
+        sideNotches,
+        externalDrawers: {
+          ...externalDrawers,
+          count: 1,
+          placement: 'top',
+          slots
+        }
+      }
+    };
+  };
+
+  const resolveImportPayload = (payload: unknown): ModuleData & { thumbnail?: string } => {
+    if (isWoolimCabinetSetPayload(payload)) {
+      return convertWoolimCabinetSetToModule(payload);
+    }
+
+    const maybeWrapper = payload as { module?: unknown };
+    const candidate = (maybeWrapper?.module && typeof maybeWrapper.module === 'object')
+      ? maybeWrapper.module
+      : payload;
+    const module = candidate as Partial<ModuleData> & { thumbnail?: string };
+
+    if (!module || typeof module !== 'object') {
+      throw new Error('JSON 최상위 값은 모듈 객체여야 합니다.');
+    }
+    if (typeof module.id !== 'string' || !module.id.trim()) {
+      throw new Error('id가 필요합니다.');
+    }
+    if (typeof module.name !== 'string' || !module.name.trim()) {
+      throw new Error('name이 필요합니다.');
+    }
+    if (!IMPORTABLE_MODULE_CATEGORIES.includes(module.category as ModuleCategory)) {
+      throw new Error('category는 full, upper, lower 중 하나여야 합니다.');
+    }
+    if (
+      !module.dimensions
+      || typeof module.dimensions.width !== 'number'
+      || typeof module.dimensions.height !== 'number'
+      || typeof module.dimensions.depth !== 'number'
+    ) {
+      throw new Error('dimensions.width/height/depth 숫자 값이 필요합니다.');
+    }
+
+    return restoreLossyWoolimModuleData({
+      ...module,
+      color: module.color || '#FFFFFF',
+      type: module.type || 'box',
+      defaultDepth: module.defaultDepth || module.dimensions.depth,
+      modelConfig: module.modelConfig || {
+        sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
+      }
+    } as ModuleData & { thumbnail?: string });
+  };
+
+  const importModuleFromJsonText = (raw: string) => {
+    const importedModule = resolveImportPayload(JSON.parse(raw));
+    loadModuleIntoForm(importedModule);
+    setTemplateSelection('');
+    setCategoryPicked(true);
+    setReadOnlyDetail(false);
+    setView('builder');
+    alert('JSON을 불러왔습니다. 미리보기 확인 후 저장하세요. 식별자가 기존과 같으면 저장 시 덮어쓰기 확인창이 뜹니다.');
+  };
+
+  const handleJsonFileChange = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.json') && file.type && file.type !== 'application/json') {
+      alert('JSON 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw = typeof reader.result === 'string' ? reader.result : '';
+        if (!raw.trim()) throw new Error('빈 파일입니다.');
+        importModuleFromJsonText(raw);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '알 수 없는 오류';
+        alert(`JSON 불러오기에 실패했습니다.\n${message}`);
+      }
+    };
+    reader.onerror = () => alert('JSON 파일을 읽지 못했습니다.');
+    reader.readAsText(file);
+  };
+
+  const openJsonFilePicker = () => {
+    jsonFileInputRef.current?.click();
+  };
+
   const saveDraft = async () => {
     const validationError = validateDraft();
     if (validationError) {
@@ -1525,7 +1950,7 @@ const ModuleBuilder = () => {
       <div className={styles.container}>
         <div className={styles.accessDenied}>
           <h2>접근 권한 없음</h2>
-          <p>sbbc212@gmail.com 슈퍼어드민만 모듈 관리에 접근할 수 있습니다.</p>
+          <p>모듈 관리 권한이 있는 계정만 접근할 수 있습니다.</p>
         </div>
       </div>
     );
@@ -1541,6 +1966,20 @@ const ModuleBuilder = () => {
             <span className={styles.countChip}>{filteredCatalog.length} / {catalogItems.length}개</span>
           </div>
           <div className={styles.headerActions}>
+            <input
+              ref={jsonFileInputRef}
+              type="file"
+              accept=".json,application/json"
+              style={{ display: 'none' }}
+              onChange={(event) => {
+                handleJsonFileChange(event.target.files?.[0]);
+                event.currentTarget.value = '';
+              }}
+            />
+            <button type="button" className={styles.copyButton} onClick={openJsonFilePicker}>
+              <Upload size={16} />
+              <span>JSON 업로드</span>
+            </button>
             <button type="button" className={styles.saveButton} onClick={openNewModule}>
               <Plus size={16} />
               <span>신규 모듈 추가</span>
@@ -1849,9 +2288,23 @@ const ModuleBuilder = () => {
           </code>
         </div>
         <div className={styles.headerActions}>
+          <input
+            ref={jsonFileInputRef}
+            type="file"
+            accept=".json,application/json"
+            style={{ display: 'none' }}
+            onChange={(event) => {
+              handleJsonFileChange(event.target.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
           <button type="button" className={styles.copyButton} onClick={copyDraft}>
             <ClipboardCopy size={16} />
             <span>JSON</span>
+          </button>
+          <button type="button" className={styles.copyButton} onClick={openJsonFilePicker}>
+            <Upload size={16} />
+            <span>파일 업로드</span>
           </button>
           <button
             type="button"
@@ -1860,14 +2313,10 @@ const ModuleBuilder = () => {
               const raw = prompt('모듈 JSON을 붙여넣으세요 (JSON 복사로 내보낸 형식)');
               if (!raw) return;
               try {
-                const mod = JSON.parse(raw);
-                if (!mod?.dimensions || !mod?.category) throw new Error('형식 오류');
-                loadModuleIntoForm(mod);
-                setCategoryPicked(true);
-                setReadOnlyDetail(false);
-                alert('JSON을 불러왔습니다. 확인 후 저장하세요 (식별자가 기존과 같으면 덮어쓰기 확인창이 뜹니다).');
-              } catch {
-                alert('JSON 파싱에 실패했습니다. "JSON" 버튼으로 복사한 형식 그대로 붙여넣어 주세요.');
+                importModuleFromJsonText(raw);
+              } catch (error) {
+                const message = error instanceof Error ? error.message : '알 수 없는 오류';
+                alert(`JSON 파싱에 실패했습니다.\n${message}`);
               }
             }}
           >
@@ -2135,6 +2584,148 @@ const ModuleBuilder = () => {
             </div>
           </details>
         </section>
+
+        {category === 'lower' && (
+          <section className={styles.panel}>
+            <div className={styles.panelHeader}>
+              <h2>WOOLIM Draft 박스 옵션</h2>
+            </div>
+            <label className={styles.checkbox}>
+              <input
+                type="checkbox"
+                checked={!!woolimDraftCompat}
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    setWoolimDraftCompat(createDefaultWoolimDraftCompat(width, depth, height, panelThickness));
+                    setHasDoor(true);
+                    setHasTopPanel(true);
+                  } else {
+                    setWoolimDraftCompat(null);
+                  }
+                }}
+              />
+              <span>WOOLIM Draft 옵션 사용</span>
+            </label>
+
+            {woolimDraftCompat && (
+              <div className={styles.woolimEditor}>
+                <div className={styles.woolimTopbar}>
+                  <label className={styles.compactField}>
+                    <span>캐비닛 번호</span>
+                    <input value={woolimDraftCompat.cabinetNo || 'K001'} onChange={(event) => setWoolimMeta('cabinetNo', event.target.value)} />
+                  </label>
+                  <label className={styles.compactField}>
+                    <span>도면 번호</span>
+                    <input value={woolimDraftCompat.drawingNo || 'D001'} onChange={(event) => setWoolimMeta('drawingNo', event.target.value)} />
+                  </label>
+                </div>
+
+                <div className={styles.woolimGroup}>
+                  <h3>외형 치수</h3>
+                  <div className={styles.woolimInlineGrid}>
+                    <label className={styles.compactField}><span>너비 W</span><input type="number" value={width} onChange={(event) => setWidth(Number(event.target.value))} /></label>
+                    <label className={styles.compactField}><span>깊이 D</span><input type="number" value={depth} onChange={(event) => setDepth(Number(event.target.value))} /></label>
+                    <label className={styles.compactField}><span>높이 H</span><input type="number" value={heightInput} onChange={(event) => handleHeightInputChange(event.target.value)} onBlur={commitHeightInput} /></label>
+                    <label className={styles.compactField}><span>판 두께</span><input type="number" step={0.5} value={panelThickness} onChange={(event) => setPanelThickness(Number(event.target.value) === 18.5 ? 18.5 : 18)} /></label>
+                  </div>
+                </div>
+
+                <div className={styles.woolimGroup}>
+                  <h3>뒷판</h3>
+                  <div className={styles.radioRow}>
+                    <label><input type="radio" checked={woolimBack.value === 'groove'} onChange={() => setWoolimOptionValue('back', 'groove')} /> 홈파기</label>
+                    <label><input type="radio" checked={woolimBack.value === 'overlay'} onChange={() => setWoolimOptionValue('back', 'overlay')} /> 덧방</label>
+                  </div>
+                  <div className={styles.woolimInlineGrid}>
+                    <label className={styles.compactField}><span>뒷판 두께</span><input type="number" value={Number(woolimBackFields.thick ?? 3)} onChange={(event) => setWoolimField('back', 'thick', Number(event.target.value))} /></label>
+                    {woolimBack.value === 'groove' ? (
+                      <>
+                        <label className={styles.compactField}><span>홈 시작</span><input type="number" value={Number(woolimBackFields.groove_start ?? 17)} onChange={(event) => setWoolimField('back', 'groove_start', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>홈 깊이</span><input type="number" value={Number(woolimBackFields.groove_depth ?? 7)} onChange={(event) => setWoolimField('back', 'groove_depth', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>상하 여유</span><input type="number" value={Number(woolimBackFields.clearance_v ?? 1)} onChange={(event) => setWoolimField('back', 'clearance_v', Number(event.target.value))} /></label>
+                      </>
+                    ) : (
+                      <>
+                        <label className={styles.compactField}><span>상하 여유</span><input type="number" value={Number(woolimBackFields.clearance_v ?? 1)} onChange={(event) => setWoolimField('back', 'clearance_v', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>좌우 여유</span><input type="number" value={Number(woolimBackFields.clearance_h ?? 1)} onChange={(event) => setWoolimField('back', 'clearance_h', Number(event.target.value))} /></label>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {woolimBack.value === 'groove' && (
+                  <div className={styles.woolimGroup}>
+                    <label className={styles.checkboxInline}>
+                      <input type="checkbox" checked={woolimInstallBand.enabled === true} onChange={(event) => setWoolimInstallEnabled(event.target.checked)} />
+                      <span>시공밴드 (CLEAT_BACK)</span>
+                    </label>
+                    {woolimInstallBand.enabled === true && (
+                      <div className={styles.woolimInlineGrid}>
+                        <label className={styles.compactField}><span>밴드 폭</span><input type="number" value={Number(woolimInstallFields.width ?? 60)} onChange={(event) => setWoolimField('install_band', 'width', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>밴드 두께</span><input type="number" value={Number(woolimInstallFields.thick ?? panelThickness)} onChange={(event) => setWoolimField('install_band', 'thick', Number(event.target.value))} /></label>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {[
+                  { key: 'top' as const, title: '상단 구조', option: woolimTop, fields: woolimTopFields },
+                  { key: 'bottom' as const, title: '하단 구조', option: woolimBottom, fields: woolimBottomFields }
+                ].map(group => (
+                  <div key={group.key} className={styles.woolimGroup}>
+                    <h3>{group.title}</h3>
+                    <div className={styles.radioRow}>
+                      <label><input type="radio" checked={group.option.value === 'solid'} onChange={() => setWoolimOptionValue(group.key, 'solid')} /> 통판형</label>
+                      <label><input type="radio" checked={group.option.value === 'band'} onChange={() => setWoolimOptionValue(group.key, 'band')} /> 밴드형</label>
+                      <label><input type="radio" checked={group.option.value === 'demband'} onChange={() => setWoolimOptionValue(group.key, 'demband')} /> 댐방</label>
+                    </div>
+                    {group.option.value === 'band' && (
+                      <div className={styles.woolimInlineGrid}>
+                        <label className={styles.compactField}><span>앞밴드 폭</span><input type="number" value={Number(group.fields.front_width ?? 60)} onChange={(event) => setWoolimField(group.key, 'front_width', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>뒷밴드 폭</span><input type="number" value={Number(group.fields.back_width ?? 60)} onChange={(event) => setWoolimField(group.key, 'back_width', Number(event.target.value))} /></label>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <div className={styles.woolimGroup}>
+                  <div className={styles.woolimGroupHeader}>
+                    <h3>목찬넬</h3>
+                    <button type="button" className={styles.copyButton} onClick={addWoolimMokItem}>추가</button>
+                  </div>
+                  {woolimMokItems.length === 0 && <p className={styles.panelHint}>목찬넬 없음</p>}
+                  {woolimMokItems.map((item, index) => (
+                    <div key={index} className={styles.woolimMokCard}>
+                      <div className={styles.woolimGroupHeader}>
+                        <strong>목찬넬 #{index + 1}</strong>
+                        <button type="button" className={styles.deleteButton} onClick={() => removeWoolimMokItem(index)}>삭제</button>
+                      </div>
+                      <div className={styles.radioRow}>
+                        <label><input type="radio" checked={(item.z_ref || 'top') === 'top'} onChange={() => setWoolimMokItem(index, 'z_ref', 'top')} /> 상단에서</label>
+                        <label><input type="radio" checked={item.z_ref === 'bot' || item.z_ref === 'bottom'} onChange={() => setWoolimMokItem(index, 'z_ref', 'bot')} /> 하단에서</label>
+                      </div>
+                      <div className={styles.woolimInlineGrid}>
+                        <label className={styles.compactField}><span>위치</span><input type="number" value={Number(item.position ?? 0)} onChange={(event) => setWoolimMokItem(index, 'position', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>가로 X</span><input type="number" value={Number(item.size_x ?? 40)} onChange={(event) => setWoolimMokItem(index, 'size_x', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>세로 Y</span><input type="number" value={Number(item.size_y ?? 70)} onChange={(event) => setWoolimMokItem(index, 'size_y', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>보강 밴드</span>
+                          <select value={String(item.band_kind || 'bottom')} onChange={(event) => setWoolimMokItem(index, 'band_kind', event.target.value)}>
+                            <option value="both">하단+후면</option>
+                            <option value="bottom">하단만</option>
+                            <option value="back">후면만</option>
+                            <option value="none">없음</option>
+                          </select>
+                        </label>
+                        <label className={styles.compactField}><span>하단 밴드 깊이</span><input type="number" value={Number(item.bottom_band ?? 60)} onChange={(event) => setWoolimMokItem(index, 'bottom_band', Number(event.target.value))} /></label>
+                        <label className={styles.compactField}><span>후면 밴드 높이</span><input type="number" value={Number(item.back_band ?? 60)} onChange={(event) => setWoolimMokItem(index, 'back_band', Number(event.target.value))} /></label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         <section className={styles.panel}>
           <div className={styles.panelHeader}>

@@ -123,3 +123,16 @@ export function isSuperAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
   return email.toLowerCase().trim() === getSuperAdminEmail().toLowerCase().trim();
 }
+
+const MODULE_BUILDER_EMAILS = new Set<string>([
+  getSuperAdminEmail().toLowerCase().trim(),
+  'woolimbj@gmail.com'
+]);
+
+/**
+ * 관리자 모듈 관리/생성 기능 접근 허용 계정
+ */
+export function canAccessModuleBuilder(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return MODULE_BUILDER_EMAILS.has(email.toLowerCase().trim());
+}

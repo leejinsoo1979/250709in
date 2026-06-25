@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
-import { isSuperAdmin as isSuperAdminEmail } from '@/firebase/admins';
+import { canAccessModuleBuilder } from '@/firebase/admins';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
 import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2, HiOutlineKey, HiOutlineOfficeBuilding, HiOutlineCube } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
@@ -19,7 +19,7 @@ const AdminLayout = () => {
 
   // 공장 파트너사 role: 발주 관련 메뉴만 노출
   const isFactoryRole = adminRole === 'factory';
-  const canUseModuleBuilder = isSuperAdminEmail(user?.email);
+  const canUseModuleBuilder = canAccessModuleBuilder(user?.email);
 
   useEffect(() => {
     console.log('🔐 AdminLayout 상태:', { authLoading, adminLoading, user: !!user, isAdmin, isSuperAdmin });

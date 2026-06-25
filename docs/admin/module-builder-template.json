@@ -1,0 +1,61 @@
+{
+  "id": "single-admin-sketchup-sample-tall-600",
+  "name": "SketchUp 샘플 키큰장",
+  "category": "full",
+  "galleryCategory": "clothing",
+  "dimensions": {
+    "width": 600,
+    "height": 2400,
+    "depth": 600
+  },
+  "color": "#FFFFFF",
+  "hasDoor": false,
+  "isDynamic": true,
+  "widthOptions": [
+    600
+  ],
+  "type": "box",
+  "defaultDepth": 600,
+  "modelConfig": {
+    "basicThickness": 18,
+    "hasOpenFront": true,
+    "hasShelf": true,
+    "shelfCount": 2,
+    "lowerSectionCount": 1,
+    "sections": [
+      {
+        "type": "open",
+        "heightType": "absolute",
+        "height": 850,
+        "count": 0,
+        "hasBackPanel": true
+      },
+      {
+        "type": "shelf",
+        "heightType": "percentage",
+        "height": 100,
+        "count": 2,
+        "shelfPositions": [
+          450,
+          900
+        ],
+        "hasBackPanel": true
+      }
+    ],
+    "verticalDividers": [
+      282
+    ],
+    "sideNotches": [
+      {
+        "fromBottom": 300,
+        "y": 65,
+        "z": 40
+      }
+    ],
+    "topNotch": {
+      "y": 60,
+      "z": 40
+    },
+    "panelExclusions": []
+  }
+}
