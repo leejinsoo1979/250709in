@@ -257,6 +257,11 @@ const textOf = (value: unknown, fallback = '-') => {
 
 const cloneJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
 
+const numberOf = (value: unknown, fallback = 0): number => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const createDefaultWoolimDraftCompat = (
   width: number,
   depth: number,
@@ -334,6 +339,75 @@ const createDefaultWoolimDraftCompat = (
   },
   operations: []
 });
+
+const normalizeWoolimDraftCompat = (
+  compat: WoolimDraftCompat,
+  dimensions: { width: number; depth: number; height: number; panelThickness: number }
+): WoolimDraftCompat => {
+  const next = cloneJson(compat);
+  const params = recordOf(next.params);
+  const catalogId = String(next.catalogId || params.catalog_id || 'kitchen_lower');
+  const cabinetNo = String(next.cabinetNo || params.cabinet_no || 'K001');
+  const drawingNo = String(next.drawingNo || params.drawing_no || 'D001');
+
+  params.catalog_id = catalogId;
+  params.cabinet_no = cabinetNo;
+  params.drawing_no = drawingNo;
+  params.dimensions = {
+    ...recordOf(params.dimensions),
+    width: dimensions.width,
+    depth: dimensions.depth,
+    height: dimensions.height,
+    board_thick: dimensions.panelThickness
+  };
+
+  const options = recordOf(params.options);
+  const installBand = recordOf(options.install_band);
+  installBand.fields = {
+    ...recordOf(installBand.fields),
+    thick: numberOf(recordOf(installBand.fields).thick, dimensions.panelThickness)
+  };
+  options.install_band = installBand;
+
+  const mok = recordOf(options.mokchanel);
+  const items = Array.isArray(mok.items)
+    ? mok.items.map(item => {
+        const row = recordOf(item);
+        return {
+          ...row,
+          z_ref: String(row.z_ref || 'top'),
+          position: numberOf(row.position, 0),
+          size_x: numberOf(row.size_x, 40),
+          size_y: numberOf(row.size_y, 70),
+          band_kind: String(row.band_kind || 'bottom'),
+          bottom_band: numberOf(row.bottom_band, 60),
+          back_band: numberOf(row.back_band, 60)
+        };
+      })
+    : [];
+  mok.items = items;
+  mok.count = items.length;
+  mok._auto_distribute = items.length > 0 ? false : Boolean(mok._auto_distribute);
+  options.mokchanel = mok;
+  params.options = options;
+
+  next.catalogId = catalogId;
+  next.cabinetNo = cabinetNo;
+  next.drawingNo = drawingNo;
+  next.definitionName = `CAB_${cabinetNo}_${drawingNo}_${dimensions.width}x${dimensions.depth}x${dimensions.height}`;
+  next.params = params;
+  next.operations = Array.isArray(next.operations) ? next.operations : [];
+  return next;
+};
+
+const buildWoolimRubyParamsExport = (compat: WoolimDraftCompat) => {
+  const params = cloneJson(recordOf(compat.params));
+  const operations = Array.isArray(compat.operations) ? cloneJson(compat.operations) : [];
+  if (operations.length > 0) {
+    params.operations = operations;
+  }
+  return params;
+};
 
 /** 분류별 표준 치수 — 표준 모듈 생성 코드와 동일 (상부장 785/D300, 하부장 캐비넷 780/D600, 키큰장 2400/D600) */
 const CATEGORY_DEFAULT_DIMENSIONS: Record<ModuleCategory, { height: number; depth: number }> = {
@@ -666,17 +740,25 @@ const ModuleBuilder = () => {
   const moduleDraft = useMemo(() => {
     const normalizedSlug = normalizeSlug(slug || name) || 'custom-module';
     const moduleId = `${getCategoryPrefix(category, layoutMode)}-${normalizedSlug}-${width}`;
+    const normalizedWoolimDraftCompat = woolimDraftCompat
+      ? normalizeWoolimDraftCompat(woolimDraftCompat, {
+          width,
+          depth,
+          height,
+          panelThickness
+        })
+      : null;
     // 측판 목찬넬 따내기 — 공통(sideNotches: 가로전대 자동) 또는 좌/우 개별
     const commonNotchConfig = notchRowsToConfig(leftNotches, height, depth);
     const rightNotchConfig = notchRowsToConfig(rightNotches, height, depth);
-    const woolimSideNotchConfig = woolimDraftCompat?.params
-      ? collectWoolimMokchanelSideNotches(woolimDraftCompat.params, {
+    const woolimSideNotchConfig = normalizedWoolimDraftCompat?.params
+      ? collectWoolimMokchanelSideNotches(normalizedWoolimDraftCompat.params, {
           depth,
           height,
           boardThick: panelThickness
         })
       : [];
-    const notchModelConfig = woolimDraftCompat
+    const notchModelConfig = normalizedWoolimDraftCompat
       ? (woolimSideNotchConfig.length > 0 ? { sideNotches: woolimSideNotchConfig } : {})
       : notchSidesLinked
         ? (commonNotchConfig.length > 0 ? { sideNotches: commonNotchConfig } : {})
@@ -775,7 +857,7 @@ const ModuleBuilder = () => {
       },
       color: '#FFFFFF',
       thumbnail: thumbnail || undefined,
-      ...(woolimDraftCompat ? { woolimDraft: woolimDraftCompat } : {}),
+      ...(normalizedWoolimDraftCompat ? { woolimDraft: normalizedWoolimDraftCompat } : {}),
       hasDoor,
       type: 'box' as const,
       galleryCategory,
@@ -1708,6 +1790,16 @@ const ModuleBuilder = () => {
     alert('모듈 초안 JSON이 복사되었습니다.');
   };
 
+  const copyWoolimRubyJson = async () => {
+    const compat = moduleDraft.woolimDraft;
+    if (!compat?.params) {
+      alert('WOOLIM Draft 옵션을 먼저 켜야 루비 실행용 JSON을 만들 수 있습니다.');
+      return;
+    }
+    await navigator.clipboard.writeText(JSON.stringify(buildWoolimRubyParamsExport(compat), null, 2));
+    alert('루비 실행용 WOOLIM params JSON이 복사되었습니다. 목찬넬 count/items가 포함됩니다.');
+  };
+
   const restoreLossyWoolimModuleData = (module: ModuleData & { thumbnail?: string }): ModuleData & { thumbnail?: string } => {
     const modelConfig = module.modelConfig;
     const externalDrawers = modelConfig?.externalDrawers;
@@ -2300,8 +2392,14 @@ const ModuleBuilder = () => {
           />
           <button type="button" className={styles.copyButton} onClick={copyDraft}>
             <ClipboardCopy size={16} />
-            <span>JSON</span>
+            <span>TTT JSON</span>
           </button>
+          {woolimDraftCompat && (
+            <button type="button" className={styles.copyButton} onClick={copyWoolimRubyJson}>
+              <Copy size={16} />
+              <span>Ruby JSON</span>
+            </button>
+          )}
           <button type="button" className={styles.copyButton} onClick={openJsonFilePicker}>
             <Upload size={16} />
             <span>파일 업로드</span>
