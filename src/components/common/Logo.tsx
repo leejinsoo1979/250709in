@@ -10,9 +10,9 @@ interface LogoProps {
 
 // lllll 로고(세로선 6개) 높이(px) + 텍스트 폰트 크기
 const sizeConfig = {
-  small: { bars: 11, gap: 6, fontSize: 15 },
-  medium: { bars: 13, gap: 7, fontSize: 18 },
-  large: { bars: 15, gap: 8, fontSize: 21 },
+  small: { bars: 9, gap: 6, fontSize: 13 },
+  medium: { bars: 11, gap: 7, fontSize: 15 },
+  large: { bars: 13, gap: 8, fontSize: 17 },
 };
 
 // mmmlogo.svg 의 세로선 x 좌표 (viewBox 0 0 70.97 22.87)
@@ -46,9 +46,9 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
     <>
       <style>{`
         @keyframes logoTextSlide {
-          0% { opacity: 0.7; letter-spacing: 0.1em; }
-          50% { opacity: 1; letter-spacing: 0.18em; }
-          100% { opacity: 1; letter-spacing: 0.1em; }
+          0% { opacity: 0.7; letter-spacing: 0.02em; }
+          50% { opacity: 1; letter-spacing: 0.06em; }
+          100% { opacity: 1; letter-spacing: 0.02em; }
         }
         @keyframes logoLoadingText {
           0%, 100% { opacity: 0.5; }
@@ -102,7 +102,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
             fontWeight: 700,
             color,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            letterSpacing: '0.1em',
+            letterSpacing: '0.02em',
             whiteSpace: 'nowrap',
             transition: 'letter-spacing 0.4s ease, opacity 0.3s ease',
             animation: loading
