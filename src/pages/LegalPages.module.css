@@ -21,13 +21,22 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 0;
   background: transparent;
   padding: 0;
   font: inherit;
-  font-weight: 800;
+  font-weight: 700;
   color: #111827;
   cursor: pointer;
+}
+
+.brandLogo {
+  height: 16px;
+  width: auto;
+  display: block;
 }
 
 .nav {
@@ -159,20 +168,82 @@
   display: flex;
   gap: 12px;
   align-items: flex-start;
+  justify-content: space-between;
   padding: 14px;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #ffffff;
 }
 
-.checkRow input {
+.checkLabel {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.checkRow input,
+.checkLabel input {
   margin-top: 4px;
   accent-color: #111827;
+}
+
+.checkBlock {
+  display: grid;
+  gap: 8px;
 }
 
 .allCheckRow {
   border-color: #cbd5e1;
   background: #f8fafc;
+  font-weight: 800;
+}
+
+.expandButton {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.legalPanel {
+  max-height: 220px;
+  overflow: auto;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.legalPanel h2 {
+  margin: 0 0 8px;
+  color: #111827;
+  font-size: 15px;
+}
+
+.legalPanel p,
+.legalPanel li {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.legalPanel p {
+  margin: 0 0 8px;
+}
+
+.legalPanel ul {
+  margin: 0 0 10px;
+  padding-left: 18px;
+}
+
+.legalPanel a {
+  color: #111827;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -189,13 +260,11 @@
 }
 
 .actions {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+  display: block;
 }
 
-.primaryButton,
-.secondaryButton {
+.primaryButton {
+  width: 100%;
   min-height: 44px;
   border-radius: 8px;
   padding: 0 18px;
@@ -216,9 +285,15 @@
 }
 
 .secondaryButton {
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  color: #374151;
+  display: block;
+  margin: 14px auto 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .error {
@@ -266,8 +341,24 @@
   border-color: #334155;
 }
 
-.theme_dark .checkText a {
+.theme_dark .checkText a,
+.theme_dark .expandButton,
+.theme_dark .legalPanel a {
   color: #f8fafc;
+}
+
+.theme_dark .legalPanel {
+  border-color: #334155;
+  background: #020617;
+}
+
+.theme_dark .legalPanel h2 {
+  color: #f8fafc;
+}
+
+.theme_dark .legalPanel p,
+.theme_dark .legalPanel li {
+  color: #cbd5e1;
 }
 
 .theme_dark .primaryButton {
@@ -278,8 +369,7 @@
 
 .theme_dark .secondaryButton {
   background: transparent;
-  border-color: #475569;
-  color: #e2e8f0;
+  color: #cbd5e1;
 }
 
 @media (max-width: 640px) {

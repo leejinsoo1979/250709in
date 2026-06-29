@@ -11,8 +11,21 @@ function LegalHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.headerInner}>
-        <button className={styles.brand} onClick={() => navigate('/')}>
-          made make material
+        <button className={styles.brand} onClick={() => navigate('/')} aria-label="made make material : craft">
+          <svg
+            viewBox="0 0 70.97 22.87"
+            className={styles.brandLogo}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+            ))}
+          </svg>
+          <span>made make material</span>
         </button>
         <nav className={styles.nav}>
           <Link to="/terms">이용약관</Link>
@@ -177,6 +190,8 @@ export function TermsConsentPage() {
   const [termsChecked, setTermsChecked] = useState(false)
   const [privacyChecked, setPrivacyChecked] = useState(false)
   const [marketingChecked, setMarketingChecked] = useState(false)
+  const [termsOpen, setTermsOpen] = useState(false)
+  const [privacyOpen, setPrivacyOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -274,28 +289,76 @@ export function TermsConsentPage() {
             </label>
           )}
           {settings.checks.requireTerms && (
-            <label className={styles.checkRow}>
-              <input
-                type="checkbox"
-                checked={termsChecked}
-                onChange={(event) => setTermsChecked(event.target.checked)}
-              />
-              <span className={styles.checkText}>
-                [필수] <Link to="/terms" target="_blank" rel="noreferrer">이용약관</Link>에 동의합니다.
-              </span>
-            </label>
+            <div className={styles.checkBlock}>
+              <div className={styles.checkRow}>
+                <label className={styles.checkLabel}>
+                  <input
+                    type="checkbox"
+                    checked={termsChecked}
+                    onChange={(event) => setTermsChecked(event.target.checked)}
+                  />
+                  <span className={styles.checkText}>[필수] 이용약관에 동의합니다.</span>
+                </label>
+                <button
+                  type="button"
+                  className={styles.expandButton}
+                  onClick={() => setTermsOpen((open) => !open)}
+                  aria-expanded={termsOpen}
+                >
+                  {termsOpen ? '접기' : '보기'}
+                </button>
+              </div>
+              {termsOpen && (
+                <div className={styles.legalPanel}>
+                  <h2>이용약관</h2>
+                  <p>본 약관은 MMM Craft가 제공하는 웹 기반 가구 설계, 프로젝트 관리, 도면 및 산출물 생성 서비스의 이용 조건을 정합니다.</p>
+                  <ul>
+                    <li>회원은 이메일 또는 Google 계정 등 제공되는 인증 수단으로 가입할 수 있습니다.</li>
+                    <li>회원은 정확한 정보를 제공하고 계정을 안전하게 관리해야 합니다.</li>
+                    <li>프로젝트, 이미지, 도면, 설정값 등 회원이 생성한 콘텐츠는 회원에게 귀속됩니다.</li>
+                    <li>서비스에서 생성되는 도면, 견적, 최적화 결과는 사용자가 최종 검토해야 합니다.</li>
+                    <li>약관 위반, 보안 위험, 불법 행위가 확인되면 서비스 이용이 제한될 수 있습니다.</li>
+                  </ul>
+                  <Link to="/terms" target="_blank" rel="noreferrer">전체 약관 새 창에서 보기</Link>
+                </div>
+              )}
+            </div>
           )}
           {settings.checks.requirePrivacy && (
-            <label className={styles.checkRow}>
-              <input
-                type="checkbox"
-                checked={privacyChecked}
-                onChange={(event) => setPrivacyChecked(event.target.checked)}
-              />
-              <span className={styles.checkText}>
-                [필수] <Link to="/privacy" target="_blank" rel="noreferrer">개인정보처리방침</Link> 및 개인정보 수집·이용에 동의합니다.
-              </span>
-            </label>
+            <div className={styles.checkBlock}>
+              <div className={styles.checkRow}>
+                <label className={styles.checkLabel}>
+                  <input
+                    type="checkbox"
+                    checked={privacyChecked}
+                    onChange={(event) => setPrivacyChecked(event.target.checked)}
+                  />
+                  <span className={styles.checkText}>[필수] 개인정보처리방침 및 개인정보 수집·이용에 동의합니다.</span>
+                </label>
+                <button
+                  type="button"
+                  className={styles.expandButton}
+                  onClick={() => setPrivacyOpen((open) => !open)}
+                  aria-expanded={privacyOpen}
+                >
+                  {privacyOpen ? '접기' : '보기'}
+                </button>
+              </div>
+              {privacyOpen && (
+                <div className={styles.legalPanel}>
+                  <h2>개인정보처리방침</h2>
+                  <p>서비스 제공을 위해 회원 식별, 계정 관리, 프로젝트 저장, 고객지원, 보안 관리에 필요한 개인정보를 처리합니다.</p>
+                  <ul>
+                    <li>수집 항목: 이메일, 이름 또는 표시 이름, 프로필 이미지, Firebase UID, 로그인 제공자 정보</li>
+                    <li>기업회원 신청 시 회사명, 담당자명, 연락처, 사업자등록번호, 사업자등록증, 주소 등이 추가로 수집될 수 있습니다.</li>
+                    <li>프로젝트, 디자인 파일, 도면, 이미지, 설정값, 공유 기록, 주문 및 문의 내용이 서비스 이용 과정에서 저장됩니다.</li>
+                    <li>회원은 개인정보 열람, 정정, 삭제, 처리정지를 요청할 수 있습니다.</li>
+                    <li>문의처: 이진수, sbbc212@gmail.com, 010-8983-6637</li>
+                  </ul>
+                  <Link to="/privacy" target="_blank" rel="noreferrer">전체 방침 새 창에서 보기</Link>
+                </div>
+              )}
+            </div>
           )}
           {settings.checks.enableMarketing && (
             <label className={styles.checkRow}>
@@ -315,12 +378,12 @@ export function TermsConsentPage() {
           <button className={styles.primaryButton} onClick={handleAccept} disabled={!canSubmit}>
             {submitting ? '저장 중' : settings.popup.primaryButtonText}
           </button>
-          {settings.popup.showLogoutButton && (
-            <button className={styles.secondaryButton} onClick={handleSignOut}>
-              {settings.popup.secondaryButtonText}
-            </button>
-          )}
         </div>
+        {settings.popup.showLogoutButton && (
+          <button className={styles.secondaryButton} onClick={handleSignOut}>
+            {settings.popup.secondaryButtonText}
+          </button>
+        )}
         {error && <div className={styles.error}>{error}</div>}
       </section>
     </main>
