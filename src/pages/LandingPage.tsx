@@ -21,12 +21,9 @@ export default function LandingPage() {
     }
   }, [navigate]);
 
-  // think thing thank 애니메이션 상태
-  const [tttAnimating, setTttAnimating] = useState(false);
   // CRAFT 애니메이션 상태
   const [craftAnimating, setCraftAnimating] = useState(false);
   // 호버 상태
-  const [tttHovered, setTttHovered] = useState(false);
   const [craftHovered, setCraftHovered] = useState(false);
   const [buttonHovered, setButtonHovered] = useState(false);
 
@@ -79,15 +76,6 @@ export default function LandingPage() {
     };
   }, [isTouchDevice]);
 
-  // think thing thank: 3초 간격 자동 애니메이션
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTttAnimating(true);
-      setTimeout(() => setTttAnimating(false), 1600);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
   // CRAFT: 4초 간격 자동 애니메이션 (ttt와 엇갈리게)
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -123,21 +111,6 @@ export default function LandingPage() {
     setTimeout(() => setCraftAnimating(false), 2000);
   }, [craftControls]);
 
-  // ttt 호버 / 터치
-  const handleTttHover = () => {
-    setTttHovered(true);
-    setTttAnimating(true);
-  };
-  const handleTttLeave = () => {
-    setTttHovered(false);
-    setTimeout(() => setTttAnimating(false), 800);
-  };
-  const handleTttTap = () => {
-    setTttAnimating(true);
-    setTimeout(() => setTttAnimating(false), 1600);
-  };
-
-  const isTttActive = tttAnimating || tttHovered;
   const isCraftActive = craftAnimating || craftHovered || buttonHovered;
 
   return (
@@ -186,12 +159,20 @@ export default function LandingPage() {
           className="flex items-center gap-1.5 cursor-pointer"
           onClick={() => navigate('/')}
         >
-          <div className="flex items-center gap-1">
-            <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`} />
-            <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`} />
-            <div className={`w-3.5 h-3.5 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`} />
-          </div>
-          <span className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-lg ml-1`}>CRAFT</span>
+          <svg
+            viewBox="0 0 70.97 22.87"
+            className={`${isDark ? 'text-white' : 'text-zinc-900'} h-3.5 w-auto`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <line key={`hbar-${i}`} x1={x} y1="22.87" x2={x} y2="0" />
+            ))}
+          </svg>
+          <span className={`${isDark ? 'text-white' : 'text-zinc-900'} font-bold text-sm sm:text-base ml-1.5`}>made make material</span>
         </div>
         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
           <button
@@ -218,14 +199,8 @@ export default function LandingPage() {
       <div className="flex-1 flex items-center justify-center px-8">
       <div className="text-center">
         {/* lllll made make material */}
-        <div
-          className="flex items-center justify-center gap-3 sm:gap-4 mb-6 cursor-pointer"
-          {...(isTouchDevice
-            ? { onClick: handleTttTap }
-            : { onMouseEnter: handleTttHover, onMouseLeave: handleTttLeave }
-          )}
-        >
-          {/* lllll 로고 (세로선 6개) — 순차 팝 애니메이션 */}
+        <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6">
+          {/* lllll 로고 (세로선 6개) — 등장 애니메이션 */}
           <svg
             viewBox="0 0 70.97 22.87"
             className={`${isDark ? 'text-white' : 'text-zinc-900'} h-5 sm:h-6 md:h-7 lg:h-8 w-auto`}
@@ -243,44 +218,27 @@ export default function LandingPage() {
                 x2={x}
                 y2="0"
                 initial={{ scaleY: 0, opacity: 0 }}
-                style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-                animate={{
-                  scaleY: isTttActive ? [1, 1.3, 0.9, 1] : 1,
-                  opacity: 1,
-                }}
+                style={{ transformBox: 'fill-box', transformOrigin: 'bottom' }}
+                animate={{ scaleY: 1, opacity: 1 }}
                 transition={{
-                  scaleY: isTttActive
-                    ? { duration: 0.8, delay: i * 0.08, times: [0, 0.3, 0.6, 1], ease: 'easeOut' }
-                    : { duration: 0.5, delay: i * 0.07, ease: 'easeOut' },
-                  opacity: { duration: 0.4, delay: i * 0.07 },
+                  scaleY: { duration: 0.45, delay: i * 0.06, ease: 'easeOut' },
+                  opacity: { duration: 0.4, delay: i * 0.06 },
                 }}
               />
             ))}
           </svg>
-          {/* made make material 텍스트 — 글자별 웨이브 */}
+          {/* made make material 텍스트 — 글자 순차 등장 (타이핑) */}
           <motion.span
-            className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide ml-2`}
+            className={`${isDark ? 'text-white' : 'text-zinc-900'} font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide ml-2`}
             style={{ display: 'inline-flex' }}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
           >
             {'made make material'.split('').map((char, i) => (
               <motion.span
                 key={i}
                 style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
-                animate={{
-                  y: isTttActive ? [0, -8, 2, 0] : 0,
-                  opacity: isTttActive ? [1, 1, 0.7, 1] : 1,
-                }}
-                transition={{
-                  y: isTttActive
-                    ? { duration: 1.2, delay: 0.3 + i * 0.035, times: [0, 0.25, 0.5, 1], ease: 'easeInOut' }
-                    : { duration: 0.3 },
-                  opacity: isTttActive
-                    ? { duration: 1.2, delay: 0.3 + i * 0.035, times: [0, 0.25, 0.5, 1] }
-                    : { duration: 0.3 },
-                }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.3 + i * 0.045, ease: 'easeOut' }}
                 whileHover={{ y: -6, scale: 1.15, transition: { duration: 0.12 } }}
               >
                 {char === ' ' ? '\u00A0' : char}
