@@ -1576,7 +1576,7 @@ function PageInner(){
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <Logo size="small" onClick={() => navigate('/')} noAnimation />
+          <Logo size="large" onClick={() => navigate('/')} noAnimation />
           <h1>{t('cnc.title')}</h1>
           <span className={styles.projectName}>
             {(() => {
