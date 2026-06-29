@@ -1,13 +1,18 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '@/firebase/auth';
 import { saveLoginHistory } from '@/firebase/userProfiles';
+import { acceptLatestAgreements, getAgreementStatus } from '@/firebase/agreements';
 
 // 인증 컨텍스트 타입
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  agreementLoading: boolean;
+  agreementAccepted: boolean | null;
   isAuthenticated: boolean;
+  refreshAgreementStatus: () => Promise<void>;
+  acceptAgreements: () => Promise<{ error: string | null }>;
 }
 
 // 인증 컨텍스트 생성
@@ -21,6 +26,8 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [agreementLoading, setAgreementLoading] = useState(false);
+  const [agreementAccepted, setAgreementAccepted] = useState<boolean | null>(null);
 
   // Firebase 설정 확인
   const isFirebaseConfigured = () => {
@@ -76,6 +83,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // localStorage에 userId와 activeTeamId 설정 (개발 모드 조건 제거!)
         if (user) {
+          setAgreementLoading(true);
+          setAgreementAccepted(null);
           console.log('🔐 사용자 로그인:', user.email);
           localStorage.setItem('userId', user.uid);
           const personalTeamId = `personal_${user.uid}`;
@@ -169,6 +178,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // 로그인 기록 저장
           try {
+            const status = await getAgreementStatus(user.uid);
+            setAgreementAccepted(status.accepted);
+          } catch (err) {
+            console.error('❌ 약관 동의 상태 확인 실패:', err);
+            setAgreementAccepted(false);
+          } finally {
+            setAgreementLoading(false);
+          }
+
+          try {
             await saveLoginHistory();
             console.log('✅ 로그인 기록 저장 완료');
           } catch (err) {
@@ -176,6 +195,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         } else {
           console.log('🔐 사용자 로그아웃');
+          setAgreementLoading(false);
+          setAgreementAccepted(null);
           // 로그아웃 시 localStorage 정리
           localStorage.removeItem('userId');
           localStorage.removeItem('activeTeamId');
@@ -203,10 +224,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  const refreshAgreementStatus = useCallback(async () => {
+    if (!user) {
+      setAgreementAccepted(null);
+      setAgreementLoading(false);
+      return;
+    }
+
+    setAgreementLoading(true);
+    try {
+      const status = await getAgreementStatus(user.uid);
+      setAgreementAccepted(status.accepted);
+    } catch (err) {
+      console.error('❌ 약관 동의 상태 새로고침 실패:', err);
+      setAgreementAccepted(false);
+    } finally {
+      setAgreementLoading(false);
+    }
+  }, [user]);
+
+  const acceptAgreements = useCallback(async (): Promise<{ error: string | null }> => {
+    if (!user) {
+      return { error: '로그인이 필요합니다.' };
+    }
+
+    try {
+      await acceptLatestAgreements(user);
+      setAgreementAccepted(true);
+      return { error: null };
+    } catch (err) {
+      console.error('❌ 약관 동의 저장 실패:', err);
+      return { error: '약관 동의 저장 중 오류가 발생했습니다.' };
+    }
+  }, [user]);
+
   const value: AuthContextType = {
     user,
     loading,
+    agreementLoading,
+    agreementAccepted,
     isAuthenticated: !!user,
+    refreshAgreementStatus,
+    acceptAgreements,
   };
 
   return (

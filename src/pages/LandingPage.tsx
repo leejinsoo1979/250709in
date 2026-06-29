@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useAnimation } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Sun, Moon } from 'lucide-react';
@@ -312,6 +312,10 @@ export default function LandingPage() {
         </motion.div>
       </div>
       </div>
+      <footer className={`px-8 pb-6 flex justify-center gap-5 text-xs ${isDark ? 'text-zinc-400' : 'text-zinc-500'}`}>
+        <Link className={isDark ? 'hover:text-white' : 'hover:text-zinc-900'} to="/terms">이용약관</Link>
+        <Link className={isDark ? 'hover:text-white' : 'hover:text-zinc-900'} to="/privacy">개인정보처리방침</Link>
+      </footer>
     </div>
   );
 }

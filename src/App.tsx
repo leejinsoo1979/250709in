@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
+import AgreementGate from '@/auth/AgreementGate';
 import DashboardAdminGuard from '@/auth/DashboardAdminGuard';
 import EnterpriseOrAdminGuard from '@/auth/EnterpriseOrAdminGuard';
 import EnterpriseInquiryNotice from '@/components/EnterpriseInquiryNotice';
@@ -31,6 +32,7 @@ import NotificationMessagePage from '@/pages/NotificationMessagePage';
 import GalleryDetailPage from '@/pages/GalleryDetailPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
+import { PrivacyPage, TermsConsentPage, TermsPage } from '@/pages/LegalPages';
 import AuthVerifiedPage from '@/pages/AuthVerifiedPage';
 import CompleteEmailSignupPage from '@/pages/CompleteEmailSignupPage';
 import EnterpriseSignUpPage from '@/pages/EnterpriseSignUpPage';
@@ -155,9 +157,13 @@ function AppContent() {
       <AdminFurnitureModuleRegistryLoader />
       <EnterpriseInquiryNotice />
       <FriendRequestToast />
+      <AgreementGate>
       <Routes>
         {/* 메인 페이지 - 랜딩 페이지 */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms-consent" element={<TermsConsentPage />} />
         {/* 대시보드 페이지 (관리자 전용 - 그 외 사용자는 /demo 로 강제) */}
         <Route path="/dashboard" element={<DashboardAdminGuard><SimpleDashboard /></DashboardAdminGuard>} />
         <Route path="/dashboard/friends" element={<DashboardAdminGuard><Friends /></DashboardAdminGuard>} />
@@ -259,6 +265,7 @@ function AppContent() {
         <Route path="/share/:token" element={<ShareLinkAccess />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </AgreementGate>
     </>
   );
 }
