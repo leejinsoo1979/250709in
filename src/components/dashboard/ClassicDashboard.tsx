@@ -190,7 +190,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
             }}
             style={{  }}
           >
-            <Logo size="large" />
+            <Logo size="large" noAnimation />
           </div>
         </div>
 
