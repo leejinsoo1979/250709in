@@ -99,7 +99,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
         <span
           style={{
             fontSize: config.fontSize,
-            fontWeight: 700,
+            fontWeight: 400,
             color,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             letterSpacing: '0.06em',
@@ -110,7 +110,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
               : isAnimating ? 'logoTextSlide 0.5s ease both' : 'none',
           }}
         >
-          mmm<span style={{ fontWeight: 400 }}>craft</span>
+          mmmcraft
         </span>
       </div>
     </>
