@@ -10,9 +10,9 @@ interface LogoProps {
 
 // lllll 로고(세로선 6개) 높이(px) + 텍스트 폰트 크기
 const sizeConfig = {
-  small: { bars: 11, gap: 6, fontSize: 12 },
-  medium: { bars: 13, gap: 7, fontSize: 14 },
-  large: { bars: 15, gap: 8, fontSize: 16 },
+  small: { bars: 11, gap: 6, fontSize: 15 },
+  medium: { bars: 13, gap: 7, fontSize: 18 },
+  large: { bars: 15, gap: 8, fontSize: 21 },
 };
 
 // mmmlogo.svg 의 세로선 x 좌표 (viewBox 0 0 70.97 22.87)
