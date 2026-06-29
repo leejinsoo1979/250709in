@@ -319,15 +319,23 @@ const MobileEditor: React.FC = () => {
             display: 'flex', alignItems: 'center', gap: 4, marginLeft: 2,
             flexShrink: 1, minWidth: 0, overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
-            </div>
+            <svg
+              viewBox="0 0 70.97 22.87"
+              style={{ height: 12, width: 'auto', flexShrink: 0 }}
+              fill="none"
+              stroke={T.ink}
+              strokeWidth={4}
+              strokeMiterlimit={10}
+              aria-hidden="true"
+            >
+              {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+                <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+              ))}
+            </svg>
             <span style={{
-              fontSize: 12, fontWeight: 700, letterSpacing: 1, color: T.ink,
+              fontSize: 12, fontWeight: 700, letterSpacing: 0.5, color: T.ink,
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>CRAFT</span>
+            }}>made make material</span>
           </div>
         )}
         {/* 프로젝트명 (가로에서는 헤더에 직접, 세로에서는 별도 줄) */}

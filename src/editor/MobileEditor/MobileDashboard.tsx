@@ -196,9 +196,21 @@ const MobileDashboard: React.FC = () => {
       <button style={iconBtn}>
         <IconGrid size={20}/>
       </button>
-      <div style={{ flex: 1, textAlign: 'center' }}>
-        <div style={{ fontSize: 16, fontWeight: 800, letterSpacing: 2, color: T.ink }}>CRAFT</div>
-        <div style={{ fontSize: 10, color: T.ink3, letterSpacing: 1 }}>think thing thank</div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+        <svg
+          viewBox="0 0 70.97 22.87"
+          style={{ height: 13, width: 'auto' }}
+          fill="none"
+          stroke={T.ink}
+          strokeWidth={4}
+          strokeMiterlimit={10}
+          aria-hidden="true"
+        >
+          {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+            <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+          ))}
+        </svg>
+        <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5, color: T.ink, whiteSpace: 'nowrap' }}>made make material</span>
       </div>
       <button style={iconBtn}>
         <IconBell/>
@@ -447,12 +459,22 @@ const MobileDashboard: React.FC = () => {
         }}>
           {/* 로고 (축약) */}
           <div style={{ textAlign: 'center', marginBottom: 18 }}>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 3 }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <svg
+                viewBox="0 0 70.97 22.87"
+                style={{ height: 12, width: 'auto' }}
+                fill="none"
+                stroke={T.ink}
+                strokeWidth={4}
+                strokeMiterlimit={10}
+                aria-hidden="true"
+              >
+                {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+                  <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+                ))}
+              </svg>
             </div>
-            <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: 1, marginTop: 4 }}>CRAFT</div>
+            <div style={{ fontSize: 7, fontWeight: 700, letterSpacing: 0.3, marginTop: 4, color: T.ink }}>made make material</div>
           </div>
           {Tabs.map(tab => {
             const isA = bottomTab === tab.k;

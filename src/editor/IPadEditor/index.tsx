@@ -244,13 +244,21 @@ const IPadEditor: React.FC = () => {
         padding: '0 20px', flexShrink: 0,
       }}>
         {/* 로고 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ display: 'flex', gap: 3 }}>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: T.ink }}/>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: T.ink }}/>
-            <span style={{ width: 7, height: 7, borderRadius: '50%', background: T.ink }}/>
-          </div>
-          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 1.5, color: T.ink }}>CRAFT</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <svg
+            viewBox="0 0 70.97 22.87"
+            style={{ height: 14, width: 'auto' }}
+            fill="none"
+            stroke={T.ink}
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+            ))}
+          </svg>
+          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: 0.5, color: T.ink, whiteSpace: 'nowrap' }}>made make material</span>
         </div>
 
         {/* 프로젝트 경로 */}

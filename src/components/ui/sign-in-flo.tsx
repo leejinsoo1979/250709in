@@ -50,9 +50,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const [localError, setLocalError] = useState<string | null>(null);
 
   // Animation states (from LandingPage)
-  const [tttAnimating, setTttAnimating] = useState(false);
   const [craftAnimating, setCraftAnimating] = useState(false);
-  const [tttHovered, setTttHovered] = useState(false);
   const [craftHovered, setCraftHovered] = useState(false);
   const craftControls = useAnimation();
 
@@ -62,16 +60,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const { isMobile } = useResponsive();
   const loading = externalLoading || isSubmitting;
 
-  // think thing thank: 3초 간격 자동 애니메이션
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTttAnimating(true);
-      setTimeout(() => setTttAnimating(false), 1600);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // CRAFT: 4초 간격 자동 애니메이션 (ttt와 엇갈리게)
+  // CRAFT: 4초 간격 자동 애니메이션
   useEffect(() => {
     const timeout = setTimeout(() => {
       const interval = setInterval(() => {
@@ -97,16 +86,6 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
     setTimeout(() => setCraftAnimating(false), 800);
   }, []);
 
-  const handleTttHover = () => {
-    setTttHovered(true);
-    setTttAnimating(true);
-  };
-  const handleTttLeave = () => {
-    setTttHovered(false);
-    setTimeout(() => setTttAnimating(false), 800);
-  };
-
-  const isTttActive = tttAnimating || tttHovered;
   const isCraftActive = craftAnimating || craftHovered;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -163,24 +142,29 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             className="flex items-center gap-1.5 cursor-pointer"
             onClick={onNavigateHome}
           >
-            <div className="flex items-center gap-1">
-              <div className="w-3.5 h-3.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
-              <div className="w-3.5 h-3.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
-              <div className="w-3.5 h-3.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
-            </div>
-            <span className="font-black text-lg ml-1" style={{ color: isDark ? '#fff' : '#000' }}>CRAFT</span>
+            <svg
+              viewBox="0 0 70.97 22.87"
+              className="h-3.5 w-auto"
+              style={{ color: isDark ? '#fff' : '#000' }}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={4}
+              strokeMiterlimit={10}
+              aria-hidden="true"
+            >
+              {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+                <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+              ))}
+            </svg>
+            <span className="font-bold text-sm sm:text-base ml-1.5" style={{ color: isDark ? '#fff' : '#000' }}>made make material</span>
           </div>
         </header>
 
         {/* Animated Content */}
         <div className="relative z-10 flex flex-col justify-center items-center flex-1">
           {/* lllll made make material */}
-          <div
-            className="flex items-center justify-center gap-3 sm:gap-4 mb-6 cursor-pointer"
-            onMouseEnter={handleTttHover}
-            onMouseLeave={handleTttLeave}
-          >
-            {/* lllll 로고 (세로선 6개) — 순차 팝 애니메이션 */}
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-6">
+            {/* lllll 로고 (세로선 6개) — 등장 애니메이션 */}
             <svg
               viewBox="0 0 70.97 22.87"
               className="h-4 sm:h-5 md:h-6 lg:h-7 w-auto"
@@ -199,16 +183,11 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   x2={x}
                   y2="0"
                   initial={{ scaleY: 0, opacity: 0 }}
-                  style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-                  animate={{
-                    scaleY: isTttActive ? [1, 1.3, 0.9, 1] : 1,
-                    opacity: 1,
-                  }}
+                  style={{ transformBox: 'fill-box', transformOrigin: 'bottom' }}
+                  animate={{ scaleY: 1, opacity: 1 }}
                   transition={{
-                    scaleY: isTttActive
-                      ? { duration: 0.8, delay: i * 0.08, times: [0, 0.3, 0.6, 1], ease: 'easeOut' }
-                      : { duration: 0.5, delay: i * 0.07, ease: 'easeOut' },
-                    opacity: { duration: 0.4, delay: i * 0.07 },
+                    scaleY: { duration: 0.45, delay: i * 0.06, ease: 'easeOut' },
+                    opacity: { duration: 0.4, delay: i * 0.06 },
                   }}
                 />
               ))}
@@ -216,26 +195,14 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             <motion.span
               className="font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-wide ml-6"
               style={{ display: 'inline-flex', color: isDark ? '#fff' : '#000' }}
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
             >
               {'made make material'.split('').map((char, i) => (
                 <motion.span
                   key={i}
                   style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
-                  animate={{
-                    y: isTttActive ? [0, -6, 2, 0] : 0,
-                    opacity: isTttActive ? [1, 1, 0.7, 1] : 1,
-                  }}
-                  transition={{
-                    y: isTttActive
-                      ? { duration: 1.2, delay: 0.3 + i * 0.035, times: [0, 0.25, 0.5, 1], ease: 'easeInOut' }
-                      : { duration: 0.3 },
-                    opacity: isTttActive
-                      ? { duration: 1.2, delay: 0.3 + i * 0.035, times: [0, 0.25, 0.5, 1] }
-                      : { duration: 0.3 },
-                  }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 + i * 0.045, ease: 'easeOut' }}
                   whileHover={{ y: -4, scale: 1.15, transition: { duration: 0.12 } }}
                 >
                   {char === ' ' ? '\u00A0' : char}
@@ -307,12 +274,21 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
             <ChevronLeft size={24} />
           </button>
           <div className="flex items-center gap-1.5 ml-2">
-            <div className="flex items-center gap-1">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
-              <div className="w-2.5 h-2.5 rounded-full" style={{ background: isDark ? '#fff' : '#000' }} />
-            </div>
-            <span className="font-black text-base ml-1" style={{ color: isDark ? '#fff' : '#000' }}>CRAFT</span>
+            <svg
+              viewBox="0 0 70.97 22.87"
+              className="h-3 w-auto"
+              style={{ color: isDark ? '#fff' : '#000' }}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={4}
+              strokeMiterlimit={10}
+              aria-hidden="true"
+            >
+              {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+                <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+              ))}
+            </svg>
+            <span className="font-bold text-sm ml-1.5" style={{ color: isDark ? '#fff' : '#000' }}>made make material</span>
           </div>
         </header>
       )}

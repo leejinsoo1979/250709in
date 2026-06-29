@@ -529,12 +529,20 @@ export default function EnterpriseSignUpPage() {
           className="flex items-center gap-1.5 cursor-pointer"
           onClick={() => navigate('/')}
         >
-          <div className="flex items-center gap-1">
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-            <div className="w-3.5 h-3.5 rounded-full bg-white" />
-          </div>
-          <span className="text-white font-black text-lg ml-1">CRAFT</span>
+          <svg
+            viewBox="0 0 70.97 22.87"
+            className="h-3.5 w-auto text-white"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+            ))}
+          </svg>
+          <span className="text-white font-bold text-sm sm:text-base ml-1.5">made make material</span>
         </div>
         <button
           className="text-sm text-zinc-400 hover:text-white transition-colors"

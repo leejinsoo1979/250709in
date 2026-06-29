@@ -93,15 +93,22 @@ const MobileLogin: React.FC = () => {
     }}>
       {/* 로고 영역 */}
       <div style={{ textAlign: 'center', marginTop: 36, marginBottom: 40 }}>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
-          <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#FFF' }}/>
-          <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#FFF' }}/>
-          <span style={{ width: 14, height: 14, borderRadius: '50%', background: '#FFF' }}/>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <svg
+            viewBox="0 0 70.97 22.87"
+            style={{ height: 28, width: 'auto' }}
+            fill="none"
+            stroke="#FFF"
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+            ))}
+          </svg>
         </div>
-        <div style={{ fontSize: 13, color: '#9CA3AF', letterSpacing: 2, marginBottom: 4 }}>
-          think thing thank
-        </div>
-        <div style={{ fontSize: 40, fontWeight: 900, letterSpacing: 4 }}>CRAFT</div>
+        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: 1 }}>made make material</div>
       </div>
 
       {/* 탭 전환 */}

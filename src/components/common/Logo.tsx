@@ -8,11 +8,15 @@ interface LogoProps {
   noAnimation?: boolean;
 }
 
+// lllll 로고(세로선 6개) 높이(px) + 텍스트 폰트 크기
 const sizeConfig = {
-  small: { dot: 9, gap: 3, fontSize: 14, dotGap: 3 },
-  medium: { dot: 12, gap: 5, fontSize: 18, dotGap: 4 },
-  large: { dot: 13, gap: 8, fontSize: 20, dotGap: 4 },
+  small: { bars: 11, gap: 6, fontSize: 12 },
+  medium: { bars: 13, gap: 7, fontSize: 14 },
+  large: { bars: 15, gap: 8, fontSize: 16 },
 };
+
+// mmmlogo.svg 의 세로선 x 좌표 (viewBox 0 0 70.97 22.87)
+const BAR_X = [68.97, 55.58, 42.18, 28.79, 15.39, 2];
 
 const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, noAnimation = false }) => {
   const config = sizeConfig[size];
@@ -28,7 +32,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
     autoTimerRef.current = setInterval(() => {
       setAutoAnimating(true);
       setTimeout(() => setAutoAnimating(false), 700);
-    }, 3000);
+    }, 4000);
 
     return () => {
       if (autoTimerRef.current) clearInterval(autoTimerRef.current);
@@ -36,59 +40,23 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
   }, [loading, noAnimation]);
 
   const isAnimating = noAnimation ? false : (loading || hovered || autoAnimating);
-
-  const dotStyle = (index: number): React.CSSProperties => {
-    if (loading) {
-      return {
-        width: config.dot,
-        height: config.dot,
-        borderRadius: '50%',
-        backgroundColor: 'var(--theme-primary, #667eea)',
-        animation: 'logoLoadingDot 1.4s ease-in-out infinite',
-        animationDelay: `${index * 0.15}s`,
-      };
-    }
-    return {
-      width: config.dot,
-      height: config.dot,
-      borderRadius: '50%',
-      backgroundColor: 'var(--theme-primary, #667eea)',
-      transition: 'transform 0.3s ease, opacity 0.3s ease',
-      transform: isAnimating ? `translateY(${Math.sin((index + 1) * 1.2) * -4}px) scale(1.15)` : 'translateY(0) scale(1)',
-      animationName: isAnimating ? 'logoDotBounce' : 'none',
-      animationDuration: '0.6s',
-      animationDelay: `${index * 0.08}s`,
-      animationTimingFunction: 'ease',
-      animationFillMode: 'both',
-    };
-  };
-
-  const textAnimation = loading
-    ? 'logoLoadingText 2s ease-in-out infinite'
-    : isAnimating ? 'logoTextSlide 0.5s ease both' : 'none';
+  const color = isDark ? '#ffffff' : '#374151';
 
   return (
     <>
       <style>{`
-        @keyframes logoDotBounce {
-          0% { transform: translateY(0) scale(1); }
-          30% { transform: translateY(-5px) scale(1.2); }
-          50% { transform: translateY(1px) scale(0.95); }
-          70% { transform: translateY(-2px) scale(1.05); }
-          100% { transform: translateY(0) scale(1); }
-        }
         @keyframes logoTextSlide {
-          0% { opacity: 0.7; letter-spacing: 0.15em; }
-          50% { opacity: 1; letter-spacing: 0.25em; }
-          100% { opacity: 1; letter-spacing: 0.15em; }
-        }
-        @keyframes logoLoadingDot {
-          0%, 100% { transform: translateY(0) scale(1); opacity: 0.4; }
-          50% { transform: translateY(-8px) scale(1.2); opacity: 1; }
+          0% { opacity: 0.7; letter-spacing: 0.1em; }
+          50% { opacity: 1; letter-spacing: 0.18em; }
+          100% { opacity: 1; letter-spacing: 0.1em; }
         }
         @keyframes logoLoadingText {
           0%, 100% { opacity: 0.5; }
           50% { opacity: 1; }
+        }
+        @keyframes logoBarPulse {
+          0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+          50% { transform: scaleY(1); opacity: 1; }
         }
       `}</style>
       <div
@@ -102,23 +70,47 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
           cursor: onClick ? 'pointer' : 'default',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: config.dotGap }}>
-          {[0, 1, 2].map((i) => (
-            <div key={i} style={dotStyle(i)} />
+        <svg
+          viewBox="0 0 70.97 22.87"
+          style={{ height: config.bars, width: 'auto', display: 'block' }}
+          fill="none"
+          stroke={color}
+          strokeWidth={4}
+          strokeMiterlimit={10}
+          aria-hidden="true"
+        >
+          {BAR_X.map((x, i) => (
+            <line
+              key={i}
+              x1={x}
+              y1="22.87"
+              x2={x}
+              y2="0"
+              style={{
+                transformBox: 'fill-box',
+                transformOrigin: 'bottom',
+                animation: loading
+                  ? `logoBarPulse 1.2s ease-in-out ${i * 0.12}s infinite`
+                  : 'none',
+              }}
+            />
           ))}
-        </div>
+        </svg>
         <span
           style={{
             fontSize: config.fontSize,
-            fontWeight: 900,
-            color: isDark ? '#ffffff' : '#374151',
+            fontWeight: 700,
+            color,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            letterSpacing: '0.15em',
+            letterSpacing: '0.1em',
+            whiteSpace: 'nowrap',
             transition: 'letter-spacing 0.4s ease, opacity 0.3s ease',
-            animation: textAnimation,
+            animation: loading
+              ? 'logoLoadingText 2s ease-in-out infinite'
+              : isAnimating ? 'logoTextSlide 0.5s ease both' : 'none',
           }}
         >
-          CRAFT
+          made make material
         </span>
       </div>
     </>
