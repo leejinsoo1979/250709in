@@ -374,6 +374,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // 공개 설정 - 로그인 사용자는 조회 가능, 관리는 관리자만 가능
+    match /publicSettings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
     // API 키 - 본인 키만 읽기/쓰기 가능
     match /apiKeys/{keyId} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;

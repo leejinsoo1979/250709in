@@ -38,7 +38,7 @@ export const DEFAULT_AGREEMENT_SETTINGS: AgreementConsentSettings = {
     primaryButtonText: '동의하고 계속',
     secondaryButtonText: '로그아웃',
     theme: 'light',
-    showLogoutButton: true
+    showLogoutButton: false
   },
   checks: {
     enableAllCheck: true,

@@ -556,24 +556,24 @@ const Settings = () => {
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
-                      checked={agreementSettings.popup.showLogoMark}
-                      onChange={(e) => updateAgreementPopup('showLogoMark', e.target.checked)}
-                    />
-                    <span>로고 마크 표시</span>
-                  </label>
-                  <label className={styles.checkboxLabel}>
-                    <input
-                      type="checkbox"
                       checked={agreementSettings.popup.showLogoutButton}
                       onChange={(e) => updateAgreementPopup('showLogoutButton', e.target.checked)}
                     />
-                    <span>로그아웃 버튼 표시</span>
+                    <span>로그아웃 링크 표시</span>
                   </label>
                 </div>
 
                 <div className={styles.divider} />
 
                 <div className={styles.switchGrid}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.checks.enableAllCheck}
+                      onChange={(e) => updateAgreementChecks('enableAllCheck', e.target.checked)}
+                    />
+                    <span>전체 동의 체크 표시</span>
+                  </label>
                   <label className={styles.checkboxLabel}>
                     <input
                       type="checkbox"
@@ -610,6 +610,17 @@ const Settings = () => {
                 </div>
 
                 <div className={styles.formGroup}>
+                  <label className={styles.label}>전체 동의 문구</label>
+                  <input
+                    type="text"
+                    value={agreementSettings.checks.allCheckLabel}
+                    onChange={(e) => updateAgreementChecks('allCheckLabel', e.target.value)}
+                    className={styles.input}
+                    disabled={!agreementSettings.checks.enableAllCheck}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
                   <label className={styles.label}>마케팅 체크 문구</label>
                   <input
                     type="text"
@@ -625,23 +636,19 @@ const Settings = () => {
                 <div className={styles.previewTitle}>미리보기</div>
                 <div className={`${styles.agreementPreview} ${styles[`preview_${agreementSettings.popup.theme}`]}`}>
                   <div className={styles.previewCard}>
-                    {agreementSettings.popup.showLogoMark && (
-                      <div className={styles.previewLogo} aria-hidden="true">
-                        {[0, 1, 2, 3, 4, 5].map((index) => <span key={index} />)}
-                      </div>
-                    )}
                     <p>{agreementSettings.popup.brandLabel}</p>
                     <h3>{agreementSettings.popup.title}</h3>
                     <span>{agreementSettings.popup.description}</span>
                     <div className={styles.previewChecks}>
+                      {agreementSettings.checks.enableAllCheck && <div className={styles.previewAllCheck}>{agreementSettings.checks.allCheckLabel}</div>}
                       {agreementSettings.checks.requireTerms && <div>[필수] 이용약관에 동의합니다.</div>}
                       {agreementSettings.checks.requirePrivacy && <div>[필수] 개인정보처리방침 및 개인정보 수집·이용에 동의합니다.</div>}
                       {agreementSettings.checks.enableMarketing && <div>{agreementSettings.checks.marketingLabel}</div>}
                     </div>
                     <div className={styles.previewActions}>
                       <button>{agreementSettings.popup.primaryButtonText}</button>
-                      {agreementSettings.popup.showLogoutButton && <button>{agreementSettings.popup.secondaryButtonText}</button>}
                     </div>
+                    {agreementSettings.popup.showLogoutButton && <button className={styles.previewLogout}>{agreementSettings.popup.secondaryButtonText}</button>}
                   </div>
                 </div>
               </div>

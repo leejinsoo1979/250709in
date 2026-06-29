@@ -183,6 +183,178 @@ select.input {
   font-weight: 400;
 }
 
+.settingsGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 28px;
+  align-items: start;
+}
+
+.twoColumn {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.switchGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.divider {
+  height: 1px;
+  background: var(--theme-border, #e5e7eb);
+}
+
+.previewPanel {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.previewTitle {
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.agreementPreview {
+  min-height: 520px;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.14);
+}
+
+.preview_brand {
+  background:
+    radial-gradient(circle at 20% 14%, rgba(59, 130, 246, 0.18), transparent 30%),
+    radial-gradient(circle at 78% 10%, rgba(16, 185, 129, 0.14), transparent 28%),
+    rgba(15, 23, 42, 0.22);
+}
+
+.preview_dark {
+  background: #020617;
+}
+
+.previewCard {
+  width: 100%;
+  max-width: 320px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.14);
+}
+
+.preview_dark .previewCard {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.previewCard p {
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.previewCard h3 {
+  margin: 0 0 10px;
+  color: inherit;
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.previewCard > span {
+  display: block;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.preview_dark .previewCard p,
+.preview_dark .previewCard > span {
+  color: #cbd5e1;
+}
+
+.previewChecks {
+  display: grid;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.previewChecks div {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #111827;
+  background: #ffffff;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.previewChecks .previewAllCheck {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  font-weight: 800;
+}
+
+.preview_dark .previewChecks div {
+  border-color: #334155;
+  background: #111827;
+  color: #e2e8f0;
+}
+
+.previewActions {
+  display: block;
+}
+
+.previewActions button {
+  width: 100%;
+  min-height: 36px;
+  border-radius: 8px;
+  padding: 0 12px;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.preview_dark .previewActions button {
+  border-color: #f8fafc;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.previewLogout {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.preview_dark .previewLogout {
+  color: #cbd5e1;
+}
+
 /* 로딩 */
 .loading {
   display: flex;
@@ -244,5 +416,15 @@ select.input {
 
   .content {
     padding: 20px;
+  }
+
+  .settingsGrid,
+  .twoColumn,
+  .switchGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .previewPanel {
+    position: static;
   }
 }
