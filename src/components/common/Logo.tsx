@@ -110,7 +110,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
               : isAnimating ? 'logoTextSlide 0.5s ease both' : 'none',
           }}
         >
-          mmmcraft
+          mmm<span style={{ fontWeight: 400 }}>craft</span>
         </span>
       </div>
     </>
