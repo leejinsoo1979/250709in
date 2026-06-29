@@ -110,7 +110,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
               : isAnimating ? 'logoTextSlide 0.5s ease both' : 'none',
           }}
         >
-          made make material
+          mmmcraft
         </span>
       </div>
     </>
