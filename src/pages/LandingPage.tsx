@@ -217,7 +217,7 @@ export default function LandingPage() {
 
       <div className="flex-1 flex items-center justify-center px-8">
       <div className="text-center">
-        {/* ... think thing thank */}
+        {/* lllll made make material */}
         <div
           className="flex items-center justify-center gap-3 sm:gap-4 mb-6 cursor-pointer"
           {...(isTouchDevice
@@ -225,26 +225,39 @@ export default function LandingPage() {
             : { onMouseEnter: handleTttHover, onMouseLeave: handleTttLeave }
           )}
         >
-          {/* 3 dots — 순차 팝 애니메이션 */}
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={`dot-${i}`}
-              className={`w-6 h-6 sm:w-7 sm:h-7 md:w-9 md:h-9 lg:w-10 lg:h-10 rounded-full ${isDark ? 'bg-white' : 'bg-zinc-900'}`}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{
-                scale: isTttActive ? [1, 1.3, 0.9, 1] : 1,
-                opacity: 1,
-              }}
-              transition={{
-                scale: isTttActive
-                  ? { duration: 0.8, delay: i * 0.12, times: [0, 0.3, 0.6, 1], ease: 'easeOut' }
-                  : { duration: 0.5, delay: i * 0.1, ease: 'easeOut' },
-                opacity: { duration: 0.4, delay: i * 0.1 },
-              }}
-              whileHover={{ scale: 1.4, transition: { duration: 0.15 } }}
-            />
-          ))}
-          {/* think thing thank 텍스트 — 글자별 웨이브 */}
+          {/* lllll 로고 (세로선 6개) — 순차 팝 애니메이션 */}
+          <svg
+            viewBox="0 0 70.97 22.87"
+            className={`${isDark ? 'text-white' : 'text-zinc-900'} h-5 sm:h-6 md:h-7 lg:h-8 w-auto`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <motion.line
+                key={`bar-${i}`}
+                x1={x}
+                y1="22.87"
+                x2={x}
+                y2="0"
+                initial={{ scaleY: 0, opacity: 0 }}
+                style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
+                animate={{
+                  scaleY: isTttActive ? [1, 1.3, 0.9, 1] : 1,
+                  opacity: 1,
+                }}
+                transition={{
+                  scaleY: isTttActive
+                    ? { duration: 0.8, delay: i * 0.08, times: [0, 0.3, 0.6, 1], ease: 'easeOut' }
+                    : { duration: 0.5, delay: i * 0.07, ease: 'easeOut' },
+                  opacity: { duration: 0.4, delay: i * 0.07 },
+                }}
+              />
+            ))}
+          </svg>
+          {/* made make material 텍스트 — 글자별 웨이브 */}
           <motion.span
             className={`${isDark ? 'text-white' : 'text-zinc-900'} font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide ml-2`}
             style={{ display: 'inline-flex' }}
@@ -252,7 +265,7 @@ export default function LandingPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
           >
-            {'think thing thank'.split('').map((char, i) => (
+            {'made make material'.split('').map((char, i) => (
               <motion.span
                 key={i}
                 style={{ display: 'inline-block', whiteSpace: char === ' ' ? 'pre' : undefined }}
