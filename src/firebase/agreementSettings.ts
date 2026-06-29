@@ -67,9 +67,14 @@ const mergeAgreementSettings = (raw: Partial<AgreementConsentSettings> | undefin
 })
 
 export async function getAgreementConsentSettings(): Promise<AgreementConsentSettings> {
-  const snap = await getDoc(SETTINGS_REF)
-  if (!snap.exists()) return DEFAULT_AGREEMENT_SETTINGS
-  return mergeAgreementSettings(snap.data() as Partial<AgreementConsentSettings>)
+  try {
+    const snap = await getDoc(SETTINGS_REF)
+    if (!snap.exists()) return DEFAULT_AGREEMENT_SETTINGS
+    return mergeAgreementSettings(snap.data() as Partial<AgreementConsentSettings>)
+  } catch (error) {
+    console.warn('약관 동의 설정을 불러오지 못해 기본값을 사용합니다:', error)
+    return DEFAULT_AGREEMENT_SETTINGS
+  }
 }
 
 export async function saveAgreementConsentSettings(
