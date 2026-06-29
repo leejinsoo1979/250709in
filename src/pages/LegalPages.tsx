@@ -248,7 +248,11 @@ export function TermsConsentPage() {
 
     setSubmitting(true)
     setError(null)
-    const result = await acceptAgreements({ marketingAccepted: marketingChecked })
+    const result = await acceptAgreements({
+      marketingAccepted: marketingChecked,
+      termsVersion: settings.termsVersion,
+      privacyVersion: settings.privacyVersion
+    })
     setSubmitting(false)
 
     if (result.error) {

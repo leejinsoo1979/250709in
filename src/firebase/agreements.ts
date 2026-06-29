@@ -11,6 +11,8 @@ export interface AgreementStatus {
 
 export interface AgreementAcceptanceOptions {
   marketingAccepted?: boolean
+  termsVersion?: string
+  privacyVersion?: string
 }
 
 const isLatestAgreementAccepted = (
@@ -53,7 +55,12 @@ export async function acceptLatestAgreements(
   user: User,
   options: AgreementAcceptanceOptions = {}
 ): Promise<void> {
-  const settings = await getAgreementConsentSettings()
+  const settings = options.termsVersion && options.privacyVersion
+    ? {
+        termsVersion: options.termsVersion,
+        privacyVersion: options.privacyVersion
+      }
+    : await getAgreementConsentSettings()
   const userRef = doc(db, 'users', user.uid)
   const acceptedAt = serverTimestamp()
 
