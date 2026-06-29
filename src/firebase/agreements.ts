@@ -1,9 +1,7 @@
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import type { User } from 'firebase/auth'
 import { db } from './config'
-
-export const CURRENT_TERMS_VERSION = '2026-06-29'
-export const CURRENT_PRIVACY_VERSION = '2026-06-29'
+import { getAgreementConsentSettings } from './agreementSettings'
 
 export interface AgreementStatus {
   accepted: boolean
@@ -11,30 +9,51 @@ export interface AgreementStatus {
   privacyVersion?: string
 }
 
-const isLatestAgreementAccepted = (data: Record<string, any> | undefined): boolean => {
+export interface AgreementAcceptanceOptions {
+  marketingAccepted?: boolean
+}
+
+const isLatestAgreementAccepted = (
+  data: Record<string, any> | undefined,
+  termsVersion: string,
+  privacyVersion: string
+): boolean => {
   if (!data) return false
 
   return Boolean(
     data.termsAcceptedAt &&
     data.privacyAcceptedAt &&
-    data.termsVersion === CURRENT_TERMS_VERSION &&
-    data.privacyVersion === CURRENT_PRIVACY_VERSION
+    data.termsVersion === termsVersion &&
+    data.privacyVersion === privacyVersion
   )
 }
 
 export async function getAgreementStatus(uid: string): Promise<AgreementStatus> {
+  const settings = await getAgreementConsentSettings()
+  if (!settings.enabled) {
+    return {
+      accepted: true,
+      termsVersion: settings.termsVersion,
+      privacyVersion: settings.privacyVersion
+    }
+  }
+
   const userRef = doc(db, 'users', uid)
   const userSnap = await getDoc(userRef)
   const data = userSnap.exists() ? userSnap.data() : undefined
 
   return {
-    accepted: isLatestAgreementAccepted(data),
+    accepted: isLatestAgreementAccepted(data, settings.termsVersion, settings.privacyVersion),
     termsVersion: data?.termsVersion,
     privacyVersion: data?.privacyVersion
   }
 }
 
-export async function acceptLatestAgreements(user: User): Promise<void> {
+export async function acceptLatestAgreements(
+  user: User,
+  options: AgreementAcceptanceOptions = {}
+): Promise<void> {
+  const settings = await getAgreementConsentSettings()
   const userRef = doc(db, 'users', user.uid)
   const acceptedAt = serverTimestamp()
 
@@ -45,8 +64,10 @@ export async function acceptLatestAgreements(user: User): Promise<void> {
     termsAcceptedAt: acceptedAt,
     privacyAcceptedAt: acceptedAt,
     agreementsAcceptedAt: acceptedAt,
-    termsVersion: CURRENT_TERMS_VERSION,
-    privacyVersion: CURRENT_PRIVACY_VERSION,
+    termsVersion: settings.termsVersion,
+    privacyVersion: settings.privacyVersion,
+    marketingAccepted: Boolean(options.marketingAccepted),
+    marketingAcceptedAt: options.marketingAccepted ? acceptedAt : null,
     updatedAt: serverTimestamp()
   }, { merge: true })
 }

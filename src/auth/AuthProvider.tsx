@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useState, Rea
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '@/firebase/auth';
 import { saveLoginHistory } from '@/firebase/userProfiles';
-import { acceptLatestAgreements, getAgreementStatus } from '@/firebase/agreements';
+import { acceptLatestAgreements, getAgreementStatus, type AgreementAcceptanceOptions } from '@/firebase/agreements';
 
 // 인증 컨텍스트 타입
 interface AuthContextType {
@@ -12,7 +12,7 @@ interface AuthContextType {
   agreementAccepted: boolean | null;
   isAuthenticated: boolean;
   refreshAgreementStatus: () => Promise<void>;
-  acceptAgreements: () => Promise<{ error: string | null }>;
+  acceptAgreements: (options?: AgreementAcceptanceOptions) => Promise<{ error: string | null }>;
 }
 
 // 인증 컨텍스트 생성
@@ -243,13 +243,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user]);
 
-  const acceptAgreements = useCallback(async (): Promise<{ error: string | null }> => {
+  const acceptAgreements = useCallback(async (options?: AgreementAcceptanceOptions): Promise<{ error: string | null }> => {
     if (!user) {
       return { error: '로그인이 필요합니다.' };
     }
 
     try {
-      await acceptLatestAgreements(user);
+      await acceptLatestAgreements(user, options);
       setAgreementAccepted(true);
       return { error: null };
     } catch (err) {

@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
 import { HiOutlineCog, HiOutlineKey, HiOutlineGlobe, HiOutlineCheckCircle, HiOutlineSave } from 'react-icons/hi';
+import {
+  DEFAULT_AGREEMENT_SETTINGS,
+  getAgreementConsentSettings,
+  saveAgreementConsentSettings,
+  type AgreementConsentSettings,
+  type AgreementPopupTheme
+} from '@/firebase/agreementSettings';
 import styles from './Settings.module.css';
 
 interface SystemSettings {
@@ -62,9 +69,10 @@ const Settings = () => {
       sessionTimeout: 30,
     },
   });
+  const [agreementSettings, setAgreementSettings] = useState<AgreementConsentSettings>(DEFAULT_AGREEMENT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'env' | 'apiKeys' | 'webhooks' | 'general'>('env');
+  const [activeTab, setActiveTab] = useState<'env' | 'apiKeys' | 'webhooks' | 'general' | 'agreements'>('env');
 
   useEffect(() => {
     loadSettings();
@@ -74,11 +82,15 @@ const Settings = () => {
     try {
       setLoading(true);
       const docRef = doc(db, 'systemSettings', 'config');
-      const docSnap = await getDoc(docRef);
+      const [docSnap, nextAgreementSettings] = await Promise.all([
+        getDoc(docRef),
+        getAgreementConsentSettings()
+      ]);
 
       if (docSnap.exists()) {
         setSettings(docSnap.data() as SystemSettings);
       }
+      setAgreementSettings(nextAgreementSettings);
     } catch (error) {
       console.error('설정 로드 실패:', error);
       alert('설정을 불러오는데 실패했습니다.');
@@ -101,6 +113,7 @@ const Settings = () => {
         updatedAt: serverTimestamp(),
         updatedBy: user.uid,
       });
+      await saveAgreementConsentSettings(agreementSettings, user.uid);
 
       alert('설정이 저장되었습니다.');
     } catch (error) {
@@ -136,6 +149,36 @@ const Settings = () => {
     setSettings({
       ...settings,
       general: { ...settings.general, [key]: value },
+    });
+  };
+
+  const updateAgreementRoot = <K extends keyof Pick<AgreementConsentSettings, 'enabled' | 'termsVersion' | 'privacyVersion'>>(
+    key: K,
+    value: AgreementConsentSettings[K]
+  ) => {
+    setAgreementSettings({
+      ...agreementSettings,
+      [key]: value,
+    });
+  };
+
+  const updateAgreementPopup = <K extends keyof AgreementConsentSettings['popup']>(
+    key: K,
+    value: AgreementConsentSettings['popup'][K]
+  ) => {
+    setAgreementSettings({
+      ...agreementSettings,
+      popup: { ...agreementSettings.popup, [key]: value },
+    });
+  };
+
+  const updateAgreementChecks = <K extends keyof AgreementConsentSettings['checks']>(
+    key: K,
+    value: AgreementConsentSettings['checks'][K]
+  ) => {
+    setAgreementSettings({
+      ...agreementSettings,
+      checks: { ...agreementSettings.checks, [key]: value },
     });
   };
 
@@ -196,6 +239,13 @@ const Settings = () => {
         >
           <HiOutlineCog size={18} />
           일반 설정
+        </button>
+        <button
+          className={activeTab === 'agreements' ? `${styles.tab} ${styles.tabActive}` : styles.tab}
+          onClick={() => setActiveTab('agreements')}
+        >
+          <HiOutlineCheckCircle size={18} />
+          약관 동의
         </button>
       </div>
 
@@ -388,6 +438,212 @@ const Settings = () => {
                   onChange={(e) => updateGeneral('sessionTimeout', parseInt(e.target.value))}
                   className={styles.input}
                 />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 약관 동의 설정 */}
+        {activeTab === 'agreements' && (
+          <div className={styles.section}>
+            <div>
+              <h2 className={styles.sectionTitle}>약관 동의 화면 설정</h2>
+              <p className={styles.hint}>로그인 사용자가 최신 약관 버전에 동의하지 않았을 때 표시되는 팝업을 설정합니다. 버전을 변경하면 기존 사용자에게 다시 동의를 받습니다.</p>
+            </div>
+
+            <div className={styles.settingsGrid}>
+              <div className={styles.form}>
+                <div className={styles.formGroup}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.enabled}
+                      onChange={(e) => updateAgreementRoot('enabled', e.target.checked)}
+                    />
+                    <span>약관 동의 게이트 활성화</span>
+                  </label>
+                  <p className={styles.hint}>비활성화하면 약관 미동의 사용자도 서비스에 진입할 수 있습니다.</p>
+                </div>
+
+                <div className={styles.twoColumn}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>이용약관 버전</label>
+                    <input
+                      type="text"
+                      value={agreementSettings.termsVersion}
+                      onChange={(e) => updateAgreementRoot('termsVersion', e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>개인정보처리방침 버전</label>
+                    <input
+                      type="text"
+                      value={agreementSettings.privacyVersion}
+                      onChange={(e) => updateAgreementRoot('privacyVersion', e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.divider} />
+
+                <div className={styles.twoColumn}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>브랜드 라벨</label>
+                    <input
+                      type="text"
+                      value={agreementSettings.popup.brandLabel}
+                      onChange={(e) => updateAgreementPopup('brandLabel', e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>팝업 테마</label>
+                    <select
+                      value={agreementSettings.popup.theme}
+                      onChange={(e) => updateAgreementPopup('theme', e.target.value as AgreementPopupTheme)}
+                      className={styles.input}
+                    >
+                      <option value="light">Light</option>
+                      <option value="brand">Brand</option>
+                      <option value="dark">Dark</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>제목</label>
+                  <input
+                    type="text"
+                    value={agreementSettings.popup.title}
+                    onChange={(e) => updateAgreementPopup('title', e.target.value)}
+                    className={styles.input}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>설명</label>
+                  <textarea
+                    value={agreementSettings.popup.description}
+                    onChange={(e) => updateAgreementPopup('description', e.target.value)}
+                    className={`${styles.input} ${styles.textarea}`}
+                  />
+                </div>
+
+                <div className={styles.twoColumn}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>확인 버튼 문구</label>
+                    <input
+                      type="text"
+                      value={agreementSettings.popup.primaryButtonText}
+                      onChange={(e) => updateAgreementPopup('primaryButtonText', e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>보조 버튼 문구</label>
+                    <input
+                      type="text"
+                      value={agreementSettings.popup.secondaryButtonText}
+                      onChange={(e) => updateAgreementPopup('secondaryButtonText', e.target.value)}
+                      className={styles.input}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.switchGrid}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.popup.showLogoMark}
+                      onChange={(e) => updateAgreementPopup('showLogoMark', e.target.checked)}
+                    />
+                    <span>로고 마크 표시</span>
+                  </label>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.popup.showLogoutButton}
+                      onChange={(e) => updateAgreementPopup('showLogoutButton', e.target.checked)}
+                    />
+                    <span>로그아웃 버튼 표시</span>
+                  </label>
+                </div>
+
+                <div className={styles.divider} />
+
+                <div className={styles.switchGrid}>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.checks.requireTerms}
+                      onChange={(e) => updateAgreementChecks('requireTerms', e.target.checked)}
+                    />
+                    <span>이용약관 체크 필수</span>
+                  </label>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.checks.requirePrivacy}
+                      onChange={(e) => updateAgreementChecks('requirePrivacy', e.target.checked)}
+                    />
+                    <span>개인정보 체크 필수</span>
+                  </label>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.checks.enableMarketing}
+                      onChange={(e) => updateAgreementChecks('enableMarketing', e.target.checked)}
+                    />
+                    <span>마케팅 체크 표시</span>
+                  </label>
+                  <label className={styles.checkboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={agreementSettings.checks.requireMarketing}
+                      disabled={!agreementSettings.checks.enableMarketing}
+                      onChange={(e) => updateAgreementChecks('requireMarketing', e.target.checked)}
+                    />
+                    <span>마케팅 체크 필수</span>
+                  </label>
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label className={styles.label}>마케팅 체크 문구</label>
+                  <input
+                    type="text"
+                    value={agreementSettings.checks.marketingLabel}
+                    onChange={(e) => updateAgreementChecks('marketingLabel', e.target.value)}
+                    className={styles.input}
+                    disabled={!agreementSettings.checks.enableMarketing}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.previewPanel}>
+                <div className={styles.previewTitle}>미리보기</div>
+                <div className={`${styles.agreementPreview} ${styles[`preview_${agreementSettings.popup.theme}`]}`}>
+                  <div className={styles.previewCard}>
+                    {agreementSettings.popup.showLogoMark && (
+                      <div className={styles.previewLogo} aria-hidden="true">
+                        {[0, 1, 2, 3, 4, 5].map((index) => <span key={index} />)}
+                      </div>
+                    )}
+                    <p>{agreementSettings.popup.brandLabel}</p>
+                    <h3>{agreementSettings.popup.title}</h3>
+                    <span>{agreementSettings.popup.description}</span>
+                    <div className={styles.previewChecks}>
+                      {agreementSettings.checks.requireTerms && <div>[필수] 이용약관에 동의합니다.</div>}
+                      {agreementSettings.checks.requirePrivacy && <div>[필수] 개인정보처리방침 및 개인정보 수집·이용에 동의합니다.</div>}
+                      {agreementSettings.checks.enableMarketing && <div>{agreementSettings.checks.marketingLabel}</div>}
+                    </div>
+                    <div className={styles.previewActions}>
+                      <button>{agreementSettings.popup.primaryButtonText}</button>
+                      {agreementSettings.popup.showLogoutButton && <button>{agreementSettings.popup.secondaryButtonText}</button>}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { signOutUser } from '@/firebase/auth'
 import { useAuth } from '@/auth/AuthProvider'
+import { DEFAULT_AGREEMENT_SETTINGS, getAgreementConsentSettings, type AgreementConsentSettings } from '@/firebase/agreementSettings'
 import styles from './LegalPages.module.css'
 
 function LegalHeader() {
@@ -171,29 +172,68 @@ export function TermsConsentPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, loading, agreementLoading, agreementAccepted, acceptAgreements } = useAuth()
+  const [settings, setSettings] = useState<AgreementConsentSettings>(DEFAULT_AGREEMENT_SETTINGS)
+  const [settingsLoading, setSettingsLoading] = useState(true)
   const [termsChecked, setTermsChecked] = useState(false)
   const [privacyChecked, setPrivacyChecked] = useState(false)
+  const [marketingChecked, setMarketingChecked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const from = (location.state as { from?: string } | null)?.from || '/demo'
 
+  useEffect(() => {
+    let cancelled = false
+
+    const loadSettings = async () => {
+      try {
+        const nextSettings = await getAgreementConsentSettings()
+        if (!cancelled) setSettings(nextSettings)
+      } catch (err) {
+        console.error('약관 동의 설정 로드 실패:', err)
+      } finally {
+        if (!cancelled) setSettingsLoading(false)
+      }
+    }
+
+    loadSettings()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   if (!loading && !user) {
     return <Navigate to="/login" replace />
   }
 
-  if (!agreementLoading && agreementAccepted) {
+  if (!settingsLoading && !settings.enabled) {
     return <Navigate to={from} replace />
   }
 
-  const canSubmit = termsChecked && privacyChecked && !submitting
+  if (!settingsLoading && !agreementLoading && agreementAccepted) {
+    return <Navigate to={from} replace />
+  }
+
+  const needsTerms = settings.checks.requireTerms
+  const needsPrivacy = settings.checks.requirePrivacy
+  const needsMarketing = settings.checks.enableMarketing && settings.checks.requireMarketing
+  const allChecked =
+    (!settings.checks.requireTerms || termsChecked) &&
+    (!settings.checks.requirePrivacy || privacyChecked) &&
+    (!settings.checks.enableMarketing || marketingChecked)
+  const canSubmit =
+    (!needsTerms || termsChecked) &&
+    (!needsPrivacy || privacyChecked) &&
+    (!needsMarketing || marketingChecked) &&
+    !submitting &&
+    !settingsLoading
 
   const handleAccept = async () => {
     if (!canSubmit) return
 
     setSubmitting(true)
     setError(null)
-    const result = await acceptAgreements()
+    const result = await acceptAgreements({ marketingAccepted: marketingChecked })
     setSubmitting(false)
 
     if (result.error) {
@@ -209,46 +249,77 @@ export function TermsConsentPage() {
     navigate('/', { replace: true })
   }
 
+  const handleAllChecked = (checked: boolean) => {
+    if (settings.checks.requireTerms) setTermsChecked(checked)
+    if (settings.checks.requirePrivacy) setPrivacyChecked(checked)
+    if (settings.checks.enableMarketing) setMarketingChecked(checked)
+  }
+
   return (
-    <main className={styles.consentShell}>
-      <section className={styles.consentCard}>
-        <p className={styles.eyebrow}>MMM Craft</p>
-        <h1>약관 동의가 필요합니다</h1>
-        <p>
-          정식 서비스 이용을 위해 이용약관과 개인정보 수집 및 이용에 동의해 주세요.
-          동의 기록은 계정에 저장됩니다.
-        </p>
+    <main className={`${styles.consentShell} ${styles[`theme_${settings.popup.theme}`]}`}>
+      <section className={styles.consentCard} role="dialog" aria-modal="true" aria-labelledby="agreement-title">
+        <p className={styles.eyebrow}>{settings.popup.brandLabel}</p>
+        <h1 id="agreement-title">{settings.popup.title}</h1>
+        <p>{settings.popup.description}</p>
 
         <div className={styles.checks}>
-          <label className={styles.checkRow}>
-            <input
-              type="checkbox"
-              checked={termsChecked}
-              onChange={(event) => setTermsChecked(event.target.checked)}
-            />
-            <span className={styles.checkText}>
-              [필수] <Link to="/terms" target="_blank" rel="noreferrer">이용약관</Link>에 동의합니다.
-            </span>
-          </label>
-          <label className={styles.checkRow}>
-            <input
-              type="checkbox"
-              checked={privacyChecked}
-              onChange={(event) => setPrivacyChecked(event.target.checked)}
-            />
-            <span className={styles.checkText}>
-              [필수] <Link to="/privacy" target="_blank" rel="noreferrer">개인정보처리방침</Link> 및 개인정보 수집·이용에 동의합니다.
-            </span>
-          </label>
+          {settings.checks.enableAllCheck && (
+            <label className={`${styles.checkRow} ${styles.allCheckRow}`}>
+              <input
+                type="checkbox"
+                checked={allChecked}
+                onChange={(event) => handleAllChecked(event.target.checked)}
+              />
+              <span className={styles.checkText}>{settings.checks.allCheckLabel}</span>
+            </label>
+          )}
+          {settings.checks.requireTerms && (
+            <label className={styles.checkRow}>
+              <input
+                type="checkbox"
+                checked={termsChecked}
+                onChange={(event) => setTermsChecked(event.target.checked)}
+              />
+              <span className={styles.checkText}>
+                [필수] <Link to="/terms" target="_blank" rel="noreferrer">이용약관</Link>에 동의합니다.
+              </span>
+            </label>
+          )}
+          {settings.checks.requirePrivacy && (
+            <label className={styles.checkRow}>
+              <input
+                type="checkbox"
+                checked={privacyChecked}
+                onChange={(event) => setPrivacyChecked(event.target.checked)}
+              />
+              <span className={styles.checkText}>
+                [필수] <Link to="/privacy" target="_blank" rel="noreferrer">개인정보처리방침</Link> 및 개인정보 수집·이용에 동의합니다.
+              </span>
+            </label>
+          )}
+          {settings.checks.enableMarketing && (
+            <label className={styles.checkRow}>
+              <input
+                type="checkbox"
+                checked={marketingChecked}
+                onChange={(event) => setMarketingChecked(event.target.checked)}
+              />
+              <span className={styles.checkText}>
+                {settings.checks.marketingLabel}
+              </span>
+            </label>
+          )}
         </div>
 
         <div className={styles.actions}>
           <button className={styles.primaryButton} onClick={handleAccept} disabled={!canSubmit}>
-            {submitting ? '저장 중' : '동의하고 계속'}
+            {submitting ? '저장 중' : settings.popup.primaryButtonText}
           </button>
-          <button className={styles.secondaryButton} onClick={handleSignOut}>
-            로그아웃
-          </button>
+          {settings.popup.showLogoutButton && (
+            <button className={styles.secondaryButton} onClick={handleSignOut}>
+              {settings.popup.secondaryButtonText}
+            </button>
+          )}
         </div>
         {error && <div className={styles.error}>{error}</div>}
       </section>
