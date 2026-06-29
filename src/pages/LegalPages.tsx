@@ -273,7 +273,22 @@ export function TermsConsentPage() {
   return (
     <main className={`${styles.consentShell} ${styles[`theme_${settings.popup.theme}`]}`}>
       <section className={styles.consentCard} role="dialog" aria-modal="true" aria-labelledby="agreement-title">
-        <p className={styles.eyebrow}>{settings.popup.brandLabel}</p>
+        <div className={styles.popupBrand}>
+          <svg
+            viewBox="0 0 70.97 22.87"
+            className={styles.brandLogo}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={4}
+            strokeMiterlimit={10}
+            aria-hidden="true"
+          >
+            {[68.97, 55.58, 42.18, 28.79, 15.39, 2].map((x, i) => (
+              <line key={i} x1={x} y1="22.87" x2={x} y2="0" />
+            ))}
+          </svg>
+          <span>{settings.popup.brandLabel}</span>
+        </div>
         <h1 id="agreement-title">{settings.popup.title}</h1>
         <p>{settings.popup.description}</p>
 

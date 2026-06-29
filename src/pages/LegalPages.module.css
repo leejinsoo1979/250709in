@@ -75,6 +75,22 @@
   font-weight: 700;
 }
 
+.popupBrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.popupBrand .brandLogo {
+  height: 15px;
+  width: auto;
+  display: block;
+}
+
 .document h1 {
   margin: 0 0 12px;
   font-size: clamp(28px, 5vw, 44px);
@@ -334,6 +350,10 @@
 .theme_dark .consentCard p,
 .theme_dark .checkText {
   color: #cbd5e1;
+}
+
+.theme_dark .popupBrand {
+  color: #f8fafc;
 }
 
 .theme_dark .checkRow {
