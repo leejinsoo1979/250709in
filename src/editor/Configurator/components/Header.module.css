@@ -94,10 +94,10 @@
   display: flex;
   align-items: center;
   height: 32px;
-  /* 로고 애니메이션이 인접 요소에 영향 주지 않도록 고정 너비 */
-  width: 120px;
+  /* lllll + made make material 텍스트가 잘리지 않도록 내용에 맞춰 너비 자동 */
+  width: auto;
   flex-shrink: 0;
-  overflow: hidden;
+  white-space: nowrap;
 }
 
 .logo img {
@@ -781,7 +781,7 @@
 
   .logo {
     height: 24px;
-    width: 90px;
+    width: auto;
   }
 
   .centerActions {
