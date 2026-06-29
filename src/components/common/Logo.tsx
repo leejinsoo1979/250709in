@@ -102,7 +102,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick, loading = false, 
             fontWeight: 400,
             color,
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-            letterSpacing: '0.06em',
+            letterSpacing: '0.1em',
             whiteSpace: 'nowrap',
             transition: 'letter-spacing 0.4s ease, opacity 0.3s ease',
             animation: loading
